@@ -1,0 +1,49 @@
+{
+  "architecture": [
+    14,
+    8,
+    4,
+    8,
+    14
+  ],
+  "training_rows_nominal": 4448,
+  "fit_time_sec": 61.564,
+  "threshold_99": 0.09776260655852702,
+  "threshold_calibrated_on": "val_mission_nominal_rows",
+  "score_boundary": 0.35,
+  "validation_missions_results_note": "Val set was used to calibrate threshold_99 \u2014 not a blind evaluation.",
+  "validation_missions_results": {
+    "mean_nominal_score": 0.1068,
+    "mean_fault_score": 0.5235,
+    "nominal_below_threshold_pct": 95.02,
+    "fault_above_threshold_pct": 68.68,
+    "n_nominal": 4936,
+    "n_fault": 4064
+  },
+  "held_out_test_missions_results_note": "Fully unseen during both training and calibration \u2014 unbiased.",
+  "held_out_test_missions_results": {
+    "mean_nominal_score": 0.1128,
+    "mean_fault_score": 0.5156,
+    "nominal_below_threshold_pct": 94.25,
+    "fault_above_threshold_pct": 66.52,
+    "n_nominal": 4368,
+    "n_fault": 4632
+  },
+  "feature_order": [
+    "d_CHT_1",
+    "d_CHT_2",
+    "d_CHT_3",
+    "d_CHT_4",
+    "d_EGT_1",
+    "d_EGT_2",
+    "d_EGT_3",
+    "d_EGT_4",
+    "d_OIL_PRESS",
+    "d_OIL_TEMP",
+    "d_FUEL_FLOW",
+    "d_MAP",
+    "d_VIB_RMS",
+    "d_BUS_VOLTAGE"
+  ],
+  "timestamp": 1788348034.972511
+}

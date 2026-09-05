@@ -1,0 +1,228 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  background-color: #0e0e10;
+  color: #f2f2f3;
+}
+
+/* Minimal scrollbar — visible on hover intent, not a decorative element */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+input[type="range"] {
+  accent-color: #3b9eff;
+}
+
+/* Elevated surface — the one card pattern used everywhere, layered via a solid color +
+   border + shadow rather than a colored glow. Status variants only tint the border.
+   Deliberately NOT backdrop-filter: blur() — with 5-8+ of these visible at once (the "Full
+   Mission Cockpit" tab) sitting over content that repaints 20-50x/sec from live telemetry,
+   blur forces the browser to recomposite every one of them on every frame and every scroll
+   tick, which is what caused the scroll/telemetry jank. A solid opaque background costs
+   effectively nothing to composite. Blur is reserved for the header and modal overlay,
+   where it's one element, not a grid of them, sitting still rather than constantly repainting. */
+.surface-panel {
+  background: #1c1c1f;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.surface-panel-critical {
+  border-color: rgba(255, 98, 89, 0.35);
+}
+
+.surface-panel-warning {
+  border-color: rgba(255, 179, 64, 0.35);
+}
+
+.surface-panel-ai {
+  border-color: rgba(192, 132, 252, 0.3);
+}
+
+/* Assistant / manual-excerpt markdown rendering */
+.assistant-markdown {
+  font-family: 'Inter', sans-serif;
+  color: #d1d1d6;
+  line-height: 1.65;
+}
+
+.assistant-markdown h1,
+.assistant-markdown h2,
+.assistant-markdown h3,
+.assistant-markdown h4 {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  color: #f2f2f3;
+  margin-top: 0.9rem;
+  margin-bottom: 0.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.assistant-markdown h1 {
+  font-size: 1.05rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 0.35rem;
+}
+
+.assistant-markdown h2 {
+  font-size: 0.95rem;
+}
+
+.assistant-markdown h3 {
+  font-size: 0.875rem;
+  color: #c8c8cd;
+}
+
+.assistant-markdown h4 {
+  font-size: 0.8125rem;
+  color: #a8a8ad;
+}
+
+.assistant-markdown p {
+  margin-bottom: 0.65rem;
+  font-size: 0.8125rem;
+}
+
+.assistant-markdown strong {
+  color: #f2f2f3;
+  font-weight: 600;
+}
+
+.assistant-markdown ul {
+  list-style: none;
+  padding-left: 0;
+  margin-bottom: 0.75rem;
+}
+
+.assistant-markdown ul li {
+  position: relative;
+  padding-left: 1.1rem;
+  font-size: 0.8125rem;
+  margin-bottom: 0.35rem;
+  color: #d1d1d6;
+}
+
+.assistant-markdown ul li::before {
+  content: '';
+  position: absolute;
+  left: 0.15rem;
+  top: 0.5rem;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #7a7a80;
+}
+
+.assistant-markdown ol {
+  counter-reset: assistant-counter;
+  list-style: none;
+  padding-left: 0;
+  margin-bottom: 0.75rem;
+}
+
+.assistant-markdown ol li {
+  counter-increment: assistant-counter;
+  position: relative;
+  padding-left: 1.75rem;
+  font-size: 0.8125rem;
+  margin-bottom: 0.4rem;
+  color: #d1d1d6;
+}
+
+.assistant-markdown ol li::before {
+  content: counter(assistant-counter);
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: #a8a8ad;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.assistant-markdown blockquote {
+  background: rgba(255, 255, 255, 0.03);
+  border-left: 2px solid rgba(255, 255, 255, 0.16);
+  padding: 0.5rem 0.75rem;
+  border-radius: 0 6px 6px 0;
+  margin: 0.75rem 0;
+  font-style: normal;
+  color: #a8a8ad;
+  font-size: 0.8rem;
+}
+
+.assistant-markdown table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.75rem 0;
+  font-size: 0.75rem;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.assistant-markdown th {
+  background: rgba(255, 255, 255, 0.04);
+  color: #f2f2f3;
+  text-align: left;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-weight: 600;
+  font-size: 0.7rem;
+}
+
+.assistant-markdown td {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.assistant-markdown code {
+  font-family: 'JetBrains Mono', monospace;
+  background: rgba(255, 255, 255, 0.06);
+  color: #cbb8ff;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+}
+
+.assistant-markdown pre {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 0.75rem;
+  overflow-x: auto;
+  margin: 0.75rem 0;
+}
+
+.assistant-markdown pre code {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: #e2e8f0;
+}

@@ -1,0 +1,23 @@
+{
+  "total_detections": 1,
+  "counts_by_severity": {
+    "CRITICAL": 1
+  },
+  "detections": [
+    {
+      "event_id": "ANOM-0001",
+      "detected_at": "T+05:24:04",
+      "detected_at_epoch": 1788336710.0,
+      "fault_id": 1,
+      "fault_name": "CYLINDER_2_CHT_OVERHEAT",
+      "severity": "CRITICAL",
+      "anomaly_score": 0.0673,
+      "ata_chapter": "ATA 72-00",
+      "subsystem": "Cylinder #2 Head Assembly",
+      "target_mesh": "Covers_Theme_M_PlasticTheme_0",
+      "sensor_trigger": "CHT > 135 \u00b0C on Cylinder #2",
+      "ml_signature": "\u0394CHT\u2082 > +25 \u00b0C thermal runaway slope; Cyl #1/#3/#4 nominal",
+      "recommended_action": "Enrich fuel trim +12%, reduce throttle to 4,600 RPM, and initiate descent to cooler ambient air."
+    }
+  ]
+}

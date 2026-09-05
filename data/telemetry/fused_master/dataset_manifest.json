@@ -1,0 +1,15 @@
+{
+  "total_rows": 9736,
+  "training_rows": 7788,
+  "validation_rows": 1948,
+  "source1_garmin_files": 0,
+  "source1_garmin_rows_fused": 0,
+  "source2_nasa_files": 1,
+  "source2_nasa_rows_fused": 2136,
+  "source3_drdo_sorties": 10,
+  "source3_drdo_rows_fused": 7600,
+  "features_included": 27,
+  "residual_dimensions": 14,
+  "train_dataset_path": "E:\\backup-llm\\backup-no-llm\\3d_engine\\data\\telemetry\\fused_master\\master_training_dataset.csv",
+  "val_dataset_path": "E:\\backup-llm\\backup-no-llm\\3d_engine\\data\\telemetry\\fused_master\\master_validation_dataset.csv"
+}

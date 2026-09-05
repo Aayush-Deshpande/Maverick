@@ -1,0 +1,236 @@
+{
+  "evaluation_methodology": "Strict Mission-Level Group Isolation (Train / Val / Test)",
+  "missions_count": {
+    "train": 10,
+    "val": 10,
+    "test": 10,
+    "total": 30
+  },
+  "samples_count": {
+    "train": 9000,
+    "val": 9000,
+    "test": 9000
+  },
+  "fault_distributions": {
+    "train": {
+      "0": 4448,
+      "1": 569,
+      "2": 569,
+      "3": 569,
+      "4": 569,
+      "5": 569,
+      "6": 569,
+      "7": 569,
+      "8": 569
+    },
+    "val": {
+      "0": 4936,
+      "1": 508,
+      "2": 508,
+      "3": 508,
+      "4": 508,
+      "5": 508,
+      "6": 508,
+      "7": 508,
+      "8": 508
+    },
+    "test": {
+      "0": 4368,
+      "1": 579,
+      "2": 579,
+      "3": 579,
+      "4": 579,
+      "5": 579,
+      "6": 579,
+      "7": 579,
+      "8": 579
+    }
+  },
+  "validation_missions_results": {
+    "accuracy": 0.9931,
+    "macro_f1": 0.9926
+  },
+  "held_out_test_missions_results": {
+    "accuracy": 0.9751,
+    "macro_f1": 0.9748,
+    "per_fault_metrics": {
+      "FAULT_0": {
+        "precision": 0.9646,
+        "recall": 0.9851,
+        "f1_score": 0.9747,
+        "support": 4368.0
+      },
+      "FAULT_1": {
+        "precision": 1.0,
+        "recall": 0.8359,
+        "f1_score": 0.9106,
+        "support": 579.0
+      },
+      "FAULT_2": {
+        "precision": 0.9965,
+        "recall": 0.9965,
+        "f1_score": 0.9965,
+        "support": 579.0
+      },
+      "FAULT_3": {
+        "precision": 0.9983,
+        "recall": 0.9914,
+        "f1_score": 0.9948,
+        "support": 579.0
+      },
+      "FAULT_4": {
+        "precision": 1.0,
+        "recall": 0.9775,
+        "f1_score": 0.9886,
+        "support": 579.0
+      },
+      "FAULT_5": {
+        "precision": 0.9847,
+        "recall": 1.0,
+        "f1_score": 0.9923,
+        "support": 579.0
+      },
+      "FAULT_6": {
+        "precision": 0.9316,
+        "recall": 0.9879,
+        "f1_score": 0.9589,
+        "support": 579.0
+      },
+      "FAULT_7": {
+        "precision": 0.9914,
+        "recall": 0.9983,
+        "f1_score": 0.9948,
+        "support": 579.0
+      },
+      "FAULT_8": {
+        "precision": 0.9873,
+        "recall": 0.9378,
+        "f1_score": 0.9619,
+        "support": 579.0
+      }
+    },
+    "confusion_matrix": [
+      [
+        4303,
+        0,
+        2,
+        0,
+        0,
+        9,
+        42,
+        5,
+        7
+      ],
+      [
+        95,
+        484,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        2,
+        0,
+        577,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        5,
+        0,
+        0,
+        574,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        13,
+        0,
+        0,
+        0,
+        566,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        579,
+        0,
+        0,
+        0
+      ],
+      [
+        7,
+        0,
+        0,
+        0,
+        0,
+        0,
+        572,
+        0,
+        0
+      ],
+      [
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        578,
+        0
+      ],
+      [
+        35,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        543
+      ]
+    ]
+  },
+  "feature_importances": {
+    "RES_d_CHT_1": 0.0784,
+    "RES_d_CHT_2": 0.0915,
+    "RES_d_CHT_3": 0.0649,
+    "RES_d_CHT_4": 0.0591,
+    "RES_d_EGT_1": 0.0675,
+    "RES_d_EGT_2": 0.0804,
+    "RES_d_EGT_3": 0.0814,
+    "RES_d_EGT_4": 0.0036,
+    "RES_d_OIL_PRESS": 0.1076,
+    "RES_d_OIL_TEMP": 0.0819,
+    "RES_d_FUEL_FLOW": 0.0447,
+    "RES_d_MAP": 0.0762,
+    "RES_d_VIB_RMS": 0.0803,
+    "RES_d_BUS_VOLTAGE": 0.0825
+  },
+  "leakage_audit": {
+    "mission_overlap": 0,
+    "temporal_lookahead_leakage": false,
+    "feature_engineering_causal": true
+  },
+  "timestamp": 1788347972.7497969
+}

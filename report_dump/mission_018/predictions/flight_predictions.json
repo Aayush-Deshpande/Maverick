@@ -1,0 +1,8 @@
+{
+  "method": "Linear extrapolation of the observed CHT rise rate against the 135 \u00b0C certified cylinder head limit.",
+  "observed_cht_rise_rate_c_per_s": 3.4774,
+  "peak_cht_c": 139.5,
+  "thermal_margin_c": -4.5,
+  "projected_seconds_to_cht_limit": 0.0,
+  "advisory": "Thermal limit already breached \u2014 descend into denser air immediately."
+}

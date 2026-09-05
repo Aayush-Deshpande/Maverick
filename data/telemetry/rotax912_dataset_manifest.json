@@ -1,0 +1,17 @@
+{
+  "total_records": 9000,
+  "missions_generated": 10,
+  "master_dataset_path": "E:\\TalentForge\\Clay\\3d_engine\\data\\telemetry\\rotax912_master_dataset.csv",
+  "individual_missions": {
+    "MISSION_01_LADAKH_NOMINAL": "E:\\TalentForge\\Clay\\3d_engine\\data\\telemetry\\mission_01_ladakh_nominal.csv",
+    "MISSION_02_THAR_NOMINAL": "E:\\TalentForge\\Clay\\3d_engine\\data\\telemetry\\mission_02_thar_nominal.csv",
+    "MISSION_03_LADAKH_FAULT01_CYL2_OVERHEAT": "E:\\TalentForge\\Clay\\3d_engine\\data\\telemetry\\mission_03_ladakh_fault01_cyl2_overheat.csv",
+    "MISSION_04_LADAKH_FAULT02_INJECTOR_CLOG": "E:\\TalentForge\\Clay\\3d_engine\\data\\telemetry\\mission_04_ladakh_fault02_injector_clog.csv",
+    "MISSION_05_LADAKH_FAULT03_IGNITION_MISFIRE": "E:\\TalentForge\\Clay\\3d_engine\\data\\telemetry\\mission_05_ladakh_fault03_ignition_misfire.csv",
+    "MISSION_06_THAR_FAULT04_OIL_PRESSURE_LOSS": "E:\\TalentForge\\Clay\\3d_engine\\data\\telemetry\\mission_06_thar_fault04_oil_pressure_loss.csv",
+    "MISSION_07_LADAKH_FAULT05_GEARBOX_VIBRATION": "E:\\TalentForge\\Clay\\3d_engine\\data\\telemetry\\mission_07_ladakh_fault05_gearbox_vibration.csv",
+    "MISSION_08_LADAKH_FAULT06_EGT_IMBALANCE": "E:\\TalentForge\\Clay\\3d_engine\\data\\telemetry\\mission_08_ladakh_fault06_egt_imbalance.csv",
+    "MISSION_09_THAR_FAULT07_ALTERNATOR_SAG": "E:\\TalentForge\\Clay\\3d_engine\\data\\telemetry\\mission_09_thar_fault07_alternator_sag.csv",
+    "MISSION_10_LADAKH_FAULT08_FADEC_DRIFT": "E:\\TalentForge\\Clay\\3d_engine\\data\\telemetry\\mission_10_ladakh_fault08_fadec_drift.csv"
+  }
+}

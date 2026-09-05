@@ -1,0 +1,96 @@
+{
+  "mission_start": "2026-09-03T09:34:51Z",
+  "mission_end": "2026-09-03T09:34:52Z",
+  "duration_hours": 0.0,
+  "event_count": 11,
+  "events": [
+    {
+      "at": "T+00:00:00",
+      "epoch": 1788428091.653,
+      "event_type": "MISSION_START",
+      "severity": "NOMINAL",
+      "title": "Sortie SORTIE-SRV-20260903-150451 launched",
+      "detail": "High-Altitude ISR Loiter \u2014 Northern Sector (Ladakh). Propulsion health index 1.00."
+    },
+    {
+      "at": "T+00:00:00",
+      "epoch": 1788428091.758,
+      "event_type": "FAULT_CONFIRMED",
+      "severity": "CRITICAL",
+      "title": "Fault 01 \u2014 CYLINDER_2_CHT_OVERHEAT",
+      "detail": "Classifier confirmed on SUB_CYL_2 (score 0.05, ATA 72-00)."
+    },
+    {
+      "at": "T+00:00:00",
+      "epoch": 1788428091.758,
+      "event_type": "ACTION_ISSUED",
+      "severity": "CRITICAL",
+      "title": "Prescriptive directive issued",
+      "detail": "Enrich fuel trim +12%, reduce throttle to 4,600 RPM, and initiate descent to cooler ambient air."
+    },
+    {
+      "at": "T+00:00:00",
+      "epoch": 1788428091.758,
+      "event_type": "MAINTENANCE_ORDER",
+      "severity": "ADVISORY",
+      "title": "Work order MAINT-0001 raised",
+      "detail": "Inspect Cylinder #2 cooling shroud and baffle elastomeric seals for tears, deformation, or dislodgement."
+    },
+    {
+      "at": "T+00:00:00",
+      "epoch": 1788428092.138,
+      "event_type": "FAULT_CONFIRMED",
+      "severity": "WARNING",
+      "title": "Fault 07 \u2014 ALTERNATOR_VOLTAGE_SAG",
+      "detail": "Classifier confirmed on SUB_ELECTRICAL (score 1.00, ATA 24-00)."
+    },
+    {
+      "at": "T+00:00:00",
+      "epoch": 1788428092.138,
+      "event_type": "ACTION_ISSUED",
+      "severity": "WARNING",
+      "title": "Prescriptive directive issued",
+      "detail": "Shed non-essential ISR payload sensors and engage backup avionics battery bus."
+    },
+    {
+      "at": "T+00:00:00",
+      "epoch": 1788428092.138,
+      "event_type": "MAINTENANCE_ORDER",
+      "severity": "ADVISORY",
+      "title": "Work order MAINT-0002 raised",
+      "detail": "Test alternator stator phase-to-phase resistance and check regulator grounding harness."
+    },
+    {
+      "at": "T+00:00:00",
+      "epoch": 1788428092.26,
+      "event_type": "FAULT_CONFIRMED",
+      "severity": "CRITICAL",
+      "title": "Fault 04 \u2014 OIL_PRESSURE_LOSS",
+      "detail": "Classifier confirmed on SUB_LUBRICATION (score 1.00, ATA 79-00)."
+    },
+    {
+      "at": "T+00:00:00",
+      "epoch": 1788428092.26,
+      "event_type": "ACTION_ISSUED",
+      "severity": "CRITICAL",
+      "title": "Prescriptive directive issued",
+      "detail": "Reduce engine RPM to 4,200 RPM to minimize bearing load and initiate immediate precautionary RTB vector."
+    },
+    {
+      "at": "T+00:00:00",
+      "epoch": 1788428092.26,
+      "event_type": "MAINTENANCE_ORDER",
+      "severity": "ADVISORY",
+      "title": "Work order MAINT-0003 raised",
+      "detail": "Inspect oil suction screen, scavenge pump gears, and oil filter element for metallic particulate contamination."
+    },
+    {
+      "at": "T+00:00:00",
+      "epoch": 1788428092.384,
+      "event_type": "MISSION_END",
+      "severity": "NOMINAL",
+      "title": "Sortie complete \u2014 COMPLETED",
+      "detail": "0.00 flight hours logged. Final propulsion health 100.0%."
+    }
+  ]
+}

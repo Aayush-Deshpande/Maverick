@@ -1,0 +1,40 @@
+{
+  "mission_start": "2026-09-05T13:21:12Z",
+  "mission_end": "2026-09-05T13:22:22Z",
+  "duration_hours": 0.0196,
+  "event_count": 4,
+  "events": [
+    {
+      "at": "T+00:00:00",
+      "epoch": 1788614472.093,
+      "event_type": "MISSION_START",
+      "severity": "NOMINAL",
+      "title": "Sortie launched",
+      "detail": "Ladakh Canyon Low-Level Tactical Sortie \u2014 ingress at 5,800 m AMSL, Auto-GCAS armed."
+    },
+    {
+      "at": "T+00:00:16",
+      "epoch": 1788614488.208,
+      "event_type": "GCAS_WARNING",
+      "severity": "WARNING",
+      "title": "Terrain proximity advisory",
+      "detail": "Time-to-impact 3.8 s at 1600 m AGL."
+    },
+    {
+      "at": "T+00:00:20",
+      "epoch": 1788614492.157,
+      "event_type": "GCAS_RECOVERY",
+      "severity": "CRITICAL",
+      "title": "Auto-GCAS recovery commanded",
+      "detail": "Automatic 2.5 G pull-up at 804 m AGL (TTI 1.7 s)."
+    },
+    {
+      "at": "T+00:01:10",
+      "epoch": 1788614542.832,
+      "event_type": "MISSION_END",
+      "severity": "NOMINAL",
+      "title": "Sortie terminated \u2014 RECOVERED",
+      "detail": "71 s flown. Peak CHT 107.7 \u00b0C, minimum oil pressure 4.14 bar, final propulsion health 85.7%."
+    }
+  ]
+}

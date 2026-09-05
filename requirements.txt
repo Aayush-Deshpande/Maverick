@@ -1,0 +1,62 @@
+# Rotax 912 iS Sport Digital Twin - Python Dependencies
+# DRDO / iDEX Problem Statement ID: 26054
+
+# Desktop GCS & Native Engine
+pygame>=2.5.0
+
+# Scientific & ML Analysis
+numpy>=1.24.0
+scipy>=1.10.0
+scikit-learn>=1.3.0
+joblib>=1.3.0
+pandas>=2.0.0
+networkx>=3.0.0
+pytest>=7.4.0
+
+# Real-Time Backend Server & Client Transport
+fastapi>=0.100.0
+uvicorn>=0.22.0
+websockets>=11.0
+pydantic>=2.0.0
+httpx>=0.24.0
+
+# Manual/document ingestion for the RAG copilot's knowledge store (data/documents/) — OPTIONAL.
+# Every manual currently shipped in data/documents/ has a plain-text/.md counterpart, which
+# LocalKnowledgeStore always prefers and needs none of this to load. These are only exercised
+# as a fallback if a manual is ever added as .pdf/.docx/.pptx with no .md/.txt version — without
+# them, backend/knowledge/loaders/*.py silently returns zero chunks for that one file (caught
+# ImportError, no exception raised) rather than failing loudly, so keep them installed.
+pypdf>=4.0.0            # backend/knowledge/loaders/pdf_loader.py primary PDF extractor
+pdfplumber>=0.11.0      # pdf_loader.py fallback if pypdf yields no extractable text
+python-docx>=1.1.0      # backend/knowledge/loaders/office_loader.py — .docx
+python-pptx>=0.6.23     # office_loader.py — .pptx
+flashrank>=0.2.5        # backend/knowledge/retrieval/reranker.py — secondary reranker tier (primary is
+                         # sentence-transformers semantic embedding; falls back further to keyword overlap
+                         # if neither is installed)
+
+# Local AI Reasoning Layer (Qwen3-4B RAG copilot) — OPTIONAL.
+# The deterministic engine, standalone app, and dashboard all work with none of this installed;
+# the AI diagnosis panel just reports "unavailable" instead.
+#
+# The LLM itself is served by Ollama (https://ollama.com), NOT a pip package — install it
+# separately and pull the model once:
+#   ollama pull qwen3:4b-instruct-2507-q4_K_M
+# Ollama wraps llama.cpp's quantized GPU kernels, which are dramatically faster for this than
+# the transformers/BitsAndBytes in-process path this used to use (~8-10 tok/s -> ~64 tok/s on
+# the same 6GB laptop GPU in this repo's own testing). torch/transformers/sentence-transformers
+# below are for the separate RAG embedding + Kokoro TTS models, not the LLM.
+torch>=2.5.0
+transformers>=4.57.0
+sentence-transformers>=5.2.0
+# Fixes HuggingFace Hub downloads on Windows machines running TLS-inspecting endpoint-security
+# software (verifies against the OS trust store instead of certifi's bundle). Harmless elsewhere.
+truststore>=0.9.0
+
+# Voice Interface (STT/TTS for the conversational Mission Copilot) — OPTIONAL, offline.
+# Uses the models already vendored in Voice/ (ggml-tiny.en.bin, Kokoro-82M). Like the Qwen3-4B
+# block above, the rest of the app works with none of this installed; the voice endpoints just
+# report "unavailable" and the text-based AI copilot chat keeps working normally.
+pywhispercpp>=1.3.0    # whisper.cpp Python bindings — loads Voice/ggml-tiny.en.bin directly, CPU-only
+kokoro>=0.9.2           # Kokoro-82M StyleTTS2 inference package, loads Voice/Kokoro-82M/ locally
+soundfile>=0.12.1       # WAV encoding for synthesized speech
+imageio-ffmpeg>=0.5.1   # bundles a static ffmpeg binary to decode/resample browser audio uploads

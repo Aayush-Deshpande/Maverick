@@ -1,0 +1,72 @@
+{
+  "mission_start": "2026-09-04T05:00:10Z",
+  "mission_end": "2026-09-04T05:00:50Z",
+  "duration_hours": 0.0112,
+  "event_count": 8,
+  "events": [
+    {
+      "at": "T+00:00:00",
+      "epoch": 1788498010.179,
+      "event_type": "MISSION_START",
+      "severity": "NOMINAL",
+      "title": "Sortie launched",
+      "detail": "Ladakh Canyon Low-Level Tactical Sortie \u2014 ingress at 5,800 m AMSL, Auto-GCAS armed."
+    },
+    {
+      "at": "T+00:00:12",
+      "epoch": 1788498022.616,
+      "event_type": "GCAS_WARNING",
+      "severity": "WARNING",
+      "title": "Terrain proximity advisory",
+      "detail": "Time-to-impact 3.8 s at 1591 m AGL."
+    },
+    {
+      "at": "T+00:00:14",
+      "epoch": 1788498024.914,
+      "event_type": "GCAS_RECOVERY",
+      "severity": "CRITICAL",
+      "title": "Auto-GCAS recovery commanded",
+      "detail": "Automatic 2.5 G pull-up at 916 m AGL (TTI 1.8 s)."
+    },
+    {
+      "at": "T+00:00:24",
+      "epoch": 1788498034.754,
+      "event_type": "CFIT_IMPACT",
+      "severity": "CRITICAL",
+      "title": "Controlled flight into terrain",
+      "detail": "RIGHT WING GROUND CARTWHEEL at 5239 m AMSL, 1582 m AGL, 323 KIAS, Copilot OFF."
+    },
+    {
+      "at": "T+00:00:29",
+      "epoch": 1788498039.804,
+      "event_type": "GCAS_RECOVERY",
+      "severity": "CRITICAL",
+      "title": "Auto-GCAS recovery commanded",
+      "detail": "Automatic 2.5 G pull-up at 1397 m AGL (TTI 1.3 s)."
+    },
+    {
+      "at": "T+00:00:32",
+      "epoch": 1788498043.005,
+      "event_type": "FAULT_INJECTED",
+      "severity": "CRITICAL",
+      "title": "Fault 01 \u2014 CYLINDER_2_CHT_OVERHEAT",
+      "detail": "CHT > 135 \u00b0C on Cylinder #2 on Cylinder #2 Head Assembly (ATA 72-00)."
+    },
+    {
+      "at": "T+00:00:32",
+      "epoch": 1788498043.005,
+      "event_type": "ACTION_ISSUED",
+      "severity": "CRITICAL",
+      "title": "Prescriptive directive issued",
+      "detail": "Enrich fuel trim +12%, throttle back 15%, descend into denser cooling air."
+    },
+    {
+      "at": "T+00:00:40",
+      "epoch": 1788498050.401,
+      "event_type": "MISSION_END",
+      "severity": "CRITICAL",
+      "title": "Sortie terminated \u2014 AIRFRAME LOST",
+      "detail": "40 s flown. Peak CHT 109.1 \u00b0C, minimum oil pressure 4.12 bar, final propulsion health 0.0%."
+    }
+  ]
+}

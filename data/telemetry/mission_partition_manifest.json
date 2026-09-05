@@ -1,0 +1,52 @@
+{
+  "splits": {
+    "TRAIN": {
+      "missions": [
+        "TRAIN_M01_LADAKH_NOMINAL",
+        "TRAIN_M02_THAR_NOMINAL",
+        "TRAIN_M03_LADAKH_FAULT01_OVERHEAT",
+        "TRAIN_M04_LADAKH_FAULT02_INJECTOR",
+        "TRAIN_M05_LADAKH_FAULT03_MISFIRE",
+        "TRAIN_M06_THAR_FAULT04_OIL_PRESS",
+        "TRAIN_M07_LADAKH_FAULT05_GEARBOX",
+        "TRAIN_M08_LADAKH_FAULT06_EGT_IMBAL",
+        "TRAIN_M09_THAR_FAULT07_ALT_SAG",
+        "TRAIN_M10_LADAKH_FAULT08_FADEC_DRIFT"
+      ],
+      "rows": 9000
+    },
+    "VAL": {
+      "missions": [
+        "VAL_M01_LADAKH_NOMINAL",
+        "VAL_M02_THAR_NOMINAL",
+        "VAL_M03_LADAKH_FAULT01_OVERHEAT",
+        "VAL_M04_LADAKH_FAULT02_INJECTOR",
+        "VAL_M05_LADAKH_FAULT03_MISFIRE",
+        "VAL_M06_THAR_FAULT04_OIL_PRESS",
+        "VAL_M07_LADAKH_FAULT05_GEARBOX",
+        "VAL_M08_LADAKH_FAULT06_EGT_IMBAL",
+        "VAL_M09_THAR_FAULT07_ALT_SAG",
+        "VAL_M10_LADAKH_FAULT08_FADEC_DRIFT"
+      ],
+      "rows": 9000
+    },
+    "TEST": {
+      "missions": [
+        "TEST_M01_LADAKH_NOMINAL",
+        "TEST_M02_THAR_NOMINAL",
+        "TEST_M03_LADAKH_FAULT01_OVERHEAT",
+        "TEST_M04_LADAKH_FAULT02_INJECTOR",
+        "TEST_M05_LADAKH_FAULT03_MISFIRE",
+        "TEST_M06_THAR_FAULT04_OIL_PRESS",
+        "TEST_M07_LADAKH_FAULT05_GEARBOX",
+        "TEST_M08_LADAKH_FAULT06_EGT_IMBAL",
+        "TEST_M09_THAR_FAULT07_ALT_SAG",
+        "TEST_M10_LADAKH_FAULT08_FADEC_DRIFT"
+      ],
+      "rows": 9000
+    }
+  },
+  "train_dataset_path": "E:\\backup-llm\\backup-no-llm\\3d_engine\\data\\telemetry\\rotax912_train_dataset.csv",
+  "val_dataset_path": "E:\\backup-llm\\backup-no-llm\\3d_engine\\data\\telemetry\\rotax912_val_dataset.csv",
+  "test_dataset_path": "E:\\backup-llm\\backup-no-llm\\3d_engine\\data\\telemetry\\rotax912_test_dataset.csv"
+}

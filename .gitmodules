@@ -1,0 +1,3 @@
+[submodule "Voice/Kokoro-82M"]
+	path = Voice/Kokoro-82M
+	url = https://huggingface.co/hexgrad/Kokoro-82M

@@ -1,0 +1,207 @@
+{
+  "source_log": "SORTIE-SRV-20260903-004745.csv",
+  "sample_count": 40,
+  "channel_count": 25,
+  "channels": [
+    {
+      "channel": "TIMESTAMP_SEC",
+      "min": 1788376666.144,
+      "max": 1788376679.74,
+      "mean": 1788376672.881,
+      "last": 1788376679.74,
+      "samples": 40
+    },
+    {
+      "channel": "ENGINE_RPM",
+      "min": 5030.0,
+      "max": 5094.7,
+      "mean": 5056.78,
+      "last": 5064.8,
+      "samples": 40
+    },
+    {
+      "channel": "PROP_RPM",
+      "min": 2070.0,
+      "max": 2096.6,
+      "mean": 2080.98,
+      "last": 2084.3,
+      "samples": 40
+    },
+    {
+      "channel": "TPS",
+      "min": 72.0,
+      "max": 72.0,
+      "mean": 72.0,
+      "last": 72.0,
+      "samples": 40
+    },
+    {
+      "channel": "CHT_1",
+      "min": 128.5,
+      "max": 129.3,
+      "mean": 129.022,
+      "last": 129.2,
+      "samples": 40
+    },
+    {
+      "channel": "CHT_2",
+      "min": 131.0,
+      "max": 131.9,
+      "mean": 131.485,
+      "last": 131.3,
+      "samples": 40
+    },
+    {
+      "channel": "CHT_3",
+      "min": 128.1,
+      "max": 128.9,
+      "mean": 128.483,
+      "last": 128.6,
+      "samples": 40
+    },
+    {
+      "channel": "CHT_4",
+      "min": 130.6,
+      "max": 131.4,
+      "mean": 131.012,
+      "last": 131.1,
+      "samples": 40
+    },
+    {
+      "channel": "EGT_1",
+      "min": 788.9,
+      "max": 792.9,
+      "mean": 790.965,
+      "last": 790.5,
+      "samples": 40
+    },
+    {
+      "channel": "EGT_2",
+      "min": 792.9,
+      "max": 797.4,
+      "mean": 795.562,
+      "last": 794.4,
+      "samples": 40
+    },
+    {
+      "channel": "EGT_3",
+      "min": 790.3,
+      "max": 795.3,
+      "mean": 792.68,
+      "last": 790.6,
+      "samples": 40
+    },
+    {
+      "channel": "EGT_4",
+      "min": 793.3,
+      "max": 798.4,
+      "mean": 795.777,
+      "last": 795.1,
+      "samples": 40
+    },
+    {
+      "channel": "OIL_PRESS",
+      "min": 3.93,
+      "max": 4.06,
+      "mean": 3.994,
+      "last": 3.99,
+      "samples": 40
+    },
+    {
+      "channel": "OIL_TEMP",
+      "min": 114.7,
+      "max": 115.3,
+      "mean": 114.98,
+      "last": 115.1,
+      "samples": 40
+    },
+    {
+      "channel": "FUEL_FLOW",
+      "min": 17.3,
+      "max": 17.6,
+      "mean": 17.447,
+      "last": 17.6,
+      "samples": 40
+    },
+    {
+      "channel": "FUEL_RAIL_P",
+      "min": 3.0,
+      "max": 3.1,
+      "mean": 3.002,
+      "last": 3.0,
+      "samples": 40
+    },
+    {
+      "channel": "MAP",
+      "min": 69.1,
+      "max": 69.6,
+      "mean": 69.42,
+      "last": 69.3,
+      "samples": 40
+    },
+    {
+      "channel": "VIB_GEARBOX_RMS",
+      "min": 0.67,
+      "max": 0.74,
+      "mean": 0.71,
+      "last": 0.72,
+      "samples": 40
+    },
+    {
+      "channel": "BUS_VOLTAGE",
+      "min": 14.05,
+      "max": 14.14,
+      "mean": 14.097,
+      "last": 14.09,
+      "samples": 40
+    },
+    {
+      "channel": "BATTERY_CURRENT",
+      "min": 3.9,
+      "max": 4.4,
+      "mean": 4.132,
+      "last": 4.0,
+      "samples": 40
+    },
+    {
+      "channel": "ALTITUDE_FT",
+      "min": 4500.0,
+      "max": 4500.0,
+      "mean": 4500.0,
+      "last": 4500.0,
+      "samples": 40
+    },
+    {
+      "channel": "OAT_C",
+      "min": 44.0,
+      "max": 44.0,
+      "mean": 44.0,
+      "last": 44.0,
+      "samples": 40
+    },
+    {
+      "channel": "TAS_KNOTS",
+      "min": 95.1,
+      "max": 98.1,
+      "mean": 96.618,
+      "last": 98.1,
+      "samples": 40
+    },
+    {
+      "channel": "DIAG_FAULT_ID",
+      "min": 0.0,
+      "max": 0.0,
+      "mean": 0.0,
+      "last": 0.0,
+      "samples": 40
+    },
+    {
+      "channel": "HEALTH_INDEX",
+      "min": 1.0,
+      "max": 1.0,
+      "mean": 1.0,
+      "last": 1.0,
+      "samples": 40
+    }
+  ]
+}

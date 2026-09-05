@@ -1,0 +1,48 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Blender temporary & backup files
+*.blend1
+*.blend2
+*.blend@
+*.blend_crash.txt
+
+# Virtual environments
+venv/
+env/
+.venv/
+ENV/
+
+# Node / Frontend
+node_modules/
+dist/
+.firebase/
+
+# Testing & Cache
+.pytest_cache/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# IDE files
+.idea/
+.vscode/
+*.suo
+*.user
+*.useroscore
+*.sln.docstates
+
+# Distribution builds
+build/
+*.egg-info/
+
+# Stray empty artifact, not a real binary
+/cmd.exe
+
+# Redistributable stock model weights (~7.6GB) — re-pull via Ollama instead of storing in git:
+#   ollama pull qwen3:4b-instruct-2507-q4_K_M
+Qwen3-4B/

@@ -1,0 +1,72 @@
+{
+  "mission_start": "2026-09-02T19:51:55Z",
+  "mission_end": "2026-09-02T19:52:39Z",
+  "duration_hours": 0.0122,
+  "event_count": 8,
+  "events": [
+    {
+      "at": "T+00:00:00",
+      "epoch": 1788378715.612,
+      "event_type": "MISSION_START",
+      "severity": "NOMINAL",
+      "title": "Sortie launched",
+      "detail": "Ladakh Canyon Low-Level Tactical Sortie \u2014 ingress at 5,800 m AMSL, Auto-GCAS armed."
+    },
+    {
+      "at": "T+00:00:14",
+      "epoch": 1788378730.045,
+      "event_type": "FAULT_INJECTED",
+      "severity": "CRITICAL",
+      "title": "Fault 01 \u2014 CYLINDER_2_CHT_OVERHEAT",
+      "detail": "CHT > 135 \u00b0C on Cylinder #2 on Cylinder #2 Head Assembly (ATA 72-00)."
+    },
+    {
+      "at": "T+00:00:14",
+      "epoch": 1788378730.045,
+      "event_type": "ACTION_ISSUED",
+      "severity": "CRITICAL",
+      "title": "Prescriptive directive issued",
+      "detail": "Enrich fuel trim +12%, throttle back 15%, descend into denser cooling air."
+    },
+    {
+      "at": "T+00:00:26",
+      "epoch": 1788378742.555,
+      "event_type": "FAULT_CLEARED",
+      "severity": "NOMINAL",
+      "title": "Fault 01 cleared",
+      "detail": "Cylinder #2 Head Assembly returned inside the certified envelope."
+    },
+    {
+      "at": "T+00:00:26",
+      "epoch": 1788378742.555,
+      "event_type": "GCAS_RECOVERY",
+      "severity": "CRITICAL",
+      "title": "Auto-GCAS recovery commanded",
+      "detail": "Automatic 2.5 G pull-up at 1197 m AGL (TTI 2.5 s)."
+    },
+    {
+      "at": "T+00:00:32",
+      "epoch": 1788378747.857,
+      "event_type": "FAULT_INJECTED",
+      "severity": "CRITICAL",
+      "title": "Fault 01 \u2014 CYLINDER_2_CHT_OVERHEAT",
+      "detail": "CHT > 135 \u00b0C on Cylinder #2 on Cylinder #2 Head Assembly (ATA 72-00)."
+    },
+    {
+      "at": "T+00:00:32",
+      "epoch": 1788378747.857,
+      "event_type": "ACTION_ISSUED",
+      "severity": "CRITICAL",
+      "title": "Prescriptive directive issued",
+      "detail": "Enrich fuel trim +12%, throttle back 15%, descend into denser cooling air."
+    },
+    {
+      "at": "T+00:00:43",
+      "epoch": 1788378759.606,
+      "event_type": "MISSION_END",
+      "severity": "NOMINAL",
+      "title": "Sortie terminated \u2014 RECOVERED",
+      "detail": "44 s flown. Peak CHT 113.3 \u00b0C, minimum oil pressure 4.06 bar, final propulsion health 79.4%."
+    }
+  ]
+}

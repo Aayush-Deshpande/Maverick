@@ -1,0 +1,47 @@
+{
+  "sortie_id": "SORTIE-CANYON-20260904-050105",
+  "name": "Ladakh Canyon Low-Level Tactical Sortie",
+  "uav_tail_number": "TAPAS-BH-201-AF01",
+  "region": "LADAKH",
+  "theater": "Northern Sector (Ladakh)",
+  "status": "ABORTED",
+  "severity": "CRITICAL",
+  "start_time": "2026-09-04T05:01:05Z",
+  "end_time": "2026-09-04T05:34:43Z",
+  "start_epoch": 1788498065.393,
+  "end_epoch": 1788500083.184,
+  "duration_hours": 0.5605,
+  "health_index_start": 1.0,
+  "health_index_end": 0.0,
+  "fault_count": 0,
+  "open_actions": 1,
+  "altitude_range_ft": [
+    19028,
+    24837
+  ],
+  "generated_by": "canyon_flight_sim",
+  "mission_id": "mission_017",
+  "generated_at": "2026-09-04T05:34:43Z",
+  "generated_at_epoch": 1788500083.325,
+  "categories": {
+    "readings": [
+      "telemetry_log.csv",
+      "sensor_channels.json"
+    ],
+    "health": [
+      "engine_health.json"
+    ],
+    "timeline": [
+      "fault_timeline.json"
+    ],
+    "predictions": [
+      "flight_predictions.json"
+    ],
+    "actions": [
+      "recommended_actions.json"
+    ],
+    "mission_summary": [
+      "mission_summary.md"
+    ]
+  }
+}

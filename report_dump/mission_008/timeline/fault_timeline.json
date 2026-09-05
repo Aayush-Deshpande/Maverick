@@ -1,0 +1,144 @@
+{
+  "mission_start": "2026-09-03T04:49:38Z",
+  "mission_end": "2026-09-03T04:52:25Z",
+  "duration_hours": 0.0463,
+  "event_count": 17,
+  "events": [
+    {
+      "at": "T+00:00:00",
+      "epoch": 1788410978.654,
+      "event_type": "MISSION_START",
+      "severity": "NOMINAL",
+      "title": "Sortie launched",
+      "detail": "Ladakh Canyon Low-Level Tactical Sortie \u2014 ingress at 5,800 m AMSL, Auto-GCAS armed."
+    },
+    {
+      "at": "T+00:00:24",
+      "epoch": 1788411003.072,
+      "event_type": "GCAS_RECOVERY",
+      "severity": "CRITICAL",
+      "title": "Auto-GCAS recovery commanded",
+      "detail": "Automatic 2.5 G pull-up at 1882 m AGL (TTI 3.0 s)."
+    },
+    {
+      "at": "T+00:00:25",
+      "epoch": 1788411004.277,
+      "event_type": "GCAS_RECOVERY",
+      "severity": "CRITICAL",
+      "title": "Auto-GCAS recovery commanded",
+      "detail": "Automatic 2.5 G pull-up at 2438 m AGL (TTI 3.1 s)."
+    },
+    {
+      "at": "T+00:00:32",
+      "epoch": 1788411010.995,
+      "event_type": "GCAS_WARNING",
+      "severity": "WARNING",
+      "title": "Terrain proximity advisory",
+      "detail": "Time-to-impact 3.9 s at 2700 m AGL."
+    },
+    {
+      "at": "T+00:00:36",
+      "epoch": 1788411014.883,
+      "event_type": "GCAS_RECOVERY",
+      "severity": "CRITICAL",
+      "title": "Auto-GCAS recovery commanded",
+      "detail": "Automatic 2.5 G pull-up at 2438 m AGL (TTI 2.9 s)."
+    },
+    {
+      "at": "T+00:00:42",
+      "epoch": 1788411021.01,
+      "event_type": "GCAS_WARNING",
+      "severity": "WARNING",
+      "title": "Terrain proximity advisory",
+      "detail": "Time-to-impact 4.9 s at 2385 m AGL."
+    },
+    {
+      "at": "T+00:00:42",
+      "epoch": 1788411021.01,
+      "event_type": "GCAS_RECOVERY",
+      "severity": "CRITICAL",
+      "title": "Auto-GCAS recovery commanded",
+      "detail": "Automatic 2.5 G pull-up at 2385 m AGL (TTI 4.9 s)."
+    },
+    {
+      "at": "T+00:00:48",
+      "epoch": 1788411027.481,
+      "event_type": "GCAS_RECOVERY",
+      "severity": "CRITICAL",
+      "title": "Auto-GCAS recovery commanded",
+      "detail": "Automatic 2.5 G pull-up at 2340 m AGL (TTI 4.6 s)."
+    },
+    {
+      "at": "T+00:01:10",
+      "epoch": 1788411048.66,
+      "event_type": "CFIT_IMPACT",
+      "severity": "CRITICAL",
+      "title": "Controlled flight into terrain",
+      "detail": "RIGHT WING GROUND CARTWHEEL at 4959 m AMSL, 261 m AGL, 330 KIAS, Copilot OFF."
+    },
+    {
+      "at": "T+00:01:20",
+      "epoch": 1788411059.326,
+      "event_type": "FAULT_INJECTED",
+      "severity": "CRITICAL",
+      "title": "Fault 01 \u2014 CYLINDER_2_CHT_OVERHEAT",
+      "detail": "CHT > 135 \u00b0C on Cylinder #2 on Cylinder #2 Head Assembly (ATA 72-00)."
+    },
+    {
+      "at": "T+00:01:20",
+      "epoch": 1788411059.326,
+      "event_type": "ACTION_ISSUED",
+      "severity": "CRITICAL",
+      "title": "Prescriptive directive issued",
+      "detail": "Enrich fuel trim +12%, throttle back 15%, descend into denser cooling air."
+    },
+    {
+      "at": "T+00:01:56",
+      "epoch": 1788411094.897,
+      "event_type": "FAULT_CLEARED",
+      "severity": "NOMINAL",
+      "title": "Fault 01 cleared",
+      "detail": "Cylinder #2 Head Assembly returned inside the certified envelope."
+    },
+    {
+      "at": "T+00:01:56",
+      "epoch": 1788411094.897,
+      "event_type": "GCAS_RECOVERY",
+      "severity": "CRITICAL",
+      "title": "Auto-GCAS recovery commanded",
+      "detail": "Automatic 2.5 G pull-up at 218 m AGL (TTI 0.5 s)."
+    },
+    {
+      "at": "T+00:02:00",
+      "epoch": 1788411098.844,
+      "event_type": "GCAS_WARNING",
+      "severity": "WARNING",
+      "title": "Terrain proximity advisory",
+      "detail": "Time-to-impact 14.1 s at 147 m AGL."
+    },
+    {
+      "at": "T+00:02:01",
+      "epoch": 1788411100.504,
+      "event_type": "GCAS_RECOVERY",
+      "severity": "CRITICAL",
+      "title": "Auto-GCAS recovery commanded",
+      "detail": "Automatic 2.5 G pull-up at 399 m AGL (TTI 1.8 s)."
+    },
+    {
+      "at": "T+00:02:45",
+      "epoch": 1788411144.394,
+      "event_type": "GCAS_RECOVERY",
+      "severity": "CRITICAL",
+      "title": "Auto-GCAS recovery commanded",
+      "detail": "Automatic 2.5 G pull-up at 2022 m AGL (TTI 12.7 s)."
+    },
+    {
+      "at": "T+00:02:46",
+      "epoch": 1788411145.321,
+      "event_type": "MISSION_END",
+      "severity": "CRITICAL",
+      "title": "Sortie terminated \u2014 AIRFRAME LOST",
+      "detail": "167 s flown. Peak CHT 131.5 \u00b0C, minimum oil pressure 3.79 bar, final propulsion health 0.0%."
+    }
+  ]
+}
