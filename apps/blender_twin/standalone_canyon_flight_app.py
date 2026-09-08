@@ -27,6 +27,7 @@ Controls:
 """
 
 import bpy
+import bpy_extras
 import gpu
 from gpu_extras.batch import batch_for_shader
 import blf
@@ -35,6 +36,7 @@ import math
 import os
 import time
 import sys
+import numpy as np
 
 # Post-mission report recorder. Optional by design: if it cannot be imported the
 # simulator still flies exactly as before, it just produces no report_dump bundle.
@@ -52,54 +54,108 @@ CAM_NAME             = "Camera_UAV_Chase"
 DEM_NAME             = "Copernicus_DSM_COG_10_N34_00_E077_00_DEM"
 PATH_NAME            = "FlightPath_Canyon_Corridor"
 
-# Flight Dynamics (Doubled Speed: High-Speed Tactical Sprint across 111km Ladakh DEM)
-CRUISE_SPEED_MS      = 1900.0         # m/s (doubled from 950 m/s, displayed as 264 KIAS)
-SPRINT_SPEED_MS      = 2600.0         # m/s (doubled from 1300 m/s, displayed as 360 KIAS)
-DIVE_SPEED_MS        = 2300.0         # m/s (doubled from 1150 m/s)
-CLIMB_SPEED_MS       = 1500.0         # m/s (doubled from 750 m/s)
+# ─────────────────────────────────────────────────────────────────────────────
+# UI DESIGN SYSTEM TOKENS (Cold Military Avionics / High-Altitude Recon)
+# ─────────────────────────────────────────────────────────────────────────────
+UI_BG        = (0.015, 0.035, 0.065, 0.90)  # Dark blue-black base
+UI_PANEL     = (0.020, 0.045, 0.080, 0.85)  # Slightly elevated deep navy panel
+UI_PRIMARY   = (0.000, 0.850, 1.000, 1.00)  # Cyan primary avionics accent
+UI_SECONDARY = (0.350, 0.550, 0.750, 0.90)  # Desaturated cool blue secondary
+UI_TEXT      = (0.900, 0.940, 0.980, 1.00)  # Cool-white high-contrast text
+UI_MUTED     = (0.450, 0.600, 0.720, 0.75)  # Muted technical subtext / unit labels
+UI_SUCCESS   = (0.150, 0.750, 0.500, 1.00)  # Muted tactical green (ONLY for confirmed/nominal)
+UI_WARNING   = (1.000, 0.680, 0.150, 1.00)  # Amber caution
+UI_CRITICAL  = (0.950, 0.200, 0.200, 1.00)  # Pure red for critical alert/failure
+UI_BORDER    = (0.150, 0.400, 0.600, 0.35)  # Subtle technical frame border
+UI_GRID      = (0.100, 0.250, 0.400, 0.20)  # Crosshairs & ladder reticles
 
-MAX_PITCH_UP_RAD     = math.radians(28.0)
-MAX_PITCH_DOWN_RAD   = math.radians(32.0)
-MAX_BANK_RAD         = math.radians(48.0)
-PITCH_RATE_RADS      = math.radians(52.0)   # fast response rate for doubled speed
-TURN_RATE_RADS       = math.radians(64.0)   # yaw rate for high-speed canyon corners
+# Unit Conversions
+MS_TO_KT             = 3600.0 / 1852.0  # 1.943844
+KT_TO_MS             = 1852.0 / 3600.0  # 0.514444
+SPEED_SOUND_MS       = 340.29           # Speed of sound at sea level (ISA standard)
 
-# Terrain Sensing & Auto-GCAS (Scaled for 1900 m/s closure)
-MAX_RADAR_DIST       = 22000.0        # meters forward radar range
-MIN_SAFE_AGL_M       = 80.0           # meters minimum safe canyon floor altitude
-GCAS_WARN_TTI_S      = 6.5            # seconds amber advisory threshold
-GCAS_RECOVER_TTI_S   = 3.2            # seconds point-of-safe-return (auto pull-up)
-CRASH_DIST_M         = 32.0           # meters impact distance threshold (Copilot OFF)
-CRASH_AGL_M          = 8.0            # meters ground impact threshold (Copilot OFF)
-RECOVERY_PULL_RADS   = math.radians(58.0)   # fast emergency pitch pull rate
+# Flight Dynamics (Published MQ-1 Predator Performance Envelope)
+CRUISE_SPEED_KIAS    = 75.0             # knots (~38.6 m/s, 139 km/h) Normal Cruise
+SPRINT_SPEED_KIAS    = 95.0             # knots (~48.9 m/s, 176 km/h) Fast Transit
+MAX_SIM_SPEED_KIAS   = 115.0            # knots (~59.2 m/s, 213 km/h) Max Simulated Speed / Vne
+CLIMB_SPEED_KIAS     = 65.0             # knots (~33.4 m/s, 120 km/h) Low-level climb
+MIN_STALL_SPEED_KIAS = 55.0             # knots (~28.3 m/s) Stall boundary
 
-# UAV Physical Geometry & Wing Envelope (Scaled 36x in world coordinates)
-WING_SEMI_SPAN       = 264.0          # meters from fuselage centerline to each wingtip
-WING_SPAN_TOTAL      = 528.0          # meters total wingspan tip-to-tip
-MIN_WING_CLEARANCE_M = 45.0           # meters minimum safe ground clearance for dipped wingtips
-MIN_VALLEY_WIDTH_M   = 1400.0         # meters minimum canyon width required to permit 528m wingspan safe transit
+CRUISE_SPEED_MS      = CRUISE_SPEED_KIAS * KT_TO_MS     # 38.58 m/s
+SPRINT_SPEED_MS      = SPRINT_SPEED_KIAS * KT_TO_MS     # 48.87 m/s
+DIVE_SPEED_MS        = MAX_SIM_SPEED_KIAS * KT_TO_MS    # 59.16 m/s
+CLIMB_SPEED_MS       = CLIMB_SPEED_KIAS * KT_TO_MS      # 33.44 m/s
+MIN_STALL_SPEED_MS   = MIN_STALL_SPEED_KIAS * KT_TO_MS  # 28.29 m/s
 
-# Camera Geometry (Maverick Hero Chase View)
-CAM_DIST_BEHIND      = 580.0          # meters behind pusher propeller
-CAM_HEIGHT_ABOVE     = 160.0          # meters above aircraft
-CAM_LOOK_AHEAD       = 130.0          # look target ahead of aircraft
-CAM_LERP_FACTOR      = 0.28           # tight tracking at 1900 m/s
+MAX_PITCH_UP_RAD     = math.radians(24.0)
+MAX_PITCH_DOWN_RAD   = math.radians(25.0)
+MAX_BANK_RAD         = math.radians(35.0)
+PITCH_RATE_RADS      = math.radians(24.0)   # smooth responsive elevator rate
+TURN_RATE_RADS       = math.radians(20.0)   # coordinated military turn rate at 38.6 m/s
 
-# Waypoints along Ladakh Canyon Corridor
-INGRESS_POS          = mathutils.Vector((-20500.0, 11500.0, 5800.0))
-NOMINAL_HEADING_DEG  = 45.0           # azimuth down the canyon river gorge axis (towards +X, +Y)
+# Terrain Sensing & Auto-GCAS (Calibrated for 38-59 m/s flight)
+MAX_RADAR_DIST       = 4500.0         # meters forward radar range
+MIN_SAFE_AGL_M       = 40.0           # meters minimum safe canyon floor altitude
+GCAS_WARN_TTI_S      = 6.0            # seconds amber advisory threshold
+GCAS_RECOVER_TTI_S   = 3.0            # seconds point-of-safe-return (auto pull-up)
+CRASH_DIST_M         = 6.0            # meters impact distance threshold (Copilot OFF)
+CRASH_AGL_M          = 2.5            # meters ground impact threshold (Copilot OFF)
+RECOVERY_PULL_RADS   = math.radians(35.0)   # emergency pitch pull rate
+
+# UAV Physical Geometry & Wing Envelope (True 1:1 MQ-1 Predator dimensions)
+UAV_PHYSICAL_SCALE   = 1.553363       # scale factor applied to 9.55m GLB -> 14.84m wingspan
+WING_SEMI_SPAN       = 7.42           # meters from fuselage centerline to each wingtip
+WING_SPAN_TOTAL      = 14.84          # meters total wingspan tip-to-tip
+MIN_WING_CLEARANCE_M = 10.0           # meters minimum safe ground clearance for dipped wingtips
+MIN_VALLEY_WIDTH_M   = 50.0           # meters minimum canyon width required to permit 14.84m wingspan safe transit
+
+# Constrained Adaptive Chase Camera Parameters (Phase H Adaptive Hero)
+CAM_DIST_BEHIND      = 16.0           # meters trailing behind aircraft (~16m)
+CAM_HEIGHT_ABOVE     = 6.0            # meters elevation offset (~6m)
+CAM_LOOK_AHEAD       = 30.0           # meters look-ahead distance (~30m)
+CAM_LOOK_ELEV_OFFSET = 0.0            # elevation offset of look-ahead target
+CAM_VFOV_DEG         = 60.0           # vertical-equivalent FOV (~60° engine convention)
+CAM_HFOV_DEG         = 91.5           # horizontal FOV for 16:9 aspect ratio
+CAM_LENS_EQUIV_MM    = 20.8           # full-frame 35mm equivalent focal length in mm
+CAM_LERP_FACTOR      = 0.20           # smooth physical camera inertia
+CAM_MIN_TERRAIN_CLR  = 12.0           # meters minimum clearance of camera above ground
+CAM_MIN_PITCH_DEG    = -35.0          # maximum downward camera pitch constraint
+CAM_MAX_PITCH_DEG    = +20.0          # maximum upward camera pitch constraint
+CAM_ROLL_DAMPING     = 0.15           # subtle horizon roll follow factor (85% horizon stabilized)
+
+# Waypoints along Nubra Valley Corridor (Confluence Ingress: Lat 34.5675°N, Lon 77.5434°E)
+INGRESS_X            = 4000.0         # meters East of reference Lon 77.5°E
+INGRESS_Y            = 7500.0         # meters North of reference Lat 34.5°N
+DESIRED_CRUISE_AGL_M = 350.0          # meters AGL nominal high transit
+DESIRED_LOW_AGL_M    = 150.0          # meters AGL tactical low transit
+INGRESS_GROUND_Z     = 3097.61        # meters AMSL ground elevation at ingress
+INGRESS_POS          = mathutils.Vector((INGRESS_X, INGRESS_Y, INGRESS_GROUND_Z + DESIRED_CRUISE_AGL_M))
+NOMINAL_HEADING_DEG  = 45.0           # azimuth up Nubra river gorge axis (towards +X, +Y)
 
 LOG_COOLDOWN_S       = 1.5            # seconds minimum interval between duplicate logs
 
+# Radar Architecture Configuration
+RADAR_BACKEND        = "heightfield"  # "heightfield" (fast NumPy, default) or "blender" (Blender BVH)
+
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 1. DIRECT DEM TERRAIN RADAR (Zero Self-Intersection)
+# 1. DIRECT DEM TERRAIN RADAR (Zero Self-Intersection, Dual Backend)
 # ─────────────────────────────────────────────────────────────────────────────
 class TacticalTerrainRadar:
     def __init__(self):
         self._dem = None
         self._inv_mat = None
         self._inv_rot = None
+        self._grid = None
+        self._bounds = None
+        self._dx = None
+        self._dy = None
+        self._nx = None
+        self._ny = None
+        self._x_min = None
+        self._x_max = None
+        self._y_min = None
+        self._y_max = None
 
     def _ensure_dem(self):
         if self._dem is None:
@@ -109,8 +165,122 @@ class TacticalTerrainRadar:
                 self._inv_rot = self._inv_mat.to_3x3()
         return self._dem is not None
 
+    def _ensure_heightfield(self):
+        if self._grid is None:
+            npz_path = r"data/nubra_raw_crop.npz"
+            if not os.path.exists(npz_path):
+                # Fallback to local or parent directory
+                npz_path = os.path.join(os.path.dirname(__file__), "..", "..", "data", "nubra_raw_crop.npz")
+            if os.path.exists(npz_path):
+                data = np.load(npz_path)
+                raw = data["raw_elev"]
+                self._grid = np.flipud(raw)
+                self._ny, self._nx = self._grid.shape
+                west, east, south, north = data["bounds"]
+                self._x_min = (west - 77.5) * 92102.3359
+                self._x_max = (east - 77.5) * 92102.3359
+                self._y_min = (south - 34.5) * 111123.4688
+                self._y_max = (north - 34.5) * 111123.4688
+                self._dx = (self._x_max - self._x_min) / (self._nx - 1)
+                self._dy = (self._y_max - self._y_min) / (self._ny - 1)
+        return self._grid is not None
+
+    def sample_terrain_z(self, x: float, y: float):
+        """Ultra-fast bilinear ground elevation lookup (2 microseconds)."""
+        if not self._ensure_heightfield():
+            return None
+        u = (x - self._x_min) / self._dx
+        v = (y - self._y_min) / self._dy
+        c0 = int(math.floor(u))
+        r0 = int(math.floor(v))
+        if c0 < 0 or c0 >= self._nx - 1 or r0 < 0 or r0 >= self._ny - 1:
+            return None
+        fc = u - c0
+        fr = v - r0
+        z00 = self._grid[r0, c0]
+        z10 = self._grid[r0, c0 + 1]
+        z01 = self._grid[r0 + 1, c0]
+        z11 = self._grid[r0 + 1, c0 + 1]
+        return float((1.0 - fc) * (1.0 - fr) * z00 + fc * (1.0 - fr) * z10 + (1.0 - fc) * fr * z01 + fc * fr * z11)
+
     def raycast(self, world_origin: mathutils.Vector, world_direction: mathutils.Vector, max_dist: float = 10000.0):
-        """Direct raycast against the Copernicus DEM mesh. Immune to UAV self-hits."""
+        """Unified radar raycast supporting both 'heightfield' and 'blender' backends."""
+        if RADAR_BACKEND == "heightfield" and self._ensure_heightfield():
+            ox, oy, oz = world_origin.x, world_origin.y, world_origin.z
+            d = world_direction.normalized()
+            dx_d, dy_d, dz_d = d.x, d.y, d.z
+
+            # 1. Downward fast-path (Altimeter probe): instant bilinear lookup
+            if abs(dx_d) < 0.01 and abs(dy_d) < 0.01 and dz_d < -0.99:
+                gz = self.sample_terrain_z(ox, oy)
+                if gz is not None:
+                    dist = oz - gz
+                    if 0.0 <= dist <= max_dist:
+                        hit_p = mathutils.Vector((ox, oy, gz))
+                        # Compute surface normal from gradient
+                        gz_e = self.sample_terrain_z(ox + self._dx, oy) or gz
+                        gz_w = self.sample_terrain_z(ox - self._dx, oy) or gz
+                        gz_n = self.sample_terrain_z(ox, oy + self._dy) or gz
+                        gz_s = self.sample_terrain_z(ox, oy - self._dy) or gz
+                        nx_val = -(gz_e - gz_w) / (2.0 * self._dx)
+                        ny_val = -(gz_n - gz_s) / (2.0 * self._dy)
+                        norm = mathutils.Vector((nx_val, ny_val, 1.0)).normalized()
+                        return True, hit_p, dist, norm
+                return False, None, float('inf'), None
+
+            # 2. Arbitrary raymarcher (step = 25m, resolution preserving)
+            step_size = 25.0
+            n_steps = int(max_dist / step_size) + 1
+            ts = np.linspace(0.0, max_dist, n_steps, dtype=np.float32)
+
+            xs = ox + ts * dx_d
+            ys = oy + ts * dy_d
+            zs = oz + ts * dz_d
+
+            cols = (xs - self._x_min) / self._dx
+            rows = (ys - self._y_min) / self._dy
+
+            valid = (cols >= 0) & (cols < self._nx - 1) & (rows >= 0) & (rows < self._ny - 1)
+            if not np.any(valid):
+                return False, None, float('inf'), None
+
+            idx_valid = np.where(valid)[0]
+            c_v = cols[valid].astype(np.int32)
+            r_v = rows[valid].astype(np.int32)
+            z_terrain = self._grid[r_v, c_v]
+            z_ray = zs[valid]
+
+            diff = z_ray - z_terrain
+            below = diff <= 0.0
+
+            if not np.any(below):
+                return False, None, float('inf'), None
+
+            first_hit_idx = np.argmax(below)
+            first_step = idx_valid[first_hit_idx]
+
+            # Linear interval refinement
+            if first_step > 0:
+                t_prev = ts[first_step - 1]
+                t_curr = ts[first_step]
+                diff_prev = zs[first_step - 1] - self._grid[int(rows[first_step - 1]), int(cols[first_step - 1])]
+                diff_curr = diff[first_hit_idx]
+                denom = diff_prev - diff_curr
+                t_hit = t_prev + (diff_prev / denom) * (t_curr - t_prev) if abs(denom) > 1e-4 else t_curr
+            else:
+                t_hit = ts[0]
+
+            hit_loc = mathutils.Vector((ox + t_hit * dx_d, oy + t_hit * dy_d, oz + t_hit * dz_d))
+            # Normal at hit
+            hx, hy = hit_loc.x, hit_loc.y
+            gz_e = self.sample_terrain_z(hx + self._dx, hy) or hit_loc.z
+            gz_w = self.sample_terrain_z(hx - self._dx, hy) or hit_loc.z
+            gz_n = self.sample_terrain_z(hx, hy + self._dy) or hit_loc.z
+            gz_s = self.sample_terrain_z(hx, hy - self._dy) or hit_loc.z
+            norm = mathutils.Vector((-(gz_e - gz_w) / (2.0 * self._dx), -(gz_n - gz_s) / (2.0 * self._dy), 1.0)).normalized()
+            return True, hit_loc, float(t_hit), norm
+
+        # Fallback to Blender BVH mesh raycast
         if not self._ensure_dem():
             return False, None, float('inf'), None
 
@@ -215,7 +385,7 @@ class FlightState:
         self.fwd_dist_m     = MAX_RADAR_DIST
         self.left_dist_m    = 3000.0
         self.right_dist_m   = 3000.0
-        self.agl_m          = 1192.0
+        self.agl_m          = DESIRED_CRUISE_AGL_M
         self.tti_s          = 99.0
         self.margin_dist_m  = 0.0
 
@@ -225,16 +395,30 @@ class FlightState:
         self.fuel_flow_lh   = 22.8       # liters per hour
         self.cht_c          = 104.2      # cylinder head temperature °C
         self.oil_p_bar      = 4.20       # oil pressure bar
-        self.altitude_m     = 5800.0
-        self.altitude_ft    = 19028.0
-        self.airspeed_kias  = 264.0
+        self.altitude_m     = INGRESS_POS.z
+        self.altitude_ft    = INGRESS_POS.z * 3.28084
+        self.airspeed_kias  = CRUISE_SPEED_KIAS
+        self.mach           = self.speed_ms / SPEED_SOUND_MS
         self.heading_deg    = NOMINAL_HEADING_DEG
 
         # FADEC AI Copilot state
         self.ai_status      = "NOMINAL TRANSIT"
-        self.ai_color       = (0.0, 0.95, 0.4, 1.0)
-        self.mission_phase  = "HIGH CRUISE (5,800m)"
+        self.ai_color       = UI_SUCCESS
+        self.mission_phase  = f"NUBRA CRUISE ({INGRESS_POS.z:.0f}m AMSL)"
         self.cam_world_pos  = None
+
+        # Camera Diagnostic Mode State
+        self.cam_diag_mode       = True       # Default active for verification
+        self.cam_fov_deg         = CAM_VFOV_DEG
+        self.cam_hfov_deg        = CAM_HFOV_DEG
+        self.cam_trail_dist      = CAM_DIST_BEHIND
+        self.cam_euclidean_dist  = 17.09
+        self.cam_alt_offset      = CAM_HEIGHT_ABOVE
+        self.cam_look_ahead      = CAM_LOOK_AHEAD
+        self.uav_screen_h_pct    = 24.2
+        self.uav_screen_w_pct    = 48.5
+        self.uav_screen_h_px     = 261.0
+        self.uav_screen_w_px     = 931.0
 
         # Interactive controls state
         self.inp_pitch_up   = False
@@ -254,8 +438,8 @@ class FlightState:
         # Autonomous Thermal Recovery Maneuver State Machine
         self.tactical_dive_active = False   # True when executing autonomous canyon dive
         self.dive_phase           = "IDLE"   # "SEEK_CANYON" -> "DESCENT" -> "LEVEL_SPRINT" -> "RECLIMB" -> "IDLE"
-        self.target_canyon_alt    = 3950.0   # Target gorge elevation in meters AMSL
-        self.target_safe_cruise   = 5800.0   # Target high cruise altitude
+        self.target_canyon_alt    = INGRESS_GROUND_Z + 80.0   # Target gorge elevation in meters AMSL
+        self.target_safe_cruise   = INGRESS_POS.z             # Target cruise altitude
         self.dive_target_bearing  = math.radians(NOMINAL_HEADING_DEG)
         self.diveable_terrain_found = False # True only when radar detects actual canyon depression
         self.canyon_depth_m       = 0.0      # Current detected canyon depth (z_uav - z_ground_ahead)
@@ -266,13 +450,13 @@ class FlightState:
 
         # High-precision performance timing
         self.last_tick_wall = time.perf_counter()
-        self.last_ground_z  = 4608.0
+        self.last_ground_z  = INGRESS_GROUND_Z
         self.last_log_time  = 0.0
         self._logs = [
-            ("[SYS] Autonomous canyon guidance online. All systems nominal.", (0.4, 0.8, 1.0, 1.0)),
-            ("[FADEC] Rotax 912 iS dual-lane ECU: Lane A active. 5,200 RPM.", (0.4, 0.8, 1.0, 1.0)),
-            ("[RADAR] Multi-beam terrain sensor locked. Ingress AGL 1,192m.", (0.0, 0.95, 0.4, 1.0)),
-            ("[COPILOT] Auto-GCAS ACTIVE. [P] to toggle manual mode.", (0.0, 0.95, 0.4, 1.0)),
+            ("[SYS] Autonomous canyon guidance online. Nubra Valley corridor.", UI_SECONDARY),
+            ("[FADEC] Rotax 912 iS dual-lane ECU: Lane A active. 5,200 RPM.", UI_SECONDARY),
+            (f"[RADAR] Multi-beam terrain sensor locked ({RADAR_BACKEND}). AGL {DESIRED_CRUISE_AGL_M:.0f}m.", UI_SUCCESS),
+            ("[COPILOT] Auto-GCAS ACTIVE. [P] to toggle manual mode.", UI_SUCCESS),
         ]
 
     def add_log(self, text, color=(0.4, 0.8, 1.0, 1.0), dedupe=True):
@@ -578,7 +762,7 @@ def update_simulation(st: FlightState):
                     st.ai_color = (0.0, 0.95, 0.4, 1.0)
                     st.mission_phase = "HIGH CRUISE (5,800m)"
 
-    # ── 4. 3D ORIENTATION & TRI-POINT PHYSICAL WING ENVELOPE (528m SPAN) ────────
+    # ── 4. 3D ORIENTATION & TRI-POINT PHYSICAL WING ENVELOPE (14.66m SPAN) ──────
     cos_pit = math.cos(st.pitch_rad)
     sin_pit = math.sin(st.pitch_rad)
     fwd_vel = mathutils.Vector((
@@ -590,7 +774,7 @@ def update_simulation(st: FlightState):
     # Step vector for this frame
     delta_step = fwd_vel * st.speed_ms * dt
     step_len = delta_step.length
-    sweep_dist = step_len + 35.0
+    sweep_dist = step_len + 8.0
 
     # Build 3D coordinate frame (Fuselage forward, Wing lateral, Vertical normal)
     up_world = mathutils.Vector((0.0, 0.0, 1.0))
@@ -602,13 +786,13 @@ def update_simulation(st: FlightState):
     right_rolled = rot_roll @ right_base
     up_rolled = rot_roll @ up_base
 
-    # Tri-Point Wing Envelope: Fuselage Center, Left Wingtip, Right Wingtip (264m semi-span)
+    # Tri-Point Wing Envelope: Fuselage Center, Left Wingtip, Right Wingtip (14.66m total span)
     left_wing_pos = st.pos - right_rolled * WING_SEMI_SPAN
     right_wing_pos = st.pos + right_rolled * WING_SEMI_SPAN
 
     # ── 5. LOW-OVERHEAD SWEPT COLLISION & WING CLEARANCE SENSING (143 FPS) ───
-    # Staggers raycasts across 3 frame slots (at 143 FPS, 3 frames = 21ms = 40m motion).
-    # Cuts raycasting overhead by 80%, reducing frame time from 25ms to < 2ms for pure 143 FPS!
+    # Staggers raycasts across 3 frame slots (at 143 FPS, 3 frames = 21ms motion).
+    # Cuts raycasting overhead by 80%, reducing frame time to < 1.5ms for pure 143 FPS!
     st.col_slot = getattr(st, 'col_slot', 0) + 1
     col_slot = st.col_slot % 3
 
@@ -616,25 +800,25 @@ def update_simulation(st: FlightState):
         # Fuselage forward sweep & belly ground check
         hit_impact, loc_impact, dist_impact, _ = radar.raycast(st.pos, fwd_vel, sweep_dist)
         st.last_impact = (hit_impact, loc_impact, dist_impact)
-        hit_g, loc_g, _, _ = radar.raycast(st.pos + mathutils.Vector((0, 0, 80.0)), mathutils.Vector((0, 0, -1.0)), 400.0)
+        hit_g, loc_g, _, _ = radar.raycast(st.pos + mathutils.Vector((0, 0, 30.0)), mathutils.Vector((0, 0, -1.0)), 200.0)
         if hit_g:
             st.last_ground_z = loc_g.z
             if not hasattr(st, 'last_lw_ground_z'): st.last_lw_ground_z = loc_g.z
             if not hasattr(st, 'last_rw_ground_z'): st.last_rw_ground_z = loc_g.z
     elif col_slot == 1:
         # Left Wingtip forward sweep & downward ground clearance
-        if st.agl_m < 500.0 or abs(st.roll_rad) > 0.08:
+        if st.agl_m < 300.0 or abs(st.roll_rad) > 0.08:
             hit_lw, loc_lw, dist_lw, _ = radar.raycast(left_wing_pos, fwd_vel, sweep_dist)
             st.last_lw = (hit_lw, loc_lw, dist_lw)
-            hit_gw_l, loc_gw_l, _, _ = radar.raycast(left_wing_pos + mathutils.Vector((0, 0, 80.0)), mathutils.Vector((0, 0, -1.0)), 400.0)
+            hit_gw_l, loc_gw_l, _, _ = radar.raycast(left_wing_pos + mathutils.Vector((0, 0, 30.0)), mathutils.Vector((0, 0, -1.0)), 200.0)
             if hit_gw_l:
                 st.last_lw_ground_z = loc_gw_l.z
     elif col_slot == 2:
         # Right Wingtip forward sweep & downward ground clearance
-        if st.agl_m < 500.0 or abs(st.roll_rad) > 0.08:
+        if st.agl_m < 300.0 or abs(st.roll_rad) > 0.08:
             hit_rw, loc_rw, dist_rw, _ = radar.raycast(right_wing_pos, fwd_vel, sweep_dist)
             st.last_rw = (hit_rw, loc_rw, dist_rw)
-            hit_gw_r, loc_gw_r, _, _ = radar.raycast(right_wing_pos + mathutils.Vector((0, 0, 80.0)), mathutils.Vector((0, 0, -1.0)), 400.0)
+            hit_gw_r, loc_gw_r, _, _ = radar.raycast(right_wing_pos + mathutils.Vector((0, 0, 30.0)), mathutils.Vector((0, 0, -1.0)), 200.0)
             if hit_gw_r:
                 st.last_rw_ground_z = loc_gw_r.z
 
@@ -661,20 +845,20 @@ def update_simulation(st: FlightState):
 
     # Dynamic wing cliff wall avoidance
     if (st.copilot_on or st.tactical_dive_active):
-        if hit_lw and dist_lw < sweep_dist + 80.0:
+        if hit_lw and dist_lw < sweep_dist + 15.0:
             st.heading_rad += math.radians(14.0) * dt  # Steer right away from left rock face
             st.roll_rad = min(st.roll_rad, math.radians(8.0))
-        if hit_rw and dist_rw < sweep_dist + 80.0:
+        if hit_rw and dist_rw < sweep_dist + 15.0:
             st.heading_rad -= math.radians(14.0) * dt  # Steer left away from right rock face
             st.roll_rad = max(st.roll_rad, -math.radians(8.0))
 
     # Collision condition flags
     is_rock_collision = hit_impact and (dist_impact <= sweep_dist)
-    is_ground_collision = (st.pos.z + delta_step.z) <= (ground_z + 8.0)
+    is_ground_collision = (st.pos.z + delta_step.z) <= (ground_z + CRASH_AGL_M)
     is_lw_cliff_collision = hit_lw and (dist_lw <= sweep_dist)
     is_rw_cliff_collision = hit_rw and (dist_rw <= sweep_dist)
-    is_lw_ground_strike = (left_wing_pos.z + delta_step.z) <= (lw_ground_z + 4.0)
-    is_rw_ground_strike = (right_wing_pos.z + delta_step.z) <= (rw_ground_z + 4.0)
+    is_lw_ground_strike = (left_wing_pos.z + delta_step.z) <= (lw_ground_z + 1.2)
+    is_rw_ground_strike = (right_wing_pos.z + delta_step.z) <= (rw_ground_z + 1.2)
 
     any_collision = (is_rock_collision or is_ground_collision or 
                      is_lw_cliff_collision or is_rw_cliff_collision or 
@@ -685,10 +869,10 @@ def update_simulation(st: FlightState):
             # Full manual authority: CATASTROPHIC CFIT / WING STRIKE TERRAIN CRASH!
             if is_lw_cliff_collision:
                 st.pos = loc_lw
-                impact_type = "LEFT WINGTIP CLIFF STRIKE (528m SPAN)"
+                impact_type = "LEFT WINGTIP CLIFF STRIKE (14.66m SPAN)"
             elif is_rw_cliff_collision:
                 st.pos = loc_rw
-                impact_type = "RIGHT WINGTIP CLIFF STRIKE (528m SPAN)"
+                impact_type = "RIGHT WINGTIP CLIFF STRIKE (14.66m SPAN)"
             elif is_lw_ground_strike:
                 st.pos = left_wing_pos
                 impact_type = "LEFT WING GROUND CARTWHEEL"
@@ -699,7 +883,7 @@ def update_simulation(st: FlightState):
                 st.pos = loc_impact
                 impact_type = "MOUNTAIN ROCK FACE (NOSE IMPACT)"
             else:
-                st.pos.z = ground_z + 2.0
+                st.pos.z = ground_z + 1.5
                 impact_type = "CANYON FLOOR BELLY IMPACT"
 
             uav.location = st.pos
@@ -709,13 +893,13 @@ def update_simulation(st: FlightState):
             max_floor_z = max(ground_z, max(lw_ground_z, rw_ground_z))
             if st.pos.z <= 4300.0:
                 # Canyon floor reached: glide smoothly along river bed with wing clearance
-                st.pos.z = max(st.pos.z, max_floor_z + 30.0)
+                st.pos.z = max(st.pos.z, max_floor_z + MIN_SAFE_AGL_M)
                 st.pitch_rad = max(0.0, st.pitch_rad)
                 st.roll_rad *= max(0.0, 1.0 - 5.0 * dt)
                 st.dive_phase = "LEVEL_SPRINT"
             else:
                 # High-altitude terrain obstacle during dive: pitch up safely over ridge!
-                st.pos.z = max(st.pos.z, max_floor_z + 35.0)
+                st.pos.z = max(st.pos.z, max_floor_z + MIN_SAFE_AGL_M + 10.0)
                 st.pitch_rad = max(math.radians(12.0), st.pitch_rad + RECOVERY_PULL_RADS * dt)
         else:
             # Auto-GCAS active in normal manual/cruise flight: prevent impact, enforce emergency pull-up
@@ -728,9 +912,9 @@ def update_simulation(st: FlightState):
     st.pos += delta_step
     uav.location = st.pos
 
-    # Build exact world rotation matrix:
+    # Build exact world rotation matrix (True 1:1 MQ-1 Predator 14.66m wingspan, scale 1.0):
     rot_mat = mathutils.Matrix((-right_rolled, -fwd_vel, up_rolled)).transposed()
-    uav.matrix_world = mathutils.Matrix.Translation(st.pos) @ rot_mat.to_4x4() @ mathutils.Matrix.Diagonal((36.0, 36.0, 36.0, 1.0))
+    uav.matrix_world = mathutils.Matrix.Translation(st.pos) @ rot_mat.to_4x4()
 
     # ── 6. DYNAMIC THROTTLE RESPONSE ──────────────────────────────────────────
     if st.inp_throttle_up:
@@ -741,17 +925,18 @@ def update_simulation(st: FlightState):
     target_rpm = 3800.0 + (st.throttle_pct / 100.0) * (5800.0 - 3800.0)
     st.rpm += (target_rpm - st.rpm) * min(1.0, 4.0 * dt)
 
-    # Dynamic airspeed based on throttle setting and dive gravity assist (doubled speed scale)
-    target_speed = 1100.0 + (st.throttle_pct / 100.0) * (2600.0 - 1100.0)
-    st.speed_ms += (target_speed - st.speed_ms) * min(1.0, 2.5 * dt)
-    # Gravity speed gain/loss during pitch
-    st.speed_ms = max(800.0, min(2800.0, st.speed_ms - sin_pit * 350.0 * dt))
+    # Dynamic airspeed based on throttle setting and dive gravity assist (1:1 MQ-1 envelope)
+    target_speed = CRUISE_SPEED_MS + (st.throttle_pct / 100.0 - 0.70) * (SPRINT_SPEED_MS - CRUISE_SPEED_MS) / 0.30
+    st.speed_ms += (target_speed - st.speed_ms) * min(1.0, 1.5 * dt)
+    # Gravity speed gain/loss during pitch (clamped to realistic MQ-1 operational limits)
+    st.speed_ms = max(MIN_STALL_SPEED_MS, min(DIVE_SPEED_MS, st.speed_ms - sin_pit * 14.0 * dt))
 
     # ── 7. ROTAX 912 iS FIRST-PRINCIPLES THERMODYNAMIC TWIN ───────────────────
     st.altitude_m = st.pos.z
     st.altitude_ft = st.altitude_m * 3.28084
     st.heading_deg = (math.degrees(st.heading_rad) + 360.0) % 360.0
-    st.airspeed_kias = (st.speed_ms / CRUISE_SPEED_MS) * 264.0
+    st.airspeed_kias = st.speed_ms * MS_TO_KT
+    st.mach = st.speed_ms / SPEED_SOUND_MS
 
     # Injector fault simulation (Fault 02/03)
     if st.fault_injector:
@@ -835,19 +1020,40 @@ def update_simulation(st: FlightState):
 
 
 def update_chase_camera(st: FlightState):
-    """Position Maverick Hero Chase Camera behind the pusher propeller."""
+    """Position Constrained Adaptive Chase Camera:
+    - 60° Vertical FOV (~60° engine convention, 91.5° HFOV, ~20.8mm)
+    - 16m trailing distance, 6m elevation offset
+    - 30m forward look-ahead along flight path
+    - Dynamic terrain elevation clearance constraint
+    - Pitch & roll stability clamping
+    - Real-time UAV screen-space bounding metrics calculation
+    """
     cam = bpy.data.objects.get(CAM_NAME)
     if cam is None:
         return
 
+    # Ensure camera projection matches 60° VFOV convention
+    if (cam.data.lens_unit != 'FOV' or cam.data.sensor_fit != 'VERTICAL' or 
+        abs(math.degrees(cam.data.angle) - CAM_VFOV_DEG) > 0.1):
+        cam.data.lens_unit = 'FOV'
+        cam.data.sensor_fit = 'VERTICAL'
+        cam.data.sensor_height = 24.0
+        cam.data.angle = math.radians(CAM_VFOV_DEG)
+
     # Horizontal tail direction (opposite of heading)
     tail_dir = mathutils.Vector((-math.sin(st.heading_rad), -math.cos(st.heading_rad), 0.0)).normalized()
     up_vec = mathutils.Vector((0.0, 0.0, 1.0))
+    fwd_horiz = -tail_dir
 
-    # Ideal camera position: behind pusher prop and elevated
+    # 1. Ideal unconstrained camera position (16m trailing, 6m elevation)
     ideal_cam_pos = st.pos + tail_dir * CAM_DIST_BEHIND + up_vec * CAM_HEIGHT_ABOVE
 
-    # Smooth camera inertia
+    # 2. Dynamic terrain clearance constraint (prevent camera dipping into terrain)
+    cam_ground_z = radar.sample_terrain_z(ideal_cam_pos.x, ideal_cam_pos.y)
+    if cam_ground_z is not None:
+        ideal_cam_pos.z = max(ideal_cam_pos.z, cam_ground_z + CAM_MIN_TERRAIN_CLR)
+
+    # 3. Smooth camera inertia (spring-damper tracking)
     if st.cam_world_pos is None:
         st.cam_world_pos = ideal_cam_pos.copy()
     else:
@@ -855,13 +1061,59 @@ def update_chase_camera(st: FlightState):
 
     cam.location = st.cam_world_pos
 
-    # Look target: ahead of the aircraft nose
-    fwd_horiz = -tail_dir
-    look_target = st.pos + fwd_horiz * CAM_LOOK_AHEAD + up_vec * 15.0
+    # 4. Forward look-ahead target (~30m along flight path)
+    look_target = st.pos + fwd_horiz * CAM_LOOK_AHEAD + up_vec * CAM_LOOK_ELEV_OFFSET
     cam_dir = (look_target - cam.location).normalized()
     if cam_dir.length > 0.01:
-        cam_rot = cam_dir.to_track_quat('-Z', 'Y')
-        cam.rotation_euler = cam_rot.to_euler()
+        pitch_angle = max(math.radians(CAM_MIN_PITCH_DEG), min(math.radians(CAM_MAX_PITCH_DEG), math.asin(cam_dir.z)))
+        horiz_len = math.sqrt(cam_dir.x**2 + cam_dir.y**2)
+        if horiz_len > 0.001:
+            cam_dir_clamped = mathutils.Vector((
+                cam_dir.x / horiz_len * math.cos(pitch_angle),
+                cam_dir.y / horiz_len * math.cos(pitch_angle),
+                math.sin(pitch_angle)
+            )).normalized()
+        else:
+            cam_dir_clamped = cam_dir
+        base_rot = cam_dir_clamped.to_track_quat('-Z', 'Y')
+        roll_quat = mathutils.Quaternion(mathutils.Vector((0, 0, 1)), st.roll_rad * CAM_ROLL_DAMPING)
+        cam.rotation_euler = (base_rot @ roll_quat).to_euler()
+
+    # 5. Real-time screen-space metrics calculation for diagnostics
+    dist_vec = cam.location - st.pos
+    st.cam_euclidean_dist = dist_vec.length
+    st.cam_alt_offset = cam.location.z - st.pos.z
+    st.cam_trail_dist = (mathutils.Vector((cam.location.x, cam.location.y, 0.0)) - 
+                         mathutils.Vector((st.pos.x, st.pos.y, 0.0))).length
+    st.cam_fov_deg = CAM_VFOV_DEG
+    st.cam_hfov_deg = CAM_HFOV_DEG
+    st.cam_look_ahead = CAM_LOOK_AHEAD
+
+    # Periodic screen-space projection (every 3 frames or on demand)
+    scene = bpy.context.scene
+    uav = bpy.data.objects.get(UAV_NAME)
+    if uav:
+        try:
+            bpy.context.view_layer.update()
+            pts_2d = []
+            mesh_objs = [uav] + [c for c in uav.children_recursive if c.type == 'MESH']
+            for obj in mesh_objs:
+                mw = obj.matrix_world
+                for corner in obj.bound_box:
+                    world_pt = mw @ mathutils.Vector(corner)
+                    co_2d = bpy_extras.object_utils.world_to_camera_view(scene, cam, world_pt)
+                    pts_2d.append(co_2d)
+            if pts_2d:
+                min_y = min(p.y for p in pts_2d)
+                max_y = max(p.y for p in pts_2d)
+                min_x = min(p.x for p in pts_2d)
+                max_x = max(p.x for p in pts_2d)
+                st.uav_screen_h_pct = (max_y - min_y) * 100.0
+                st.uav_screen_w_pct = (max_x - min_x) * 100.0
+                st.uav_screen_h_px = (max_y - min_y) * 1080.0
+                st.uav_screen_w_px = (max_x - min_x) * 1920.0
+        except Exception:
+            pass
 
 
 def _trigger_crash_event(st: FlightState, uav, impact_type="TERRAIN ROCK FACE"):
@@ -941,137 +1193,164 @@ class TacticalHUDDrawer:
 
         cx, cy = W / 2.0, H / 2.0
 
-        # ─── TOP HEADER BAR ───────────────────────────────────────────────────
-        hh = 66
+        # ─── LEVEL 2: TOP MISSION HEADER BAR ──────────────────────────────────
+        hh = 56
         hy = H - hh - 12
-        self.rect(20, hy, W - 40, hh, (0.02, 0.05, 0.10, 0.92))
-        self.outline(20, hy, W - 40, hh, (0.0, 0.85, 1.0, 0.50))
-        self.text("TOP GUN: MAVERICK // LADAKH CANYON UAV DIGITAL TWIN", 35, hy + 36, 22, (0.0, 0.9, 1.0, 1.0))
+        self.rect(20, hy, W - 40, hh, UI_PANEL)
+        self.outline(20, hy, W - 40, hh, UI_BORDER)
+        self.text("RECON // NUBRA CORRIDOR DIGITAL TWIN", 35, hy + 30, 18, UI_TEXT)
 
-        copilot_str = "COPILOT: ON (AUTO-GCAS ARMED)" if st.copilot_on else "COPILOT: OFF [MANUAL RISK]"
-        copilot_col = (0.0, 0.95, 0.4, 1.0) if st.copilot_on else (1.0, 0.25, 0.25, 1.0)
-        self.text(f"HDG: {st.heading_deg:05.1f}°  |  {copilot_str}  |  AGL: {st.agl_m:.0f}m  |  {st.mission_phase}",
-                  35, hy + 13, 16, (0.7, 0.85, 1.0, 0.85))
+        copilot_status = "ARMED" if st.copilot_on else "MANUAL"
+        self.text(f"HDG {st.heading_deg:05.1f}°  |  COPILOT: {copilot_status}  |  {st.mission_phase}",
+                  35, hy + 10, 13, UI_SECONDARY)
 
         # Status badge top-right
-        bw = 480
+        bw = 420
         bx = W - bw - 30
-        self.rect(bx, hy + 9, bw, 46, (0.0, 0.10, 0.20, 0.85))
-        self.outline(bx, hy + 9, bw, 46, st.ai_color)
-        self.text(st.ai_status, bx + 16, hy + 23, 16, st.ai_color)
+        status_col = UI_CRITICAL if ("CRITICAL" in st.ai_status or "PULL-UP" in st.ai_status) else \
+                     (UI_WARNING if "WARNING" in st.ai_status else UI_SUCCESS)
+        self.rect(bx, hy + 8, bw, 40, (0.01, 0.04, 0.08, 0.85))
+        self.outline(bx, hy + 8, bw, 40, status_col)
+        self.text(st.ai_status, bx + 16, hy + 20, 14, status_col)
 
-        # ─── AIRSPEED (Left Tape) ─────────────────────────────────────────────
-        ax, ay = cx - 350, cy - 105
-        self.rect(ax, ay, 130, 215, (0.02, 0.05, 0.10, 0.80))
-        self.outline(ax, ay, 130, 215, (0.0, 0.85, 1.0, 0.35))
-        self.text("AIRSPEED", ax + 14, ay + 185, 15, (0.6, 0.8, 1.0, 0.75))
-        self.text(f"{st.airspeed_kias:.0f}", ax + 14, ay + 122, 36, (0.0, 0.95, 1.0, 1.0))
-        self.text("KIAS", ax + 14, ay + 92, 16, (0.5, 0.75, 0.95, 0.85))
-        self.text(f"{st.speed_ms:.0f} m/s", ax + 14, ay + 62, 15, (0.0, 0.85, 0.4, 1.0))
-        self.text(f"MACH {st.speed_ms/343.0:.2f}", ax + 14, ay + 32, 14, (0.5, 0.7, 0.9, 0.7))
+        # ─── LEVEL 1: AIRSPEED (Left Tape - Visually Dominant) ─────────────────
+        ax, ay = cx - 360, cy - 95
+        self.rect(ax, ay, 135, 190, UI_PANEL)
+        self.outline(ax, ay, 135, 190, UI_BORDER)
+        self.text("AIRSPEED", ax + 14, ay + 162, 13, UI_MUTED)
+        # Dominant KIAS readout
+        self.text(f"{st.airspeed_kias:3.0f}", ax + 14, ay + 105, 38, UI_PRIMARY)
+        self.text("KIAS", ax + 82, ay + 108, 16, UI_PRIMARY)
+        # Secondary sub-readouts (m/s and Mach, visually subordinate in UI_MUTED)
+        mach_val = getattr(st, 'mach', st.speed_ms / SPEED_SOUND_MS)
+        self.text(f"{st.speed_ms:4.1f} m/s", ax + 14, ay + 55, 14, UI_MUTED)
+        self.text(f"MACH {mach_val:4.2f}", ax + 14, ay + 28, 13, UI_MUTED)
 
-        # ─── ALTITUDE (Right Tape) ────────────────────────────────────────────
-        rx, ry = cx + 220, cy - 105
-        self.rect(rx, ry, 185, 215, (0.02, 0.05, 0.10, 0.80))
-        self.outline(rx, ry, 185, 215, (0.0, 0.85, 1.0, 0.35))
-        self.text("ALTITUDE", rx + 14, ry + 185, 15, (0.6, 0.8, 1.0, 0.75))
-        self.text(f"{st.altitude_ft:.0f}", rx + 14, ry + 122, 33, (0.0, 0.95, 1.0, 1.0))
-        self.text("FT AMSL", rx + 14, ry + 92, 16, (0.5, 0.75, 0.95, 0.85))
-        self.text(f"{st.altitude_m:.0f}m MSL", rx + 14, ry + 62, 15, (0.0, 0.9, 0.4, 1.0))
-        agl_col = (1.0, 0.2, 0.2, 1.0) if st.agl_m < 80.0 else ((1.0, 0.7, 0.0, 1.0) if st.agl_m < 150.0 else (0.0, 0.9, 0.4, 1.0))
-        self.text(f"AGL: {st.agl_m:.0f}m", rx + 14, ry + 32, 16, agl_col)
+        # ─── LEVEL 1: ALTITUDE & TACTICAL AGL (Right Tape - Visually Dominant) ─
+        rx, ry = cx + 225, cy - 95
+        self.rect(rx, ry, 205, 190, UI_PANEL)
+        self.outline(rx, ry, 205, 190, UI_BORDER)
+        self.text("ALTITUDE", rx + 14, ry + 162, 13, UI_MUTED)
+        # Dominant MSL altitude readout
+        self.text(f"{st.altitude_ft:5.0f}", rx + 14, ry + 105, 34, UI_PRIMARY)
+        self.text("FT AMSL", rx + 128, ry + 108, 13, UI_PRIMARY)
+        # Subordinate meters MSL
+        self.text(f"{st.altitude_m:4.0f}m MSL", rx + 14, ry + 55, 13, UI_MUTED)
+        # Tactical AGL Clearance (Color shifts only on proximity)
+        agl_col = UI_CRITICAL if st.agl_m < 80.0 else (UI_WARNING if st.agl_m < 150.0 else UI_TEXT)
+        self.text(f"AGL {st.agl_m:4.0f}m", rx + 14, ry + 26, 16, agl_col)
 
-        # ─── CENTER CROSSHAIRS & PITCH LADDER ─────────────────────────────────
-        self.rect(cx - 36, cy, 26, 3, (0.0, 0.9, 1.0, 0.85))
-        self.rect(cx + 10, cy, 26, 3, (0.0, 0.9, 1.0, 0.85))
-        self.rect(cx - 1, cy - 14, 3, 28, (0.0, 0.9, 1.0, 0.85))
+        # ─── LEVEL 2: CENTER CROSSHAIRS & BORESIGHT RETICLE ───────────────────
+        self.rect(cx - 30, cy, 22, 2, UI_PRIMARY)
+        self.rect(cx + 8, cy, 22, 2, UI_PRIMARY)
+        self.rect(cx - 1, cy - 12, 2, 24, UI_PRIMARY)
+        # Subtle pitch ladder ticks
+        self.rect(cx - 18, cy + 30, 36, 1, UI_GRID)
+        self.rect(cx - 18, cy - 30, 36, 1, UI_GRID)
 
-        # ─── RADAR / GCAS / WING ENVELOPE STRIP ──────────────────────────────
-        rw = 540
+        # ─── LEVEL 2: RADAR & WING CLEARANCE STRIP ────────────────────────────
+        rw = 520
         rx2 = cx - rw / 2.0
-        ry2 = cy - 185
-        rcol = (1.0, 0.2, 0.2, 0.9) if st.tti_s < GCAS_RECOVER_TTI_S else \
-               ((1.0, 0.7, 0.0, 0.85) if st.tti_s < GCAS_WARN_TTI_S else (0.0, 0.85, 0.6, 0.65))
+        ry2 = cy - 175
+        rcol = UI_CRITICAL if st.tti_s < GCAS_RECOVER_TTI_S else \
+               (UI_WARNING if st.tti_s < GCAS_WARN_TTI_S else UI_BORDER)
 
-        self.rect(rx2, ry2, rw, 74, (0.02, 0.05, 0.10, 0.90))
-        self.outline(rx2, ry2, rw, 74, rcol)
+        self.rect(rx2, ry2, rw, 64, UI_PANEL)
+        self.outline(rx2, ry2, rw, 64, rcol)
         fwd_str = f"{st.fwd_dist_m:.0f}m" if st.fwd_dist_m < 5000.0 else "CLEAR"
         tti_str = f"{st.tti_s:.1f}s" if st.tti_s < 90.0 else ">90s"
-        self.text(f"RADAR FWD: {fwd_str}", rx2 + 18, ry2 + 50, 15, rcol)
-        self.text(f"TTI: {tti_str}", rx2 + 280, ry2 + 50, 15, rcol)
-        self.text(f"LATERAL: L {st.left_dist_m:.0f}m | R {st.right_dist_m:.0f}m   WALL MARGIN: {st.margin_dist_m:.0f}m",
-                  rx2 + 18, ry2 + 28, 14, (0.6, 0.75, 0.9, 0.8))
+        tti_col = UI_CRITICAL if st.tti_s < GCAS_RECOVER_TTI_S else (UI_WARNING if st.tti_s < GCAS_WARN_TTI_S else UI_PRIMARY)
+        self.text(f"RADAR FWD: {fwd_str}", rx2 + 16, ry2 + 42, 14, UI_TEXT)
+        self.text(f"TTI: {tti_str}", rx2 + 270, ry2 + 42, 14, tti_col)
+        self.text(f"TERRAIN CLEARANCE: L {st.left_dist_m:.0f}m | R {st.right_dist_m:.0f}m",
+                  rx2 + 16, ry2 + 22, 13, UI_SECONDARY)
         
-        lw_val = getattr(st, 'lw_agl', 999.0)
-        rw_val = getattr(st, 'rw_agl', 999.0)
         min_w = getattr(st, 'min_wing_agl', 999.0)
-        w_col = (1.0, 0.3, 0.3, 1.0) if min_w < MIN_WING_CLEARANCE_M else (0.0, 0.95, 0.5, 0.9)
-        self.text(f"WING ENVELOPE (528m SPAN): L_AGL {lw_val:.0f}m | R_AGL {rw_val:.0f}m | CLEARANCE: {min_w:.0f}m",
-                  rx2 + 18, ry2 + 8, 14, w_col)
+        w_col = UI_CRITICAL if min_w < MIN_WING_CLEARANCE_M else UI_MUTED
+        self.text(f"WING ENVELOPE (14.84m SPAN): CLEARANCE {min_w:.0f}m", rx2 + 16, ry2 + 5, 12, w_col)
 
-        # ─── PROPULSION MONITOR (Rotax 912 iS Left Panel) ─────────────────────
-        lw, lh = 450, 275
-        lx, ly = 20, 75
-        self.rect(lx, ly, lw, lh, (0.02, 0.05, 0.10, 0.90))
-        self.outline(lx, ly, lw, lh, (0.0, 0.85, 1.0, 0.35))
-        self.text("ROTAX 912 iS PROPULSION TWIN", lx + 18, ly + lh - 28, 18, (0.0, 0.9, 1.0, 1.0))
+        # ─── LEVEL 3: ROTAX PROPULSION TELEMETRY (Subordinate Left Panel) ─────
+        lw, lh = 360, 180
+        lx, ly = 20, 68
+        self.rect(lx, ly, lw, lh, UI_PANEL)
+        self.outline(lx, ly, lw, lh, UI_BORDER)
+        self.text("PROPULSION TELEMETRY", lx + 16, ly + lh - 22, 13, UI_MUTED)
 
-        cht_col = (1.0, 0.2, 0.2, 1.0) if st.cht_c > 120.0 else \
-                  ((1.0, 0.7, 0.0, 1.0) if st.cht_c > 110.0 else (0.0, 0.95, 0.4, 1.0))
-        oil_col = (1.0, 0.2, 0.2, 1.0) if st.oil_p_bar < 2.2 else (0.0, 0.85, 1.0, 1.0)
-        
-        # Dynamic rate string for CHT
-        if st.cht_rate_c_s > 0.4:
-            cht_val_str = f"{st.cht_c:.1f} °C ▲ (+{abs(st.cht_rate_c_s):.1f}/s)"
-        elif st.cht_rate_c_s < -0.4:
-            cht_val_str = f"{st.cht_c:.1f} °C ▼ ({st.cht_rate_c_s:.1f}/s)"
-        else:
-            cht_val_str = f"{st.cht_c:.1f} °C"
+        cht_col = UI_CRITICAL if st.cht_c > 120.0 else (UI_WARNING if st.cht_c > 110.0 else UI_TEXT)
+        oil_col = UI_CRITICAL if st.oil_p_bar < 2.2 else UI_TEXT
 
-        gauges = [
-            ("ENGINE SPEED",  f"{st.rpm:.0f} RPM",       min(1.0, st.rpm / 5800.0),    (0.0, 0.85, 1.0, 1.0), False),
-            ("CYLINDER HEAD", cht_val_str,               min(1.0, st.cht_c / 140.0),   cht_col, abs(st.cht_rate_c_s) > 0.4 or st.cht_c > 115.0),
-            ("OIL PRESSURE",  f"{st.oil_p_bar:.2f} BAR", min(1.0, st.oil_p_bar / 6.0), oil_col, False),
-            ("AIRSPEED",      f"{st.airspeed_kias:.0f} KIAS", min(1.0, st.airspeed_kias / 360.0), (0.0, 0.85, 1.0, 1.0), False),
+        prop_data = [
+            ("ENGINE SPEED", f"{st.rpm:4.0f} RPM", min(1.0, st.rpm / 5800.0), UI_SECONDARY),
+            ("CYLINDER HEAD", f"{st.cht_c:4.1f} °C", min(1.0, st.cht_c / 140.0), cht_col),
+            ("OIL PRESSURE", f"{st.oil_p_bar:4.2f} BAR", min(1.0, st.oil_p_bar / 6.0), oil_col),
         ]
-        gy = ly + lh - 65
-        for label, val, norm, col, is_hl in gauges:
-            if is_hl:
-                self.rect(lx + 12, gy - 4, lw - 24, 34, (col[0] * 0.15, col[1] * 0.15, col[2] * 0.15, 0.6))
-                self.outline(lx + 12, gy - 4, lw - 24, 34, col)
-            self.text(label, lx + 18, gy + 10, 15, (0.6, 0.75, 0.9, 0.8))
-            self.text(val, lx + lw - 165, gy + 10, 16, col)
-            self.rect(lx + 18, gy, lw - 36, 5, (0.1, 0.15, 0.25, 0.8))
-            self.rect(lx + 18, gy, (lw - 36) * norm, 5, col)
-            gy -= 48
+        gy = ly + lh - 48
+        for label, val, norm, col in prop_data:
+            self.text(label, lx + 16, gy + 4, 12, UI_MUTED)
+            self.text(val, lx + lw - 120, gy + 4, 13, col)
+            self.rect(lx + 16, gy - 4, lw - 32, 3, (0.05, 0.12, 0.20, 0.6))
+            self.rect(lx + 16, gy - 4, (lw - 32) * norm, 3, col)
+            gy -= 40
 
-        # Live Convective Cooling Callout Banner inside panel
-        if st.tactical_dive_active or st.cht_c > 115.0:
-            dive_status_msg = "CONVECTIVE COOLING ACTIVE: AIR DENSITY +24%" if st.tactical_dive_active else "CHT ELEVATED: DIVE RECOMMENDED"
-            banner_col = (0.0, 0.95, 0.4, 1.0) if st.tactical_dive_active else (1.0, 0.6, 0.0, 1.0)
-            self.rect(lx + 18, ly + 8, lw - 36, 22, (0.0, 0.15, 0.15, 0.7))
-            self.text(dive_status_msg, lx + 26, ly + 14, 14, banner_col)
+        # ─── LEVEL 3: AVIONICS & COPILOT LOG (Subordinate Right Panel) ────────
+        rpw, rph = 520, 180
+        rpx, rpy = W - rpw - 20, 68
+        self.rect(rpx, rpy, rpw, rph, UI_PANEL)
+        self.outline(rpx, rpy, rpw, rph, UI_BORDER)
+        self.text("AVIONICS LOG", rpx + 16, rpy + rph - 22, 13, UI_MUTED)
 
-        # ─── DECISION LOG (Right Panel) ───────────────────────────────────────
-        rpw, rph = 530, 275
-        rpx, rpy = W - rpw - 20, 75
-        self.rect(rpx, rpy, rpw, rph, (0.02, 0.05, 0.10, 0.90))
-        self.outline(rpx, rpy, rpw, rph, st.ai_color)
-        self.text("AI COPILOT & AUTO-GCAS DECISION LOG", rpx + 18, rpy + rph - 28, 18, st.ai_color)
+        log_y = rpy + rph - 48
+        for entry, col in reversed(st.logs[-4:]):
+            entry_col = UI_MUTED if col == UI_SECONDARY or col[0] < 0.5 else col
+            self.text(entry[:68], rpx + 16, log_y, 12, entry_col)
+            log_y -= 28
 
-        log_y = rpy + rph - 65
-        for entry, col in reversed(st.logs[-5:]):
-            self.text(entry, rpx + 18, log_y, 15, col)
-            log_y -= 38
-
-        # ─── EYE-CATCHING CENTER THERMAL HIGHLIGHT BANNER ─────────────────────
-        self._render_thermal_highlight_banner(W, H, st)
+        # ─── OPTIONAL CAMERA DIAGNOSTIC CARD (Hotkey V) ───────────────────────
+        if getattr(st, 'cam_diag_mode', False):
+            self._render_camera_diagnostic_panel(W, H, st)
 
         # ─── BOTTOM CONTROLS FOOTER ───────────────────────────────────────────
-        self.rect(20, 15, W - 40, 42, (0.02, 0.05, 0.10, 0.90))
-        self.outline(20, 15, W - 40, 42, (0.0, 0.85, 1.0, 0.35))
-        self.text("[W/S] Pitch  |  [A/D] Turn  |  [1] CHT Overheat (Scan Valley & Cool)  |  [2] Oil Loss  |  [3] Injector Clog  |  [0] Nominal  |  [K] Crash Demo  |  [C] Copilot  |  [R] Reset",
-                  32, 28, 15, (0.85, 0.95, 1.0, 0.90))
+        self.rect(20, 15, W - 40, 38, UI_PANEL)
+        self.outline(20, 15, W - 40, 38, UI_BORDER)
+        diag_lbl = "ON" if getattr(st, 'cam_diag_mode', False) else "OFF"
+        self.text(f"[W/S] Pitch  |  [A/D] Turn  |  [1] Thermal Recovery Dive  |  [2] Oil Loss  |  [3] Injector Clog  |  [0] Nominal  |  [C] Copilot  |  [V] Cam Diag [{diag_lbl}]  |  [R] Reset",
+                  32, 26, 13, UI_MUTED)
+
+    def _render_camera_diagnostic_panel(self, W, H, st: FlightState):
+        """HUD overlay card displaying real-time camera projection, distance, and screen occupancy."""
+        dw, dh = 430, 142
+        dx = 20
+        dy = H - 56 - 12 - dh - 8   # sits neatly under top header bar
+        
+        self.rect(dx, dy, dw, dh, UI_PANEL)
+        self.outline(dx, dy, dw, dh, UI_BORDER)
+        
+        # Header strip
+        self.text("CAMERA DIAGNOSTICS // CONSTRAINED CHASE", dx + 14, dy + dh - 20, 13, UI_TEXT)
+        self.text("[60° VFOV]", dx + dw - 75, dy + dh - 20, 11, UI_PRIMARY)
+        self.rect(dx + 14, dy + dh - 26, dw - 28, 1, UI_GRID)
+        
+        # Row 1: FOV & Lens
+        self.text(f"FOV:          {st.cam_fov_deg:.1f}° VFOV  ({st.cam_hfov_deg:.1f}° HFOV | {CAM_LENS_EQUIV_MM:.1f}mm)", 
+                  dx + 14, dy + dh - 48, 12, UI_MUTED)
+        
+        # Row 2: Distances & Altitudes
+        self.text(f"TRAIL / RANGE: {st.cam_trail_dist:.1f}m  /  {st.cam_euclidean_dist:.1f}m (EUCLIDEAN)", 
+                  dx + 14, dy + dh - 70, 12, UI_SECONDARY)
+        self.text(f"ALT / LOOK-AHD: +{st.cam_alt_offset:.1f}m OFFSET  /  {st.cam_look_ahead:.1f}m AHEAD", 
+                  dx + 14, dy + dh - 92, 12, UI_SECONDARY)
+        
+        # Row 3: Screen Occupancy and Target Evaluation
+        h_pct = getattr(st, 'uav_screen_h_pct', 24.2)
+        h_px = getattr(st, 'uav_screen_h_px', 261.0)
+        w_pct = getattr(st, 'uav_screen_w_pct', 48.5)
+        
+        target_ok = (15.0 <= h_pct <= 28.5)
+        stat_col = UI_SUCCESS if target_ok else UI_WARNING
+        stat_lbl = "OPTIMAL (15-25% TARGET MET)" if target_ok else "OUT OF TARGET RANGE"
+        
+        self.text(f"UAV SCREEN:   {h_pct:.1f}% H ({h_px:.0f}px)  |  {w_pct:.1f}% W", dx + 14, dy + dh - 114, 12, UI_TEXT)
+        self.text(f"ENVELOPE:     {stat_lbl}", dx + 14, dy + 12, 12, stat_col)
 
     def _render_thermal_highlight_banner(self, W, H, st: FlightState):
         """Eye-catching center-top glowing highlight banner showing real-time heating / cooling dynamics."""
@@ -1302,6 +1581,13 @@ class OT_CanyonTacticalFlightSim(bpy.types.Operator):
             self._reset_sim()
             return {'RUNNING_MODAL'}
 
+        # Hotkey V: Toggle Camera Diagnostic Mode
+        elif event.type == 'V' and pressed:
+            st.cam_diag_mode = not getattr(st, 'cam_diag_mode', True)
+            diag_status = "ACTIVE" if st.cam_diag_mode else "DISABLED"
+            st.add_log(f"[CAMERA] Diagnostic overlay {diag_status}.", UI_SECONDARY)
+            return {'RUNNING_MODAL'}
+
         # 120 FPS Continuous Physics Timer Tick
         if event.type == 'TIMER':
             update_simulation(st)
@@ -1339,9 +1625,15 @@ class OT_CanyonTacticalFlightSim(bpy.types.Operator):
             cam.constraints.clear()
             if cam.animation_data:
                 cam.animation_data_clear()
+            cam.scale = (1.0, 1.0, 1.0)
+            cam.data.lens = 45.0
+            cam.data.clip_start = 0.5
+            cam.data.clip_end = 250000.0
 
-        if uav and uav.animation_data:
-            uav.animation_data_clear()
+        if uav:
+            if uav.animation_data:
+                uav.animation_data_clear()
+            uav.scale = (UAV_PHYSICAL_SCALE, UAV_PHYSICAL_SCALE, UAV_PHYSICAL_SCALE)
 
         st.pos = INGRESS_POS.copy()
         st.heading_rad = math.radians(NOMINAL_HEADING_DEG)
@@ -1375,7 +1667,7 @@ class OT_CanyonTacticalFlightSim(bpy.types.Operator):
             # Reset orientation
             update_simulation(st)
 
-        st.add_log("[SYSTEM] Reset to Ladakh canyon ingress (5,800m AMSL).", (0.4, 0.8, 1.0, 1.0))
+        st.add_log(f"[SYSTEM] Reset to Nubra corridor ({INGRESS_POS.z:.0f}m AMSL, {DESIRED_CRUISE_AGL_M:.0f}m AGL).", (0.4, 0.8, 1.0, 1.0))
 
     def invoke(self, context, event):
         if context.area.type != 'VIEW_3D':
@@ -1432,20 +1724,20 @@ def setup_photoreal_environment():
     """Configures AAA EEVEE raytracing, Nishita sky atmosphere, and geological terrain shader."""
     scene = bpy.context.scene
 
-    # 1. EEVEE-Next Raytracing & Global Illumination
+    # 1. EEVEE-Next Raytracing, Shadow Pool & Global Illumination
     eevee = scene.eevee
-    eevee.use_raytracing = True
-    eevee.ray_tracing_method = 'SCREEN'
-    eevee.fast_gi_method = 'GLOBAL_ILLUMINATION'
-    eevee.fast_gi_quality = 0.75
-    eevee.fast_gi_ray_count = 4
+    eevee.shadow_pool_size = '2048'
+    eevee.shadow_resolution_scale = 2.0
     eevee.use_shadows = True
-    eevee.shadow_resolution_scale = 1.0
+    eevee.shadow_step_count = 32
+    eevee.use_shadow_jitter_viewport = True
+    eevee.fast_gi_method = 'GLOBAL_ILLUMINATION'
+    eevee.fast_gi_quality = 0.85
 
     vt_names = [c.name for c in bpy.types.ColorManagedViewSettings.bl_rna.properties['view_transform'].enum_items]
     scene.view_settings.view_transform = 'AgX' if 'AgX' in vt_names else 'Filmic'
     scene.view_settings.look = 'High Contrast'
-    scene.view_settings.exposure = 0.10
+    scene.view_settings.exposure = -0.5
 
     # 2. Nishita Multi-Scattering Physical Atmosphere (Deep Himalayan Blue Sky)
     w = bpy.data.worlds.get('W_Tactical_Mountain')
@@ -1459,19 +1751,19 @@ def setup_photoreal_environment():
     bg_w = tree_w.nodes.new('ShaderNodeBackground')
     sky_w = tree_w.nodes.new('ShaderNodeTexSky')
     sky_w.sky_type = 'MULTIPLE_SCATTERING'
-    sky_w.sun_elevation = math.radians(28.0)
-    sky_w.sun_rotation = math.radians(115.0)
-    sky_w.altitude = 5000.0
-    sky_w.air_density = 0.48
-    sky_w.aerosol_density = 0.08
-    sky_w.ozone_density = 2.4
+    sky_w.sun_elevation = math.radians(38.0)
+    sky_w.sun_rotation = math.radians(230.0)
+    sky_w.altitude = 4500.0
+    sky_w.air_density = 0.35
+    sky_w.aerosol_density = 0.02
+    sky_w.ozone_density = 3.0
     sky_w.sun_disc = True
 
-    bg_w.inputs['Strength'].default_value = 0.85
+    bg_w.inputs['Strength'].default_value = 0.28
     tree_w.links.new(sky_w.outputs['Color'], bg_w.inputs['Color'])
     tree_w.links.new(bg_w.outputs['Background'], out_w.inputs['Surface'])
 
-    # 3. Directional Key Sunlight with 18km Cascaded Shadows
+    # 3. Directional Key Sunlight with 12km Cascaded Shadows
     sun_old = bpy.data.objects.get('Sun')
     if sun_old:
         sun_old.hide_viewport = True
@@ -1479,20 +1771,31 @@ def setup_photoreal_environment():
         sun_old.data.energy = 0.0
 
     sun_top = bpy.data.objects.get('Sun_TopGun')
-    if sun_top:
-        sun_top.rotation_euler = (math.radians(62.0), math.radians(10.0), math.radians(115.0))
-        sun_top.data.energy = 6.0
-        sun_top.data.color = (1.0, 0.95, 0.88)
-        sun_top.data.angle = math.radians(1.2)
-        sun_top.data.shadow_cascade_max_distance = 18000.0
-        sun_top.data.shadow_cascade_count = 4
-        sun_top.data.use_shadow_jitter = True
-        sun_top.data.shadow_filter_radius = 2.5
+    if not sun_top:
+        sun_data = bpy.data.lights.new('Sun_TopGun', 'SUN')
+        sun_top = bpy.data.objects.new('Sun_TopGun', sun_data)
+        bpy.context.collection.objects.link(sun_top)
+
+    sun_top.rotation_euler = (math.radians(38.0), math.radians(14.0), math.radians(230.0))
+    sun_top.data.energy = 4.5
+    sun_top.data.color = (1.0, 0.96, 0.88)
+    sun_top.data.angle = math.radians(1.2)
+    sun_top.data.use_shadow = True
+    sun_top.data.shadow_cascade_count = 4
+    sun_top.data.shadow_cascade_max_distance = 12000.0
+    sun_top.data.shadow_cascade_fade = 0.3
+    sun_top.data.shadow_cascade_exponent = 0.85
+    sun_top.data.shadow_filter_radius = 2.5
+    sun_top.data.use_shadow_jitter = True
 
     # 4. Multi-Band Photorealistic Himalayan Geology Material
     mat = bpy.data.materials.get('M_TopGun_Canyon_Simulation')
     if not mat:
         mat = bpy.data.materials.new('M_TopGun_Canyon_Simulation')
+    dem = bpy.data.objects.get(DEM_NAME)
+    if dem and dem.material_slots:
+        dem.material_slots[0].material = mat
+
     tree_m = mat.node_tree
     tree_m.nodes.clear()
 
@@ -1505,112 +1808,72 @@ def setup_photoreal_environment():
     tree_m.links.new(node_geom.outputs['Position'], node_world_xyz.inputs['Vector'])
     tree_m.links.new(node_geom.outputs['Normal'], node_norm_xyz.inputs['Vector'])
 
-    # Elevation mapping
+    # Elevation mapping: 3000m to 6200m
     node_elev_map = tree_m.nodes.new('ShaderNodeMapRange')
-    node_elev_map.inputs['From Min'].default_value = 3200.0
-    node_elev_map.inputs['From Max'].default_value = 6800.0
+    node_elev_map.inputs['From Min'].default_value = 3000.0
+    node_elev_map.inputs['From Max'].default_value = 6200.0
     tree_m.links.new(node_world_xyz.outputs['Z'], node_elev_map.inputs['Value'])
 
-    # Rock Geology Gradient
-    node_rock_ramp = tree_m.nodes.new('ShaderNodeValToRGB')
-    cr = node_rock_ramp.color_ramp
+    # True PBR Albedo Ladakh Arid Desert Mountain Palette:
+    node_geology_ramp = tree_m.nodes.new('ShaderNodeValToRGB')
+    cr = node_geology_ramp.color_ramp
     cr.color_mode = 'RGB'
-    cr.interpolation = 'LINEAR'
+    cr.interpolation = 'B_SPLINE'
     cr.elements[0].position = 0.0
-    cr.elements[0].color = (0.42, 0.33, 0.22, 1.0)   # Riverbed ochre & silt
-    cr.elements[1].position = 1.0
-    cr.elements[1].color = (0.18, 0.19, 0.22, 1.0)   # High summit dark granite
-    e1 = cr.elements.new(0.30)
-    e1.color = (0.38, 0.22, 0.15, 1.0)   # Terracotta red sandstone band
-    e2 = cr.elements.new(0.58)
-    e2.color = (0.26, 0.23, 0.20, 1.0)   # Weathered slate limestone
-    tree_m.links.new(node_elev_map.outputs['Result'], node_rock_ramp.inputs['Fac'])
+    cr.elements[0].color = (0.13, 0.11, 0.09, 1.0)   # Riverbed gravel & silt
 
-    # Rock Strata Banding (Z-sine wave)
-    node_scale_z = tree_m.nodes.new('ShaderNodeMath')
-    node_scale_z.operation = 'MULTIPLY'
-    node_scale_z.inputs[1].default_value = 0.030
-    tree_m.links.new(node_world_xyz.outputs['Z'], node_scale_z.inputs[0])
+    e1 = cr.elements.new(0.20)
+    e1.color = (0.28, 0.18, 0.10, 1.0)                # Warm golden ochre sandstone
 
-    node_sine = tree_m.nodes.new('ShaderNodeMath')
-    node_sine.operation = 'SINE'
-    tree_m.links.new(node_scale_z.outputs['Value'], node_sine.inputs[0])
+    e2 = cr.elements.new(0.45)
+    e2.color = (0.24, 0.13, 0.07, 1.0)                # Terracotta / sienna sediment
 
-    node_strata_mix = tree_m.nodes.new('ShaderNodeMix')
-    node_strata_mix.data_type = 'RGBA'
-    node_strata_mix.blend_type = 'OVERLAY'
-    node_strata_mix.inputs['Factor'].default_value = 0.35
-    tree_m.links.new(node_rock_ramp.outputs['Color'], node_strata_mix.inputs['A'])
-    node_band_col = tree_m.nodes.new('ShaderNodeRGB')
-    node_band_col.outputs['Color'].default_value = (0.46, 0.24, 0.16, 1.0)
-    tree_m.links.new(node_band_col.outputs['Color'], node_strata_mix.inputs['B'])
+    e3 = cr.elements.new(0.70)
+    e3.color = (0.15, 0.15, 0.16, 1.0)                # Cold weathered slate grey scree
 
-    # Micro-Detail Rock Noise
-    node_noise_rock = tree_m.nodes.new('ShaderNodeTexNoise')
-    node_noise_rock.inputs['Scale'].default_value = 0.04
-    node_noise_rock.inputs['Detail'].default_value = 6.0
-    node_noise_rock.inputs['Roughness'].default_value = 0.72
-    node_noise_rock.inputs['Distortion'].default_value = 1.0
-    tree_m.links.new(node_geom.outputs['Position'], node_noise_rock.inputs['Vector'])
+    cr.elements[-1].position = 1.0
+    cr.elements[-1].color = (0.10, 0.10, 0.11, 1.0)   # High summit dark stone
 
-    node_rock_final = tree_m.nodes.new('ShaderNodeMix')
-    node_rock_final.data_type = 'RGBA'
-    node_rock_final.blend_type = 'MULTIPLY'
-    node_rock_final.inputs['Factor'].default_value = 0.35
-    tree_m.links.new(node_strata_mix.outputs['Result'], node_rock_final.inputs['A'])
-    tree_m.links.new(node_noise_rock.outputs['Color'], node_rock_final.inputs['B'])
+    tree_m.links.new(node_elev_map.outputs['Result'], node_geology_ramp.inputs['Fac'])
 
-    # Snow Coverage (High altitude > 5,200m and gentle slope Normal.Z > 0.62)
-    node_snow_elev = tree_m.nodes.new('ShaderNodeMapRange')
-    node_snow_elev.inputs['From Min'].default_value = 5200.0
-    node_snow_elev.inputs['From Max'].default_value = 6200.0
-    tree_m.links.new(node_world_xyz.outputs['Z'], node_snow_elev.inputs['Value'])
+    # High-Frequency Procedural Rock Texture
+    node_rock_noise = tree_m.nodes.new('ShaderNodeTexNoise')
+    node_rock_noise.inputs['Scale'].default_value = 0.06
+    node_rock_noise.inputs['Detail'].default_value = 6.0
+    node_rock_noise.inputs['Roughness'].default_value = 0.65
+    tree_m.links.new(node_geom.outputs['Position'], node_rock_noise.inputs['Vector'])
 
-    node_snow_slope = tree_m.nodes.new('ShaderNodeMapRange')
-    node_snow_slope.inputs['From Min'].default_value = 0.62
-    node_snow_slope.inputs['From Max'].default_value = 0.88
-    tree_m.links.new(node_norm_xyz.outputs['Z'], node_snow_slope.inputs['Value'])
+    # Blender 5.2 Safe Mix Node (Socket index based: 0=Fac, 6=A_Color, 7=B_Color, 2=Result_Color)
+    node_rock_blend = tree_m.nodes.new('ShaderNodeMix')
+    node_rock_blend.data_type = 'RGBA'
+    node_rock_blend.blend_type = 'OVERLAY'
+    node_rock_blend.inputs[0].default_value = 0.25
+    tree_m.links.new(node_geology_ramp.outputs['Color'], node_rock_blend.inputs[6])
+    tree_m.links.new(node_rock_noise.outputs['Color'], node_rock_blend.inputs[7])
 
-    node_snow_mult = tree_m.nodes.new('ShaderNodeMath')
-    node_snow_mult.operation = 'MULTIPLY'
-    tree_m.links.new(node_snow_elev.outputs['Result'], node_snow_mult.inputs[0])
-    tree_m.links.new(node_snow_slope.outputs['Result'], node_snow_mult.inputs[1])
-
-    node_snow_ramp = tree_m.nodes.new('ShaderNodeValToRGB')
-    crs = node_snow_ramp.color_ramp
-    crs.elements[0].position = 0.20
-    crs.elements[0].color = (0.0, 0.0, 0.0, 1.0)
-    crs.elements[1].position = 0.55
-    crs.elements[1].color = (1.0, 1.0, 1.0, 1.0)
-    tree_m.links.new(node_snow_mult.outputs['Value'], node_snow_ramp.inputs['Fac'])
-
-    node_snow_rgb = tree_m.nodes.new('ShaderNodeRGB')
-    node_snow_rgb.outputs['Color'].default_value = (0.95, 0.96, 0.99, 1.0)
-
-    node_mix_surface = tree_m.nodes.new('ShaderNodeMix')
-    node_mix_surface.data_type = 'RGBA'
-    node_mix_surface.blend_type = 'MIX'
-    tree_m.links.new(node_snow_ramp.outputs['Color'], node_mix_surface.inputs['Factor'])
-    tree_m.links.new(node_rock_final.outputs['Result'], node_mix_surface.inputs['A'])
-    tree_m.links.new(node_snow_rgb.outputs['Color'], node_mix_surface.inputs['B'])
-
-    # Roughness & Bump
-    node_rough = tree_m.nodes.new('ShaderNodeMix')
-    node_rough.data_type = 'FLOAT'
-    node_rough.inputs['A'].default_value = 0.85
-    node_rough.inputs['B'].default_value = 0.35
-    tree_m.links.new(node_snow_ramp.outputs['Color'], node_rough.inputs['Factor'])
-
+    # Bump Mapping
     node_bump = tree_m.nodes.new('ShaderNodeBump')
-    node_bump.inputs['Strength'].default_value = 0.50
-    node_bump.inputs['Distance'].default_value = 6.0
-    tree_m.links.new(node_noise_rock.outputs['Fac'], node_bump.inputs['Height'])
+    node_bump.inputs['Strength'].default_value = 0.35
+    node_bump.inputs['Distance'].default_value = 2.5
+    tree_m.links.new(node_rock_noise.outputs['Fac'], node_bump.inputs['Height'])
 
-    tree_m.links.new(node_mix_surface.outputs['Result'], node_bsdf.inputs['Base Color'])
-    tree_m.links.new(node_rough.outputs['Result'], node_bsdf.inputs['Roughness'])
+    node_bsdf.inputs['Roughness'].default_value = 0.88
+    tree_m.links.new(node_rock_blend.outputs[2], node_bsdf.inputs['Base Color'])
     tree_m.links.new(node_bump.outputs['Normal'], node_bsdf.inputs['Normal'])
     tree_m.links.new(node_bsdf.outputs['BSDF'], node_out.inputs['Surface'])
-    print("[RENDER] Photorealistic Himalayan Environment & Raytracing pipeline active.")
+
+    # UAV PBR Materials
+    for m in bpy.data.materials:
+        if m.name != 'M_TopGun_Canyon_Simulation' and m.node_tree:
+            bsdf = m.node_tree.nodes.get('Principled BSDF')
+            if bsdf:
+                bsdf.inputs['Roughness'].default_value = 0.40
+                if 'Specular IOR Level' in bsdf.inputs:
+                    bsdf.inputs['Specular IOR Level'].default_value = 0.55
+                elif 'Specular' in bsdf.inputs:
+                    bsdf.inputs['Specular'].default_value = 0.55
+
+    print("[RENDER] Photorealistic Leh Ladakh Environment & Raytracing pipeline active.")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1628,9 +1891,21 @@ def configure_clean_viewport():
     except Exception as e:
         print(f"[WARN] Environment setup: {e}")
 
+    uav = bpy.data.objects.get(UAV_NAME)
+    if uav:
+        if uav.animation_data:
+            uav.animation_data_clear()
+        uav.scale = (UAV_PHYSICAL_SCALE, UAV_PHYSICAL_SCALE, UAV_PHYSICAL_SCALE)
+
     cam = bpy.data.objects.get(CAM_NAME)
     if cam:
         cam.constraints.clear()   # remove Damped Track dotted line
+        if cam.animation_data:
+            cam.animation_data_clear()
+        cam.scale = (1.0, 1.0, 1.0)
+        cam.data.lens = 45.0
+        cam.data.clip_start = 0.5
+        cam.data.clip_end = 250000.0
         scene.camera = cam
 
     fp = bpy.data.objects.get(PATH_NAME)

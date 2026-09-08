@@ -46,3 +46,6 @@ build/
 # Redistributable stock model weights (~7.6GB) — re-pull via Ollama instead of storing in git:
 #   ollama pull qwen3:4b-instruct-2507-q4_K_M
 Qwen3-4B/
+
+# Scratch transient heavy blends (>100MB)
+scratch/phase_c_blends/
