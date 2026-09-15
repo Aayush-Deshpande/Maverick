@@ -1,0 +1,72 @@
+{
+  "mission_start": "2026-09-09T04:10:59Z",
+  "mission_end": "2026-09-09T04:11:17Z",
+  "duration_hours": 0.005,
+  "event_count": 8,
+  "events": [
+    {
+      "at": "T+00:00:00",
+      "epoch": 1788927059.748,
+      "event_type": "MISSION_START",
+      "severity": "NOMINAL",
+      "title": "Sortie launched",
+      "detail": "Ladakh Canyon Low-Level Tactical Sortie \u2014 ingress at 5,800 m AMSL, Auto-GCAS armed."
+    },
+    {
+      "at": "T+00:00:14",
+      "epoch": 1788927074.077,
+      "event_type": "FAULT_INJECTED",
+      "severity": "CRITICAL",
+      "title": "Fault 01 \u2014 CYLINDER_2_CHT_OVERHEAT",
+      "detail": "CHT > 135 \u00b0C on Cylinder #2 on Cylinder #2 Head Assembly (ATA 72-00)."
+    },
+    {
+      "at": "T+00:00:14",
+      "epoch": 1788927074.077,
+      "event_type": "ACTION_ISSUED",
+      "severity": "CRITICAL",
+      "title": "Prescriptive directive issued",
+      "detail": "Enrich fuel trim +12%, throttle back 15%, descend into denser cooling air."
+    },
+    {
+      "at": "T+00:00:15",
+      "epoch": 1788927075.088,
+      "event_type": "FAULT_INJECTED",
+      "severity": "WARNING",
+      "title": "Fault 04 \u2014 OIL_PRESSURE_LOSS",
+      "detail": "Oil pressure < 2.0 bar on Dry-Sump Lubrication Circuit (ATA 79-00)."
+    },
+    {
+      "at": "T+00:00:15",
+      "epoch": 1788927075.088,
+      "event_type": "ACTION_ISSUED",
+      "severity": "WARNING",
+      "title": "Prescriptive directive issued",
+      "detail": "Throttle back to 4,200 RPM, initiate precautionary landing."
+    },
+    {
+      "at": "T+00:00:16",
+      "epoch": 1788927076.102,
+      "event_type": "FAULT_INJECTED",
+      "severity": "WARNING",
+      "title": "Fault 02 \u2014 FUEL_INJECTOR_1_CLOG",
+      "detail": "Fuel flow drop with EGT divergence on Fuel Injection System & Rails (ATA 73-10)."
+    },
+    {
+      "at": "T+00:00:16",
+      "epoch": 1788927076.102,
+      "event_type": "ACTION_ISSUED",
+      "severity": "WARNING",
+      "title": "Prescriptive directive issued",
+      "detail": "Switch to Lane B ECU backup map, activate auxiliary boost pump."
+    },
+    {
+      "at": "T+00:00:17",
+      "epoch": 1788927077.701,
+      "event_type": "MISSION_END",
+      "severity": "NOMINAL",
+      "title": "Sortie terminated \u2014 RECOVERED",
+      "detail": "18 s flown. Peak CHT 116.7 \u00b0C, minimum oil pressure 3.10 bar, final propulsion health 62.0%."
+    }
+  ]
+}

@@ -72,7 +72,7 @@ def launch_canyon_sim():
     print(f" * Script: {app_script}")
     print("=" * 75)
     
-    cmd = [str(blender_exe), str(blend_file), "--python", str(app_script)]
+    cmd = [str(blender_exe), "--window-maximized", str(blend_file), "--python", str(app_script)]
     try:
         return subprocess.run(cmd).returncode
     except KeyboardInterrupt:

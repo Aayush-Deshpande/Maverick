@@ -14,6 +14,7 @@ import json
 import logging
 import sys
 import uuid
+from dataclasses import asdict
 from typing import Set, List, Optional
 from contextlib import asynccontextmanager
 
@@ -43,6 +44,7 @@ from backend.server.schemas import (
     VoiceConverseResponse,
 )
 from backend.server.engine_service import EngineStateService
+from backend.telemetry.replay_engine import ReplayEngine
 from backend.agent.llm_engine import LocalQwenEngine
 from backend.voice.stt_engine import LocalWhisperSTT
 from backend.voice.tts_engine import LocalKokoroTTS
@@ -56,6 +58,14 @@ class AIAskRequest(BaseModel):
 class VoiceResetRequest(BaseModel):
     session_id: str
 
+
+class MaintenanceSignoffRequest(BaseModel):
+    inspector: str
+
+
+class FlightCommandRequest(BaseModel):
+    text: str
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
@@ -65,6 +75,11 @@ logger = logging.getLogger("DigitalTwinServer")
 # Client connection pools
 active_web_sockets: Set[WebSocket] = set()
 active_blender_sockets: Set[WebSocket] = set()
+
+# Historical mission replay (PRD F12) — stateless aside from its own internal per-mission
+# caches, so a single process-lifetime instance is fine; no state_lock needed since it never
+# touches EngineStateService's live sortie state.
+_replay_engine = ReplayEngine()
 
 
 @asynccontextmanager
@@ -155,7 +170,13 @@ def root():
             "voice_status": "/api/voice/status",
             "debrief": "/api/debrief",
             "cbm_fleet": "/api/cbm/fleet",
-            "cbm_regions": "/api/cbm/regions"
+            "cbm_regions": "/api/cbm/regions",
+            "cbm_maintenance": "/api/cbm/maintenance",
+            "cbm_maintenance_signoff": "/api/cbm/maintenance/{action_id}/signoff",
+            "copilot_flight_command": "/api/copilot/flight-command",
+            "replay_manifests": "/api/replay/manifests",
+            "replay_manifest": "/api/replay/{mission_id}/manifest",
+            "replay_frame": "/api/replay/{mission_id}/frame?time_sec=..."
         }
     }
 
@@ -227,6 +248,73 @@ def get_region_comparison():
     service = EngineStateService.get_instance()
     with service.state_lock:
         return service.graph.get_region_comparison()
+
+
+@app.get("/api/replay/manifests")
+def list_replay_manifests():
+    """Lists every recorded sortie available to replay (PRD F12), newest first."""
+    return {"manifests": _replay_engine.list_manifests()}
+
+
+@app.get("/api/replay/{mission_id}/manifest")
+def get_replay_manifest(mission_id: str):
+    """Full manifest for one sortie, including event markers for the scrubber timeline."""
+    manifest = _replay_engine.get_manifest(mission_id)
+    if manifest is None:
+        raise HTTPException(status_code=404, detail=f"Unknown mission_id: {mission_id}")
+    return manifest
+
+
+@app.get("/api/replay/{mission_id}/frame")
+def get_replay_frame(mission_id: str, time_sec: float):
+    """Exact telemetry snapshot at-or-before `time_sec` for scrubbing/seeking."""
+    frame = _replay_engine.get_frame(mission_id, time_sec)
+    if frame is None:
+        raise HTTPException(status_code=404, detail=f"No telemetry for mission_id: {mission_id}")
+    return frame
+
+
+@app.post("/api/copilot/flight-command")
+def post_flight_command(body: FlightCommandRequest):
+    """
+    Natural-language tactical maneuver intent (PRD F10) — parses `text` into one of the six
+    canonical flight-vector intents (final_tasks/01_DYNAMIC_TACTICAL_SIMULATION_AND_AUTOGCAS.md
+    §5) and enqueues it for the running standalone_canyon_flight_app.py Blender process to pick
+    up on its next command-poll tick. Does not touch EngineStateService/state_lock at all — the
+    canyon flight sim is a separate process with its own FlightState, not the engine digital
+    twin this server otherwise models, so this is intentionally the one endpoint in this file
+    with no shared-state locking concern.
+    """
+    from backend.agent.flight_intent import handle_flight_command_text
+    result = handle_flight_command_text(body.text)
+    if result["status"] == "UNRECOGNIZED":
+        raise HTTPException(status_code=422, detail=result["message"])
+    return result
+
+
+@app.get("/api/cbm/maintenance")
+def list_maintenance_work_orders(status: Optional[str] = None):
+    """Lists maintenance work orders (optionally filtered by ?status=OPEN or SIGNED_OFF),
+    newest first — the ground-crew queue view backing sign-off."""
+    service = EngineStateService.get_instance()
+    with service.state_lock:
+        return {"work_orders": service.graph.get_work_orders(status=status)}
+
+
+@app.post("/api/cbm/maintenance/{action_id}/signoff")
+def signoff_maintenance_action(action_id: str, body: MaintenanceSignoffRequest):
+    """Closes a maintenance work order. A work order can only ever be signed off once —
+    re-signing an already-closed order returns 409, not a silent no-op, so a ground crew
+    can't accidentally paper over a real double-approval process error."""
+    service = EngineStateService.get_instance()
+    with service.state_lock:
+        try:
+            node = service.graph.sign_off_action(action_id, inspector=body.inspector)
+        except ValueError as e:
+            raise HTTPException(status_code=409, detail=str(e))
+        if node is None:
+            raise HTTPException(status_code=404, detail=f"Unknown maintenance action_id: {action_id}")
+        return asdict(node)
 
 
 # ──────────────────────────────────────────────────────────────────────────────

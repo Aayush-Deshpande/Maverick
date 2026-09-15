@@ -9,9 +9,10 @@ import { MissionReadinessCard } from './components/MissionReadinessCard';
 import { SubsystemHealthCard } from './components/SubsystemHealthCard';
 import { DiagnosticCard } from './components/DiagnosticCard';
 import { VoiceCopilot } from './components/VoiceCopilot';
+import { MissionReplayScrubber } from './components/MissionReplayScrubber';
 import { ConnectionModal } from './components/ConnectionModal';
 import { PanelErrorBoundary } from './components/PanelErrorBoundary';
-import { WifiOff, Radio, Shield, Layers, Brain, Mic } from 'lucide-react';
+import { WifiOff, Radio, Shield, Layers, Brain, Mic, History } from 'lucide-react';
 
 export function App() {
   const {
@@ -25,7 +26,7 @@ export function App() {
     setIsModalOpen,
   } = useTelemetrySocket();
 
-  const [activeTab, setActiveTab] = useState<'PILLAR_1' | 'AI_DIAGNOSTICS' | 'VOICE_COPILOT'>('PILLAR_1');
+  const [activeTab, setActiveTab] = useState<'PILLAR_1' | 'AI_DIAGNOSTICS' | 'VOICE_COPILOT' | 'MISSION_REPLAY'>('PILLAR_1');
 
   return (
     <div className="min-h-screen bg-background text-[#f2f2f3] flex flex-col selection:bg-accent selection:text-white">
@@ -71,6 +72,7 @@ export function App() {
               { id: 'PILLAR_1', label: 'Pillar 1 — Pre-Flight Certification', icon: <Layers className="w-3.5 h-3.5" /> },
               { id: 'AI_DIAGNOSTICS', label: 'AI reasoning & copilot', icon: <Brain className="w-3.5 h-3.5" /> },
               { id: 'VOICE_COPILOT', label: 'Voice copilot', icon: <Mic className="w-3.5 h-3.5" /> },
+              { id: 'MISSION_REPLAY', label: 'Mission replay', icon: <History className="w-3.5 h-3.5" /> },
             ].map((tab) => {
               const isActive = activeTab === tab.id;
               return (
@@ -138,6 +140,12 @@ export function App() {
         {activeTab === 'VOICE_COPILOT' && (
           <PanelErrorBoundary label="Voice copilot">
             <VoiceCopilot state={state} serverUrl={serverUrl} />
+          </PanelErrorBoundary>
+        )}
+
+        {activeTab === 'MISSION_REPLAY' && (
+          <PanelErrorBoundary label="Mission replay">
+            <MissionReplayScrubber serverUrl={serverUrl} />
           </PanelErrorBoundary>
         )}
       </main>

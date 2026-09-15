@@ -1,0 +1,41 @@
+{
+  "total_detections": 3,
+  "detections": [
+    {
+      "detected_at": "T+00:00:14",
+      "detected_at_epoch": 1788927074.077,
+      "fault_id": 1,
+      "fault_name": "CYLINDER_2_CHT_OVERHEAT",
+      "severity": "CRITICAL",
+      "ata_chapter": "ATA 72-00",
+      "subsystem": "Cylinder #2 Head Assembly",
+      "sensor_trigger": "CHT > 135 \u00b0C on Cylinder #2",
+      "detection_source": "FADEC threshold monitor (flight simulator)",
+      "recommended_action": "Enrich fuel trim +12%, throttle back 15%, descend into denser cooling air."
+    },
+    {
+      "detected_at": "T+00:00:15",
+      "detected_at_epoch": 1788927075.088,
+      "fault_id": 4,
+      "fault_name": "OIL_PRESSURE_LOSS",
+      "severity": "WARNING",
+      "ata_chapter": "ATA 79-00",
+      "subsystem": "Dry-Sump Lubrication Circuit",
+      "sensor_trigger": "Oil pressure < 2.0 bar",
+      "detection_source": "FADEC threshold monitor (flight simulator)",
+      "recommended_action": "Throttle back to 4,200 RPM, initiate precautionary landing."
+    },
+    {
+      "detected_at": "T+00:00:16",
+      "detected_at_epoch": 1788927076.102,
+      "fault_id": 2,
+      "fault_name": "FUEL_INJECTOR_1_CLOG",
+      "severity": "WARNING",
+      "ata_chapter": "ATA 73-10",
+      "subsystem": "Fuel Injection System & Rails",
+      "sensor_trigger": "Fuel flow drop with EGT divergence",
+      "detection_source": "FADEC threshold monitor (flight simulator)",
+      "recommended_action": "Switch to Lane B ECU backup map, activate auxiliary boost pump."
+    }
+  ]
+}

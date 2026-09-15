@@ -131,7 +131,10 @@ class FlightMissionRecorder:
             round(st.altitude_ft, 1),
             round(st.agl_m, 1),
             round(st.airspeed_kias, 1),
-            round(st.speed_ms, 1),
+            # Ground speed logged consistently with airspeed_kias (both reflect the actual,
+            # GROUND_SPEED_MULTIPLIER-scaled movement rate) — st.speed_ms alone is only the
+            # internal aerodynamic model's speed, not what the aircraft visibly covers ground at.
+            round(st.airspeed_kias * (1852.0 / 3600.0), 1),
             round(st.heading_deg, 1),
             round(math.degrees(st.pitch_rad), 2),
             round(math.degrees(st.roll_rad), 2),

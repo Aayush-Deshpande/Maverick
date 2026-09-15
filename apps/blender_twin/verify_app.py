@@ -45,8 +45,9 @@ def run_verification():
     
     scene = bpy.context.scene
     scene.render.engine = 'BLENDER_EEVEE'
-    scene.render.resolution_x = 960
-    scene.render.resolution_y = 540
+    scene.render.resolution_x = 1920
+    scene.render.resolution_y = 1080
+    scene.render.resolution_percentage = 100
     scene.render.image_settings.file_format = 'PNG'
     
     test_out = os.path.join(out_dir, "standalone_verification_render.png")

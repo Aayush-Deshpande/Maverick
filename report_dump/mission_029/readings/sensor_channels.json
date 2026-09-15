@@ -1,0 +1,159 @@
+{
+  "source_log": "telemetry_log.csv",
+  "sample_count": 34,
+  "channel_count": 19,
+  "channels": [
+    {
+      "channel": "TIMESTAMP_SEC",
+      "min": 1788880363.295,
+      "max": 1788880380.9,
+      "mean": 1788880372.242,
+      "last": 1788880380.9,
+      "samples": 34
+    },
+    {
+      "channel": "ELAPSED_SEC",
+      "min": 0.24,
+      "max": 17.85,
+      "mean": 9.191,
+      "last": 17.85,
+      "samples": 34
+    },
+    {
+      "channel": "ALTITUDE_M",
+      "min": 3442.5,
+      "max": 3447.6,
+      "mean": 3447.138,
+      "last": 3442.5,
+      "samples": 34
+    },
+    {
+      "channel": "ALTITUDE_FT",
+      "min": 11294.4,
+      "max": 11311.1,
+      "mean": 11309.579,
+      "last": 11294.4,
+      "samples": 34
+    },
+    {
+      "channel": "AGL_M",
+      "min": 345.3,
+      "max": 350.0,
+      "mean": 349.021,
+      "last": 345.3,
+      "samples": 34
+    },
+    {
+      "channel": "AIRSPEED_KIAS",
+      "min": 75.5,
+      "max": 83.1,
+      "mean": 81.132,
+      "last": 82.8,
+      "samples": 34
+    },
+    {
+      "channel": "GROUND_SPEED_MS",
+      "min": 38.8,
+      "max": 42.7,
+      "mean": 41.721,
+      "last": 42.6,
+      "samples": 34
+    },
+    {
+      "channel": "HEADING_DEG",
+      "min": 1.5,
+      "max": 355.5,
+      "mean": 213.015,
+      "last": 269.0,
+      "samples": 34
+    },
+    {
+      "channel": "PITCH_DEG",
+      "min": -8.24,
+      "max": 0.0,
+      "mean": -0.695,
+      "last": -2.08,
+      "samples": 34
+    },
+    {
+      "channel": "ROLL_DEG",
+      "min": -35.0,
+      "max": 0.0,
+      "mean": -25.521,
+      "last": -0.04,
+      "samples": 34
+    },
+    {
+      "channel": "ENGINE_RPM",
+      "min": 5238.0,
+      "max": 5400.0,
+      "mean": 5388.941,
+      "last": 5400.0,
+      "samples": 34
+    },
+    {
+      "channel": "THROTTLE_PCT",
+      "min": 80.0,
+      "max": 80.0,
+      "mean": 80.0,
+      "last": 80.0,
+      "samples": 34
+    },
+    {
+      "channel": "CHT_C",
+      "min": 88.0,
+      "max": 103.97,
+      "mean": 91.691,
+      "last": 88.0,
+      "samples": 34
+    },
+    {
+      "channel": "CHT_RATE_C_S",
+      "min": -4.66,
+      "max": 0.0,
+      "mean": -1.942,
+      "last": 0.0,
+      "samples": 34
+    },
+    {
+      "channel": "OIL_PRESS_BAR",
+      "min": 4.2,
+      "max": 4.44,
+      "mean": 4.385,
+      "last": 4.44,
+      "samples": 34
+    },
+    {
+      "channel": "FUEL_FLOW_LH",
+      "min": 22.8,
+      "max": 22.8,
+      "mean": 22.8,
+      "last": 22.8,
+      "samples": 34
+    },
+    {
+      "channel": "RADAR_FWD_M",
+      "min": 2480.2,
+      "max": 4500.0,
+      "mean": 4212.153,
+      "last": 4500.0,
+      "samples": 34
+    },
+    {
+      "channel": "TTI_SEC",
+      "min": 26.53,
+      "max": 116.24,
+      "mean": 93.679,
+      "last": 105.66,
+      "samples": 34
+    },
+    {
+      "channel": "COPILOT_ON",
+      "min": 1.0,
+      "max": 1.0,
+      "mean": 1.0,
+      "last": 1.0,
+      "samples": 34
+    }
+  ]
+}

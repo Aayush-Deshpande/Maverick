@@ -1,0 +1,64 @@
+{
+  "mission_start": "2026-09-09T07:28:00Z",
+  "mission_end": "2026-09-09T07:28:45Z",
+  "duration_hours": 0.0125,
+  "event_count": 7,
+  "events": [
+    {
+      "at": "T+00:00:00",
+      "epoch": 1788938880.522,
+      "event_type": "MISSION_START",
+      "severity": "NOMINAL",
+      "title": "Sortie launched",
+      "detail": "Ladakh Canyon Low-Level Tactical Sortie \u2014 ingress at 5,800 m AMSL, Auto-GCAS armed."
+    },
+    {
+      "at": "T+00:00:29",
+      "epoch": 1788938910.179,
+      "event_type": "GCAS_WARNING",
+      "severity": "WARNING",
+      "title": "Terrain proximity advisory",
+      "detail": "Time-to-impact 6.9 s at 1166 m AGL."
+    },
+    {
+      "at": "T+00:00:33",
+      "epoch": 1788938913.777,
+      "event_type": "GCAS_RECOVERY",
+      "severity": "CRITICAL",
+      "title": "Auto-GCAS recovery commanded",
+      "detail": "Automatic 2.5 G pull-up at 536 m AGL (TTI 3.1 s)."
+    },
+    {
+      "at": "T+00:00:34",
+      "epoch": 1788938915.441,
+      "event_type": "GCAS_RECOVERY",
+      "severity": "CRITICAL",
+      "title": "Auto-GCAS recovery commanded",
+      "detail": "Automatic 2.5 G pull-up at 452 m AGL (TTI 2.8 s)."
+    },
+    {
+      "at": "T+00:00:36",
+      "epoch": 1788938917.034,
+      "event_type": "GCAS_RECOVERY",
+      "severity": "CRITICAL",
+      "title": "Auto-GCAS recovery commanded",
+      "detail": "Automatic 2.5 G pull-up at 385 m AGL (TTI 2.7 s)."
+    },
+    {
+      "at": "T+00:00:38",
+      "epoch": 1788938919.182,
+      "event_type": "GCAS_WARNING",
+      "severity": "WARNING",
+      "title": "Terrain proximity advisory",
+      "detail": "Time-to-impact 19.7 s at 151 m AGL."
+    },
+    {
+      "at": "T+00:00:44",
+      "epoch": 1788938925.521,
+      "event_type": "MISSION_END",
+      "severity": "NOMINAL",
+      "title": "Sortie terminated \u2014 RECOVERED",
+      "detail": "45 s flown. Peak CHT 108.6 \u00b0C, minimum oil pressure 4.13 bar, final propulsion health 84.7%."
+    }
+  ]
+}

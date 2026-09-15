@@ -1,0 +1,56 @@
+{
+  "mission_start": "2026-09-08T05:57:50Z",
+  "mission_end": "2026-09-08T05:59:15Z",
+  "duration_hours": 0.0236,
+  "event_count": 6,
+  "events": [
+    {
+      "at": "T+00:00:00",
+      "epoch": 1788847070.859,
+      "event_type": "MISSION_START",
+      "severity": "NOMINAL",
+      "title": "Sortie launched",
+      "detail": "Ladakh Canyon Low-Level Tactical Sortie \u2014 ingress at 5,800 m AMSL, Auto-GCAS armed."
+    },
+    {
+      "at": "T+00:00:18",
+      "epoch": 1788847089.29,
+      "event_type": "FAULT_INJECTED",
+      "severity": "CRITICAL",
+      "title": "Fault 01 \u2014 CYLINDER_2_CHT_OVERHEAT",
+      "detail": "CHT > 135 \u00b0C on Cylinder #2 on Cylinder #2 Head Assembly (ATA 72-00)."
+    },
+    {
+      "at": "T+00:00:18",
+      "epoch": 1788847089.29,
+      "event_type": "ACTION_ISSUED",
+      "severity": "CRITICAL",
+      "title": "Prescriptive directive issued",
+      "detail": "Enrich fuel trim +12%, throttle back 15%, descend into denser cooling air."
+    },
+    {
+      "at": "T+00:00:28",
+      "epoch": 1788847099.805,
+      "event_type": "FAULT_CLEARED",
+      "severity": "NOMINAL",
+      "title": "Fault 01 cleared",
+      "detail": "Cylinder #2 Head Assembly returned inside the certified envelope."
+    },
+    {
+      "at": "T+00:01:18",
+      "epoch": 1788847149.812,
+      "event_type": "CFIT_IMPACT",
+      "severity": "CRITICAL",
+      "title": "Controlled flight into terrain",
+      "detail": "SIMULATED CFIT IMPACT at 5393 m AMSL, 1366 m AGL, 107 KIAS, Copilot ON."
+    },
+    {
+      "at": "T+00:01:24",
+      "epoch": 1788847155.706,
+      "event_type": "MISSION_END",
+      "severity": "CRITICAL",
+      "title": "Sortie terminated \u2014 AIRFRAME LOST",
+      "detail": "85 s flown. Peak CHT 119.7 \u00b0C, minimum oil pressure 3.96 bar, final propulsion health 0.0%."
+    }
+  ]
+}

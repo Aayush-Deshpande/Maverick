@@ -78,6 +78,12 @@ class MaintenanceActionNode:
     rul_p10_hours: Optional[float] = None
     rul_p50_hours: Optional[float] = None
     limiting_component: Optional[str] = None
+    # Ground-crew sign-off record (PS-26054 CBM lifecycle: a work order must be explicitly
+    # closed by an inspector, not silently forgotten). Added as trailing Optional fields so
+    # `MaintenanceActionNode(**v)` still loads pre-existing fleet_graph.json rows that predate
+    # this field without any migration step.
+    signoff_epoch: Optional[float] = None
+    signoff_inspector: Optional[str] = None
 
 
 class MissionKnowledgeGraph:
@@ -303,6 +309,30 @@ class MissionKnowledgeGraph:
 
         self._autosave()
         return node
+
+    def sign_off_action(self, action_id: str, inspector: str) -> Optional[MaintenanceActionNode]:
+        """Close a maintenance work order. Returns None if the action_id is unknown; raises
+        ValueError if it is already signed off (re-signing a closed order silently would hide
+        a real double-approval bug from whoever is calling this)."""
+        node = self.maintenance_actions.get(action_id)
+        if node is None:
+            return None
+        if node.status == "SIGNED_OFF":
+            raise ValueError(f"{action_id} is already signed off by {node.signoff_inspector!r}")
+        node.status = "SIGNED_OFF"
+        node.signoff_epoch = time.time()
+        node.signoff_inspector = inspector
+        self._autosave()
+        return node
+
+    def get_work_orders(self, status: Optional[str] = None) -> List[Dict[str, Any]]:
+        """List maintenance actions (optionally filtered to 'OPEN' or 'SIGNED_OFF'), newest
+        first, for a ground-crew work-order queue view."""
+        actions = list(self.maintenance_actions.values())
+        if status:
+            actions = [a for a in actions if a.status == status]
+        actions.sort(key=lambda a: a.action_id, reverse=True)
+        return [asdict(a) for a in actions]
 
     def get_cbm_summary(self) -> Dict[str, Any]:
         """

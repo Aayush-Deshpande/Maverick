@@ -1,0 +1,208 @@
+{
+  "mission_start": "2026-09-11T06:44:53Z",
+  "mission_end": "2026-09-11T06:45:45Z",
+  "duration_hours": 0.0145,
+  "event_count": 25,
+  "events": [
+    {
+      "at": "T+00:00:00",
+      "epoch": 1789109093.356,
+      "event_type": "MISSION_START",
+      "severity": "NOMINAL",
+      "title": "Sortie launched",
+      "detail": "Ladakh Canyon Low-Level Tactical Sortie \u2014 ingress at 5,800 m AMSL, Auto-GCAS armed."
+    },
+    {
+      "at": "T+00:00:12",
+      "epoch": 1789109105.996,
+      "event_type": "GCAS_WARNING",
+      "severity": "WARNING",
+      "title": "Terrain proximity advisory",
+      "detail": "Time-to-impact 6.1 s at 1034 m AGL."
+    },
+    {
+      "at": "T+00:00:15",
+      "epoch": 1789109108.728,
+      "event_type": "GCAS_RECOVERY",
+      "severity": "CRITICAL",
+      "title": "Auto-GCAS recovery commanded",
+      "detail": "Automatic 2.5 G pull-up at 602 m AGL (TTI 3.1 s)."
+    },
+    {
+      "at": "T+00:00:18",
+      "epoch": 1789109111.922,
+      "event_type": "GCAS_RECOVERY",
+      "severity": "CRITICAL",
+      "title": "Auto-GCAS recovery commanded",
+      "detail": "Automatic 2.5 G pull-up at 463 m AGL (TTI 5.8 s)."
+    },
+    {
+      "at": "T+00:00:20",
+      "epoch": 1789109113.528,
+      "event_type": "GCAS_WARNING",
+      "severity": "WARNING",
+      "title": "Terrain proximity advisory",
+      "detail": "Time-to-impact 5.3 s at 381 m AGL."
+    },
+    {
+      "at": "T+00:00:20",
+      "epoch": 1789109113.528,
+      "event_type": "GCAS_RECOVERY",
+      "severity": "CRITICAL",
+      "title": "Auto-GCAS recovery commanded",
+      "detail": "Automatic 2.5 G pull-up at 381 m AGL (TTI 5.3 s)."
+    },
+    {
+      "at": "T+00:00:21",
+      "epoch": 1789109115.202,
+      "event_type": "GCAS_RECOVERY",
+      "severity": "CRITICAL",
+      "title": "Auto-GCAS recovery commanded",
+      "detail": "Automatic 2.5 G pull-up at 201 m AGL (TTI 2.8 s)."
+    },
+    {
+      "at": "T+00:00:23",
+      "epoch": 1789109116.832,
+      "event_type": "GCAS_WARNING",
+      "severity": "WARNING",
+      "title": "Terrain proximity advisory",
+      "detail": "Time-to-impact 6.1 s at 386 m AGL."
+    },
+    {
+      "at": "T+00:00:23",
+      "epoch": 1789109117.333,
+      "event_type": "GCAS_RECOVERY",
+      "severity": "CRITICAL",
+      "title": "Auto-GCAS recovery commanded",
+      "detail": "Automatic 2.5 G pull-up at 482 m AGL (TTI 6.2 s)."
+    },
+    {
+      "at": "T+00:00:25",
+      "epoch": 1789109118.445,
+      "event_type": "GCAS_RECOVERY",
+      "severity": "CRITICAL",
+      "title": "Auto-GCAS recovery commanded",
+      "detail": "Automatic 2.5 G pull-up at 312 m AGL (TTI 2.5 s)."
+    },
+    {
+      "at": "T+00:00:28",
+      "epoch": 1789109122.204,
+      "event_type": "GCAS_RECOVERY",
+      "severity": "CRITICAL",
+      "title": "Auto-GCAS recovery commanded",
+      "detail": "Automatic 2.5 G pull-up at 212 m AGL (TTI 2.1 s)."
+    },
+    {
+      "at": "T+00:00:29",
+      "epoch": 1789109122.732,
+      "event_type": "GCAS_WARNING",
+      "severity": "WARNING",
+      "title": "Terrain proximity advisory",
+      "detail": "Time-to-impact 4.9 s at 290 m AGL."
+    },
+    {
+      "at": "T+00:00:30",
+      "epoch": 1789109124.29,
+      "event_type": "GCAS_WARNING",
+      "severity": "WARNING",
+      "title": "Terrain proximity advisory",
+      "detail": "Time-to-impact 5.5 s at 337 m AGL."
+    },
+    {
+      "at": "T+00:00:30",
+      "epoch": 1789109124.29,
+      "event_type": "GCAS_RECOVERY",
+      "severity": "CRITICAL",
+      "title": "Auto-GCAS recovery commanded",
+      "detail": "Automatic 2.5 G pull-up at 337 m AGL (TTI 5.5 s)."
+    },
+    {
+      "at": "T+00:00:32",
+      "epoch": 1789109125.887,
+      "event_type": "GCAS_WARNING",
+      "severity": "WARNING",
+      "title": "Terrain proximity advisory",
+      "detail": "Time-to-impact 3.6 s at 458 m AGL."
+    },
+    {
+      "at": "T+00:00:32",
+      "epoch": 1789109125.887,
+      "event_type": "GCAS_RECOVERY",
+      "severity": "CRITICAL",
+      "title": "Auto-GCAS recovery commanded",
+      "detail": "Automatic 2.5 G pull-up at 458 m AGL (TTI 3.6 s)."
+    },
+    {
+      "at": "T+00:00:34",
+      "epoch": 1789109127.531,
+      "event_type": "GCAS_WARNING",
+      "severity": "WARNING",
+      "title": "Terrain proximity advisory",
+      "detail": "Time-to-impact 5.9 s at 448 m AGL."
+    },
+    {
+      "at": "T+00:00:34",
+      "epoch": 1789109127.531,
+      "event_type": "GCAS_RECOVERY",
+      "severity": "CRITICAL",
+      "title": "Auto-GCAS recovery commanded",
+      "detail": "Automatic 2.5 G pull-up at 448 m AGL (TTI 5.9 s)."
+    },
+    {
+      "at": "T+00:00:35",
+      "epoch": 1789109129.105,
+      "event_type": "GCAS_RECOVERY",
+      "severity": "CRITICAL",
+      "title": "Auto-GCAS recovery commanded",
+      "detail": "Automatic 2.5 G pull-up at 271 m AGL (TTI 3.0 s)."
+    },
+    {
+      "at": "T+00:00:37",
+      "epoch": 1789109130.764,
+      "event_type": "GCAS_RECOVERY",
+      "severity": "CRITICAL",
+      "title": "Auto-GCAS recovery commanded",
+      "detail": "Automatic 2.5 G pull-up at 151 m AGL (TTI 2.3 s)."
+    },
+    {
+      "at": "T+00:00:39",
+      "epoch": 1789109132.48,
+      "event_type": "GCAS_RECOVERY",
+      "severity": "CRITICAL",
+      "title": "Auto-GCAS recovery commanded",
+      "detail": "Automatic 2.5 G pull-up at 250 m AGL (TTI 1.1 s)."
+    },
+    {
+      "at": "T+00:00:40",
+      "epoch": 1789109133.558,
+      "event_type": "GCAS_WARNING",
+      "severity": "WARNING",
+      "title": "Terrain proximity advisory",
+      "detail": "Time-to-impact 22.9 s at 86 m AGL."
+    },
+    {
+      "at": "T+00:00:40",
+      "epoch": 1789109134.087,
+      "event_type": "GCAS_RECOVERY",
+      "severity": "CRITICAL",
+      "title": "Auto-GCAS recovery commanded",
+      "detail": "Automatic 2.5 G pull-up at 21 m AGL (TTI 0.0 s)."
+    },
+    {
+      "at": "T+00:00:50",
+      "epoch": 1789109143.606,
+      "event_type": "CFIT_IMPACT",
+      "severity": "CRITICAL",
+      "title": "Controlled flight into terrain",
+      "detail": "LEFT WING GROUND CARTWHEEL at 5391 m AMSL, 24 m AGL, 235 KIAS, Copilot OFF."
+    },
+    {
+      "at": "T+00:00:52",
+      "epoch": 1789109145.421,
+      "event_type": "MISSION_END",
+      "severity": "CRITICAL",
+      "title": "Sortie terminated \u2014 AIRFRAME LOST",
+      "detail": "52 s flown. Peak CHT 108.6 \u00b0C, minimum oil pressure 4.13 bar, final propulsion health 0.0%."
+    }
+  ]
+}

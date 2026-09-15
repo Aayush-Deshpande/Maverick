@@ -1,0 +1,15 @@
+{
+  "engine_health_index_start": 1.0,
+  "engine_health_index_end": 0.62,
+  "health_degradation": 0.38,
+  "peak_cht_c": 116.74,
+  "cht_limit_c": 135.0,
+  "cht_margin_c": 18.26,
+  "max_cht_rise_rate_c_per_s": 2.4476,
+  "minimum_oil_pressure_bar": 3.099,
+  "oil_pressure_floor_bar": 2.0,
+  "minimum_agl_m": 1413.8,
+  "auto_gcas_warnings": 0,
+  "auto_gcas_recoveries": 0,
+  "airframe_lost": false
+}
