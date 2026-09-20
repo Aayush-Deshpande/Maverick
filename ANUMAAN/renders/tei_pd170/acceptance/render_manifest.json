@@ -1,0 +1,57 @@
+[
+  {
+    "filename": "01_hero_front_left.png",
+    "camera": "Cam_Hero",
+    "film_transparent": false
+  },
+  {
+    "filename": "02_rear_right.png",
+    "camera": "Cam_Beauty_Orbit",
+    "film_transparent": false
+  },
+  {
+    "filename": "03_closeup_turbo.png",
+    "camera": "Cam_Turbo",
+    "film_transparent": false
+  },
+  {
+    "filename": "04_closeup_fuel_system.png",
+    "camera": "Cam_Fuel_System",
+    "film_transparent": false
+  },
+  {
+    "filename": "05_closeup_gearbox.png",
+    "camera": "Cam_Gearbox",
+    "film_transparent": false
+  },
+  {
+    "filename": "06_wireframe_clay.png",
+    "camera": "Cam_Wireframe",
+    "film_transparent": false
+  },
+  {
+    "filename": "07_fault_combustion_failure_cyl_1.png",
+    "camera": "Cam_Hero",
+    "film_transparent": false
+  },
+  {
+    "filename": "07_fault_rail_pressure_loss.png",
+    "camera": "Cam_Hero",
+    "film_transparent": false
+  },
+  {
+    "filename": "07_fault_coolant_loss_thermostat.png",
+    "camera": "Cam_Hero",
+    "film_transparent": false
+  },
+  {
+    "filename": "07_fault_intercooler_fouling.png",
+    "camera": "Cam_Hero",
+    "film_transparent": false
+  },
+  {
+    "filename": "08_sensor_suspect_rpm.png",
+    "camera": "Cam_Hero",
+    "film_transparent": false
+  }
+]

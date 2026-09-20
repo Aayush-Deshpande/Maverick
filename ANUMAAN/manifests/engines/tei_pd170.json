@@ -1,0 +1,247 @@
+{
+  "engine_id": "tei_pd170",
+  "display_name": "TEI PD170",
+  "manifest_version": 1,
+  "blend_lod0": "Models/engines/tei_pd170.blend",
+  "blend_lod1": "Models/engines/tei_pd170_lod1.blend",
+  "collection": "tei_pd170",
+  "class": {
+    "cycle": "compression_ignition",
+    "aspiration": "two_stage_turbo",
+    "cooling": "liquid",
+    "layout": "inline_4"
+  },
+  "specs": {
+    "displacement_cc": { "value": 2100, "source": "Models_Images/TEI PD170/descr.md" },
+    "dry_weight_kg": { "value": 162, "source": "Models_Images/TEI PD170/descr.md" },
+    "takeoff_power_hp": { "value": 172, "source": "Models_Images/TEI PD170/descr.md" },
+    "max_continuous_power_hp": { "value": 170, "source": "Models_Images/TEI PD170/descr.md" },
+    "prop_rpm_max": { "value": 2300, "source": "Models_Images/TEI PD170/descr.md" },
+    "envelope_m": {
+      "length": 0.850,
+      "width": 0.950,
+      "height": 0.930,
+      "source": "TUSAŞ Engine Industries official PD170 datasheet"
+    }
+  },
+  "dimension_confidence": "HIGH",
+  "prop_rotation": "CW_from_rear",
+  "components": {
+    "Engine_Block": {
+      "subsystem": "Block_Cylinders",
+      "objects": ["Engine_Block_M_CastAluminium_0"],
+      "inspect_pose": { "target": [0.0, 0.25, 0.0], "azimuth_deg": 45, "elevation_deg": 25, "distance_m": 1.4 }
+    },
+    "Cylinder_Head": {
+      "subsystem": "Block_Cylinders",
+      "objects": ["Cylinder_Head_M_CastAluminium_0"],
+      "inspect_pose": { "target": [0.0, 0.25, 0.15], "azimuth_deg": 45, "elevation_deg": 30, "distance_m": 1.2 }
+    },
+    "Valve_Cover": {
+      "subsystem": "Block_Cylinders",
+      "objects": ["Valve_Cover_M_PlasticBlack_0"],
+      "inspect_pose": { "target": [0.0, 0.25, 0.25], "azimuth_deg": 0, "elevation_deg": 45, "distance_m": 1.1 }
+    },
+    "Oil_Sump": {
+      "subsystem": "Lubrication",
+      "objects": ["Oil_Sump_M_CastAluminium_0"],
+      "inspect_pose": { "target": [0.0, 0.25, -0.22], "azimuth_deg": -45, "elevation_deg": -20, "distance_m": 1.2 }
+    },
+    "Gearbox": {
+      "subsystem": "Gearbox_Prop_Drive",
+      "objects": ["Gearbox_M_CastAluminium_0"],
+      "inspect_pose": { "target": [0.0, 0.05, 0.0], "azimuth_deg": 30, "elevation_deg": 20, "distance_m": 1.0 }
+    },
+    "Prop_Flange": {
+      "subsystem": "Gearbox_Prop_Drive",
+      "objects": ["Prop_Flange_M_Steel_0"],
+      "inspect_pose": { "target": [0.0, 0.0, 0.0], "azimuth_deg": 0, "elevation_deg": 10, "distance_m": 0.8 }
+    },
+    "Common_Rail": {
+      "subsystem": "Fuel_System",
+      "objects": ["Common_Rail_M_Steel_0"],
+      "inspect_pose": { "target": [-0.18, 0.25, 0.12], "azimuth_deg": -75, "elevation_deg": 25, "distance_m": 1.0 }
+    },
+    "HP_Fuel_Pump": {
+      "subsystem": "Fuel_System",
+      "objects": ["HP_Fuel_Pump_M_SteelDark_0"],
+      "inspect_pose": { "target": [-0.18, 0.45, 0.08], "azimuth_deg": -90, "elevation_deg": 20, "distance_m": 0.9 }
+    },
+    "Injector_1": {
+      "subsystem": "Fuel_System",
+      "objects": ["Injector_1_M_Steel_0"],
+      "inspect_pose": { "target": [-0.08, 0.12, 0.22], "azimuth_deg": -60, "elevation_deg": 40, "distance_m": 0.8 }
+    },
+    "Injector_2": {
+      "subsystem": "Fuel_System",
+      "objects": ["Injector_2_M_Steel_0"],
+      "inspect_pose": { "target": [-0.08, 0.22, 0.22], "azimuth_deg": -60, "elevation_deg": 40, "distance_m": 0.8 }
+    },
+    "Injector_3": {
+      "subsystem": "Fuel_System",
+      "objects": ["Injector_3_M_Steel_0"],
+      "inspect_pose": { "target": [-0.08, 0.32, 0.22], "azimuth_deg": -60, "elevation_deg": 40, "distance_m": 0.8 }
+    },
+    "Injector_4": {
+      "subsystem": "Fuel_System",
+      "objects": ["Injector_4_M_Steel_0"],
+      "inspect_pose": { "target": [-0.08, 0.42, 0.22], "azimuth_deg": -60, "elevation_deg": 40, "distance_m": 0.8 }
+    },
+    "Turbocharger_LP": {
+      "subsystem": "Intake_Charge_Air",
+      "objects": ["Turbocharger_LP_M_TurboHousing_0"],
+      "inspect_pose": { "target": [0.26, 0.38, -0.05], "azimuth_deg": 90, "elevation_deg": 15, "distance_m": 1.0 }
+    },
+    "Turbocharger_HP": {
+      "subsystem": "Intake_Charge_Air",
+      "objects": ["Turbocharger_HP_M_TurboHousing_0"],
+      "inspect_pose": { "target": [0.24, 0.22, 0.05], "azimuth_deg": 85, "elevation_deg": 20, "distance_m": 1.0 }
+    },
+    "Intercooler": {
+      "subsystem": "Intake_Charge_Air",
+      "objects": ["Intercooler_M_CastAluminium_0"],
+      "inspect_pose": { "target": [0.0, 0.62, 0.24], "azimuth_deg": 45, "elevation_deg": 35, "distance_m": 1.1 }
+    },
+    "Intake_Manifold": {
+      "subsystem": "Intake_Charge_Air",
+      "objects": ["Intake_Manifold_M_CastAluminium_0"],
+      "inspect_pose": { "target": [-0.16, 0.25, 0.16], "azimuth_deg": -80, "elevation_deg": 20, "distance_m": 1.0 }
+    },
+    "Exhaust_Collector": {
+      "subsystem": "Exhaust",
+      "objects": ["Exhaust_Collector_M_HeatTintedSteel_0"],
+      "inspect_pose": { "target": [0.22, 0.30, -0.02], "azimuth_deg": 90, "elevation_deg": 10, "distance_m": 1.1 }
+    },
+    "Water_Pump": {
+      "subsystem": "Cooling",
+      "objects": ["Water_Pump_M_CastAluminium_0"],
+      "inspect_pose": { "target": [-0.14, 0.08, -0.08], "azimuth_deg": -45, "elevation_deg": 10, "distance_m": 0.9 }
+    },
+    "Oil_Filter": {
+      "subsystem": "Lubrication",
+      "objects": ["Oil_Filter_M_MetalPaintedBlack_0"],
+      "inspect_pose": { "target": [-0.20, 0.52, 0.06], "azimuth_deg": -85, "elevation_deg": 15, "distance_m": 0.85 }
+    },
+    "Oil_Cooler": {
+      "subsystem": "Lubrication",
+      "objects": ["Oil_Cooler_M_CastAluminium_0"],
+      "inspect_pose": { "target": [0.18, 0.12, -0.16], "azimuth_deg": 65, "elevation_deg": -15, "distance_m": 0.9 }
+    },
+    "Starter": {
+      "subsystem": "Electrical",
+      "objects": ["Starter_M_MetalPaintedBlack_0"],
+      "inspect_pose": { "target": [0.16, 0.46, -0.14], "azimuth_deg": 75, "elevation_deg": -10, "distance_m": 0.9 }
+    },
+    "Generator_1": {
+      "subsystem": "Electrical",
+      "objects": ["Generator_1_M_CastAluminium_0"],
+      "inspect_pose": { "target": [-0.22, 0.12, 0.02], "azimuth_deg": -65, "elevation_deg": 15, "distance_m": 0.9 }
+    },
+    "Generator_2": {
+      "subsystem": "Electrical",
+      "objects": ["Generator_2_M_CastAluminium_0"],
+      "inspect_pose": { "target": [-0.22, 0.38, -0.05], "azimuth_deg": -75, "elevation_deg": 10, "distance_m": 0.9 }
+    },
+    "ECU_Lane_A": {
+      "subsystem": "FADEC_ECU",
+      "objects": ["ECU_Lane_A_M_MetalPaintedBlack_0"],
+      "inspect_pose": { "target": [0.0, 0.58, 0.08], "azimuth_deg": 180, "elevation_deg": 25, "distance_m": 1.1 }
+    },
+    "ECU_Lane_B": {
+      "subsystem": "FADEC_ECU",
+      "objects": ["ECU_Lane_B_M_MetalPaintedBlack_0"],
+      "inspect_pose": { "target": [0.0, 0.58, -0.05], "azimuth_deg": 180, "elevation_deg": 20, "distance_m": 1.1 }
+    },
+    "Wiring_Harness": {
+      "subsystem": "Electrical",
+      "objects": ["Wiring_Harness_M_Rubber_0"],
+      "inspect_pose": { "target": [0.0, 0.30, 0.10], "azimuth_deg": 45, "elevation_deg": 35, "distance_m": 1.3 }
+    },
+    "Engine_Mount_Frame": {
+      "subsystem": "Mounts",
+      "objects": ["Engine_Mount_Frame_M_SteelDark_0"],
+      "inspect_pose": { "target": [0.0, 0.35, 0.0], "azimuth_deg": 120, "elevation_deg": 25, "distance_m": 1.4 }
+    }
+  },
+  "sensors": {
+    "RPM": { "objects": ["Sensor_RPM_M_Steel_0"], "component": "Gearbox" },
+    "COOLANT_TEMP": { "objects": ["Sensor_Coolant_Temp_M_Steel_0"], "component": "Water_Pump" },
+    "BOOST_PRESS": { "objects": ["Sensor_Boost_M_Steel_0"], "component": "Turbocharger_LP" },
+    "CHARGE_AIR_TEMP": { "objects": ["Sensor_Charge_Air_Temp_M_Steel_0"], "component": "Intercooler" },
+    "OIL_PRESS": { "objects": ["Sensor_Oil_Press_M_Steel_0"], "component": "Oil_Filter" },
+    "OIL_TEMP": { "objects": ["Sensor_Oil_Temp_M_Steel_0"], "component": "Oil_Sump" },
+    "FUEL_RAIL_PRESS": { "objects": ["Sensor_Fuel_Rail_Press_M_Steel_0"], "component": "Common_Rail" },
+    "FUEL_FLOW": { "objects": ["Sensor_Fuel_Flow_M_Steel_0"], "component": "HP_Fuel_Pump" },
+    "EGT_1": { "objects": ["Sensor_EGT_1_M_Steel_0"], "component": "Exhaust_Collector" },
+    "EGT_2": { "objects": ["Sensor_EGT_2_M_Steel_0"], "component": "Exhaust_Collector" },
+    "EGT_3": { "objects": ["Sensor_EGT_3_M_Steel_0"], "component": "Exhaust_Collector" },
+    "EGT_4": { "objects": ["Sensor_EGT_4_M_Steel_0"], "component": "Exhaust_Collector" },
+    "VIBRATION_GEARBOX": { "objects": ["Sensor_Vibration_Gearbox_M_Steel_0"], "component": "Gearbox" }
+  },
+  "telemetry_channels": [
+    "ENGINE_RPM", "PROP_RPM", "COOLANT_TEMP", "BOOST_PRESS", "CHARGE_AIR_TEMP",
+    "OIL_PRESS", "OIL_TEMP", "FUEL_RAIL_PRESS", "FUEL_FLOW", "EGT_1", "EGT_2",
+    "EGT_3", "EGT_4", "VIBRATION_GEARBOX"
+  ],
+  "faults": [
+    {
+      "fault_id": 101, "key": "COMBUSTION_FAILURE_CYL_1", "title": "Cylinder 1 Combustion Failure",
+      "severity": "CRITICAL", "component": "Injector_1",
+      "trigger_channels": ["EGT_1", "ENGINE_RPM"],
+      "recommended_action": "Reduce throttle, monitor RPM, divert to emergency recovery.",
+      "status": "proposed"
+    },
+    {
+      "fault_id": 103, "key": "RAIL_PRESSURE_LOSS", "title": "Common Rail Pressure Loss",
+      "severity": "MAJOR", "component": "Common_Rail",
+      "trigger_channels": ["FUEL_RAIL_PRESS", "FUEL_FLOW"],
+      "recommended_action": "Inspect high pressure fuel pump and common rail delivery lines.",
+      "status": "proposed"
+    },
+    {
+      "fault_id": 104, "key": "COOLANT_LOSS_THERMOSTAT", "title": "Coolant Loss / Thermostat Malfunction",
+      "severity": "CRITICAL", "component": "Water_Pump",
+      "trigger_channels": ["COOLANT_TEMP"],
+      "recommended_action": "Reduce power, establish gliding descent profile.",
+      "status": "proposed"
+    },
+    {
+      "fault_id": 105, "key": "INTERCOOLER_FOULING", "title": "Charge Air Intercooler Fouling",
+      "severity": "MINOR", "component": "Intercooler",
+      "trigger_channels": ["CHARGE_AIR_TEMP", "BOOST_PRESS"],
+      "recommended_action": "Clean intercooler matrix upon landing.",
+      "status": "proposed"
+    },
+    {
+      "fault_id": 106, "key": "OIL_PRESSURE_DECAY", "title": "Engine Oil Pressure Decay",
+      "severity": "CRITICAL", "component": "Oil_Filter",
+      "trigger_channels": ["OIL_PRESS", "OIL_TEMP"],
+      "recommended_action": "Land immediately; shut down engine if vibration exceeds limits.",
+      "status": "proposed"
+    },
+    {
+      "fault_id": 108, "key": "GEARBOX_VIBRATION", "title": "Reduction Gearbox Vibration Anomaly",
+      "severity": "MAJOR", "component": "Gearbox",
+      "trigger_channels": ["VIBRATION_GEARBOX"],
+      "recommended_action": "Reduce propeller RPM to minimum cruise.",
+      "status": "proposed"
+    },
+    {
+      "fault_id": 109, "key": "TURBO_UNDERBOOST", "title": "LP Turbocharger Underboost",
+      "severity": "MAJOR", "component": "Turbocharger_LP",
+      "trigger_channels": ["BOOST_PRESS", "EGT_MEAN"],
+      "recommended_action": "Descend below critical altitude (20,000 ft); inspect wastegate and turbocharger.",
+      "status": "proposed"
+    },
+    {
+      "fault_id": 110, "key": "BUS_28V_SAG", "title": "28V Electrical Alternator Bus Sag",
+      "severity": "MAJOR", "component": "Generator_1",
+      "trigger_channels": ["BUS_VOLTAGE_28V"],
+      "recommended_action": "Switch to Lane B generator, shed non-essential avionics loads.",
+      "status": "proposed"
+    }
+  ],
+  "cameras": [
+    "Cam_Hero", "Cam_Beauty_Orbit", "Cam_Wireframe", "Cam_Turbo", "Cam_Fuel_System", "Cam_Gearbox"
+  ]
+}

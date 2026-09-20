@@ -1,0 +1,17 @@
+[
+  {
+    "filename": "01_hero_front_left.png",
+    "camera": "Cam_Hero",
+    "film_transparent": false
+  },
+  {
+    "filename": "02_rear_right.png",
+    "camera": "Cam_Beauty_Orbit",
+    "film_transparent": false
+  },
+  {
+    "filename": "06_wireframe_clay.png",
+    "camera": "Cam_Wireframe",
+    "film_transparent": false
+  }
+]

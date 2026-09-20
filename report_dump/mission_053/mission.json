@@ -1,0 +1,50 @@
+{
+  "sortie_id": "SORTIE-SRV-20260917-102430",
+  "name": "High-Altitude ISR Loiter",
+  "uav_tail_number": "TAPAS-BH-201-AF01",
+  "region": "LADAKH",
+  "theater": "Northern Sector (Ladakh)",
+  "status": "COMPLETED",
+  "severity": "CRITICAL",
+  "start_time": "2026-09-17T04:54:30Z",
+  "end_time": "2026-09-17T04:54:30Z",
+  "start_epoch": 1789620870.114,
+  "end_epoch": 1789620870.673,
+  "duration_hours": 0.0,
+  "health_index_start": 1.0,
+  "health_index_end": 1.0,
+  "fault_count": 3,
+  "open_actions": 3,
+  "generated_by": "engine_service",
+  "oat_range_c": [
+    -22.0,
+    -15.0
+  ],
+  "altitude_range_ft": [
+    18000,
+    20000
+  ],
+  "mission_id": "mission_053",
+  "generated_at": "2026-09-17T04:54:30Z",
+  "generated_at_epoch": 1789620870.695,
+  "categories": {
+    "health": [
+      "engine_health.json"
+    ],
+    "faults": [
+      "faults_detected.json"
+    ],
+    "timeline": [
+      "fault_timeline.json"
+    ],
+    "predictions": [
+      "rul_prognostics.json"
+    ],
+    "actions": [
+      "recommended_actions.json"
+    ],
+    "mission_summary": [
+      "mission_summary.md"
+    ]
+  }
+}

@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TEI-PD170 Turbodiesel Aircraft Engine — 360° Visual Reference & Component Blueprint</title>
+<style>
+  :root {
+    --bg-primary: #0b0f17;
+    --bg-card: #131b26;
+    --bg-card-hover: #1c2636;
+    --border-color: #223246;
+    --accent-blue: #00d2ff;
+    --accent-gold: #ffd23f;
+    --accent-red: #ff4757;
+    --accent-green: #2ed573;
+    --accent-purple: #a55eea;
+    --text-main: #f1f2f6;
+    --text-muted: #8e9eab;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg-primary);
+    color: var(--text-main);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.5;
+    overflow-x: hidden;
+  }
+  header {
+    background: linear-gradient(180deg, #101622 0%, #0b0f17 100%);
+    border-bottom: 1px solid var(--border-color);
+    padding: 20px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .title-group h1 {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .badge {
+    background: rgba(0, 210, 255, 0.15);
+    color: var(--accent-blue);
+    border: 1px solid rgba(0, 210, 255, 0.4);
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .title-group p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+  .header-actions {
+    display: flex;
+    gap: 12px;
+  }
+  .btn {
+    background: var(--bg-card);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn:hover, .btn.active {
+    background: var(--accent-blue);
+    color: #000;
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 15px rgba(0, 210, 255, 0.4);
+  }
+
+  main {
+    max-width: 1800px;
+    margin: 0 auto;
+    padding: 30px 40px;
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 30px;
+  }
+
+  .viewer-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .viewport-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    position: relative;
+  }
+
+  .viewport-header {
+    background: rgba(16, 22, 34, 0.9);
+    padding: 14px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .viewport-header .view-info h2 {
+    font-size: 16px;
+    color: var(--accent-blue);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .viewport-header .view-info span {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .stage-wrapper {
+    position: relative;
+    background: radial-gradient(circle at center, #1b2434 0%, #0e141e 100%);
+    min-height: 640px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+  }
+
+  .stage-image {
+    max-width: 100%;
+    max-height: 720px;
+    object-fit: contain;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    cursor: zoom-in;
+  }
+
+  .stage-image.zoomed {
+    transform: scale(1.6);
+    cursor: zoom-out;
+  }
+
+  /* 360 Angle Quick Selector Bar */
+  .angle-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 16px;
+    background: #0f1520;
+    border-top: 1px solid var(--border-color);
+  }
+
+  .angle-btn {
+    flex: 1;
+    min-width: 120px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    padding: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+  }
+  .angle-btn strong {
+    display: block;
+    color: var(--text-main);
+    font-size: 13px;
+    margin-bottom: 2px;
+  }
+  .angle-btn:hover {
+    border-color: var(--accent-blue);
+    color: #fff;
+  }
+  .angle-btn.active {
+    background: rgba(0, 210, 255, 0.15);
+    border-color: var(--accent-blue);
+    color: var(--accent-blue);
+  }
+  .angle-btn.active strong {
+    color: var(--accent-blue);
+  }
+
+  /* Thumbnails strip */
+  .thumbs-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 12px;
+  }
+  .thumb-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .thumb-card:hover, .thumb-card.active {
+    border-color: var(--accent-blue);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 210, 255, 0.3);
+  }
+  .thumb-card img {
+    width: 100%;
+    height: 80px;
+    object-fit: cover;
+    display: block;
+  }
+  .thumb-label {
+    padding: 6px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Right Sidebar: Component & Fault Directory */
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .panel h3 {
+    font-size: 15px;
+    color: #fff;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+  }
+
+  .comp-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 520px;
+    overflow-y: auto;
+    padding-right: 6px;
+  }
+
+  .comp-item {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .comp-item:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--accent-blue);
+  }
+  .comp-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .comp-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+  .fault-tag {
+    margin-top: 6px;
+    font-size: 11px;
+    color: var(--accent-gold);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .specs-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .specs-table td {
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .specs-table td:first-child {
+    color: var(--text-muted);
+    width: 45%;
+  }
+  .specs-table td:last-child {
+    color: #fff;
+    font-weight: 600;
+  }
+
+  /* Comparison modal or split */
+  .ref-comparison {
+    margin-top: 30px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 24px;
+  }
+  .ref-comparison h3 {
+    font-size: 18px;
+    margin-bottom: 16px;
+    color: var(--accent-blue);
+  }
+  .compare-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .compare-box {
+    background: #0d121b;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px;
+  }
+  .compare-box h4 {
+    font-size: 13px;
+    color: var(--accent-gold);
+    margin-bottom: 8px;
+  }
+  .compare-box img {
+    width: 100%;
+    height: 380px;
+    object-fit: contain;
+    border-radius: 4px;
+    background: #000;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg-primary); }
+  ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent-blue); }
+
+  @media (max-width: 1200px) {
+    main { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="title-group">
+    <h1>TEI-PD170 360° MASTER REFERENCE & VISUAL BLUEPRINT <span class="badge">3D Benchmark</span></h1>
+    <p>Turbodiesel Aviation Engine (Bayraktar TB3 / TAI Anka / Aksungur) | Multi-Angle Turnaround Reference for 3D Modeling & Visual Closeness</p>
+  </div>
+  <div class="header-actions">
+    <button class="btn" onclick="toggleZoom()">🔍 Toggle Zoom</button>
+    <a href="tei_pd170_360_master_blueprint.jpg" target="_blank" class="btn active">⬇ View 4K UHD Master Blueprint</a>
+  </div>
+</header>
+
+<main>
+  <div class="viewer-container">
+    <!-- Active Viewport Stage -->
+    <div class="viewport-card">
+      <div class="viewport-header">
+        <div class="view-info">
+          <h2 id="activeViewTitle">360° Master Turnaround Reference Sheet</h2>
+          <span id="activeViewDesc">Comprehensive 4-angle panoramic showcase: Front Gearbox, Right Intake, Left Turbos, 3/4 Iso</span>
+        </div>
+        <div class="view-badge badge" id="angleBadge">360° PANORAMA</div>
+      </div>
+      <div class="stage-wrapper" id="stageWrapper">
+        <img src="tei_pd170_360_master_blueprint.jpg" id="stageImage" class="stage-image" alt="TEI PD170 360 Reference View" onclick="toggleZoom()">
+      </div>
+
+      <!-- Quick 360 Angle Selection Buttons -->
+      <div class="angle-bar">
+        <div class="angle-btn active" onclick="switchView('master')">
+          <strong>MASTER BLUEPRINT</strong>
+          4K Composite (All Angles)
+        </div>
+        <div class="angle-btn" onclick="switchView('front_ortho')">
+          <strong>0° FRONT ORTHO</strong>
+          Gearbox, Prop Flange, Governor
+        </div>
+        <div class="angle-btn" onclick="switchView('right_hero')">
+          <strong>90° RIGHT PROFILE</strong>
+          Dual Alternators, Intake, ASAS Filter
+        </div>
+        <div class="angle-btn" onclick="switchView('rear_ortho')">
+          <strong>180° REAR ORTHO</strong>
+          Flywheel, Ring Gear, Coolant
+        </div>
+        <div class="angle-btn" onclick="switchView('left_hero')">
+          <strong>270° LEFT PROFILE</strong>
+          Sequential Turbos, Downpipe
+        </div>
+        <div class="angle-btn" onclick="switchView('top_ortho')">
+          <strong>TOP PLAN VIEW</strong>
+          Common Rail, Injector Hard Lines
+        </div>
+        <div class="angle-btn" onclick="switchView('turnaround')">
+          <strong>360° TURNAROUND</strong>
+          4-Panel Studio Ortho/Iso
+        </div>
+        <div class="angle-btn" onclick="switchView('rear_top')">
+          <strong>REAR & TOP SHEET</strong>
+          3-Panel Orthographic Set
+        </div>
+      </div>
+    </div>
+
+    <!-- Thumbnail Carousel Strip -->
+    <div class="thumbs-strip">
+      <div class="thumb-card active" onclick="switchView('master')" id="thumb-master">
+        <img src="tei_pd170_360_master_blueprint.jpg" alt="Master Blueprint">
+        <div class="thumb-label">Master Blueprint</div>
+      </div>
+      <div class="thumb-card" onclick="switchView('turnaround')" id="thumb-turnaround">
+        <img src="tei_pd170_360_turnaround_sheet.jpg" alt="Turnaround Sheet">
+        <div class="thumb-label">360° Turnaround</div>
+      </div>
+      <div class="thumb-card" onclick="switchView('front_ortho')" id="thumb-front_ortho">
+        <img src="tei_pd170_360_front_ortho.jpg" alt="Front Ortho">
+        <div class="thumb-label">0° Front Ortho</div>
+      </div>
+      <div class="thumb-card" onclick="switchView('right_hero')" id="thumb-right_hero">
+        <img src="tei_pd170_360_front_right_hero.jpg" alt="Right Intake Hero">
+        <div class="thumb-label">90° Right Intake</div>
+      </div>
+      <div class="thumb-card" onclick="switchView('rear_ortho')" id="thumb-rear_ortho">
+        <img src="tei_pd170_360_rear_ortho.jpg" alt="Rear Ortho">
+        <div class="thumb-label">180° Rear Ortho</div>
+      </div>
+      <div class="thumb-card" onclick="switchView('left_hero')" id="thumb-left_hero">
+        <img src="tei_pd170_360_left_turbo_hero.jpg" alt="Left Turbo Hero">
+        <div class="thumb-label">270° Left Turbo</div>
+      </div>
+      <div class="thumb-card" onclick="switchView('top_ortho')" id="thumb-top_ortho">
+        <img src="tei_pd170_360_top_ortho.jpg" alt="Top Plan Ortho">
+        <div class="thumb-label">Top Plan View</div>
+      </div>
+      <div class="thumb-card" onclick="switchView('rear_top')" id="thumb-rear_top">
+        <img src="tei_pd170_360_rear_top_sheet.jpg" alt="Rear & Top Sheet">
+        <div class="thumb-label">Rear & Top Set</div>
+      </div>
+    </div>
+
+    <!-- Side by Side Real Reference Comparison -->
+    <div class="ref-comparison">
+      <h3>Direct Benchmark Comparison (Real TEI PD170 Exhibition Artifacts vs 360 Blueprint)</h3>
+      <div class="compare-grid">
+        <div class="compare-box">
+          <h4>Authentic Real Photo: Right Intake & Alternator Side (tei_pd170_ref_002.png)</h4>
+          <img src="../tei_pd170_ref_002.png" alt="Real TEI PD170 Intake Side">
+          <p style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">Note: Gold alternators, ASAS fuel filter, oil cooler, blue silicone lines, yellow wire tags.</p>
+        </div>
+        <div class="compare-box">
+          <h4>Authentic Real Photo: Left Exhaust & Turbo Side (tei_pd170_ref_044.png)</h4>
+          <img src="../tei_pd170_ref_044.png" alt="Real TEI PD170 Turbo Side">
+          <p style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">Note: Two-stage sequential turbos, wastegate actuators, heat shields, deep ribbed sump.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sidebar: Subsystems, Components & Fault Highlighting -->
+  <div class="sidebar">
+    <!-- Engine Technical Specifications -->
+    <div class="panel">
+      <h3>Engine Specifications <span>TEI-PD170</span></h3>
+      <table class="specs-table">
+        <tr><td>Configuration</td><td>Inline 4-Cylinder, 4-Stroke</td></tr>
+        <tr><td>Aspiration</td><td>Sequential Two-Stage Turbo</td></tr>
+        <tr><td>Displacement</td><td>2.1 Liters (2,100 cc)</td></tr>
+        <tr><td>Power Output</td><td>172 HP Max / 170 HP Cont.</td></tr>
+        <tr><td>Propeller Speed</td><td>2,300 Propeller RPM</td></tr>
+        <tr><td>Alternators</td><td>Dual 2x 4.5 kW (9 kW total, 28V)</td></tr>
+        <tr><td>Fuel Injection</td><td>Common Rail Diesel (HPCR)</td></tr>
+        <tr><td>Service Ceiling</td><td>45,000 ft (Critical: 20,000 ft)</td></tr>
+        <tr><td>Dry Weight</td><td>162 kg</td></tr>
+        <tr><td>Target UAVs</td><td>Bayraktar TB3, TAI ANKA, Aksungur</td></tr>
+      </table>
+    </div>
+
+    <!-- Component & Fault Highlights -->
+    <div class="panel">
+      <h3>Component & Fault Highlights <span>11 Subsystems</span></h3>
+      <div class="comp-list">
+        
+        <div class="comp-item" onclick="switchView('front_ortho')">
+          <div class="comp-header">
+            <span class="dot" style="background: var(--accent-blue);"></span>
+            <span>Reduction Gearbox & Prop Hub</span>
+          </div>
+          <p class="comp-desc">Conical aluminum casing with stiffening ribs, 6-bolt propeller hub, sight glass, drain plug, and safety wiring.</p>
+          <div class="fault-tag">⚠️ Fault: Gearbox oil pressure drop / Flange bearing wear</div>
+        </div>
+
+        <div class="comp-item" onclick="switchView('front_ortho')">
+          <div class="comp-header">
+            <span class="dot" style="background: var(--accent-blue);"></span>
+            <span>Hydraulic Propeller Governor</span>
+          </div>
+          <p class="comp-desc">Single-lever hydromechanical prop governor mounted lower right on gearbox with steel hydraulic hard lines.</p>
+          <div class="fault-tag">⚠️ Fault: Pitch control failure / Hydraulic seal leak</div>
+        </div>
+
+        <div class="comp-item" onclick="switchView('left_hero')">
+          <div class="comp-header">
+            <span class="dot" style="background: var(--accent-red);"></span>
+            <span>Two-Stage Sequential Turbochargers</span>
+          </div>
+          <p class="comp-desc">High-Pressure (HP) and Low-Pressure (LP) turbos with cast crossover exhaust duct and oil feed/return lines.</p>
+          <div class="fault-tag">⚠️ Fault: Turbo overboost / Compressor stall / Oil seal leak</div>
+        </div>
+
+        <div class="comp-item" onclick="switchView('left_hero')">
+          <div class="comp-header">
+            <span class="dot" style="background: var(--accent-red);"></span>
+            <span>Dual Wastegate Actuators</span>
+          </div>
+          <p class="comp-desc">Black primary pneumatic actuator + Red billet anodized TiAL-style actuator with stainless linkage rod and jam nuts.</p>
+          <div class="fault-tag">⚠️ Fault: Wastegate flap sticking / Boost loss at altitude</div>
+        </div>
+
+        <div class="comp-item" onclick="switchView('left_hero')">
+          <div class="comp-header">
+            <span class="dot" style="background: #eccc68;"></span>
+            <span>Exhaust Downpipe & Heat Shield</span>
+          </div>
+          <p class="comp-desc">Stainless steel downpipe with V-band clamp, dimpled metallic thermal insulation blanket over exhaust manifold.</p>
+          <div class="fault-tag">⚠️ Fault: Exhaust manifold crack / V-band clamp loose</div>
+        </div>
+
+        <div class="comp-item" onclick="switchView('right_hero')">
+          <div class="comp-header">
+            <span class="dot" style="background: var(--accent-gold);"></span>
+            <span>Dual 4.5 kW 28V DC Alternators</span>
+          </div>
+          <p class="comp-desc">Vertically stacked gold/yellow rotor housings with perimeter cooling slots and heavy gauge terminal cables.</p>
+          <div class="fault-tag">⚠️ Fault: Alternator 1/2 diode short / Voltage regulator trip</div>
+        </div>
+
+        <div class="comp-item" onclick="switchView('top_ortho')">
+          <div class="comp-header">
+            <span class="dot" style="background: var(--accent-gold);"></span>
+            <span>Common Rail Fuel Rail & 4 Hard Lines</span>
+          </div>
+          <p class="comp-desc">Yellow support rail bracket, 4 stainless injector lines feeding high-pressure solenoid injectors with vibration dampeners.</p>
+          <div class="fault-tag">⚠️ Fault: Injection pressure drop / Injector #3 solenoid fault</div>
+        </div>
+
+        <div class="comp-item" onclick="switchView('right_hero')">
+          <div class="comp-header">
+            <span class="dot" style="background: var(--accent-green);"></span>
+            <span>Oil & Fuel Conditioning (ASAS & Cooler)</span>
+          </div>
+          <p class="comp-desc">ASAS cylindrical diesel filter canister, horizontal spin-on oil filter, finned billet oil cooler heat exchanger box.</p>
+          <div class="fault-tag">⚠️ Fault: Fuel filter clog / Oil cooler bypass valve open</div>
+        </div>
+
+        <div class="comp-item" onclick="switchView('rear_ortho')">
+          <div class="comp-header">
+            <span class="dot" style="background: #70a1ff;"></span>
+            <span>Flywheel & Ring Gear Assembly</span>
+          </div>
+          <p class="comp-desc">Precision machined steel flywheel with starter ring gear, bell housing rim with alignment dowels, rear coolant neck.</p>
+          <div class="fault-tag">⚠️ Fault: Ring gear tooth damage / Starter motor failure</div>
+        </div>
+
+        <div class="comp-item" onclick="switchView('turnaround')">
+          <div class="comp-header">
+            <span class="dot" style="background: var(--accent-purple);"></span>
+            <span>Aerospace Mil-Spec Wiring Harness</span>
+          </div>
+          <p class="comp-desc">Expandable black braided loom, yellow heat-shrink identification sleeves, Mil-Spec P-clamps, dual FADEC interface.</p>
+          <div class="fault-tag">⚠️ Fault: Sensor ground intermittent / CAN bus communication error</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+  const views = {
+    master: {
+      title: "Master 4K UHD 360° Reference Blueprint",
+      desc: "All canonical views aligned: 0° Front, 90° Right Intake, 180° Rear, 270° Left Turbo, Top Plan, Turnaround Panorama, Component Index",
+      badge: "4K MASTER BLUEPRINT",
+      file: "tei_pd170_360_master_blueprint.jpg"
+    },
+    front_ortho: {
+      title: "0° Front Gearbox Orthographic View",
+      desc: "Conical reduction gearbox housing, 6-bolt propeller hub flange, hydraulic governor, oil sight glass, timing cover coolant bypass",
+      badge: "0° FRONT ORTHO",
+      file: "tei_pd170_360_front_ortho.jpg"
+    },
+    right_hero: {
+      title: "90° Right Profile View (Intake & Electrical Systems)",
+      desc: "Dual 4.5 kW gold alternators, ASAS fuel filter, spin-on oil filter, oil cooler heat exchanger, common rail fuel lines, blue silicone hoses",
+      badge: "90° RIGHT INTAKE",
+      file: "tei_pd170_360_front_right_hero.jpg"
+    },
+    rear_ortho: {
+      title: "180° Rear Flywheel Orthographic View",
+      desc: "Machined steel flywheel with starter ring gear, starter pinion engagement, bell housing rim, rear cylinder head coolant outlet neck",
+      badge: "180° REAR ORTHO",
+      file: "tei_pd170_360_rear_ortho.jpg"
+    },
+    left_hero: {
+      title: "270° Left Profile View (Two-Stage Sequential Turbos)",
+      desc: "HP and LP sequential turbochargers, crossover exhaust duct, black & red wastegate actuators, stainless downpipe with V-band clamp, starter motor, deep sump",
+      badge: "270° LEFT TURBO",
+      file: "tei_pd170_360_left_turbo_hero.jpg"
+    },
+    top_ortho: {
+      title: "Top Plan Orthographic View (Dual-Axis Plan)",
+      desc: "Propeller gearbox flange, cylinder head valve cover, yellow common-rail fuel bracket with 4 steel injector lines, twin turbos, intake manifold",
+      badge: "TOP PLAN VIEW",
+      file: "tei_pd170_360_top_ortho.jpg"
+    },
+    turnaround: {
+      title: "Full 360° Turnaround Reference Sheet",
+      desc: "Studio 4-view horizontal alignment: Front Gearbox, Right Side, Left Side, Three-Quarter Perspective with technical callouts",
+      badge: "360° TURNAROUND",
+      file: "tei_pd170_360_turnaround_sheet.jpg"
+    },
+    rear_top: {
+      title: "Rear & Top Plan 3-View Reference Sheet",
+      desc: "Rear Orthographic, Top Plan Orthographic, and Front-Left Three-Quarter Perspective technical set",
+      badge: "REAR & TOP SET",
+      file: "tei_pd170_360_rear_top_sheet.jpg"
+    }
+  };
+
+  function switchView(key) {
+    const data = views[key];
+    if (!data) return;
+
+    // Update active buttons
+    document.querySelectorAll('.angle-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.thumb-card').forEach(c => c.classList.remove('active'));
+
+    const activeThumb = document.getElementById('thumb-' + key);
+    if (activeThumb) activeThumb.classList.add('active');
+
+    // Update image and text
+    const img = document.getElementById('stageImage');
+    img.style.opacity = '0';
+    setTimeout(() => {
+      img.src = data.file;
+      img.alt = data.title;
+      img.classList.remove('zoomed');
+      img.style.opacity = '1';
+    }, 150);
+
+    document.getElementById('activeViewTitle').textContent = data.title;
+    document.getElementById('activeViewDesc').textContent = data.desc;
+    document.getElementById('angleBadge').textContent = data.badge;
+  }
+
+  function toggleZoom() {
+    const img = document.getElementById('stageImage');
+    img.classList.toggle('zoomed');
+  }
+</script>
+
+</body>
+</html>

@@ -49,3 +49,7 @@ Qwen3-4B/
 
 # Scratch transient heavy blends (>100MB)
 scratch/phase_c_blends/
+
+# Large model weights / voice assets — excluded from Maverick push (size/LFS quota)
+/Voice/
+/Qwen3-4B/

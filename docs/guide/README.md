@@ -1,6 +1,6 @@
-# 📚 DRDO PS-26054: Master Engineering Documentation Suite
-**Rotax 912 iS Sport Aero-Engine AI Digital Twin & Health Monitoring System**  
-*Defence Research and Development Organisation (DRDO) / Innovations for Defence Excellence (iDEX)*
+# 📚 Project ANUMAAN — Master Engineering Documentation Suite
+**AI-Enabled Digital Twin for Predictive Health Monitoring & Mission Reliability of Aero Piston Engines**
+*Smart India Hackathon — DRDO Problem Statement 26054 (Software / Robotics and Drones)*
 
 ---
 
@@ -29,6 +29,12 @@ To help stakeholders navigate the system specifications without friction or fold
 ## 📑 Master Documentation Suite
 
 Each file is a self-contained, authoritative specification:
+
+### 0. 🇮🇳 [00_official_problem_statement.md](../../ANUMAAN/docs/00_official_problem_statement.md)
+* **Official SIH Problem Statement Documentation:**
+  * Verbatim DRDO PS-26054 problem statement (ID, background, description, expected solution, deliverables).
+  * Project name and rationale — **ANUMAAN**.
+  * Requirement-to-component mapping table linking each official ask to the corresponding ANUMAAN module.
 
 ### 1. 🎯 [01_problem_statement_and_analysis.md](file:///e:/TalentForge/Clay/3d_engine/docs/01_problem_statement_and_analysis.md)
 * **Requirements & Strategic Defense Rationale:**

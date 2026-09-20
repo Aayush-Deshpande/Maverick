@@ -1,0 +1,61 @@
+{
+  "platform_id": "bayraktar_tb3",
+  "display_name": "Bayraktar TB3 UCAV",
+  "manifest_version": 1,
+  "blend": "Models/airframes/bayraktar_tb3.blend",
+  "collection": "bayraktar_tb3",
+  "material_prefix": "TB3",
+  "quality_tier": "T1",
+  "dimensions_m": {
+    "wingspan": { "value": 14.0, "sources": ["Baykar Tech official TB3 datasheet"] },
+    "length": { "value": 8.35, "sources": ["Baykar Tech official TB3 datasheet"] },
+    "height": { "value": 2.60, "sources": ["Baykar Tech official TB3 datasheet"] }
+  },
+  "dimension_confidence": "HIGH",
+  "engines": [
+    {
+      "mount_id": "E1",
+      "engine_id": "tei_pd170",
+      "empty": "Engine_Mount_1",
+      "location_m": [0.0, -0.65, 1.15],
+      "rotation_deg": [0.0, 0.0, 180.0],
+      "pusher": true
+    }
+  ],
+  "propellers": [
+    {
+      "mount_id": "E1",
+      "blades": 3,
+      "pivot": "Pivot_Propeller",
+      "blur_disc": "Prop_Blur_Disc_1"
+    }
+  ],
+  "mechanisms": {
+    "gear_retract": {
+      "pivots": ["Pivot_Nose_Gear", "Pivot_Main_Gear_Left", "Pivot_Main_Gear_Right"],
+      "angles_deg": [95.0, 85.0, 85.0]
+    },
+    "wing_fold": {
+      "pivots": ["Pivot_WingFold_Left", "Pivot_WingFold_Right"],
+      "angles_deg": [115.0, 115.0]
+    }
+  },
+  "cameras": [
+    "Cam_Hero",
+    "Cam_Beauty_Orbit",
+    "Cam_Front_Sensor",
+    "Cam_Engine_Bay",
+    "Cam_Undercarriage",
+    "Cam_Wireframe"
+  ],
+  "markings": [
+    { "type": "roundel", "location": "wing_upper_outer", "source": "Turkish Air Force Standard Roundel" },
+    { "type": "flag", "location": "v_tail_outer", "source": "Turkish National Flag" },
+    { "type": "serial", "location": "fuselage_aft", "source": "PT-2 Prototype Markings" }
+  ],
+  "must_have_features": [
+    "Fuselage", "Wing_Inner_Left", "Wing_Outer_Left", "Wing_Inner_Right", "Wing_Outer_Right",
+    "Inverted_V_Stabilizer", "Tail_Boom_Left", "Tail_Boom_Right", "Sensor_Turret_CATS",
+    "Turret_Optics_Sapphire", "SATCOM_Radome", "Nose_Gear_Strut", "Main_Wheel_Left", "Main_Wheel_Right"
+  ]
+}
