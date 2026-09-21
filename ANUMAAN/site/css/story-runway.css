@@ -1,0 +1,349 @@
+/* ==========================================================================
+   PROJECT ANUMAAN — 18-SCENE CINEMATIC MISSION RUNWAY CSS
+   USAvionix Narrative Architecture: Problem -> Tension -> Escalation -> Resolution
+   ========================================================================== */
+
+/* Story Experience Container */
+.story-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: var(--bg-void);
+  user-select: none;
+}
+
+/* Background Scene Canvas Container */
+.story-canvas-viewport {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  pointer-events: all;
+}
+
+/* 3D Canvas Canvas Element */
+#story-webgl-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Photographic Backdrop Image Plane (For Cinematic Fallback & Split-Screen) */
+.story-image-backdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0;
+  transition: opacity var(--transition-slow);
+  pointer-events: none;
+}
+
+.story-image-backdrop.active {
+  opacity: 1;
+}
+
+/* Split-Screen Real vs Twin Divider (Scene 5) */
+.split-screen-divider {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  background: var(--state-cyan);
+  box-shadow: 0 0 15px var(--state-cyan);
+  z-index: 10;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-normal);
+}
+
+.split-screen-divider.active {
+  opacity: 1;
+}
+
+.split-label-left, .split-label-right {
+  position: absolute;
+  top: calc(var(--status-bar-height) + var(--header-height) + 24px);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 4px 10px;
+  background: rgba(12, 16, 26, 0.85);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+  z-index: 10;
+}
+
+.split-label-left {
+  left: 32px;
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.split-label-right {
+  right: 32px;
+  color: var(--state-cyan);
+  border-color: var(--border-cyan);
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+}
+
+.split-screen-divider.active ~ .split-label-left,
+.split-screen-divider.active ~ .split-label-right {
+  opacity: 1;
+}
+
+/* Fixed HUD Overlay (Scene by Scene) */
+.story-hud-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  grid-template-columns: 1fr 1fr;
+  padding: calc(var(--status-bar-height) + var(--header-height) + 20px) 48px 48px 48px;
+}
+
+/* Top Center: Progress Tick Ruler */
+.story-progress-ruler {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.ruler-phase-label {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--state-neutral);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ruler-ticks {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ruler-tick {
+  width: 14px;
+  height: 3px;
+  border-radius: 1px;
+  background: rgba(255, 255, 255, 0.15);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+  pointer-events: all;
+}
+
+.ruler-tick:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.ruler-tick.passed {
+  background: rgba(0, 240, 255, 0.5);
+}
+
+.ruler-tick.active {
+  width: 32px;
+  background: var(--state-cyan);
+  box-shadow: 0 0 10px var(--state-cyan);
+}
+
+.ruler-tick.active.amber {
+  background: var(--state-amber);
+  box-shadow: 0 0 10px var(--state-amber);
+}
+
+.ruler-tick.active.red {
+  background: var(--state-red);
+  box-shadow: 0 0 10px var(--state-red);
+}
+
+/* Scene Headline (Top Left) */
+.story-headline-block {
+  grid-column: 1;
+  grid-row: 2;
+  align-self: start;
+  max-width: 620px;
+  animation: fade-slide-up 0.5s var(--ease-tactical);
+}
+
+.story-scene-tag {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--state-cyan);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.story-scene-tag.amber { color: var(--state-amber); }
+.story-scene-tag.red { color: var(--state-red); }
+
+.story-scene-title {
+  font-family: var(--font-display);
+  font-size: 2.85rem;
+  line-height: 1.05;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.03em;
+  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.8);
+}
+
+/* Scene Caption (Bottom Left) */
+.story-caption-block {
+  grid-column: 1;
+  grid-row: 3;
+  align-self: end;
+  max-width: 520px;
+  padding-bottom: 8px;
+}
+
+.story-caption-text {
+  font-size: 1.08rem;
+  line-height: 1.5;
+  color: var(--state-neutral-bright);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+  font-weight: 400;
+}
+
+.story-citation-text {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--state-neutral);
+  margin-top: 6px;
+  letter-spacing: 0.04em;
+}
+
+/* Monospace HUD Data Stack (Bottom Right) */
+.story-hud-stack {
+  grid-column: 2;
+  grid-row: 3;
+  justify-self: end;
+  align-self: end;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 380px;
+  pointer-events: all;
+}
+
+.hud-telemetry-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background: rgba(9, 13, 21, 0.85);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  backdrop-filter: blur(12px);
+}
+
+.hud-telemetry-row.highlight-cyan {
+  border-color: var(--border-cyan);
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.15);
+}
+
+.hud-telemetry-row.highlight-amber {
+  border-color: var(--border-amber);
+  background: rgba(245, 158, 11, 0.08);
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.2);
+}
+
+.hud-telemetry-row.highlight-red {
+  border-color: var(--border-red);
+  background: rgba(239, 68, 68, 0.1);
+  box-shadow: 0 0 18px rgba(239, 68, 68, 0.25);
+}
+
+.hud-telemetry-label {
+  color: var(--state-neutral);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.hud-telemetry-val {
+  font-weight: 700;
+  color: #ffffff;
+}
+
+/* Presenter Controller (Bottom Center) */
+.story-controls-bar {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(12, 16, 26, 0.9);
+  border: 1px solid var(--border-medium);
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  z-index: 10;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+}
+
+.story-ctrl-btn {
+  background: transparent;
+  border: none;
+  color: var(--state-neutral-bright);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all var(--transition-fast);
+}
+
+.story-ctrl-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.story-ctrl-btn.active {
+  background: var(--state-cyan);
+  color: #000000;
+  font-weight: 700;
+}
+
+.story-key-hint {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--state-neutral);
+  background: rgba(255, 255, 255, 0.08);
+  padding: 2px 6px;
+  border-radius: 3px;
+  border: 1px solid var(--border-subtle);
+}
+
+/* Keyframe Animations */
+@keyframes fade-slide-up {
+  0% { opacity: 0; transform: translateY(16px); }
+  100% { opacity: 1; transform: translateY(0); }
+}

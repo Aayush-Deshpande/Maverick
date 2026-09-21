@@ -1,0 +1,7 @@
+# Dataset files are NOT tracked in git — only metadata and instructions.
+*
+!.gitignore
+!README.md
+!fetch.py
+!*/
+!*/README.md

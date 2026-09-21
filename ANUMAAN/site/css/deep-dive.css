@@ -1,0 +1,398 @@
+/* ==========================================================================
+   PROJECT ANUMAAN — DEEP DIVE MODULES CSS
+   Problem Statement, Architecture Layers, Mission Simulator, Fleet Map & Traceability
+   ========================================================================== */
+
+/* Problem Statement Pitch Card */
+.problem-pitch-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 32px;
+  align-items: center;
+}
+
+.crisis-stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.crisis-stat-card {
+  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid var(--border-red);
+  border-radius: var(--radius-md);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.crisis-stat-val {
+  font-family: var(--font-mono);
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.crisis-stat-label {
+  font-size: 0.82rem;
+  color: #fca5a5;
+  line-height: 1.3;
+}
+
+/* Threshold Failure Comparison Card */
+.threshold-vs-twin-box {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.comparison-timeline-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.timeline-track-bar {
+  height: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  position: relative;
+  overflow: hidden;
+}
+
+.timeline-fill-nominal {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 60%;
+  background: var(--state-green);
+}
+
+.timeline-fill-twin-early {
+  position: absolute;
+  left: 60%;
+  top: 0;
+  bottom: 0;
+  width: 35%;
+  background: var(--state-amber);
+}
+
+.timeline-fill-threshold-late {
+  position: absolute;
+  left: 95%;
+  top: 0;
+  bottom: 0;
+  width: 5%;
+  background: var(--state-red);
+}
+
+/* Architecture: The 6 Named Layers Grid */
+.layers-showcase-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.layer-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  backdrop-filter: blur(16px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: all var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+}
+
+.layer-card:hover {
+  border-color: var(--border-cyan);
+  box-shadow: 0 12px 30px rgba(0, 240, 255, 0.12);
+  transform: translateY(-2px);
+}
+
+.layer-header-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.layer-name {
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #ffffff;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.layer-meaning {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--state-cyan);
+  text-transform: uppercase;
+}
+
+.layer-tagline {
+  font-size: 0.92rem;
+  color: var(--state-neutral-bright);
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+.layer-pillars-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 6px;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 12px;
+}
+
+.layer-pillar-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pillar-title {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.pillar-desc {
+  font-size: 0.78rem;
+  color: var(--state-neutral);
+  line-height: 1.3;
+}
+
+/* Mission Simulation Studio (KALPANA) */
+.simulation-theater-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.theater-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.theater-card.ladakh {
+  border-top: 3px solid var(--state-cyan);
+}
+
+.theater-card.thar {
+  border-top: 3px solid var(--state-amber);
+}
+
+.theater-title {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.theater-specs-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.theater-spec-box {
+  background: rgba(9, 13, 21, 0.7);
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+}
+
+.theater-spec-label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--state-neutral);
+  text-transform: uppercase;
+}
+
+.theater-spec-val {
+  font-family: var(--font-mono);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-top: 2px;
+}
+
+/* Fleet Command Center */
+.fleet-command-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 24px;
+}
+
+.fleet-map-container {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  height: 480px;
+  position: relative;
+  overflow: hidden;
+}
+
+#india-tactical-svg {
+  width: 100%;
+  height: 100%;
+}
+
+.fleet-drones-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  max-height: 480px;
+  overflow-y: auto;
+}
+
+.drone-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.drone-card:hover {
+  border-color: var(--border-cyan);
+  background: rgba(20, 27, 44, 0.9);
+}
+
+.drone-card.active {
+  border-color: var(--border-cyan);
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.2);
+}
+
+.drone-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.drone-tail {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.drone-status-pill {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  padding: 2px 6px;
+  border-radius: 3px;
+  text-transform: uppercase;
+}
+
+.status-airborne {
+  background: rgba(0, 240, 255, 0.15);
+  color: var(--state-cyan);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+}
+
+.status-standby {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--state-green);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.status-maint {
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--state-amber);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+/* Requirements Traceability Table */
+.traceability-wrapper {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  overflow-x: auto;
+}
+
+.traceability-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.trace-search-input {
+  background: rgba(9, 13, 21, 0.8);
+  border: 1px solid var(--border-subtle);
+  color: #ffffff;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  outline: none;
+  min-width: 280px;
+}
+
+.trace-search-input:focus {
+  border-color: var(--border-cyan);
+}
+
+.traceability-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.traceability-table th {
+  font-family: var(--font-mono);
+  font-size: 0.70rem;
+  text-transform: uppercase;
+  color: var(--state-neutral);
+  text-align: left;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-medium);
+  letter-spacing: 0.06em;
+}
+
+.traceability-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--state-neutral-bright);
+}
+
+.traceability-table tr:hover td {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.req-id-badge {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--state-cyan);
+  font-weight: 600;
+}
