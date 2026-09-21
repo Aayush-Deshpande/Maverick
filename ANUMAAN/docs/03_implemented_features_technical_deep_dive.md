@@ -139,4 +139,60 @@ What none of this proves on its own — the one thing worth holding onto from th
 
 ---
 
+## 11. Features Still To Implement — What PS-26054 Asks For That Isn't Here Yet
+
+Everything above describes what exists. This section is the inverse: capabilities the problem statement requires (or strongly implies) that are absent or only nominally present, each with the technical reason it matters and the concrete build. Gap IDs (G##) refer to [gap_plan.md](gap_plan.md), which holds the acceptance criteria per item. Ordered by priority: P1 items undermine the credibility of everything in §1–§10; P2 items are explicitly named in the PS and missing or broken; P3 items add depth.
+
+### P1 — Credibility blockers
+
+**11.1 Independent virtual engine (G01).** Today `can_streamer.py` builds each "actual" reading as the twin's own expected state plus Gaussian noise plus fault offsets, so residuals are noise + the injected fault by construction and detection cannot fail. Build a separate plant process on the higher-fidelity ODE model in `rotax_dataset_generator.py` (thermal capacitance lag, crank inertia, oil-viscosity coupling) with properties the twin does not know: engine-to-engine parameter variation, sensor bias/lag/noise, slow wear. It publishes only sensor frames over a transport; faults are injected into the plant only; the twin never sees `FAULT_ID`. Nominal residuals must then be non-zero and structured (model mismatch), which is what makes every downstream detector's performance meaningful.
+
+**11.2 Operator commands that drive physics (G02).** `SET_THROTTLE/ALTITUDE/OAT` only overwrite displayed fields after the frame is generated. Route them into the plant as inputs with first-order dynamics (RPM response to throttle, thermal lag on CHT/EGT/oil) so a throttle step yields a transient with a measurable time constant, altitude reduces MAP and power, and OAT raises CHT/oil temperature. Each needs an automated direction/time-constant test. This is the prerequisite for any credible environmental or hot-weather simulation.
+
+**11.3 Evaluation harness proving prediction (G03).** The 97.51% accuracy is per-frame classification on data from the training generator. Build `backend/evaluation/` running the twin against the independent plant on unseen severities, onset rates, engine seeds and regions, reporting: warning lead time versus a plain fixed-threshold monitor (the direct evidence for "transition from threshold-based monitoring"), false alarms per nominal flight hour, RUL error against the plant's known time-to-failure with p10–p90 coverage, and sensor-fault versus component-fault discrimination. One command, fixed seeds, generated report.
+
+### P2 — Explicitly named in the PS
+
+**11.4 Real vibration signatures (G04).** Vibration is one RMS channel at 20 Hz, so `spectral_analyser.py` correctly falls back to RMS (the 3× prop order at ~100 Hz exceeds the 10 Hz Nyquist limit). The plant must synthesize a ≥2 kHz waveform (prop orders 1×/2×/3×, crank order, gear mesh, misfire impulses, bearing tones); an edge extractor computes FFT/order spectra and publishes order amplitudes, band energies, kurtosis and crest factor at 20 Hz. Gearbox wear must raise 3× amplitude before broadband RMS; misfire must be separable from wear; the dashboard gets a spectrum/order plot.
+
+**11.5 Sensor drift detection (G05).** `drift_detected` is hardcoded `False`. Add slow-bias detection using redundancy (four CHT, four EGT channels, FADEC Lane A vs B MAP) plus measured-vs-expected bias estimation (CUSUM or a Kalman bias state), and inject bias-ramp, stuck, noise-growth and dropout faults in the plant. A +0.5 °C/min ramp on one CHT must be reported as sensor drift, while a real cooling fault on that cylinder must be reported as a component fault.
+
+**11.6 Injection timing parameters (G06).** Absent end to end. Add `INJ_TIMING_DEG_1..4`, `INJ_PULSE_MS_1..4`, `IGN_TIMING_DEG` to the schema, model their effect on EGT/power/fuel flow, add an injection-timing-drift / injector-response-delay fault distinguishable from injector clog (fault 2), and carry the channels through state, dashboard, replay, classifier features and dataset schema.
+
+**11.7 Engine performance maps (G07).** Expected values come from algebraic formulas. Add tabulated power, fuel-flow and manifold-pressure maps over RPM × throttle with density-altitude correction, sourced and cited from the Rotax 912 iS operator/installation manual charts, bilinear-interpolated in the expected-state calculation, matching published points within a stated tolerance (proposed 5%) with tests for interpolation and out-of-range handling.
+
+**11.8 Engine efficiency trends (G09).** Nothing exists on the dashboard or in analytics. Compute brake-specific fuel consumption (mapped power over fuel flow), fuel flow versus expected at equal power, and altitude power margin; trend them within a sortie and across sorties/fleet; chart them and include them in mission reports. Injector clog and cooling degradation must visibly shift the trend.
+
+**11.9 Mission profiles and named scenarios (G12).** Live mode is a single `CRUISE_LOITER` phase with sinusoidal altitude. Add mission profile files (phase sequence, durations, target altitude, throttle schedule, ISA deviation, seed) and four selectable presets: High Altitude, Endurance (time-accelerated with wear accumulation), Hot Weather, Rapid Throttle Transitions, each runnable live, in replay and headless, with faults injectable at any phase.
+
+**11.10 Three audience views (G10).** One operator-style dashboard exists. Add an Operator view (status, alerts, action, Go/No-Go), a Propulsion Engineer view (residuals, trends, spectra, model explanations with feature contributions, timing, efficiency) and a Maintenance view (per-component RUL, work-order queue with UI sign-off, advisory history, mission-wise reports).
+
+**11.11 Dataset honesty (G18).** `source1_avionics_logs/` is empty and source 2 is NASA turbofan data. Either obtain licensed real piston-engine logs and parse them with `garmin_parser.py`, or label every dataset as simulated with its generation method and drop or caveat the turbofan-derived RUL grounding, so every claim in docs, UI and slides matches the files present.
+
+**11.12 Architecture and deployment documentation (G20).** Regenerate the architecture document from the real code after G01/G11 and add a deployment roadmap covering edge versus GCS split, test-rig mode, fleet server, the hardware path to real CAN/FADEC, telemetry security and known limitations. Every diagram component maps to a real module or is marked roadmap.
+
+### P3 — Depth
+
+**11.13 External ingestion and transport (G11).** Only the in-process generator feeds the twin; no CAN framing exists. Add virtual CAN via python-can with a documented DBC (SocketCAN on Linux/WSL `vcan`, UDP fallback), a log-as-live mode streaming recorded CSV through the same ingestion path, and an ingestion health view (frame rate, drops, stale channels).
+
+**11.14 Adaptive learning (G08).** Models are trained once. Add per-engine baseline adaptation from flights later confirmed nominal, retraining from sorties using work-order sign-offs as labels, versioned models with automatic before/after evaluation through the G03 harness, and a guard that never adapts across open anomalies (so a slow real fault is not absorbed into the baseline). Record model version in every diagnostic event.
+
+**11.15 Fault taxonomy separation (G13, G14, G15, G16).** Split cooling degradation (slow efficiency loss) from acute overheat; separate combustion instability (cycle-to-cycle RPM/EGT variation, vibration impulses) from misfire and EGT imbalance; extend lubrication beyond pressure loss (oil temperature rise at constant load, viscosity drift, consumption); estimate battery state of health from internal resistance under load steps and alternator capacity versus load, detecting degradation before bus voltage leaves limits. Each is verified as mutually distinguishable in the evaluation confusion matrix.
+
+**11.16 State estimation (G17).** The expected state is steady-state algebra. Add thermal and rotational lag states and a Kalman or observer-style estimator fusing model prediction with possibly faulty sensors, yielding unmeasured quantities such as estimated power and supporting G05; the estimate should track the plant's true internal state better than raw sensors during noise and single-sensor faults.
+
+**11.17 Fleet and multi-engine scalability (G19) and operational history (G21).** No `engine_id`, fault IDs validated 0..8, Rotax constants at module level, fleet summary aggregating sorties not engines. Add engine identity to state and records, engine parameters from configuration, and a fleet view of at least two concurrent virtual engines with separate health, RUL and history. Verify (currently unchecked) that RUL uses cumulative engine hours and that maintenance sign-off adjusts component wear state.
+
+**11.18 Hygiene (G22).** Make the absolute paths in `rotax912_dataset_manifest.json` relative, and align the `_tick` docstring (120 Hz) with the real 20 Hz broadcast.
+
+### Suggested execution order
+
+1. Make the twin honest: 11.1, 11.2, transport part of 11.13, 11.18.
+2. Prove it predicts: 11.3, 11.9, 11.11.
+3. Close explicit gaps: 11.6, 11.7, 11.4, 11.5, 11.8, 11.10.
+4. Depth: 11.14, 11.15, 11.16, history part of 11.17.
+5. Scale and document: rest of 11.17, 11.12, log-as-live and ingestion health from 11.13.
+
+---
+
 *Document maintained as part of the ANUMAAN documentation suite. Companion documents: [02_comprehensive_audit_summary.md](02_comprehensive_audit_summary.md) (plain-language status), [gap_plan.md](gap_plan.md) (requirement-by-requirement grading with the structural gap this pipeline sits behind).*
