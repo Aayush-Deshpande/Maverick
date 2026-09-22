@@ -1,0 +1,53 @@
+{
+  "engine_id": "austro_ae300",
+  "display_name": "Austro Engine AE300 (E4)",
+  "manufacturer": "Austro Engine GmbH (Diamond Aircraft)",
+  "platforms": [
+    "DRDO TAPAS BH-201 / Rustom-2",
+    "Diamond DA40 NG",
+    "Diamond DA42"
+  ],
+  "ignition_mode": "COMPRESSION_IGNITION",
+  "induction": "TURBOCHARGED",
+  "fuel": "JET_A1",
+  "cooling": "LIQUID_COOLED",
+  "layout": {
+    "count": 4,
+    "arrangement": "INLINE",
+    "firing_order": [
+      1,
+      3,
+      4,
+      2
+    ],
+    "bore_mm": 83.0,
+    "stroke_mm": 92.0,
+    "displacement_cc": 1991.0,
+    "compression_ratio": 17.5
+  },
+  "turbo": {
+    "max_boost_kpa": 190.0,
+    "critical_altitude_ft": 18000.0,
+    "wastegate_controlled": true,
+    "max_shaft_rpm": 200000.0,
+    "intercooled": true,
+    "lag_time_constant_sec": 1.1,
+    "surge_margin_min": 0.1
+  },
+  "rated_power_kw": 123.5,
+  "rated_rpm": 3880.0,
+  "max_continuous_power_kw": 114.0,
+  "max_continuous_rpm": 3600.0,
+  "idle_rpm": 760.0,
+  "gearbox_ratio": 1.69,
+  "dry_mass_kg": 185.0,
+  "tbo_hours": 1800.0,
+  "nominal_bsfc_g_kwh": 235.0,
+  "nominal_lambda": 1.55,
+  "nominal_inj_timing_btdc": 8.0,
+  "nominal_ign_timing_btdc": null,
+  "rail_pressure_bar": 1800.0,
+  "fuel_cloud_point_c": -47.0,
+  "fuel_cfpp_c": -50.0,
+  "source": "Austro E4/AE300 spec (bore 83, stroke 92, CR 17.5:1, gearbox 1.69, 185kg dry); licensed Mercedes-Benz OM640 block. Jet-A1 cloud point per DEF STAN 91-091 freeze point -47C"
+}

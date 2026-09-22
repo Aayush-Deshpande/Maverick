@@ -1,0 +1,56 @@
+{
+  "engine_id": "rotax_914",
+  "display_name": "Rotax 914 UL/F (turbocharged)",
+  "manufacturer": "BRP-Rotax",
+  "platforms": [
+    "GA-ASI MQ-1 Predator",
+    "IAI Heron",
+    "Elbit Hermes 900",
+    "IAI Searcher",
+    "Wing Loong I",
+    "NASA Altus II (ACES dataset)"
+  ],
+  "ignition_mode": "SPARK_IGNITION",
+  "induction": "TURBOCHARGED",
+  "fuel": "AVGAS_100LL",
+  "cooling": "AIR_COOLED_BARRELS_LIQUID_HEADS",
+  "layout": {
+    "count": 4,
+    "arrangement": "BOXER",
+    "firing_order": [
+      1,
+      4,
+      2,
+      3
+    ],
+    "bore_mm": 79.5,
+    "stroke_mm": 61.0,
+    "displacement_cc": 1211.0,
+    "compression_ratio": 9.0
+  },
+  "turbo": {
+    "max_boost_kpa": 135.0,
+    "critical_altitude_ft": 16000.0,
+    "wastegate_controlled": true,
+    "max_shaft_rpm": 180000.0,
+    "intercooled": false,
+    "lag_time_constant_sec": 0.8,
+    "surge_margin_min": 0.12
+  },
+  "rated_power_kw": 84.5,
+  "rated_rpm": 5800.0,
+  "max_continuous_power_kw": 73.5,
+  "max_continuous_rpm": 5500.0,
+  "idle_rpm": 1400.0,
+  "gearbox_ratio": 2.4286,
+  "dry_mass_kg": 76.0,
+  "tbo_hours": 2000.0,
+  "nominal_bsfc_g_kwh": 295.0,
+  "nominal_lambda": 0.95,
+  "nominal_inj_timing_btdc": 0.0,
+  "nominal_ign_timing_btdc": 26.0,
+  "rail_pressure_bar": 0.25,
+  "fuel_cloud_point_c": null,
+  "fuel_cfpp_c": null,
+  "source": "Rotax 914 Operator's + Installation Manual (docs/reference/); PRIMARY TARGET \u2014 global MALE standard, matches NASA ACES real telemetry"
+}
