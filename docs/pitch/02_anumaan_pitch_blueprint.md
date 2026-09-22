@@ -72,7 +72,7 @@ Placeholders like `{{EVAL.lead_time_cyl3}}` must be filled from the evaluation h
 
 | # | Scene ID | Story beat | Visual | HUD / narration (draft) | Data source |
 |---|---|---|---|---|---|
-| 0 | `boot` | **The twin comes online** | Dark screen, engine wireframe assembling | `ANUMAAN TWIN · BOOT` · `ENGINE: ROTAX 912 iS · LINK ESTABLISHED` · `27 CHANNELS @ 20 Hz` · `PHYSICS MODEL: SYNCED` | Static config + live `/api/health` |
+| 0 | `boot` | **The twin comes online** | Dark screen, engine wireframe assembling | `ANUMAAN TWIN · BOOT` · `ENGINE: ROTAX 912 iS · LINK ESTABLISHED` · `27 CHANNELS @ 20 Hz` · `PHYSICS MODEL: SYNCED` | Static config + live `api/health` |
 | 1 | `promise` | **The promise** | MALE UAV over Himalayan terrain at dawn | Headline + supporting sentence (§1.1) | — |
 | 2 | `stakes` | **Why it matters** | Camera pulls back to a map; long sortie track | `SINGLE ENGINE` · `24–45 h SORTIES` · `POWER PLANT: 41% OF MILITARY UAV FAILURES` (cite source on screen) | Textbook Ch. 1 references |
 | 3 | `aircraft` | **Meet the aircraft** | Airframe fly-by; skin turns to X-ray | `ALT 25,000 FT` · `OAT −31 °C` · `T+14:02 INTO SORTIE` | Replay frame |
@@ -174,7 +174,7 @@ The same scene system should produce four outputs, so the story is built once:
                └────────────────────┬──────────────────────────────┘
                                     ▼
                       ANUMAAN backend (live /api/state, /ws)
-                      Recorded replays (/api/replay/…) → story timelines
+                      Recorded replays (api/replay/…) → story timelines
 ```
 
 - **Story** is a new app (e.g. `frontend-story/`), or a route in the existing app.
@@ -302,7 +302,7 @@ Verify exact glTF-Transform command flags with `gltf-transform --help`, as optio
 | Sensor suspect | Striped/flickering material on `Sensor_*` meshes only |
 | Thermal overlay | Vertex-colour or shader uniform mapping CHT/EGT to a colour ramp per cylinder |
 
-Use the object names from the engine manifest (`ANUMAAN/manifests/engines/*.json` once created). The web viewer and the Blender controller then share one fault-to-mesh mapping.
+Use the object names from the engine manifest (`manifests/engines/*.json` once created). The web viewer and the Blender controller then share one fault-to-mesh mapping.
 
 ### 6.5 Fallbacks
 
@@ -373,7 +373,7 @@ The failing component should visibly travel **cyan → amber → red → cyan** 
 |---|---|---|
 | **S1 Story lock** | Final script, scene list, headline, layer names; storyboard sketches per scene | Team agreement |
 | **S2 Design system** | Colour tokens, fonts, HUD components (gauge, score, trace, RUL band, advisory card) in a shared package; applied to the existing dashboard | S1 |
-| **S3 3D web viewer** | Rotax 912 iS web GLB + R3F viewer with fault highlight, ghost, thermal overlay, driven by live `/api/state` | Asset pipeline §6 |
+| **S3 3D web viewer** | Rotax 912 iS web GLB + R3F viewer with fault highlight, ghost, thermal overlay, driven by live `api/state` | Asset pipeline §6 |
 | **S4 Presenter app** | Scene engine (keys, playback), camera clips from Blender, HUD bound to a sample timeline | S2, S3 |
 | **S5 Real timelines** | Story timelines exported from evaluation runs | **Gaps G01–G03** |
 | **S6 Scenes polish** | Terrain, airframe, split real/twin view, counterfactual scene, proof cards | S4, S5 |

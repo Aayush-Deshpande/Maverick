@@ -1,0 +1,118 @@
+{
+  "engine_health_index_start": 1.0,
+  "engine_health_index_end": 1.0,
+  "health_degradation": 0.0,
+  "final_anomaly_score": 0.5729,
+  "fleet_subsystems": [
+    {
+      "subsystem_id": "SUB_LUBRICATION",
+      "name": "Dry-Sump Lubrication Circuit",
+      "ata_chapter": "ATA 79-00",
+      "target_mesh": "Oil_Tank_M_Steel_0",
+      "current_health": 0.75,
+      "cumulative_stress_hours": 0.0,
+      "lifetime_anomalies": 1,
+      "action_required": true
+    },
+    {
+      "subsystem_id": "SUB_ELECTRICAL",
+      "name": "Heavy-Duty Alternator & Power Bus",
+      "ata_chapter": "ATA 24-00",
+      "target_mesh": "External_Alternator_M_Steel_0",
+      "current_health": 0.75,
+      "cumulative_stress_hours": 0.0,
+      "lifetime_anomalies": 1,
+      "action_required": true
+    },
+    {
+      "subsystem_id": "SUB_CYL_2",
+      "name": "Cylinder #2 Head Assembly",
+      "ata_chapter": "ATA 72-00",
+      "target_mesh": "Covers_Theme_M_PlasticTheme_0",
+      "current_health": 1.0,
+      "cumulative_stress_hours": 0.0,
+      "lifetime_anomalies": 0,
+      "action_required": false
+    },
+    {
+      "subsystem_id": "SUB_FUEL_SYS",
+      "name": "Fuel Injection System & Rails",
+      "ata_chapter": "ATA 73-10",
+      "target_mesh": "Rotax_912i_Base_M_PlasticGreen_0",
+      "current_health": 1.0,
+      "cumulative_stress_hours": 0.0,
+      "lifetime_anomalies": 0,
+      "action_required": false
+    },
+    {
+      "subsystem_id": "SUB_IGNITION",
+      "name": "Dual Ignition Harness & Coils",
+      "ata_chapter": "ATA 74-20",
+      "target_mesh": "Wiring_Harness_M_Copper_0",
+      "current_health": 1.0,
+      "cumulative_stress_hours": 0.0,
+      "lifetime_anomalies": 0,
+      "action_required": false
+    },
+    {
+      "subsystem_id": "SUB_GEARBOX",
+      "name": "Propeller Reduction Gearbox",
+      "ata_chapter": "ATA 72-10",
+      "target_mesh": "Gearbox_Type_2_M_Steel_0",
+      "current_health": 1.0,
+      "cumulative_stress_hours": 0.0,
+      "lifetime_anomalies": 0,
+      "action_required": false
+    },
+    {
+      "subsystem_id": "SUB_EXHAUST",
+      "name": "Exhaust Gas Manifold Runner #3",
+      "ata_chapter": "ATA 78-10",
+      "target_mesh": "Exhaust_System_M_SteelDark_0",
+      "current_health": 1.0,
+      "cumulative_stress_hours": 0.0,
+      "lifetime_anomalies": 0,
+      "action_required": false
+    },
+    {
+      "subsystem_id": "SUB_FADEC",
+      "name": "Dual Lane FADEC Engine Control Units",
+      "ata_chapter": "ATA 76-00",
+      "target_mesh": "ECU_M_PlasticBlack_0",
+      "current_health": 1.0,
+      "cumulative_stress_hours": 0.0,
+      "lifetime_anomalies": 0,
+      "action_required": false
+    }
+  ],
+  "sortie_subsystem_health": {
+    "propulsion": 0.6,
+    "fuel_system": 0.96,
+    "electrical": 0.99,
+    "thermal": 1.0,
+    "mechanical": 0.99
+  },
+  "physics_residuals": {
+    "d_CHT_1": -8.9,
+    "d_CHT_2": -8.55,
+    "d_CHT_3": -8.47,
+    "d_CHT_4": -8.68,
+    "d_EGT_1": 6.9,
+    "d_EGT_2": 7.2,
+    "d_EGT_3": 8.3,
+    "d_EGT_4": 6.3,
+    "d_OIL_PRESS": 0.08,
+    "d_OIL_TEMP": -8.4,
+    "d_FUEL_FLOW": -0.1,
+    "d_MAP": -0.63,
+    "d_VIB_RMS": 0.02,
+    "d_BUS_VOLTAGE": -0.02
+  },
+  "sensor_sanity": {
+    "all_sensors_valid": true,
+    "drift_detected": false,
+    "failed_channels": [],
+    "suppressed_anomaly": false,
+    "advisory": "All sensors valid."
+  }
+}

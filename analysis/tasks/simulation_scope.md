@@ -228,8 +228,8 @@ The simulation runs a GPU-drawn 2D Tactical HUD (built with Blender's `gpu` and 
 
 ## 📁 5. Implementation Roadmap & File Locations
 
-* **Core Simulation Script:** [apps/blender_twin/standalone_canyon_flight_app.py](file:///e:/backup-llm/backup-no-llm/3d_engine/apps/blender_twin/standalone_canyon_flight_app.py)
-* **Launcher Batch File:** [launch_canyon_simulation.bat](file:///e:/backup-llm/backup-no-llm/3d_engine/launch_canyon_simulation.bat)
+* **Core Simulation Script:** [apps/blender_twin/standalone_canyon_flight_app.py](../../apps/blender_twin/standalone_canyon_flight_app.py)
+* **Launcher Batch File:** [launch_canyon_simulation.bat](../../launch_canyon_simulation.bat)
 * **3D Scene & Terrain Model:** `Models/terrain.blend`
-* **Agentic Language Hook:** [backend/agent/copilot.py](file:///e:/backup-llm/backup-no-llm/3d_engine/backend/agent/copilot.py) and [diagnostic_agent.py](file:///e:/backup-llm/backup-no-llm/3d_engine/backend/agent/diagnostic_agent.py)
-* **Thermodynamic Engine Coupling:** [backend/physics/thermo_model.py](file:///e:/backup-llm/backup-no-llm/3d_engine/backend/physics/thermo_model.py)
+* **Agentic Language Hook:** [backend/agent/copilot.py](../../backend/agent/copilot.py) and [diagnostic_agent.py](../../backend/agent/diagnostic_agent.py)
+* **Thermodynamic Engine Coupling:** [backend/physics/thermo_model.py](../../backend/physics/thermo_model.py)

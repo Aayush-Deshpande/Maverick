@@ -33,7 +33,7 @@ For each target platform, a **twin-integrated 3D asset**, meaning three things t
 
 ## 2. Platform Matrix — Required UAVs and Engines
 
-Derived from the reference libraries present in `ANUMAAN/Models_Images/`. Engine pairings verified against the spec sheets in those folders.
+Derived from the reference libraries present in `Models_Images/`. Engine pairings verified against the spec sheets in those folders.
 
 | # | UAV | Engine | Engine cycle | Cooling | Why it matters |
 |---|---|---|---|---|---|
@@ -70,7 +70,7 @@ Two different baselines, because the two existing assets set two different stand
 
 **Neither baseline is complete on its own**, and this is the central structural gap the program must close:
 
-- The **TB3 airframe has no telemetry integration whatsoever** — its controller exposes display modes, subsystem isolation, wing fold, gear retract and cameras, but zero connection to `/api/state`, faults, or health.
+- The **TB3 airframe has no telemetry integration whatsoever** — its controller exposes display modes, subsystem isolation, wing fold, gear retract and cameras, but zero connection to `api/state`, faults, or health.
 - The **Rotax 912 twin has no airframe** — it is an engine floating in space with an excellent fault-visualization layer.
 
 Every new platform must satisfy **both** baselines simultaneously. That combination does not yet exist for any platform, including the two baselines themselves.

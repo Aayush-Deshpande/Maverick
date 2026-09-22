@@ -114,35 +114,61 @@ export const EngineControls: React.FC<EngineControlsProps> = ({ state, onCommand
           </div>
         </div>
 
-        {/* Right: Theater & environment */}
+        {/* Right: Mission Regimes & Environment (SIM-05..SIM-08) */}
         <div className="space-y-3 bg-white/[0.03] p-3.5 rounded-sm border border-surface-border">
           <div className="flex items-center justify-between text-xs">
             <span className="text-slate-400 flex items-center gap-1.5 font-medium">
               <Compass className="w-3.5 h-3.5 text-slate-500" />
-              Theater / sector
+              Mission Regimes (SIM-05..08)
             </span>
-            <div className="flex gap-1.5">
-              <button
-                onClick={() => onCommand({ action: 'SET_REGIME', region: 'LADAKH' })}
-                className={`px-2.5 py-1 text-[11px] rounded-sm border transition-colors ${
-                  theater === 'LADAKH'
-                    ? 'border-accent-muted text-accent bg-accent-dim font-medium'
-                    : 'bg-surface-card border-surface-border text-slate-400 hover:text-white'
-                }`}
-              >
-                Ladakh (20k ft)
-              </button>
-              <button
-                onClick={() => onCommand({ action: 'SET_REGIME', region: 'THAR_DESERT' })}
-                className={`px-2.5 py-1 text-[11px] rounded-sm border transition-colors ${
-                  theater === 'THAR_DESERT'
-                    ? 'border-warning-muted text-warning bg-warning-dim font-medium'
-                    : 'bg-surface-card border-surface-border text-slate-400 hover:text-white'
-                }`}
-              >
-                Thar (+44°C)
-              </button>
-            </div>
+            <span className="text-[10px] font-mono text-accent">{theater}</span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-1.5">
+            <button
+              onClick={() => onCommand({ action: 'SET_REGIME', regime: 'LADAKH', region: 'LADAKH' })}
+              className={`px-2 py-1.5 text-[11px] rounded-sm border transition-colors text-left ${
+                theater === 'LADAKH'
+                  ? 'border-accent-muted text-accent bg-accent-dim font-medium'
+                  : 'bg-surface-card border-surface-border text-slate-400 hover:text-white'
+              }`}
+            >
+              <div className="font-semibold">Ladakh (20k ft)</div>
+              <div className="text-[9px] text-slate-500 font-mono">SIM-05 High-Alt</div>
+            </button>
+            <button
+              onClick={() => onCommand({ action: 'SET_REGIME', regime: 'THAR_DESERT', region: 'THAR_DESERT' })}
+              className={`px-2 py-1.5 text-[11px] rounded-sm border transition-colors text-left ${
+                theater === 'THAR_DESERT'
+                  ? 'border-warning-muted text-warning bg-warning-dim font-medium'
+                  : 'bg-surface-card border-surface-border text-slate-400 hover:text-white'
+              }`}
+            >
+              <div className="font-semibold">Thar (+44°C)</div>
+              <div className="text-[9px] text-slate-500 font-mono">SIM-07 Hot-Weather</div>
+            </button>
+            <button
+              onClick={() => onCommand({ action: 'SET_REGIME', regime: 'ENDURANCE_LOITER', region: 'ENDURANCE_LOITER' })}
+              className={`px-2 py-1.5 text-[11px] rounded-sm border transition-colors text-left ${
+                theater === 'ENDURANCE_LOITER'
+                  ? 'border-emerald-500/50 text-emerald-300 bg-emerald-500/10 font-medium'
+                  : 'bg-surface-card border-surface-border text-slate-400 hover:text-white'
+              }`}
+            >
+              <div className="font-semibold">Endurance Loiter</div>
+              <div className="text-[9px] text-slate-500 font-mono">SIM-06 Eco-Cruise</div>
+            </button>
+            <button
+              onClick={() => onCommand({ action: 'SET_REGIME', regime: 'RAPID_THROTTLE_TRANSIENTS', region: 'RAPID_THROTTLE_TRANSIENTS' })}
+              className={`px-2 py-1.5 text-[11px] rounded-sm border transition-colors text-left ${
+                theater === 'RAPID_THROTTLE_TRANSIENTS'
+                  ? 'border-indigo-500/50 text-indigo-300 bg-indigo-500/10 font-medium'
+                  : 'bg-surface-card border-surface-border text-slate-400 hover:text-white'
+              }`}
+            >
+              <div className="font-semibold">Rapid Transients</div>
+              <div className="text-[9px] text-slate-500 font-mono">SIM-08 FADEC Burst</div>
+            </button>
           </div>
 
           <div className="grid grid-cols-2 gap-3 pt-1">

@@ -20,7 +20,7 @@ This fact shapes our entire data strategy, so state it plainly rather than worki
 
 > **The rule:** never present a proxy result as an engine result, and never present a synthetic result as validation. ✅ [Part VIII §8.4](08_fault_diagnosis.md) explains in detail why benchmark numbers do not transfer.
 
-The full catalogue with acquisition instructions lives in [`Datasets/`](../../../Datasets/README.md) at the repository root.
+The full catalogue with acquisition instructions lives in [`Datasets/`](../../Datasets/README.md) at the repository root.
 
 ---
 

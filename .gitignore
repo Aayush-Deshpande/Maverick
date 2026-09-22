@@ -53,3 +53,13 @@ scratch/phase_c_blends/
 # Large model weights / voice assets — excluded from Maverick push (size/LFS quota)
 /Voice/
 /Qwen3-4B/
+
+# Competitor repos cloned for audit — not our code, never commit
+competitors/
+
+# Local LLM weights vendored for tooling — too large for GitHub/LFS quota
+/vendor/Qwen3-4B/
+
+# Local TTS voice assets vendored for tooling — contains a 327MB .pth over GitHub's
+# 100MB non-LFS limit; keep excluded like the old /Voice/ rule did before the move.
+/vendor/Voice/

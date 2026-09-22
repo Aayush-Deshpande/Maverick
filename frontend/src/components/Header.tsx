@@ -7,13 +7,18 @@ import {
   Clock,
   Compass,
   Zap,
+  User,
+  Cpu,
+  Wrench,
 } from 'lucide-react';
-import { UnifiedTelemetryState } from '../types/telemetry';
+import { UnifiedTelemetryState, GCSRole } from '../types/telemetry';
 
 interface HeaderProps {
   state: UnifiedTelemetryState;
   isConnected: boolean;
   latencyMs: number;
+  activeRole: GCSRole;
+  onSelectRole: (role: GCSRole) => void;
   onOpenSettings: () => void;
 }
 
@@ -21,6 +26,8 @@ export const Header: React.FC<HeaderProps> = ({
   state,
   isConnected,
   latencyMs,
+  activeRole,
+  onSelectRole,
   onOpenSettings,
 }) => {
   const isFaulted = state.analytics.diagnosed_fault_id > 0;
@@ -124,6 +131,32 @@ export const Header: React.FC<HeaderProps> = ({
             <span>HI</span>
             <span>{(state.analytics.health_index * 100).toFixed(0)}%</span>
           </div>
+        </div>
+
+        {/* Role Selector (VIS-02..04) */}
+        <div className="hidden sm:flex items-center gap-1 p-0.5 rounded bg-surface-card border border-surface-border text-xs">
+          {[
+            { id: 'OPERATOR' as GCSRole, label: 'Operator', icon: <User className="w-3 h-3" /> },
+            { id: 'PROPULSION_ENGINEER' as GCSRole, label: 'Propulsion', icon: <Cpu className="w-3 h-3" /> },
+            { id: 'MAINTENANCE_CREW' as GCSRole, label: 'Maintenance', icon: <Wrench className="w-3 h-3" /> },
+          ].map((r) => {
+            const isActive = activeRole === r.id;
+            return (
+              <button
+                key={r.id}
+                onClick={() => onSelectRole(r.id)}
+                className={`flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium transition-colors ${
+                  isActive
+                    ? 'bg-accent-dim text-accent border border-accent-muted'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+                title={`Switch GCS Role: ${r.label}`}
+              >
+                {r.icon}
+                <span>{r.label}</span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Right: Sortie & settings */}

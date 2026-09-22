@@ -11,7 +11,7 @@
 | Asset | Location | Size | Format | Verdict |
 |---|---|---|---|---|
 | **Rotax 912 iS Sport** | `3d_models/rotax_912_is_sport.blend` | 78 MB | Blender, textured, individually named meshes | ✅ **REUSE AS-IS** — production baseline |
-| **Bayraktar TB3** | `ANUMAAN/Models/bayraktar_tb3_digital_twin.blend` (only a `.blend1` backup remains in `3d_models/`) + `scripts/build_tb3_digital_twin.py` | 219 KB + 68 KB script | Procedurally generated Blender | ⚠️ **REUSE + MODIFY** — see §3 |
+| **Bayraktar TB3** | `Models/bayraktar_tb3_digital_twin.blend` (only a `.blend1` backup remains in `3d_models/`) + `scripts/build_tb3_digital_twin.py` | 219 KB + 68 KB script | Procedurally generated Blender | ⚠️ **REUSE + MODIFY** — see §3 |
 
 **Measured with Blender 5.2.1 (2026-09-16):**
 
@@ -26,10 +26,10 @@
 | Cameras | `Cam_Beauty_Orbit`, `Cam_Front_Sensor`, `Cam_Hero_Image_PNG`, `Cam_Wireframe_FDDA` | `MainCamera` |
 | Animation | `CTRL_Gear_Retract`, `CTRL_Wing_Fold`, `Pivot_Propeller` keyframed; no drivers | None |
 | Name hygiene | Clean | **15 duplicate `.00N` names**; `Cooling_Air_Baffle_M_PlasticCable_0` is targeted by `FAULT_DATABASE` but **does not exist** (37 of 38 fault targets resolve) |
-| Rotax 912 iS CAD | `ANUMAAN/Models/engine-rotax-912is-1.snapshot.15/` | 374 MB | STEP / IGS / SLDASM | ⬜ **REDUNDANT** — .blend above already supersedes it. Keep as dimensional cross-reference only |
-| Rotax 914 CAD | `ANUMAAN/Models/engine-rotax-914-1.snapshot.2/` | 147 MB | Parasolid `.x_t`, Cyrillic part names | ⚠️ **CONVERT REQUIRED** — raw CAD, no materials, no UVs, no twin-compatible naming |
-| Rotax 915 | `ANUMAAN/Models/Rotax_915.FBX` + `915_complete.max` | 45 MB + 38 MB | FBX / 3ds Max | ⚠️ **CONVERT REQUIRED** — same caveats; FBX is the usable path |
-| Nubra terrain | `ANUMAAN/Models/terrain.blend` | 52 MB | Blender | ⬜ Out of scope for this program (environment, not platform) |
+| Rotax 912 iS CAD | `Models/engine-rotax-912is-1.snapshot.15/` | 374 MB | STEP / IGS / SLDASM | ⬜ **REDUNDANT** — .blend above already supersedes it. Keep as dimensional cross-reference only |
+| Rotax 914 CAD | `Models/engine-rotax-914-1.snapshot.2/` | 147 MB | Parasolid `.x_t`, Cyrillic part names | ⚠️ **CONVERT REQUIRED** — raw CAD, no materials, no UVs, no twin-compatible naming |
+| Rotax 915 | `Models/Rotax_915.FBX` + `915_complete.max` | 45 MB + 38 MB | FBX / 3ds Max | ⚠️ **CONVERT REQUIRED** — same caveats; FBX is the usable path |
+| Nubra terrain | `Models/terrain.blend` | 52 MB | Blender | ⬜ Out of scope for this program (environment, not platform) |
 
 ### 1.1 What "CONVERT REQUIRED" actually costs
 
@@ -51,7 +51,7 @@ Raw CAD is **not** a 3D asset. STEP/Parasolid/FBX from CAD carries:
 
 ## 2. Reference Library Inventory
 
-`ANUMAAN/Models_Images/` — 690 files across 10 folders. Category coverage per UAV:
+`Models_Images/` — 690 files across 10 folders. Category coverage per UAV:
 
 | UAV | Ortho | Exterior | Engine | Prop | Sensors | Gear | Textures | Markings | Dims | CAD | Docs |
 |---|---|---|---|---|---|---|---|---|---|---|---|
@@ -104,7 +104,7 @@ Backend side: `backend/telemetry/can_streamer.py` holds `DRDO_FAULT_DEFINITIONS`
 
 `3d_models/tb3_digital_twin_controller.py` exposes: inspection modes, subsystem isolation, wing fold, gear retraction, camera navigation.
 
-**What it does not contain, verified by grep:** no telemetry polling, no `/api/state` client, no fault database, no health indices, no emission-based fault highlighting, no CHT/EGT/RPM binding of any kind. Every hit for "fault/telemetry/sensor/health" in the build script is a false positive (`default_value`, `Sensors_Payload` collection naming).
+**What it does not contain, verified by grep:** no telemetry polling, no `api/state` client, no fault database, no health indices, no emission-based fault highlighting, no CHT/EGT/RPM binding of any kind. Every hit for "fault/telemetry/sensor/health" in the build script is a false positive (`default_value`, `Sensors_Payload` collection naming).
 
 > **The TB3 is a high-quality static model with mechanical animation. It is not a digital twin.** Closing this gap is Phase 2 and is the single highest-leverage piece of work in the program, because it converts an existing asset into a demonstrable one.
 

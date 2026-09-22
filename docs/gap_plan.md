@@ -26,18 +26,18 @@
 
 | Capability | Evidence |
 |---|---|
-| 9-stage real-time detection pipeline at 20 Hz | [backend/ml/detection_pipeline.py](../../backend/ml/detection_pipeline.py) |
-| Unsupervised residual autoencoder (pure numpy) | [backend/ml/anomaly_detector.py](../../backend/ml/anomaly_detector.py) |
-| Fault classifier (Random Forest on physics residuals), mission-isolated train/val/test split, leakage audit | [backend/ml/fault_classifier.py](../../backend/ml/fault_classifier.py), [backend/ml/models/model_metrics.json](../../backend/ml/models/model_metrics.json) |
-| Degradation trend analysis + Monte Carlo RUL (p10/p50/p90) in a background worker | [backend/ml/trend_analyser.py](../../backend/ml/trend_analyser.py), [backend/ml/rul_estimator.py](../../backend/ml/rul_estimator.py) |
+| 9-stage real-time detection pipeline at 20 Hz | [backend/ml/detection_pipeline.py](../backend/ml/detection_pipeline.py) |
+| Unsupervised residual autoencoder (pure numpy) | [backend/ml/anomaly_detector.py](../backend/ml/anomaly_detector.py) |
+| Fault classifier (Random Forest on physics residuals), mission-isolated train/val/test split, leakage audit | [backend/ml/fault_classifier.py](../backend/ml/fault_classifier.py), [backend/ml/models/model_metrics.json](../backend/ml/models/model_metrics.json) |
+| Degradation trend analysis + Monte Carlo RUL (p10/p50/p90) in a background worker | [backend/ml/trend_analyser.py](../backend/ml/trend_analyser.py), [backend/ml/rul_estimator.py](../backend/ml/rul_estimator.py) |
 | Pre-flight Go/No-Go advisory | `MissionGoNoGoAdvisory` in `rul_estimator.py` |
-| Sensor sanity checks (unphysical rate, isolated spike, frozen sensor) | [backend/physics/sensor_validator.py](../../backend/physics/sensor_validator.py) |
-| 8 fault scenarios with progressive, causally coupled onset ramps | [backend/telemetry/can_streamer.py](../../backend/telemetry/can_streamer.py) |
-| Unified 20 Hz state over REST and WebSocket | [backend/server/main.py](../../backend/server/main.py), [backend/server/schemas.py](../../backend/server/schemas.py) |
-| Mission replay engine + UI scrubber | [backend/telemetry/replay_engine.py](../../backend/telemetry/replay_engine.py), `frontend/src/components/MissionReplayScrubber.tsx` |
+| Sensor sanity checks (unphysical rate, isolated spike, frozen sensor) | [backend/physics/sensor_validator.py](../backend/physics/sensor_validator.py) |
+| 8 fault scenarios with progressive, causally coupled onset ramps | [backend/telemetry/can_streamer.py](../backend/telemetry/can_streamer.py) |
+| Unified 20 Hz state over REST and WebSocket | [backend/server/main.py](../backend/server/main.py), [backend/server/schemas.py](../backend/server/schemas.py) |
+| Mission replay engine + UI scrubber | [backend/telemetry/replay_engine.py](../backend/telemetry/replay_engine.py), `frontend/src/components/MissionReplayScrubber.tsx` |
 | Mission debriefs, mission reports, knowledge graph, graph viewer | `backend/graph/`, `backend/reports/`, `apps/mission_graph_viewer/` |
 | Condition-based maintenance: work orders with one-time sign-off, fleet summary, region comparison | `/api/cbm/maintenance`, `/api/cbm/fleet`, `/api/cbm/regions` |
-| Time-accelerated long-mission bundle generation | [scripts/simulate_missions.py](../../scripts/simulate_missions.py) |
+| Time-accelerated long-mission bundle generation | [scripts/simulate_missions.py](../scripts/simulate_missions.py) |
 | Dashboard: readings, fault matrix, diagnostic card, subsystem health, mission readiness, calculations | `frontend/src/components/` |
 | Desktop GCS and 3D Blender twin client | `apps/desktop_gcs/`, `apps/blender_twin/` |
 
@@ -52,10 +52,10 @@ Targets marked 🟦 are our proposed acceptance values. The PS states no numbers
 ### G01: The simulated engine and the twin are the same model · **P1**
 
 - **Finding:** each "actual" sensor reading is built as the twin's own *expected* state + Gaussian noise + injected fault offsets. The twin then compares actual against that same expected state, so residuals are always exactly noise + the injected fault, and detection cannot meaningfully fail.
-- **Evidence:** [can_streamer.py:175-215](../../backend/telemetry/can_streamer.py#L175-L215); consumed at [engine_service.py:239](../../backend/server/engine_service.py#L239).
+- **Evidence:** [can_streamer.py:175-215](../backend/telemetry/can_streamer.py#L175-L215); consumed at [engine_service.py:239](../backend/server/engine_service.py#L239).
 - **PS items:** SYS-01, SYS-04, INT-01, INT-06, DTC-02, DTC-03, DTC-04, CAP-03, CAP-12, DEL-03.
 - **Build:**
-  1. A separate **virtual engine** process: the plant that stands in for the real engine. Base it on the higher-fidelity ODE model in [rotax_dataset_generator.py](../../backend/telemetry/rotax_dataset_generator.py) (thermal capacitance lags, crankshaft inertia, oil viscosity coupling), **not** on `thermo_model.py`.
+  1. A separate **virtual engine** process: the plant that stands in for the real engine. Base it on the higher-fidelity ODE model in [rotax_dataset_generator.py](../backend/telemetry/rotax_dataset_generator.py) (thermal capacitance lags, crankshaft inertia, oil viscosity coupling), **not** on `thermo_model.py`.
   2. Give the virtual engine properties the twin does not know: engine-to-engine parameter variation, sensor bias, sensor lag, sensor noise, slow wear accumulation.
   3. The virtual engine publishes **only sensor frames** over a transport (G11). The twin never imports its internals.
   4. Faults are injected into the virtual engine only. The twin has no access to `active_fault_id`.
@@ -68,7 +68,7 @@ Targets marked 🟦 are our proposed acceptance values. The PS states no numbers
 ### G02: Operator throttle/altitude/temperature commands do not affect physics · **P1**
 
 - **Finding:** `SET_THROTTLE`, `SET_ALTITUDE` and `SET_OAT` only overwrite the displayed fields *after* the frame is generated from the region's sinusoidal profile. Temperatures, pressures and fuel flow do not respond. Only `SET_REGIME` changes the physics.
-- **Evidence:** [engine_service.py:253-257](../../backend/server/engine_service.py#L253-L257), commands at [engine_service.py:626-651](../../backend/server/engine_service.py#L626-L651); profile in `CANStreamer.get_flight_context` ([can_streamer.py:108](../../backend/telemetry/can_streamer.py#L108)).
+- **Evidence:** [engine_service.py:253-257](../backend/server/engine_service.py#L253-L257), commands at [engine_service.py:626-651](../backend/server/engine_service.py#L626-L651); profile in `CANStreamer.get_flight_context` ([can_streamer.py:108](../backend/telemetry/can_streamer.py#L108)).
 - **PS items:** CAP-07, CAP-08, SIM-01, SIM-04, SIM-05, SIM-07, SIM-08.
 - **Build:** route commanded throttle, altitude and OAT into the virtual engine (G01) as its inputs; add first-order dynamics (RPM response to throttle, thermal lag on CHT/EGT/oil) so a step change produces a transient, not an instant jump.
 - **Done when:**
@@ -80,7 +80,7 @@ Targets marked 🟦 are our proposed acceptance values. The PS states no numbers
 ### G03: No evidence the system predicts before failure; validation is circular · **P1**
 
 - **Finding:** the classifier's 97.51% held-out accuracy is measured on data from the same generator and fault-signature code used for training. Metrics are per-frame classification only. Nothing measures warning lead time, false alarms over long nominal flights, RUL error, or improvement over threshold alarms.
-- **Evidence:** [model_metrics.json](../../backend/ml/models/model_metrics.json) (`held_out_test_missions_results`, 10 missions per split, one fault type per mission).
+- **Evidence:** [model_metrics.json](../backend/ml/models/model_metrics.json) (`held_out_test_missions_results`, 10 missions per split, one fault type per mission).
 - **PS items:** CAP-04, CAP-05, CAP-06, CAP-13, CAP-14, FDP-01…09, AIM-02, AIM-04, AIM-05, DEL-04.
 - **Build:** an evaluation harness `backend/evaluation/` that runs the twin against the virtual engine (G01) and reports:
   1. **Unseen conditions:** fault severities, onset rates, engine-variation seeds and regions **not** used in training.
@@ -100,7 +100,7 @@ Targets marked 🟦 are our proposed acceptance values. The PS states no numbers
 ### G04: "Vibration signatures" are a single RMS value at 20 Hz · **P2**
 
 - **Finding:** vibration is one `VIB_GEARBOX_RMS` channel at 20 Hz. The spectral analyser correctly detects that the 3rd harmonic (~100 Hz at cruise) exceeds the 10 Hz Nyquist limit and falls back to RMS, so no spectral signature is actually analysed.
-- **Evidence:** [spectral_analyser.py:176](../../backend/ml/spectral_analyser.py#L176), sampling at [detection_pipeline.py:213](../../backend/ml/detection_pipeline.py#L213).
+- **Evidence:** [spectral_analyser.py:176](../backend/ml/spectral_analyser.py#L176), sampling at [detection_pipeline.py:213](../backend/ml/detection_pipeline.py#L213).
 - **PS items:** HMS-09, FDP-09.
 - **Build:** the virtual engine synthesizes a vibration waveform at ≥ 2 kHz (shaft orders 1×/2×/3× prop, crank order, gear-mesh frequency, misfire impulses, bearing defect tones, noise). An edge feature extractor computes FFT/order spectra over short windows and publishes features (order amplitudes, band energies, kurtosis, crest factor) at 20 Hz. The twin consumes features; the dashboard shows a spectrum or order plot for engineers.
 - **Done when:**
@@ -111,7 +111,7 @@ Targets marked 🟦 are our proposed acceptance values. The PS states no numbers
 ### G05: Sensor drift detection is hardcoded off · **P2**
 
 - **Finding:** `drift_detected` is always `False`. The validator's comment says the trend analyser populates it, but nothing does. Only spikes, unphysical rates and frozen values are detected.
-- **Evidence:** [engine_service.py:457](../../backend/server/engine_service.py#L457), [detection_pipeline.py:313](../../backend/ml/detection_pipeline.py#L313), [detection_pipeline.py:620](../../backend/ml/detection_pipeline.py#L620), [sensor_validator.py:263](../../backend/physics/sensor_validator.py#L263).
+- **Evidence:** [engine_service.py:457](../backend/server/engine_service.py#L457), [detection_pipeline.py:313](../backend/ml/detection_pipeline.py#L313), [detection_pipeline.py:620](../backend/ml/detection_pipeline.py#L620), [sensor_validator.py:263](../backend/physics/sensor_validator.py#L263).
 - **PS items:** FDP-06.
 - **Build:** slow-bias detection using (a) redundancy: 4 CHT and 4 EGT channels, FADEC Lane A vs Lane B MAP; (b) measured-vs-physics-expected bias estimation with CUSUM or a Kalman bias state. Inject sensor faults in the virtual engine: bias ramp, stuck value, noise growth, intermittent dropout.
 - **Done when:**
@@ -122,7 +122,7 @@ Targets marked 🟦 are our proposed acceptance values. The PS states no numbers
 ### G06: Injection timing parameters are not tracked anywhere · **P2**
 
 - **Finding:** no injection or ignition timing field exists in backend, frontend or apps. The 27-parameter `EnginePhysicalState` has no timing channel.
-- **Evidence:** [thermo_model.py:29](../../backend/physics/thermo_model.py#L29); schema [schemas.py](../../backend/server/schemas.py); search for `injection_timing|pulse_width|ignition_timing|spark_advance` returns nothing.
+- **Evidence:** [thermo_model.py:29](../backend/physics/thermo_model.py#L29); schema [schemas.py](../backend/server/schemas.py); search for `injection_timing|pulse_width|ignition_timing|spark_advance` returns nothing.
 - **PS items:** HMS-11.
 - **Build:** channels `INJ_TIMING_DEG_1..4` (start of injection), `INJ_PULSE_MS_1..4`, `IGN_TIMING_DEG` for the 912 iS. Model their effect on EGT, power and fuel flow; add fault *injection timing drift / injector response delay*; show them on the dashboard and include them in the classifier features; extend the dataset schema.
 - **Done when:**
@@ -131,7 +131,7 @@ Targets marked 🟦 are our proposed acceptance values. The PS states no numbers
 
 ### G07: Engine performance maps do not exist · **P2**
 
-- **Finding:** the expected state comes from algebraic formulas (e.g. manifold pressure at [thermo_model.py:146](../../backend/physics/thermo_model.py#L146)). No performance map tables are used.
+- **Finding:** the expected state comes from algebraic formulas (e.g. manifold pressure at [thermo_model.py:146](../backend/physics/thermo_model.py#L146)). No performance map tables are used.
 - **PS items:** INT-03.
 - **Build:** tabulated maps of power, fuel flow and manifold pressure vs RPM × throttle, with density-altitude correction, sourced from Rotax 912 iS operator/installation manual performance charts (source recorded in the data file). Bilinear interpolation in the twin's expected-state calculation.
 - **Done when:**
@@ -191,7 +191,7 @@ Targets marked 🟦 are our proposed acceptance values. The PS states no numbers
 ### G12: Missions have a single flight phase · **P2**
 
 - **Finding:** every region returns `CRUISE_LOITER` with sinusoidal altitude. There is no takeoff, climb, descent, landing or throttle-transient scenario in live mode. Endurance is only covered by the time-accelerated bundle script.
-- **Evidence:** [can_streamer.py:108-140](../../backend/telemetry/can_streamer.py#L108-L140).
+- **Evidence:** [can_streamer.py:108-140](../backend/telemetry/can_streamer.py#L108-L140).
 - **PS items:** CAP-07, SIM-02, SIM-05, SIM-06, SIM-07, SIM-08.
 - **Build:** mission profile files (phase sequence, durations, target altitude, throttle schedule, ISA temperature deviation, seed); scenario presets **High Altitude**, **Endurance (time-accelerated, with wear accumulation)**, **Hot Weather**, **Rapid Throttle Transitions**; run them in live mode, replay and the evaluation harness.
 - **Done when:**
@@ -261,7 +261,7 @@ Targets marked 🟦 are our proposed acceptance values. The PS states no numbers
 ### G22: Hygiene · **P3**
 
 - `data/telemetry/rotax912_dataset_manifest.json` stores absolute paths from another machine (`E:\TalentForge\Clay\...`). Make them relative.
-- `_tick` docstring says 120 Hz; the state broadcast is 20 Hz ([engine_service.py:233](../../backend/server/engine_service.py#L233), [schemas.py:116](../../backend/server/schemas.py#L116)). Align the documentation with the real rate.
+- `_tick` docstring says 120 Hz; the state broadcast is 20 Hz ([engine_service.py:233](../backend/server/engine_service.py#L233), [schemas.py:116](../backend/server/schemas.py#L116)). Align the documentation with the real rate.
 
 ---
 

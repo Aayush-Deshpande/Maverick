@@ -29,6 +29,13 @@ export interface EngineTelemetry {
   TAS_KNOTS: number;
   FLIGHT_PHASE: string;
   THEATER: string;
+  INJ_TIMING_BTDC?: number;
+  INJ_PULSE_WIDTH_MS?: number;
+  IGN_TIMING_BTDC?: number;
+  LAMBDA_AFR?: number;
+  BSFC_G_KWH?: number;
+  POWER_KW?: number;
+  THERMAL_EFFICIENCY?: number;
 }
 
 export interface EarlyWarningTrend {
@@ -94,6 +101,21 @@ export interface AnalyticsState {
   rul_by_component?: Record<string, ComponentRUL>;
   sensor_sanity?: SensorSanity;
   early_warning_trend?: EarlyWarningTrend | null;
+  threshold_baseline?: {
+    conventional_breached: boolean;
+    breached_parameters: string[];
+    conventional_breach_timestamp?: number | null;
+    twin_detect_timestamp?: number | null;
+    lead_time_sec?: number | null;
+    conventional_thresholds?: Record<string, number>;
+  };
+  conformal_rul?: Record<string, {
+    rul_p10_hours: number;
+    rul_p50_hours: number;
+    rul_p90_hours: number;
+    confidence_level: number;
+    coverage_guarantee: string;
+  }>;
   subsystem_health?: SubsystemHealth;
   causal_chain?: string[];
   ai_diagnosis?: AIDiagnosis;
@@ -109,11 +131,15 @@ export interface UnifiedTelemetryState {
   analytics: AnalyticsState;
 }
 
+export type GCSRole = 'OPERATOR' | 'PROPULSION_ENGINEER' | 'MAINTENANCE_CREW';
+
 export interface ControlCommand {
-  action: 'START_ENGINE' | 'STOP_ENGINE' | 'SET_FAULT' | 'CLEAR_FAULT' | 'SET_THROTTLE' | 'SET_ALTITUDE' | 'SET_OAT' | 'SET_REGIME' | 'EXPORT_DEBRIEF';
+  action: 'START_ENGINE' | 'STOP_ENGINE' | 'SET_FAULT' | 'CLEAR_FAULT' | 'SET_THROTTLE' | 'SET_ALTITUDE' | 'SET_OAT' | 'SET_REGIME' | 'SET_ROLE' | 'EXPORT_DEBRIEF';
   fault_id?: number;
   throttle?: number;
   altitude_ft?: number;
   oat_c?: number;
   region?: string;
+  regime?: string;
+  role?: GCSRole;
 }

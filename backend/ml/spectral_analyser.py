@@ -155,13 +155,21 @@ class GearboxSpectralAnalyser:
     # Public API
     # ------------------------------------------------------------------
 
-    def update(self, vib_rms: float, engine_rpm: float) -> SpectralReport:
+    def update(
+        self,
+        vib_rms: float,
+        engine_rpm: float,
+        high_rate_burst: Optional[List[float]] = None,
+        fs_hz: Optional[float] = None
+    ) -> SpectralReport:
         """
         Ingest one telemetry frame and return the current spectral report.
 
         Args:
-            vib_rms:    VIB_GEARBOX_RMS value (mm/s) from current frame.
-            engine_rpm: ENGINE_RPM from current frame.
+            vib_rms:         VIB_GEARBOX_RMS value (mm/s) from current frame.
+            engine_rpm:      ENGINE_RPM from current frame.
+            high_rate_burst: Optional kHz vibration time-series burst for real DFT.
+            fs_hz:           Sample rate of high_rate_burst in Hz (e.g. 2000.0).
 
         Returns:
             SpectralReport (ready=False until enough frames accumulated)
@@ -172,26 +180,45 @@ class GearboxSpectralAnalyser:
         # Compute target frequencies
         prop_hz = max(1.0, engine_rpm / GEAR_REDUCTION_RATIO) / 60.0
         target_hz = 3.0 * prop_hz   # 3rd harmonic
-        nyquist_hz = self._fs / 2.0
-        use_rms_fallback = target_hz > nyquist_hz  # True at 20 Hz prototype rate
 
-        # Not enough samples for DFT yet
-        if len(self._buffer) < self._window_n:
-            return SpectralReport(ready=False,
-                                  prop_shaft_hz=prop_hz,
-                                  target_freq_hz=target_hz)
-
-        samples = list(self._buffer)
-        if use_rms_fallback:
-            # At 20 Hz, target harmonic is above Nyquist.
-            # Use amplitude envelope (window RMS) as energy proxy.
-            # Gear meshing amplitude modulation is still observable via RMS changes.
-            current_energy = self._rms(samples)
+        if high_rate_burst is not None and len(high_rate_burst) >= 64:
+            # Active kHz Vibration Path (F07 / PS-26054)
+            fs = fs_hz or 2000.0
+            nyquist_hz = fs / 2.0
+            use_rms_fallback = target_hz > nyquist_hz
+            samples = high_rate_burst
+            old_fs = self._fs
+            old_win = self._window_n
+            self._fs = fs
+            self._window_n = len(samples)
+            if not use_rms_fallback:
+                windowed = self._hann_window(samples)
+                mags = self._compute_dft_magnitudes(windowed)
+                current_energy = self._peak_in_band(mags, target_hz)
+            else:
+                current_energy = self._rms(samples)
+            self._fs = old_fs
+            self._window_n = old_win
         else:
-            # Apply Hann window and compute DFT (for high-rate production hardware)
-            windowed = self._hann_window(samples)
-            mags = self._compute_dft_magnitudes(windowed)
-            current_energy = self._peak_in_band(mags, target_hz)
+            nyquist_hz = self._fs / 2.0
+            use_rms_fallback = target_hz > nyquist_hz  # True at 20 Hz prototype rate
+
+            # Not enough samples for DFT yet
+            if len(self._buffer) < self._window_n:
+                return SpectralReport(ready=False,
+                                      prop_shaft_hz=prop_hz,
+                                      target_freq_hz=target_hz)
+
+            samples = list(self._buffer)
+            if use_rms_fallback:
+                # At 20 Hz, target harmonic is above Nyquist.
+                # Use amplitude envelope (window RMS) as energy proxy.
+                current_energy = self._rms(samples)
+            else:
+                # Apply Hann window and compute DFT
+                windowed = self._hann_window(samples)
+                mags = self._compute_dft_magnitudes(windowed)
+                current_energy = self._peak_in_band(mags, target_hz)
 
         # Accumulate baseline during first baseline_sec of flight
         if not self._baseline_locked:

@@ -6,10 +6,11 @@ import csv
 import base64
 import urllib.request
 import urllib.parse
+from pathlib import Path
 from PIL import Image
 from playwright.sync_api import sync_playwright
 
-root_images_dir = r"e:\backup-llm\backup-no-llm\3d_engine\ANUMAAN\Models_Images"
+root_images_dir = str(Path(__file__).resolve().parent.parent / "assets" / "model_images")
 
 UAV_SPEC_DATA = {
     "Bayraktar_TB2": {

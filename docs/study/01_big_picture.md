@@ -14,26 +14,51 @@ Now consider what a human pilot in a light aircraft actually does. They hear the
 
 That is the real problem statement, underneath the formal one: *rebuild the pilot's situational awareness of engine health, from telemetry, at a ground station 250 km away, over a link that can carry only a few kilobits per second.*
 
-## 1.2 Why threshold monitoring is not enough
+## 1.2 Why threshold monitoring is not enough — for this class of engine
 
-Conventional engine monitoring is a comparator:
+At the flight-safety layer, a great deal of certified aviation genuinely does run on a comparator:
 
 ```python
 if CHT > 135:
     alert()
 ```
 
-This fails for three structural reasons, not merely because it is crude.
+Calling this merely "crude" is the wrong critique, and it is worth saying why before dismissing it. Certifiers (DO-178C-style processes) demand deterministic, provably-correct logic for anything that can trigger a flight-critical alert — a model that fires and cannot explain why is disqualifying at the safety-critical assurance levels, not a design choice an engineer overlooked. The comparator survives because it is *certifiable*, not because nobody thought of anything better.
 
-**It has no memory.** A CHT of 128 °C that has been stable for an hour and a CHT of 128 °C that has climbed 9 °C in twenty minutes are the same number to a threshold, and completely different engines to an engineer. The information lives in the *derivative*, which a threshold never computes.
+It still fails for this application, for three structural reasons:
 
-**It has no context.** The expected CHT at 25,000 ft over Ladakh at −20 °C ambient is genuinely different from the expected CHT at sea level in Rajasthan at +45 °C. A single fixed limit must be set conservatively enough for the worst case, which makes it blind in every other case.
+**It has no memory.** A CHT of 128 °C that has been stable for an hour and a CHT of 128 °C that has climbed 9 °C in twenty minutes are the same number to a threshold, and completely different engines to an engineer. The information lives in the *derivative*, which a threshold never computes. (Rate-of-change trip points do exist in some certified piston-aircraft monitors — the derivative problem is old, not undiscovered — but they are not the baseline the PS describes.)
+
+**It has no context.** The expected CHT at 25,000 ft over Ladakh at −20 °C ambient is genuinely different from the expected CHT at sea level in Rajasthan at +45 °C. A single fixed limit must be set conservatively enough for the worst case, which makes it blind in every other case. (Density-altitude-corrected redlines exist in some certified FADECs for the same reason.)
 
 **It fires after the damage.** A limit is placed where the component is already being harmed. By construction, a system that only watches for limit crossings cannot warn you before one.
 
 The PS is explicit that this reactive approach is what it wants replaced. ✅ **VERIFIED** — the official text describes conventional systems as "threshold-based and reactive" and says they "indicate failures only after an abnormality has already occurred."
 
-## 1.3 The four capability levels
+## 1.3 Why this isn't already solved — the actual gap
+
+The honest question to ask before claiming novelty: if memory, context, and prediction are known deficiencies, why hasn't someone already fixed them for this platform class? They have — just not for this platform class.
+
+**This capability already exists, at a different scale.** Lockheed's F-35 runs a full PHM/ALIS stack doing exactly this memory + context + prediction combination, for a manned fighter. ✅ **VERIFIED** — DRDO itself runs IVHMS (Integrated Vehicle Health Monitoring System) on Tejas, including fibre-optic structural health monitoring on the wings. Commercial turbofan OEMs (GE, Pratt & Whitney, Rolls-Royce) have run ML-based engine health monitoring and RUL estimation on fleets since the 2000s. None of this is undiscovered territory in aviation generally.
+
+**What breaks when you try to port it down to a MALE-class UAV piston engine:**
+
+| Constraint | Manned/turbofan IVHM | This platform |
+|---|---|---|
+| Sensor payload | Dozens of accelerometers, fibre-optic strain sensors — mass and power are a rounding error on a multi-ton airframe | Every gram and watt is contested on a piston-engine UAV |
+| Onboard compute | Avionics-grade, often redundant channels | A single edge SBC, no redundancy margin |
+| Data link | Wideband post-sortie downlink or physical data pull | A few kbps over SATCOM (§1.6) — raw signals cannot be sent |
+| Safety backstop | A pilot's senses catch what the algorithm misses | None. The algorithm *is* the only safety net |
+| Failure taxonomy | Jet-engine physics: blade erosion, seal wear, EGT margin — decades of literature | Piston/rotary physics: misfire, detonation, carburetion, cooling — largely automotive-derived, thin literature |
+| Fleet-scale data | Airlines generate decades of run-to-failure MRO records across thousands of engines | No equivalent fleet exists for tactical UAV piston engines (see [Part XIV](14_datasets.md)) |
+
+None of these is a single blocking wall — each is a real, separately-solvable constraint. The claim this project can defend is not "conventional monitoring is dumb and nobody noticed." It is: **the memory/context/prediction layer that already exists for manned military platforms has not been re-derived for the sensor, compute, bandwidth, and data budget of a small UAV piston engine — and porting it down is a re-derivation, not a copy job.**
+
+### A note on datasets: NASA C-MAPSS
+
+The standard RUL benchmark in the literature, NASA's C-MAPSS, is a *simulation* of a large commercial turbofan — not real flight data, and not this engine class. It exists as the field's default benchmark only because almost no public run-to-failure data exists for any engine, and none at all for aero piston engines under UAV operating conditions ([Part XIV](14_datasets.md) documents this as a negative search result). It is useful for validating our RUL *method* — evaluation scheme, sequence framing, scoring — against a benchmark the field recognises. It should not shape our *fault taxonomy*, which comes from the PS's eight piston-engine fault modes and our own physics-based synthetic generator, not from turbofan degradation physics.
+
+## 1.4 The four capability levels
 
 These words get used interchangeably and are not interchangeable. Each is strictly harder than the one before.
 
@@ -46,7 +71,7 @@ These words get used interchangeably and are not interchangeable. Each is strict
 
 The PS asks for all four. Most of the engineering difficulty, and almost all of the evaluation difficulty, lives in the last two. See [Part IX](09_rul_prognostics.md) for why prognosis is disproportionately hard.
 
-## 1.4 What a Digital Twin actually is here
+## 1.5 What a Digital Twin actually is here
 
 Strip away the marketing. A digital twin, in this system, is one specific computational object:
 
@@ -62,7 +87,7 @@ A residual of +34 °C on CHT #2 means something regardless of altitude, weather,
 
 **A 3D render of an engine is not a digital twin.** It is a view onto one. The test: if you deleted the 3D view entirely, would the system still detect and predict faults? It must.
 
-## 1.5 The physical chain, which is what most of this course is about
+## 1.6 The physical chain, which is what most of this course is about
 
 Everything downstream depends on understanding what physically happens to a measurement. This chain runs through Parts II, III, IV and XII:
 
@@ -100,7 +125,7 @@ Two facts about this chain drive nearly every architectural decision we will mak
 
 **The link is the bottleneck.** ✅ **VERIFIED** — one source characterises Ku-band SATCOM control links at roughly 122 kbps or less with ~1–1.5 s command-to-feedback latency. ([Data Links chapter](https://kstatelibraries.pressbooks.pub/unmannedaircraftsystems/chapter/chapter-13-data-links-functions-attributes-and-latency/)) You cannot stream a 2 kHz accelerometer to the ground. This single fact is why the PS lists "Edge AI" and "lightweight onboard analytics" as innovation areas, and why our architecture must split compute. See [Part V](05_edge_ai.md) and [Part XIII](13_edge_vs_ground_split.md).
 
-## 1.6 What the PS actually requires
+## 1.7 What the PS actually requires
 
 ✅ **VERIFIED** from the official text. Eight monitored parameter groups:
 
@@ -120,7 +145,7 @@ Innovation areas it *encourages* (not requires): physics-informed AI, edge AI, l
 
 Everything in those gaps is ⬜ **ASSUMPTION** on our part, and must be labelled as such.
 
-## 1.7 How the parts of this course connect
+## 1.8 How the parts of this course connect
 
 ```
                     ┌─────────────────────────────┐
@@ -171,7 +196,7 @@ Everything in those gaps is ⬜ **ASSUMPTION** on our part, and must be labelled
                             └─────────────────────────┘
 ```
 
-## 1.8 Common misconceptions, stated up front
+## 1.9 Common misconceptions, stated up front
 
 | Misconception | Reality |
 |---|---|
@@ -182,6 +207,8 @@ Everything in those gaps is ⬜ **ASSUMPTION** on our part, and must be labelled
 | "RUL is just a number the model outputs" | RUL without a visible degradation trend and an uncertainty bound is decoration |
 | "Anomaly detection and fault classification are the same" | One says "something is off" without labels, the other names a known fault. Different models, different data needs |
 | "DRDO uses MIL-STD-1553 / MAVLink / X" | 🔒 Not public. Never assert this |
+| "Nobody has built smart engine health monitoring before" | DRDO's own IVHMS on Tejas and the F-35's PHM stack do exactly this, for manned platforms. The gap is porting it to a UAV piston engine's sensor/compute/bandwidth/data budget, not inventing the concept |
+| "C-MAPSS is our engine's data, roughly" | It is a simulated turbofan. Useful for validating RUL *method*, not for shaping our piston-engine fault taxonomy. See §1.3 |
 
 ---
 

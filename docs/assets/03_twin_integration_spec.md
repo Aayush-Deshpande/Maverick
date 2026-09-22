@@ -26,9 +26,9 @@ can_streamer.py ──► thermo_model.py ──► detection_pipeline.py / faul
    FAULT_DATABASE (hardcoded) ──► target_parts[] ──► ghost / emission / camera
 ```
 
-**Control path back to the backend:** `POST /api/control` (or a message on `/ws/blender`) with `ControlCommand.action` ∈ `START_ENGINE | STOP_ENGINE | SET_FAULT | CLEAR_FAULT | SET_THROTTLE | SET_ALTITUDE | SET_OAT | SET_REGIME | EXPORT_DEBRIEF`.
+**Control path back to the backend:** `POST /api/control` (or a message on `ws/blender`) with `ControlCommand.action` ∈ `START_ENGINE | STOP_ENGINE | SET_FAULT | CLEAR_FAULT | SET_THROTTLE | SET_ALTITUDE | SET_OAT | SET_REGIME | EXPORT_DEBRIEF`.
 
-**Replay path:** `GET /api/replay/manifests`, `/api/replay/{mission_id}/manifest`, `/api/replay/{mission_id}/frame?time_sec=` served by `backend/telemetry/replay_engine.py` from `report_dump/mission_*/`.
+**Replay path:** `GET /api/replay/manifests`, `api/replay/{mission_id}/manifest`, `api/replay/{mission_id}/frame?time_sec=` served by `backend/telemetry/replay_engine.py` from `report_dump/mission_*/`.
 
 ---
 
@@ -53,7 +53,7 @@ Verified by code inspection. None of these are modelling problems; all block eve
 🟦 **Our design decision.** Replace hardcoded fault tables with one declarative manifest per platform, loaded by both backend and clients. This is the concrete answer to the PS's modularity requirement: adding a platform becomes adding a file, not editing three codebases.
 
 ```text
-ANUMAAN/manifests/
+manifests/
 ├── engines/
 │   ├── rotax_912is.json      ├── rotax_914f.json     ├── rotax_915is.json
 │   ├── tei_pd170.json        ├── austro_ae330.json   └── lark_hfe.json
@@ -245,4 +245,4 @@ Each item below is verified in [doc 05](05_deliverables_validation_acceptance.md
 - Every fault in a manifest can be injected, rendered, and cleared with materials restored.
 - Inspect poses frame the target component inside the viewport (screenshot check).
 - The client runs with **no platform-specific code**: switching platform is a manifest change only.
-- Removing the 3D client leaves all health/fault/RUL data available via `/api/state`.
+- Removing the 3D client leaves all health/fault/RUL data available via `api/state`.

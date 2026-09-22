@@ -9,9 +9,9 @@
 This module upgrades the standalone canyon tactical flight simulation from a pre-baked animation into an **autonomous, physics-driven, map-independent guidance system**.
 
 ### Target Files & Scope
-* **Primary Flight Script:** [apps/blender_twin/standalone_canyon_flight_app.py](file:///e:/backup-llm/backup-no-llm/3d_engine/apps/blender_twin/standalone_canyon_flight_app.py)
-* **Launcher File:** [launch_canyon_simulation.bat](file:///e:/backup-llm/backup-no-llm/3d_engine/launch_canyon_simulation.bat)
-* **Intent Engine Hook:** [backend/agent/copilot.py](file:///e:/backup-llm/backup-no-llm/3d_engine/backend/agent/copilot.py)
+* **Primary Flight Script:** [apps/blender_twin/standalone_canyon_flight_app.py](../../apps/blender_twin/standalone_canyon_flight_app.py)
+* **Launcher File:** [launch_canyon_simulation.bat](../../launch_canyon_simulation.bat)
+* **Intent Engine Hook:** [backend/agent/copilot.py](../../backend/agent/copilot.py)
 * **3D Environment:** `Models/terrain.blend`
 
 ---

@@ -28,7 +28,7 @@ A platform is **done** only when every row applicable to its tier ([doc 02 §1](
 ## 2. Proposed Folder Structure 🟦
 
 ```text
-ANUMAAN/
+<repo root>/
 ├── docs/
 │   ├── 00_official_problem_statement.md
 │   ├── 01_problem_statement_breakdown.md
@@ -120,7 +120,7 @@ Gates are sequential per platform. A later gate never waives an earlier one.
 | D5 | Visual priority order (doc 03 §5.3) respected: sensor-suspect never renders as component fault | Inject sensor fault + real fault together |
 | D6 | Degrading-but-unclassified state visibly distinct from nominal **before** fault classification | Frame capture during onset ramp |
 | D7 | Engine inside airframe: ghost mode auto-engages and pose transforms through `engine_mount` | Visual check on the airframe, not the bare engine |
-| D8 | **Kill the 3D client:** health, faults, RUL and recommendations remain available and unchanged via `/api/state` | Direct API check |
+| D8 | **Kill the 3D client:** health, faults, RUL and recommendations remain available and unchanged via `api/state` | Direct API check |
 | D9 | ≥ 60 FPS single platform, ≥ 30 FPS fleet view on the demo machine | Measured, machine spec recorded |
 
 ### Gate E: Simulation & replay
@@ -178,7 +178,7 @@ Derived from [breakdown §17](../01_problem_statement_breakdown.md). Each must b
 | L1 | **No real telemetry exists for any engine except via the Rotax 912 dataset**, itself partly synthetic (`source3_drdo_missions`) | Non-Rotax detection and RUL are validated on simulator data only. The demo must say so |
 | L2 | All platform information is from public sources | Dimensions and internal layouts are approximations of real military systems, never authoritative |
 | L3 | **Reference image licensing is unknown.** The TB3 set consists of TurboSquid commercial product renders; others are web-scraped | Use strictly as modelling reference. Never as textures, never redistributed, never shown in the submission as our own imagery |
-| L4 | Engine CAD in `ANUMAAN/Models/` appears to be community-made (snapshot naming, Cyrillic part names), not manufacturer data | Geometrically plausible, not certified-accurate; licence must be checked before any redistribution |
+| L4 | Engine CAD in `Models/` appears to be community-made (snapshot naming, Cyrillic part names), not manufacturer data | Geometrically plausible, not certified-accurate; licence must be checked before any redistribution |
 | L5 | `915_complete.max` requires 3ds Max | Treat the FBX as the only usable source unless Max is available |
 | L6 | Sub-second vibration spectra cannot be carried on the 20 Hz state stream | Vibration faults rely on edge-computed features (doc 03 §4.3) |
 

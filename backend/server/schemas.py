@@ -46,6 +46,15 @@ class EngineTelemetry(BaseModel):
     FLIGHT_PHASE: str = Field("CRUISE_LOITER", description="Flight operational phase")
     THEATER: str = Field("LADAKH", description="Active operational theater/region: LADAKH | THAR_DESERT")
 
+    # Engine Management & Efficiency (FADEC / Performance Map)
+    INJ_TIMING_BTDC: float = Field(18.5, description="Fuel injection start timing (°BTDC)")
+    INJ_PULSE_WIDTH_MS: float = Field(4.2, description="Fuel injection pulse width (ms)")
+    IGN_TIMING_BTDC: float = Field(22.0, description="Ignition advance timing (°BTDC)")
+    LAMBDA_AFR: float = Field(14.7, description="Air-Fuel Ratio (AFR)")
+    BSFC_G_KWH: float = Field(270.0, description="Brake Specific Fuel Consumption (g/kWh)")
+    POWER_KW: float = Field(65.0, description="Engine brake shaft power (kW)")
+    THERMAL_EFFICIENCY: float = Field(0.31, description="Engine brake thermal efficiency (0.0 - 1.0)")
+
 
 class AnalyticsState(BaseModel):
     """Real-time machine learning inference, physics residuals & diagnostics."""
@@ -85,6 +94,8 @@ class AnalyticsState(BaseModel):
     
     sensor_sanity: Dict[str, Any] = Field(default_factory=dict, description="Sensor sanity validation report")
     early_warning_trend: Optional[Dict[str, Any]] = Field(None, description="Sub-threshold prognostic drift trend")
+    threshold_baseline: Dict[str, Any] = Field(default_factory=dict, description="Conventional fixed-threshold baseline comparator & lead-time (F13)")
+    conformal_rul: Dict[str, Any] = Field(default_factory=dict, description="Conformal prediction intervals for component RUL (F12)")
     
     subsystem_health: Dict[str, float] = Field(
         default_factory=lambda: {
@@ -125,12 +136,14 @@ class UnifiedTelemetryState(BaseModel):
 
 class ControlCommand(BaseModel):
     """Incoming command from Mobile Web Frontend or GCS."""
-    action: str = Field(..., description="Action: START_ENGINE | STOP_ENGINE | SET_FAULT | CLEAR_FAULT | SET_THROTTLE | SET_ALTITUDE | SET_OAT | SET_REGIME | EXPORT_DEBRIEF")
+    action: str = Field(..., description="Action: START_ENGINE | STOP_ENGINE | SET_FAULT | CLEAR_FAULT | SET_THROTTLE | SET_ALTITUDE | SET_OAT | SET_REGIME | SET_ROLE | EXPORT_DEBRIEF")
     fault_id: Optional[int] = Field(None, description="Fault ID (0 to 8)")
     throttle: Optional[float] = Field(None, description="Throttle percentage (0 - 100%)")
     altitude_ft: Optional[float] = Field(None, description="Altitude MSL (feet)")
     oat_c: Optional[float] = Field(None, description="Outside Air Temp (°C)")
     region: Optional[str] = Field(None, description="Operating region: LADAKH | THAR_DESERT")
+    regime: Optional[str] = Field(None, description="Mission regime: LADAKH | THAR_DESERT | ENDURANCE_LOITER | RAPID_THROTTLE_TRANSIENTS")
+    role: Optional[str] = Field(None, description="Active GCS role: OPERATOR | PROPULSION_ENGINEER | MAINTENANCE_CREW")
 
 
 class VoiceConverseResponse(BaseModel):

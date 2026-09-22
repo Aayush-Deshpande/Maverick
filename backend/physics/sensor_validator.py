@@ -15,8 +15,10 @@ be misdiagnosed as mechanical engine destruction.
 """
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Any
 import math
+
+from .thermo_model import ResidualVector
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -245,22 +247,68 @@ class SensorSanityValidator:
                     if "CHT_2" not in failed:
                         failed.append("CHT_2")
 
+        # ── CHECK 3: Statistical Sensor Drift Detection (FDP-06 / PS-26054) ──
+        # Detects gradual calibration loss / transducer resistance drift over rolling window
+        drift_detected = False
+        DRIFT_LIMITS = {
+            "CHT_1": 4.0, "CHT_2": 4.0, "CHT_3": 4.0, "CHT_4": 4.0,
+            "EGT_1": 20.0, "EGT_2": 20.0, "EGT_3": 20.0, "EGT_4": 20.0,
+            "OIL_PRESS": 0.35, "OIL_TEMP": 4.0, "FUEL_FLOW": 2.0,
+            "MAP": 3.5, "BUS_VOLTAGE": 0.5
+        }
+        for ch, limit in DRIFT_LIMITS.items():
+            hist = self._history[ch]
+            if len(hist) >= 30 and ch not in failed:
+                # Compare first quarter to fourth quarter of history window
+                q_len = max(5, len(hist) // 4)
+                mean_old = sum(hist[:q_len]) / q_len
+                mean_new = sum(hist[-q_len:]) / q_len
+                shift = mean_new - mean_old
+                
+                # If persistent single-channel shift exceeds drift threshold
+                if abs(shift) > limit:
+                    # Verify if it's isolated (uncorroborated by adjacent engine indicators)
+                    is_isolated = True
+                    if ch.startswith("CHT_"):
+                        # Check if other CHTs shifted similarly
+                        other_chts = [c for c in ["CHT_1", "CHT_2", "CHT_3", "CHT_4"] if c != ch]
+                        other_shifts = [
+                            abs(sum(self._history[c][-q_len:]) / q_len - sum(self._history[c][:q_len]) / q_len)
+                            for c in other_chts if len(self._history[c]) >= 30
+                        ]
+                        if other_shifts and max(other_shifts) > limit * 0.6:
+                            is_isolated = False # Engine-wide thermal shift, not transducer drift
+                    
+                    if is_isolated:
+                        statuses[ch] = ChannelSanityStatus(
+                            channel=ch, valid=False,
+                            fault_type="SENSOR_DRIFT",
+                            measured_rate=abs(shift) / (len(hist) * dt),
+                            max_physical_rate=RATE_LIMITS[ch][0],
+                            variance_recent=self._variance(hist),
+                            detail=(
+                                f"{ch} drifted {shift:+.2f} units across {len(hist)} frames "
+                                f"(threshold: ±{limit:.1f}). Isolated transducer calibration bias."
+                            )
+                        )
+                        failed.append(ch)
+                        drift_detected = True
+
         all_valid = len(failed) == 0
 
         # Build advisory
         if not all_valid:
+            fault_types = list(set(statuses[ch].fault_type for ch in failed if statuses[ch].fault_type))
             advisory = (
-                f"SENSOR ALERT: {len(failed)} channel(s) failed sanity check: "
-                f"{', '.join(failed)}. "
-                f"Downstream anomaly scoring suppressed for failed channels. "
-                f"DO NOT misinterpret sensor failure as engine fault."
+                f"SENSOR ALERT [{'/'.join(fault_types)}]: {len(failed)} channel(s) quarantined: "
+                f"{', '.join(failed)}. Residual shielding active to isolate engine twin."
             )
         else:
             advisory = "All sensors valid."
 
         return SanityReport(
             all_sensors_valid=all_valid,
-            drift_detected=False,   # populated by trend analyser, not here
+            drift_detected=drift_detected,
             failed_channels=failed,
             channel_statuses=statuses,
             suppressed_anomaly=not all_valid,
@@ -272,3 +320,57 @@ class SensorSanityValidator:
         for ch in self.MONITORED_CHANNELS:
             self._history[ch].clear()
             self._prev_values[ch] = None
+
+
+def apply_residual_shielding(
+    residuals: ResidualVector,
+    quarantined_channels: List[str]
+) -> ResidualVector:
+    """
+    Gagguverse/F14 Residual Shielding:
+    Zeroes residuals of quarantined (failed or drifting) sensors so corrupted
+    measurements cannot contaminate the composite anomaly score or trigger false engine alarms.
+    """
+    if not quarantined_channels:
+        return residuals
+
+    res_dict = residuals.to_dict()
+    channel_map = {
+        "CHT_1": "d_CHT_1", "CHT_2": "d_CHT_2", "CHT_3": "d_CHT_3", "CHT_4": "d_CHT_4",
+        "EGT_1": "d_EGT_1", "EGT_2": "d_EGT_2", "EGT_3": "d_EGT_3", "EGT_4": "d_EGT_4",
+        "OIL_PRESS": "d_OIL_PRESS", "OIL_TEMP": "d_OIL_TEMP", "FUEL_FLOW": "d_FUEL_FLOW",
+        "MAP": "d_MAP", "VIB_GEARBOX_RMS": "d_VIB_RMS", "BUS_VOLTAGE": "d_BUS_VOLTAGE",
+    }
+
+    for ch in quarantined_channels:
+        field_name = channel_map.get(ch)
+        if field_name and field_name in res_dict:
+            res_dict[field_name] = 0.0
+
+    # Recompute z-scores without quarantined noise
+    z_scores = [
+        abs(res_dict["d_CHT_1"]) / 4.0,
+        abs(res_dict["d_CHT_2"]) / 4.0,
+        abs(res_dict["d_CHT_3"]) / 4.0,
+        abs(res_dict["d_CHT_4"]) / 4.0,
+        abs(res_dict["d_EGT_1"]) / 15.0,
+        abs(res_dict["d_EGT_2"]) / 15.0,
+        abs(res_dict["d_EGT_3"]) / 15.0,
+        abs(res_dict["d_EGT_4"]) / 15.0,
+        abs(res_dict["d_OIL_PRESS"]) / 0.3,
+        abs(res_dict["d_OIL_TEMP"]) / 5.0,
+        abs(res_dict["d_FUEL_FLOW"]) / 1.5,
+        abs(res_dict["d_MAP"]) / 3.0,
+        abs(res_dict["d_VIB_RMS"]) / 0.25,
+        abs(res_dict["d_BUS_VOLTAGE"]) / 0.35,
+    ]
+    rms_z = math.sqrt(sum(z ** 2 for z in z_scores) / len(z_scores))
+    max_z = max(z_scores)
+    composite_z = 0.65 * max_z + 0.35 * rms_z
+    anomaly_score = round(1.0 - math.exp(-0.45 * composite_z), 4)
+    is_anomaly = anomaly_score >= 0.65
+
+    res_dict["anomaly_score"] = anomaly_score
+    res_dict["is_anomaly"] = is_anomaly
+
+    return ResidualVector(**res_dict)

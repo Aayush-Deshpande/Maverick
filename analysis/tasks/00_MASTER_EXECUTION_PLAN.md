@@ -40,9 +40,9 @@ This master plan structures all remaining deliverables into **3 self-contained, 
 
 | Task File | Module / Domain | Scope & Core Deliverables |
 |---|---|---|
-| [01_DYNAMIC_TACTICAL_SIMULATION_AND_AUTOGCAS.md](file:///e:/backup-llm/backup-no-llm/3d_engine/final_tasks/01_DYNAMIC_TACTICAL_SIMULATION_AND_AUTOGCAS.md) | `apps/blender_twin/`, `backend/agent/` | 3D Raycast Radar Probing, Artificial Potential Fields (APF) Cost Optimizer, Auto-GCAS Margin Solver, Copilot ON/OFF Switch, Center-Screen Crash Screen, Natural Language Copilot Hooks. |
-| [02_HISTORICAL_MISSION_REPLAY_AND_SCRUBBER.md](file:///e:/backup-llm/backup-no-llm/3d_engine/final_tasks/02_HISTORICAL_MISSION_REPLAY_AND_SCRUBBER.md) | `frontend/src/components/`, `backend/server/` | 10–50 Hz FDR Time-Series Streamer, React VCR Playback Scrubber, Synchronized Dial Animations, Timestamped 3D Camera Focus Hooks, AI Reasoning Playback. |
-| [03_PERSISTENT_MISSION_KNOWLEDGE_GRAPH_AND_CBM.md](file:///e:/backup-llm/backup-no-llm/3d_engine/final_tasks/03_PERSISTENT_MISSION_KNOWLEDGE_GRAPH_AND_CBM.md) | `backend/graph/`, `data/graph_db/` | Disk-Persistent SQLite Graph Database, Multi-Sortie Fleet Lifecycle Tracking, Cross-Regional Wear Correlation (Ladakh vs Thar), Automated Maintenance Work Order Generator. |
+| [01_DYNAMIC_TACTICAL_SIMULATION_AND_AUTOGCAS.md](../../analysis/tasks/01_DYNAMIC_TACTICAL_SIMULATION_AND_AUTOGCAS.md) | `apps/blender_twin/`, `backend/agent/` | 3D Raycast Radar Probing, Artificial Potential Fields (APF) Cost Optimizer, Auto-GCAS Margin Solver, Copilot ON/OFF Switch, Center-Screen Crash Screen, Natural Language Copilot Hooks. |
+| [02_HISTORICAL_MISSION_REPLAY_AND_SCRUBBER.md](../../analysis/tasks/02_HISTORICAL_MISSION_REPLAY_AND_SCRUBBER.md) | `frontend/src/components/`, `backend/server/` | 10–50 Hz FDR Time-Series Streamer, React VCR Playback Scrubber, Synchronized Dial Animations, Timestamped 3D Camera Focus Hooks, AI Reasoning Playback. |
+| [03_PERSISTENT_MISSION_KNOWLEDGE_GRAPH_AND_CBM.md](../../analysis/tasks/03_PERSISTENT_MISSION_KNOWLEDGE_GRAPH_AND_CBM.md) | `backend/graph/`, `data/graph_db/` | Disk-Persistent SQLite Graph Database, Multi-Sortie Fleet Lifecycle Tracking, Cross-Regional Wear Correlation (Ladakh vs Thar), Automated Maintenance Work Order Generator. |
 
 ---
 

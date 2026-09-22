@@ -45,11 +45,43 @@ from typing import Optional, Dict, Any, Callable, List
 from backend.physics.thermo_model import (
     RotaxThermoModel, EnginePhysicalState, ResidualVector
 )
-from backend.physics.sensor_validator import SensorSanityValidator, SanityReport
+from backend.physics.sensor_validator import (
+    SensorSanityValidator, SanityReport, apply_residual_shielding
+)
 from backend.ml.anomaly_detector import ResidualAutoencoder, FEATURE_ORDER
 from backend.ml.spectral_analyser import GearboxSpectralAnalyser, SpectralReport
 from backend.ml.trend_analyser import ScoreBuffer
 from backend.agent.diagnostic_agent import DiagnosticAgent, DiagnosticDirective
+
+
+# ---------------------------------------------------------------------------
+# Threshold baseline comparator report (F13 / G03)
+# ---------------------------------------------------------------------------
+
+@dataclass
+class ThresholdBaselineReport:
+    """
+    Conventional fixed-threshold baseline comparison report (F13 / G03).
+    Compares conventional avionics warning thresholds (Rotax operating limits)
+    against the Physics-AI Digital Twin early anomaly detection.
+    """
+    conventional_breached: bool = False
+    breached_parameters: List[str] = field(default_factory=list)
+    conventional_breach_timestamp: Optional[float] = None
+    twin_detect_timestamp: Optional[float] = None
+    lead_time_sec: Optional[float] = None
+    conventional_thresholds: Dict[str, float] = field(default_factory=lambda: {
+        "CHT_MAX_C": 135.0,
+        "EGT_MAX_C": 850.0,
+        "OIL_PRESS_MIN_BAR": 2.0,
+        "OIL_PRESS_MAX_BAR": 5.5,
+        "OIL_TEMP_MAX_C": 130.0,
+        "VIB_RMS_MAX": 2.5,
+        "BUS_VOLTAGE_MIN_V": 12.0,
+    })
+
+    def to_dict(self) -> Dict[str, Any]:
+        return asdict(self)
 
 
 # ---------------------------------------------------------------------------
@@ -232,6 +264,12 @@ class DetectionPipeline:
         self.last_sanity_report: Optional[SanityReport] = None
         self.last_spectral_report: Optional[SpectralReport] = None
 
+        # Threshold baseline comparator (F13 / G03)
+        self._twin_first_detect_time: Optional[float] = None
+        self._baseline_first_breach_time: Optional[float] = None
+        self._baseline_breached_params: List[str] = []
+        self.last_threshold_baseline_report: Optional[ThresholdBaselineReport] = None
+
     def load_models(self,
                     rf_path: Optional[str] = None,
                     ae_path: Optional[str] = None) -> None:
@@ -274,6 +312,10 @@ class DetectionPipeline:
         self._vote.reset()
         self._last_alert_time = 0.0
         self._frame_count = 0
+        self._twin_first_detect_time = None
+        self._baseline_first_breach_time = None
+        self._baseline_breached_params = []
+        self.last_threshold_baseline_report = None
 
     # ------------------------------------------------------------------
     # Main entry point — called once per 20 Hz frame
@@ -323,6 +365,9 @@ class DetectionPipeline:
             flight_phase=actual.FLIGHT_PHASE,
         )
         residuals = self._thermo.compute_residuals(actual, expected)
+        # Stage 2b: Residual Shielding (F14) — zero residuals on failing/drifting channels
+        if sanity and sanity.failed_channels:
+            residuals = apply_residual_shielding(residuals, sanity.failed_channels)
 
         # ── Stage 3: Anomaly Score ─────────────────────────────────────
         ae_score = 0.0
@@ -339,7 +384,13 @@ class DetectionPipeline:
         # a rolling sample buffer and a 60s baseline lock by frame count, so a duplicate call
         # here would silently shrink those windows' real-world duration. Callers must read
         # self.last_spectral_report instead of calling update() again.
-        spectral = self._spectral.update(actual.VIB_GEARBOX_RMS, actual.ENGINE_RPM)
+        high_rate_vib = getattr(actual, 'high_rate_vib_buffer', None)
+        spectral = self._spectral.update(
+            actual.VIB_GEARBOX_RMS,
+            actual.ENGINE_RPM,
+            high_rate_burst=high_rate_vib,
+            fs_hz=2000.0,
+        )
         self.last_spectral_report = spectral
 
         # Blend gearbox spectral anomaly into composite if elevated
@@ -378,6 +429,48 @@ class DetectionPipeline:
 
         # ── Stage 7: Majority Vote ────────────────────────────────────
         confirmed_fault_id = self._vote.update(fault_id)
+
+        # ── Threshold Baseline Comparator (F13 / G03) ─────────────────
+        breached_now = []
+        if actual.CHT_1 > 135.0 or actual.CHT_2 > 135.0 or actual.CHT_3 > 135.0 or actual.CHT_4 > 135.0:
+            breached_now.append("CHT_REDLINE")
+        if actual.EGT_1 > 850.0 or actual.EGT_2 > 850.0 or actual.EGT_3 > 850.0 or actual.EGT_4 > 850.0:
+            breached_now.append("EGT_REDLINE")
+        if actual.OIL_PRESS < 2.0 or actual.OIL_PRESS > 5.5:
+            breached_now.append("OIL_PRESS_REDLINE")
+        if actual.OIL_TEMP > 130.0:
+            breached_now.append("OIL_TEMP_REDLINE")
+        if actual.VIB_GEARBOX_RMS > 2.5:
+            breached_now.append("VIB_REDLINE")
+        if actual.BUS_VOLTAGE < 12.0:
+            breached_now.append("BUS_VOLTAGE_REDLINE")
+
+        if breached_now:
+            for p in breached_now:
+                if p not in self._baseline_breached_params:
+                    self._baseline_breached_params.append(p)
+            if self._baseline_first_breach_time is None:
+                self._baseline_first_breach_time = now
+
+        # Digital Twin detection condition
+        twin_alarmed = (composite_score >= self.ANOMALY_GATE) or (confirmed_fault_id is not None and confirmed_fault_id > 0)
+        if twin_alarmed and self._twin_first_detect_time is None:
+            self._twin_first_detect_time = now
+
+        lead_time_sec = None
+        if self._twin_first_detect_time is not None:
+            if self._baseline_first_breach_time is not None:
+                lead_time_sec = max(0.0, self._baseline_first_breach_time - self._twin_first_detect_time)
+            else:
+                lead_time_sec = max(0.0, now - self._twin_first_detect_time)
+
+        self.last_threshold_baseline_report = ThresholdBaselineReport(
+            conventional_breached=len(self._baseline_breached_params) > 0,
+            breached_parameters=list(self._baseline_breached_params),
+            conventional_breach_timestamp=self._baseline_first_breach_time,
+            twin_detect_timestamp=self._twin_first_detect_time,
+            lead_time_sec=lead_time_sec,
+        )
 
         # ── Stage 8: Read Prognostics Summary ─────────────────────────
         prog_report = None
@@ -603,6 +696,7 @@ class DetectionPipeline:
             "emergency_checklist": checklist,
             "maintenance_order": maint_order,
             "sensor_failures": sanity.failed_channels if sanity else [],
+            "threshold_baseline": self.last_threshold_baseline_report.to_dict() if self.last_threshold_baseline_report else {},
         }
 
         event = DiagnosticEvent(
@@ -617,7 +711,7 @@ class DetectionPipeline:
             },
             sensor_sanity={
                 "all_sensors_valid": sanity.all_sensors_valid if sanity else True,
-                "drift_detected": False,
+                "drift_detected": sanity.drift_detected if sanity else False,
                 "failed_channels": sanity.failed_channels if sanity else [],
             },
             ml_detection_payload=payload,

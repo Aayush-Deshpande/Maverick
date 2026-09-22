@@ -20,6 +20,7 @@ from backend.physics.sensor_validator import SensorSanityValidator, SanityReport
 from backend.telemetry.can_streamer import TelemetryStreamer, DRDO_FAULT_DEFINITIONS
 from backend.ml.detection_pipeline import DetectionPipeline, DiagnosticEvent
 from backend.ml.trend_analyser import ScoreBuffer, PrognosticsWorker
+from backend.ml.rul_estimator import RULEstimator
 from backend.agent.diagnostic_agent import DiagnosticAgent, DiagnosticDirective, ROTAX_ATA_FAULT_DIRECTIVES
 from backend.agent.copilot import MissionCopilot
 from backend.graph.mission_graph import MissionKnowledgeGraph
@@ -166,6 +167,8 @@ class EngineStateService:
         self._telemetry_log_file = None
         self._telemetry_log_writer = None
         self._telemetry_log_tick_count = 0
+        self.rul_estimator = RULEstimator()
+        self.active_role = "OPERATOR"
         self.agent = DiagnosticAgent()
         self.copilot = MissionCopilot()  # RAG + Qwen3-4B intelligence layer (loads its LLM lazily)
 
@@ -235,11 +238,16 @@ class EngineStateService:
         # 1. Update streamer environmental params
         self.streamer.region = self.region
         
-        # 2. Generate frame from physical streamer
-        actual, expected, residuals = self.streamer.generate_frame()
-        
-        # 3. Apply engine running and throttle overrides
-        if not self.is_engine_running:
+        # 2. Generate frame from physical streamer with dynamic operator controls (G01/G02 plant decoupling)
+        if self.is_engine_running:
+            actual, expected, residuals = self.streamer.generate_frame(
+                throttle_cmd=self.throttle_pct,
+                altitude_cmd=self.altitude_ft,
+                oat_cmd=self.oat_c
+            )
+            actual.FLIGHT_PHASE = self.flight_phase
+        else:
+            actual, expected, residuals = self.streamer.generate_frame()
             p_amb, _, _ = self.thermo_model.get_ambient_properties(self.altitude_ft, self.oat_c)
             actual.ENGINE_RPM = 0.0
             actual.PROP_RPM = 0.0
@@ -251,11 +259,6 @@ class EngineStateService:
             actual.BATTERY_CURRENT = -2.5
             actual.VIB_GEARBOX_RMS = 0.0
             actual.HEALTH_INDEX = 1.0
-        else:
-            actual.TPS = self.throttle_pct
-            actual.ALTITUDE_FT = self.altitude_ft
-            actual.OAT_C = self.oat_c
-            actual.FLIGHT_PHASE = self.flight_phase
 
         # Widen this sortie's recorded ambient flight envelope for the mission debrief's
         # ambient_environment block (doc04 §2). Cheap dict-field update, no disk I/O.
@@ -267,6 +270,9 @@ class EngineStateService:
         # 5. Process through 9-stage Detection Pipeline
         event_diag = self.pipeline.process_frame(actual, self.prev_actual, dt_sec=dt)
         self.prev_actual = actual
+
+        # Update physical RUL degradation dynamics (F12)
+        self.rul_estimator.update_degradation(actual, residuals, dt_sec=dt)
 
         # Pull latest prognostics report. Computed here (before fault-diagnosis/graph-recording
         # below) so early_trend/rul_by_component are available to attach as real, live-computed
@@ -327,31 +333,29 @@ class EngineStateService:
         
         p = event_diag.ml_detection_payload if event_diag else {}
         
-        # If an active fault was commanded by operator, that is the authoritative active scenario
-        if self.active_fault_id > 0:
-            diag_fid = self.active_fault_id
-            diag_fname = DRDO_FAULT_DEFINITIONS[diag_fid]["name"]
-            diag_conf = max(0.95, p.get('confidence', 0.98))
-        else:
-            diag_fid = p.get('primary_fault_id', 0)
-            if diag_fid == 0 and residuals.anomaly_score > 0.45:
-                # Reuse this frame's already-computed Stage 1/4 reports — both sub-components
-                # are stateful (rolling history/frame-count windows) and must not be invoked
-                # a second time for the same frame. See DetectionPipeline.process_frame().
-                spectral_rep = self.pipeline.last_spectral_report
-                sanity_rep = self.pipeline.last_sanity_report
-                classified_id, classified_conf = self.pipeline._classify(actual, expected, residuals, spectral_rep, sanity_rep)
-                if classified_id != 0 and classified_conf >= 0.70:
-                    diag_fid = classified_id
-                    diag_conf = classified_conf
-                    diag_fname = self.pipeline.FAULT_NAMES.get(diag_fid, "NOMINAL_FLIGHT")
-                else:
-                    diag_fid = 0
-                    diag_fname = "NOMINAL_FLIGHT"
-                    diag_conf = 0.99
+        # Genuine ML & Physics diagnosis (NO shortcut fake diagnosis label echo)
+        diag_fid = p.get('primary_fault_id', 0)
+        diag_fname = p.get('fault_name', self.pipeline.FAULT_NAMES.get(diag_fid, "NOMINAL_FLIGHT"))
+        diag_conf = p.get('confidence', 0.0)
+
+        if diag_fid == 0 and residuals.anomaly_score > 0.35:
+            # Reuse this frame's already-computed Stage 1/4 reports — both sub-components
+            # are stateful (rolling history/frame-count windows) and must not be invoked
+            # a second time for the same frame. See DetectionPipeline.process_frame().
+            spectral_rep = self.pipeline.last_spectral_report
+            sanity_rep = self.pipeline.last_sanity_report
+            classified_id, classified_conf = self.pipeline._classify(actual, expected, residuals, spectral_rep, sanity_rep)
+            if classified_id != 0 and classified_conf >= self.pipeline.CONFIDENCE_GATE:
+                diag_fid = classified_id
+                diag_conf = classified_conf
+                diag_fname = self.pipeline.FAULT_NAMES.get(diag_fid, "NOMINAL_FLIGHT")
             else:
-                diag_fname = p.get('fault_name', self.pipeline.FAULT_NAMES.get(diag_fid, "NOMINAL_FLIGHT"))
-                diag_conf = p.get('confidence', 0.99)
+                diag_fid = 0
+                diag_fname = "NOMINAL_FLIGHT"
+                diag_conf = 0.99
+        elif diag_fid == 0:
+            diag_fname = "NOMINAL_FLIGHT"
+            diag_conf = 0.99
         
         # Pull authoritative ATA directive
         directive: Optional[DiagnosticDirective] = None
@@ -437,7 +441,14 @@ class EngineStateService:
             OAT_C=round(actual.OAT_C, 1),
             TAS_KNOTS=round(actual.TAS_KNOTS, 1),
             FLIGHT_PHASE=actual.FLIGHT_PHASE,
-            THEATER=self.region
+            THEATER=self.region,
+            INJ_TIMING_BTDC=round(actual.INJ_TIMING_BTDC, 2),
+            INJ_PULSE_WIDTH_MS=round(actual.INJ_PULSE_WIDTH_MS, 2),
+            IGN_TIMING_BTDC=round(actual.IGN_TIMING_BTDC, 2),
+            LAMBDA_AFR=round(actual.LAMBDA_AFR, 2),
+            BSFC_G_KWH=round(actual.BSFC_G_KWH, 1),
+            POWER_KW=round(actual.POWER_KW, 1),
+            THERMAL_EFFICIENCY=round(actual.THERMAL_EFFICIENCY, 3),
         )
         
         # Live per-sortie telemetry log, throttled to ~2 Hz (every 10th 20Hz tick) — real data
@@ -469,33 +480,33 @@ class EngineStateService:
             
             # 2. Fuel System Health: derived from fuel flow residual and individual cylinder EGT spikes
             fuel_penalty = (abs(residuals.d_FUEL_FLOW) / 8.0) + (max(0.0, residuals.d_EGT_1) / 250.0)
-            if diag_fid == 2:
+            if diag_fid == 2 or residuals.d_FUEL_FLOW < -1.0:
                 fuel_penalty = max(fuel_penalty, 0.65)
-            elif diag_fid == 8:
+            elif diag_fid == 8 or residuals.d_MAP > 3.0:
                 fuel_penalty = max(fuel_penalty, 0.50)
             sub_fuel = max(0.15, min(1.0, 1.0 - fuel_penalty))
             
             # 3. Electrical Health: derived from bus voltage sag, battery discharge, and ignition/ECU state
             elec_penalty = (max(0.0, -residuals.d_BUS_VOLTAGE) / 2.2) + (max(0.0, -actual.BATTERY_CURRENT) / 30.0)
-            if diag_fid == 7:
+            if diag_fid == 7 or residuals.d_BUS_VOLTAGE < -0.6:
                 elec_penalty = max(elec_penalty, 0.65)
-            elif diag_fid == 3:
+            elif diag_fid == 3 or residuals.d_EGT_2 < -30.0:
                 elec_penalty = max(elec_penalty, 0.55)
-            elif diag_fid == 8:
+            elif diag_fid == 8 or residuals.d_MAP > 3.0:
                 elec_penalty = max(elec_penalty, 0.45)
             sub_elec = max(0.15, min(1.0, 1.0 - elec_penalty))
             
             # 4. Thermal Health: derived from max CHT residual and oil temperature rise
             max_d_cht = max(residuals.d_CHT_1, residuals.d_CHT_2, residuals.d_CHT_3, residuals.d_CHT_4)
             therm_penalty = (max(0.0, max_d_cht) / 50.0) + (max(0.0, residuals.d_OIL_TEMP) / 40.0)
-            if diag_fid in (1, 6):
-                therm_penalty = max(therm_penalty, 0.75 if diag_fid == 1 else 0.55)
+            if diag_fid in (1, 6) or max_d_cht > 10.0:
+                therm_penalty = max(therm_penalty, 0.75 if (diag_fid == 1 or residuals.d_CHT_2 > 10.0) else 0.55)
             sub_therm = max(0.15, min(1.0, 1.0 - therm_penalty))
             
             # 5. Mechanical Health: derived from gearbox vibration RMS and oil pressure decay
             mech_penalty = (max(0.0, residuals.d_VIB_RMS) / 3.0) + (max(0.0, -residuals.d_OIL_PRESS) / 2.8)
-            if diag_fid in (4, 5):
-                mech_penalty = max(mech_penalty, 0.75 if diag_fid == 4 else 0.65)
+            if diag_fid in (4, 5) or residuals.d_OIL_PRESS < -0.5 or residuals.d_VIB_RMS > 0.5 or actual.OIL_PRESS < 2.5:
+                mech_penalty = max(mech_penalty, 0.75 if (diag_fid == 4 or residuals.d_OIL_PRESS < -0.5 or actual.OIL_PRESS < 2.5) else 0.65)
             sub_mech = max(0.15, min(1.0, 1.0 - mech_penalty))
 
         subsystem_health_dict = {
@@ -550,6 +561,8 @@ class EngineStateService:
             rul_by_component=rul_by_component,
             sensor_sanity=sanity_report,
             early_warning_trend=early_trend,
+            threshold_baseline=self.pipeline.last_threshold_baseline_report.to_dict() if self.pipeline.last_threshold_baseline_report else {},
+            conformal_rul=self.rul_estimator.get_conformal_rul(residuals=residuals),
             subsystem_health=subsystem_health_dict,
             ai_diagnosis=dict(self.ai_diagnosis_state),
             causal_chain=directive.causal_chain if directive else [
@@ -639,17 +652,22 @@ class EngineStateService:
                     res = {"status": "SUCCESS", "message": f"OAT set to {self.oat_c:.1f}°C"}
                     
             elif action == "SET_REGIME":
-                if cmd.region:
-                    self.region = cmd.region.upper()
-                    # Snap altitude/OAT to the canonical baseline for the newly selected theater so
-                    # the switch is immediately visible; the operator can still fine-tune afterward.
-                    if self.region == "LADAKH":
-                        self.altitude_ft = 18500.0
-                        self.oat_c = -22.0
-                    elif self.region == "THAR_DESERT":
-                        self.altitude_ft = 4500.0
-                        self.oat_c = 44.0
-                    res = {"status": "SUCCESS", "message": f"Region set to {self.region}"}
+                reg = cmd.regime or cmd.region
+                if reg:
+                    reg = reg.upper()
+                    self.streamer.set_mission_regime(reg)
+                    self.region = self.streamer.region
+                    self.altitude_ft = self.streamer.altitude_cmd
+                    self.oat_c = self.streamer.oat_cmd
+                    self.throttle_pct = self.streamer.throttle_cmd
+                    res = {"status": "SUCCESS", "message": f"Mission regime set to {reg}"}
+
+            elif action == "SET_ROLE":
+                if cmd.role:
+                    role = cmd.role.upper()
+                    if role in ("OPERATOR", "PROPULSION_ENGINEER", "MAINTENANCE_CREW"):
+                        self.active_role = role
+                        res = {"status": "SUCCESS", "message": f"GCS active role set to {role}"}
                     
             elif action == "EXPORT_DEBRIEF":
                 path = self.export_debrief()

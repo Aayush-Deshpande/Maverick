@@ -9,9 +9,9 @@
 This module upgrades the **Mission Knowledge Graph** from a transient in-memory Python dictionary into a **persistent, disk-backed SQLite graph database** (`data/graph_db/mission_graph.db`), enabling multi-sortie fleet intelligence, regional wear comparisons, and automated maintenance work orders across restarts.
 
 ### Target Files & Scope
-* **Graph Engine:** [backend/graph/mission_graph.py](file:///e:/backup-llm/backup-no-llm/3d_engine/backend/graph/mission_graph.py)
-* **Debrief Reporter:** [backend/graph/mission_reporter.py](file:///e:/backup-llm/backup-no-llm/3d_engine/backend/graph/mission_reporter.py)
-* **Server Integration:** [backend/server/engine_service.py](file:///e:/backup-llm/backup-no-llm/3d_engine/backend/server/engine_service.py) & [main.py](file:///e:/backup-llm/backup-no-llm/3d_engine/backend/server/main.py)
+* **Graph Engine:** [backend/graph/mission_graph.py](../../backend/graph/mission_graph.py)
+* **Debrief Reporter:** [backend/graph/mission_reporter.py](../../backend/graph/mission_reporter.py)
+* **Server Integration:** [backend/server/engine_service.py](../../backend/server/engine_service.py) & [main.py](../../backend/server/main.py)
 * **Database Target:** `data/graph_db/mission_graph.db`
 * **Output Debriefs:** `data/mission_reports/*.md`
 

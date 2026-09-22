@@ -41,7 +41,7 @@ echo [OK] Physics-driven UAV, Chase camera behind tail, Auto-GCAS armed
 echo [OK] Controls: W/S=Pitch  A/D=Turn  E/Q=Throttle  7/8/9/0=Presets (140/180/234/264kt)  C=Copilot  R=Reset  ESC=Exit
 echo.
 
-%BLENDER_EXE% --window-maximized "%~dp0Models\terrain.blend" --python "%~dp0apps\blender_twin\standalone_canyon_flight_app.py"
+%BLENDER_EXE% --window-maximized "%~dp0assets\models\terrain.blend" --python "%~dp0apps\blender_twin\standalone_canyon_flight_app.py"
 
 echo.
 echo [SIM] Blender process exited. If it closed instantly, review the error above.

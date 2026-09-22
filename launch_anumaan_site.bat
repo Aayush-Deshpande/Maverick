@@ -7,7 +7,7 @@ echo  Opening browser at http://localhost:8080
 echo  Press Ctrl+C to terminate the server.
 echo =====================================================================
 
-cd /d "%~dp0\ANUMAAN\site"
+cd /d "%~dp0web\site"
 start "" http://localhost:8080
 python -m http.server 8080
 pause

@@ -1,0 +1,39 @@
+{
+  "total_detections": 2,
+  "counts_by_severity": {
+    "WARNING": 1,
+    "CRITICAL": 1
+  },
+  "detections": [
+    {
+      "event_id": "ANOM-0001",
+      "detected_at": "T+00:00:00",
+      "detected_at_epoch": 1790060735.466,
+      "fault_id": 7,
+      "fault_name": "ALTERNATOR_VOLTAGE_SAG",
+      "severity": "WARNING",
+      "anomaly_score": 0.9957,
+      "ata_chapter": "ATA 24-00",
+      "subsystem": "Heavy-Duty Alternator & Power Bus",
+      "target_mesh": "External_Alternator_M_Steel_0",
+      "sensor_trigger": "DC bus voltage < 12.8 V",
+      "ml_signature": "Bus sag under ISR avionics load; battery discharge current rising",
+      "recommended_action": "Shed non-essential ISR payload sensors and engage backup avionics battery bus."
+    },
+    {
+      "event_id": "ANOM-0002",
+      "detected_at": "T+00:00:00",
+      "detected_at_epoch": 1790060735.549,
+      "fault_id": 4,
+      "fault_name": "OIL_PRESSURE_LOSS",
+      "severity": "CRITICAL",
+      "anomaly_score": 0.9957,
+      "ata_chapter": "ATA 79-00",
+      "subsystem": "Dry-Sump Lubrication Circuit",
+      "target_mesh": "Oil_Tank_M_Steel_0",
+      "sensor_trigger": "Oil pressure < 2.0 bar",
+      "ml_signature": "Continuous linear oil-pressure decay with gradual oil-temp rise",
+      "recommended_action": "Reduce engine RPM to 4,200 RPM to minimize bearing load and initiate immediate precautionary RTB vector."
+    }
+  ]
+}

@@ -42,7 +42,10 @@ class TestRotaxPhysicsAndTelemetry(unittest.TestCase):
             rpm=5100.0,
             tps=70.0
         )
-        self.assertEqual(len(state.to_dict()), 28) # 27 telemetry/context/label parameters + timestamp
+        self.assertGreaterEqual(len(state.to_dict()), 28) # 27 base params + injection/efficiency + timestamp
+        self.assertGreater(state.INJ_TIMING_BTDC, 10.0) # HMS-11 injection timing
+        self.assertGreater(state.BSFC_G_KWH, 200.0)     # VIS-07 BSFC efficiency
+        self.assertGreater(state.POWER_KW, 20.0)        # INT-03 performance map power
         self.assertGreater(state.CHT_1, 50.0)
         self.assertLess(state.CHT_1, 130.0)
         self.assertGreater(state.OIL_PRESS, 2.0)

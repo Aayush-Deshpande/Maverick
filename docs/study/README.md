@@ -37,7 +37,20 @@ Read in order. Each part assumes the previous ones. Parts I–VI build the physi
 | XXII | [22_final_recommendation.md](22_final_recommendation.md) | What to build, and what is real vs simulated vs assumed |
 | XXIII | [23_glossary.md](23_glossary.md) | Every acronym and term |
 
-Related: the datasets themselves are catalogued in [`Datasets/`](../../../Datasets/README.md) at the repository root.
+### Implementation-grade reference (Parts XXIV–XXVII)
+
+Added after the [competitive audit](../audit/README.md). Parts I–XXIII teach the domain; these four are **working references for building the differentiating features** — every equation is meant to be typed into code. Read only if implementing.
+
+| # | File | What it specifies | Feature |
+|---|---|---|---|
+| XXIV | [24_combustion_cycle_and_crank_dynamics.md](24_combustion_cycle_and_crank_dynamics.md) | Slider-crank kinematics, Wiebe heat release, cylinder pressure, gas + inertial torque, **ω(θ)**. Rotax hard numbers | F01 |
+| XXV | [25_misfire_and_combustion_diagnostics.md](25_misfire_and_combustion_diagnostics.md) | Per-cylinder torque deficit, tach correction, misfire rate, COV proxy for combustion instability | F02, F03 |
+| XXVI | [26_order_tracking_and_envelope.md](26_order_tracking_and_envelope.md) | Angular resampling algorithm, order features, Hilbert envelope, compute budget | F04–F07 |
+| XXVII | [27_conformal_prediction_for_rul.md](27_conformal_prediction_for_rul.md) | Split conformal, one-sided lower bound for go/no-go, coverage validation | F12 |
+
+**Why these exist:** [Part XVII §17.5](17_simulation_design.md) synthesises vibration as a sum of *prescribed* order components and never computes crankshaft angular velocity — so a misfire signature is asserted rather than derived, and the per-cylinder detector has no signal to run on. Part XXIV supplies that missing physics layer; XXV–XXVII build on it.
+
+Related: the datasets themselves are catalogued in [`Datasets/`](../../Datasets/README.md) at the repository root. The competitive and self-audit set is in [`../audit/`](../audit/README.md).
 
 ---
 

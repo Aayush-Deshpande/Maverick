@@ -62,7 +62,18 @@ class EnginePhysicalState:
     TAS_KNOTS: float = 85.0        # True Airspeed (knots)
     FLIGHT_PHASE: str = "CRUISE_LOITER"
     
-    # 6. ML Labels & Metadata
+    # 6. Injection Timing & Combustion (HMS-11 / PS-26054)
+    INJ_TIMING_BTDC: float = 18.5  # Injection timing (° BTDC)
+    INJ_PULSE_WIDTH_MS: float = 4.8# Injector effective pulse width (ms)
+    IGN_TIMING_BTDC: float = 24.0  # FADEC Electronic Ignition Advance (° BTDC)
+    LAMBDA_AFR: float = 1.0        # Combustion Air-Fuel Ratio equivalence (lambda)
+
+    # 7. Engine Performance & Efficiency (VIS-07 / INT-03)
+    BSFC_G_KWH: float = 265.0      # Brake Specific Fuel Consumption (g/kWh)
+    THERMAL_EFFICIENCY: float = 0.31 # Overall brake thermal efficiency (fraction, 0-1)
+    POWER_KW: float = 54.0         # Mechanical brake shaft power output (kW)
+
+    # 8. ML Labels & Metadata
     HEALTH_INDEX: float = 1.0      # 1.0 (New) -> 0.0 (Failed)
     FAULT_ID: int = 0              # 0 = Nominal, 1..8 = Faults
     RUL_HOURS: float = 500.0       # Remaining Useful Life
@@ -89,6 +100,11 @@ class ResidualVector:
     d_MAP: float = 0.0
     d_VIB_RMS: float = 0.0
     d_BUS_VOLTAGE: float = 0.0
+    
+    # Injection & Efficiency Residuals
+    d_INJ_TIMING: float = 0.0
+    d_INJ_PULSE_WIDTH: float = 0.0
+    d_BSFC: float = 0.0
     
     anomaly_score: float = 0.0     # 0.0 to 1.0 composite anomaly score
     is_anomaly: bool = False
@@ -197,6 +213,23 @@ class RotaxThermoModel:
         # 9. Gearbox Vibration RMS (mm/s)
         vib_expected = 0.35 + 0.35 * (rpm_norm ** 2.0)
         
+        # 10. Injection Timing & Ignition Advance (HMS-11 / PS-26054)
+        # FADEC advances timing with RPM and trims with load
+        inj_timing_expected = 14.0 + 5.5 * (rpm / 5800.0) + 1.5 * throttle_norm
+        inj_pulse_width_expected = 2.0 + 4.8 * (fuel_flow_expected / 25.0) * (5000.0 / max(1000.0, rpm))
+        ign_advance_expected = 18.0 + 6.0 * (1.0 - throttle_norm) + 4.0 * (rpm / 5800.0)
+        lambda_expected = 1.0 - 0.12 * (throttle_norm ** 2.0)
+
+        # 11. Performance Map & Efficiency Metrics (VIS-07 / INT-03)
+        perf_data = self.lookup_performance_map(rpm, map_expected, altitude_ft)
+        power_kw = perf_data["power_kw"]
+        fuel_mass_kg_hr = fuel_flow_expected * fuel_density_kg_l
+        bsfc_expected = (fuel_mass_kg_hr * 1000.0) / max(5.0, power_kw)
+        # Lower Heating Value of aviation gasoline = 43.0 MJ/kg = 43000 kJ/kg
+        # Thermal efficiency = Work_out (kJ/hr) / Heat_in (kJ/hr) = (kW * 3600) / (kg/hr * 43000)
+        thermal_eff_expected = (power_kw * 3600.0) / max(1.0, fuel_mass_kg_hr * 43000.0)
+        thermal_eff_expected = max(0.15, min(0.38, thermal_eff_expected))
+
         return EnginePhysicalState(
             ENGINE_RPM=round(rpm, 1),
             PROP_RPM=round(prop_rpm, 1),
@@ -222,10 +255,75 @@ class RotaxThermoModel:
             OAT_C=round(oat_c, 1),
             TAS_KNOTS=round(tas_knots, 1),
             FLIGHT_PHASE=flight_phase,
+            INJ_TIMING_BTDC=round(inj_timing_expected, 1),
+            INJ_PULSE_WIDTH_MS=round(inj_pulse_width_expected, 2),
+            IGN_TIMING_BTDC=round(ign_advance_expected, 1),
+            LAMBDA_AFR=round(lambda_expected, 2),
+            BSFC_G_KWH=round(bsfc_expected, 1),
+            THERMAL_EFFICIENCY=round(thermal_eff_expected, 3),
+            POWER_KW=round(power_kw, 1),
             HEALTH_INDEX=1.0,
             FAULT_ID=0,
             RUL_HOURS=500.0
         )
+
+    def lookup_performance_map(
+        self,
+        rpm: float,
+        map_kpa: float,
+        altitude_ft: float
+    ) -> Dict[str, Any]:
+        """
+        Rotax 912 iS Factory Operating Envelope & Performance Map (INT-03 / PS-26054).
+        Interpolates factory brake power, nominal BSFC, and fuel consumption.
+        """
+        p_amb, _, rho_amb = self.get_ambient_properties(altitude_ft, 15.0)
+        density_ratio = rho_amb / SEA_LEVEL_RHO
+
+        # Standard Sea Level Operating Curve:
+        # Max Takeoff (5800 RPM, WOT ~100 kPa): 73.5 kW (100 HP)
+        # Max Continuous (5500 RPM, 96 kPa): 69.0 kW
+        # 75% Cruise (5000 RPM, 88 kPa): 51.0 kW
+        # 65% Cruise (4800 RPM, 80 kPa): 43.0 kW
+        # 50% Loiter (4300 RPM, 68 kPa): 32.0 kW
+        rpm_clamped = max(2000.0, min(5800.0, rpm))
+        map_ratio = max(0.3, min(1.05, map_kpa / 100.0))
+        
+        # Power is proportional to air mass ingested (RPM * MAP) with temperature correction (SAE J1349)
+        # MAP is already absolute intake pressure (accounting for altitude throttling/lapse)
+        t_kelvin = max(200.0, 15.0 + 273.15)
+        temp_correction = math.sqrt(SEA_LEVEL_T_K / t_kelvin)
+        base_power_kw = 73.5 * ((rpm_clamped / 5800.0) ** 1.15) * (map_ratio ** 1.0) * temp_correction
+        derated_power_kw = max(8.0, base_power_kw)
+        
+        # Nominal BSFC (g/kWh) - sweet spot around 4800-5000 RPM is ~240-250 g/kWh
+        # Increases at low power (idle inefficiency) and max takeoff (rich enrichment)
+        power_fraction = derated_power_kw / 73.5
+        if power_fraction > 0.85:
+            nominal_bsfc = 270.0 + (power_fraction - 0.85) * 60.0 # Takeoff enrichment
+        elif power_fraction > 0.50:
+            nominal_bsfc = 240.0 + (0.75 - power_fraction) ** 2 * 120.0 # Cruise economy
+        else:
+            nominal_bsfc = 260.0 + (0.50 - power_fraction) * 150.0 # Low power throttle loss
+            
+        nominal_fuel_flow_l_hr = (derated_power_kw * nominal_bsfc / 1000.0) / 0.74
+
+        if power_fraction >= 0.90:
+            regime = "TAKEOFF_MAX_POWER"
+        elif power_fraction >= 0.70:
+            regime = "CONTINUOUS_CRUISE"
+        elif power_fraction >= 0.45:
+            regime = "ECONOMY_LOITER"
+        else:
+            regime = "IDLE_DESCENT"
+
+        return {
+            "power_kw": round(derated_power_kw, 1),
+            "bsfc_g_kwh": round(nominal_bsfc, 1),
+            "nominal_bsfc_g_kwh": round(nominal_bsfc, 1),
+            "nominal_fuel_flow_l_hr": round(nominal_fuel_flow_l_hr, 1),
+            "operating_regime": regime
+        }
 
     def compute_residuals(
         self,
@@ -251,6 +349,11 @@ class RotaxThermoModel:
         d_map = actual.MAP - expected.MAP
         d_vib = actual.VIB_GEARBOX_RMS - expected.VIB_GEARBOX_RMS
         d_bus_v = actual.BUS_VOLTAGE - expected.BUS_VOLTAGE
+
+        # Injection & Efficiency residuals
+        d_inj_timing = actual.INJ_TIMING_BTDC - expected.INJ_TIMING_BTDC
+        d_inj_pw = actual.INJ_PULSE_WIDTH_MS - expected.INJ_PULSE_WIDTH_MS
+        d_bsfc = actual.BSFC_G_KWH - expected.BSFC_G_KWH
         
         # Individual channel normalized standard deviations (z-scores)
         z_scores = [
@@ -295,6 +398,21 @@ class RotaxThermoModel:
             d_MAP=round(d_map, 2),
             d_VIB_RMS=round(d_vib, 3),
             d_BUS_VOLTAGE=round(d_bus_v, 2),
+            d_INJ_TIMING=round(d_inj_timing, 2),
+            d_INJ_PULSE_WIDTH=round(d_inj_pw, 2),
+            d_BSFC=round(d_bsfc, 1),
             anomaly_score=anomaly_score,
             is_anomaly=is_anomaly
         )
+
+
+_DEFAULT_MODEL = RotaxThermoModel()
+
+def lookup_performance_map(rpm: float, map_kpa: float, altitude_ft: float = 0.0):
+    """
+    Module-level convenience wrapper for Rotax 912 iS Performance Map (INT-03).
+    Returns (power_kw, bsfc_g_kwh).
+    """
+    res = _DEFAULT_MODEL.lookup_performance_map(rpm, map_kpa, altitude_ft)
+    return res["power_kw"], res["bsfc_g_kwh"]
+

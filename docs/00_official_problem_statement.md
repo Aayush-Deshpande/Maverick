@@ -17,7 +17,7 @@
 | **Category** | Software |
 | **Theme** | Robotics and Drones |
 
-*This document reproduces the official SIH problem statement as published, with only obvious source-text OCR artifacts silently corrected for readability (e.g. "Defection" → "Detection", "coding degradation" → "cooling degradation", "logit" → "logic"). No requirement has been added, removed, or reinterpreted. For the team's own engineering interpretation, target-platform assumptions, and architecture, see [01_problem_statement_and_analysis.md](../../docs/guide/01_problem_statement_and_analysis.md).*
+*This document reproduces the official SIH problem statement as published, with only obvious source-text OCR artifacts silently corrected for readability (e.g. "Defection" → "Detection", "coding degradation" → "cooling degradation", "logit" → "logic"). No requirement has been added, removed, or reinterpreted. For the team's own engineering interpretation, target-platform assumptions, and architecture, see [01_problem_statement_and_analysis.md](../analysis/strategy/01_problem_statement_and_analysis.md).*
 
 ---
 
@@ -163,13 +163,13 @@ Teams are expected to demonstrate understanding of:
 
 | SIH Requirement | ANUMAAN Component |
 |---|---|
-| Digital Twin Core Framework | Real-time engine state synchronization engine (see [02_system_architecture_and_boundaries.md](../../docs/guide/02_system_architecture_and_boundaries.md)) |
-| Health Monitoring System | 27-parameter telemetry pipeline (see [03_telemetry_physics_and_dataset_strategy.md](../../docs/guide/03_telemetry_physics_and_dataset_strategy.md)) |
-| Fault Detection & Predictive Analytics | 8 canonical fault-scenario ML classifiers (see [01_problem_statement_and_analysis.md](../../docs/guide/01_problem_statement_and_analysis.md), §4) |
-| AI/ML Layer (anomaly, RUL, trend, advisory) | Physics-informed prognostics stack (see [05_machine_learning_physics_prognostics.md](../../docs/guide/05_machine_learning_physics_prognostics.md)) |
-| Simulation & Replay | Mission replay engine & knowledge graph (see [04_rag_and_mission_knowledge_graph.md](../../docs/guide/04_rag_and_mission_knowledge_graph.md)) |
-| Visualization Dashboard | 3D Digital Twin GCS dashboard (see [07_frontend_and_gcs_clients.md](../../docs/guide/07_frontend_and_gcs_clients.md)) |
+| Digital Twin Core Framework | Real-time engine state synchronization engine (see [02_system_architecture_and_boundaries.md](../analysis/strategy/02_system_architecture_and_boundaries.md)) |
+| Health Monitoring System | 27-parameter telemetry pipeline (see [03_telemetry_physics_and_dataset_strategy.md](../analysis/strategy/03_telemetry_physics_and_dataset_strategy.md)) |
+| Fault Detection & Predictive Analytics | 8 canonical fault-scenario ML classifiers (see [01_problem_statement_and_analysis.md](../analysis/strategy/01_problem_statement_and_analysis.md), §4) |
+| AI/ML Layer (anomaly, RUL, trend, advisory) | Physics-informed prognostics stack (see [05_machine_learning_physics_prognostics.md](../analysis/engineering/05_machine_learning_physics_prognostics.md)) |
+| Simulation & Replay | Mission replay engine & knowledge graph (see [04_rag_and_mission_knowledge_graph.md](../analysis/strategy/04_rag_and_mission_knowledge_graph.md)) |
+| Visualization Dashboard | 3D Digital Twin GCS dashboard (see [07_frontend_and_gcs_clients.md](../analysis/engineering/07_frontend_and_gcs_clients.md)) |
 
 ---
 
-*Document maintained as part of the ANUMAAN documentation suite. See [README.md](../../docs/guide/README.md) for the full reading guide.*
+*Document maintained as part of the ANUMAAN documentation suite. See [README.md](../analysis/engineering/README.md) for the full reading guide.*

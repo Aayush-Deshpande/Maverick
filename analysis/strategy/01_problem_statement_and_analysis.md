@@ -2,7 +2,7 @@
 **DRDO / iDEX Problem Statement ID: 26054**
 *AI-Enabled Real-Time Digital Twin System for Health Monitoring, Fault Prediction and Mission Reliability Enhancement of Aero Piston Engines used in MALE UAVs*
 
-> For the verbatim official problem statement, see [00_official_problem_statement.md](../../ANUMAAN/docs/00_official_problem_statement.md).
+> For the verbatim official problem statement, see [00_official_problem_statement.md](../../docs/00_official_problem_statement.md).
 
 ---
 

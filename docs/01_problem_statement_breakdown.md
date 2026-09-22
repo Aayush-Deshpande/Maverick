@@ -317,7 +317,7 @@ The critical test: **if you deleted the entire 3D view, would the system still b
 ## 16. What Would a Complete Solution Look Like?
 
 - **UAV** — the airframe carrying a single piston engine, flying a long-duration ISR/surveillance mission with no onboard pilot to notice problems.
-- **Engine** — a 4-cylinder aero piston engine (🟦 our reference assumption: Rotax 912 iS Sport, see [01_problem_statement_and_analysis.md](../../docs/guide/01_problem_statement_and_analysis.md)) whose 8 monitored parameters are continuously produced.
+- **Engine** — a 4-cylinder aero piston engine (🟦 our reference assumption: Rotax 912 iS Sport, see [01_problem_statement_and_analysis.md](../analysis/strategy/01_problem_statement_and_analysis.md)) whose 8 monitored parameters are continuously produced.
 - **Sensors** — instruments on the engine measuring RPM, CHT, EGT, oil pressure/temperature, fuel flow, vibration, electrical health, and injection timing, transmitting over CAN bus/SocketCAN.
 - **Data pipeline** — ingests that raw stream, cleans it, timestamps it, and stores it.
 - **Digital Twin** — the core service combining live data with a physics model to hold the authoritative current + expected state of the engine.
