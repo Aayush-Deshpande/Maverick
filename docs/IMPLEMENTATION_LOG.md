@@ -393,16 +393,93 @@ the code.
 
 ---
 
+## Session 3 — 2026-09-23 (crank-angle chain)
+
+### F01 — Crank-angle-resolved dynamics
+`backend/physics/crank_dynamics.py`
+
+Wiebe heat release → per-cylinder p(θ) → slider-crank gas and inertial torque →
+integrated ω(θ) → structural transfer → accelerometer waveform at 2–10 kHz.
+Faults modify the pressure trace and physical parameters, never the output
+signal.
+
+**Verified against the physical anchor.** A healthy four-cylinder four-stroke is
+**order-2.0 dominant**, with sidebands at 1.88/2.12 and a harmonic at 4.0; mean
+speed 5 193 rpm against 5 200 commanded.
+
+**Defect found and fixed.** The first version used fixed friction plus a weak
+governor. Mean speed drifted upward through the window, and that ramp dominated
+the order spectrum — order 0.25 outranked order 2.0 and the anchor failed.
+Replaced with a physical propeller load (torque ∝ ω²), calibrated so the balance
+point lands on the commanded RPM. This is the anchor doing exactly the job it
+exists for.
+
+### F02 / F03 — Per-cylinder combustion diagnostics
+`backend/ml/crank_diagnostics.py`
+
+Segments ω(θ) by firing interval and attributes the kinetic-energy change to the
+cylinder that owns that interval. Attribution is deterministic — no classifier,
+so there is no confidence score to argue about.
+
+**Verified — intermittent misfire rate recovered exactly:**
+
+| True rate | Detected | Cylinder |
+|---|---|---|
+| 5 % | **6.0 %** (6.0 % actually injected) | 3 ✓ |
+| 15 % | **14.0 %** (14.0 % injected) | 3 ✓ |
+| 40 % | **40.7 %** (40.7 % injected) | 3 ✓ |
+
+Output: *"Cylinder 3: misfiring on 40.7 % of cycles, contributing no useful work
+(net absorbing), severity index 1.6."* That is the sentence the plan promised,
+and it is a measurement rather than an inference.
+
+**Defect found and fixed.** Normalising per-cylinder work by the cycle *spread*
+cancelled severity out: one dead cylinder in four always read a 0.75 deficit
+whether it was misfiring completely or merely weak, because the spread scales
+with the fault. Now referenced to the **median** cylinder, the robust estimate of
+a healthy contribution.
+
+**Known limitation, recorded rather than papered over.** For a *continuous*
+partial fault the contribution ratio saturates — a 20 % combustion loss and a
+total misfire both read about −2.5 — because any meaningful loss drives that
+interval's kinetic-energy delta negative. Confirmed genuine, not a test
+artifact, by repeating with the propeller load frozen at the healthy
+calibration. **Attribution and rate are exact; absolute severity grading of a
+continuous partial fault is not.** For intermittent faults severity does grade
+correctly (0.2 / 0.5 / 1.6 at 5/15/40 % rates), because the rate modulates it.
+
+### F04 / F05 / F06 — Order tracking, order features, envelope
+`backend/ml/crank_diagnostics.py`
+
+Tach-synchronous angular resampling (speed-invariant), order-domain feature
+extraction, and Hilbert envelope analysis for bearing defect tones.
+
+**Verified — and this is the competitive thesis, as a number:**
+
+| Metric | Healthy | Misfire cyl 3 | Change |
+|---|---|---|---|
+| Order-0.5 fraction | 0.00013 | 0.01464 | **114×** |
+| Broadband RMS | 0.0044 | 0.0042 | **0.97× — flat** |
+
+The order-domain detector fires while the scalar RMS channel every competitor
+relies on does not move. Envelope spectrum peaks at 173.3 Hz, exactly the firing
+rate (5 200 rpm × 2 orders / 60).
+
+**Unproven.** The structural transfer is a single damped resonance, not a modal
+model of the crankcase; it puts the right orders in the right places and should
+not be quoted as a prediction of absolute vibration amplitude. Bearing defect
+tones (BPFO/BPFI) are not yet injected, so the envelope path is demonstrated but
+not exercised against its actual target fault.
+
+---
+
 ## Status against the plan
 
-**65 features in scope · 25 implemented (38 %)**
-
-F01–F30 from [`audit/04_feature_spec.md`](audit/04_feature_spec.md) (F09–F11 do
-not exist; the spec jumps F08 → F12) plus F31–F68 from the ground-up plan.
+**65 features in scope · 31 implemented (48 %)**
 
 | Tier | Features | Done |
 |---|---|---|
-| Crank-angle chain (F01–F08) | 8 | **0** |
+| Crank-angle chain (F01–F08) | 8 | **6** — F07, F08 open |
 | Credibility (F12–F18) | 7 | 2 — F12, F13 |
 | Visualisation (F19–F24) | 6 | 0 |
 | Slack (F25–F30) | 6 | 0 |
@@ -419,16 +496,18 @@ not exist; the spec jumps F08 → F12) plus F31–F68 from the ground-up plan.
 
 ### What still blocks the headline claims
 
-1. **G01 — the plant and the twin are still one model.** Everything above is
-   scaffolding until an independent virtual engine exists.
-2. **G03 — no lead time has been measured.** F13 provides the baseline; nothing
-   has been run through it against the twin.
-3. **F01–F08, the crank-angle chain, is entirely unbuilt** — and F35 has now
-   *proved* it is load-bearing rather than merely desirable.
+1. **G01 — the plant and the twin are still one model.** The crank chain is now
+   a genuine second physics path, but it has not been split into an independent
+   plant process.
+2. **G03 — no lead time has been measured.** F13 provides the baseline and F02
+   now provides a detector that fires on something a threshold cannot see; the
+   two have not been run head to head.
+3. **F07/F08** — feeding the kHz channel into the dormant DFT path and the edge
+   feature compressor — are the remaining crank-chain items.
 
 ### Cross-cutting caveat
 
-Every damage law, hazard rate, wear coefficient and oil limit in this
-implementation is a **labelled placeholder**. Relative comparisons — this
-environment versus that one, this derate versus none — are defensible. No
-absolute number is, until these are replaced with OEM or fleet-traceable values.
+Every damage law, hazard rate, wear coefficient, oil limit and combustion
+constant here is a **labelled placeholder**. Relative comparisons are
+defensible. No absolute number is, until these are replaced with OEM or
+fleet-traceable values.
