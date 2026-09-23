@@ -69,3 +69,6 @@ competitors/
 /data/telemetry/nasa_aces/raw/
 /data/telemetry/nasa_aces/extracted/
 /dataset/
+
+# Cloned reference repos (not our code)
+/mk-jev-fly-brain/
