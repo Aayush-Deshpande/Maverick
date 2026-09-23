@@ -1,0 +1,218 @@
+{
+  "as_built": {
+    "n_modes": 20,
+    "n_channels": 9,
+    "detectable": 15,
+    "undetectable": [
+      "FM-04",
+      "FM-09",
+      "FM-11",
+      "FM-12",
+      "FM-16"
+    ],
+    "fully_isolable": 11,
+    "detectability_ratio": 0.75,
+    "isolability_ratio": 0.55,
+    "indistinguishable_classes": [
+      [
+        "FM-01",
+        "FM-03"
+      ],
+      [
+        "FM-13",
+        "FM-15"
+      ]
+    ]
+  },
+  "proposed": {
+    "n_modes": 20,
+    "n_channels": 21,
+    "detectable": 19,
+    "undetectable": [
+      "FM-12"
+    ],
+    "fully_isolable": 19,
+    "detectability_ratio": 0.95,
+    "isolability_ratio": 0.95,
+    "indistinguishable_classes": []
+  },
+  "channel_value": [
+    {
+      "channel": "CRANK_OMEGA",
+      "isolable_with": 19,
+      "isolable_without": 17,
+      "isolability_lost": 2,
+      "newly_undetectable": [],
+      "new_ambiguity_groups": 1
+    },
+    {
+      "channel": "EGT_n",
+      "isolable_with": 19,
+      "isolable_without": 17,
+      "isolability_lost": 2,
+      "newly_undetectable": [
+        "FM-02",
+        "FM-03"
+      ],
+      "new_ambiguity_groups": 0
+    },
+    {
+      "channel": "CHT_n",
+      "isolable_with": 19,
+      "isolable_without": 18,
+      "isolability_lost": 1,
+      "newly_undetectable": [
+        "FM-19"
+      ],
+      "new_ambiguity_groups": 0
+    },
+    {
+      "channel": "FADEC_ACTIVE_LANE",
+      "isolable_with": 19,
+      "isolable_without": 18,
+      "isolability_lost": 1,
+      "newly_undetectable": [
+        "FM-18"
+      ],
+      "new_ambiguity_groups": 0
+    },
+    {
+      "channel": "OIL_PRESS",
+      "isolable_with": 19,
+      "isolable_without": 18,
+      "isolability_lost": 1,
+      "newly_undetectable": [
+        "FM-10"
+      ],
+      "new_ambiguity_groups": 0
+    },
+    {
+      "channel": "BATTERY_CURRENT",
+      "isolable_with": 19,
+      "isolable_without": 19,
+      "isolability_lost": 0,
+      "newly_undetectable": [],
+      "new_ambiguity_groups": 0
+    },
+    {
+      "channel": "BLOWBY",
+      "isolable_with": 19,
+      "isolable_without": 19,
+      "isolability_lost": 0,
+      "newly_undetectable": [],
+      "new_ambiguity_groups": 0
+    },
+    {
+      "channel": "BUS_VOLTAGE",
+      "isolable_with": 19,
+      "isolable_without": 19,
+      "isolability_lost": 0,
+      "newly_undetectable": [],
+      "new_ambiguity_groups": 0
+    },
+    {
+      "channel": "CHARGE_TEMP_C",
+      "isolable_with": 19,
+      "isolable_without": 19,
+      "isolability_lost": 0,
+      "newly_undetectable": [],
+      "new_ambiguity_groups": 0
+    },
+    {
+      "channel": "COOLANT_TEMP",
+      "isolable_with": 19,
+      "isolable_without": 19,
+      "isolability_lost": 0,
+      "newly_undetectable": [],
+      "new_ambiguity_groups": 0
+    },
+    {
+      "channel": "FUEL_FILTER_DP_KPA",
+      "isolable_with": 19,
+      "isolable_without": 19,
+      "isolability_lost": 0,
+      "newly_undetectable": [],
+      "new_ambiguity_groups": 0
+    },
+    {
+      "channel": "FUEL_TEMP_C",
+      "isolable_with": 19,
+      "isolable_without": 19,
+      "isolability_lost": 0,
+      "newly_undetectable": [],
+      "new_ambiguity_groups": 0
+    },
+    {
+      "channel": "MAP",
+      "isolable_with": 19,
+      "isolable_without": 19,
+      "isolability_lost": 0,
+      "newly_undetectable": [],
+      "new_ambiguity_groups": 0
+    },
+    {
+      "channel": "OIL_Fe_PPM",
+      "isolable_with": 19,
+      "isolable_without": 19,
+      "isolability_lost": 0,
+      "newly_undetectable": [],
+      "new_ambiguity_groups": 0
+    },
+    {
+      "channel": "OIL_LARGE_DEBRIS",
+      "isolable_with": 19,
+      "isolable_without": 19,
+      "isolability_lost": 0,
+      "newly_undetectable": [],
+      "new_ambiguity_groups": 0
+    },
+    {
+      "channel": "OIL_Pb_PPM",
+      "isolable_with": 19,
+      "isolable_without": 19,
+      "isolability_lost": 0,
+      "newly_undetectable": [],
+      "new_ambiguity_groups": 0
+    },
+    {
+      "channel": "OIL_Si_PPM",
+      "isolable_with": 19,
+      "isolable_without": 19,
+      "isolability_lost": 0,
+      "newly_undetectable": [],
+      "new_ambiguity_groups": 0
+    },
+    {
+      "channel": "RAIL_PRESSURE_BAR",
+      "isolable_with": 19,
+      "isolable_without": 19,
+      "isolability_lost": 0,
+      "newly_undetectable": [],
+      "new_ambiguity_groups": 0
+    },
+    {
+      "channel": "TURBO_SURGE_MARGIN",
+      "isolable_with": 19,
+      "isolable_without": 19,
+      "isolability_lost": 0,
+      "newly_undetectable": [],
+      "new_ambiguity_groups": 0
+    },
+    {
+      "channel": "VIB",
+      "isolable_with": 19,
+      "isolable_without": 19,
+      "isolability_lost": 0,
+      "newly_undetectable": [],
+      "new_ambiguity_groups": 0
+    },
+    {
+      "channel": "WASTEGATE_POS",
+      "isolable_with": 19,
+      "isolable_without": 19,
+      "isolability_lost": 0,
+      "newly_undetectable": [],
+      "new_ambiguity_groups": 0
+    }
+  ]
+}

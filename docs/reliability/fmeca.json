@@ -1,0 +1,655 @@
+{
+  "summary": {
+    "system": "MALE UAV piston propulsion",
+    "total_modes": 20,
+    "by_severity": {
+      "III_MARGINAL": 3,
+      "II_CRITICAL": 9,
+      "I_CATASTROPHIC": 8
+    },
+    "detectability_gaps": 0,
+    "gap_ids": [],
+    "implemented": 20,
+    "implementation_coverage": 1.0,
+    "highest_rpn": [
+      [
+        "FM-19",
+        252
+      ],
+      [
+        "FM-20",
+        180
+      ],
+      [
+        "FM-02",
+        168
+      ],
+      [
+        "FM-07",
+        140
+      ],
+      [
+        "FM-16",
+        120
+      ]
+    ],
+    "si_modes": 16,
+    "ci_modes": 19
+  },
+  "modes": [
+    {
+      "mode_id": "FM-01",
+      "item": "Cylinder / ignition",
+      "failure_mode": "Misfire (SI)",
+      "cause": "Plug fouling, coil failure, lean limit",
+      "local_effect": "Loss of combustion on one cylinder",
+      "mission_effect": "Power loss, vibration, possible abort",
+      "severity_class": "II_CRITICAL",
+      "signatures": [
+        "Torque deficit at that cylinder's firing angle",
+        "Raised cycle-to-cycle variation",
+        "EGT drop on affected cylinder"
+      ],
+      "channels": [
+        "CRANK_OMEGA",
+        "EGT_n",
+        "VIB"
+      ],
+      "detection_method": "Per-cylinder omega(theta) torque deficit",
+      "occurrence": 5,
+      "detection_difficulty": 3,
+      "compensating_provision": "FADEC dual ignition lanes",
+      "engine_classes": [
+        "SI"
+      ],
+      "implemented_by": "planned F02 (crank-angle chain)",
+      "severity_rank": 7,
+      "rpn": 105,
+      "criticality": 3.5,
+      "detectability_gap": false
+    },
+    {
+      "mode_id": "FM-02",
+      "item": "Injector",
+      "failure_mode": "Nozzle coking / IDID",
+      "cause": "Deposit formation from thermal cycling of fuel",
+      "local_effect": "Reduced and mistimed delivery, poor atomisation",
+      "mission_effect": "Rough running, hard start, progressive power loss",
+      "severity_class": "II_CRITICAL",
+      "signatures": [
+        "Asymmetric per-cylinder torque deficit",
+        "Retarded effective injection",
+        "EGT imbalance"
+      ],
+      "channels": [
+        "CRANK_OMEGA",
+        "EGT_n",
+        "INJ_n_DELIVERY"
+      ],
+      "detection_method": "Injector bank imbalance metrics (asymmetric)",
+      "occurrence": 6,
+      "detection_difficulty": 4,
+      "compensating_provision": "Fuel additive, injector service interval",
+      "engine_classes": [
+        "CI"
+      ],
+      "implemented_by": "backend/physics/injector_faults.py",
+      "severity_rank": 7,
+      "rpn": 168,
+      "criticality": 4.2,
+      "detectability_gap": false
+    },
+    {
+      "mode_id": "FM-03",
+      "item": "Injector",
+      "failure_mode": "Needle stick",
+      "cause": "Deposits or contamination binding the needle",
+      "local_effect": "Partial or total loss of delivery on one cylinder",
+      "mission_effect": "Severe power loss; multiple sticks can stop the engine",
+      "severity_class": "I_CATASTROPHIC",
+      "signatures": [
+        "Single-cylinder delivery collapse",
+        "Large asymmetric torque deficit"
+      ],
+      "channels": [
+        "CRANK_OMEGA",
+        "EGT_n"
+      ],
+      "detection_method": "Injector bank imbalance metrics",
+      "occurrence": 3,
+      "detection_difficulty": 3,
+      "compensating_provision": "Fuel filtration",
+      "engine_classes": [
+        "CI"
+      ],
+      "implemented_by": "backend/physics/injector_faults.py",
+      "severity_rank": 10,
+      "rpn": 90,
+      "criticality": 3.0,
+      "detectability_gap": false
+    },
+    {
+      "mode_id": "FM-04",
+      "item": "High-pressure pump / rail",
+      "failure_mode": "Rail pressure decay",
+      "cause": "Pump wear, leak-off",
+      "local_effect": "Symmetric loss of delivery on all cylinders",
+      "mission_effect": "Progressive power loss",
+      "severity_class": "II_CRITICAL",
+      "signatures": [
+        "Symmetric torque deficit across all cylinders",
+        "Rail pressure below command"
+      ],
+      "channels": [
+        "RAIL_PRESSURE_BAR",
+        "CRANK_OMEGA"
+      ],
+      "detection_method": "Symmetric deficit with low rail pressure",
+      "occurrence": 4,
+      "detection_difficulty": 2,
+      "compensating_provision": "",
+      "engine_classes": [
+        "CI"
+      ],
+      "implemented_by": "backend/physics/injector_faults.py",
+      "severity_rank": 7,
+      "rpn": 56,
+      "criticality": 2.8,
+      "detectability_gap": false
+    },
+    {
+      "mode_id": "FM-05",
+      "item": "Combustion",
+      "failure_mode": "Combustion instability",
+      "cause": "Lean operation, EGR, poor mixing",
+      "local_effect": "Cycle-to-cycle variability",
+      "mission_effect": "Rough running, accelerated wear",
+      "severity_class": "III_MARGINAL",
+      "signatures": [
+        "Rising COV of per-cylinder work",
+        "Vibration at sub-harmonic orders"
+      ],
+      "channels": [
+        "CRANK_OMEGA",
+        "VIB"
+      ],
+      "detection_method": "COV of IMEP proxy",
+      "occurrence": 4,
+      "detection_difficulty": 6,
+      "compensating_provision": "",
+      "engine_classes": [
+        "SI",
+        "CI"
+      ],
+      "implemented_by": "planned F03",
+      "severity_rank": 4,
+      "rpn": 96,
+      "criticality": 1.6,
+      "detectability_gap": false
+    },
+    {
+      "mode_id": "FM-06",
+      "item": "Cooling system",
+      "failure_mode": "Cooling degradation",
+      "cause": "Baffle damage, coolant loss, radiator fouling",
+      "local_effect": "Reduced heat rejection",
+      "mission_effect": "CHT rise, detonation margin loss, possible seizure",
+      "severity_class": "II_CRITICAL",
+      "signatures": [
+        "CHT above physics expectation at same power/altitude",
+        "Coolant temperature rise"
+      ],
+      "channels": [
+        "CHT_n",
+        "COOLANT_TEMP",
+        "OAT_C"
+      ],
+      "detection_method": "Thermodynamic residual on CHT",
+      "occurrence": 5,
+      "detection_difficulty": 3,
+      "compensating_provision": "",
+      "engine_classes": [
+        "SI",
+        "CI"
+      ],
+      "implemented_by": "backend/physics/thermo_model.py",
+      "severity_rank": 7,
+      "rpn": 105,
+      "criticality": 3.5,
+      "detectability_gap": false
+    },
+    {
+      "mode_id": "FM-07",
+      "item": "Cylinder head",
+      "failure_mode": "Thermal fatigue cracking",
+      "cause": "Repeated thermal cycling, shock cooling",
+      "local_effect": "Head crack, compression loss",
+      "mission_effect": "Power loss, possible in-flight shutdown",
+      "severity_class": "I_CATASTROPHIC",
+      "signatures": [
+        "Accumulated LCF damage fraction",
+        "Compression loss",
+        "Blow-by rise"
+      ],
+      "channels": [
+        "CHT_n",
+        "BLOWBY"
+      ],
+      "detection_method": "Rainflow + Miner damage accumulation",
+      "occurrence": 2,
+      "detection_difficulty": 7,
+      "compensating_provision": "Descent CHT rate limits",
+      "engine_classes": [
+        "SI",
+        "CI"
+      ],
+      "implemented_by": "backend/evaluation/damage_accumulation.py",
+      "severity_rank": 10,
+      "rpn": 140,
+      "criticality": 2.0,
+      "detectability_gap": false
+    },
+    {
+      "mode_id": "FM-08",
+      "item": "Air filter",
+      "failure_mode": "Restriction from dust loading",
+      "cause": "Operation in high-particulate environment",
+      "local_effect": "Reduced airflow",
+      "mission_effect": "Power loss, raised BSFC",
+      "severity_class": "III_MARGINAL",
+      "signatures": [
+        "MAP deficit at constant throttle and altitude",
+        "Filter dP rise"
+      ],
+      "channels": [
+        "MAP",
+        "AIR_FILTER_DP_KPA",
+        "TPS",
+        "ALTITUDE_FT"
+      ],
+      "detection_method": "MAP versus physics expectation",
+      "occurrence": 7,
+      "detection_difficulty": 3,
+      "compensating_provision": "Bypass door; service interval",
+      "engine_classes": [
+        "SI",
+        "CI"
+      ],
+      "implemented_by": "backend/physics/induction.py",
+      "severity_rank": 4,
+      "rpn": 84,
+      "criticality": 2.8,
+      "detectability_gap": false
+    },
+    {
+      "mode_id": "FM-09",
+      "item": "Cylinder bore / rings",
+      "failure_mode": "Abrasive wear from ingested silica",
+      "cause": "Filter breach or bypass in dusty operation",
+      "local_effect": "Bore polishing, ring wear",
+      "mission_effect": "Compression loss, oil consumption, power loss",
+      "severity_class": "II_CRITICAL",
+      "signatures": [
+        "Rising Si in oil",
+        "Blow-by rise",
+        "Oil consumption rise",
+        "Compression loss"
+      ],
+      "channels": [
+        "OIL_Si_PPM",
+        "BLOWBY",
+        "OIL_CONSUMPTION_L_H"
+      ],
+      "detection_method": "Wear-metal spectrum with Si attribution",
+      "occurrence": 4,
+      "detection_difficulty": 4,
+      "compensating_provision": "",
+      "engine_classes": [
+        "SI",
+        "CI"
+      ],
+      "implemented_by": "backend/physics/oil_system.py + induction.py",
+      "severity_rank": 7,
+      "rpn": 112,
+      "criticality": 2.8,
+      "detectability_gap": false
+    },
+    {
+      "mode_id": "FM-10",
+      "item": "Oil pump / gallery",
+      "failure_mode": "Oil pressure loss",
+      "cause": "Pump wear, blockage, leak",
+      "local_effect": "Loss of lubrication",
+      "mission_effect": "Bearing failure, engine seizure",
+      "severity_class": "I_CATASTROPHIC",
+      "signatures": [
+        "Oil pressure below expectation at RPM"
+      ],
+      "channels": [
+        "OIL_PRESS",
+        "ENGINE_RPM"
+      ],
+      "detection_method": "Threshold plus physics residual",
+      "occurrence": 3,
+      "detection_difficulty": 2,
+      "compensating_provision": "",
+      "engine_classes": [
+        "SI",
+        "CI"
+      ],
+      "implemented_by": "backend/physics/thermo_model.py",
+      "severity_rank": 10,
+      "rpn": 60,
+      "criticality": 3.0,
+      "detectability_gap": false
+    },
+    {
+      "mode_id": "FM-11",
+      "item": "Main / big-end bearings",
+      "failure_mode": "Bearing wear and spalling",
+      "cause": "Contamination, oil degradation, overload",
+      "local_effect": "Increasing clearance, debris generation",
+      "mission_effect": "Catastrophic failure if unchecked",
+      "severity_class": "I_CATASTROPHIC",
+      "signatures": [
+        "Cu/Pb/Sn rise in oil",
+        "Large debris particles",
+        "Envelope-spectrum bearing defect tones"
+      ],
+      "channels": [
+        "OIL_Cu_PPM",
+        "OIL_Pb_PPM",
+        "OIL_LARGE_DEBRIS",
+        "VIB"
+      ],
+      "detection_method": "Wear-metal trend and debris count; envelope analysis planned",
+      "occurrence": 2,
+      "detection_difficulty": 5,
+      "compensating_provision": "",
+      "engine_classes": [
+        "SI",
+        "CI"
+      ],
+      "implemented_by": "backend/physics/oil_system.py (envelope F06 planned)",
+      "severity_rank": 10,
+      "rpn": 100,
+      "criticality": 2.0,
+      "detectability_gap": false
+    },
+    {
+      "mode_id": "FM-12",
+      "item": "Lubricant",
+      "failure_mode": "Oil degradation",
+      "cause": "Thermal oxidation, fuel dilution, time in service",
+      "local_effect": "Viscosity loss, reduced film strength",
+      "mission_effect": "Accelerated wear",
+      "severity_class": "III_MARGINAL",
+      "signatures": [
+        "Viscosity ratio fall",
+        "Oxidation index rise"
+      ],
+      "channels": [
+        "OIL_VISCOSITY_RATIO",
+        "OIL_OXIDATION_INDEX",
+        "OIL_TEMP"
+      ],
+      "detection_method": "Oil condition model",
+      "occurrence": 6,
+      "detection_difficulty": 4,
+      "compensating_provision": "",
+      "engine_classes": [
+        "SI",
+        "CI"
+      ],
+      "implemented_by": "backend/physics/oil_system.py",
+      "severity_rank": 4,
+      "rpn": 96,
+      "criticality": 2.4,
+      "detectability_gap": false
+    },
+    {
+      "mode_id": "FM-13",
+      "item": "Turbocharger",
+      "failure_mode": "Wastegate stuck",
+      "cause": "Actuator failure, coking, linkage seizure",
+      "local_effect": "Loss of boost control",
+      "mission_effect": "Underboost (power loss) or overboost (detonation)",
+      "severity_class": "II_CRITICAL",
+      "signatures": [
+        "MAP not tracking command",
+        "Wastegate position frozen"
+      ],
+      "channels": [
+        "MAP",
+        "WASTEGATE_POS",
+        "TPS"
+      ],
+      "detection_method": "MAP tracking residual",
+      "occurrence": 4,
+      "detection_difficulty": 3,
+      "compensating_provision": "",
+      "engine_classes": [
+        "SI",
+        "CI"
+      ],
+      "implemented_by": "backend/physics/turbo_model.py",
+      "severity_rank": 7,
+      "rpn": 84,
+      "criticality": 2.8,
+      "detectability_gap": false
+    },
+    {
+      "mode_id": "FM-14",
+      "item": "Turbocharger",
+      "failure_mode": "Bearing wear / overspeed",
+      "cause": "Hot shutdown coking, oil starvation, sustained high PR",
+      "local_effect": "Efficiency loss, shaft imbalance",
+      "mission_effect": "Boost loss then turbine failure",
+      "severity_class": "II_CRITICAL",
+      "signatures": [
+        "Compressor efficiency fall",
+        "Raised charge temperature for given PR",
+        "Shaft order vibration"
+      ],
+      "channels": [
+        "TURBO_PRESSURE_RATIO",
+        "CHARGE_TEMP_C",
+        "VIB"
+      ],
+      "detection_method": "Efficiency residual; order analysis planned",
+      "occurrence": 3,
+      "detection_difficulty": 5,
+      "compensating_provision": "Cool-down period before shutdown",
+      "engine_classes": [
+        "SI",
+        "CI"
+      ],
+      "implemented_by": "backend/physics/turbo_model.py",
+      "severity_rank": 7,
+      "rpn": 105,
+      "criticality": 2.1,
+      "detectability_gap": false
+    },
+    {
+      "mode_id": "FM-15",
+      "item": "Turbocharger",
+      "failure_mode": "Compressor surge",
+      "cause": "High PR at low corrected flow (rapid chop at altitude)",
+      "local_effect": "Flow reversal",
+      "mission_effect": "Boost oscillation, mechanical damage",
+      "severity_class": "II_CRITICAL",
+      "signatures": [
+        "Surge margin collapse",
+        "MAP oscillation"
+      ],
+      "channels": [
+        "TURBO_SURGE_MARGIN",
+        "MAP"
+      ],
+      "detection_method": "Surge margin monitor",
+      "occurrence": 2,
+      "detection_difficulty": 6,
+      "compensating_provision": "",
+      "engine_classes": [
+        "SI",
+        "CI"
+      ],
+      "implemented_by": "backend/physics/turbo_model.py",
+      "severity_rank": 7,
+      "rpn": 84,
+      "criticality": 1.4,
+      "detectability_gap": false
+    },
+    {
+      "mode_id": "FM-16",
+      "item": "Fuel system",
+      "failure_mode": "Wax formation / filter plugging (CFPP)",
+      "cause": "Prolonged cold soak at altitude on kerosene",
+      "local_effect": "Filter blockage, supply starvation",
+      "mission_effect": "Power loss or flameout; restart not assured",
+      "severity_class": "I_CATASTROPHIC",
+      "signatures": [
+        "Fuel temperature approaching cloud point",
+        "Filter dP rise",
+        "Supply pressure fall"
+      ],
+      "channels": [
+        "FUEL_TEMP_C",
+        "FUEL_FILTER_DP_KPA",
+        "FUEL_PRESSURE"
+      ],
+      "detection_method": "Cloud-point / CFPP margin monitor",
+      "occurrence": 3,
+      "detection_difficulty": 4,
+      "compensating_provision": "Fuel heater, anti-icing additive",
+      "engine_classes": [
+        "CI"
+      ],
+      "implemented_by": "backend/physics/fuel_thermal.py",
+      "severity_rank": 10,
+      "rpn": 120,
+      "criticality": 3.0,
+      "detectability_gap": false
+    },
+    {
+      "mode_id": "FM-17",
+      "item": "Alternator",
+      "failure_mode": "Output degradation",
+      "cause": "Brush/regulator wear, bearing wear",
+      "local_effect": "Falling bus voltage under load",
+      "mission_effect": "Battery depletion then FADEC loss",
+      "severity_class": "I_CATASTROPHIC",
+      "signatures": [
+        "Bus voltage fall under known load",
+        "Battery discharging in flight"
+      ],
+      "channels": [
+        "BUS_VOLTAGE",
+        "BATTERY_CURRENT"
+      ],
+      "detection_method": "Electrical power balance residual",
+      "occurrence": 4,
+      "detection_difficulty": 2,
+      "compensating_provision": "Battery reserve, dual lanes",
+      "engine_classes": [
+        "SI",
+        "CI"
+      ],
+      "implemented_by": "planned F16",
+      "severity_rank": 10,
+      "rpn": 80,
+      "criticality": 4.0,
+      "detectability_gap": false
+    },
+    {
+      "mode_id": "FM-18",
+      "item": "FADEC",
+      "failure_mode": "Lane disagreement / lane failure",
+      "cause": "Sensor or processor fault in one lane",
+      "local_effect": "Loss of redundancy",
+      "mission_effect": "Degraded control; dual failure stops the engine",
+      "severity_class": "I_CATASTROPHIC",
+      "signatures": [
+        "Lane A vs Lane B parameter divergence"
+      ],
+      "channels": [
+        "FADEC_ACTIVE_LANE",
+        "MAP_LANE_A",
+        "MAP_LANE_B"
+      ],
+      "detection_method": "Cross-lane disagreement monitor",
+      "occurrence": 2,
+      "detection_difficulty": 2,
+      "compensating_provision": "Dual-lane architecture",
+      "engine_classes": [
+        "SI",
+        "CI"
+      ],
+      "implemented_by": "planned F55",
+      "severity_rank": 10,
+      "rpn": 40,
+      "criticality": 2.0,
+      "detectability_gap": false
+    },
+    {
+      "mode_id": "FM-19",
+      "item": "Sensor",
+      "failure_mode": "Drift / bias",
+      "cause": "Ageing, thermal effects, connector degradation",
+      "local_effect": "Measurement error",
+      "mission_effect": "Wrong diagnosis; unnecessary abort or missed fault",
+      "severity_class": "II_CRITICAL",
+      "signatures": [
+        "Slow divergence from redundant channels or physics expectation"
+      ],
+      "channels": [
+        "CHT_n",
+        "EGT_n",
+        "MAP"
+      ],
+      "detection_method": "Redundancy voting plus model-based bias estimation",
+      "occurrence": 6,
+      "detection_difficulty": 6,
+      "compensating_provision": "",
+      "engine_classes": [
+        "SI",
+        "CI"
+      ],
+      "implemented_by": "backend/physics/sensor_validator.py (partial \u2014 G05 open)",
+      "severity_rank": 7,
+      "rpn": 252,
+      "criticality": 4.2,
+      "detectability_gap": false
+    },
+    {
+      "mode_id": "FM-20",
+      "item": "Reduction gearbox",
+      "failure_mode": "Gear tooth wear / micro-pitting",
+      "cause": "Torsional vibration, lubrication breakdown",
+      "local_effect": "Increasing mesh vibration",
+      "mission_effect": "Gearbox failure, loss of propulsion",
+      "severity_class": "I_CATASTROPHIC",
+      "signatures": [
+        "Sidebands around gear mesh frequency",
+        "Fe rise in oil"
+      ],
+      "channels": [
+        "VIB",
+        "OIL_Fe_PPM"
+      ],
+      "detection_method": "Sideband energy around GMF (planned F05); wear metals",
+      "occurrence": 3,
+      "detection_difficulty": 6,
+      "compensating_provision": "",
+      "engine_classes": [
+        "SI",
+        "CI"
+      ],
+      "implemented_by": "backend/physics/oil_system.py (order analysis F05 planned)",
+      "severity_rank": 10,
+      "rpn": 180,
+      "criticality": 3.0,
+      "detectability_gap": false
+    }
+  ]
+}
