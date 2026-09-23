@@ -473,41 +473,199 @@ not exercised against its actual target fault.
 
 ---
 
+## Session 4 — 2026-09-23 (plant split, measured lead time, edge, validation)
+
+This session closed the two gaps that had made every previous number meaningless.
+
+### G01 — The plant is now independent of the twin ✅
+`backend/plant/virtual_engine.py`
+
+Composes the higher-fidelity physics (crank dynamics, turbo, induction, fuel
+thermal, injectors, oil), carries build-to-build variation and a sensor model
+with bias, lag, noise and quantisation that the twin knows nothing about,
+injects faults only on its own side, and publishes **sensor frames only**.
+`truth()` is a separate method, so wiring ground truth into the twin by accident
+is hard rather than easy.
+
+**Verified.** No ground-truth key appears in any frame. Two builds given
+identical commands produce different readings (CHT 237.0 vs 242.0 °C). Nominal
+CHT spread of 2.5 °C over 100 s from sensor noise and lag — not zero, which is
+the point.
+
+**Two defects found and fixed.** CHT ran at 226 °C in cruise against a 135 °C
+limit, because the altitude cooling term multiplied absolute temperature instead
+of adding to the temperature *rise*; every scenario would have failed instantly.
+And the crank integration ran on every telemetry step, which was ~45 000× slower
+than necessary and architecturally wrong — a real edge node analyses crank data
+on its own cadence, not at the 1 Hz thermal rate. Now opt-in via
+`crank_every_n_steps` / `crank_signal()`.
+
+Post-fix operating points, against the Rotax 914 manual:
+
+| Condition | CHT | EGT | Oil T | Oil P | Power |
+|---|---|---|---|---|---|
+| Cruise 20 kft | 115 °C | 753 °C | 104 °C | 3.42 bar | 76.6 kW |
+| Hot low (6 kft, 38 °C) | 129.5 °C | 815 °C | 124.5 °C | 3.57 bar | 89.0 kW |
+| High loiter 28 kft | 102 °C | 641 °C | 87 °C | 3.26 bar | 54.7 kW |
+
+Cooling degradation at 0.95 severity drives CHT_OVERTEMP at 1027 s — the plant
+can genuinely destroy itself, which is what makes a lead-time measurement mean
+something.
+
+### G03 / F18 — Detection lead time, measured ✅
+`backend/evaluation/harness.py`, `docs/evaluation/detection_report.md`
+
+Twin and a conventional threshold monitor run head to head on the same frames
+from the independent plant, across 8 scenarios.
+
+| Metric | Result |
+|---|---|
+| Fault scenarios detected by the twin (either channel) | **6 / 6** |
+| Detected by the conventional threshold baseline | **1 / 6** |
+| Found by the twin but invisible to the baseline | **4** |
+| Median lead time over the baseline | **7.92 min** |
+| False alarms per flight hour (3 nominal hours) | twin **0.0**, baseline **0.0** |
+| Cooling degradation | caught at 1304 s, **694 s before the plant destroyed itself** at 1998 s |
+| Sensor drift | correctly classified `SENSOR_FAULT` |
+
+**The two channels are complementary, and the report says so.** Thermal
+residuals miss the slow injector coking entirely; the crank detector catches it
+at 750 s and names cylinder 2. The crank channel is silent on cooling, oil and
+turbo faults, which are not combustion events. Neither channel alone finds
+everything, and claiming otherwise would be the easy lie here.
+
+### F50 — Per-tail calibration, and three failed detectors ✅
+`backend/twin/residual_detector.py`
+
+The standing offset between twin and engine is estimated over an early nominal
+window and then **frozen**. Freezing is the whole point: an offset that keeps
+adapting slowly absorbs a real fault.
+
+Three detectors were built before one worked. The harness caught each failure,
+and all three are documented in the module because the failures are the argument
+for the final design:
+
+1. **Frozen-baseline z-score** fired at the same instant in *every* scenario
+   including both nominal ones — **3 143 false alarms per flight hour**. The
+   plant is still thermally settling when the baseline freezes, and the warm-up
+   variance of a settling channel is tiny. It was measuring the clock.
+2. **Fast/slow change detector** cut false alarms to zero but missed **4 of 6**
+   faults, including the cooling degradation that destroyed the engine. A slow
+   average absorbs any ramp slower than its own time constant — and degradation
+   is exactly that. *A detector referenced to a channel's own history cannot see
+   gradual degradation, because the history degrades with it.* That is the
+   argument for referencing physics instead.
+3. **Sensor-vs-engine classification by "one channel moving alone"** reported a
+   genuine misfire as a sensor fault. Corroboration had to become *relative*: a
+   misfire drops EGT ~150 °C almost immediately but moves CHT only ~2.5 °C,
+   because the head has a 25 s time constant and far more mass. An absolute
+   partner threshold cannot work; what matters is that the partner channel
+   points at *this* cylinder more than at any other.
+
+### F08 / F67 / F68 — Edge compression, bandwidth, power, latency ✅
+`backend/edge/compressor.py`
+
+The architectural claim turned into arithmetic. A **29-byte** frame carries the
+full per-cylinder diagnosis.
+
+| Quantity | Value |
+|---|---|
+| Raw crank channel @ 10 kHz / 16-bit | 160 kbit/s |
+| Datalink spare after video/command/housekeeping | 22 kbit/s |
+| Raw over budget by | **7.3× — cannot be downlinked** |
+| Compressed | 0.232 kbit/s = **1.05 %** of spare, **690×** ratio |
+| Edge analysis latency | median **3.7 ms**, p95 6.5 ms (50 ms deadline) |
+| Power | 9.5 W → **0.62 min** endurance over an 18 h sortie |
+
+**Measurement error found and corrected.** The first latency figure was 175 ms
+and failed the deadline, because the benchmark included *synthesising* the
+waveform — plant work an edge node never does. Timing only the analysis the edge
+actually performs gives 3.7 ms median. The worst observed (102 ms) is a
+first-call import warmup outlier and is reported as **worst-observed, not
+worst-case**; a hard real-time claim needs static WCET analysis on target
+hardware, which the module says explicitly.
+
+### F14 / F17 / F62 / F16 / F63 — Validation instruments ✅
+`backend/evaluation/validation.py`
+
+**F14 residual shielding.** Quarantining a bad channel moves the health index
+from 0.12 to 1.0 and drops the usable channel count 4 → 3. Quarantine is sticky
+with a recovery dwell so a marginal channel cannot flap and produce alternating
+diagnoses. Aggregate health *drops* the channel rather than zeroing it, because
+zeroing keeps it in the average and biases toward healthy.
+
+**F17 UNKNOWN class.** Confident posterior → names the fault; ambiguous
+posterior (0.46/0.44) → withheld with the reason stated; confident posterior but
+far from every known signature (distance 7.5) → **UNKNOWN**. A confident
+posterior over a signature nothing resembles is precisely the case this exists
+to catch.
+
+**F62 anomaly-detection protocol — and this one is worth quoting.** A detector
+that fires **once, at random, inside a 40-sample anomaly window** scores:
+
+| Convention | F1 |
+|---|---|
+| Point-wise (honest) | **0.049** |
+| Point-adjusted (widely published) | **1.000** |
+
+An inflation of **0.95 F1** for a detector that found essentially nothing. Both
+are now computed side by side so the inflation is visible rather than hidden.
+This protects every number elsewhere in this log.
+
+**F16 / F63 real-data validation — found a data defect.** Run against real ACES
+Altus II / Rotax 914 telemetry (2 403 in-flight samples, 18 channels bound), the
+comparison for `EGT_1` gives:
+
+| | Real | Model | Bias | Correlation |
+|---|---|---|---|---|
+| EGT_1 | mean **170.2 °C** | 658.3 °C | 488 °C | **0.086** |
+
+A real exhaust gas temperature is 600–900 °C, so **170 °C is not an EGT** — this
+confirms the suspect channel binding flagged in session 1. The validation did
+its job: it caught a data problem instead of silently producing a meaningless
+agreement figure. `ENGINE_THERMO_2` (median 1035 °C) is the more likely true EGT.
+**Channel bindings must be confirmed against the ACES dataset documentation
+before any sim2real number is quoted.**
+
+---
+
 ## Status against the plan
 
-**65 features in scope · 31 implemented (48 %)**
+**65 features in scope · 41 implemented (63 %)** · both structural blockers closed
 
 | Tier | Features | Done |
 |---|---|---|
-| Crank-angle chain (F01–F08) | 8 | **6** — F07, F08 open |
-| Credibility (F12–F18) | 7 | 2 — F12, F13 |
+| Crank-angle chain (F01–F08) | 8 | **7** — F07 open |
+| Credibility (F12–F18) | 7 | **5** — F15, F16 partial |
 | Visualisation (F19–F24) | 6 | 0 |
 | Slack (F25–F30) | 6 | 0 |
 | A — Strategic reframe (F31–F35) | 5 | 5 |
 | B — Physics-of-failure life (F36–F40) | 5 | 4 — F38 open |
 | C — HFE + environment (F41–F45) | 5 | 3 — F44, F45 open |
 | D — Real interfaces (F46–F49) | 4 | 2 — F47, F49 open |
-| E — Twin validity (F50–F53) | 4 | 3 — F50 open |
+| E — Twin validity (F50–F53) | 4 | **4** |
 | F — Security as physics (F54–F55) | 2 | 2 |
 | G — Mission reliability (F56–F59) | 4 | 3 — F59 open |
-| H — Evaluation (F60–F63) | 4 | 1 — F61–F63 open |
+| H — Evaluation (F60–F63) | 4 | **3** — F61 open |
 | I — HMI (F64–F66) | 3 | 0 |
-| J — Edge systems (F67–F68) | 2 | 0 |
+| J — Edge systems (F67–F68) | 2 | **2** |
 
-### What still blocks the headline claims
+### Open work, in the order I would take it
 
-1. **G01 — the plant and the twin are still one model.** The crank chain is now
-   a genuine second physics path, but it has not been split into an independent
-   plant process.
-2. **G03 — no lead time has been measured.** F13 provides the baseline and F02
-   now provides a detector that fires on something a threshold cannot see; the
-   two have not been run head to head.
-3. **F07/F08** — feeding the kHz channel into the dormant DFT path and the edge
-   feature compressor — are the remaining crank-chain items.
+1. **Fix the ACES channel bindings** — until then F16/F63 cannot produce a real
+   sim2real number, and that is the single most valuable outstanding result.
+2. **F61** zero-shot foundation-model baseline — the control that answers "you
+   only beat your own simulator".
+3. **F38** dual-path RUL with disagreement alarm.
+4. **F07** feed the kHz channel to the dormant DFT path in `spectral_analyser.py`.
+5. **F64–F66** operator-facing: alarm management, causal explanation, case retrieval.
+6. **F19–F24** visualisation, which is where the crank work becomes legible.
+7. **F44/F45, F47, F49, F59**, then the Tier 4 slack items.
 
-### Cross-cutting caveat
+### Standing caveat
 
 Every damage law, hazard rate, wear coefficient, oil limit and combustion
-constant here is a **labelled placeholder**. Relative comparisons are
-defensible. No absolute number is, until these are replaced with OEM or
-fleet-traceable values.
+constant remains a **labelled placeholder**, marked in the `source` field of the
+relevant dataclass. Relative comparisons — twin vs baseline, this environment vs
+that one, this derate vs none — are defensible. **No absolute number is**, until
+these are replaced with OEM- or fleet-traceable values.

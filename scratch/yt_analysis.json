@@ -1,0 +1,50 @@
+{
+  "u1bJrs-CLG8": {
+    "url": "https://www.youtube.com/watch?v=u1bJrs-CLG8",
+    "title": "Team Nirvanaa presenting the demo of SIH26054 problem of Digital Twin Telemetry.",
+    "uploader": "Jay Suryawanshi",
+    "duration_seconds": 196,
+    "tags": [],
+    "description": "",
+    "transcript": "No transcript available: type object 'YouTubeTranscriptApi' has no attribute 'get_transcript'"
+  },
+  "KxE6J0IZOdk": {
+    "url": "https://www.youtube.com/watch?v=KxE6J0IZOdk",
+    "title": "DRONANETRA: AI enabled engine health monitoring for MALE UAVs",
+    "uploader": "Anindita Mondal",
+    "duration_seconds": 233,
+    "tags": [],
+    "description": "",
+    "transcript": "No transcript available: type object 'YouTubeTranscriptApi' has no attribute 'get_transcript'"
+  },
+  "oXN3gUaqNHA": {
+    "url": "https://www.youtube.com/watch?v=oXN3gUaqNHA",
+    "title": "Team Aetheris_GAT - Aeronex",
+    "uploader": "Vidya M",
+    "duration_seconds": 170,
+    "tags": [],
+    "description": "Aeronex, AI enabled Real time digital twin system for health monitoring, fault prediction and mission reliability enhancement for Aero piston engines used in Male UAV's.\n#SIH 2026",
+    "transcript": "No transcript available: type object 'YouTubeTranscriptApi' has no attribute 'get_transcript'"
+  },
+  "NHvcTRt15CY": {
+    "url": "https://www.youtube.com/watch?v=NHvcTRt15CY",
+    "title": "UAV Aero Engine Digital | hackathon | osen",
+    "uploader": "vineet sharma",
+    "duration_seconds": 185,
+    "tags": [
+      "hackathon",
+      "osen"
+    ],
+    "description": "https://github.com/vikram-sharma-96/UAV-Engine-Digital-Twin",
+    "transcript": "No transcript available: type object 'YouTubeTranscriptApi' has no attribute 'get_transcript'"
+  },
+  "F1uMvmKkdms": {
+    "url": "https://www.youtube.com/watch?v=F1uMvmKkdms",
+    "title": "AI-Enabled Digital Twin System for Aero Piston Engine Health Monitoring | SIH 2026",
+    "uploader": "Team InnovativeX",
+    "duration_seconds": 114,
+    "tags": [],
+    "description": "Smart India Hackathon 2026\nTeam Name: InnovativeX\n\nProblem Statement:\nAI-Enabled Real-Time Digital Twin System for Health Monitoring, Fault Prediction and Mission Reliability Enhancement of Aero Piston Engines used in MALE UAVs.\n\nOur solution integrates Digital Twin technology, Artificial Intelligence, and real-time analytics to enable continuous engine health monitoring, early fault prediction, and improved mission reliability.\n\n#SIH2026 #SmartIndiaHackathon #DigitalTwin #ArtificialIntelligence #UAV #PredictiveMaintenance",
+    "transcript": "No transcript available: type object 'YouTubeTranscriptApi' has no attribute 'get_transcript'"
+  }
+}
