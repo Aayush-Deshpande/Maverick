@@ -383,6 +383,22 @@
       "min_altitude_ft": 20000.0,
       "max_altitude_ft": 20000.0,
       "telemetry_log_path": "E:\\backup-llm\\backup-no-llm\\3d_engine\\data\\telemetry\\live_sorties\\SORTIE-SRV-20260917-104606.csv"
+    },
+    "SORTIE-SRV-20260923-074731": {
+      "sortie_id": "SORTIE-SRV-20260923-074731",
+      "region": "LADAKH",
+      "start_timestamp": 1790129856.3298616,
+      "end_timestamp": null,
+      "flight_hours": 0.0,
+      "final_health_index": 1.0,
+      "status": "ACTIVE",
+      "uav_tail_number": "TAPAS-BH-201-AF01",
+      "start_health_index": 1.0,
+      "min_oat_c": null,
+      "max_oat_c": null,
+      "min_altitude_ft": null,
+      "max_altitude_ft": null,
+      "telemetry_log_path": null
     }
   },
   "subsystems": {
@@ -7096,7 +7112,8 @@
       "ANOM-0242",
       "ANOM-0243",
       "ANOM-0244"
-    ]
+    ],
+    "SORTIE-SRV-20260923-074731": []
   },
   "subsystem_anomalies": {
     "SUB_CYL_2": [
@@ -7649,6 +7666,7 @@
       "MAINT-0242",
       "MAINT-0243",
       "MAINT-0244"
-    ]
+    ],
+    "SORTIE-SRV-20260923-074731": []
   }
 }

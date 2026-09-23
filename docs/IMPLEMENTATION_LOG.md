@@ -206,21 +206,229 @@ is used for physics validation.
 
 ---
 
+## Session 2 — 2026-09-23
+
+### F42 — Fuel thermal management / CFPP margin
+`backend/physics/fuel_thermal.py`
+
+Lumped fuel thermal mass with return-flow heating, cloud-point and CFPP margins,
+wax fraction, filter blockage, cold-soak injector delivery loss, restart verdict.
+
+**Verified.** A 6 h loiter at −45 °C OAT settles fuel at −37.9 °C (return-flow
+heating balances the loss), cloud-point margin 4.1 °C, risk ADVISORY, restart
+delivery 0.889 → DEGRADED_START. AVGAS at the same OAT correctly reports risk
+NONE: gasoline does not wax.
+
+**Unproven.** Equilibrium depends entirely on `return_flow_heat_w`, a guess. The
+waxing path itself was never exercised, because equilibrium stayed above cloud
+point.
+
+### F43 — Induction and the dust chain
+`backend/physics/induction.py`
+
+Filter loading → dP → MAP deficit → silica ingress → bore wear → blow-by.
+
+**Verified over 300 h.** TEMPERATE_INLAND: 5 % loaded, 5 619 h life left, bore
+wear 0.0006. SEMI_ARID: 39 % loaded, 472 h left. DESERT_THAR: filter spent,
+15 kPa MAP deficit, bore wear 0.086, blow-by 1.145×.
+
+**Unproven.** The silica-to-wear coefficient is a labelled placeholder; an
+earlier value saturated bore wear to 1.0 in 300 h and was corrected.
+
+### F39 — Oil system: wear metals, debris, condition
+`backend/physics/oil_system.py`
+
+SOAP-style concentrations with per-element source attribution, debris counting,
+oxidation and viscosity. An oil change resets concentration but not cumulative
+wear.
+
+**Verified.** 120 h at elevated bore wear flags Fe WARNING (202 ppm, 5.05×
+caution), Al WARNING, Cr CAUTION, each correctly attributed to its component.
+
+**Unproven.** Limits are representative fleet values, not Rotax or Austro data.
+The Si → dust-ingress attribution was not exercised hard enough to dominate the
+ranking.
+
+### F40 — Environmental exposure accumulator
+`backend/physics/exposure.py`
+
+**Verified.** 240 h of desert/high-altitude operation gives cylinder bore 3.03×,
+head 3.50×, turbo 1.60×, overall 2.71× fleet baseline (SEVERE).
+
+**Corrected during development.** The first version averaged a 40× air-filter
+factor into the overall number and reported 12.49× wear acceleration, which is
+not credible. Filter loading genuinely is linear in dust concentration, but that
+is a consumable service interval rather than engine wear; it is now reported
+separately and excluded from `overall`.
+
+### F41 — CI injector fault library
+`backend/physics/injector_faults.py`
+
+**Verified — and this is the diagnostic payoff.** Rail-pressure decay reads
+`SYMMETRIC_DEFICIT` (mean 0.853, COV unchanged at 0.003); coking on cylinder 3
+and needle stick on cylinder 2 read `ASYMMETRIC_DEFICIT` and name the cylinder.
+That distinction decides which part gets replaced. Clearing a fault restores the
+engine exactly.
+
+**Bug found and fixed.** `delivery_fraction` was mutated in place on every
+update, so the rail-pressure term compounded and drove a perfectly healthy engine
+to zero delivery within ~100 steps. It is now recomputed from an immutable
+per-injector baseline each step.
+
+### F56 / F57 / F58 — Mission reliability and prescriptive advisory
+`backend/mission/reliability.py`, `backend/mission/prescriptive.py`
+
+Mission reliability as a computed probability over per-phase, per-component
+hazard rates, with a Wilson interval, limiting-component attribution and a
+failure-phase distribution. The prescriptive layer adds a derate ladder trading
+damage rate against endurance, and re-planning over power → altitude → duration.
+
+**Verified decision ladder** on an 18 h / 28 000 ft ISR profile:
+
+| Damage | Result |
+|---|---|
+| healthy | R = 0.997 [0.995–0.998] → GO |
+| 0.78 | R = 0.936 → GO as planned |
+| 0.84 | R = 0.841 → **derate to 75 %: R 0.912, 29 min endurance penalty** |
+| 0.92 | R = 0.094 → NO-GO, no achievable variation |
+
+Attribution correctly identified `injector_2` as limiting and the 12.5 h loiter
+as the dominant risk phase.
+
+**Unproven, and it matters.** The base hazard rates are placeholders, tuned so a
+healthy engine completes the sortie. Only the ranking of limiting components and
+the relative effect of derating are defensible; the absolute probability is not.
+
+### F33 / F35 — FMECA and fault isolability
+`backend/reliability/`, `docs/reliability/`
+
+20 failure modes per MIL-STD-1629A with severity class, RPN, criticality,
+signature, channels, detection method and implementing module, tagged by engine
+class. The signature matrix derives from the FMECA, so the two cannot drift.
+
+**Headline result — as-built vs proposed instrumentation:**
+
+| Sensor set | Detectable | Uniquely isolable | Ambiguity groups |
+|---|---|---|---|
+| As-built (9 channels, today's 20 Hz) | 75 % | **55 %** | 2 |
+| Proposed (21 channels) | 95 % | **95 %** | 0 |
+
+Undetectable today: rail-pressure decay, abrasive bore wear, bearing wear, oil
+degradation, fuel waxing. **Indistinguishable today: misfire ≡ injector needle
+stick, and wastegate-stuck ≡ compressor surge.**
+
+That converts the crank-angle instrumentation argument from a preference into a
+proof — on current sensors those pairs are literally the same observation, and no
+classifier can separate them.
+
+**Bug found and fixed.** `from_fmeca` keyed each signature by its own mode ID,
+making every mode unique by construction and reporting a meaningless 100 %
+isolability for *any* system. Signatures now map to a canonical observation
+vocabulary so physically identical observations collide.
+
+**Unproven.** Severity and occurrence are engineering judgement, not fleet data.
+The isolability result is only as good as the signature assignments, which were
+written per mode; a more adversarial assignment would likely find more ambiguity.
+
+### F51 / F52 — Twin validity monitoring
+`backend/twin/validity.py`
+
+NIS against χ² bounds, Ljung-Box residual whiteness, per-channel bias, and
+operating-envelope checks, producing a three-way attribution.
+
+**Verified.** Healthy twin: NOMINAL, confidence 1.00, NIS 4.0 within bounds.
+Biased and autocorrelated residuals with no independent fault indication:
+**MODEL_DRIFT** (NIS 13.4 outside [0.5, 11.1], autocorrelation 0.91). *Identical
+statistics* with the detector flagging a fault: **ENGINE_FAULT**.
+Out-of-envelope operation: OUT_OF_ENVELOPE.
+
+That discrimination is the whole point — a monitor that cannot make it will
+recalibrate away a real fault.
+
+**Unproven.** `expected_sigma` per channel is currently set by hand; it must come
+from calibration flights or NIS is meaningless. Never run against the real
+detection stack.
+
+### F54 / F55 — Physics-constrained telemetry integrity
+`backend/twin/integrity.py`
+
+Seven physical constraints with conformal-calibrated thresholds, plus
+stale/frozen channel detection and dual-lane FADEC disagreement.
+
+**Verified.** Genuine telemetry: NOMINAL. A spoofed MAP value breaks two
+constraints at once → SUSPECTED_SPOOF. A single broken constraint →
+SENSOR_FAULT, since one bad sensor is the more parsimonious explanation. Lane
+disagreement → SENSOR_FAULT.
+
+**Unproven.** Constraint coefficients are deliberately loose approximations, and
+were tested only against synthetic frames built from those same relationships,
+which is circular. Needs testing against ACES.
+
+### F46 — MAVLink EFI_STATUS ingestion
+`backend/telemetry/mavlink_efi.py`
+
+Decodes EFI_STATUS (#225) into canonical channels, with live, SITL and `.tlog`
+replay paths behind one interface.
+
+**Verified against a real pymavlink-constructed message** (85 bytes on the wire):
+16 channels mapped including **ignition timing and injection time**, satisfying
+PS HMS-11 *by standard message field* rather than by an invented channel, and
+closing part of DTC-06.
+
+**Unproven.** Never run against an actual SITL instance or hardware — only
+against a message built in-process. The fuel-flow conversion assumes g/min,
+which matches the current dialect but should be confirmed per ECU driver.
+
+### F34 — OSA-CBM / ISO 13374 architecture mapping
+`backend/osacbm.py`, `docs/ARCHITECTURE_OSACBM.md`
+
+All 28 modules registered against the six standard functional blocks, with the
+PS requirements each serves and an enforceable upward-flow layering rule.
+
+**Verified.** 27/28 modules implemented across DA/DM/SD/HA/PA/AG, **47 distinct
+PS requirements** served, **no layering violations**. The one pending module is
+`spectral_analyser`, dormant until the kHz vibration channel exists (F04). The
+architecture document is generated from the registry, so it cannot drift from
+the code.
+
+---
+
 ## Status against the plan
 
-| Tier | Features | State |
-|---|---|---|
-| A — Strategic reframe | F31 ✅, F32 ✅, F33 ⬜, F34 ⬜, F35 ⬜ | 2/5 |
-| B — Physics-of-failure life | F36 ✅, F37 ✅, F38 ⬜, F39 ⬜, F40 ⬜ | 2/5 |
-| C — HFE + environment faults | F41–F45 ⬜ | 0/5 |
-| D — Real interfaces | F46 ⬜, F47 ⬜, F48 ✅, F49 ⬜ | 1/4 |
-| E — Twin validity | F50–F53 | F53 ✅ (partial) |
-| F — Security as physics | F54, F55 ⬜ | 0/2 |
-| G — Mission reliability | F56–F59 ⬜ | 0/4 |
-| H — Evaluation & honesty | F60 ✅, F61 ⬜, F62 ⬜, F63 ⬜ | 1/4 |
-| I — HMI | F64–F66 ⬜ | 0/3 |
-| J — Edge systems | F67, F68 ⬜ | 0/2 |
+**65 features in scope · 25 implemented (38 %)**
 
-**The two structural gaps from `gap_plan.md` remain open and block the headline
-claims:** the plant and the twin are still one model (G01), and no lead time has
-been measured (G03). Everything above is scaffolding until those close.
+F01–F30 from [`audit/04_feature_spec.md`](audit/04_feature_spec.md) (F09–F11 do
+not exist; the spec jumps F08 → F12) plus F31–F68 from the ground-up plan.
+
+| Tier | Features | Done |
+|---|---|---|
+| Crank-angle chain (F01–F08) | 8 | **0** |
+| Credibility (F12–F18) | 7 | 2 — F12, F13 |
+| Visualisation (F19–F24) | 6 | 0 |
+| Slack (F25–F30) | 6 | 0 |
+| A — Strategic reframe (F31–F35) | 5 | 5 |
+| B — Physics-of-failure life (F36–F40) | 5 | 4 — F38 open |
+| C — HFE + environment (F41–F45) | 5 | 3 — F44, F45 open |
+| D — Real interfaces (F46–F49) | 4 | 2 — F47, F49 open |
+| E — Twin validity (F50–F53) | 4 | 3 — F50 open |
+| F — Security as physics (F54–F55) | 2 | 2 |
+| G — Mission reliability (F56–F59) | 4 | 3 — F59 open |
+| H — Evaluation (F60–F63) | 4 | 1 — F61–F63 open |
+| I — HMI (F64–F66) | 3 | 0 |
+| J — Edge systems (F67–F68) | 2 | 0 |
+
+### What still blocks the headline claims
+
+1. **G01 — the plant and the twin are still one model.** Everything above is
+   scaffolding until an independent virtual engine exists.
+2. **G03 — no lead time has been measured.** F13 provides the baseline; nothing
+   has been run through it against the twin.
+3. **F01–F08, the crank-angle chain, is entirely unbuilt** — and F35 has now
+   *proved* it is load-bearing rather than merely desirable.
+
+### Cross-cutting caveat
+
+Every damage law, hazard rate, wear coefficient and oil limit in this
+implementation is a **labelled placeholder**. Relative comparisons — this
+environment versus that one, this derate versus none — are defensible. No
+absolute number is, until these are replaced with OEM or fleet-traceable values.
