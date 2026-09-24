@@ -44,6 +44,7 @@ from backend.server.schemas import (
     VoiceConverseResponse,
 )
 from backend.server.engine_service import EngineStateService
+from backend.server.engine_api import router as engine_router
 from backend.telemetry.replay_engine import ReplayEngine
 from backend.agent.llm_engine import LocalLLMEngine
 from backend.voice.stt_engine import LocalWhisperSTT
@@ -105,6 +106,8 @@ app = FastAPI(
     version="2.0.0",
     lifespan=lifespan
 )
+
+app.include_router(engine_router)
 
 # Enable permissive CORS for Vercel cloud and local development
 app.add_middleware(

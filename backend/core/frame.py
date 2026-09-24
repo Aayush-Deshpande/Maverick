@@ -161,11 +161,17 @@ class TruthRecord:
     plant_params: Dict[str, Any] = field(default_factory=dict)
     failed: bool = False
     failure_mode: Optional[str] = None
+    origin: str = "SCRIPTED"              # SCRIPTED (experiment/scenario) | MANUAL (operator lever or fault)
     schema_version: str = "truth/1"
 
     @property
     def is_nominal(self) -> bool:
         return not self.active_faults
+
+    @property
+    def kpi_eligible(self) -> bool:
+        """Manual operator injections never count toward evidence KPIs (D30)."""
+        return self.origin != "MANUAL"
 
 
 # --------------------------------------------------------------------------
