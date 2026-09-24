@@ -1,6 +1,6 @@
 # ANUMAAN — Current System Guide
 
-*What is actually built, as of 22 September 2026. Written by reading the source, not the older documentation — where this and [`03_implemented_features_technical_deep_dive.md`](03_implemented_features_technical_deep_dive.md) disagree, trust this one and re-verify.*
+*What is actually built. Originally written 22 September 2026, revised 23 September 2026 after wiring the independent plant (G01), adding FlyHash novelty detection, and fixing the 3D fault-highlighting regression — see §8 for what changed. Written by reading the source, not the older documentation — where this and [`03_implemented_features_technical_deep_dive.md`](03_implemented_features_technical_deep_dive.md) disagree, trust this one and re-verify.*
 
 ---
 
@@ -133,6 +133,25 @@ A ground-station digital twin for a **Rotax 912 iS Sport** aero-piston engine on
 | `llm_engine.py` | 299 | `LocalQwenEngine` — local inference wrapper |
 | `flight_intent.py` | 149 | Natural-language flight-command parsing |
 
+### New since the original version of this guide (2026-09-23)
+
+⚠️ Built directly from [`docs/audit/04_feature_spec.md`](audit/04_feature_spec.md) and
+[`07_unoccupied_axes_and_ground_up_plan.md`](audit/07_unoccupied_axes_and_ground_up_plan.md)'s
+F-numbered feature list. Not all of it is wired into the live 20 Hz service yet — see §8's
+"Known limitations" for exactly what's connected versus standalone-and-correct.
+
+| Package | What it does |
+|---|---|
+| `backend/plant/` | `virtual_engine.py` — an independently-parameterised plant model (own build variation, sensor bias/lag/noise, hidden faults), deliberately not the twin. `adapter.py` bridges it into `engine_service.py` for nominal + faults 1-4, opt-in |
+| `backend/evaluation/` | `conformal.py` (split + adaptive conformal RUL intervals), `threshold_baseline.py` (F13, the naive comparator the PS asks us to beat), `damage_accumulation.py` (rainflow + Miner's rule), `prognostic_metrics.py` (standard PHM metrics via NASA's methodology), `validation.py` (F14 residual shielding, F17 UNKNOWN/`NoveltyGate`, external ACES validation), `harness.py` |
+| `backend/mission/` | `reliability.py` — computed mission reliability `R = P(sortie completes \| health, profile, environment)` via Monte Carlo over per-component hazard rates, with a confidence interval and named limiting component (the literal PS title, not a health-index badge). `prescriptive.py` — damage-budgeted advisory |
+| `backend/reliability/` | `fmeca.py` (MIL-STD-1629A-derived fault taxonomy), `isolability.py` (which faults are distinguishable given the sensor set) |
+| `backend/twin/` | `validity.py`, `integrity.py`, `residual_detector.py` — twin validity monitoring and physics-constrained telemetry integrity (is the twin still trustworthy; is an injected value physically consistent) |
+| `backend/edge/` | `compressor.py` — feature compression, bandwidth/power/latency accounting for onboard analytics |
+| `backend/ml/crank_diagnostics.py` | F01-F06: per-cylinder misfire/combustion-instability detection from crank angular velocity, tach-synchronous order tracking, envelope analysis. Correct and tested standalone; not yet fed a live crank signal in the 20 Hz loop |
+| `backend/ml/flyhash_novelty.py` | Sparse-coding (FlyHash) novelty detection on residuals + order features — a published technique (Dasgupta et al. 2017; Ryali et al. ICML 2020) applied to this domain, not claimed as a novel algorithm. Wired live as an additive pipeline stage, residuals-only until crank diagnostics is itself wired in |
+| `backend/osacbm.py` | ISO 13374 / OSA-CBM six-layer architecture mapping (Data Acquisition → Data Manipulation → State Detection → Health Assessment → Prognostic Assessment → Advisory Generation) |
+
 ### `backend/graph/` · `knowledge/` · `reports/` · `voice/`
 
 | Package | Lines | What it does |
@@ -229,14 +248,18 @@ Each carries an ATA chapter, root cause, prescriptive action, emergency checklis
 
 ### Known limitations
 
+⚠️ **This table was substantially revised on 2026-09-23** — several items below were fixed in the interim (verified by reading the current source, not by trusting the previous version of this table). Where an item says "resolved," it was re-checked directly.
+
 | Limitation | Detail |
 |---|---|
-| ⚠️ **Vibration DFT path is dormant** | `spectral_analyser.py` is correctly Nyquist-aware: it computes `nyquist_hz`, tests `target_hz > nyquist_hz`, and falls back to an RMS envelope rather than producing a bogus DFT. But at the configured 20 Hz the 3rd harmonic (~103 Hz) is above the 10 Hz Nyquist limit, so **the DFT branch never executes**. The module's claimed early-warning advantage is not active. ⬜ Fix: pass `sample_rate_hz=10000` and feed a real kHz channel — see [Part XXVI](study/26_order_tracking_and_envelope.md) |
-| No calibrated uncertainty | RUL emits point values and margins; no conformal intervals — [Part XXVII](study/27_conformal_prediction_for_rul.md) |
-| No baseline comparison | The threshold comparator the PS asks us to beat is never measured against |
-| Physics is the thinnest core module | 577 lines, versus 1,950 for the LLM copilot the PS never requested |
-| Edge split is architectural only | Documented in study Parts V/XIII; no link-loss demonstration exists |
-| `Voice/` and `Qwen3-4B/` are untracked | 8 GB of local weights, gitignored |
+| ✅ **Resolved — vibration DFT path** | Was dormant (20 Hz nominal rate, 3rd harmonic above Nyquist). `can_streamer.py` now synthesises a real `high_rate_vib_buffer`, and `detection_pipeline.py:410-414` feeds it into `GearboxSpectralAnalyser.update(..., high_rate_burst=...)` every frame — the DFT branch is live, not the RMS fallback |
+| 🔶 **Partially resolved — calibrated uncertainty** | `backend/evaluation/conformal.py` is a real, correct split-conformal + adaptive-conformal implementation with `empirical_coverage()` — but it is **not yet wired into the live RUL path** (`trend_analyser.py`'s `ProbabilisticRULEstimator` still uses its own Monte Carlo spread, not conformal intervals). Built, not connected — same pattern as the plant adapter was before this pass |
+| ✅ **Resolved — baseline comparison** | `backend/evaluation/threshold_baseline.py` exists, and `detection_pipeline.py` has its own live `ThresholdBaselineReport` tracking, wired and read every frame (`self.last_threshold_baseline_report`) |
+| ⚠️ **G01 (twin/plant circularity) — fixed, opt-in, off by default** | `backend/plant/adapter.py` now wires the independent `VirtualEngine` plant into `engine_service.py` for nominal flight + faults 1-4. `ANUMAAN_USE_INDEPENDENT_PLANT=1` to enable; off by default because the published 0.9751 classifier accuracy was measured against the old circular distribution and hasn't been re-validated against the new one |
+| Physics is still a thin core module in isolation | `backend/physics/` alone is 577 lines, but see the new packages below — the physics/reliability footprint is now much larger project-wide (`plant/`, `evaluation/`, `mission/`, `reliability/`, `twin/`) |
+| Edge split is architectural only | Documented in study Parts V/XIII; `backend/edge/compressor.py` exists (feature compression, bandwidth/power/latency accounting) but no link-loss demonstration exists yet |
+| `Voice/` and `Qwen3-4B/` are untracked | Moved to `vendor/Voice/` and `vendor/Qwen3-4B/`, ~8 GB of local weights, still gitignored |
+| Order-domain vibration features not in the live pipeline | `backend/ml/crank_diagnostics.py` (F01-F06, per-cylinder misfire/order-tracking/envelope) is correct and tested standalone, but not itself wired into the 20 Hz loop yet — needs a driven crank/ω(θ) signal source. `backend/ml/flyhash_novelty.py`'s novelty detector runs residuals-only in the live pipeline for exactly this reason |
 
 ---
 
@@ -248,7 +271,7 @@ Each carries an ATA chapter, root cause, prescriptive action, emergency checklis
 | `report_dump/` | Generated mission reports — **live, 18 code references**, 400 tracked files |
 | `Datasets/` | Catalogue metadata only; raw data untracked by design |
 | `backend/ml/models/` | Trained RF + autoencoder + metrics |
-| `Models/`, `Models_Images/`, `3d_models/` | 3D assets (LFS) |
+| `assets/models/`, `assets/model_images/`, `assets/blender/` | 3D assets (LFS) |
 
 ---
 

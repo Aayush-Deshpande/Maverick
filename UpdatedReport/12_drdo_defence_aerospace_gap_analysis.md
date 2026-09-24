@@ -1,3 +1,5 @@
+> ⚠️ **Read [31_VERIFICATION_AND_CORRECTIONS.md](31_VERIFICATION_AND_CORRECTIONS.md) before quoting or citing this report.** File paths, some numeric claims, and the competitor list in this report set were checked against the real repository on 2026-09-23 and substantially diverged -- most of it also predates real work (backend/plant, evaluation, mission, reliability, twin, edge, osacbm.py, crank-angle diagnostics, FlyHash novelty detection) that supersedes what this file describes. Use docs/04_system_guide.md and docs/audit/07_unoccupied_axes_and_ground_up_plan.md as the current, source-verified reference instead.
+
 # REPORT 12: DRDO & DEFENCE AEROSPACE GAP ANALYSIS: THE "SOUL" AUDIT
 
 **DRDO Aero-Twin | SIH 26054 Technical Reconstruction**  

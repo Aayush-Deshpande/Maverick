@@ -15,6 +15,7 @@ This is the **primary** documentation set. Supporting and background material li
 | [`01_problem_statement_breakdown.md`](01_problem_statement_breakdown.md) | Our plain-language reading of what it actually asks for |
 | [`audit/README.md`](audit/README.md) | **Where we stand against the competition, and what to build.** The most decision-relevant document here |
 | [`study/README.md`](study/README.md) | The 27-part technical course, from first principles |
+| [`build/README.md`](build/README.md) | **Continuing the project (human or LLM):** mental model, findings register, verification checklist, decisions, interfaces, backlog |
 
 ---
 

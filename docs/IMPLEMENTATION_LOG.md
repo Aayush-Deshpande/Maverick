@@ -669,3 +669,332 @@ constant remains a **labelled placeholder**, marked in the `source` field of the
 relevant dataclass. Relative comparisons — twin vs baseline, this environment vs
 that one, this derate vs none — are defensible. **No absolute number is**, until
 these are replaced with OEM- or fleet-traceable values.
+
+---
+
+## Session 5 — 2026-09-23/24 (builder docs + E0 truth/hygiene)
+
+Five planning documents landed in `docs/audit/` (08–12, deployable-system
+blueprint through dataset implementation) and `docs/build/` (DECISIONS,
+INTERFACES, BACKLOG, CURRENT_STATE, RESEARCH_LEDGER) — the full plan of record
+from here on; see `docs/build/BACKLOG.md`. Then E0 (truth and hygiene) began.
+
+### B0.1 — Removed the FlyHash ground-truth leak ✅
+`backend/ml/detection_pipeline.py`, `tests/test_no_truth_leak.py`
+
+Stage 2c calibrated FlyHash's "seen" set on `actual.FAULT_ID == 0` — a field
+that exists only on the synthetic plant's output for the evaluator's benefit
+and that real telemetry never carries. Real deployment has no such signal to
+gate on.
+
+**Fix.** Calibrate on a fixed frame-count window at the start of each sortie
+(`self._frame_count <= self._novelty.calibration_frames`) instead — the same
+"first N frames of a sortie" assumption `FlyNoveltyDetector.observe_nominal()`'s
+own docstring already documents, and one derivable from real telemetry alone.
+
+**Verified.** New `tests/test_no_truth_leak.py`: an AST-based static scan over
+`backend/ml/`, `backend/twin/` (and the future `backend/detect/`) fails if any
+module reads `.FAULT_ID` / `.HEALTH_INDEX` / `.RUL_HOURS` as an attribute
+(`rul_estimator.py`'s own *write* of `RUL_HOURS` is allow-listed, since setting
+a prognostic's own output field is not a truth leak). A regression pin checks
+the specific fixed string. 131/131 passing after the fix (was 129).
+
+**Unproven / limitation, stated plainly.** A fixed startup window is honest
+about what real deployment can assume (an engine is presumed healthy for a
+short window right after a confirmed-nominal start) but inherits that
+assumption's own failure mode: if the sortie itself starts unhealthy, the
+window calibrates on a fault. This is a known limitation of startup-window
+calibration in general (see `twin/residual_detector.py`'s frozen-baseline
+design for the same trade-off), not specific to this detector, and is exactly
+why B5.1 will condition the novelty memory by regime rather than trust one
+global startup window forever.
+
+### B0.2 — LLM provider made pluggable; default is now DISABLED, never Chinese-origin ✅
+`backend/agent/llm_engine.py`, `backend/agent/copilot.py`, `backend/server/main.py`,
+`requirements.txt`, `frontend/src/components/{DiagnosticCard,VoiceCopilot}.tsx`,
+`tests/test_llm_provider_default.py`
+
+The copilot's LLM defaulted to Qwen3-4B (Alibaba) with no way to select
+anything else. For a DRDO-facing deliverable that is a real defect: the Indian
+Army cancelled contracts for 400 drones in 2025 specifically over Chinese-origin
+components (`docs/audit/10_red_team_readiness_review.md` §2.6).
+
+**Fix.** `LocalQwenEngine` → `LocalLLMEngine` (backward-compat alias kept), with
+a provider registry (`ANUMAAN_LLM_PROVIDER`: `none` default / `sarvam` / `bharatgen`
+/ `qwen` / `local-other`). `provider="none"` never contacts Ollama — `status`
+starts `DISABLED` and `ensure_loaded()` returns `False` immediately, so the
+copilot's existing deterministic templated-fallback path (already there for
+every caller) is what actually ships by default. Every "Qwen3-4B" string visible
+to a user or reviewer — API docstrings, frontend labels, `requirements.txt`
+comments, code comments — was updated to be provider-neutral or to name Qwen
+only as an explicit, non-default, dev/offline opt-in.
+
+**Verified.** `tests/test_llm_provider_default.py`: default provider is `"none"`,
+default status is `"DISABLED"`, `ensure_loaded()` is `False` with no network
+call attempted; the `LocalQwenEngine` alias still resolves; `qwen` remains
+selectable but is confirmed not reachable via the no-env-var path. 134/134
+passing (was 131).
+
+**Unproven.** Nobody has actually pulled or run Sarvam/BharatGen through Ollama
+against this codebase yet — the model tags in `LLM_PROVIDER_MODELS` (`sarvam-30b`,
+`param2`) are the Ollama-library names as best known today and should be
+confirmed against `ollama pull` before a real demo depends on them.
+
+### B0.4 — Engine config provenance + Rotax 915 iS config ✅
+`backend/physics/engine_config.py`, `configs/engines/*.json`,
+`tests/test_engine_config_provenance.py`
+
+`vrde_jayem_2_2l.json` presented itself as a "specification" with one
+undifferentiated `source` string, when in fact only a handful of its numbers
+(power, cylinder count/layout, induction, fuel, manufacturer) are publicly
+reported and everything else — bore/stroke/CR, turbo details, rail pressure,
+BSFC, gearbox ratio, mass — is an assumption scaled from comparable CRDi
+engines. Separately, the repository had no config at all for the **Rotax 915
+iS**, the engine the IAF and Army actually fly on the **Heron Mk II** (the base
+Heron flies the 914; only `rotax_914.json` existed).
+
+**Fix.** Added a per-field `provenance: Dict[str, {"status", "ref"}]` to
+`EngineConfig` (`PROVENANCE_STATUSES = {PUBLIC, MANUAL, ASSUMED, PLACEHOLDER}`,
+docs/build/INTERFACES.md §8), plus `provenance_status(field_path)` and
+`unlabelled_numeric_fields()` helpers (the latter correctly skips fields whose
+value is `None` — not applicable to that engine, e.g. `fuel_cloud_point_c` on
+an AVGAS engine — since there's nothing to source). All five configs now carry
+full provenance: `rotax_912is`/`rotax_914` as `MANUAL` (their manuals are in
+`docs/reference/`), `austro_ae300` split `PUBLIC` (bore/stroke/CR/gearbox/mass,
+from its own already-cited spec sheet) vs `ASSUMED`, and `vrde_jayem_2_2l`
+mostly `ASSUMED`/`PLACEHOLDER` with only the handful of genuinely public facts
+marked `PUBLIC`. Also removed an unsourced "DRDO Archer-NG" platform claim from
+`vrde_jayem_2_2l.json` and corrected `austro_ae300.json`'s platform claim to
+note it powered *earlier* TAPAS prototypes, not the current VRDE-engined
+production line. Added `configs/engines/rotax_915is.json`
+(1,352 cc, 105.1/100.7 kW take-off/continuous, 1,200 h TBO — all `PUBLIC`;
+bore/stroke/CR/turbo details `ASSUMED`/`PLACEHOLDER`, scaled from the shared
+912iS/914 architecture pending a real 915 iS manual).
+
+**Verified.** `tests/test_engine_config_provenance.py` (13 tests): all 5
+configs load; every numeric field in every config has a classified provenance
+entry; every entry's status is one of the four allowed values with a non-empty
+`ref`; the 915 iS config exists with its public facts marked `PUBLIC`; a
+regression pin confirms `vrde_jayem_2_2l.json` no longer calls itself a
+specification and has more assumed/placeholder fields than public/manual ones.
+147/147 passing (was 134).
+
+**Unproven.** The 915 iS's bore/stroke/CR/turbo numbers are assumptions by
+family resemblance to the 912iS/914, not independently confirmed — flagged as
+such in its own provenance map. The VRDE engine's assumed numbers remain
+exactly that: assumptions, now honestly labelled rather than presented as fact.
+
+### B0.3 — Fixed the ACES EGT/CHT channel-binding bug ✅
+`backend/telemetry/aces_loader.py`, `tests/test_aces_channel_binding.py`
+
+Session 4 (2026-09-23) had already found something was wrong: `EGT_1` resolved
+to a channel reading a median of 170.2 °C, "too low for an EGT", and flagged
+`ENGINE_THERMO_2` (1035 °C) as "the more likely true EGT" — correct in spirit,
+but the actual root cause and correct fix are more specific.
+
+**Root cause, found by direct inspection of the real `.mat` data
+(`data/telemetry/nasa_aces/extracted/M080001.mat`).** ACES's fixed-width
+16-character name field is narrower than several true channel descriptions, so
+a column's decoded name reliably **starts with** that column's own true name
+and, when there's spare room in the field, **runs on into the start of the
+next column's name**. E.g. column 91 decodes as `"Water Temp EGT 1"` — its true
+name is "Water Temp" (the coolant channel), with "EGT 1" bleeding in as the
+*start* of column 92's own name, which decodes as `"EGT 1 EGT 2 Altn"`. The old
+`find_channel()` matched a fragment **anywhere** in the string, so `EGT_1`'s
+alias `"egt 1"` bound to column 91 (first occurrence) instead of the genuine
+EGT 1 channel at column 92.
+
+**Independent corroboration, found before writing the fix.** A competitor
+repository already in this workspace (`competitors/Adityaraj13b/AeroPulse/
+data_sample/aces_demo.csv`), built from an independent decode of the same raw
+ACES files, has a `CHT` column whose values match this loader's now-corrected
+CHT binding (column 263) to **5 significant figures** (202.51373…) with no
+unit conversion applied — strong outside confirmation that the corrected
+binding, and the native numeric scale, are both right.
+
+**Fix.** `find_channel()` now requires the fragment at **position 0** of the
+decoded name, not anywhere in it — this is what actually stops binding to the
+bleed-through tail of the *preceding* column. Added `EGT_3`, `EGT_4` and `CHT`
+aliases (present in the data at columns 264/265/263, never previously
+extracted at all, closing another PS gap — CHT is a named `HMS-04` monitored
+parameter). Verified across 5 granules that no existing alias regressed: two
+channels (`ENGINE_THERMO_2`, `COOLING_FLAP_POS`) stop resolving in later
+granules, confirmed by direct name-matrix inspection to be **genuinely absent**
+in those files (a real per-tail/per-date channel-map difference in the
+campaign), not a side effect of the fix.
+
+**What remains honestly unresolved.** The corrected binding is right —
+verified independently, and confirmed physically continuous and distinct from
+neighbouring channels across every granule checked. The **numeric scale is
+not**: ACES's own `m_units` field suffers the identical column-boundary
+artifact as the name field, so it cannot be read reliably at these indices
+either, and the observed EGT range (~1200–1400) is too high for a calibrated
+Celsius reading but plausible as Fahrenheit or an uncalibrated raw scale. The
+independent competitor decode above reports the same raw numbers unconverted,
+which is the same honest position taken here. `ACES_PROVENANCE["unit_caveat"]`
+now carries this explicitly: **do not report an EGT/CHT figure in degrees
+Celsius, and do not compute a sim-to-real bias against the (Celsius) thermo
+model, until the actual ACES documentation PDF confirms the scale** (the
+`ghrc.nsstc.nasa.gov` documentation host was unreachable from this environment
+in session 1 — still true). Relative comparisons (flight vs flight, trend
+direction) remain valid regardless of the unit.
+
+**Verified.** `tests/test_aces_channel_binding.py` (5 tests, skipped if the
+real granule isn't present): EGT_1/EGT_2/COOLANT_TEMP resolve to three
+distinct, correctly-named columns; EGT_1's median is no longer ~170 (the old
+mis-binding's signature value); CHT/EGT_3/EGT_4 now resolve and pass their
+envelopes; the position-0 matching rule is pinned directly; the provenance
+caveat is present. 152/152 passing (was 147).
+
+**Open follow-on (not done here, tracked for B7.5/E01).** Obtain the actual
+ACES documentation PDF (or contact NASA GHRC DAAC) to resolve the unit
+question properly before any sim-to-real EGT number is quoted outside the lab.
+
+### Handoff documentation — `docs/build/MENTAL_MODEL.md`, `SUPERSEDED_VS_CURRENT.md` ✅
+Written so a different LLM/human can continue cold. `MENTAL_MODEL.md` is the
+read-first orientation (reading order, the two-parallel-systems fact, the
+20 Hz → 51.2 kHz story, real-vs-aspirational table, ten traps, pickup loop, and
+"if your quota is about to run out" steps). `SUPERSEDED_VS_CURRENT.md` is a
+verified registry of six old/new implementation pairs (S01–S06), found by
+tracing every importer rather than guessing.
+
+**Findings that were not previously recorded anywhere:**
+- **Dead duplicate classifier (S04).** `RotaxFaultClassifier` in
+  `ml/fault_classifier.py` and `DetectionPipeline._classify()` in
+  `ml/detection_pipeline.py` implement the *same* 8-fault sigmoid rules with copy-pasted
+  thresholds; only the second runs live. A threshold "fixed" in one would silently
+  diverge from the other.
+- **Two unrelated RUL/Go-No-Go systems (S03).** The live `RULEstimator` +
+  `MissionGoNoGoAdvisory` (hardcoded lifetimes) versus four carefully built, tested,
+  *never-assembled* modules (damage accumulation, conformal, PHM metrics, Monte Carlo
+  mission reliability). "RUL is done" would be a false reading of the file list.
+- **Two incompatible fault-ID spaces (S02).** Legacy `DRDO_FAULT_DEFINITIONS` (8 IDs,
+  cylinder-hardcoded) versus the 20-mode FMECA; adding FMECA names to the legacy dict
+  would keep the design flaw.
+- **51.2 kHz has zero code (S05).** It is a design target only; the live vibration path
+  is the 20 Hz RMS scalar whose DFT cannot see its target. This is a build task, not a
+  wiring task.
+- **The plant adapter is off by default on purpose**, not by neglect: its docstring
+  records that enabling it silently invalidates the published 0.9751 RF accuracy. It was
+  therefore deliberately *not* flipped.
+- **`.gitignore` line 40 (`build/`) silently ignored `docs/build/`** — every handoff
+  document would never have been committed. Fixed with `!docs/build/`.
+- `DECISIONS.md` pointed to a non-existent `AGENTS.md`; fixed.
+
+### B1.1 — `Frame` / `TruthRecord` contract ✅ · B1.2 (part 1) — `PlantSource` 🟡
+`backend/core/frame.py`, `backend/sources/plant_source.py`, `tests/test_frame_and_plant_source.py`
+
+Implements INTERFACES §1–2. `Frame` has no field for a fault ID, health index or RUL,
+rejects them in `from_dict`, distinguishes "unmeasured" (`None`/empty) from zero, and is
+engine-agnostic (per-cylinder lists). `PlantSource` exposes the *current independent
+plant* (`VirtualEngine`, S01's WIRE side) as `(Frame, TruthRecord)` pairs; faults are
+injected plant-side and appear only in the `TruthRecord`. It deliberately bypasses both
+the legacy `TelemetryStreamer` and the `plant/adapter.py` blend.
+
+**Verified (9 tests, 161/161 total, was 152).** Structural absence of truth fields on
+`Frame`; forbidden-field rejection; validation; `None` vs 0; separate truth stream; a
+`MISFIRE` fault never appears anywhere in the frame's repr; same seed reproduces and
+different seeds give different builds; engine class is configuration (914 / 915 iS /
+VRDE); a cooling fault measurably raises CHT through readings alone. The truth-leak scan
+now also covers `backend/sources/`.
+
+**Not done / unproven.** The live service does **not** use `Frame` or `PlantSource` yet —
+that is B1.3/B1.4. `Frame` covers the channels the plant publishes; FADEC trims, rail
+pressure and commanded SOI stay empty until the FADEC emulator (B2.6). Nothing here
+changes live behaviour, so nothing needed re-validating.
+
+### Re-verification pass -- two things I had wrong or had not noticed ✅
+`backend/ml/rul_estimator.py`, `tests/test_fun_req_compliance.py`, `frontend/src/types/telemetry.ts`
+
+1. **A live false claim.** `RULEstimator.get_conformal_rul()` was documented as split-conformal
+   with a coverage guarantee and emitted `coverage_guarantee: "90% Conformal Calibration"`. The
+   implementation is a fixed 12 % margin + 18 % x anomaly score; nothing is calibrated and
+   `significance_level` does not affect the bounds. **Fixed the claim, not the numbers:** the
+   output now carries `calibrated: False` and `coverage_guarantee: "None -- uncalibrated
+   heuristic margin (not conformal)"`, the docstring says so, and the test pins it. The real
+   implementation is `evaluation/conformal.py` (orphaned) -- registered as S07.
+2. **My own earlier statement was wrong.** I wrote (SUPERSEDED S03, CURRENT_STATE) that the
+   orphaned research modules were "tested in isolation." Grepping `tests/` shows **none of them
+   has pytest coverage**; the "Verified" lines in Sessions 1-4 are ad-hoc runs. Corrected in
+   S03, CURRENT_STATE and MENTAL_MODEL (trap 11), and added backlog **B0.9**
+   (characterization tests before any wiring).
+
+**Verified.** Full suite green after the change (`test_fun_req_compliance` 8/8 including the new
+honesty pin). **Unproven.** The headline numbers of Sessions 1-4 are only as trustworthy as an
+unrepeated ad-hoc run until B0.9 pins them.
+
+### Universality & freshness audit ✅ (audit + enforcement; refactor not yet done)
+`docs/build/UNIVERSALITY_AUDIT.md`, `docs/build/VERIFICATION_CHECKLIST.md`, `tests/test_engine_agnostic_ratchet.py`, `tests/engine_agnostic_baseline.json`
+
+Asked: is the code so engine-specific that it reads as a one-engine simulation, and are the
+models/datasets current? **Yes to the first, no to the second.** Measured: no engine-selection
+path in API/UI; the twin, pipeline, validators, RUL model, fault list, copilot and UI hardcode
+a 4-cylinder Rotax 912 iS (**286 cylinder-index, 78 brand, 37 model-number literals** across 19
+modules); the RF/autoencoder are dated 2 Sep and trained on the circular 912 iS generator; the
+dataset manifest holds another machine's absolute paths; Qwen weights (7.6 GB) are vestigial;
+`assets/manifests` (AE330, PD170) and `configs/engines` share no engine ID. The F31 headline in
+Session 2 ("engine class as configuration") is true for the plant, not the twin.
+
+**Done:** audit doc (evidence, `EngineProfile` design, hook points, scope honesty, per-dataset
+benefit, freshness table); decisions D27/D28; backlog tier E12 (U1-U10); a verification
+checklist for future LLMs; and a **ratchet test** that fails if any engine-specific literal
+count rises (baselines can only be lowered). 2 new tests.
+
+**Verified.** Counts come from the ratchet script itself; the freshness table from file
+timestamps and JSON contents. **Unproven / not done.** No refactor was attempted -- the
+counts are the baseline, not an improvement. The `EngineProfile` design is a proposal; no
+engine-selection API exists. Whether the plant generalises across profiles (E16) is unmeasured.
+
+### Findings register and build-folder index ✅ (documentation only)
+`docs/build/FINDINGS.md`, `docs/build/README.md`, plus links from `docs/README.md`, `docs/audit/README.md`, `MENTAL_MODEL.md`, `VERIFICATION_CHECKLIST.md`
+
+Consolidated every finding from the audit and build sessions into one register (F01-F20: 7
+defects that misled or would have misled a reviewer, 8 structural findings, 5 artifact/data
+findings, plus a corrections table and a "what is actually strong" section), each with the
+evidence used to establish it, impact, status and the test that pins it. Added an index for
+`docs/build/`, which had ten files and none. Counts quoted in the register (72 backlog items,
+5 done, 1 partial, 28 decisions, 20 findings, 163 tests) were re-derived by command, not
+remembered.
+
+**Verified.** Doc links checked programmatically; counts re-derived. **Unproven.** The register
+records what was found in the repository on 24 Sep; it is a snapshot and goes stale unless rows
+are updated as fixes land (its section F says how).
+
+### Multi-engine architecture, detector decision, dead-code audit and docs sweep ✅ (analysis + one experiment; no runtime code changed)
+`docs/build/{MULTI_ENGINE_ARCHITECTURE,DETECTOR_DECISION,DEAD_CODE_AUDIT,IDEAS_AND_GAPS_SWEEP}.md`, `experiments/E17_detector_bakeoff_plant.py`, `scripts/tools/audit_reachability.py`, `docs/evaluation/{E17_detector_bakeoff,reachability_audit}.json`
+
+Asked: run simulators, fault injectors and detectors for several engines at once with a dropdown
+that switches instantly; decide between open-source Jev, a fly-brain/connectome library, or
+cheap classical ML; one universal detector vs many; add a waveform + Raspberry-Pi-5 edge path;
+audit the code against that; list stale code; sweep all docs for missed ideas.
+
+**Established (F21-F30):** the plant is Rotax-shaped internally; injector/rail/turbo-bearing faults
+are invisible to every scalar channel; the live levers are cosmetic (G02); the runtime is a
+single-engine singleton but concurrency costs ~1.2 % of a core; the Rotax blend is one base plus
+914/915 fitting sets and 39 assets are LFS stubs; `ffbf` has no licence, `fbfc` is MIT;
+15 orphan libraries (4,235 lines) are the designed replacements, 24,832 lines of scripts/apps are
+unreferenced; 3500-DEFault labels cannot be decoded without the paper.
+
+**Experiment E17 (simulation).** Universal vs per-engine vs new-engine, five engines, different
+builds for train and test, split by run: Mahalanobis AUROC 0.976 / 0.974 / 0.973; RF macro-F1
+0.904 / 0.852 / 0.840; normalisation +4.6 points across engines; FlyHash-FBF (untuned, tabular)
+AUROC 0.84; sklearn single-row RF 11.5 ms. **Decisions D29-D35** and backlog tiers **E13/E14**
+(R1-R11, W1-W9), V1-V10, B0.10 record the outcome.
+
+**Verified.** Numbers come from the E17 run and the audit script (JSON committed). **Unproven:**
+single seed set, no confidence intervals; plant not engine-class-aware; fly-inspired methods on
+high-dimensional waveform features untested (W5); Pi 5 timings extrapolated, no hardware run;
+connectome and Jev ruled out on architecture, not benchmarked. No runtime code was changed and
+the test suite is unchanged (163 passing).
+
+### Downloads — public datasets, resumed
+`Datasets/download_all.py` (background)
+
+Essential Tier A sets — C-MAPSS, 3500-DEFault (4 files), CWRU (161 files), all
+32 Paderborn bearings, NASA battery + randomized-battery, SKAB — finished
+downloading. Marine-diesel and ROAD remain blocked by Zenodo's parallel-traffic
+filter (retry with `--connections 1` once it clears, per `docs/audit/12`); MIMII
+(optional) is failing the same way.
+
+### Session 5 addendum (24 Sep 2026) — fly/Jev re-evaluation
+User corrected premises (selected-engine-only heavy inference; DRDO A100-class GPUs). Web research found published connectome-reservoir work. Added `experiments/E19_connectome_reservoir.py` (reservoir beats RF by ~4-5 pts; real connectome ties shuffled/random controls), `docs/build/FLY_100_WAYS.md`, decisions D36/D37 (D32 superseded, D33/D29 amended), finding F31. Next: LOEO repeat of E19, W10 Jev bake-off, W1 `backend/detect/`, B0.9 tests.

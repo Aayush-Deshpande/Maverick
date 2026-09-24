@@ -10,8 +10,8 @@
 
 | Asset | Location | Size | Format | Verdict |
 |---|---|---|---|---|
-| **Rotax 912 iS Sport** | `3d_models/rotax_912_is_sport.blend` | 78 MB | Blender, textured, individually named meshes | ✅ **REUSE AS-IS** — production baseline |
-| **Bayraktar TB3** | `Models/bayraktar_tb3_digital_twin.blend` (only a `.blend1` backup remains in `3d_models/`) + `scripts/build_tb3_digital_twin.py` | 219 KB + 68 KB script | Procedurally generated Blender | ⚠️ **REUSE + MODIFY** — see §3 |
+| **Rotax 912 iS Sport** | `assets/blender/rotax_912_is_sport.blend` | 78 MB | Blender, textured, individually named meshes | ✅ **REUSE AS-IS** — production baseline |
+| **Bayraktar TB3** | `assets/blender/bayraktar_tb3_digital_twin.blend` (⚠️ a second, unresolved copy also exists at `assets/models/bayraktar_tb3_digital_twin.blend` — still-unresolved duplication, see [`docs/audit/06_repo_cleanup_plan.md`](../audit/06_repo_cleanup_plan.md) §6) + `scripts/build_tb3_digital_twin.py` | 219 KB + 68 KB script | Procedurally generated Blender | ⚠️ **REUSE + MODIFY** — see §3 |
 
 **Measured with Blender 5.2.1 (2026-09-16):**
 
@@ -102,7 +102,7 @@ Backend side: `backend/telemetry/can_streamer.py` holds `DRDO_FAULT_DEFINITIONS`
 
 `scripts/build_tb3_digital_twin.py` sets a high structural standard: metric units, ground-contact `Z_OFFSET` constant, 10 named collections, root empty, three material systems (tactical PBR / wireframe clay / X-ray hologram with an `XRayFactor` value node), 4K PBR maps, decals integrated into mesh UVs, five named inspection cameras, subsurf viewport-0/render-2, EEVEE-first for viewport speed with AgX color management.
 
-`3d_models/tb3_digital_twin_controller.py` exposes: inspection modes, subsystem isolation, wing fold, gear retraction, camera navigation.
+`assets/blender/tb3_digital_twin_controller.py` exposes: inspection modes, subsystem isolation, wing fold, gear retraction, camera navigation.
 
 **What it does not contain, verified by grep:** no telemetry polling, no `api/state` client, no fault database, no health indices, no emission-based fault highlighting, no CHT/EGT/RPM binding of any kind. Every hit for "fault/telemetry/sensor/health" in the build script is a false positive (`default_value`, `Sensors_Payload` collection naming).
 
@@ -162,7 +162,7 @@ Consequences and the required generalization are specified in [04_rigging_animat
 
 ## 5. Honest Assessment of the Visual Baseline
 
-Reviewed `3d_models/renders/render_01_hero_image_png.png` directly.
+Reviewed `assets/blender/renders/render_01_hero_image_png.png` directly.
 
 **What it achieves:** clean silhouette, correct proportions, integrated decals (roundels, Turkish flag, PT-2 stencils), red/yellow hazard banding, MAM-L munitions with distinct material slots, panel-line detail, competent studio lighting, no floating decal quads.
 

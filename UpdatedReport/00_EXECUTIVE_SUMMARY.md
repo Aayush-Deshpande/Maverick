@@ -1,3 +1,5 @@
+> ⚠️ **See [31_VERIFICATION_AND_CORRECTIONS.md](31_VERIFICATION_AND_CORRECTIONS.md) before quoting this report.** Several file paths and competitor claims below were checked against the real repository on 2026-09-23 and do not match — read the correction first.
+
 # REPORT 00: MASTER FORENSIC AUDIT & EXECUTIVE SUMMARY
 
 **DRDO Aero-Twin | SIH 26054 Technical Reconstruction**  

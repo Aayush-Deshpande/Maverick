@@ -1,3 +1,5 @@
+> ⚠️ **See [31_VERIFICATION_AND_CORRECTIONS.md](31_VERIFICATION_AND_CORRECTIONS.md) §2.3 before citing any competitor by name.** Two of the six named repositories were independently confirmed real; four could not be found in two separate searches. Verify each URL directly before presenting it to anyone.
+
 # REPORT 11: FORENSIC COMPETITIVE STUDY & RESEARCH RECONSTRUCTION
 
 **DRDO Aero-Twin | SIH 26054 Technical Reconstruction**  
