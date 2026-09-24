@@ -54,7 +54,10 @@ FAULT_DATABASE = {
             'Covers_Theme_M_PlasticTheme_0',
             'Covers_Theme_M_PlasticGreen_0',
             'Cooling_Air_Baffle_M_PlasticWhite_0',
-            'Cooling_Air_Baffle_M_PlasticCable_0'
+            # 'Cooling_Air_Baffle_M_PlasticCable_0' removed -- no such object in
+            # assets/blender/rotax_912_is_sport.blend; only PlasticWhite exists.
+            # Mirrors the same fix in backend/server/engine_service.py's
+            # FAULT_TARGET_PARTS -- these two lists should never diverge.
         ],
         'target_center': mathutils.Vector((-22.0, 44.0, -10.0)),
         'target_angle': math.radians(-145.0),

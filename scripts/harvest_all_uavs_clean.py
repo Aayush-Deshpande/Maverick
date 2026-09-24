@@ -10,7 +10,7 @@ from PIL import Image
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-BASE_DIR = r"E:\backup-llm\backup-no-llm\3d_engine\ANUMAAN\Models_Images"
+BASE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "assets", "model_images")
 WIKI_API = "https://commons.wikimedia.org/w/api.php"
 WIKI_HEADERS = {'User-Agent': 'AeroUAVReconstructionResearch/1.0 (academic; research-contact@engine3d.org)'}
 

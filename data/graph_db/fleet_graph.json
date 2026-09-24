@@ -399,6 +399,166 @@
       "min_altitude_ft": null,
       "max_altitude_ft": null,
       "telemetry_log_path": null
+    },
+    "SORTIE-SRV-20260923-145507": {
+      "sortie_id": "SORTIE-SRV-20260923-145507",
+      "region": "LADAKH",
+      "start_timestamp": 1790155508.90535,
+      "end_timestamp": null,
+      "flight_hours": 0.0,
+      "final_health_index": 1.0,
+      "status": "ACTIVE",
+      "uav_tail_number": "TAPAS-BH-201-AF01",
+      "start_health_index": 1.0,
+      "min_oat_c": null,
+      "max_oat_c": null,
+      "min_altitude_ft": null,
+      "max_altitude_ft": null,
+      "telemetry_log_path": null
+    },
+    "SORTIE-SRV-20260923-145555": {
+      "sortie_id": "SORTIE-SRV-20260923-145555",
+      "region": "LADAKH",
+      "start_timestamp": 1790155556.66157,
+      "end_timestamp": null,
+      "flight_hours": 0.0,
+      "final_health_index": 1.0,
+      "status": "ACTIVE",
+      "uav_tail_number": "TAPAS-BH-201-AF01",
+      "start_health_index": 1.0,
+      "min_oat_c": null,
+      "max_oat_c": null,
+      "min_altitude_ft": null,
+      "max_altitude_ft": null,
+      "telemetry_log_path": null
+    },
+    "SORTIE-SRV-20260923-145816": {
+      "sortie_id": "SORTIE-SRV-20260923-145816",
+      "region": "LADAKH",
+      "start_timestamp": 1790155698.9758332,
+      "end_timestamp": null,
+      "flight_hours": 0.0,
+      "final_health_index": 1.0,
+      "status": "ACTIVE",
+      "uav_tail_number": "TAPAS-BH-201-AF01",
+      "start_health_index": 1.0,
+      "min_oat_c": -22.0,
+      "max_oat_c": -22.0,
+      "min_altitude_ft": 20000.0,
+      "max_altitude_ft": 20000.0,
+      "telemetry_log_path": null
+    },
+    "SORTIE-SRV-20260923-145831": {
+      "sortie_id": "SORTIE-SRV-20260923-145831",
+      "region": "LADAKH",
+      "start_timestamp": 1790155713.7934926,
+      "end_timestamp": null,
+      "flight_hours": 0.0,
+      "final_health_index": 1.0,
+      "status": "ACTIVE",
+      "uav_tail_number": "TAPAS-BH-201-AF01",
+      "start_health_index": 1.0,
+      "min_oat_c": -22.0,
+      "max_oat_c": -22.0,
+      "min_altitude_ft": 20000.0,
+      "max_altitude_ft": 20000.0,
+      "telemetry_log_path": null
+    },
+    "SORTIE-SRV-20260923-145859": {
+      "sortie_id": "SORTIE-SRV-20260923-145859",
+      "region": "LADAKH",
+      "start_timestamp": 1790155741.3863573,
+      "end_timestamp": null,
+      "flight_hours": 0.0,
+      "final_health_index": 1.0,
+      "status": "ACTIVE",
+      "uav_tail_number": "TAPAS-BH-201-AF01",
+      "start_health_index": 1.0,
+      "min_oat_c": -22.0,
+      "max_oat_c": -22.0,
+      "min_altitude_ft": 20000.0,
+      "max_altitude_ft": 20000.0,
+      "telemetry_log_path": null
+    },
+    "SORTIE-SRV-20260923-145915": {
+      "sortie_id": "SORTIE-SRV-20260923-145915",
+      "region": "LADAKH",
+      "start_timestamp": 1790155756.8274531,
+      "end_timestamp": null,
+      "flight_hours": 0.0,
+      "final_health_index": 1.0,
+      "status": "ACTIVE",
+      "uav_tail_number": "TAPAS-BH-201-AF01",
+      "start_health_index": 1.0,
+      "min_oat_c": -22.0,
+      "max_oat_c": -22.0,
+      "min_altitude_ft": 20000.0,
+      "max_altitude_ft": 20000.0,
+      "telemetry_log_path": null
+    },
+    "SORTIE-SRV-20260923-150401": {
+      "sortie_id": "SORTIE-SRV-20260923-150401",
+      "region": "LADAKH",
+      "start_timestamp": 1790156043.3362732,
+      "end_timestamp": null,
+      "flight_hours": 0.0,
+      "final_health_index": 1.0,
+      "status": "ACTIVE",
+      "uav_tail_number": "TAPAS-BH-201-AF01",
+      "start_health_index": 1.0,
+      "min_oat_c": null,
+      "max_oat_c": null,
+      "min_altitude_ft": null,
+      "max_altitude_ft": null,
+      "telemetry_log_path": null
+    },
+    "SORTIE-SRV-20260923-152424": {
+      "sortie_id": "SORTIE-SRV-20260923-152424",
+      "region": "LADAKH",
+      "start_timestamp": 1790157266.7331805,
+      "end_timestamp": null,
+      "flight_hours": 0.0,
+      "final_health_index": 1.0,
+      "status": "ACTIVE",
+      "uav_tail_number": "TAPAS-BH-201-AF01",
+      "start_health_index": 1.0,
+      "min_oat_c": null,
+      "max_oat_c": null,
+      "min_altitude_ft": null,
+      "max_altitude_ft": null,
+      "telemetry_log_path": null
+    },
+    "SORTIE-SRV-20260923-152440": {
+      "sortie_id": "SORTIE-SRV-20260923-152440",
+      "region": "LADAKH",
+      "start_timestamp": 1790157283.3636515,
+      "end_timestamp": null,
+      "flight_hours": 0.0,
+      "final_health_index": 1.0,
+      "status": "ACTIVE",
+      "uav_tail_number": "TAPAS-BH-201-AF01",
+      "start_health_index": 1.0,
+      "min_oat_c": -22.0,
+      "max_oat_c": -22.0,
+      "min_altitude_ft": 20000.0,
+      "max_altitude_ft": 20000.0,
+      "telemetry_log_path": "E:\\backup-llm\\backup-no-llm\\3d_engine\\data\\telemetry\\live_sorties\\SORTIE-SRV-20260923-152440.csv"
+    },
+    "SORTIE-SRV-20260923-153112": {
+      "sortie_id": "SORTIE-SRV-20260923-153112",
+      "region": "LADAKH",
+      "start_timestamp": 1790157674.489166,
+      "end_timestamp": null,
+      "flight_hours": 0.0,
+      "final_health_index": 1.0,
+      "status": "ACTIVE",
+      "uav_tail_number": "TAPAS-BH-201-AF01",
+      "start_health_index": 1.0,
+      "min_oat_c": -22.0,
+      "max_oat_c": -22.0,
+      "min_altitude_ft": 20000.0,
+      "max_altitude_ft": 20000.0,
+      "telemetry_log_path": "E:\\backup-llm\\backup-no-llm\\3d_engine\\data\\telemetry\\live_sorties\\SORTIE-SRV-20260923-153112.csv"
     }
   },
   "subsystems": {
@@ -3647,6 +3807,162 @@
       "ata_chapter": "ATA 76-00",
       "recommended_action": "Force FADEC arbitration to Lane B and flag Lane A sensor channel for post-flight calibration.",
       "trend_note": null
+    },
+    "ANOM-0245": {
+      "event_id": "ANOM-0245",
+      "sortie_id": "SORTIE-SRV-20260923-145816",
+      "subsystem_id": "SUB_IGNITION",
+      "timestamp_epoch": 1790155699.135592,
+      "fault_id": 3,
+      "fault_name": "IGNITION_MISFIRE",
+      "severity": "WARNING",
+      "anomaly_score": 0.9989,
+      "ata_chapter": "ATA 74-20",
+      "recommended_action": "Switch FADEC ignition arbitration to redundant Lane B coil circuit.",
+      "trend_note": null
+    },
+    "ANOM-0246": {
+      "event_id": "ANOM-0246",
+      "sortie_id": "SORTIE-SRV-20260923-145816",
+      "subsystem_id": "SUB_IGNITION",
+      "timestamp_epoch": 1790155699.1471071,
+      "fault_id": 3,
+      "fault_name": "IGNITION_MISFIRE",
+      "severity": "WARNING",
+      "anomaly_score": 0.9989,
+      "ata_chapter": "ATA 74-20",
+      "recommended_action": "Switch FADEC ignition arbitration to redundant Lane B coil circuit.",
+      "trend_note": null
+    },
+    "ANOM-0247": {
+      "event_id": "ANOM-0247",
+      "sortie_id": "SORTIE-SRV-20260923-145831",
+      "subsystem_id": "SUB_IGNITION",
+      "timestamp_epoch": 1790155713.91108,
+      "fault_id": 3,
+      "fault_name": "IGNITION_MISFIRE",
+      "severity": "WARNING",
+      "anomaly_score": 0.9992,
+      "ata_chapter": "ATA 74-20",
+      "recommended_action": "Switch FADEC ignition arbitration to redundant Lane B coil circuit.",
+      "trend_note": null
+    },
+    "ANOM-0248": {
+      "event_id": "ANOM-0248",
+      "sortie_id": "SORTIE-SRV-20260923-145831",
+      "subsystem_id": "SUB_IGNITION",
+      "timestamp_epoch": 1790155713.9197679,
+      "fault_id": 3,
+      "fault_name": "IGNITION_MISFIRE",
+      "severity": "WARNING",
+      "anomaly_score": 0.9992,
+      "ata_chapter": "ATA 74-20",
+      "recommended_action": "Switch FADEC ignition arbitration to redundant Lane B coil circuit.",
+      "trend_note": null
+    },
+    "ANOM-0249": {
+      "event_id": "ANOM-0249",
+      "sortie_id": "SORTIE-SRV-20260923-145859",
+      "subsystem_id": "SUB_IGNITION",
+      "timestamp_epoch": 1790155741.4594831,
+      "fault_id": 3,
+      "fault_name": "IGNITION_MISFIRE",
+      "severity": "WARNING",
+      "anomaly_score": 0.999,
+      "ata_chapter": "ATA 74-20",
+      "recommended_action": "Switch FADEC ignition arbitration to redundant Lane B coil circuit.",
+      "trend_note": null
+    },
+    "ANOM-0250": {
+      "event_id": "ANOM-0250",
+      "sortie_id": "SORTIE-SRV-20260923-145915",
+      "subsystem_id": "SUB_IGNITION",
+      "timestamp_epoch": 1790155756.9255652,
+      "fault_id": 3,
+      "fault_name": "IGNITION_MISFIRE",
+      "severity": "WARNING",
+      "anomaly_score": 0.9988,
+      "ata_chapter": "ATA 74-20",
+      "recommended_action": "Switch FADEC ignition arbitration to redundant Lane B coil circuit.",
+      "trend_note": null
+    },
+    "ANOM-0251": {
+      "event_id": "ANOM-0251",
+      "sortie_id": "SORTIE-SRV-20260923-152440",
+      "subsystem_id": "SUB_FADEC",
+      "timestamp_epoch": 1790157296.2770512,
+      "fault_id": 8,
+      "fault_name": "DUAL_FADEC_ECU_DRIFT",
+      "severity": "WARNING",
+      "anomaly_score": 0.4411,
+      "ata_chapter": "ATA 76-00",
+      "recommended_action": "Force FADEC arbitration to Lane B and flag Lane A sensor channel for post-flight calibration.",
+      "trend_note": null
+    },
+    "ANOM-0252": {
+      "event_id": "ANOM-0252",
+      "sortie_id": "SORTIE-SRV-20260923-152440",
+      "subsystem_id": "SUB_IGNITION",
+      "timestamp_epoch": 1790157299.599704,
+      "fault_id": 3,
+      "fault_name": "IGNITION_MISFIRE",
+      "severity": "WARNING",
+      "anomaly_score": 0.6049,
+      "ata_chapter": "ATA 74-20",
+      "recommended_action": "Switch FADEC ignition arbitration to redundant Lane B coil circuit.",
+      "trend_note": null
+    },
+    "ANOM-0253": {
+      "event_id": "ANOM-0253",
+      "sortie_id": "SORTIE-SRV-20260923-152440",
+      "subsystem_id": "SUB_IGNITION",
+      "timestamp_epoch": 1790157300.1083827,
+      "fault_id": 3,
+      "fault_name": "IGNITION_MISFIRE",
+      "severity": "WARNING",
+      "anomaly_score": 0.6331,
+      "ata_chapter": "ATA 74-20",
+      "recommended_action": "Switch FADEC ignition arbitration to redundant Lane B coil circuit.",
+      "trend_note": null
+    },
+    "ANOM-0254": {
+      "event_id": "ANOM-0254",
+      "sortie_id": "SORTIE-SRV-20260923-153112",
+      "subsystem_id": "SUB_IGNITION",
+      "timestamp_epoch": 1790157724.0766826,
+      "fault_id": 3,
+      "fault_name": "IGNITION_MISFIRE",
+      "severity": "WARNING",
+      "anomaly_score": 0.5611,
+      "ata_chapter": "ATA 74-20",
+      "recommended_action": "Switch FADEC ignition arbitration to redundant Lane B coil circuit.",
+      "trend_note": null
+    },
+    "ANOM-0255": {
+      "event_id": "ANOM-0255",
+      "sortie_id": "SORTIE-SRV-20260923-153112",
+      "subsystem_id": "SUB_GEARBOX",
+      "timestamp_epoch": 1790157726.6300056,
+      "fault_id": 5,
+      "fault_name": "Gearbox Vibration & Clutch Wear",
+      "severity": "WARNING",
+      "anomaly_score": 0.7471,
+      "ata_chapter": "ATA 72-10",
+      "recommended_action": "Limit rapid throttle transients, avoid critical RPM resonance zones (4,000-4,400 RPM), and schedule post-flight clutch overhaul.",
+      "trend_note": null
+    },
+    "ANOM-0256": {
+      "event_id": "ANOM-0256",
+      "sortie_id": "SORTIE-SRV-20260923-153112",
+      "subsystem_id": "SUB_IGNITION",
+      "timestamp_epoch": 1790157726.7611556,
+      "fault_id": 3,
+      "fault_name": "IGNITION_MISFIRE",
+      "severity": "WARNING",
+      "anomaly_score": 0.7594,
+      "ata_chapter": "ATA 74-20",
+      "recommended_action": "Switch FADEC ignition arbitration to redundant Lane B coil circuit.",
+      "trend_note": null
     }
   },
   "maintenance_actions": {
@@ -6821,6 +7137,149 @@
       "limiting_component": null,
       "signoff_epoch": null,
       "signoff_inspector": null
+    },
+    "MAINT-0245": {
+      "action_id": "MAINT-0245",
+      "sortie_id": "SORTIE-SRV-20260923-145816",
+      "subsystem_id": "SUB_IGNITION",
+      "ata_chapter": "ATA 74-20",
+      "description": "Perform ignition lead resistance test (nominal 4.5-5.5 kOhm) and replace Lane A coil pack.",
+      "status": "OPEN",
+      "rul_p10_hours": null,
+      "rul_p50_hours": null,
+      "limiting_component": null,
+      "signoff_epoch": null,
+      "signoff_inspector": null
+    },
+    "MAINT-0246": {
+      "action_id": "MAINT-0246",
+      "sortie_id": "SORTIE-SRV-20260923-145816",
+      "subsystem_id": "SUB_IGNITION",
+      "ata_chapter": "ATA 74-20",
+      "description": "Perform ignition lead resistance test (nominal 4.5-5.5 kOhm) and replace Lane A coil pack.",
+      "status": "OPEN",
+      "rul_p10_hours": null,
+      "rul_p50_hours": null,
+      "limiting_component": null,
+      "signoff_epoch": null,
+      "signoff_inspector": null
+    },
+    "MAINT-0247": {
+      "action_id": "MAINT-0247",
+      "sortie_id": "SORTIE-SRV-20260923-145831",
+      "subsystem_id": "SUB_IGNITION",
+      "ata_chapter": "ATA 74-20",
+      "description": "Perform ignition lead resistance test (nominal 4.5-5.5 kOhm) and replace Lane A coil pack.",
+      "status": "OPEN",
+      "rul_p10_hours": null,
+      "rul_p50_hours": null,
+      "limiting_component": null,
+      "signoff_epoch": null,
+      "signoff_inspector": null
+    },
+    "MAINT-0248": {
+      "action_id": "MAINT-0248",
+      "sortie_id": "SORTIE-SRV-20260923-145859",
+      "subsystem_id": "SUB_IGNITION",
+      "ata_chapter": "ATA 74-20",
+      "description": "Perform ignition lead resistance test (nominal 4.5-5.5 kOhm) and replace Lane A coil pack.",
+      "status": "OPEN",
+      "rul_p10_hours": null,
+      "rul_p50_hours": null,
+      "limiting_component": null,
+      "signoff_epoch": null,
+      "signoff_inspector": null
+    },
+    "MAINT-0249": {
+      "action_id": "MAINT-0249",
+      "sortie_id": "SORTIE-SRV-20260923-145915",
+      "subsystem_id": "SUB_IGNITION",
+      "ata_chapter": "ATA 74-20",
+      "description": "Perform ignition lead resistance test (nominal 4.5-5.5 kOhm) and replace Lane A coil pack.",
+      "status": "OPEN",
+      "rul_p10_hours": null,
+      "rul_p50_hours": null,
+      "limiting_component": null,
+      "signoff_epoch": null,
+      "signoff_inspector": null
+    },
+    "MAINT-0250": {
+      "action_id": "MAINT-0250",
+      "sortie_id": "SORTIE-SRV-20260923-152440",
+      "subsystem_id": "SUB_FADEC",
+      "ata_chapter": "ATA 76-00",
+      "description": "Connect BRP BUDS diagnostic tool to ECU and recalibrate internal MAP transducer channel.",
+      "status": "OPEN",
+      "rul_p10_hours": null,
+      "rul_p50_hours": null,
+      "limiting_component": null,
+      "signoff_epoch": null,
+      "signoff_inspector": null
+    },
+    "MAINT-0251": {
+      "action_id": "MAINT-0251",
+      "sortie_id": "SORTIE-SRV-20260923-152440",
+      "subsystem_id": "SUB_IGNITION",
+      "ata_chapter": "ATA 74-20",
+      "description": "Perform ignition lead resistance test (nominal 4.5-5.5 kOhm) and replace Lane A coil pack.",
+      "status": "OPEN",
+      "rul_p10_hours": null,
+      "rul_p50_hours": null,
+      "limiting_component": null,
+      "signoff_epoch": null,
+      "signoff_inspector": null
+    },
+    "MAINT-0252": {
+      "action_id": "MAINT-0252",
+      "sortie_id": "SORTIE-SRV-20260923-152440",
+      "subsystem_id": "SUB_IGNITION",
+      "ata_chapter": "ATA 74-20",
+      "description": "Perform ignition lead resistance test (nominal 4.5-5.5 kOhm) and replace Lane A coil pack.",
+      "status": "OPEN",
+      "rul_p10_hours": null,
+      "rul_p50_hours": null,
+      "limiting_component": null,
+      "signoff_epoch": null,
+      "signoff_inspector": null
+    },
+    "MAINT-0253": {
+      "action_id": "MAINT-0253",
+      "sortie_id": "SORTIE-SRV-20260923-153112",
+      "subsystem_id": "SUB_IGNITION",
+      "ata_chapter": "ATA 74-20",
+      "description": "Perform ignition lead resistance test (nominal 4.5-5.5 kOhm) and replace Lane A coil pack.",
+      "status": "OPEN",
+      "rul_p10_hours": null,
+      "rul_p50_hours": null,
+      "limiting_component": null,
+      "signoff_epoch": null,
+      "signoff_inspector": null
+    },
+    "MAINT-0254": {
+      "action_id": "MAINT-0254",
+      "sortie_id": "SORTIE-SRV-20260923-153112",
+      "subsystem_id": "SUB_GEARBOX",
+      "ata_chapter": "ATA 72-10",
+      "description": "Perform gearbox backlash measurement (max allowable 0.05 mm) and dog-clutch spring pack inspection.",
+      "status": "OPEN",
+      "rul_p10_hours": null,
+      "rul_p50_hours": null,
+      "limiting_component": null,
+      "signoff_epoch": null,
+      "signoff_inspector": null
+    },
+    "MAINT-0255": {
+      "action_id": "MAINT-0255",
+      "sortie_id": "SORTIE-SRV-20260923-153112",
+      "subsystem_id": "SUB_IGNITION",
+      "ata_chapter": "ATA 74-20",
+      "description": "Perform ignition lead resistance test (nominal 4.5-5.5 kOhm) and replace Lane A coil pack.",
+      "status": "OPEN",
+      "rul_p10_hours": null,
+      "rul_p50_hours": null,
+      "limiting_component": null,
+      "signoff_epoch": null,
+      "signoff_inspector": null
     }
   },
   "sortie_anomalies": {
@@ -7113,7 +7572,35 @@
       "ANOM-0243",
       "ANOM-0244"
     ],
-    "SORTIE-SRV-20260923-074731": []
+    "SORTIE-SRV-20260923-074731": [],
+    "SORTIE-SRV-20260923-145507": [],
+    "SORTIE-SRV-20260923-145555": [],
+    "SORTIE-SRV-20260923-145816": [
+      "ANOM-0245",
+      "ANOM-0246"
+    ],
+    "SORTIE-SRV-20260923-145831": [
+      "ANOM-0247",
+      "ANOM-0248"
+    ],
+    "SORTIE-SRV-20260923-145859": [
+      "ANOM-0249"
+    ],
+    "SORTIE-SRV-20260923-145915": [
+      "ANOM-0250"
+    ],
+    "SORTIE-SRV-20260923-150401": [],
+    "SORTIE-SRV-20260923-152424": [],
+    "SORTIE-SRV-20260923-152440": [
+      "ANOM-0251",
+      "ANOM-0252",
+      "ANOM-0253"
+    ],
+    "SORTIE-SRV-20260923-153112": [
+      "ANOM-0254",
+      "ANOM-0255",
+      "ANOM-0256"
+    ]
   },
   "subsystem_anomalies": {
     "SUB_CYL_2": [
@@ -7214,7 +7701,17 @@
       "ANOM-0213",
       "ANOM-0222",
       "ANOM-0232",
-      "ANOM-0239"
+      "ANOM-0239",
+      "ANOM-0245",
+      "ANOM-0246",
+      "ANOM-0247",
+      "ANOM-0248",
+      "ANOM-0249",
+      "ANOM-0250",
+      "ANOM-0252",
+      "ANOM-0253",
+      "ANOM-0254",
+      "ANOM-0256"
     ],
     "SUB_LUBRICATION": [
       "ANOM-0004",
@@ -7270,7 +7767,8 @@
       "ANOM-0215",
       "ANOM-0224",
       "ANOM-0234",
-      "ANOM-0241"
+      "ANOM-0241",
+      "ANOM-0255"
     ],
     "SUB_EXHAUST": [
       "ANOM-0006",
@@ -7374,7 +7872,8 @@
       "ANOM-0209",
       "ANOM-0218",
       "ANOM-0227",
-      "ANOM-0244"
+      "ANOM-0244",
+      "ANOM-0251"
     ]
   },
   "sortie_actions": {
@@ -7667,6 +8166,33 @@
       "MAINT-0243",
       "MAINT-0244"
     ],
-    "SORTIE-SRV-20260923-074731": []
+    "SORTIE-SRV-20260923-074731": [],
+    "SORTIE-SRV-20260923-145507": [],
+    "SORTIE-SRV-20260923-145555": [],
+    "SORTIE-SRV-20260923-145816": [
+      "MAINT-0245",
+      "MAINT-0246"
+    ],
+    "SORTIE-SRV-20260923-145831": [
+      "MAINT-0247"
+    ],
+    "SORTIE-SRV-20260923-145859": [
+      "MAINT-0248"
+    ],
+    "SORTIE-SRV-20260923-145915": [
+      "MAINT-0249"
+    ],
+    "SORTIE-SRV-20260923-150401": [],
+    "SORTIE-SRV-20260923-152424": [],
+    "SORTIE-SRV-20260923-152440": [
+      "MAINT-0250",
+      "MAINT-0251",
+      "MAINT-0252"
+    ],
+    "SORTIE-SRV-20260923-153112": [
+      "MAINT-0253",
+      "MAINT-0254",
+      "MAINT-0255"
+    ]
   }
 }

@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 def run_verification():
     base_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.abspath(os.path.join(base_dir, "..", ".."))
-    blend_path = os.path.join(project_root, "3d_models", "rotax_912_is_sport.blend")
+    blend_path = os.path.join(project_root, "assets", "blender", "rotax_912_is_sport.blend")
     bpy.ops.wm.open_mainfile(filepath=blend_path)
     
     print("\n--- 1. VERIFYING SCENE OBJECTS ---")
@@ -30,17 +30,30 @@ def run_verification():
         print(f"  [OK] Found Material: {km}")
 
     print("\n--- 3. VERIFYING DRDO FAULT COMPONENT TARGETS ---")
+    # Every declared target must exist -- not just "at least one". A partially-stale
+    # list (e.g. 3 real names + 1 renamed/deleted one) still highlights *something*,
+    # so a ">0 found" check passes silently while quietly under-highlighting the
+    # fault region. That gap is exactly how the 'Cooling_Air_Baffle_M_PlasticCable_0'
+    # stale entry (fixed alongside this check) went undetected.
     from standalone_digital_twin_app import FAULT_DATABASE
+    all_missing = {}
     for fid, fdata in FAULT_DATABASE.items():
-        found_targets = []
-        for tp in fdata['target_parts']:
-            if tp in bpy.data.objects:
-                found_targets.append(tp)
-        print(f"  [OK] {fid} ({fdata['short']}): Found {len(found_targets)}/{len(fdata['target_parts'])} target meshes.")
-        assert len(found_targets) > 0, f"No target meshes found for {fid}"
+        missing = [tp for tp in fdata['target_parts'] if tp not in bpy.data.objects]
+        found = len(fdata['target_parts']) - len(missing)
+        print(f"  {'[OK]' if not missing else '[STALE]'} {fid} ({fdata['short']}): "
+              f"{found}/{len(fdata['target_parts'])} target meshes exist"
+              + (f" -- MISSING: {missing}" if missing else ""))
+        if missing:
+            all_missing[fid] = missing
+        assert found > 0, f"No target meshes found for {fid} at all -- this fault will never highlight"
+    assert not all_missing, (
+        f"{sum(len(v) for v in all_missing.values())} stale target-part name(s) across "
+        f"{len(all_missing)} fault(s): {all_missing}. These highlight nothing and silently "
+        f"under-represent the fault region even though the fault still shows *some* highlight."
+    )
 
     print("\n--- 4. TEST RENDER VERIFICATION ---")
-    out_dir = os.path.join(project_root, "renders")
+    out_dir = os.path.join(project_root, "assets", "renders")
     os.makedirs(out_dir, exist_ok=True)
     
     scene = bpy.context.scene

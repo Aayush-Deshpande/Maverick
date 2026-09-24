@@ -10,6 +10,11 @@
     "film_transparent": false
   },
   {
+    "filename": "02_beauty_orbit.png",
+    "camera": "Cam_Beauty_Orbit",
+    "film_transparent": false
+  },
+  {
     "filename": "03_closeup_turbo.png",
     "camera": "Cam_Turbo",
     "film_transparent": false

@@ -38,6 +38,9 @@ Desktop.ini
 
 # Distribution builds
 build/
+# ...but docs/build/ is the project's build-handoff documentation (MENTAL_MODEL, DECISIONS,
+# INTERFACES, BACKLOG, ...), NOT a build artefact -- it must be tracked.
+!docs/build/
 *.egg-info/
 
 # Stray empty artifact, not a real binary
@@ -72,3 +75,13 @@ competitors/
 
 # Cloned reference repos (not our code)
 /mk-jev-fly-brain/
+
+# Stray editor/session backup files (docs/audit/06_repo_cleanup_plan.md Phase 3)
+*.backup_pre_*
+*.checkpoint_*
+
+# runtime output and local scratch (never tracked)
+report_dump/
+data/telemetry/live_sorties/
+*.blend1
+archive/

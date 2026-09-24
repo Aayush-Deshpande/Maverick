@@ -9,7 +9,7 @@ import requests
 from PIL import Image
 from playwright.sync_api import sync_playwright
 
-BASE_DIR = r"E:\backup-llm\backup-no-llm\3d_engine\ANUMAAN\Models_Images"
+BASE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "assets", "model_images")
 
 UAV_CONFIGS = {
     "Bayraktar_TB2": {
