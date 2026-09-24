@@ -1,0 +1,236 @@
+{
+  "engines": [
+    "austro_ae300",
+    "rotax_912is",
+    "rotax_914",
+    "rotax_915is",
+    "vrde_jayem_2_2l"
+  ],
+  "classes": [
+    "nominal",
+    "MISFIRE",
+    "COOLING_DEGRADATION",
+    "OIL_PRESSURE_LOSS",
+    "AIR_FILTER_BLOCKAGE",
+    "SENSOR_STUCK",
+    "BOOST_LEAK"
+  ],
+  "invisible_on_thermal_channels": [
+    "INJECTOR_COKING",
+    "INJECTOR_NEEDLE_STICK",
+    "RAIL_PRESSURE_DECAY",
+    "TURBO_BEARING_WEAR"
+  ],
+  "A_classification_macroF1": {
+    "per_engine_rf": {
+      "austro_ae300": 0.9485299885087607,
+      "rotax_912is": 0.7941234912615048,
+      "rotax_914": 0.906464722876164,
+      "rotax_915is": 0.9168437766265983,
+      "vrde_jayem_2_2l": 0.9517649820063795,
+      "MEAN": 0.9035453922558814
+    },
+    "universal_rf": {
+      "austro_ae300": 0.9329595114502537,
+      "rotax_912is": 0.6957188376137011,
+      "rotax_914": 0.8469259848324563,
+      "rotax_915is": 0.8554975257480589,
+      "vrde_jayem_2_2l": 0.9307146856938571,
+      "MEAN": 0.8523633090676654
+    },
+    "universal_rf_with_class_flags": {
+      "austro_ae300": 0.946712919875501,
+      "rotax_912is": 0.698394862772222,
+      "rotax_914": 0.8911167695204124,
+      "rotax_915is": 0.8985398133997133,
+      "vrde_jayem_2_2l": 0.9446897251208368,
+      "MEAN": 0.8758908181377372
+    },
+    "universal_rf_loeo_calibrated": {
+      "austro_ae300": 0.92664126686157,
+      "rotax_912is": 0.6378253121486029,
+      "rotax_914": 0.8515254915327722,
+      "rotax_915is": 0.8500179169945108,
+      "vrde_jayem_2_2l": 0.9353585765623622,
+      "MEAN": 0.8402737128199635
+    },
+    "universal_rf_loeo_no_normalisation": {
+      "austro_ae300": 0.8376019245701186,
+      "rotax_912is": 0.6035670002801934,
+      "rotax_914": 0.8032207169788673,
+      "rotax_915is": 0.8348744801713804,
+      "vrde_jayem_2_2l": 0.8906085278988349,
+      "MEAN": 0.793974529979879
+    },
+    "per_engine_rf_no_normalisation": {
+      "austro_ae300": 0.9121625567499683,
+      "rotax_912is": 0.8226696152369123,
+      "rotax_914": 0.9129770272653064,
+      "rotax_915is": 0.9173032843610969,
+      "vrde_jayem_2_2l": 0.9194978261011298,
+      "MEAN": 0.8969220619428826
+    }
+  },
+  "B_novelty": {
+    "FlyHash-FBF": {
+      "per_engine_detector": {
+        "AUROC": 0.836171430832542,
+        "TPR@1%FPR": 0.1432242962962963,
+        "per_engine_AUROC": {
+          "austro_ae300": 0.883,
+          "rotax_912is": 0.712,
+          "rotax_914": 0.837,
+          "rotax_915is": 0.857,
+          "vrde_jayem_2_2l": 0.892
+        }
+      },
+      "universal_detector": {
+        "AUROC": 0.8578989870212093,
+        "TPR@1%FPR": 0.1121037037037037,
+        "per_engine_AUROC": {
+          "austro_ae300": 0.884,
+          "rotax_912is": 0.81,
+          "rotax_914": 0.848,
+          "rotax_915is": 0.86,
+          "vrde_jayem_2_2l": 0.888
+        }
+      },
+      "universal_leave_one_engine_out": {
+        "AUROC": 0.8500846391263058,
+        "TPR@1%FPR": 0.12354074074074073,
+        "per_engine_AUROC": {
+          "austro_ae300": 0.872,
+          "rotax_912is": 0.794,
+          "rotax_914": 0.848,
+          "rotax_915is": 0.86,
+          "vrde_jayem_2_2l": 0.877
+        }
+      }
+    },
+    "Mahalanobis": {
+      "per_engine_detector": {
+        "AUROC": 0.9761891737891737,
+        "TPR@1%FPR": 0.9408444444444445,
+        "per_engine_AUROC": {
+          "austro_ae300": 0.996,
+          "rotax_912is": 0.904,
+          "rotax_914": 0.99,
+          "rotax_915is": 0.992,
+          "vrde_jayem_2_2l": 0.999
+        }
+      },
+      "universal_detector": {
+        "AUROC": 0.9735242165242164,
+        "TPR@1%FPR": 0.9424888888888887,
+        "per_engine_AUROC": {
+          "austro_ae300": 0.993,
+          "rotax_912is": 0.899,
+          "rotax_914": 0.989,
+          "rotax_915is": 0.99,
+          "vrde_jayem_2_2l": 0.996
+        }
+      },
+      "universal_leave_one_engine_out": {
+        "AUROC": 0.9725163342830008,
+        "TPR@1%FPR": 0.9391999999999999,
+        "per_engine_AUROC": {
+          "austro_ae300": 0.993,
+          "rotax_912is": 0.896,
+          "rotax_914": 0.988,
+          "rotax_915is": 0.99,
+          "vrde_jayem_2_2l": 0.995
+        }
+      }
+    },
+    "IsolationForest": {
+      "per_engine_detector": {
+        "AUROC": 0.7154954336815447,
+        "TPR@1%FPR": 0.12742222222222221,
+        "per_engine_AUROC": {
+          "austro_ae300": 0.748,
+          "rotax_912is": 0.654,
+          "rotax_914": 0.72,
+          "rotax_915is": 0.712,
+          "vrde_jayem_2_2l": 0.742
+        }
+      },
+      "universal_detector": {
+        "AUROC": 0.7282155587211141,
+        "TPR@1%FPR": 0.1713185185185185,
+        "per_engine_AUROC": {
+          "austro_ae300": 0.77,
+          "rotax_912is": 0.642,
+          "rotax_914": 0.726,
+          "rotax_915is": 0.73,
+          "vrde_jayem_2_2l": 0.773
+        }
+      },
+      "universal_leave_one_engine_out": {
+        "AUROC": 0.7341305159860715,
+        "TPR@1%FPR": 0.18053333333333335,
+        "per_engine_AUROC": {
+          "austro_ae300": 0.773,
+          "rotax_912is": 0.607,
+          "rotax_914": 0.758,
+          "rotax_915is": 0.759,
+          "vrde_jayem_2_2l": 0.773
+        }
+      }
+    },
+    "max|z| threshold": {
+      "per_engine_detector": {
+        "AUROC": 0.9503307059195947,
+        "TPR@1%FPR": 0.837437037037037,
+        "per_engine_AUROC": {
+          "austro_ae300": 0.977,
+          "rotax_912is": 0.87,
+          "rotax_914": 0.958,
+          "rotax_915is": 0.967,
+          "vrde_jayem_2_2l": 0.979
+        }
+      },
+      "universal_detector": {
+        "AUROC": 0.9503307059195947,
+        "TPR@1%FPR": 0.837437037037037,
+        "per_engine_AUROC": {
+          "austro_ae300": 0.977,
+          "rotax_912is": 0.87,
+          "rotax_914": 0.958,
+          "rotax_915is": 0.967,
+          "vrde_jayem_2_2l": 0.979
+        }
+      },
+      "universal_leave_one_engine_out": {
+        "AUROC": 0.9503307059195947,
+        "TPR@1%FPR": 0.837437037037037,
+        "per_engine_AUROC": {
+          "austro_ae300": 0.977,
+          "rotax_912is": 0.87,
+          "rotax_914": 0.958,
+          "rotax_915is": 0.967,
+          "vrde_jayem_2_2l": 0.979
+        }
+      }
+    }
+  },
+  "C_latency_us_per_sample_this_machine": {
+    "RandomForest100 sklearn single row": 11508.900500000436,
+    "RandomForest100 sklearn, batch of 20 (per sample)": 616.2391249999928,
+    "FlyHash-FBF score": 26.08049999935247,
+    "Mahalanobis": 7.292000000234111,
+    "IsolationForest single row": 12655.085999995208,
+    "feature+residual computation (calib.features)": 344.419000000471
+  },
+  "meta": {
+    "runtime_sec": 33.1,
+    "dt_sec": 5.0,
+    "frames_per_run": 180,
+    "runs": {
+      "nom_train": 10,
+      "nom_test": 6,
+      "fault_train": 5,
+      "fault_test": 3
+    },
+    "features": "13 n_cyl-agnostic z-residual features per frame"
+  }
+}

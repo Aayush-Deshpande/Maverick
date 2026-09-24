@@ -21,8 +21,11 @@ def render_acceptance_set(blend_path, manifest_path):
 
     is_engine = "engine_id" in manifest
     asset_id = manifest.get("engine_id") or manifest.get("platform_id")
-    out_dir = ROOT / "renders" / asset_id / "acceptance"
+    out_dir = ROOT / "assets" / "renders" / asset_id / "acceptance"
     out_dir.mkdir(parents=True, exist_ok=True)
+
+    if blend_p.exists() and (not bpy.data.filepath or Path(bpy.data.filepath).resolve() != blend_p):
+        bpy.ops.wm.open_mainfile(filepath=str(blend_p))
 
     scene = bpy.context.scene
 
@@ -68,6 +71,7 @@ def render_acceptance_set(blend_path, manifest_path):
     # 2. Rear Right
     if "Cam_Beauty_Orbit" in bpy.data.objects:
         do_render("02_rear_right.png", "Cam_Beauty_Orbit")
+        do_render("02_beauty_orbit.png", "Cam_Beauty_Orbit")
 
     # 3. Subsystem Closeups
     if "Cam_Turbo" in bpy.data.objects:
