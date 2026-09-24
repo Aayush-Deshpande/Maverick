@@ -113,3 +113,16 @@ Fix: backlog E1 (one pipeline).
 - **Network:** each connection to foreign hosts is throttled (~5–20 KB/s), while the aggregate line is ~800 KB/s. Use many parallel ranged connections (the downloader does this). **Zenodo blocks parallel traffic**: use a single connection.
 - SocketCAN `vcan` needs Linux (WSL2 or CI on Ubuntu). On Windows, use python-can's `virtual` interface.
 - Git LFS tracks large binaries (`.blend`, `.rar`, `.stp`, `.exe`). `Datasets/` content is gitignored except scripts and READMEs.
+
+## 6. Build status snapshot (24 Sep 2026, after the S0-S4 slices)
+
+| Area | State |
+|---|---|
+| Tests | 275 pass, 1 strict xfail (`exposure` brownout counting) |
+| `backend/detect/` | calibration + FlyBloom/Mahalanobis/max-z + conformal thresholds + persistence gate + reservoir (tier-1) |
+| `backend/runtime/` | EngineRuntime, RuntimeHub (all engines concurrent, heavy tier for the selected engine), fault registry, lever dynamics |
+| `backend/server/engine_api.py` | `/api/engines`, `/api/engines/{id}/{state,faults,levers}`, `/ws/engines/{id}`, `/ws/fleet` (lazy hub; legacy routes unchanged) |
+| `backend/edge/node.py`, `backend/sources/recorder.py` | gated downlink accounting (Pi 5 EMULATED), record/replay with hash manifest |
+| Evidence | E17 (re-run on class-aware plant), E19, E20 - all SIMULATION |
+| Not started | frontend F1-F10 (FRONTEND_SPEC), waveform channel (W5/W6), Jev bake-off (W10), real Pi 5 benchmark, ReplaySource for ACES/Parquet, MAVLink source |
+| Legacy still live | `engine_service` singleton and old `/ws/telemetry` (the UI still uses them) - retire after frontend F1-F3 |

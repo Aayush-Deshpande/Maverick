@@ -48,6 +48,13 @@ from ..physics.turbo_model import TurbochargerModel, isa_ambient
 __all__ = ["EngineVariation", "SensorModel", "VirtualEngine", "PLANT_FAULTS"]
 
 
+# R6 (F21): plant constants that used to be Rotax-only.  Speed fractions reproduce the old 3000..5600 rpm on a
+# 5800 rpm engine.  EGT class table is ASSUMED (general spark-ignition ~360-790 C, compression-ignition
+# ~240-620 C over the load range; no engine-specific public datum) -- provenance label ASSUMED, replace per tail.
+_RPM_FRAC_IDLE = 3000.0 / 5800.0
+_RPM_FRAC_SPAN = 2600.0 / 5800.0
+_EGT_CLASS = {"SI": (360.0, 430.0), "CI": (240.0, 380.0)}
+
 PLANT_FAULTS = (
     "MISFIRE", "INJECTOR_COKING", "INJECTOR_NEEDLE_STICK", "RAIL_PRESSURE_DECAY",
     "COOLING_DEGRADATION", "OIL_PRESSURE_LOSS", "WASTEGATE_STUCK_OPEN",
@@ -306,7 +313,9 @@ class VirtualEngine:
 
         # Crank / combustion
         self.injectors.update(dt_sec, fuel_temp_factor=fst.injector_cold_soak_factor)
-        rpm_cmd = 3000.0 + 2600.0 * (throttle / 100.0)
+        # Speed schedule from the profile (R6/F21): 0.517..0.966 of rated rpm, which is exactly the old
+        # 3000..5600 rpm for a 5800 rpm-rated engine and scales for every other profile.
+        rpm_cmd = self.cfg.rated_rpm * (_RPM_FRAC_IDLE + _RPM_FRAC_SPAN * (throttle / 100.0))
         self._step_count += 1
         run_crank = (self.crank_every_n_steps > 0
                      and self._step_count % self.crank_every_n_steps == 0)
@@ -344,6 +353,7 @@ class VirtualEngine:
         cool_mass_flow = max(0.30, amb_p / 101.325)
         alt_penalty_c = 22.0 * (1.0 - cool_mass_flow)
         load = power_kw / max(self.cfg.rated_power_kw, 1.0)
+        _egt_base, _egt_gain = _EGT_CLASS["CI" if self.cfg.is_compression_ignition else "SI"]
         for i in range(self.cfg.cylinder_count):
             cyl = i + 1
             fire = self.crank.cylinders[cyl].combustion_efficiency
@@ -355,12 +365,13 @@ class VirtualEngine:
             tau = 25.0
             a = 1.0 - math.exp(-dt_sec / tau)
             self._cht_true[i] += (target_cht - self._cht_true[i]) * a
-            target_egt = (360.0 + 430.0 * load) * fire * contrib.get(cyl, 1.0)
+            target_egt = (_egt_base + _egt_gain * load) * fire * contrib.get(cyl, 1.0)
             self._egt_true[i] += (target_egt - self._egt_true[i]) * (1.0 - math.exp(-dt_sec / 3.0))
 
         target_oil_t = 60.0 + 55.0 * (power_kw / max(self.cfg.rated_power_kw, 1.0)) + 0.2 * oat_c
         self._oil_temp_true += (target_oil_t - self._oil_temp_true) * (1.0 - math.exp(-dt_sec / 60.0))
-        oil_press_true = max(0.3, (0.6 + 0.00058 * rpm_true) * (1.0 - 0.75 * self._oil_press_loss))
+        oil_press_true = max(0.3, (0.6 + 0.00058 * rpm_true * (5800.0 / self.cfg.rated_rpm))
+                             * (1.0 - 0.75 * self._oil_press_loss))
 
         self.oil.update(dt_sec / 3600.0, power_kw / max(self.cfg.rated_power_kw, 1.0),
                         self._oil_temp_true, ind.bore_wear_index, 0.0, 0.0)
@@ -369,7 +380,7 @@ class VirtualEngine:
         if max(self._cht_true) > 165.0 and not self._failed:
             self._failed, self._failure_reason = True, "CHT_OVERTEMP"
             self._failure_t = self._elapsed_sec
-        if oil_press_true < 0.8 and rpm_true > 2000 and not self._failed:
+        if oil_press_true < 0.8 and rpm_true > 0.345 * self.cfg.rated_rpm and not self._failed:
             self._failed, self._failure_reason = True, "OIL_PRESSURE"
             self._failure_t = self._elapsed_sec
 
@@ -380,7 +391,7 @@ class VirtualEngine:
             "ALTITUDE_FT": altitude_ft,
             "OAT_C": oat_c,
             "POWER_KW": power_kw,
-            "FUEL_FLOW": power_kw * 0.30 + 1.5,
+            "FUEL_FLOW": power_kw * (self.cfg.nominal_bsfc_g_kwh / 1000.0) + 1.5,
             "OIL_PRESS": oil_press_true,
             "OIL_TEMP": self._oil_temp_true,
             "CHARGE_TEMP_C": charge_t,

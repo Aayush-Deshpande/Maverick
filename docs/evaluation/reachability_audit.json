@@ -1,20 +1,20 @@
 {
   "summary": {
     "LIVE": {
-      "modules": 42,
-      "lines": 12595
+      "modules": 53,
+      "lines": 13807
     },
     "HARNESS_ONLY": {
-      "modules": 6,
-      "lines": 1596
+      "modules": 4,
+      "lines": 1321
     },
     "TEST_ONLY": {
-      "modules": 6,
-      "lines": 1649
+      "modules": 18,
+      "lines": 4668
     },
     "ORPHAN_LIBRARY": {
-      "modules": 15,
-      "lines": 4235
+      "modules": 0,
+      "lines": 0
     },
     "SCRIPT_OR_ENTRY": {
       "modules": 0,
@@ -37,6 +37,26 @@
     [
       "backend.agent.llm_engine",
       360
+    ],
+    [
+      "backend.core.frame",
+      225
+    ],
+    [
+      "backend.detect.calibration",
+      136
+    ],
+    [
+      "backend.detect.detector",
+      104
+    ],
+    [
+      "backend.detect.reservoir",
+      111
+    ],
+    [
+      "backend.detect.scorers",
+      68
     ],
     [
       "backend.graph.mission_graph",
@@ -144,7 +164,7 @@
     ],
     [
       "backend.plant.virtual_engine",
-      424
+      435
     ],
     [
       "backend.reports.mission_bundle",
@@ -155,16 +175,40 @@
       285
     ],
     [
+      "backend.runtime.engine_runtime",
+      187
+    ],
+    [
+      "backend.runtime.hub",
+      70
+    ],
+    [
+      "backend.runtime.levers",
+      38
+    ],
+    [
+      "backend.runtime.registry",
+      51
+    ],
+    [
+      "backend.server.engine_api",
+      152
+    ],
+    [
       "backend.server.engine_service",
       812
     ],
     [
       "backend.server.main",
-      568
+      571
     ],
     [
       "backend.server.schemas",
       171
+    ],
+    [
+      "backend.sources.plant_source",
+      56
     ],
     [
       "backend.telemetry.can_streamer",
@@ -193,10 +237,6 @@
   ],
   "HARNESS_ONLY": [
     [
-      "backend.core.frame",
-      219
-    ],
-    [
       "backend.evaluation.harness",
       422
     ],
@@ -209,44 +249,18 @@
       439
     ],
     [
-      "backend.sources.plant_source",
-      56
-    ],
-    [
       "backend.twin.residual_detector",
       243
     ]
   ],
   "TEST_ONLY": [
     [
-      "backend.ml.fault_classifier",
-      251
-    ],
-    [
-      "backend.telemetry.aces_loader",
-      289
-    ],
-    [
-      "backend.telemetry.dataset_fusion_engine",
-      311
-    ],
-    [
-      "backend.telemetry.parsers.garmin_parser",
-      168
-    ],
-    [
-      "backend.telemetry.parsers.nasa_prognostics_parser",
-      146
-    ],
-    [
-      "backend.telemetry.rotax_dataset_generator",
-      484
-    ]
-  ],
-  "ORPHAN_LIBRARY": [
-    [
       "backend.edge.compressor",
       272
+    ],
+    [
+      "backend.edge.node",
+      88
     ],
     [
       "backend.evaluation.conformal",
@@ -274,7 +288,7 @@
     ],
     [
       "backend.osacbm",
-      291
+      287
     ],
     [
       "backend.physics.exposure",
@@ -287,6 +301,14 @@
     [
       "backend.reliability.isolability",
       292
+    ],
+    [
+      "backend.sources.recorder",
+      60
+    ],
+    [
+      "backend.telemetry.aces_loader",
+      289
     ],
     [
       "backend.telemetry.mavlink_efi",
@@ -305,6 +327,7 @@
       308
     ]
   ],
+  "ORPHAN_LIBRARY": [],
   "SCRIPT_OR_ENTRY": [],
   "unreferenced_scripts": [
     [
@@ -341,19 +364,11 @@
     ],
     [
       "scripts.build.build_austro_ae330",
-      2370
+      2523
     ],
     [
       "scripts.build.build_austro_ae330_details",
-      1178
-    ],
-    [
-      "scripts.build.build_bayraktar_tb3",
-      1545
-    ],
-    [
-      "scripts.build.build_tei_pd170",
-      1445
+      1131
     ],
     [
       "scripts.ingest_rag_docs",
@@ -370,14 +385,6 @@
     [
       "scripts.lib.anumaan_twin_controller",
       215
-    ],
-    [
-      "scripts.pd170.pd170_lib",
-      170
-    ],
-    [
-      "scripts.pd170.verify_pd170",
-      280
     ],
     [
       "scripts.populate_engine_references",
@@ -420,8 +427,8 @@
       184
     ],
     [
-      "scripts.train_ml_models",
-      316
+      "scripts.tools.render_austro_all_views",
+      39
     ],
     [
       "scripts.validate.validate_asset",

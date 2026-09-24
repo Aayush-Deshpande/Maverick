@@ -121,3 +121,15 @@ def test_reservoir_random_streams_and_separates():
     r.reset()
     labs = [r.predict_step(u)[0] for u in seq(20, "COOLING_DEGRADATION")]
     assert np.mean(np.array(labs[-60:]) == 1) > 0.7
+
+
+def test_federated_fly_bloom_merge_equals_pooled():
+    """W12: colony merge = weighted mean of frequency memories; no raw data leaves a tail."""
+    from backend.detect import FlyBloomScorer
+    rng = np.random.default_rng(0)
+    A, B = rng.normal(size=(300, 13)), rng.normal(0.2, 1.1, size=(500, 13))
+    a, b, pooled = FlyBloomScorer(13).fit(A), FlyBloomScorer(13).fit(B), FlyBloomScorer(13).fit(np.vstack([A, B]))
+    a.merge(b, len(A), len(B))
+    assert np.allclose(a.freq, pooled.freq)
+    probe = rng.normal(size=(20, 13))
+    assert np.allclose(a.score(probe), pooled.score(probe))

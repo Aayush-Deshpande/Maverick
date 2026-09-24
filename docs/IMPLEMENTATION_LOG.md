@@ -998,3 +998,6 @@ filter (retry with `--connections 1` once it clears, per `docs/audit/12`); MIMII
 
 ### Session 5 addendum (24 Sep 2026) — fly/Jev re-evaluation
 User corrected premises (selected-engine-only heavy inference; DRDO A100-class GPUs). Web research found published connectome-reservoir work. Added `experiments/E19_connectome_reservoir.py` (reservoir beats RF by ~4-5 pts; real connectome ties shuffled/random controls), `docs/build/FLY_100_WAYS.md`, decisions D36/D37 (D32 superseded, D33/D29 amended), finding F31. Next: LOEO repeat of E19, W10 Jev bake-off, W1 `backend/detect/`, B0.9 tests.
+
+### Session 5 build addendum (24 Sep 2026) - development started
+Committed the pile in chunks, tagged `pre-dev-2026-09-24`, archived dead code (`archive_tracked/`, scratch in ignored `archive/`). Built: `backend/detect/` (W1, W11, W12), `backend/runtime/` (R1-R3), `backend/server/engine_api.py` (R4 backend), `backend/edge/node.py` (W4), `backend/sources/recorder.py` (W3), class-aware plant (R6 part 1), `TruthRecord.origin`. Evidence: E17 re-run, E20. B0.9: 7 characterization test files by a delegated agent (92 pass, 1 xfail; doc-drift findings F33). Frontend spec written (`FRONTEND_SPEC.md`). Next: frontend F1-F3, waveform channel (W5/W6), Jev bake-off (W10), plant per-engine thermal constants.

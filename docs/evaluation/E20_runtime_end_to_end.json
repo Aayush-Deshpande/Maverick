@@ -1,0 +1,246 @@
+{
+ "seeds": [
+  1,
+  2,
+  3
+ ],
+ "dt_s": 1.0,
+ "ramp_s": 120,
+ "engines": {
+  "austro_ae300": {
+   "waveform_only_not_tested_here": [
+    "INJECTOR_COKING",
+    "INJECTOR_NEEDLE_STICK",
+    "RAIL_PRESSURE_DECAY",
+    "TURBO_BEARING_WEAR"
+   ],
+   "faults": {
+    "MISFIRE": {
+     "detected_in_runs": 3,
+     "runs": 3,
+     "median_delay_s": 9.0,
+     "far_confirmed_mean": 0.0,
+     "far_raw_mean": 0.0022222222222222222
+    },
+    "COOLING_DEGRADATION": {
+     "detected_in_runs": 3,
+     "runs": 3,
+     "median_delay_s": 61.0,
+     "far_confirmed_mean": 0.0,
+     "far_raw_mean": 0.0022222222222222222
+    },
+    "OIL_PRESSURE_LOSS": {
+     "detected_in_runs": 3,
+     "runs": 3,
+     "median_delay_s": 9.0,
+     "far_confirmed_mean": 0.0,
+     "far_raw_mean": 0.0022222222222222222
+    },
+    "AIR_FILTER_BLOCKAGE": {
+     "detected_in_runs": 3,
+     "runs": 3,
+     "median_delay_s": 83.0,
+     "far_confirmed_mean": 0.0,
+     "far_raw_mean": 0.0022222222222222222
+    },
+    "BOOST_LEAK": {
+     "detected_in_runs": 3,
+     "runs": 3,
+     "median_delay_s": 28.0,
+     "far_confirmed_mean": 0.0,
+     "far_raw_mean": 0.0022222222222222222
+    },
+    "WASTEGATE_STUCK_OPEN": {
+     "detected_in_runs": 3,
+     "runs": 3,
+     "median_delay_s": 2.0,
+     "far_confirmed_mean": 0.0,
+     "far_raw_mean": 0.0022222222222222222
+    }
+   }
+  },
+  "rotax_912is": {
+   "waveform_only_not_tested_here": [],
+   "faults": {
+    "MISFIRE": {
+     "detected_in_runs": 3,
+     "runs": 3,
+     "median_delay_s": 10.0,
+     "far_confirmed_mean": 0.0,
+     "far_raw_mean": 0.006666666666666667
+    },
+    "COOLING_DEGRADATION": {
+     "detected_in_runs": 3,
+     "runs": 3,
+     "median_delay_s": 47.0,
+     "far_confirmed_mean": 0.0,
+     "far_raw_mean": 0.006666666666666667
+    },
+    "OIL_PRESSURE_LOSS": {
+     "detected_in_runs": 3,
+     "runs": 3,
+     "median_delay_s": 9.0,
+     "far_confirmed_mean": 0.0,
+     "far_raw_mean": 0.006666666666666667
+    },
+    "AIR_FILTER_BLOCKAGE": {
+     "detected_in_runs": 3,
+     "runs": 3,
+     "median_delay_s": 62.0,
+     "far_confirmed_mean": 0.0,
+     "far_raw_mean": 0.006666666666666667
+    }
+   }
+  },
+  "rotax_914": {
+   "waveform_only_not_tested_here": [
+    "TURBO_BEARING_WEAR"
+   ],
+   "faults": {
+    "MISFIRE": {
+     "detected_in_runs": 3,
+     "runs": 3,
+     "median_delay_s": 9.0,
+     "far_confirmed_mean": 0.0,
+     "far_raw_mean": 0.008888888888888889
+    },
+    "COOLING_DEGRADATION": {
+     "detected_in_runs": 3,
+     "runs": 3,
+     "median_delay_s": 53.0,
+     "far_confirmed_mean": 0.0,
+     "far_raw_mean": 0.008888888888888889
+    },
+    "OIL_PRESSURE_LOSS": {
+     "detected_in_runs": 3,
+     "runs": 3,
+     "median_delay_s": 7.0,
+     "far_confirmed_mean": 0.0,
+     "far_raw_mean": 0.008888888888888889
+    },
+    "AIR_FILTER_BLOCKAGE": {
+     "detected_in_runs": 3,
+     "runs": 3,
+     "median_delay_s": 59.0,
+     "far_confirmed_mean": 0.0,
+     "far_raw_mean": 0.008888888888888889
+    },
+    "BOOST_LEAK": {
+     "detected_in_runs": 3,
+     "runs": 3,
+     "median_delay_s": 19.0,
+     "far_confirmed_mean": 0.0,
+     "far_raw_mean": 0.008888888888888889
+    },
+    "WASTEGATE_STUCK_OPEN": {
+     "detected_in_runs": 3,
+     "runs": 3,
+     "median_delay_s": 2.0,
+     "far_confirmed_mean": 0.0,
+     "far_raw_mean": 0.008888888888888889
+    }
+   }
+  },
+  "rotax_915is": {
+   "waveform_only_not_tested_here": [
+    "TURBO_BEARING_WEAR"
+   ],
+   "faults": {
+    "MISFIRE": {
+     "detected_in_runs": 3,
+     "runs": 3,
+     "median_delay_s": 8.0,
+     "far_confirmed_mean": 0.0,
+     "far_raw_mean": 0.012222222222222223
+    },
+    "COOLING_DEGRADATION": {
+     "detected_in_runs": 3,
+     "runs": 3,
+     "median_delay_s": 55.0,
+     "far_confirmed_mean": 0.0,
+     "far_raw_mean": 0.012222222222222223
+    },
+    "OIL_PRESSURE_LOSS": {
+     "detected_in_runs": 3,
+     "runs": 3,
+     "median_delay_s": 9.0,
+     "far_confirmed_mean": 0.0,
+     "far_raw_mean": 0.012222222222222223
+    },
+    "AIR_FILTER_BLOCKAGE": {
+     "detected_in_runs": 3,
+     "runs": 3,
+     "median_delay_s": 66.0,
+     "far_confirmed_mean": 0.0,
+     "far_raw_mean": 0.012222222222222223
+    },
+    "BOOST_LEAK": {
+     "detected_in_runs": 3,
+     "runs": 3,
+     "median_delay_s": 28.0,
+     "far_confirmed_mean": 0.0,
+     "far_raw_mean": 0.012222222222222223
+    },
+    "WASTEGATE_STUCK_OPEN": {
+     "detected_in_runs": 3,
+     "runs": 3,
+     "median_delay_s": 2.0,
+     "far_confirmed_mean": 0.0,
+     "far_raw_mean": 0.012222222222222223
+    }
+   }
+  },
+  "vrde_jayem_2_2l": {
+   "waveform_only_not_tested_here": [
+    "INJECTOR_COKING",
+    "INJECTOR_NEEDLE_STICK",
+    "RAIL_PRESSURE_DECAY",
+    "TURBO_BEARING_WEAR"
+   ],
+   "faults": {
+    "MISFIRE": {
+     "detected_in_runs": 3,
+     "runs": 3,
+     "median_delay_s": 9.0,
+     "far_confirmed_mean": 0.0,
+     "far_raw_mean": 0.0011111111111111111
+    },
+    "COOLING_DEGRADATION": {
+     "detected_in_runs": 3,
+     "runs": 3,
+     "median_delay_s": 61.0,
+     "far_confirmed_mean": 0.0,
+     "far_raw_mean": 0.0011111111111111111
+    },
+    "OIL_PRESSURE_LOSS": {
+     "detected_in_runs": 3,
+     "runs": 3,
+     "median_delay_s": 9.0,
+     "far_confirmed_mean": 0.0,
+     "far_raw_mean": 0.0011111111111111111
+    },
+    "AIR_FILTER_BLOCKAGE": {
+     "detected_in_runs": 3,
+     "runs": 3,
+     "median_delay_s": 85.0,
+     "far_confirmed_mean": 0.0,
+     "far_raw_mean": 0.0011111111111111111
+    },
+    "BOOST_LEAK": {
+     "detected_in_runs": 3,
+     "runs": 3,
+     "median_delay_s": 25.0,
+     "far_confirmed_mean": 0.0,
+     "far_raw_mean": 0.0011111111111111111
+    },
+    "WASTEGATE_STUCK_OPEN": {
+     "detected_in_runs": 3,
+     "runs": 3,
+     "median_delay_s": 2.0,
+     "far_confirmed_mean": 0.0,
+     "far_raw_mean": 0.0011111111111111111
+    }
+   }
+  }
+ }
+}
