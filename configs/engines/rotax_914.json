@@ -52,5 +52,95 @@
   "rail_pressure_bar": 0.25,
   "fuel_cloud_point_c": null,
   "fuel_cfpp_c": null,
-  "source": "Rotax 914 Operator's + Installation Manual (docs/reference/); PRIMARY TARGET \u2014 global MALE standard, matches NASA ACES real telemetry"
+  "source": "Rotax 914 Operator's + Installation Manual (docs/reference/); PRIMARY TARGET \u2014 global MALE standard, matches NASA ACES real telemetry",
+  "provenance": {
+    "layout.bore_mm": {
+      "status": "MANUAL",
+      "ref": "Rotax 914 Operator's + Installation Manual (docs/reference/)"
+    },
+    "layout.stroke_mm": {
+      "status": "MANUAL",
+      "ref": "Rotax 914 Operator's + Installation Manual (docs/reference/)"
+    },
+    "layout.displacement_cc": {
+      "status": "MANUAL",
+      "ref": "Rotax 914 Operator's + Installation Manual (docs/reference/)"
+    },
+    "layout.compression_ratio": {
+      "status": "MANUAL",
+      "ref": "Rotax 914 Operator's + Installation Manual (docs/reference/)"
+    },
+    "rated_power_kw": {
+      "status": "MANUAL",
+      "ref": "Rotax 914 Operator's + Installation Manual (docs/reference/)"
+    },
+    "rated_rpm": {
+      "status": "MANUAL",
+      "ref": "Rotax 914 Operator's + Installation Manual (docs/reference/)"
+    },
+    "max_continuous_power_kw": {
+      "status": "MANUAL",
+      "ref": "Rotax 914 Operator's + Installation Manual (docs/reference/)"
+    },
+    "max_continuous_rpm": {
+      "status": "MANUAL",
+      "ref": "Rotax 914 Operator's + Installation Manual (docs/reference/)"
+    },
+    "idle_rpm": {
+      "status": "MANUAL",
+      "ref": "Rotax 914 Operator's + Installation Manual (docs/reference/)"
+    },
+    "gearbox_ratio": {
+      "status": "MANUAL",
+      "ref": "Rotax 914 Operator's + Installation Manual (docs/reference/)"
+    },
+    "dry_mass_kg": {
+      "status": "MANUAL",
+      "ref": "Rotax 914 Operator's + Installation Manual (docs/reference/)"
+    },
+    "tbo_hours": {
+      "status": "MANUAL",
+      "ref": "Rotax 914 Operator's + Installation Manual (docs/reference/)"
+    },
+    "nominal_bsfc_g_kwh": {
+      "status": "MANUAL",
+      "ref": "Rotax 914 Operator's + Installation Manual (docs/reference/)"
+    },
+    "nominal_lambda": {
+      "status": "MANUAL",
+      "ref": "Rotax 914 Operator's + Installation Manual (docs/reference/)"
+    },
+    "nominal_inj_timing_btdc": {
+      "status": "MANUAL",
+      "ref": "Rotax 914 Operator's + Installation Manual (docs/reference/)"
+    },
+    "nominal_ign_timing_btdc": {
+      "status": "MANUAL",
+      "ref": "Rotax 914 Operator's + Installation Manual (docs/reference/)"
+    },
+    "rail_pressure_bar": {
+      "status": "MANUAL",
+      "ref": "Rotax 914 Operator's + Installation Manual (docs/reference/)"
+    },
+    "turbo.max_boost_kpa": {
+      "status": "MANUAL",
+      "ref": "Rotax 914 Operator's + Installation Manual (docs/reference/)"
+    },
+    "turbo.critical_altitude_ft": {
+      "status": "MANUAL",
+      "ref": "Rotax 914 Operator's + Installation Manual (docs/reference/)"
+    },
+    "turbo.max_shaft_rpm": {
+      "status": "MANUAL",
+      "ref": "Rotax 914 Operator's + Installation Manual (docs/reference/)"
+    },
+    "turbo.lag_time_constant_sec": {
+      "status": "MANUAL",
+      "ref": "Rotax 914 Operator's + Installation Manual (docs/reference/)"
+    },
+    "turbo.surge_margin_min": {
+      "status": "MANUAL",
+      "ref": "Rotax 914 Operator's + Installation Manual (docs/reference/)"
+    }
+  }
 }

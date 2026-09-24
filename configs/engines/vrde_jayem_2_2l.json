@@ -1,11 +1,9 @@
 {
   "engine_id": "vrde_jayem_2_2l",
-  "display_name": "VRDE-Jayem 2.2L Turbocharged Aero-Diesel",
+  "display_name": "VRDE-Jayem 2.2L Turbocharged Aero-Diesel (parametrised, mostly assumed)",
   "manufacturer": "DRDO VRDE / Jayem Automotives Ltd",
   "platforms": [
-    "DRDO TAPAS-BH-201 (Rustom-II MALE UAV)",
-    "DRDO Archer-NG",
-    "Indian Armed Forces MALE UAV Fleet"
+    "DRDO TAPAS-BH-201 (Rustom-II MALE UAV)"
   ],
   "ignition_mode": "COMPRESSION_IGNITION",
   "induction": "TURBOCHARGED",
@@ -49,5 +47,38 @@
   "rail_pressure_bar": 1850.0,
   "fuel_cloud_point_c": -47.0,
   "fuel_cfpp_c": -50.0,
-  "source": "DRDO VRDE & Jayem Automotives 2.2L Turbo-Aero-Diesel specification for TAPAS-BH-201; 180 HP at 3800 RPM, Jet-A1/DEF STAN 91-091 fuel, intercooled turbocharging with 20,000 ft critical altitude ceiling."
+  "source": "See the per-field \"provenance\" map below (B0.4) -- unlike the other configs in this directory, most of this file's numbers do NOT come from a manufacturer manual. Only a handful of facts about this engine are public as of Sep 2025: it is a 2.2L 4-cylinder inline turbocharged CRDi diesel with a FADEC, built by VRDE with Jayem Automotives, rated at 180 hp (~134.2 kW) at 11,000 ft, operable to 32,000 ft, and it raises TAPAS BH-201's indigenous content to ~80%. See Indian Defence News (2025-08-24) and idrw.org (2025-08-24), both cited in docs/audit/08_deployable_system_blueprint.md Sec 0 and docs/build/DECISIONS.md D01. Everything else here (bore/stroke/CR, rail pressure, turbo boost curve, BSFC, lambda, injection timing, fuel cold-flow properties, mass, TBO...) is an engineering assumption scaled from comparable 2.0-2.2L automotive CRDi engines (e.g. the OM640-class block the Austro AE300 licenses) and MUST be replaced with VRDE-supplied data before being quoted as fact -- this is precisely the list of what we need FROM VRDE (docs/audit/10_red_team_readiness_review.md Sec 3, \"what do you need from us?\").",
+  "provenance": {
+    "manufacturer": {"status": "PUBLIC", "ref": "Indian Defence News 2025-08-24; idrw.org 2025-08-24 -- 'developed by VRDE in partnership with Jayem Automotives'"},
+    "platforms": {"status": "PUBLIC", "ref": "TAPAS BH-201 confirmed by both sources above. Archer-NG and other platforms were listed in an earlier version of this file without a source and have been removed pending confirmation -- see docs/build/RESEARCH_LEDGER.md Sec 4."},
+    "induction": {"status": "PUBLIC", "ref": "'turbocharged' -- Indian Defence News 2025-08-24"},
+    "fuel": {"status": "ASSUMED", "ref": "Jet-A1 is the standard defence heavy-fuel/single-fuel-policy choice (docs/audit/07 Sec II) but was not itself stated in the public sources; not contradicted by anything found"},
+    "ignition_mode": {"status": "ASSUMED", "ref": "'CRDi' (common-rail direct injection) in the public sources implies compression ignition; not stated explicitly as such"},
+    "layout.count": {"status": "PUBLIC", "ref": "'4-cylinder' -- Indian Defence News 2025-08-24"},
+    "layout.arrangement": {"status": "PUBLIC", "ref": "'inline' -- Indian Defence News 2025-08-24"},
+    "layout.bore_mm": {"status": "ASSUMED", "ref": "scaled from OM640-class 2.0-2.2L 4-cyl CRDi blocks -- NOT VRDE-confirmed"},
+    "layout.stroke_mm": {"status": "ASSUMED", "ref": "scaled from OM640-class 2.0-2.2L 4-cyl CRDi blocks -- NOT VRDE-confirmed"},
+    "layout.displacement_cc": {"status": "ASSUMED", "ref": "'2.2L' is public (Indian Defence News 2025-08-24); the exact cc figure (2179) is back-calculated from the assumed bore/stroke above, not independently sourced"},
+    "layout.compression_ratio": {"status": "PLACEHOLDER", "ref": "typical CRDi CR range; no source"},
+    "turbo.max_boost_kpa": {"status": "PLACEHOLDER", "ref": "no source"},
+    "turbo.critical_altitude_ft": {"status": "PLACEHOLDER", "ref": "no source -- do not confuse with the public 32,000 ft operating ceiling, which is an airframe/engine ceiling, not the turbo's boost-hold altitude"},
+    "turbo.max_shaft_rpm": {"status": "PLACEHOLDER", "ref": "no source"},
+    "turbo.intercooled": {"status": "ASSUMED", "ref": "standard practice at this boost level; not confirmed"},
+    "turbo.lag_time_constant_sec": {"status": "PLACEHOLDER", "ref": "no source"},
+    "turbo.surge_margin_min": {"status": "PLACEHOLDER", "ref": "no source"},
+    "rated_power_kw": {"status": "PUBLIC", "ref": "180 hp = 134.23 kW -- Indian Defence News 2025-08-24 and idrw.org 2025-08-24 both give 180 hp; the ALTITUDE at which this is rated (11,000 ft) is public but this config schema has no field for rating altitude -- do not present this as a sea-level rating"},
+    "rated_rpm": {"status": "PLACEHOLDER", "ref": "no source"},
+    "max_continuous_power_kw": {"status": "PLACEHOLDER", "ref": "no source"},
+    "max_continuous_rpm": {"status": "PLACEHOLDER", "ref": "no source"},
+    "idle_rpm": {"status": "PLACEHOLDER", "ref": "no source"},
+    "gearbox_ratio": {"status": "PLACEHOLDER", "ref": "no source"},
+    "dry_mass_kg": {"status": "PLACEHOLDER", "ref": "no source"},
+    "tbo_hours": {"status": "ASSUMED", "ref": "matches the other configs' 2000h default; not VRDE-confirmed"},
+    "nominal_bsfc_g_kwh": {"status": "PLACEHOLDER", "ref": "no source"},
+    "nominal_lambda": {"status": "PLACEHOLDER", "ref": "no source"},
+    "nominal_inj_timing_btdc": {"status": "PLACEHOLDER", "ref": "no source"},
+    "rail_pressure_bar": {"status": "ASSUMED", "ref": "typical for a modern CRDi system in this class; not VRDE-confirmed"},
+    "fuel_cloud_point_c": {"status": "ASSUMED", "ref": "Jet-A1 / DEF STAN 91-091 typical spec values"},
+    "fuel_cfpp_c": {"status": "ASSUMED", "ref": "Jet-A1 / DEF STAN 91-091 typical spec values"}
+  }
 }

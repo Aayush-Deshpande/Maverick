@@ -139,9 +139,17 @@ class RULEstimator:
         residuals: Optional[ResidualVector] = None
     ) -> Dict[str, Dict[str, float]]:
         """
-        Split-conformal prediction intervals for component RUL (F12).
-        Guarantees 1 - alpha coverage (e.g. 90% confidence interval: [P10, P90])
-        calibrated using non-conformity scores and residual variance.
+        Heuristic +/- margin around each component's RUL. **NOT conformal, NOT calibrated.**
+
+        This was previously documented as "split-conformal ... guarantees 1 - alpha
+        coverage" and labelled "90% Conformal Calibration". It is neither: the width is a
+        fixed 12% of the point estimate plus 18% x the anomaly score, there are no
+        non-conformity scores and no calibration set, and `significance_level` does not
+        affect the bounds (it only feeds the reported `confidence_level` label). No
+        coverage has ever been measured for it. The real split-conformal implementation is
+        `backend/evaluation/conformal.py` (finite-sample corrected, ACI, coverage
+        measurement) -- it is not wired in yet; see docs/build/SUPERSEDED_VS_CURRENT.md
+        S07 and backlog B6.1. Do not present these bounds as a statistical guarantee.
         """
         base_uncertainty = 0.12  # Nominal 12% conformal margin
         if residuals is not None:
@@ -157,8 +165,9 @@ class RULEstimator:
                 "rul_p10_hours": round(p10, 1),
                 "rul_p50_hours": round(p50, 1),
                 "rul_p90_hours": round(p90, 1),
-                "confidence_level": round(1.0 - significance_level, 2),
-                "coverage_guarantee": "90% Conformal Calibration",
+                "confidence_level": round(1.0 - significance_level, 2),  # nominal label only
+                "calibrated": False,
+                "coverage_guarantee": "None -- uncalibrated heuristic margin (not conformal)",
             }
         return conformal_bounds
 

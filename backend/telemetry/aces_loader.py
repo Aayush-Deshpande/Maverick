@@ -62,15 +62,52 @@ ACES_PROVENANCE = {
         "All flights completed safely. No labelled faults, no RUL ground truth. "
         "Usable for physics validation and nominal baselining only."
     ),
+    "unit_caveat": (
+        "EGT_1..4 and CHT: the channel BINDING is verified (B0.3, 2026-09-24) -- "
+        "each resolves to a distinct, name-confirmed, physically-continuous "
+        "per-cylinder signal, cross-checked against an independently-decoded "
+        "ACES file in competitors/Adityaraj13b/AeroPulse (its CHT column "
+        "matches this loader's binding to 5 significant figures). The numeric "
+        "SCALE is NOT confirmed to be Celsius: ACES's own 'DEG' unit label is "
+        "generic and, like the name field, suffers the same column-boundary "
+        "artifact, so it cannot be read reliably at these column indices "
+        "either. Observed EGT values run ~1200-1400 in ACES's native scale, "
+        "too high to be a calibrated Celsius EGT reading but plausible as "
+        "Fahrenheit (683-760C equivalent) or as an uncalibrated raw scale -- "
+        "do not report an EGT/CHT figure in degrees Celsius, or compute a "
+        "sim-to-real bias/error against this loader's thermo model (which IS "
+        "in Celsius) until the ACES documentation PDF confirms the scale. "
+        "Relative comparisons (this flight vs that flight, climb vs cruise, "
+        "trend direction) remain valid regardless of the unit."
+    ),
 }
 
 # Channel-name fragments to look for. The .mat name matrix is a fixed-width char
-# array with embedded newlines, so reconstructed names are approximate at their
-# boundaries; matching on a distinctive fragment is more robust than equality.
+# array (16 character-position rows x n_channels columns); scipy strips
+# trailing whitespace per row, so rows arrive at unequal lengths and must be
+# right-padded before reading column-wise (see _decode_name_matrix). Even after
+# that, the reconstructed 16-character name for column j is not always exactly
+# and only column j's true name: ACES's own name field is evidently narrower
+# than some true descriptions, so a channel's decoded name reliably STARTS with
+# that channel's true (possibly truncated) name, and may then run on into the
+# start of column j+1's name if there was room left in the 16-character field
+# (e.g. column 92 decodes as "EGT 1 EGT 2 Altn" -- "EGT 1" is genuinely column
+# 92's name; "EGT 2 Altn..." is the start of column 93's name bleeding into the
+# same field). Confirmed empirically against M080001.mat (session 2026-09-24):
+# every alias below was verified to occur at position 0 of its target column's
+# decoded name, and find_channel() below now requires that position, which is
+# what actually fixed the binding (see docs/IMPLEMENTATION_LOG.md B0.3) --
+# matching *anywhere* in the string, as this used to do, picks up trailing
+# bleed-through from the PRECEDING column instead (e.g. "egt 1" also occurs,
+# at position 11, in column 91's decoded name "Water Temp EGT 1", which is
+# actually the water/coolant temperature channel wearing a borrowed tail).
 CHANNEL_ALIASES: Dict[str, Tuple[str, ...]] = {
     "ENGINE_RPM": ("engine speed",),
     "EGT_1": ("egt 1",),
     "EGT_2": ("egt 2",),
+    "EGT_3": ("egt 3",),
+    "EGT_4": ("egt 4",),
+    "CHT": ("cht",),
     "COOLANT_TEMP": ("water temp",),
     "ALTERNATOR_TEMP": ("altntr temp",),
     "ENGINE_THERMO_2": ("eng thermo",),
@@ -93,11 +130,30 @@ CHANNEL_ALIASES: Dict[str, Tuple[str, ...]] = {
 # Sanity envelopes used to confirm a resolved channel really is what we think.
 # A name-matching heuristic that silently binds the wrong column would poison
 # every downstream validation result, so binding is checked against physics.
+#
+# EGT_1..4 and CHT ranges below are deliberately wide and NOT asserted to be
+# degrees Celsius -- see the "unit caveat" in ACES_PROVENANCE. They exist to
+# catch a wrong binding (a channel that is obviously something else entirely,
+# e.g. a voltage or a position feedback), not to validate a calibrated
+# temperature. Do not narrow these to a "plausible Celsius EGT" band; that
+# would silently re-introduce the same binding bug this range is here to catch,
+# because the ACES-native scale for these specific channels runs materially
+# higher than a calibrated Celsius EGT would (confirmed against both this
+# file's own EGT/CHT columns and an independently-implemented ACES decode in
+# competitors/Adityaraj13b/AeroPulse/data_sample/aces_demo.csv, whose CHT
+# column matches this loader's CHT binding to 5 significant figures without
+# any unit conversion applied).
 _PLAUSIBLE_RANGE: Dict[str, Tuple[float, float]] = {
     "ENGINE_RPM": (0.0, 7000.0),
-    "EGT_1": (0.0, 1100.0),
-    "EGT_2": (0.0, 1100.0),
-    "COOLANT_TEMP": (-60.0, 160.0),
+    "EGT_1": (100.0, 1800.0),
+    "EGT_2": (100.0, 1800.0),
+    "EGT_3": (100.0, 1800.0),
+    "EGT_4": (100.0, 1800.0),
+    "CHT": (50.0, 400.0),
+    # Widened from the original (-60, 160) -- that band assumed a calibrated
+    # Celsius reading and was silently rejecting the correctly-bound channel
+    # (observed native-scale values run to ~220; see the unit caveat above).
+    "COOLANT_TEMP": (-60.0, 260.0),
     "ALTITUDE_FT": (-1500.0, 60000.0),
     "BUS_VOLTAGE": (0.0, 40.0),
     "BATTERY_VOLTAGE": (0.0, 40.0),
@@ -145,9 +201,20 @@ class ACESGranule:
         return float(self.n_samples) / ACES_PROVENANCE["sample_rate_hz"]
 
     def find_channel(self, fragment: str) -> Optional[int]:
+        """Column whose decoded name starts with ``fragment`` (case-insensitive).
+
+        Requiring position 0 rather than "anywhere in the string" is the B0.3
+        fix (docs/IMPLEMENTATION_LOG.md, session 2026-09-24): each column's
+        decoded 16-character name reliably begins with that column's own true
+        name and may run on into the next column's name if there is room left
+        in the field, so a fragment can appear at the START of its true
+        column's name (correct) or trailing off the END of the *previous*
+        column's decoded name (wrong binding). Preferring the earliest column
+        with a start-of-string match keeps this a single pass, matching the
+        method's previous O(n) contract."""
         frag = fragment.lower()
         for i, n in enumerate(self.names):
-            if frag in n.lower():
+            if n.lower().startswith(frag):
                 return i
         return None
 

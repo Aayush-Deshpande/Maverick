@@ -1,0 +1,165 @@
+{
+  "engine_id": "rotax_915is",
+  "display_name": "Rotax 915 iS (turbocharged)",
+  "manufacturer": "BRP-Rotax",
+  "platforms": [
+    "IAI Heron Mk II (Indian Air Force, Indian Army -- Tawang sector)"
+  ],
+  "ignition_mode": "SPARK_IGNITION",
+  "induction": "TURBOCHARGED",
+  "fuel": "AVGAS_100LL",
+  "cooling": "AIR_COOLED_BARRELS_LIQUID_HEADS",
+  "layout": {
+    "count": 4,
+    "arrangement": "BOXER",
+    "firing_order": [
+      1,
+      4,
+      2,
+      3
+    ],
+    "bore_mm": 84.0,
+    "stroke_mm": 61.0,
+    "displacement_cc": 1352.0,
+    "compression_ratio": 9.0
+  },
+  "turbo": {
+    "max_boost_kpa": 145.0,
+    "critical_altitude_ft": 16500.0,
+    "wastegate_controlled": true,
+    "max_shaft_rpm": 180000.0,
+    "intercooled": true,
+    "lag_time_constant_sec": 0.75,
+    "surge_margin_min": 0.12
+  },
+  "rated_power_kw": 105.1,
+  "rated_rpm": 5800.0,
+  "max_continuous_power_kw": 100.7,
+  "max_continuous_rpm": 5500.0,
+  "idle_rpm": 1400.0,
+  "gearbox_ratio": 2.4286,
+  "dry_mass_kg": 82.0,
+  "tbo_hours": 1200.0,
+  "nominal_bsfc_g_kwh": 290.0,
+  "nominal_lambda": 0.95,
+  "nominal_inj_timing_btdc": 0.0,
+  "nominal_ign_timing_btdc": 26.0,
+  "rail_pressure_bar": 0.35,
+  "fuel_cloud_point_c": null,
+  "fuel_cfpp_c": null,
+  "source": "Added for the Heron Mk II gap identified in docs/audit/10_red_team_readiness_review.md Sec 2.8: the IAF/Army fly the 915 iS, not the 914, and this repository previously had no config for it. See the per-field \"provenance\" map -- only displacement, power ratings, induction/cooling and TBO are public; bore/stroke/CR, turbo details, gearbox ratio, mass and nominal fuel/air figures are scaled from the shared 912iS/914 architecture (same bore-class, same stroke as the 912 iS/914 family) pending a Rotax 915 iS operator's manual.",
+  "provenance": {
+    "manufacturer": {
+      "status": "PUBLIC",
+      "ref": "BRP-Rotax"
+    },
+    "platforms": {
+      "status": "PUBLIC",
+      "ref": "Janes -- 'Indian Air Force inducts Heron Mk II'; Indian Army Heron Mk II induction reporting (2022), both citing the Rotax 915 iS as the Mk II's engine vs. the base Heron's 914 (see docs/audit/10 Sec 2.8)"
+    },
+    "induction": {
+      "status": "PUBLIC",
+      "ref": "turbocharged, per manufacturer spec"
+    },
+    "layout.count": {
+      "status": "PUBLIC",
+      "ref": "4-cylinder horizontally-opposed, same family as 912iS/914"
+    },
+    "layout.arrangement": {
+      "status": "PUBLIC",
+      "ref": "boxer, same family as 912iS/914"
+    },
+    "layout.displacement_cc": {
+      "status": "PUBLIC",
+      "ref": "1,352 cc -- BRP-Rotax public spec sheet (matches the 912 iS's displacement, turbocharged)"
+    },
+    "layout.bore_mm": {
+      "status": "ASSUMED",
+      "ref": "not independently confirmed for the 915 iS specifically; consistent with the 912iS/914 bore class"
+    },
+    "layout.stroke_mm": {
+      "status": "ASSUMED",
+      "ref": "assumed identical to 912iS/914 (61.0mm); not independently confirmed"
+    },
+    "layout.compression_ratio": {
+      "status": "ASSUMED",
+      "ref": "assumed similar to 914; not independently confirmed"
+    },
+    "turbo.max_boost_kpa": {
+      "status": "PLACEHOLDER",
+      "ref": "no source"
+    },
+    "turbo.critical_altitude_ft": {
+      "status": "PLACEHOLDER",
+      "ref": "no source -- Heron Mk II's >10,000m (~32,800 ft) service ceiling is an airframe figure, not this field (turbo boost-hold altitude)"
+    },
+    "turbo.intercooled": {
+      "status": "ASSUMED",
+      "ref": "915 iS is reported as a more heavily reworked turbo system than the 914's; intercooling assumed but not confirmed"
+    },
+    "rated_power_kw": {
+      "status": "PUBLIC",
+      "ref": "141 hp = 105.1 kW takeoff -- BRP-Rotax public spec sheet"
+    },
+    "max_continuous_power_kw": {
+      "status": "PUBLIC",
+      "ref": "135 hp = 100.7 kW continuous -- BRP-Rotax public spec sheet"
+    },
+    "rated_rpm": {
+      "status": "ASSUMED",
+      "ref": "assumed identical to 912iS/914 family (5,800 rpm); not independently confirmed"
+    },
+    "gearbox_ratio": {
+      "status": "ASSUMED",
+      "ref": "assumed identical to 912iS/914 (2.4286); the 915 iS may use a different reduction ratio -- not confirmed"
+    },
+    "dry_mass_kg": {
+      "status": "PLACEHOLDER",
+      "ref": "no source; estimated above the 914's 76kg for the larger turbo/intercooler"
+    },
+    "tbo_hours": {
+      "status": "PUBLIC",
+      "ref": "1,200 h -- BRP-Rotax public spec sheet (shorter than the 914's 2,000 h)"
+    },
+    "nominal_bsfc_g_kwh": {
+      "status": "PLACEHOLDER",
+      "ref": "no source"
+    },
+    "nominal_lambda": {
+      "status": "PLACEHOLDER",
+      "ref": "no source"
+    },
+    "nominal_inj_timing_btdc": {
+      "status": "PLACEHOLDER",
+      "ref": "no source"
+    },
+    "nominal_ign_timing_btdc": {
+      "status": "PLACEHOLDER",
+      "ref": "no source"
+    },
+    "rail_pressure_bar": {
+      "status": "PLACEHOLDER",
+      "ref": "no source"
+    },
+    "max_continuous_rpm": {
+      "status": "ASSUMED",
+      "ref": "assumed identical to 912iS/914 family; not independently confirmed"
+    },
+    "idle_rpm": {
+      "status": "ASSUMED",
+      "ref": "assumed identical to 912iS/914 family; not independently confirmed"
+    },
+    "turbo.max_shaft_rpm": {
+      "status": "PLACEHOLDER",
+      "ref": "no source"
+    },
+    "turbo.lag_time_constant_sec": {
+      "status": "PLACEHOLDER",
+      "ref": "no source"
+    },
+    "turbo.surge_margin_min": {
+      "status": "PLACEHOLDER",
+      "ref": "no source"
+    }
+  }
+}

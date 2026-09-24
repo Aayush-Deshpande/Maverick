@@ -51,6 +51,11 @@ from backend.physics.sensor_validator import (
 from backend.ml.anomaly_detector import ResidualAutoencoder, FEATURE_ORDER
 from backend.ml.spectral_analyser import GearboxSpectralAnalyser, SpectralReport
 from backend.ml.trend_analyser import ScoreBuffer
+from backend.ml.flyhash_novelty import (
+    FlyNoveltyDetector,
+    NoveltyReport,
+    residual_and_order_features,
+)
 from backend.agent.diagnostic_agent import DiagnosticAgent, DiagnosticDirective
 
 
@@ -243,6 +248,12 @@ class DetectionPipeline:
         self._sanity = SensorSanityValidator()
         self._autoencoder = ResidualAutoencoder()
         self._spectral = GearboxSpectralAnalyser(sample_rate_hz=20.0)
+        # FlyHash novelty (F-flyhash): residuals-only mode. order_feats stays at
+        # zero until crank_diagnostics.order_features() is itself wired into this
+        # pipeline -- see flyhash_novelty.py's module docstring. Calibrated only
+        # on the sortie's starting frame-count window (no ground-truth field
+        # involved); see Stage 2c below.
+        self._novelty = FlyNoveltyDetector()
         self._vote = MajorityVoteBuffer(window=10, threshold=0.8)
         self._agent = DiagnosticAgent()
 
@@ -263,6 +274,7 @@ class DetectionPipeline:
         # calling self._sanity.validate() / self._spectral.update() a second time.
         self.last_sanity_report: Optional[SanityReport] = None
         self.last_spectral_report: Optional[SpectralReport] = None
+        self.last_novelty_report: Optional[NoveltyReport] = None
 
         # Threshold baseline comparator (F13 / G03)
         self._twin_first_detect_time: Optional[float] = None
@@ -309,6 +321,7 @@ class DetectionPipeline:
         self._sortie_id = sortie_id
         self._sanity.reset()
         self._spectral.reset()
+        self._novelty.reset_calibration()
         self._vote.reset()
         self._last_alert_time = 0.0
         self._frame_count = 0
@@ -368,6 +381,26 @@ class DetectionPipeline:
         # Stage 2b: Residual Shielding (F14) — zero residuals on failing/drifting channels
         if sanity and sanity.failed_channels:
             residuals = apply_residual_shielding(residuals, sanity.failed_channels)
+
+        # ── Stage 2c: FlyHash Novelty (additive, does not gate downstream stages) ──
+        # Residuals-only feature vector (order_feats=None -- see class docstring).
+        #
+        # Calibrates on a fixed-length window at the *start of the sortie only*
+        # (self._frame_count <= calibration window), never on a ground-truth fault
+        # label -- real telemetry carries no such field. This mirrors real
+        # deployment procedure: the engine is assumed healthy for a short
+        # ground-run/early-climb window immediately after a confirmed-nominal
+        # start, the same assumption FlyNoveltyDetector.observe_nominal()'s own
+        # docstring calls out ("the first N frames of a sortie"). If the sortie
+        # itself starts unhealthy this window will calibrate on a fault -- that
+        # is a real limitation of startup-window calibration in general, not
+        # specific to this detector, and is why the offset is frozen rather than
+        # left adaptive (see twin/residual_detector.py's identical reasoning for
+        # the per-tail baseline).
+        novelty_vec = residual_and_order_features(residuals, order_feats=None)
+        if self._frame_count <= self._novelty.calibration_frames:
+            self._novelty.observe_nominal(novelty_vec)
+        self.last_novelty_report = self._novelty.score(novelty_vec)
 
         # ── Stage 3: Anomaly Score ─────────────────────────────────────
         ae_score = 0.0

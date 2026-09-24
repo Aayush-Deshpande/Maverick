@@ -39,9 +39,35 @@ __all__ = [
     "load_engine_config",
     "available_engines",
     "CONFIG_DIR",
+    "PROVENANCE_STATUSES",
 ]
 
 CONFIG_DIR = Path(__file__).resolve().parents[2] / "configs" / "engines"
+
+# Allowed values for provenance["<field>"]["status"] (docs/build/INTERFACES.md Sec 8).
+PROVENANCE_STATUSES = {
+    "PUBLIC",       # reported by a named public source -- cite it in "ref"
+    "MANUAL",       # from a manufacturer manual in docs/reference/
+    "ASSUMED",      # engineering judgement, not sourced -- "ref" explains the basis
+    "PLACEHOLDER",  # a filler value with no real basis yet; must not be quoted
+}
+
+# Fields whose values feed a physics or evaluation computation and therefore
+# need a provenance entry before any number derived from them is reported
+# outside the lab (report generators check against this list).
+NUMERIC_FIELD_PATHS = [
+    "layout.bore_mm", "layout.stroke_mm", "layout.displacement_cc",
+    "layout.compression_ratio",
+    "rated_power_kw", "rated_rpm", "max_continuous_power_kw", "max_continuous_rpm",
+    "idle_rpm", "gearbox_ratio", "dry_mass_kg", "tbo_hours",
+    "nominal_bsfc_g_kwh", "nominal_lambda", "nominal_inj_timing_btdc",
+    "nominal_ign_timing_btdc", "rail_pressure_bar",
+    "fuel_cloud_point_c", "fuel_cfpp_c",
+]
+TURBO_NUMERIC_FIELD_PATHS = [
+    "turbo.max_boost_kpa", "turbo.critical_altitude_ft", "turbo.max_shaft_rpm",
+    "turbo.lag_time_constant_sec", "turbo.surge_margin_min",
+]
 
 
 class IgnitionMode:
@@ -135,6 +161,19 @@ class EngineConfig:
 
     source: str = ""
 
+    # Per-field provenance (B0.4) -- ``source`` above is a single free-text string
+    # that cannot express "this one number is public, everything else is a guess",
+    # which is exactly the problem it had: vrde_jayem_2_2l.json's source string
+    # read like a confirmed OEM specification when in fact only a handful of its
+    # numbers (power, cylinder count, layout, induction, fuel, manufacturer) are
+    # publicly reported and the rest are engineering assumptions. Each entry maps
+    # a dotted field path (matching the JSON layout, e.g. "layout.bore_mm") to
+    # {"status": ..., "ref": ...}. See docs/build/INTERFACES.md Sec 8 for the
+    # contract and PROVENANCE_STATUSES below for the allowed status values.
+    # A field with no entry here is implicitly UNVERIFIED -- see
+    # unlabelled_numeric_fields().
+    provenance: Dict[str, dict] = field(default_factory=dict)
+
     # -- derived helpers ----------------------------------------------------
 
     @property
@@ -190,6 +229,38 @@ class EngineConfig:
             if self.turbo and self.turbo.intercooled:
                 common.append("INTERCOOLER_FOULING")
         return common
+
+    def provenance_status(self, field_path: str) -> str:
+        """Status for a dotted field path, e.g. "layout.bore_mm" or "rated_power_kw".
+        Fields with no explicit entry are "UNVERIFIED" -- distinct from PLACEHOLDER
+        (a filler value someone chose deliberately) because it just means nobody
+        has classified this field yet, which a report generator should treat at
+        least as cautiously as PLACEHOLDER."""
+        entry = self.provenance.get(field_path)
+        return entry["status"] if entry else "UNVERIFIED"
+
+    def _field_value(self, field_path: str):
+        obj = self
+        for part in field_path.split("."):
+            obj = getattr(obj, part, None)
+            if obj is None:
+                return None
+        return obj
+
+    def unlabelled_numeric_fields(self) -> List[str]:
+        """Numeric fields (from NUMERIC_FIELD_PATHS, plus turbo fields if this
+        engine has a turbo) with no provenance entry at all. Fields whose value
+        is None (e.g. fuel_cloud_point_c on an AVGAS engine, nominal_ign_timing_btdc
+        on a compression-ignition engine) are not applicable to this config and
+        are excluded -- there is nothing to source. Empty on a fully labelled
+        config."""
+        paths = list(NUMERIC_FIELD_PATHS)
+        if self.turbo is not None:
+            paths += TURBO_NUMERIC_FIELD_PATHS
+        return [
+            p for p in paths
+            if p not in self.provenance and self._field_value(p) is not None
+        ]
 
     def to_dict(self) -> dict:
         return asdict(self)

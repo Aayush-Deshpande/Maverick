@@ -3,7 +3,7 @@
   "display_name": "Austro Engine AE300 (E4)",
   "manufacturer": "Austro Engine GmbH (Diamond Aircraft)",
   "platforms": [
-    "DRDO TAPAS BH-201 / Rustom-2",
+    "DRDO TAPAS BH-201 / Rustom-2 (earlier prototypes, pre-VRDE engine -- see rotax_914.json / vrde_jayem_2_2l.json for the current picture)",
     "Diamond DA40 NG",
     "Diamond DA42"
   ],
@@ -49,5 +49,99 @@
   "rail_pressure_bar": 1800.0,
   "fuel_cloud_point_c": -47.0,
   "fuel_cfpp_c": -50.0,
-  "source": "Austro E4/AE300 spec (bore 83, stroke 92, CR 17.5:1, gearbox 1.69, 185kg dry); licensed Mercedes-Benz OM640 block. Jet-A1 cloud point per DEF STAN 91-091 freeze point -47C"
+  "source": "Austro E4/AE300 spec (bore 83, stroke 92, CR 17.5:1, gearbox 1.69, 185kg dry); licensed Mercedes-Benz OM640 block. Jet-A1 cloud point per DEF STAN 91-091 freeze point -47C",
+  "provenance": {
+    "layout.bore_mm": {
+      "status": "PUBLIC",
+      "ref": "Austro Engine AE300 / E4 public spec sheet (Wikipedia; Austro Engine)"
+    },
+    "layout.stroke_mm": {
+      "status": "PUBLIC",
+      "ref": "Austro Engine AE300 / E4 public spec sheet (Wikipedia; Austro Engine)"
+    },
+    "layout.displacement_cc": {
+      "status": "PUBLIC",
+      "ref": "Austro Engine AE300 / E4 public spec sheet (Wikipedia; Austro Engine) (bore/stroke give ~1991cc)"
+    },
+    "layout.compression_ratio": {
+      "status": "PUBLIC",
+      "ref": "Austro Engine AE300 / E4 public spec sheet (Wikipedia; Austro Engine)"
+    },
+    "rated_power_kw": {
+      "status": "PUBLIC",
+      "ref": "Austro Engine AE300 / E4 public spec sheet (Wikipedia; Austro Engine)"
+    },
+    "rated_rpm": {
+      "status": "PUBLIC",
+      "ref": "Austro Engine AE300 / E4 public spec sheet (Wikipedia; Austro Engine)"
+    },
+    "max_continuous_power_kw": {
+      "status": "ASSUMED",
+      "ref": "derated from rated power; not independently confirmed"
+    },
+    "max_continuous_rpm": {
+      "status": "ASSUMED",
+      "ref": "derated from rated rpm; not independently confirmed"
+    },
+    "gearbox_ratio": {
+      "status": "PUBLIC",
+      "ref": "Austro Engine AE300 / E4 public spec sheet (Wikipedia; Austro Engine)"
+    },
+    "dry_mass_kg": {
+      "status": "PUBLIC",
+      "ref": "Austro Engine AE300 / E4 public spec sheet (Wikipedia; Austro Engine)"
+    },
+    "idle_rpm": {
+      "status": "ASSUMED",
+      "ref": "typical for this class; not independently confirmed"
+    },
+    "tbo_hours": {
+      "status": "ASSUMED",
+      "ref": "typical for this class; not independently confirmed"
+    },
+    "turbo.max_boost_kpa": {
+      "status": "ASSUMED",
+      "ref": "not in the cited spec sheet"
+    },
+    "turbo.critical_altitude_ft": {
+      "status": "ASSUMED",
+      "ref": "not in the cited spec sheet"
+    },
+    "turbo.max_shaft_rpm": {
+      "status": "ASSUMED",
+      "ref": "not in the cited spec sheet"
+    },
+    "turbo.lag_time_constant_sec": {
+      "status": "ASSUMED",
+      "ref": "not in the cited spec sheet"
+    },
+    "turbo.surge_margin_min": {
+      "status": "ASSUMED",
+      "ref": "not in the cited spec sheet"
+    },
+    "nominal_bsfc_g_kwh": {
+      "status": "ASSUMED",
+      "ref": "typical for a modern CRDi diesel in this class; not independently confirmed"
+    },
+    "nominal_lambda": {
+      "status": "ASSUMED",
+      "ref": "typical lean-burn CI value; not independently confirmed"
+    },
+    "nominal_inj_timing_btdc": {
+      "status": "ASSUMED",
+      "ref": "not independently confirmed"
+    },
+    "rail_pressure_bar": {
+      "status": "ASSUMED",
+      "ref": "typical modern common-rail pressure; not independently confirmed"
+    },
+    "fuel_cloud_point_c": {
+      "status": "PUBLIC",
+      "ref": "DEF STAN 91-091 Jet-A1 typical freeze/cloud point, as cited in this file's own source string"
+    },
+    "fuel_cfpp_c": {
+      "status": "ASSUMED",
+      "ref": "typical Jet-A1 CFPP margin below cloud point; not independently confirmed"
+    }
+  }
 }
