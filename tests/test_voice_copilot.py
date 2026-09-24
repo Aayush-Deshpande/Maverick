@@ -4,7 +4,7 @@ DRDO / iDEX Problem Statement ID: 26054
 
 Covers ask_voice() guardrails, deterministic fault grounding, spoken-form output
 (no markdown), and per-session conversation history — independent of whether the
-GPU-bound Qwen3-4B / whisper.cpp / Kokoro engines are actually loaded, mirroring
+GPU-bound local LLM / whisper.cpp / Kokoro engines are actually loaded, mirroring
 the existing offline-friendly style of test_copilot_and_knowledge.py.
 """
 

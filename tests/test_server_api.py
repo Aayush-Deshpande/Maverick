@@ -92,6 +92,49 @@ def test_control_fault_activation_and_clearing(client):
     assert data["active_commanded_fault_id"] == 0
 
 
+def test_commanded_fault_highlights_immediately(client):
+    """
+    Regression test for the 3D-highlighting bug: target_parts (what the Blender
+    client highlights) must respond to the OPERATOR-COMMANDED fault immediately,
+    the same way active_commanded_fault_id and camera framing already do -- not
+    wait for the detection pipeline to independently re-confirm it, which can lag
+    by the fault's full ramp_duration_sec or never cross CONFIDENCE_GATE at low
+    severity. Before the fix, target_parts was tied unconditionally to the
+    genuine ML/physics diagnosis, so a freshly-commanded fault highlighted
+    nothing until (if ever) independently re-detected.
+    """
+    import time
+
+    try:
+        for fault_id in (1, 2, 3, 4, 5, 6, 7, 8):
+            res = client.post("/api/control", json={"action": "SET_FAULT", "fault_id": fault_id})
+            assert res.status_code == 200
+
+            # A couple of 20 Hz ticks' worth of margin; the background loop ticks
+            # independently of this request/response cycle.
+            target_parts = []
+            for _ in range(10):
+                data = client.get("/api/state").json()
+                target_parts = data["analytics"].get("target_parts", [])
+                if target_parts:
+                    break
+                time.sleep(0.05)
+
+            assert target_parts, (
+                f"fault {fault_id}: target_parts is empty immediately after commanding "
+                "it -- highlighting is not responding to the commanded fault"
+            )
+            assert data["active_commanded_fault_id"] == fault_id
+    finally:
+        client.post("/api/control", json={"action": "CLEAR_FAULT"})
+
+    # Nominal: target_parts must go back to empty (FAULT_TARGET_PARTS[0] == []).
+    data = client.get("/api/state").json()
+    assert data["active_commanded_fault_id"] == 0
+    # diagnosed_fault_id may briefly lag to 0 too since it's the genuine, separate
+    # diagnosis -- only target_parts (the highlight-priority fix) is asserted here.
+
+
 def test_control_throttle_and_environment(client):
     # Set throttle to 85%
     res = client.post("/api/control", json={"action": "SET_THROTTLE", "throttle": 85.0})

@@ -1,0 +1,97 @@
+{
+  "backend/agent/copilot.py": {
+    "brand": 12,
+    "cyl": 0,
+    "model": 8
+  },
+  "backend/agent/diagnostic_agent.py": {
+    "brand": 14,
+    "cyl": 0,
+    "model": 11
+  },
+  "backend/core/frame.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/ml/anomaly_detector.py": {
+    "brand": 1,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/ml/detection_pipeline.py": {
+    "brand": 9,
+    "cyl": 23,
+    "model": 1
+  },
+  "backend/ml/fault_classifier.py": {
+    "brand": 4,
+    "cyl": 19,
+    "model": 1
+  },
+  "backend/ml/rul_estimator.py": {
+    "brand": 1,
+    "cyl": 12,
+    "model": 1
+  },
+  "backend/ml/spectral_analyser.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/physics/sensor_validator.py": {
+    "brand": 1,
+    "cyl": 70,
+    "model": 1
+  },
+  "backend/physics/thermo_model.py": {
+    "brand": 8,
+    "cyl": 48,
+    "model": 5
+  },
+  "backend/server/engine_service.py": {
+    "brand": 13,
+    "cyl": 16,
+    "model": 3
+  },
+  "backend/server/schemas.py": {
+    "brand": 2,
+    "cyl": 8,
+    "model": 2
+  },
+  "backend/sources/plant_source.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/telemetry/can_streamer.py": {
+    "brand": 4,
+    "cyl": 64,
+    "model": 1
+  },
+  "frontend/src/components/CalculationsPanel.tsx": {
+    "brand": 0,
+    "cyl": 2,
+    "model": 0
+  },
+  "frontend/src/components/DiagnosticCard.tsx": {
+    "brand": 3,
+    "cyl": 0,
+    "model": 1
+  },
+  "frontend/src/components/PropulsionEngineerPanel.tsx": {
+    "brand": 4,
+    "cyl": 16,
+    "model": 2
+  },
+  "frontend/src/components/ReadingsPanel.tsx": {
+    "brand": 2,
+    "cyl": 8,
+    "model": 0
+  },
+  "frontend/src/components/SubsystemHealthCard.tsx": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  }
+}

@@ -193,19 +193,34 @@ def test_canonical_mission_regimes():
 # ===========================================================================
 
 def test_high_rate_vibration_dft_and_orders():
-    """Verify that high-rate 2 kHz burst synthesizes 3rd gear mesh harmonic and DFT tracks it."""
+    """Verify that high-rate 2 kHz burst synthesizes 3rd gear mesh harmonic and DFT tracks it.
+
+    The analyser's baseline window is 0.25 s = 5 frames at 20 Hz. The fault's ramp
+    (ramp_duration_sec=0.1 s = 2 frames) must complete *after* that window closes, or
+    the baseline itself locks in on already-elevated energy and the ratio never rises
+    above 1.0 — that was the original bug here, not the DFT path. Five nominal frames
+    lock a genuinely healthy baseline before the fault is injected.
+    """
     streamer = TelemetryStreamer(sample_rate_hz=20.0)
     analyser = GearboxSpectralAnalyser(sample_rate_hz=20.0, baseline_sec=0.25)
-    
-    # Set gearbox fault
-    streamer.set_fault(5, ramp_duration_sec=0.1)
-    
-    for _ in range(15):
+
+    def _feed_frame():
         actual, exp, res = streamer.generate_frame()
         burst = getattr(actual, "high_rate_vib_buffer", None)
         assert burst is not None and len(burst) >= 200, "2 kHz vibration burst must be present"
-        report = analyser.update(actual.VIB_GEARBOX_RMS, actual.ENGINE_RPM, high_rate_burst=burst, fs_hz=2000.0)
-    
+        return analyser.update(actual.VIB_GEARBOX_RMS, actual.ENGINE_RPM, high_rate_burst=burst, fs_hz=2000.0)
+
+    # Warm up a nominal baseline (5 frames locks it at baseline_sec=0.25, fs=20 Hz).
+    for _ in range(5):
+        _feed_frame()
+
+    # Now inject the gearbox fault against the already-locked healthy baseline.
+    streamer.set_fault(5, ramp_duration_sec=0.1)
+
+    report = None
+    for _ in range(10):
+        report = _feed_frame()
+
     assert report.ready, "Spectral report must be ready after bursts"
     assert report.harmonic_ratio >= 1.0, "Gearbox harmonic ratio must be computed from DFT"
 
@@ -231,6 +246,11 @@ def test_conformal_rul_prediction_intervals():
     for comp, bounds in conformal.items():
         assert bounds["rul_p10_hours"] <= bounds["rul_p50_hours"] <= bounds["rul_p90_hours"]
         assert bounds["confidence_level"] == 0.90
+        # Honesty pin: these bounds are a fixed heuristic margin, not conformal. They must
+        # never claim a calibration/coverage guarantee until backend/evaluation/conformal.py
+        # is actually wired in (docs/build/SUPERSEDED_VS_CURRENT.md S07, backlog B6.1).
+        assert bounds["calibrated"] is False
+        assert "conformal calibration" not in bounds["coverage_guarantee"].lower().replace("not conformal", "")
 
 
 # ===========================================================================
