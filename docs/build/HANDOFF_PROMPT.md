@@ -26,7 +26,7 @@ You are taking over an in-flight engineering project: **ANUMAAN** — an AI-enab
 Run: `git status`, `git log --oneline | head`, `python -m pytest -q`, `python scripts/tools/audit_reachability.py`, then re-run `python experiments/E20_runtime_end_to_end.py` and confirm it reproduces `docs/evaluation/E20_runtime_end_to_end.json` within noise. State in one paragraph what you believe is real/live/wired vs orphaned, and compare with `CURRENT_STATE.md`. If they differ, investigate and correct the docs.
 
 ### Step 2 — pick up the interrupted parallel build (see §3–§4 of this file)
-Seven track agents were launched in isolated git worktrees and **stopped mid-work when the session ended**: WAVEFORM, TWIN, DIAG, EDGELINK, FLEET, DATA, FOUNDATION. Inspect each worktree for partial work *before* re-launching; their specs are the prompts summarised in §3. Then wave 2 (§5).
+Seven track agents were launched in isolated git worktrees and **stopped mid-work when the session ended**: WAVEFORM, TWIN, DIAG, EDGELINK, FLEET, DATA, FOUNDATION. Their worktrees are empty (verified), so re-launch them from the specs in §3 (the full original prompts are in this session's transcript; the summary table plus `AGENT_BRIEF.md` and the BACKLOG rows are sufficient to rebuild them). Then wave 2 (§5).
 
 ### Rules that override convenience
 Truth isolation; engine-agnostic (no literals); provenance labels on every constant; evidence class on every number; **no claim without a null control and multiple seeds**; train/test seeds disjoint (test offset ≥ 1000); no fabricated numbers, sources or licences (write `UNVERIFIED`); third-party code needs a present permissive licence (D35: `clembarr/ffbf` has none — excluded; `rithram/fbfc` MIT; TabPFN ≥ 2.5 and Moirai are non-commercial → research-only labels); library code in `backend/`, never in experiment scripts; every module tested and deterministic; no LLM in any detection path (the LLM provider defaults to `none`); never call sklearn one row at a time on the live path (11.5 ms/row trap); edit shared docs only as integrator; commit in logical chunks with the trailer `Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>`; before any destructive git/file operation run `git status` and stash/commit first.
@@ -37,7 +37,7 @@ Truth isolation; engine-agnostic (no literals); provenance labels on every const
 
 ## 3. The seven stopped tracks (specs)
 
-Each was created with `isolation: worktree` → worktree under `.claude/worktrees/agent-<id>` on branch `track/<name>`, told to read `AGENT_BRIEF.md`, to write `docs/build/tracks/<TRACK>.md`, to add experiments `E21+`, and to end with a structured report. Check partial work with `git -C <worktree> status` / `git -C <worktree> log --oneline`; branch `track/foundation` already has one commit (`a63c0f6`), the others show no commits yet (there may still be uncommitted files).
+Each was created with `isolation: worktree` → worktree under `.claude/worktrees/agent-<id>` on branch `track/<name>`, told to read `AGENT_BRIEF.md`, to write `docs/build/tracks/<TRACK>.md`, to add experiments `E21+`, and to end with a structured report. **Verified after the stop: all seven worktrees have zero changed files and no new commits — the tracks produced nothing, so re-launch them from scratch** (`track/foundation` points at an old ancestor commit `a63c0f6`, not new work; recreate branches from current `maverick-main`).
 
 | Track | Branch | Rows | Owns (new packages) | Experiment |
 |---|---|---|---|---|
