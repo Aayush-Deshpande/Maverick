@@ -3,5 +3,9 @@
 !.gitignore
 !README.md
 !fetch.py
+!download_all.py
 !*/
 !*/README.md
+# nested upstream clones (own .git) - never track
+Anomaly_Benchmarks/skab/
+CAN_ECU/syncan/

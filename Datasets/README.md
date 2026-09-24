@@ -29,7 +29,9 @@ We searched and did not find one. Such data would require destroying instrumente
 | Folder | Contents | Tier |
 |---|---|---|
 | [`Engine_PHM/`](Engine_PHM/README.md) | C-MAPSS, N-CMAPSS turbofan degradation | Proxy — RUL methods |
-| [`Piston_Engine/`](Piston_Engine/README.md) | **Empty — nothing public found.** Documents the gap and how to close it | — |
+| [`Piston_Engine/`](Piston_Engine/README.md) | Real **marine diesel** engine with 5 induced faults (Zenodo); **3500-DEFault** diesel crank-torsional/pressure features; **IC-engine journal-bearing** vibration (Mendeley). Still no aero piston run-to-failure data anywhere | Engine-class proxy |
+| `Battery_Electrical/` | NASA Li-ion ageing (+ randomized usage) — for PS "battery / alternator health" | Proxy — battery SOH/RUL |
+| `Anomaly_Benchmarks/` | SKAB multivariate anomaly benchmark | Proxy — AD protocol |
 | [`Aviation/`](Aviation/README.md) | Rotax manuals, EASA TCDS, public engine documentation | Reference |
 | [`Vibration/`](Vibration/README.md) | General vibration and machine-signal datasets | Proxy — DSP methods |
 | [`Bearing/`](Bearing/README.md) | CWRU, Paderborn, XJTU-SY, FEMTO, IMS, MFPT | Proxy — vibration classification and RUL |
@@ -75,7 +77,16 @@ We searched and did not find one. Such data would require destroying instrumente
 
 ## Download helper
 
-`fetch.py` in this folder downloads the openly-accessible datasets (C-MAPSS, IMS). Others require registration or manual download — the per-folder READMEs give instructions.
+**`download_all.py` downloads every openly accessible dataset in the catalogue** (≈32 GB: C-MAPSS, N-CMAPSS, CWRU, Paderborn, IMS, FEMTO, marine diesel, 3500-DEFault, engine journal bearings, NASA battery, ALFA, MIMII gearbox/bearing, ROAD, SynCAN, SKAB). It is built for a throttled link: files are split into byte-range segments over many parallel connections, in priority tiers (A: small and directly relevant first). It is resumable, and every file is hashed into `MANIFEST.json` with its URL and licence. Zenodo is fetched over a single connection because it blocks parallel downloads.
+
+```bash
+python Datasets/download_all.py --list           # pending files and licences
+python Datasets/download_all.py --tiers A        # high-value sets only
+python Datasets/download_all.py                  # everything (resume any time)
+python Datasets/download_all.py --extract-nested # unpack archives nested inside NASA zips
+```
+
+The older `fetch.py` (C-MAPSS and IMS only) is kept for reference.
 
 ```bash
 python Datasets/fetch.py --list
