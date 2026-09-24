@@ -356,46 +356,6 @@
       1445
     ],
     [
-      "scripts.build_tb3_digital_twin",
-      1559
-    ],
-    [
-      "scripts.collect_uav_datasets",
-      514
-    ],
-    [
-      "scripts.generate_clean_pbr_textures",
-      214
-    ],
-    [
-      "scripts.generate_tb3_4k_textures",
-      257
-    ],
-    [
-      "scripts.generate_tb3_integrated_pbr",
-      378
-    ],
-    [
-      "scripts.generate_tb3_textures",
-      352
-    ],
-    [
-      "scripts.harvest_all_uav_categories",
-      481
-    ],
-    [
-      "scripts.harvest_all_uavs",
-      798
-    ],
-    [
-      "scripts.harvest_all_uavs_clean",
-      419
-    ],
-    [
-      "scripts.harvest_parallel_uavs",
-      465
-    ],
-    [
       "scripts.ingest_rag_docs",
       573
     ],
@@ -428,64 +388,12 @@
       127
     ],
     [
-      "scripts.render_comparison_gallery",
-      62
-    ],
-    [
-      "scripts.run_fast_uav_harvester",
-      757
-    ],
-    [
       "scripts.simulate_missions",
       153
     ],
     [
-      "scripts.stamp_wireframe_text",
-      40
-    ],
-    [
-      "scripts.tb3_ui_controller",
-      206
-    ],
-    [
-      "scripts.test_angles_wireframe",
-      99
-    ],
-    [
-      "scripts.test_bomb_parenting",
-      45
-    ],
-    [
-      "scripts.test_gear_constraint",
-      80
-    ],
-    [
-      "scripts.test_hero_angle",
-      111
-    ],
-    [
-      "scripts.test_keyframe_behavior",
-      25
-    ],
-    [
       "scripts.test_socketcan_mavlink_bridge",
       131
-    ],
-    [
-      "scripts.test_transform_constraint",
-      78
-    ],
-    [
-      "scripts.test_wing_fold_driver",
-      43
-    ],
-    [
-      "scripts.test_wireframe_fdda",
-      148
-    ],
-    [
-      "scripts.test_wireframe_perfect",
-      137
     ],
     [
       "scripts.tools.audit_reachability",
@@ -522,10 +430,6 @@
     [
       "scripts.verify_kinematics",
       65
-    ],
-    [
-      "scripts.verify_tb3_and_render",
-      212
     ]
   ]
 }

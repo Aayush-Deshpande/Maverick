@@ -24,11 +24,6 @@
     "cyl": 23,
     "model": 1
   },
-  "backend/ml/fault_classifier.py": {
-    "brand": 4,
-    "cyl": 19,
-    "model": 1
-  },
   "backend/ml/rul_estimator.py": {
     "brand": 1,
     "cyl": 12,

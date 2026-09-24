@@ -149,10 +149,6 @@ OSACBM_REGISTRY: List[ModuleRegistration] = [
 
     # --- HA: Health Assessment ---
     ModuleRegistration(
-        "backend.ml.fault_classifier", Layer.HA,
-        "Fault classification over physics residuals",
-        ["FDP-02", "FDP-03", "FDP-04", "FDP-05", "FDP-07", "FDP-08"], [Layer.SD]),
-    ModuleRegistration(
         "backend.ml.detection_pipeline", Layer.HA,
         "Nine-stage real-time detection and health indices",
         ["HMS-01", "HMS-02", "CAP-02"], [Layer.SD, Layer.DM]),

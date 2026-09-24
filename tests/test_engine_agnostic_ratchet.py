@@ -35,7 +35,6 @@ GUARDED = [
     "backend/physics/sensor_validator.py",
     "backend/ml/detection_pipeline.py",
     "backend/ml/rul_estimator.py",
-    "backend/ml/fault_classifier.py",
     "backend/ml/anomaly_detector.py",
     "backend/ml/spectral_analyser.py",
     "backend/telemetry/can_streamer.py",
