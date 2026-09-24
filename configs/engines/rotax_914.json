@@ -141,6 +141,28 @@
     "turbo.surge_margin_min": {
       "status": "MANUAL",
       "ref": "Rotax 914 Operator's + Installation Manual (docs/reference/)"
+    },
+    "operating_limits.cht_max_c": {
+      "status": "ASSUMED",
+      "ref": "legacy literal from backend/ml/detection_pipeline.py (135/850) and the plant hard-failure threshold (0.8 bar); typical of the Rotax operator manuals but NOT re-verified against docs/reference (verification row V-limits)"
+    },
+    "operating_limits.egt_max_c": {
+      "status": "ASSUMED",
+      "ref": "legacy literal from backend/ml/detection_pipeline.py (135/850) and the plant hard-failure threshold (0.8 bar); typical of the Rotax operator manuals but NOT re-verified against docs/reference (verification row V-limits)"
+    },
+    "operating_limits.oil_p_min_bar": {
+      "status": "ASSUMED",
+      "ref": "legacy literal from backend/ml/detection_pipeline.py (135/850) and the plant hard-failure threshold (0.8 bar); typical of the Rotax operator manuals but NOT re-verified against docs/reference (verification row V-limits)"
+    },
+    "operating_limits.oil_t_max_c": {
+      "status": "ASSUMED",
+      "ref": "legacy literal from backend/ml/detection_pipeline.py (135/850) and the plant hard-failure threshold (0.8 bar); typical of the Rotax operator manuals but NOT re-verified against docs/reference (verification row V-limits)"
     }
+  },
+  "operating_limits": {
+    "cht_max_c": 135.0,
+    "egt_max_c": 850.0,
+    "oil_p_min_bar": 0.8,
+    "oil_t_max_c": 130.0
   }
 }

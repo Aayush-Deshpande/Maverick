@@ -161,6 +161,11 @@ class EngineConfig:
 
     source: str = ""
 
+    # Operating limits (U3): redlines the runtime checks. Keys: cht_max_c, egt_max_c, oil_p_min_bar,
+    # oil_t_max_c. Each needs a provenance entry under "operating_limits.<key>"; PLACEHOLDER limits are
+    # used for alerting logic only and must never be quoted as OEM limits.
+    operating_limits: Dict[str, float] = field(default_factory=dict)
+
     # Per-field provenance (B0.4) -- ``source`` above is a single free-text string
     # that cannot express "this one number is public, everything else is a guess",
     # which is exactly the problem it had: vrde_jayem_2_2l.json's source string
@@ -261,6 +266,10 @@ class EngineConfig:
             p for p in paths
             if p not in self.provenance and self._field_value(p) is not None
         ]
+
+    def unlabelled_limits(self) -> List[str]:
+        return [f"operating_limits.{k}" for k in self.operating_limits
+                if f"operating_limits.{k}" not in self.provenance]
 
     def to_dict(self) -> dict:
         return asdict(self)

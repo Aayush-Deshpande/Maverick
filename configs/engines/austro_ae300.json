@@ -142,6 +142,28 @@
     "fuel_cfpp_c": {
       "status": "ASSUMED",
       "ref": "typical Jet-A1 CFPP margin below cloud point; not independently confirmed"
+    },
+    "operating_limits.cht_max_c": {
+      "status": "PLACEHOLDER",
+      "ref": "no public datum for this diesel profile; alerting placeholder only"
+    },
+    "operating_limits.egt_max_c": {
+      "status": "PLACEHOLDER",
+      "ref": "no public datum for this diesel profile; alerting placeholder only"
+    },
+    "operating_limits.oil_p_min_bar": {
+      "status": "PLACEHOLDER",
+      "ref": "no public datum for this diesel profile; alerting placeholder only"
+    },
+    "operating_limits.oil_t_max_c": {
+      "status": "PLACEHOLDER",
+      "ref": "no public datum for this diesel profile; alerting placeholder only"
     }
+  },
+  "operating_limits": {
+    "cht_max_c": 120.0,
+    "egt_max_c": 750.0,
+    "oil_p_min_bar": 0.8,
+    "oil_t_max_c": 130.0
   }
 }

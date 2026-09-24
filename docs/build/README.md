@@ -10,6 +10,7 @@
 | 4 | [`SUPERSEDED_VS_CURRENT.md`](SUPERSEDED_VS_CURRENT.md) | Seven old/new implementation pairs: which to wire, which to retire | medium |
 | 5 | [`UNIVERSALITY_AUDIT.md`](UNIVERSALITY_AUDIT.md) | Why this is still a one-engine simulator, the `EngineProfile` design, dataset benefits, freshness of every model/dataset | long |
 | 5b | [`MULTI_ENGINE_ARCHITECTURE.md`](MULTI_ENGINE_ARCHITECTURE.md) | Simulators + fault injectors + detectors per engine, all running at once; the lever verdict; waveform and Raspberry-Pi-5 edge pipeline; assets | long |
+| 5g | [`HANDOFF_PROMPT.md`](HANDOFF_PROMPT.md) | **Paste-able prompt + state snapshot for the next LLM (stopped tracks, WIP, pitfalls)** | short |
 | 5f | [`FRONTEND_SPEC.md`](FRONTEND_SPEC.md) | **What the console must show: screens, widgets, data sources, build slices** | medium |
 | 5e | [`DEV_EXECUTION_PLAN.md`](DEV_EXECUTION_PLAN.md) | **How the build is run: directory operations, slices, gates, guardrails** | short |
 | 5d | [`FLY_100_WAYS.md`](FLY_100_WAYS.md) | **100 ways the fly/connectome idea can work + E19 result** | medium |
