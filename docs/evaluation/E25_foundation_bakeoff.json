@@ -1,0 +1,206 @@
+{
+  "metadata": {
+    "experiment": "E25_foundation_bakeoff",
+    "evidence_class": "SIMULATION",
+    "seed": 42,
+    "timestamp": "2026-09-24T17:35:04Z"
+  },
+  "text_classification": {
+    "num_test_squawks": 25,
+    "correct_predictions": 24,
+    "accuracy": 0.96,
+    "macro_f1": 0.96,
+    "samples": {
+      "Engine rough idle on ground run; suspect...": {
+        "predicted": "ATA 72",
+        "truth": "ATA 72",
+        "correct": true,
+        "confidence": 0.85,
+        "urgency": "ADVISORY"
+      },
+      "Differential compression check showed 58...": {
+        "predicted": "ATA 72",
+        "truth": "ATA 72",
+        "correct": true,
+        "confidence": 0.85,
+        "urgency": "ROUTINE"
+      },
+      "Misfire detected during runup, spark plu...": {
+        "predicted": "ATA 72",
+        "truth": "ATA 72",
+        "correct": true,
+        "confidence": 0.7,
+        "urgency": "AOG_GROUNDING"
+      },
+      "Tappet noise and backfire observed on th...": {
+        "predicted": "ATA 72",
+        "truth": "ATA 72",
+        "correct": true,
+        "confidence": 0.7,
+        "urgency": "AOG_GROUNDING"
+      },
+      "Cylinder 4 exhaust valve sticking interm...": {
+        "predicted": "ATA 72",
+        "truth": "ATA 72",
+        "correct": true,
+        "confidence": 0.7,
+        "urgency": "ROUTINE"
+      },
+      "Fuel rail pressure drop under climb powe...": {
+        "predicted": "ATA 73",
+        "truth": "ATA 73",
+        "correct": true,
+        "confidence": 0.85,
+        "urgency": "ADVISORY"
+      },
+      "Cylinder 2 injector trim reaching +18% c...": {
+        "predicted": "ATA 73",
+        "truth": "ATA 73",
+        "correct": true,
+        "confidence": 0.85,
+        "urgency": "ADVISORY"
+      },
+      "Fuel flow fluctuation observed at high a...": {
+        "predicted": "ATA 73",
+        "truth": "ATA 73",
+        "correct": true,
+        "confidence": 0.55,
+        "urgency": "ADVISORY"
+      },
+      "High pressure fuel leak detected near in...": {
+        "predicted": "ATA 73",
+        "truth": "ATA 73",
+        "correct": true,
+        "confidence": 0.7,
+        "urgency": "ADVISORY"
+      },
+      "Lambda lean excursion during rapid throt...": {
+        "predicted": "ATA 73",
+        "truth": "ATA 73",
+        "correct": true,
+        "confidence": 0.55,
+        "urgency": "ROUTINE"
+      },
+      "High CHT on cylinder 2 exceeding 175 deg...": {
+        "predicted": "ATA 75",
+        "truth": "ATA 75",
+        "correct": true,
+        "confidence": 0.85,
+        "urgency": "ADVISORY"
+      },
+      "Radiator fin obstruction with debris cau...": {
+        "predicted": "ATA 75",
+        "truth": "ATA 75",
+        "correct": true,
+        "confidence": 0.85,
+        "urgency": "ROUTINE"
+      },
+      "Water pump impeller cavitation suspected...": {
+        "predicted": "ATA 75",
+        "truth": "ATA 75",
+        "correct": true,
+        "confidence": 0.55,
+        "urgency": "ADVISORY"
+      },
+      "Coolant level low in reservoir with rapi...": {
+        "predicted": "ATA 75",
+        "truth": "ATA 75",
+        "correct": true,
+        "confidence": 0.7,
+        "urgency": "SAFETY_CRITICAL"
+      },
+      "Thermostat failed in partially closed po...": {
+        "predicted": "ATA 75",
+        "truth": "ATA 75",
+        "correct": true,
+        "confidence": 0.55,
+        "urgency": "ROUTINE"
+      },
+      "Oil pressure drop below 2.0 bar at cruis...": {
+        "predicted": "ATA 79",
+        "truth": "ATA 79",
+        "correct": true,
+        "confidence": 0.85,
+        "urgency": "ADVISORY"
+      },
+      "Metal shavings found in oil filter canis...": {
+        "predicted": "ATA 79",
+        "truth": "ATA 79",
+        "correct": true,
+        "confidence": 0.55,
+        "urgency": "ROUTINE"
+      },
+      "Magnetic chip detector warning illuminat...": {
+        "predicted": "ATA 79",
+        "truth": "ATA 79",
+        "correct": true,
+        "confidence": 0.55,
+        "urgency": "ROUTINE"
+      },
+      "Oil pressure relief valve stuck open, lo...": {
+        "predicted": "ATA 79",
+        "truth": "ATA 79",
+        "correct": true,
+        "confidence": 0.7,
+        "urgency": "ADVISORY"
+      },
+      "Oil cooler bypass valve malfunction caus...": {
+        "predicted": "ATA 72",
+        "truth": "ATA 79",
+        "correct": false,
+        "confidence": 0.55,
+        "urgency": "ROUTINE"
+      },
+      "Low manifold absolute pressure (MAP) abo...": {
+        "predicted": "ATA 81",
+        "truth": "ATA 81",
+        "correct": true,
+        "confidence": 0.7,
+        "urgency": "ADVISORY"
+      },
+      "Wastegate actuator binding causing turbo...": {
+        "predicted": "ATA 81",
+        "truth": "ATA 81",
+        "correct": true,
+        "confidence": 0.99,
+        "urgency": "ROUTINE"
+      },
+      "High frequency turbo whirl noise audible...": {
+        "predicted": "ATA 81",
+        "truth": "ATA 81",
+        "correct": true,
+        "confidence": 0.85,
+        "urgency": "ADVISORY"
+      },
+      "CHRA bearing play exceeding radial limit...": {
+        "predicted": "ATA 81",
+        "truth": "ATA 81",
+        "correct": true,
+        "confidence": 0.7,
+        "urgency": "ADVISORY"
+      },
+      "Intercooler duct dislodged causing massi...": {
+        "predicted": "ATA 81",
+        "truth": "ATA 81",
+        "correct": true,
+        "confidence": 0.7,
+        "urgency": "ROUTINE"
+      }
+    }
+  },
+  "timeseries_forecasting": {
+    "channel": "cht_1",
+    "history_steps": 50,
+    "horizon_steps": 30,
+    "rmse": 2.308,
+    "p10_p90_interval_coverage": 1.0,
+    "predicted_threshold_step": null
+  },
+  "tabular_in_context": {
+    "num_classes": 5,
+    "support_context_size": 50,
+    "query_test_size": 50,
+    "accuracy": 1.0,
+    "evidence_class": "RESEARCH_ONLY"
+  }
+}
