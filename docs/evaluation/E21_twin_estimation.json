@@ -1,0 +1,14 @@
+{
+  "experiment_id": "E21",
+  "schema_version": "result/1",
+  "evidence_class": "SIMULATION",
+  "ci_coverage_rate": 1.0,
+  "mean_tracking_error_eta": 0.0004180568460067646,
+  "mean_nis": 0.9957049852408796,
+  "sindy_law_recovery_rmse": 1.7494262851177573e-05,
+  "seeds": [
+    10,
+    20
+  ],
+  "notes": "Twin joint state/parameter estimation validated: cooling degradation tracked within 95% CI and SINDy recovers wear laws."
+}
