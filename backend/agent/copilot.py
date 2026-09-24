@@ -16,7 +16,7 @@ import re
 
 from backend.agent.diagnostic_agent import DiagnosticAgent, DiagnosticDirective
 from backend.knowledge.retrieval.local_store import LocalKnowledgeStore
-from backend.agent.llm_engine import LocalQwenEngine
+from backend.agent.llm_engine import LocalLLMEngine
 from backend.voice.conversation import VoiceConversationManager
 
 
@@ -201,13 +201,13 @@ class MissionCopilot:
         self,
         llm_dir: Optional[Path] = None,
         docs_dir: Optional[Path] = None,
-        llm_engine: Optional[LocalQwenEngine] = None
+        llm_engine: Optional[LocalLLMEngine] = None
     ):
         self.project_root = Path(__file__).resolve().parent.parent.parent
         self.llm_dir = llm_dir or (self.project_root / "llm")
         self.diagnostic_agent = DiagnosticAgent()
         self.knowledge_store = LocalKnowledgeStore(docs_dir=docs_dir)
-        self.llm_engine = llm_engine or LocalQwenEngine.get_instance()
+        self.llm_engine = llm_engine or LocalLLMEngine.get_instance()
         self.voice_conversations = VoiceConversationManager()
 
     def check_guardrails(self, query: str) -> Optional[str]:
@@ -637,8 +637,9 @@ class MissionCopilot:
     ) -> str:
         """
         Speech-friendly deterministic fallback used when the local LLM is unavailable
-        (still fully grounded — no markdown, no invention). Mirrors the reasoning the
-        Qwen path would explain out loud: root cause, what changed, and what to do.
+        (still fully grounded — no markdown, no invention; also the only path that runs
+        when ANUMAAN_LLM_PROVIDER=none, the default). Mirrors the reasoning the LLM
+        path would explain out loud: root cause, what changed, and what to do.
 
         This runs whenever Ollama is down, and always under pytest by design — so it's the
         one guaranteed to fire in tests. Without a nominal branch, a status question with no
@@ -711,7 +712,7 @@ class MissionCopilot:
         so the reply can go straight into the TTS engine.
 
         `on_delta`, if given, is invoked with each text chunk as the reply streams in (see
-        LocalQwenEngine.generate_chat_stream) — used to surface a live "thinking" preview in
+        LocalLLMEngine.generate_chat_stream) — used to surface a live "thinking" preview in
         the voice UI instead of a silent wait for the full reply. Purely a side channel: the
         function's return value is unaffected, and the deterministic fallback path below
         (used when the LLM call fails or is skipped) never streams since it's already instant.
@@ -996,7 +997,8 @@ class MissionCopilot:
         model_file = self.find_local_llm_model()
         response_text = ""
 
-        # Branch A: Generative Conversational AI (Local Qwen3-4B). Always attempted — generate()
+        # Branch A: Generative Conversational AI (local LLM, provider-configurable, disabled by
+        # default). Always attempted — generate()
         # lazy-loads on first call and fails soft into Branch B on any error. Previously this was
         # gated on a pre-checked `is_ready` flag that nothing ever set True outside the separate
         # /api/ai/warmup button, so this branch silently never ran and every answer came from the
@@ -1132,7 +1134,7 @@ class MissionCopilot:
 
     def diagnose_with_ai(self, engine_snapshot: Dict[str, Any], directive: Optional[DiagnosticDirective]) -> Dict[str, Any]:
         """
-        Core Plane-2 flow: Digital Twin State -> RAG retrieval -> Qwen3-4B reasoning -> grounded diagnosis.
+        Core Plane-2 flow: Digital Twin State -> RAG retrieval -> LLM reasoning -> grounded diagnosis.
         """
         fault_name = directive.fault_name if directive else "NOMINAL_FLIGHT"
         subsystem = directive.subsystem if directive else "PROPULSION_CORE"

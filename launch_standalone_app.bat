@@ -47,4 +47,4 @@ echo [NOTE] If telemetry is offline, ensure launch_backend_server.bat is running
 echo [OK] Launching Dedicated 3D Digital Twin Client (EEVEE Viewport Mode)...
 echo.
 
-"%BLENDER_EXE%" "%~dp03d_models\rotax_912_is_sport.blend" --python "%~dp0apps\blender_twin\standalone_digital_twin_app.py"
+"%BLENDER_EXE%" "%~dp0assets\blender\rotax_912_is_sport.blend" --python "%~dp0apps\blender_twin\standalone_digital_twin_app.py"

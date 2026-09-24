@@ -135,7 +135,18 @@ class MissionKnowledgeGraph:
         }
 
     def save(self, path: Optional[str] = None) -> None:
-        """Persist the full fleet graph to a single JSON file."""
+        """Persist the full fleet graph to a single JSON file.
+
+        os.replace() is atomic on both POSIX and Windows -- readers never see a
+        half-written store. What "atomic" does not mean on Windows: mandatory
+        file locking means MoveFileEx (what os.replace uses under the hood)
+        raises PermissionError/WinError 32 if another process has `target` open
+        at that instant, even just for reading. On POSIX the same call would
+        silently succeed. This is transient -- a concurrent reader's handle
+        closes within milliseconds -- so a short bounded retry is the correct
+        fix, not a design change. Discovered running the same server with two
+        processes touching this file concurrently on Windows.
+        """
         target = path or self.persist_path
         if not target:
             return
@@ -143,7 +154,19 @@ class MissionKnowledgeGraph:
         tmp = target + ".tmp"
         with open(tmp, "w", encoding="utf-8") as f:
             json.dump(self.to_dict(), f, indent=2)
-        os.replace(tmp, target)  # atomic on POSIX and Windows — never leaves a half-written store
+
+        last_err: Optional[OSError] = None
+        for attempt in range(5):
+            try:
+                os.replace(tmp, target)
+                return
+            except PermissionError as e:
+                last_err = e
+                time.sleep(0.02 * (attempt + 1))
+        # All retries exhausted: surface the failure rather than silently
+        # dropping the write, but leave `tmp` in place so no data is lost --
+        # the next successful save() overwrites it.
+        raise last_err  # type: ignore[misc]
 
     def load(self, path: str) -> None:
         """Restore fleet state from a JSON file previously written by save()."""

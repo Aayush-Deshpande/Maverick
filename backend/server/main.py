@@ -45,7 +45,7 @@ from backend.server.schemas import (
 )
 from backend.server.engine_service import EngineStateService
 from backend.telemetry.replay_engine import ReplayEngine
-from backend.agent.llm_engine import LocalQwenEngine
+from backend.agent.llm_engine import LocalLLMEngine
 from backend.voice.stt_engine import LocalWhisperSTT
 from backend.voice.tts_engine import LocalKokoroTTS
 from backend.voice.thinking_stream import THINKING_STREAM
@@ -318,7 +318,7 @@ def signoff_maintenance_action(action_id: str, body: MaintenanceSignoffRequest):
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Local AI (Qwen3-4B RAG reasoning layer) Endpoints
+# Local AI (pluggable LLM RAG reasoning layer -- see backend/agent/llm_engine.py) Endpoints
 #
 # All three routes are blocking/GPU-bound and are offloaded via asyncio.to_thread
 # so they never stall this process's event loop — which also runs
@@ -328,21 +328,23 @@ def signoff_maintenance_action(action_id: str, body: MaintenanceSignoffRequest):
 
 @app.get("/api/ai/status")
 def get_ai_status():
-    """Reports whether the local Qwen3-4B engine is loaded, loading, or unavailable."""
-    return LocalQwenEngine.get_instance().status_payload()
+    """Reports whether the configured local LLM provider (ANUMAAN_LLM_PROVIDER; DISABLED
+    by default) is loaded, loading, or unavailable."""
+    return LocalLLMEngine.get_instance().status_payload()
 
 
 @app.post("/api/ai/warmup")
 async def warmup_ai_engine():
-    """Explicitly triggers the (slow, one-time) Qwen3-4B load, instead of waiting for a fault."""
-    engine = LocalQwenEngine.get_instance()
+    """Explicitly triggers the (slow, one-time) LLM load, instead of waiting for a fault. A
+    no-op if no provider is configured (the default)."""
+    engine = LocalLLMEngine.get_instance()
     ok = await asyncio.to_thread(engine.ensure_loaded)
     return {"status": "SUCCESS" if ok else "ERROR", **engine.status_payload()}
 
 
 @app.post("/api/ai/ask")
 async def ask_ai_copilot(req: AIAskRequest):
-    """Free-text mission copilot query (guardrails + RAG retrieval + optional Qwen synthesis)."""
+    """Free-text mission copilot query (guardrails + RAG retrieval + optional LLM synthesis)."""
     service = EngineStateService.get_instance()
     state = service.get_latest_state()
     result = await asyncio.to_thread(
@@ -358,20 +360,20 @@ async def ask_ai_copilot(req: AIAskRequest):
 # Voice Interface Endpoints (STT -> Mission Copilot -> TTS)
 #
 # Same offload rationale as the /api/ai/* routes above: whisper.cpp transcription,
-# Qwen generation, and Kokoro synthesis are all blocking, CPU/GPU-bound calls that
+# LLM generation, and Kokoro synthesis are all blocking, CPU/GPU-bound calls that
 # would otherwise stall broadcast_telemetry_loop() for every connected client for
 # the duration of a voice turn (can be several seconds end-to-end).
 # ──────────────────────────────────────────────────────────────────────────────
 
 @app.get("/api/voice/status")
 def get_voice_status():
-    """Reports whether the local STT (whisper.cpp), TTS (Kokoro), and LLM (Qwen3-4B) engines
+    """Reports whether the local STT (whisper.cpp), TTS (Kokoro), and LLM engines
     are loaded. The LLM is included here even though it's also covered by /api/ai/status
     because a voice turn is unusable — falls back to templated answers — without it."""
     return {
         "stt": LocalWhisperSTT.get_instance().status_payload(),
         "tts": LocalKokoroTTS.get_instance().status_payload(),
-        "llm": LocalQwenEngine.get_instance().status_payload(),
+        "llm": LocalLLMEngine.get_instance().status_payload(),
     }
 
 
@@ -382,7 +384,7 @@ async def warmup_voice_engines():
     so this mostly just waits on it rather than starting it cold."""
     stt = LocalWhisperSTT.get_instance()
     tts = LocalKokoroTTS.get_instance()
-    llm = LocalQwenEngine.get_instance()
+    llm = LocalLLMEngine.get_instance()
     stt_ok, tts_ok, llm_ok = await asyncio.gather(
         asyncio.to_thread(stt.ensure_loaded),
         asyncio.to_thread(tts.ensure_loaded),

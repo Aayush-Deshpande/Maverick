@@ -1,14 +1,31 @@
 """
-Local Qwen3-4B Reasoning Engine — served via Ollama (GGUF Q4_K_M, GPU-offloaded)
+Local LLM Reasoning Engine — served via Ollama (GGUF, GPU-offloaded)
 DRDO / iDEX Problem Statement ID: 26054
 
-Runs Qwen3-4B fully on-device (no cloud, no API keys) through a local Ollama
-server, which wraps llama.cpp's quantized GPU kernels. This replaced an earlier
-transformers + BitsAndBytes 4-bit implementation: both run the same model at the
-same ~4-bit precision, but llama.cpp's kernels are dramatically faster for this
-kind of consumer-GPU inference — benchmarked in this repo at ~8-10 tok/s under
-transformers/BitsAndBytes vs. ~64 tok/s under Ollama on the same RTX 4050 Laptop
-GPU (6GB VRAM), turning a 30-90s reply into single-digit seconds.
+Runs a local model fully on-device (no cloud, no API keys) through a local
+Ollama server, which wraps llama.cpp's quantized GPU kernels.
+
+Pluggable provider, defaulting to DISABLED (B0.2). This file previously
+hardcoded Qwen3-4B (Alibaba) as both the class name and the only supported
+model. For a DRDO deliverable that is a real defect, not a style choice: the
+Indian Army cancelled contracts for 400 drones in 2025 specifically over
+Chinese-origin components (see docs/audit/10_red_team_readiness_review.md
+Sec 2.6), and shipping a Chinese model as the *default* AI component of this
+system is exactly that failure mode. The engine now:
+
+  * defaults to ANUMAAN_LLM_PROVIDER=none -- the LLM never starts, never talks
+    to Ollama, and the copilot falls back to its deterministic templated
+    answers (backend/agent/copilot.py already has this fallback path for
+    every caller, since the engine was always allowed to be unavailable);
+  * requires an explicit, informed opt-in to select a provider, preferring
+    Indian open-weight models (Sarvam, Apache-2.0; BharatGen Param2) over
+    anything else; Qwen remains selectable (ANUMAAN_LLM_PROVIDER=qwen) for
+    local dev/offline use, but is never the default and must never be shipped
+    as the default in a DRDO-facing build;
+  * keeps every other property of the original design: lazy-loaded, fails
+    soft, blocking-by-design, external Ollama dependency.
+
+See docs/build/DECISIONS.md D14 for the standing decision this implements.
 
 Design constraints (do not relax without re-reading the caller):
   * Lazy-loaded: the model is only pulled into Ollama's VRAM (via a no-op "warm"
@@ -25,8 +42,9 @@ Design constraints (do not relax without re-reading the caller):
     or the engine's `state_lock` critical section.
   * External dependency: requires an Ollama server running locally (`ollama
     serve`, or the Windows/Mac app, which runs it as a background service) with
-    the model already pulled (`ollama pull qwen3:4b-instruct-2507-q4_K_M`). This
-    class does not manage the Ollama process itself, only talks to its REST API.
+    the selected provider's model already pulled (see the provider registry
+    below). This class does not manage the Ollama process itself, only talks
+    to its REST API.
 """
 
 import json
@@ -38,33 +56,62 @@ from typing import Callable, Optional
 
 import httpx
 
-logger = logging.getLogger("QwenEngine")
+logger = logging.getLogger("LocalLLMEngine")
 
 OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
-QWEN_MODEL_ID = os.environ.get("QWEN_MODEL_ID", "qwen2.5:1.5b")
+
+# Provider registry: Ollama model tag per provider. "none" (the default) never
+# resolves to a tag and the engine never contacts Ollama at all. Pull the
+# corresponding model yourself before selecting a provider, e.g.:
+#   ollama pull sarvam-30b            # Sarvam-30B, Apache-2.0 (sarvam)
+#   ollama pull param2                # BharatGen Param2, MoE-17B (bharatgen)
+#   ollama pull qwen2.5:1.5b          # dev/offline only -- never the default (qwen)
+# ANUMAAN_LLM_MODEL_ID overrides the tag for any provider, including "local-other"
+# for a self-hosted/self-pulled model not in this registry.
+LLM_PROVIDER_MODELS = {
+    "none": None,
+    "sarvam": "sarvam-30b",
+    "bharatgen": "param2",
+    "qwen": "qwen2.5:1.5b",
+    "local-other": None,  # resolved entirely from ANUMAAN_LLM_MODEL_ID below
+}
+ANUMAAN_LLM_PROVIDER = os.environ.get("ANUMAAN_LLM_PROVIDER", "none").lower()
+if ANUMAAN_LLM_PROVIDER not in LLM_PROVIDER_MODELS:
+    logger.warning(
+        f"[LocalLLMEngine] Unknown ANUMAAN_LLM_PROVIDER={ANUMAAN_LLM_PROVIDER!r}, "
+        f"falling back to 'none' (disabled). Valid: {sorted(LLM_PROVIDER_MODELS)}"
+    )
+    ANUMAAN_LLM_PROVIDER = "none"
+QWEN_MODEL_ID = os.environ.get(
+    "ANUMAAN_LLM_MODEL_ID",
+    os.environ.get("QWEN_MODEL_ID") or LLM_PROVIDER_MODELS[ANUMAAN_LLM_PROVIDER] or "",
+)  # QWEN_MODEL_ID kept as a fallback env var name for anyone with it already set
 QWEN_MAX_NEW_TOKENS = int(os.environ.get("QWEN_MAX_NEW_TOKENS", "320"))
-# Qwen3's native context window (262144 tokens per `ollama show`) is wildly oversized for
-# this diagnostic-assistant use case — asking Ollama to allocate a KV cache for the full
-# window fails outright (observed: a 37GB buffer allocation error) on a 6GB laptop GPU.
-# 4096 comfortably covers a system prompt + retrieved manual excerpts + conversation
-# history + reply for every prompt this app constructs.
+# 262144-token native context windows are wildly oversized for this diagnostic-assistant
+# use case — asking Ollama to allocate a KV cache for the full window fails outright
+# (observed: a 37GB buffer allocation error) on a 6GB laptop GPU. 4096 comfortably covers
+# a system prompt + retrieved manual excerpts + conversation history + reply for every
+# prompt this app constructs.
 QWEN_NUM_CTX = int(os.environ.get("QWEN_NUM_CTX", "4096"))
-# Qwen3's hybrid thinking mode is disabled by default: the <think>...</think> reasoning
-# preamble adds latency this diagnostic-assistant use case doesn't need.
+# Hybrid "thinking" reasoning preambles are disabled by default: the extra latency isn't
+# needed for this diagnostic-assistant use case.
 QWEN_ENABLE_THINKING = os.environ.get("QWEN_ENABLE_THINKING", "0") == "1"
 # Keeps the model resident in VRAM between turns instead of reloading on every request —
 # reloading is fast on Ollama (~1-3s) but still needless overhead for an active session.
 QWEN_KEEP_ALIVE = os.environ.get("QWEN_KEEP_ALIVE", "30m")
 
 
-class LocalQwenEngine:
-    """Singleton client for a Qwen3-4B model served locally by Ollama."""
+class LocalLLMEngine:
+    """Singleton client for a locally-served LLM (via Ollama). Disabled by default
+    (ANUMAAN_LLM_PROVIDER=none) -- see the module docstring and
+    docs/build/DECISIONS.md D14 for why the default must never be a Chinese-origin
+    model."""
 
-    _instance: Optional["LocalQwenEngine"] = None
+    _instance: Optional["LocalLLMEngine"] = None
     _instance_lock = threading.Lock()
 
     @classmethod
-    def get_instance(cls) -> "LocalQwenEngine":
+    def get_instance(cls) -> "LocalLLMEngine":
         with cls._instance_lock:
             if cls._instance is None:
                 cls._instance = cls()
@@ -73,8 +120,14 @@ class LocalQwenEngine:
     def __init__(self):
         self._gen_lock = threading.Lock()   # serializes concurrent generate() calls
         self._load_lock = threading.Lock()  # guards the one-time warm-load
-        self.status = "NOT_LOADED"          # NOT_LOADED | LOADING | READY | ERROR
-        self.load_error: Optional[str] = None
+        self.provider = ANUMAAN_LLM_PROVIDER
+        self.status = "DISABLED" if self.provider == "none" else "NOT_LOADED"
+        # NOT_LOADED | LOADING | READY | ERROR | DISABLED
+        self.load_error: Optional[str] = (
+            None if self.provider != "none"
+            else "No LLM provider selected (ANUMAAN_LLM_PROVIDER=none, the default); "
+                 "the copilot uses its deterministic templated answers instead."
+        )
         self.device_info: str = ""
         self.model_id = QWEN_MODEL_ID
         self._client = httpx.Client(base_url=OLLAMA_HOST, timeout=180.0)
@@ -85,6 +138,8 @@ class LocalQwenEngine:
 
     def ensure_loaded(self) -> bool:
         """Warms the model into Ollama's VRAM on first call. Thread-safe and idempotent."""
+        if self.provider == "none":
+            return False  # disabled by configuration -- never touch the network
         if self.status == "READY":
             return True
         # ask()/ask_voice()/diagnose_with_ai() always attempt real generation now (no
@@ -94,7 +149,7 @@ class LocalQwenEngine:
         # every test environment — callers exercise their fail-soft fallback path instead.
         if "PYTEST_CURRENT_TEST" in os.environ:
             self.status = "ERROR"
-            self.load_error = "Qwen engine disabled under pytest (PYTEST_CURRENT_TEST set)"
+            self.load_error = "LLM engine disabled under pytest (PYTEST_CURRENT_TEST set)"
             return False
         with self._load_lock:
             if self.status == "READY":
@@ -104,7 +159,7 @@ class LocalQwenEngine:
             self.status = "LOADING"
             try:
                 t0 = time.time()
-                logger.info(f"[QwenEngine] Warming {self.model_id} via Ollama at {OLLAMA_HOST} ...")
+                logger.info(f"[LocalLLMEngine] Warming {self.model_id} via Ollama at {OLLAMA_HOST} ...")
                 # An empty prompt loads the model into VRAM and returns immediately
                 # (done_reason: "load") without generating any tokens.
                 resp = self._client.post("/api/generate", json={
@@ -145,16 +200,16 @@ class LocalQwenEngine:
                         "options": {"num_ctx": QWEN_NUM_CTX, "num_predict": 64},
                     })
                 except Exception as warm_e:
-                    logger.warning(f"[QwenEngine] Decode warm-up call failed (non-fatal): {warm_e}")
+                    logger.warning(f"[LocalLLMEngine] Decode warm-up call failed (non-fatal): {warm_e}")
 
                 self.device_info = "Ollama (GPU-offloaded)"
                 self.status = "READY"
-                logger.info(f"[QwenEngine] {self.model_id} ready in {time.time() - t0:.1f}s")
+                logger.info(f"[LocalLLMEngine] {self.model_id} ready in {time.time() - t0:.1f}s")
                 return True
             except Exception as e:
                 self.status = "ERROR"
                 self.load_error = str(e)
-                logger.error(f"[QwenEngine] Failed to reach/load {self.model_id} via Ollama: {e}", exc_info=True)
+                logger.error(f"[LocalLLMEngine] Failed to reach/load {self.model_id} via Ollama: {e}", exc_info=True)
                 return False
 
     def _chat(self, messages: list, max_new_tokens: Optional[int], temperature: float, top_p: float) -> str:
@@ -231,7 +286,7 @@ class LocalQwenEngine:
         Raises RuntimeError (never crashes) if the model is unavailable.
         """
         if not self.ensure_loaded():
-            raise RuntimeError(f"Qwen engine unavailable: {self.load_error}")
+            raise RuntimeError(f"LLM engine unavailable: {self.load_error}")
 
         messages = [
             {"role": "system", "content": system_prompt},
@@ -252,7 +307,7 @@ class LocalQwenEngine:
                      oldest first. Does not include the current user_prompt.
         """
         if not self.ensure_loaded():
-            raise RuntimeError(f"Qwen engine unavailable: {self.load_error}")
+            raise RuntimeError(f"LLM engine unavailable: {self.load_error}")
 
         messages = [{"role": "system", "content": system_prompt}]
         for turn in history:
@@ -277,7 +332,7 @@ class LocalQwenEngine:
         until the full reply is done. Used by the voice copilot so the operator sees the
         reply being composed live rather than staring at a silent "thinking" state."""
         if not self.ensure_loaded():
-            raise RuntimeError(f"Qwen engine unavailable: {self.load_error}")
+            raise RuntimeError(f"LLM engine unavailable: {self.load_error}")
 
         messages = [{"role": "system", "content": system_prompt}]
         for turn in history:
@@ -292,8 +347,14 @@ class LocalQwenEngine:
     def status_payload(self) -> dict:
         return {
             "status": self.status,
-            "model_id": self.model_id,
+            "provider": self.provider,
+            "model_id": self.model_id or None,
             "device": self.device_info or None,
             "error": self.load_error,
             "enable_thinking": QWEN_ENABLE_THINKING,
         }
+
+
+# Backward-compat alias: earlier code/branches import LocalQwenEngine by name.
+# Prefer LocalLLMEngine in new code.
+LocalQwenEngine = LocalLLMEngine

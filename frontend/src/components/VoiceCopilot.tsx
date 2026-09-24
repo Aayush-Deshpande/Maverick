@@ -240,7 +240,7 @@ export const VoiceCopilot: React.FC<VoiceCopilotProps> = ({
     refreshEngineStatus();
     // Keeps polling for as long as this tab is mounted (App.tsx only mounts VoiceCopilot
     // while the Voice Copilot tab is active, so this naturally stops when the operator
-    // navigates away). Without this, opening the tab while Whisper/Kokoro/Qwen are still
+    // navigates away). Without this, opening the tab while Whisper/Kokoro/LLM are still
     // loading in the background (the normal case right after server startup) left the
     // STT/TTS/LLM badges frozen on whatever the single initial fetch read - LOADING
     // forever, with no visible sign anything was still happening, until the operator
@@ -682,7 +682,7 @@ export const VoiceCopilot: React.FC<VoiceCopilotProps> = ({
                 Voice Mission Copilot
               </h2>
               <p className="text-[11px] text-slate-500">
-                Whisper.cpp STT + Qwen3-4B RAG + Kokoro TTS — fully local, conversational
+                Whisper.cpp STT + local LLM RAG + Kokoro TTS — fully local, conversational
               </p>
             </div>
           </div>
@@ -696,7 +696,7 @@ export const VoiceCopilot: React.FC<VoiceCopilotProps> = ({
             </span>
             <span
               className={`text-[10px] font-mono px-2 py-1 rounded-lg border ${statusBadgeClasses(llmStatus?.status)}`}
-              title={llmStatus?.status === 'ERROR' ? llmStatus?.error || '' : 'Qwen3-4B reasoning engine'}
+              title={llmStatus?.status === 'ERROR' ? llmStatus?.error || '' : (llmStatus?.provider && llmStatus.provider !== 'none' ? `${llmStatus.provider} reasoning engine` : 'No LLM provider configured (disabled by default)')}
             >
               LLM: {llmStatus?.status || 'UNKNOWN'}
             </span>

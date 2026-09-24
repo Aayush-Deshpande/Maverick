@@ -18,6 +18,7 @@ import asyncio
 from backend.physics.thermo_model import RotaxThermoModel, EnginePhysicalState, ResidualVector
 from backend.physics.sensor_validator import SensorSanityValidator, SanityReport
 from backend.telemetry.can_streamer import TelemetryStreamer, DRDO_FAULT_DEFINITIONS
+from backend.plant.adapter import IndependentPlantAdapter
 from backend.ml.detection_pipeline import DetectionPipeline, DiagnosticEvent
 from backend.ml.trend_analyser import ScoreBuffer, PrognosticsWorker
 from backend.ml.rul_estimator import RULEstimator
@@ -42,7 +43,11 @@ FAULT_TARGET_PARTS: Dict[int, List[str]] = {
         'Covers_Theme_M_PlasticTheme_0',
         'Covers_Theme_M_PlasticGreen_0',
         'Cooling_Air_Baffle_M_PlasticWhite_0',
-        'Cooling_Air_Baffle_M_PlasticCable_0'
+        # 'Cooling_Air_Baffle_M_PlasticCable_0' removed -- no such object in
+        # assets/blender/rotax_912_is_sport.blend; only a PlasticWhite variant
+        # of this part exists (confirmed via headless Blender object dump,
+        # scratch/real_objects.txt). Kept as a comment, not silently dropped,
+        # in case a future asset revision reintroduces a cable-material variant.
     ],
     2: [
         'Rotax_912i_Base_M_PlasticGreen_0',
@@ -139,6 +144,17 @@ class EngineStateService:
         # sample_rate_hz=20.0) are frame-count based, so feeding it frames at any other rate
         # silently changes those windows' real-world durations.
         self.streamer = TelemetryStreamer(sample_rate_hz=20.0)
+        # G01 (independent plant, closed for faults 1-4 + nominal): opt-in via env
+        # var, default off. See backend/plant/adapter.py's module docstring for why
+        # this is not the default yet -- the published 0.9751 classifier accuracy was
+        # measured against the old generator's distribution and has not been
+        # re-validated against the independent plant's. Flip on deliberately, retrain,
+        # publish the new number alongside the old one; do not swap it silently.
+        self.use_independent_plant = os.environ.get("ANUMAAN_USE_INDEPENDENT_PLANT", "0") == "1"
+        self.data_source = (
+            IndependentPlantAdapter(self.streamer, self.thermo_model)
+            if self.use_independent_plant else self.streamer
+        )
         self.score_buffer = ScoreBuffer(maxlen=7200)
         self.pipeline = DetectionPipeline(score_buffer=self.score_buffer, sortie_id=self.sortie_id)
         self.pipeline.load_models()
@@ -234,20 +250,20 @@ class EngineStateService:
             time.sleep(sleep_time)
 
     def _tick(self, dt: float):
-        """Computes one 120 Hz physical state update and analytical cycle."""
+        """Computes one 20 Hz physical state update and analytical cycle."""
         # 1. Update streamer environmental params
         self.streamer.region = self.region
         
         # 2. Generate frame from physical streamer with dynamic operator controls (G01/G02 plant decoupling)
         if self.is_engine_running:
-            actual, expected, residuals = self.streamer.generate_frame(
+            actual, expected, residuals = self.data_source.generate_frame(
                 throttle_cmd=self.throttle_pct,
                 altitude_cmd=self.altitude_ft,
                 oat_cmd=self.oat_c
             )
             actual.FLIGHT_PHASE = self.flight_phase
         else:
-            actual, expected, residuals = self.streamer.generate_frame()
+            actual, expected, residuals = self.data_source.generate_frame()
             p_amb, _, _ = self.thermo_model.get_ambient_properties(self.altitude_ft, self.oat_c)
             actual.ENGINE_RPM = 0.0
             actual.PROP_RPM = 0.0
@@ -458,7 +474,21 @@ class EngineStateService:
         if self._telemetry_log_tick_count % 10 == 0 and "PYTEST_CURRENT_TEST" not in os.environ:
             self._log_telemetry_row(telemetry_payload, diag_fid, health_idx)
 
-        target_parts = FAULT_TARGET_PARTS.get(diag_fid, [])
+        # 3D highlight target: prioritise the OPERATOR-COMMANDED fault, falling back to the
+        # genuine ML/physics diagnosis -- mirrors the client's own priority for camera framing
+        # (see update_camera_for_backend_fault() in standalone_digital_twin_app.py: "Use
+        # commanded fault if explicitly set by operator, else use diagnosed fault"). Before this
+        # fix, target_parts was tied unconditionally to diag_fid (the genuine, non-circular
+        # diagnosis added to stop the dashboard fake-echoing the commanded label as a real
+        # detection). That was the right fix for diagnosed_fault_id/confidence, but it also
+        # silently broke 3D mesh highlighting: an operator-commanded fault now highlights
+        # nothing until the pipeline independently re-detects it, which can lag by several
+        # seconds (the fault's own ramp_duration_sec) or never cross CONFIDENCE_GATE at low
+        # severity. Camera panning already used commanded-first and kept working -- this brings
+        # mesh highlighting into line with it. diagnosed_fault_id/diag_conf below are untouched
+        # and remain the genuine diagnosis, never the commanded label.
+        display_fault_id = self.active_fault_id if self.active_fault_id > 0 else diag_fid
+        target_parts = FAULT_TARGET_PARTS.get(display_fault_id, [])
         target_mesh = target_parts[0] if target_parts else "All"
         
         # Reuse the report Stage 1 already computed inside process_frame() above for this

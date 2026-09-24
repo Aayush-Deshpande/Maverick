@@ -115,6 +115,7 @@ export interface AnalyticsState {
     rul_p90_hours: number;
     confidence_level: number;
     coverage_guarantee: string;
+    calibrated?: boolean;
   }>;
   subsystem_health?: SubsystemHealth;
   causal_chain?: string[];

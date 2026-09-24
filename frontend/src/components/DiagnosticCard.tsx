@@ -185,7 +185,7 @@ export const DiagnosticCard: React.FC<DiagnosticCardProps> = ({
         <div className="space-y-2 pt-1">
           <span className="text-[11px] font-medium text-ai-accent flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5" />
-            AI reasoning (Qwen3-4B, local / RAG-grounded)
+            AI reasoning (local LLM, RAG-grounded)
           </span>
 
           {(!a.ai_diagnosis || a.ai_diagnosis.status === 'IDLE') && (
@@ -214,7 +214,7 @@ export const DiagnosticCard: React.FC<DiagnosticCardProps> = ({
               <AerospaceMarkdown
                 content={a.ai_diagnosis.explanation}
                 citations={a.ai_diagnosis.citations}
-                title="Qwen3-4B Grounded Diagnostic Synthesis"
+                title="Local LLM Grounded Diagnostic Synthesis"
               />
             </div>
           )}

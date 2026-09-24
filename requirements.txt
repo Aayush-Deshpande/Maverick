@@ -34,16 +34,22 @@ flashrank>=0.2.5        # backend/knowledge/retrieval/reranker.py — secondary 
                          # sentence-transformers semantic embedding; falls back further to keyword overlap
                          # if neither is installed)
 
-# Local AI Reasoning Layer (Qwen3-4B RAG copilot) — OPTIONAL.
+# Local AI Reasoning Layer (pluggable RAG copilot) — OPTIONAL, DISABLED BY DEFAULT.
 # The deterministic engine, standalone app, and dashboard all work with none of this installed;
-# the AI diagnosis panel just reports "unavailable" instead.
+# the AI diagnosis panel just reports "unavailable" instead, using its deterministic
+# templated fallback (see backend/agent/copilot.py).
 #
 # The LLM itself is served by Ollama (https://ollama.com), NOT a pip package — install it
-# separately and pull the model once:
-#   ollama pull qwen3:4b-instruct-2507-q4_K_M
+# separately, set ANUMAAN_LLM_PROVIDER, and pull the matching model once. The default is
+# ANUMAAN_LLM_PROVIDER=none (no model pulled, no Ollama contact at all — see
+# backend/agent/llm_engine.py and docs/build/DECISIONS.md D14 for why a Chinese-origin
+# model is never the default in a DRDO-facing build):
+#   ANUMAAN_LLM_PROVIDER=sarvam       &&  ollama pull sarvam-30b     # Indian, Apache-2.0
+#   ANUMAAN_LLM_PROVIDER=bharatgen    &&  ollama pull param2         # Indian, MoE-17B
+#   ANUMAAN_LLM_PROVIDER=qwen         &&  ollama pull qwen2.5:1.5b   # dev/offline only
 # Ollama wraps llama.cpp's quantized GPU kernels, which are dramatically faster for this than
-# the transformers/BitsAndBytes in-process path this used to use (~8-10 tok/s -> ~64 tok/s on
-# the same 6GB laptop GPU in this repo's own testing). torch/transformers/sentence-transformers
+# an in-process transformers/BitsAndBytes path (~8-10 tok/s -> ~64 tok/s on a 6GB laptop GPU
+# in this repo's own testing, measured against Qwen3-4B). torch/transformers/sentence-transformers
 # below are for the separate RAG embedding + Kokoro TTS models, not the LLM.
 torch>=2.5.0
 transformers>=4.57.0
