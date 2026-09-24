@@ -1,0 +1,16 @@
+{
+  "experiment_id": "E22",
+  "schema_version": "result/1",
+  "evidence_class": "SIMULATION",
+  "bn_top_hypothesis": "COOLING_DEGRADATION",
+  "bn_top_probability": 1.0,
+  "active_test_recommended": null,
+  "active_test_eig_bits": 0.0,
+  "rul_median_hours": 531.7,
+  "rul_conformal_interval": [
+    393.7,
+    669.8
+  ],
+  "alarm_flood_suppressed": true,
+  "notes": "Diagnosis Bayesian network, active test selection, dual-path RUL, and ISA-18.2 alarm management validated."
+}
