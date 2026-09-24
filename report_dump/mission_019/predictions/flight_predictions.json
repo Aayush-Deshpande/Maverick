@@ -1,8 +1,0 @@
-{
-  "method": "Linear extrapolation of the observed CHT rise rate against the 135 \u00b0C certified cylinder head limit.",
-  "observed_cht_rise_rate_c_per_s": 0.8237,
-  "peak_cht_c": 107.74,
-  "thermal_margin_c": 27.26,
-  "projected_seconds_to_cht_limit": 33.1,
-  "advisory": "Maintain convective cooling profile; re-evaluate on the next climb."
-}
