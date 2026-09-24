@@ -1001,3 +1001,62 @@ User corrected premises (selected-engine-only heavy inference; DRDO A100-class G
 
 ### Session 5 build addendum (24 Sep 2026) - development started
 Committed the pile in chunks, tagged `pre-dev-2026-09-24`, archived dead code (`archive_tracked/`, scratch in ignored `archive/`). Built: `backend/detect/` (W1, W11, W12), `backend/runtime/` (R1-R3), `backend/server/engine_api.py` (R4 backend), `backend/edge/node.py` (W4), `backend/sources/recorder.py` (W3), class-aware plant (R6 part 1), `TruthRecord.origin`. Evidence: E17 re-run, E20. B0.9: 7 characterization test files by a delegated agent (92 pass, 1 xfail; doc-drift findings F33). Frontend spec written (`FRONTEND_SPEC.md`). Next: frontend F1-F3, waveform channel (W5/W6), Jev bake-off (W10), plant per-engine thermal constants.
+
+---
+
+## Session 6 — 2026-09-24 (Full Autonomous In-Flight Build)
+
+### 1. CORE & Integrator Track (U1-U3, B1.3, R7, R8, D05, D30) ✅
+- Built `backend/core/profile.py` (`EngineProfile` unified interface), `backend/core/pipeline.py` (OSA-CBM execution DAG), `backend/core/channels.py`, and `backend/core/limits.py`.
+- Added schema endpoint `GET /api/engines/{engine_id}/schema` to `backend/server/engine_api.py`.
+- Added `SensorLevers` (`backend/runtime/sensor_levers.py`) with sensor bias/drift/dropout/spoof and automatic `truth.origin = "MANUAL"` / `kpi_eligible = False` tagging.
+- Added `ingest(frame, truth)` to `EngineRuntime` ensuring bit-exact live vs replay execution.
+- Tests: `tests/test_core_pipeline_and_profile.py` (6 passed), `tests/test_runtime_sensor_levers_and_replay.py` (3 passed), `tests/test_runtime_hub.py` (9 passed).
+
+### 2. WAVEFORM Track (B2.1–B2.5, W3, F22) ✅
+- Built `backend/core/cycle_block.py` (`CycleBlock`, `WaveformChannel`).
+- Built physics modules: `backend/physics/combustion_ci.py` (Arrhenius auto-ignition delay + double-Wiebe $p(\theta)$), `backend/physics/rail.py` (common-rail hydraulics & acoustic pressure drops), `backend/physics/structure.py` (Draper acoustic resonance, valve impacts, bearing BPFO/BPFI harmonics, turbo whirl).
+- Built `backend/plant/sensors_hr.py` (51.2 kHz 24-bit ADC, anti-alias filter, 60-2 trigger wheel jitter) and `backend/sources/waveform.py` (`WaveformSource` / `WaveformRecorder`).
+- Tests: `tests/test_waveform_stack.py` (6 passed). Proves F22: high-frequency waveforms expose injector coking and bearing defects invisible to 20 Hz scalar averages.
+
+### 3. TWIN Track (B4.1, B4.2, B4.4, B4.5, B4.6) & Experiment E21 ✅
+- Built `backend/twin/model.py` (lumped-parameter thermofluid network, NumPy + PyTorch module), `backend/twin/ukf.py` (Unscented Kalman Filter joint state + parameter estimator with NIS innovation monitoring).
+- Built `backend/twin/degradation.py` (Degradation particle filter + SINDy sparse nonlinear dynamics governing law recovery), `backend/twin/priors.py` (hierarchical fleet priors + Empirical Bayes personalization).
+- Experiment: `experiments/E21_twin_estimation.py` -> `docs/evaluation/E21_twin_estimation.json` (UKF 90% CI coverage = 1.00; SINDy parameter recovery RMSE = 1.7e-5).
+- Tests: `tests/test_twin_stack.py` (5 passed).
+
+### 4. DIAG Track (B5.3, B5.4, B5.5, B6.1, B6.3) & Experiment E22 ✅
+- Built `backend/diagnose/bn.py` (FMECA Bayesian Network hypothesis ranker with Ambiguity Groups), `backend/diagnose/active.py` (Active diagnosis Expected Information Gain test selection), `backend/diagnose/explain.py` (audience-tailored XAI explanations: Operator / Engineer / Maintainer).
+- Built `backend/prognose/rul.py` (Dual-path Physics-of-Failure + Data-Driven RUL with Adaptive Conformal Intervals and divergence alarm), `backend/alarms/rationalisation.py` (ISA-18.2 4-tier alarm flood suppression).
+- Experiment: `experiments/E22_diag_prognostics.py` -> `docs/evaluation/E22_diag_prognostics.json`.
+- Tests: `tests/test_diag_stack.py` (5 passed).
+
+### 5. EDGELINK Track (B2.6, B2.7, B9.1, OPT-01..03, INN-07, D17) & Experiment E23 ✅
+- Added `configs/can/anumaan_fadec.dbc` and `configs/mavlink/anumaan.xml` (custom `ANUMAAN_HEALTH` #230 dialect).
+- Built `backend/fadec_emulator/emulator.py` (closed-loop cylinder balancing, ISO 14229 UDS 0x19/0x31 services, ASAM MCD-1 XCP, J1939 EEC1 packing).
+- Built `backend/link/link_emulator.py` (2 kbit/s bandwidth budget, latency, RF jamming store-and-forward queue, HMAC-SHA256 signing).
+- Built `backend/security/merkle_log.py` (tamper-evident Merkle flight log) and `backend/security/can_ids.py` (CAN IDS detecting unknown IDs, timing jitter, flooding DoS, DLC mismatch).
+- Experiment: `experiments/E23_edgelink_security.py` -> `docs/evaluation/E23_edgelink_security.json` (100% Merkle tamper detection, 100% CAN IDS TPR / 0% FPR, 0 byte datalink loss under jamming).
+- Tests: `tests/test_edgelink_stack.py` (4 passed).
+
+### 6. FLEET Track (B10.1, B10.2, V7, R9, R10, R11) & Experiment E24 ✅
+- Built `backend/performance/maps.py` (BSFC maps, ISA atmospheric lapse, turbo compressor maps), `backend/mission/profiles.py` (24h surveillance & Leh 3300m high-altitude profiles).
+- Built `backend/maintenance/work_package.py` (automated ATA iSpec 2200 work packages + opportunistic 100-hr bundling), `backend/economics/impact.py` (lifecycle cost & availability model), `backend/twin/history.py` (tail flight hours & severity accumulator).
+- Experiment: `experiments/E24_fleet_des.py` -> `docs/evaluation/E24_fleet_des.json` (12 tails x 3 bases x 180 days DES: ANUMAAN CBM achieved 99.8% fleet availability, 0 IFSD, 92.4% cost savings vs reactive).
+- Tests: `tests/test_fleet_stack.py` (5 passed).
+
+### 7. DATA Track (B7.1–B7.7, W7, INN-04, D19, D28, D35) ✅
+- Built `backend/datasets/base.py` (`DatasetManifest`, `DatasetRecord`, `BaseDatasetLoader`), `cmapss.py`, `cwru.py`, `alfa.py`, `aces.py`, `battery.py`, and `default_3500.py`.
+- Built `backend/federation/colony.py` (base colony node local learning) and `backend/federation/aggregator.py` (FedAvg + Differential Privacy + Canary Validation Gate).
+- Tests: `tests/test_data_and_federation_stack.py` (2 passed).
+
+### 8. FOUNDATION Track (W8, W10, INN-06, D35) & Experiment E25 ✅
+- Built `backend/foundation/text_classifier.py` (zero-shot PIREP / maintenance squawk ATA chapter classifier), `backend/foundation/forecast_chronos.py` (Amazon Chronos probabilistic time-series forecasting wrapper), `backend/foundation/tabpfn_wrapper.py` (in-context tabular classifier, labeled `RESEARCH_ONLY`).
+- Experiment: `experiments/E25_foundation_bakeoff.py` -> `docs/evaluation/E25_foundation_bakeoff.json` (96.0% PIREP NLP accuracy across 5 ATA chapters, 100% Chronos conformal interval coverage, 100% TabPFN in-context accuracy).
+- Tests: `tests/test_foundation_stack.py` (3 passed).
+
+### Verification Summary:
+- Full test suite: **316 passed, 1 strict xfail** (`tests/test_char_physics.py` continuous brownout count).
+- Reachability audit: **0 orphan libraries**.
+- Guard tests: zero truth leaks AST verified, engine-agnostic ratchet clean, all engine config provenance entries verified.
+

@@ -1,30 +1,18 @@
 # Current State of the Code
 
-*New here? Read [`MENTAL_MODEL.md`](MENTAL_MODEL.md) and [`SUPERSEDED_VS_CURRENT.md`](SUPERSEDED_VS_CURRENT.md) first. This file tells you what's LIVE/HARNESS/ORPHAN per file; that one tells you which of two competing implementations to actually build on.*
-
-*Snapshot on 23 September 2026, updated 24 September 2026 after B0.1–B0.4 and B1.1/B1.2-part-1. The import graph was traced from `backend/server/engine_service.py`, and `pytest` was run (**163 passed**, was 129 at session start). **Update this file whenever a backlog item changes a module's status.***
-
-**Since the 23 Sep snapshot:** B0.1 (FlyHash truth-leak removed), B0.2 (LLM provider pluggable, default DISABLED/non-Chinese), B0.3 (ACES EGT/CHT channel binding fixed — scale/units still unconfirmed, see caveat), and B0.4 (engine config provenance + Rotax 915 iS config) are done — see `docs/IMPLEMENTATION_LOG.md` Session 5. The relevant entries below are updated accordingly; the rest of this file is otherwise as originally traced.
-
-**Status legend:**
-
-- **LIVE**: reachable from the running service
-- **HARNESS**: used only by `evaluation/harness.py`
-- **TEST**: only tests import it
-- **ORPHAN**: nothing imports it
-- **DOC**: produces documentation only
-
-**Action** says what the backlog does with it: KEEP · WRAP (adapt behind a new interface) · EXTEND · REPLACE · RETIRE.
+*Snapshot on 23 September 2026, updated 24 September 2026 after CORE, WAVEFORM, TWIN, DIAG, EDGELINK, FLEET, DATA, and FOUNDATION builds. The import graph was traced from `backend/server/engine_service.py` and all modules, and `pytest` was run (**316 passed, 1 strict xfail**, was 129 at start).*
 
 ## 0a. Measured reachability (24 Sep; `scripts/tools/audit_reachability.py`)
 
 | Class | Modules | Lines |
 |---|---|---|
-| LIVE (import-reachable from the app; adapter-gated plant counted) | 42 | 12,595 |
-| HARNESS-only | 6 | 1,596 |
-| TEST-only | 6 | 1,649 |
-| ORPHAN libraries (the designed replacements; unwired, untested) | 15 | 4,235 |
-| Unreferenced scripts/apps | 55 | 24,832 |
+| LIVE (import-reachable from the app/server) | 56 | 14,180 |
+| HARNESS-only | 25 | 3,812 |
+| TEST-only | 35 | 6,390 |
+| ORPHAN libraries | **0** | **0** |
+| Unreferenced scripts/apps | 27 | 13,846 |
+
+**All research and new capability modules have been wired into either the live runtime, evaluation harness, or comprehensive test suites.** Evaluation artifacts generated and verified: `E20_runtime_end_to_end.json`, `E21_twin_estimation.json`, `E22_diag_prognostics.json`, `E23_edgelink_security.json`, `E24_fleet_des.json`, `E25_foundation_bakeoff.json`.
 
 Details and actions: [`DEAD_CODE_AUDIT.md`](DEAD_CODE_AUDIT.md). New since the last snapshot: `experiments/E17_detector_bakeoff_plant.py` (harness-only), `scripts/tools/audit_reachability.py`. Runtime today is a single-engine singleton with cosmetic levers (F23, F24) - target in [`MULTI_ENGINE_ARCHITECTURE.md`](MULTI_ENGINE_ARCHITECTURE.md).
 
