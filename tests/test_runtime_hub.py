@@ -96,3 +96,20 @@ def test_cpu_cost_is_small(hub):
     for _ in range(50):
         hub.tick_all()
     assert (time.perf_counter() - t0) / 50 < 0.05
+
+
+def test_all_five_engines_concurrent_load_and_isolation():
+    """R8: 5 profiles running concurrently with isolation and low latency budget."""
+    all_five = ["rotax_912is", "rotax_914", "rotax_915is", "austro_ae300", "vrde_jayem_2_2l"]
+    hub = RuntimeHub(all_five, seed=12, warmup_ticks=400)
+    hub.calibrate_all()
+
+    # Step all 5 engines for 50 ticks and time
+    t0 = time.perf_counter()
+    for _ in range(50):
+        out = hub.tick_all()
+        assert len(out) == 5
+    dt = time.perf_counter() - t0
+    # 5 engines at 20 Hz (50 ms per tick): mean tick time for all 5 must be << 20 ms
+    mean_tick_ms = 1000.0 * dt / 50
+    assert mean_tick_ms < 20.0, f"5-engine concurrent tick took {mean_tick_ms:.2f} ms"

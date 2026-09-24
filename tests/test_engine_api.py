@@ -63,3 +63,13 @@ def test_ws_fleet(client):
     with client.websocket_connect("/ws/fleet") as ws:
         msg = ws.receive_json()
         assert {e["engine_id"] for e in msg["engines"]} == {"rotax_912is", "rotax_914"}
+
+
+def test_engine_schema(client):
+    r = client.get("/api/engines/rotax_914/schema")
+    assert r.status_code == 200
+    data = r.json()
+    assert data["engine_id"] == "rotax_914"
+    assert "channels" in data
+    assert "operating_limits" in data
+    assert client.get("/api/engines/nonexistent_engine/schema").status_code == 404

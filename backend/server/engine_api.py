@@ -91,6 +91,16 @@ def engine_state(engine_id: str):
     return EngineRuntime.payload(rt.buffer[-1])
 
 
+@router.get("/api/engines/{engine_id}/schema")
+def engine_schema(engine_id: str):
+    from backend.core.profile import load_profile
+    try:
+        prof = load_profile(engine_id)
+        return prof.to_schema()
+    except FileNotFoundError:
+        raise HTTPException(404, f"unknown engine {engine_id!r}")
+
+
 @router.post("/api/engines/{engine_id}/faults")
 def inject_fault(engine_id: str, body: FaultBody):
     rt = _rt(engine_id)

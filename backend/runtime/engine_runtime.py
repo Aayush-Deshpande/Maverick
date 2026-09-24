@@ -1,8 +1,11 @@
-"""EngineRuntime -- one engine profile's simulator + injectors + detector bank (R1/R2/R3, D29).
+"""EngineRuntime -- one engine profile's simulator + injectors + detector bank (R1/R2/R3/R7, D29, D05).
 
-No module-level state: every runtime owns its plant, levers, detector, buffers and locks, so a fault on
-one engine can never touch another.  Tier-0 (calibrated residual scorers, FlyHash) runs every tick;
-tier-1 (reservoir) is trained and stepped only while this engine is the SELECTED one (D29/D36)."""
+No module-level state: every runtime owns its plant, levers, sensor levers, detector, buffers and locks,
+so a fault on one engine can never touch another. Tier-0 (calibrated residual scorers, FlyHash) runs every tick;
+tier-1 (reservoir) is trained and stepped only while this engine is the SELECTED one (D29/D36).
+
+Implements ingest(frame, truth): processing a live tick and ingesting a replayed frame run the identical path.
+"""
 
 from __future__ import annotations
 
@@ -18,6 +21,7 @@ from backend.detect import DetectionResult, Reservoir, ResidualDetector
 from backend.physics.engine_config import EngineConfig, load_engine_config
 from backend.runtime.levers import Levers
 from backend.runtime.registry import FAULT_REGISTRY, faults_for, thermal_visible_faults
+from backend.runtime.sensor_levers import SensorLevers
 from backend.sources import PlantSource
 
 DT = 1.0                      # simulated seconds per tick (calibrated at this cadence)
@@ -43,6 +47,7 @@ class EngineRuntime:
         self.tail_id = tail_id or f"TAIL-{engine_config_id}-{seed}"
         self.source = PlantSource(engine_config_id, seed=seed, tail_id=self.tail_id)
         self.levers = Levers()
+        self.sensor_levers = SensorLevers(seed=seed)
         self.buffer: Deque[Tick] = deque(maxlen=buffer_len)
         self.detector: Optional[ResidualDetector] = None
         self.reservoir: Optional[Reservoir] = None
@@ -113,7 +118,7 @@ class EngineRuntime:
             self.reservoir = res
             self.heavy_ready = True
 
-    # ---- operator actions (R2/R3) -----------------------------------------------------------
+    # ---- operator actions (R2/R3/R7) --------------------------------------------------------
     def set_levers(self, **kw) -> Dict[str, float]:
         with self._lock:
             self.levers.set_targets(**kw)
@@ -143,17 +148,37 @@ class EngineRuntime:
     def clear_faults(self) -> None:
         with self._lock:
             self.source.clear_faults()
+            self.sensor_levers.clear()
             self.injected.clear()
             if self.detector:
                 self.detector.gate.reset()
 
-    # ---- simulation ------------------------------------------------------------------------
-    def tick(self, heavy: bool = False) -> Tick:
+    def set_sensor_fault(self, kind: str, channel: str, **kwargs) -> None:
+        """Inject sensor-level fault (R7): bias, drift, stuck, noise, dropout, spoof."""
         with self._lock:
-            self.levers.advance(DT)
-            frame, truth = self.source.step(DT, throttle_pct=self.levers.throttle_pct,
-                                            altitude_ft=self.levers.altitude_ft, oat_c=self.levers.oat_c)
-            truth.origin = "MANUAL" if self.manual_origin else "SCRIPTED"
+            if kind == "bias":
+                self.sensor_levers.inject_bias(channel, kwargs.get("offset", 0.0))
+            elif kind == "drift":
+                self.sensor_levers.inject_drift(channel, kwargs.get("rate_per_sec", 0.0))
+            elif kind == "stuck":
+                self.sensor_levers.inject_stuck(channel, kwargs.get("frozen_value"))
+            elif kind == "noise":
+                self.sensor_levers.inject_noise(channel, kwargs.get("sigma", 1.0))
+            elif kind == "dropout":
+                self.sensor_levers.inject_dropout(channel)
+            elif kind == "spoof":
+                self.sensor_levers.inject_spoof(channel, kwargs.get("spoof_value", 0.0))
+            else:
+                raise ValueError(f"unknown sensor fault kind {kind!r}")
+            self.manual_origin = True
+
+    # ---- ingest and simulation (D05: Live = Replay at 1x) -----------------------------------
+    def ingest(self, frame: Frame, truth: Optional[TruthRecord] = None, heavy: bool = False) -> Tick:
+        """Process one Frame through the detector stack. Identical for live and replay."""
+        with self._lock:
+            if truth is None:
+                truth = TruthRecord(t=frame.t, origin="REPLAY")
+
             det = self.detector.score(frame) if self.detector else None
             hv = None
             if heavy and self.reservoir is not None and self.detector is not None:
@@ -161,9 +186,29 @@ class EngineRuntime:
                 label, scores = self.reservoir.predict_step(cal.features(cal.z(frame)))
                 hv = {"label": str(label), "classes": [str(c) for c in self.reservoir.classes_],
                       "scores": [round(float(s), 3) for s in scores]}
+
             t = Tick(self.engine_id, frame, truth, det, hv)
             self.buffer.append(t)
             return t
+
+    def tick(self, heavy: bool = False) -> Tick:
+        with self._lock:
+            self.levers.advance(DT)
+            raw_frame, truth = self.source.step(DT, throttle_pct=self.levers.throttle_pct,
+                                                altitude_ft=self.levers.altitude_ft, oat_c=self.levers.oat_c)
+
+            # Apply sensor layer manipulations (R7)
+            frame = self.sensor_levers.apply(raw_frame, DT)
+
+            if self.manual_origin or self.sensor_levers.has_active_faults:
+                truth.origin = "MANUAL"
+            else:
+                truth.origin = "SCRIPTED"
+
+            if self.sensor_levers.has_active_faults:
+                truth.active_faults.extend(self.sensor_levers.active_fault_truths(frame.t))
+
+            return self.ingest(frame, truth, heavy=heavy)
 
     # ---- presentation ------------------------------------------------------------------------
     def profile(self) -> Dict[str, Any]:
