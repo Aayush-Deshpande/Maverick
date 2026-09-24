@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<mavlink>
+  <include>common.xml</include>
+  <dialect>0</dialect>
+  <messages>
+    <message id="230" name="ANUMAAN_HEALTH">
+      <description>Edge-computed HealthFrame v2 downlink message for ANUMAAN Digital Twin.</description>
+      <field type="uint32_t" name="time_boot_ms">Timestamp (milliseconds since system boot)</field>
+      <field type="float" name="order_05">Half-order vibration amplitude (combustion work balance)</field>
+      <field type="float" name="order_1">1st shaft order vibration amplitude</field>
+      <field type="float" name="order_2">2nd order vibration amplitude (dominant 4-cylinder order)</field>
+      <field type="float" name="order_4">4th order vibration amplitude</field>
+      <field type="float" name="crest_factor">Vibration crest factor</field>
+      <field type="float" name="kurtosis">Vibration kurtosis</field>
+      <field type="uint8_t" name="n_cyl">Cylinder count</field>
+      <field type="uint8_t" name="verdict_code">0=HEALTHY, 1=CAUTION, 2=WARNING, 3=CRITICAL</field>
+      <field type="uint8_t" name="top_hypothesis_id">FMECA hypothesis mode code</field>
+      <field type="uint8_t" name="hypothesis_prob_byte">Hypothesis probability scaled 0..255</field>
+      <field type="uint8_t" name="novelty_score_byte">Novelty score scaled 0..255</field>
+      <field type="uint16_t" name="flags">Status bitflags (jamming, store-and-forward drain, etc.)</field>
+    </message>
+  </messages>
+</mavlink>

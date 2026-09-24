@@ -1,0 +1,28 @@
+VERSION ""
+
+NS_ :
+
+BS_:
+
+BU_: FADEC ANUMAAN_TWIN GCS
+
+BO_ 2566849022 EEC1_ENGINE_SPEED: 8 FADEC
+ SG_ EngineSpeed : 0|16@1+ (0.125,0) [0|8000] "rpm" Vector__XXX
+ SG_ EngineTorqueMode : 16|4@1+ (1,0) [0|15] "" Vector__XXX
+ SG_ ActualEnginePercentTorque : 24|8@1+ (1,-125) [-125|125] "%" Vector__XXX
+
+BO_ 2566849278 ET1_ENGINE_TEMP: 8 FADEC
+ SG_ EngineCoolantTemperature : 0|8@1+ (1,-40) [-40|210] "degC" Vector__XXX
+ SG_ FuelTemperature : 8|8@1+ (1,-40) [-40|210] "degC" Vector__XXX
+ SG_ EngineOilTemperature : 16|16@1+ (0.03125,-273) [-273|1735] "degC" Vector__XXX
+
+BO_ 2566849534 EFL_P1_ENGINE_FLUID: 8 FADEC
+ SG_ EngineFuelDeliveryPressure : 0|8@1+ (4,0) [0|1000] "kPa" Vector__XXX
+ SG_ EngineOilPressure : 16|8@1+ (4,0) [0|1000] "kPa" Vector__XXX
+ SG_ FuelRate : 32|16@1+ (0.05,0) [0|3212.75] "L/h" Vector__XXX
+
+BO_ 2566850046 ANUMAAN_CYL_TRIMS: 8 FADEC
+ SG_ Cyl1Trim : 0|8@1+ (0.5,-64) [-64|63.5] "%" Vector__XXX
+ SG_ Cyl2Trim : 8|8@1+ (0.5,-64) [-64|63.5] "%" Vector__XXX
+ SG_ Cyl3Trim : 16|8@1+ (0.5,-64) [-64|63.5] "%" Vector__XXX
+ SG_ Cyl4Trim : 24|8@1+ (0.5,-64) [-64|63.5] "%" Vector__XXX

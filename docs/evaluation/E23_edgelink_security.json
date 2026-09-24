@@ -1,0 +1,61 @@
+{
+  "metadata": {
+    "experiment": "E23_edgelink_security",
+    "evidence_class": "SIMULATION",
+    "seed": 42,
+    "timestamp": "2026-09-24T17:27:30Z"
+  },
+  "fadec_balancing": {
+    "engine_profile": "austro_ae300",
+    "nominal_torques_nm": [
+      200.0,
+      235.0,
+      235.0,
+      235.0
+    ],
+    "adapted_trims_pct": [
+      13.05,
+      -4.35,
+      -4.35,
+      -4.35
+    ],
+    "adapted_drift_pct": [
+      0.09,
+      -0.03,
+      -0.03,
+      -0.03
+    ],
+    "masking_effect_observed": true,
+    "xcp_observability": true
+  },
+  "datalink_queuing": {
+    "bandwidth_bps": 2000.0,
+    "simulated_duration_sec": 10.0,
+    "jamming_window_sec": [
+      3.0,
+      6.0
+    ],
+    "packets_sent": 22,
+    "packets_delivered_post_jam": 22,
+    "queue_drop_count": 0,
+    "p1_alarm_latency_mean_sec": 0.75,
+    "p3_telemetry_latency_mean_sec": 0.905,
+    "store_and_forward_zero_loss": true
+  },
+  "merkle_forensics": {
+    "log_entries_sealed": 1000,
+    "clean_log_integrity_valid": true,
+    "merkle_root": "4ee00e2a2e53ae8172a9cae5c448c625c03d1f701a6d731a72d5bb46dd8ac56a",
+    "tamper_attack_trials": 50,
+    "tamper_detection_rate": 1.0,
+    "tamper_false_negatives": 0
+  },
+  "can_ids_security": {
+    "nominal_frames_evaluated": 600,
+    "clean_stream_false_alarms": 0,
+    "attacks_injected": 20,
+    "attacks_detected": 20,
+    "tpr": 1.0,
+    "fpr": 0.0
+  }
+}
