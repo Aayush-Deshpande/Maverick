@@ -1,0 +1,45 @@
+{
+  "metadata": {
+    "experiment": "E24_fleet_des",
+    "evidence_class": "SIMULATION",
+    "seed": 42,
+    "fleet_size": 12,
+    "bases": [
+      "BASE_SURATGARH",
+      "BASE_BHATINDA",
+      "BASE_LEH"
+    ],
+    "simulation_days": 180,
+    "total_fleet_flight_hours": 9720.0,
+    "timestamp": "2026-09-24T17:31:07Z"
+  },
+  "results": {
+    "REACTIVE": {
+      "fleet_availability_pct": 95.74,
+      "in_flight_shutdowns": 12,
+      "unscheduled_groundings": 12,
+      "total_maintenance_cost_usd": 660720.0,
+      "cost_per_flight_hour_usd": 67.98,
+      "wasted_component_life_pct": 0.0,
+      "cost_savings_vs_reactive_pct": 0.0
+    },
+    "PERIODIC_100HR": {
+      "fleet_availability_pct": 97.02,
+      "in_flight_shutdowns": 4,
+      "unscheduled_groundings": 4,
+      "total_maintenance_cost_usd": 448120.0,
+      "cost_per_flight_hour_usd": 46.1,
+      "wasted_component_life_pct": 20.85,
+      "cost_savings_vs_reactive_pct": 32.18
+    },
+    "ANUMAAN_CBM": {
+      "fleet_availability_pct": 99.79,
+      "in_flight_shutdowns": 0,
+      "unscheduled_groundings": 0,
+      "total_maintenance_cost_usd": 50282.0,
+      "cost_per_flight_hour_usd": 5.17,
+      "wasted_component_life_pct": 0.0,
+      "cost_savings_vs_reactive_pct": 92.39
+    }
+  }
+}
