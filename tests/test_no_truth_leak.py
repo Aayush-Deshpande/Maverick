@@ -27,8 +27,14 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 SCANNED_PACKAGES = [
     REPO_ROOT / "backend" / "ml",
     REPO_ROOT / "backend" / "twin",
-    REPO_ROOT / "backend" / "detect",  # future home of the detector suite (B5.1)
-    REPO_ROOT / "backend" / "sources",  # source adapters must emit Frames, never read truth fields
+    REPO_ROOT / "backend" / "detect",
+    REPO_ROOT / "backend" / "sources",
+    REPO_ROOT / "backend" / "diagnose",
+    REPO_ROOT / "backend" / "prognose",
+    REPO_ROOT / "backend" / "dsp",
+    REPO_ROOT / "backend" / "foundation",
+    REPO_ROOT / "backend" / "security",
+    REPO_ROOT / "backend" / "federation",
 ]
 
 FORBIDDEN_ATTRS = {"FAULT_ID", "HEALTH_INDEX", "RUL_HOURS"}
