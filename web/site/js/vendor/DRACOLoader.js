@@ -85,6 +85,27 @@
 
 		decodeGeometry( buffer, taskConfig ) {
 
+			// Clean clone & sanitize taskConfig so all values are JSON-serializable primitives for Web Worker postMessage
+			const cleanTaskConfig = {
+				useUniqueIDs: Boolean( taskConfig && taskConfig.useUniqueIDs ),
+				attributeUniqueIdMap: {},
+				attributeTypeMap: {}
+			};
+
+			if ( taskConfig && taskConfig.attributeUniqueIdMap ) {
+				for ( const key in taskConfig.attributeUniqueIdMap ) {
+					cleanTaskConfig.attributeUniqueIdMap[ key ] = taskConfig.attributeUniqueIdMap[ key ];
+				}
+			}
+
+			if ( taskConfig && taskConfig.attributeTypeMap ) {
+				for ( const key in taskConfig.attributeTypeMap ) {
+					const val = taskConfig.attributeTypeMap[ key ];
+					cleanTaskConfig.attributeTypeMap[ key ] = ( typeof val === 'function' ? val.name : String( val ) );
+				}
+			}
+
+			taskConfig = cleanTaskConfig;
 			const taskKey = JSON.stringify( taskConfig );
 
 			// Check for an existing task.

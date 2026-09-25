@@ -371,10 +371,80 @@ class DigitalTwinEngineModel {
     });
   }
 
-  update(delta, rpm = 4800) {
-    // Dynamic Pulsating Red Emission Shader
+  update(delta, rpm = 2400) {
+    this.animTime = (this.animTime || 0) + delta;
+    const t = this.animTime;
+
+    // 1. Calculate Mechanical Angular Speeds Synchronized with Live Telemetry RPM
+    const effectiveRpm = Math.max(450, rpm);
+    
+    // Fault Stumble: Misfire / Injector clog causes erratic rotational angular velocity drop
+    let misfireJitter = 0;
+    if (this.activeFaultId === 2 || this.activeFaultId === 3) {
+      misfireJitter = -0.32 * Math.pow(Math.sin(t * 16.0), 4);
+    }
+    
+    // Propeller Flange & Output Drive (Rotax / Austro 2.43:1 gearbox reduction)
+    const propSpeed = ((effectiveRpm / 60.0) / 2.43) * 2.0 * Math.PI * (1.0 + misfireJitter);
+    this.propAngle = (this.propAngle || 0) + propSpeed * delta;
+
+    // Alternator Impeller Fan & Timing Belt Drive (1.8x Overdrive)
+    const altSpeed = ((effectiveRpm / 60.0) * 1.8) * 2.0 * Math.PI;
+    this.altAngle = (this.altAngle || 0) + altSpeed * delta;
+
+    // Turbocharger Compressor Turbine Spool (14.5x High Speed)
+    const turboSpeed = ((effectiveRpm / 60.0) * 14.5) * 2.0 * Math.PI;
+    this.turboAngle = (this.turboAngle || 0) + turboSpeed * delta;
+
+    // 2. Animate Active Engine Mechanical Nodes & Actuators
+    const activeMeshes = this.engineMeshes[this.activeEngineId] || {};
+    
+    Object.keys(activeMeshes).forEach(name => {
+      const mesh = activeMeshes[name];
+      const lower = name.toLowerCase();
+
+      // Propeller Flange / Reduction Gearbox Output Shaft
+      if (lower.includes('flange') || lower.includes('prop_flange') || lower.includes('snout') || lower.includes('gearbox_type_2_m_metal')) {
+        mesh.rotation.y = this.propAngle;
+      }
+      
+      // Alternator Impeller Fan & Pulleys
+      else if (lower.includes('alternator_impeller') || lower.includes('fan') || lower.includes('timingbelt') || lower.includes('pulley') || lower.includes('tensioner')) {
+        mesh.rotation.x = this.altAngle;
+      }
+
+      // Turbocharger Volute / Turbine Spool
+      else if (lower.includes('turbocharger') || lower.includes('compressor')) {
+        mesh.rotation.z = this.turboAngle;
+      }
+
+      // Fault Kinematics: Wastegate Actuator Rod Deflection & Oscillation
+      if (lower.includes('wastegate') && (this.activeFaultId === 1 || this.activeFaultId === 2)) {
+        mesh.position.z = Math.sin(t * 16.0) * 0.018;
+      }
+
+      // Fault Kinematics: Gearbox Bearing Degradation & Eccentric Radial Wobble
+      if ((lower.includes('gearbox') || lower.includes('flange')) && this.activeFaultId === 5) {
+        mesh.position.x = Math.sin(t * 32.0) * 0.005;
+        mesh.position.y = Math.cos(t * 32.0) * 0.005;
+      }
+    });
+
+    // 3. Engine Block Physical Combustion Harmonics (Micro-Vibration Shake)
+    const activeGroup = this.engineGroups[this.activeEngineId];
+    if (activeGroup) {
+      let vibeIntensity = 0.00035; // Nominal smooth 4-stroke boxer
+      if (this.activeFaultId > 0) {
+        // Harsh vibration shudder during misfire, gearbox fault, or cylinder runaway
+        vibeIntensity = (this.activeFaultId === 5 || this.activeFaultId === 3 || this.activeFaultId === 1) ? 0.0028 : 0.0014;
+      }
+      activeGroup.position.y = Math.sin(t * 52.0) * vibeIntensity;
+      activeGroup.position.x = Math.cos(t * 26.0) * (vibeIntensity * 0.75);
+    }
+
+    // 4. Dynamic Pulsating Red Emission Shader (USAvionix Diagnostic Glow)
     if (this.activeFaultId > 0 || this.highlightedMeshes.size > 0) {
-      const pulse = 2.4 + 1.6 * Math.sin(Date.now() * 0.009);
+      const pulse = 2.8 + 1.8 * Math.sin(Date.now() * 0.011);
       this.faultMaterial.emissiveIntensity = pulse;
     }
   }

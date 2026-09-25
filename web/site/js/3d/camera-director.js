@@ -75,6 +75,10 @@ class BlenderCameraDirector {
     
     // Distance in meters from engine profile (e.g. 0.9m - 1.4m close-up framing)
     const dist = (typeof distance === 'number' && distance > 0) ? distance : (this.currentDistance * 0.65);
+    this.currentAngle = angle;
+    this.currentElevation = elevation;
+    this.currentDistance = dist;
+
     const cx = this.cameraCenter.x + dist * Math.cos(angle) * Math.cos(elevation);
     const cy = this.cameraCenter.y + dist * Math.sin(elevation);
     const cz = this.cameraCenter.z + dist * Math.sin(angle) * Math.cos(elevation);
