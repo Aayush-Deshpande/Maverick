@@ -20,6 +20,7 @@
   <!-- Local Vendor 3D Libraries (Offline-First) -->
   <script src="js/vendor/three.min.js"></script>
   <script src="js/vendor/OrbitControls.js"></script>
+  <script src="js/vendor/DRACOLoader.js"></script>
   <script src="js/vendor/GLTFLoader.js"></script>
 </head>
 <body>
@@ -219,71 +220,52 @@
         <canvas id="viewport-webgl-canvas"></canvas>
         <div class="viewport-grid-reticle"></div>
 
-        <!-- 3D Model Selector Toolbar (Engine vs Drone vs Terrain Sortie) -->
-        <div class="viewport-model-selector">
-          <button class="model-select-btn active" data-model="engine">PROPULSION TWIN (TEI-PD170)</button>
-          <button class="model-select-btn" data-model="drone">DELTA UAV AIRFRAME</button>
-          <button class="model-select-btn" data-model="flight">TACTICAL SORTIE (UAV + TERRAIN)</button>
+        <!-- 3D Engine Model Selector Toolbar (0ms Instant In-Memory Switcher) -->
+        <div class="viewport-model-selector" id="viewport-engine-selector">
+          <button class="model-select-btn active" data-engine="rotax_912is" title="[F1] Rotax 912 iS Sport (100 HP EFI)"><span class="key-badge">F1</span> ROTAX 912 iS</button>
+          <button class="model-select-btn" data-engine="rotax_914" title="[F2] Rotax 914 F Turbocharged (115 HP)"><span class="key-badge">F2</span> ROTAX 914</button>
+          <button class="model-select-btn" data-engine="rotax_915is" title="[F3] Rotax 915 iS Turbo Intercooled (141 HP)"><span class="key-badge">F3</span> ROTAX 915 iS</button>
+          <button class="model-select-btn" data-engine="austro_ae300" title="[F4] Austro AE300 CRDi Diesel (170 HP)"><span class="key-badge">F4</span> AUSTRO AE300</button>
+          <button class="model-select-btn" data-engine="vrde_jayem_2_2l" title="[F5] VRDE / Jayem 2.2L Indigenous Diesel (180 HP)"><span class="key-badge">F5</span> VRDE 2.2L</button>
         </div>
 
         <!-- Top Left Viewport Stamp -->
         <div class="viewport-header-stamp">
-          <div class="stamp-title">TEI-PD170 DIGITAL TWIN <span class="stamp-lens" id="viewport-focal-readout">f=75mm (26.9° FOV)</span></div>
-          <div>ORBIT: LMB DRAG | PAN: RMB DRAG | ZOOM: SCROLL</div>
+          <div class="stamp-title" id="viewport-engine-title">ROTAX 912 iS SPORT <span class="stamp-lens" id="viewport-focal-readout">f=75mm (26.9° FOV)</span></div>
+          <div id="viewport-engine-subtitle" style="color: var(--state-cyan); font-size: 0.70rem;">100 HP NATURALLY ASPIRATED EFI • DUAL FADEC (LANE A/B)</div>
+          <div style="font-size: 0.65rem; opacity: 0.85; margin-top: 2px;">F1-F5: ENGINE | 1-8: FAULT | 0/ESC: RESET | G/X: GHOST X-RAY | SPACE: ORBIT</div>
         </div>
 
         <!-- Top Right Shading Modes Toolbar -->
         <div class="viewport-top-toolbar">
           <button class="shading-mode-btn active" data-shading="pbr">PBR TACTICAL</button>
           <button class="shading-mode-btn" data-shading="wireframe">CLAY WIRE</button>
-          <button class="shading-mode-btn" data-shading="ghost">X-RAY GHOST</button>
-          <button class="shading-mode-btn" data-shading="thermal">THERMAL CHT</button>
+          <button class="shading-mode-btn" data-shading="ghost">X-RAY GHOST [G]</button>
+          <button class="shading-mode-btn" id="btn-toggle-orbit">AUTO ORBIT</button>
         </div>
       </div>
 
       <!-- Right Column: Subsystems & Fault Injection -->
       <div class="director-sidebar-right">
         
-        <!-- Subsystems Health -->
+        <!-- Active Engine Profile Card -->
         <div class="director-panel-card">
-          <div class="director-card-title">SUBSYSTEM HEALTH STATUS</div>
-          <div class="subsystem-list">
-            <div class="subsystem-item-btn"><span class="subsystem-name">Cylinder 1-2 Block</span><span class="subsystem-status-dot"></span></div>
-            <div class="subsystem-item-btn" id="subsys-cyl3"><span class="subsystem-name">Cylinder 3 Assembly</span><span class="subsystem-status-dot" id="dot-cyl3"></span></div>
-            <div class="subsystem-item-btn"><span class="subsystem-name">Cylinder 4 Assembly</span><span class="subsystem-status-dot"></span></div>
-            <div class="subsystem-item-btn" id="subsys-turbo"><span class="subsystem-name">Turbocharger Volutes</span><span class="subsystem-status-dot" id="dot-turbo"></span></div>
-            <div class="subsystem-item-btn"><span class="subsystem-name">Reduction Gearbox</span><span class="subsystem-status-dot"></span></div>
-            <div class="subsystem-item-btn"><span class="subsystem-name">Dual 28V Alternators</span><span class="subsystem-status-dot"></span></div>
-            <div class="subsystem-item-btn" id="subsys-plumbing"><span class="subsystem-name">Cooling & Fuel Plumbing</span><span class="subsystem-status-dot" id="dot-plumbing"></span></div>
+          <div class="director-card-title">PROPULSION TWIN ARCHITECTURE</div>
+          <div id="engine-spec-details" class="subsystem-list">
+            <!-- Populated dynamically per active engine -->
           </div>
         </div>
 
         <!-- Physics Fault Injector -->
         <div class="director-panel-card">
-          <div class="director-card-title">PHYSICS FAULT INJECTOR</div>
-          <div class="fault-injector-grid">
-            <button class="fault-inject-btn" data-fault="combustion_cyl3">
-              <div class="fault-inject-title">CYL 3 THERMAL RUNAWAY</div>
-              <div class="fault-inject-desc">+18.4°C CHT residual divergence, micro-galling</div>
-            </button>
-            <button class="fault-inject-btn" data-fault="coolant_loss">
-              <div class="fault-inject-title">COOLANT DECOMPRESSION</div>
-              <div class="fault-inject-desc">Loss of loop pressure, core heat dissipation -38%</div>
-            </button>
-            <button class="fault-inject-btn" data-fault="turbo_fouling">
-              <div class="fault-inject-title">INTERCOOLER FOULING</div>
-              <div class="fault-inject-desc">MAP drop, turbo compressor temp rise, FL210 ceiling</div>
-            </button>
-            <button class="fault-inject-btn" data-fault="rail_drop">
-              <div class="fault-inject-title">COMMON RAIL DROOP</div>
-              <div class="fault-inject-desc">1,290 bar rail pressure, throttle hunting</div>
-            </button>
-            <button class="fault-inject-btn" data-fault="sensor_rpm_drift">
-              <div class="fault-inject-title">SENSOR DRIFT (NADI ISOLATION)</div>
-              <div class="fault-inject-desc">Pick-up A jitter (+/-140 RPM), dual channel isolated</div>
-            </button>
-            <button class="btn-reset-faults" data-fault="none">RESET ALL FAULTS (NOMINAL)</button>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <div class="director-card-title" style="margin-bottom: 0;">PHYSICS FAULT INJECTOR</div>
+            <span style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--state-cyan);">KEYS 1 - 8</span>
           </div>
+          <div class="fault-injector-grid" id="fault-injector-buttons-container">
+            <!-- 8 dynamic fault injection buttons populated per engine -->
+          </div>
+          <button class="btn-reset-faults" id="btn-reset-faults-all" style="width: 100%; margin-top: 8px;">RESET ALL FAULTS (NOMINAL) [0 / ESC]</button>
         </div>
 
       </div>

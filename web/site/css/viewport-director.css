@@ -445,3 +445,50 @@
   font-weight: 700;
   box-shadow: 0 0 12px var(--state-cyan);
 }
+
+.key-badge {
+  display: inline-block;
+  padding: 1px 4px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 700;
+  margin-right: 4px;
+  color: var(--state-cyan);
+}
+
+.model-select-btn.active .key-badge {
+  background: rgba(0, 0, 0, 0.75);
+  color: #00f0ff;
+  border-color: rgba(0, 0, 0, 0.3);
+}
+
+.fault-tag-badge {
+  display: inline-block;
+  padding: 1px 4px;
+  font-size: 0.58rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  border-radius: 2px;
+  text-transform: uppercase;
+}
+
+.fault-tag-badge.CRITICAL {
+  background: rgba(239, 68, 68, 0.25);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.fault-tag-badge.MAJOR {
+  background: rgba(245, 158, 11, 0.25);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.fault-tag-badge.MINOR {
+  background: rgba(59, 130, 246, 0.25);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.4);
+}
