@@ -49,18 +49,18 @@ ENGINE_PROFILES = {
         'fuel_type': 'AVGAS / MOGAS',
         'induction': 'NATURALLY ASPIRATED',
         'default_center': mathutils.Vector((1.932, 61.648, -35.324)),
-        'default_distance': 245.0,
-        'default_elevation': math.radians(26.0),
+        'default_distance': 230.0,
+        'default_elevation': math.radians(24.0),
         'rpm_max': 5800.0,
         'faults': {
-            1: {'short': 'CYL #2 OVERHEAT', 'comp': 'Cylinder #2 Head & Baffle Assembly', 'tag': 'CRITICAL', 'parts': ['Covers_Theme_M_PlasticTheme_0', 'Covers_Theme_M_PlasticGreen_0', 'Cooling_Air_Baffle_M_PlasticWhite_0'], 'center': mathutils.Vector((-22.0, 44.0, -10.0)), 'angle': math.radians(-145.0), 'elevation': math.radians(24.0), 'distance': 145.0},
-            2: {'short': 'INJECTOR #1 CLOG', 'comp': 'Electronic Fuel Injector #1 (Lane A)', 'tag': 'MAJOR', 'parts': ['Rotax_912i_Base_M_PlasticGreen_0', 'Rotax_912i_Base_M_Steel_0', 'Rotax_912i_Base_M_PlasticCable_0', 'Rotax_912i_Base_M_Rubber_0'], 'center': mathutils.Vector((1.06, 25.69, -8.0)), 'angle': math.radians(-90.0), 'elevation': math.radians(36.0), 'distance': 135.0},
-            3: {'short': 'IGNITION MISFIRE', 'comp': 'Secondary Spark Plug Lead & Harness', 'tag': 'MAJOR', 'parts': ['Wiring_Harness_M_Copper_0', 'Rotax_912i_Base_M_Copper_0', 'Wiring_Harness_M_Cobalt_0', 'Wiring_Harness_M_PlasticCable_0'], 'center': mathutils.Vector((0.98, 42.0, -12.0)), 'angle': math.radians(-115.0), 'elevation': math.radians(35.0), 'distance': 130.0},
-            4: {'short': 'OIL PRESSURE LOSS', 'comp': 'Dry-Sump Reservoir & Scavenge Line', 'tag': 'CRITICAL', 'parts': ['Oil_Tank_M_Steel_0', 'Oil_Tank_M_Labels_0', 'Oil_Tank_M_Cobalt_0', 'Oil_Tank_M_PlasticBlack_0'], 'center': mathutils.Vector((-24.76, 105.82, -20.31)), 'angle': math.radians(140.0), 'elevation': math.radians(18.0), 'distance': 135.0},
-            5: {'short': 'GEARBOX VIBRATION', 'comp': 'Propeller Reduction Gearbox (Type 2)', 'tag': 'MINOR', 'parts': ['Gearbox_Type_2_M_Steel_0', 'Gearbox_Type_2_M_MetalPaintedBlack_0', 'Gearbox_Type_2_M_Cobalt_0', 'Gearbox_Type_2_M_PlasticBlack_0', 'Gearbox_Type_2_M_PlasticWhite_0'], 'center': mathutils.Vector((0.97, 18.01, -8.39)), 'angle': math.radians(-90.0), 'elevation': math.radians(14.0), 'distance': 130.0},
-            6: {'short': 'EXHAUST EGT DELTA', 'comp': 'Exhaust Runner Manifold (Runner #3)', 'tag': 'MINOR', 'parts': ['Exhaust_System_M_SteelDark_0', 'Exhaust_System_M_Steel_0', 'Exhaust_System_M_Cobalt_0', 'Exhaust_System_M_Chrome_0', 'Exhaust_System_M_PlasticBlack_0'], 'center': mathutils.Vector((6.68, 38.87, -45.78)), 'angle': math.radians(-45.0), 'elevation': math.radians(-10.0), 'distance': 150.0},
-            7: {'short': 'ALTERNATOR SAG', 'comp': 'Heavy-Duty Alternator & Belt Drive', 'tag': 'MINOR', 'parts': ['External_Alternator_M_Rotax914_Extras_0', 'External_Alternator_M_TimingBelt_0'], 'center': mathutils.Vector((6.56, 17.39, -8.66)), 'angle': math.radians(-40.0), 'elevation': math.radians(22.0), 'distance': 130.0},
-            8: {'short': 'DUAL FADEC DRIFT', 'comp': 'Lane A/B Dual FADEC ECU Assembly', 'tag': 'MINOR', 'parts': ['ECU_M_PlasticBlack_0', 'ECU_M_FuseLight_0', 'ECU_M_Motherboard_0', 'ECU_M_GlassMilky_0', 'ECU_M_Labels_0', 'ECU_M_Chrome_0', 'ECU_M_Copper_0', 'ECU_M_Steel_0', 'ECU_M_PlasticBlue_0', 'ECU_M_PlasticRed_0'], 'center': mathutils.Vector((12.52, 101.68, -17.96)), 'angle': math.radians(85.0), 'elevation': math.radians(26.0), 'distance': 140.0},
+            1: {'short': 'CYL #2 OVERHEAT', 'comp': 'Cylinder #2 Head & Baffle Assembly', 'tag': 'CRITICAL', 'parts': ['Covers_Theme_M_PlasticTheme_0', 'Covers_Theme_M_PlasticGreen_0', 'Cooling_Air_Baffle_M_PlasticWhite_0'], 'center': mathutils.Vector((0.966, 38.400, -10.990)), 'angle': math.radians(-140.0), 'elevation': math.radians(24.0), 'distance': 120.0},
+            2: {'short': 'INJECTOR #1 CLOG', 'comp': 'Electronic Fuel Injector #1 (Lane A)', 'tag': 'MAJOR', 'parts': ['Rotax_912i_Base_M_PlasticGreen_0', 'Rotax_912i_Base_M_Steel_0', 'Rotax_912i_Base_M_PlasticCable_0', 'Rotax_912i_Base_M_Rubber_0'], 'center': mathutils.Vector((1.160, 61.687, -15.547)), 'angle': math.radians(-85.0), 'elevation': math.radians(34.0), 'distance': 115.0},
+            3: {'short': 'IGNITION MISFIRE', 'comp': 'Secondary Spark Plug Lead & Harness', 'tag': 'MAJOR', 'parts': ['Wiring_Harness_M_Copper_0', 'Rotax_912i_Base_M_Copper_0', 'Wiring_Harness_M_Cobalt_0', 'Wiring_Harness_M_PlasticCable_0'], 'center': mathutils.Vector((4.962, 69.016, -15.626)), 'angle': math.radians(-115.0), 'elevation': math.radians(30.0), 'distance': 120.0},
+            4: {'short': 'OIL PRESSURE LOSS', 'comp': 'Dry-Sump Reservoir & Scavenge Line', 'tag': 'CRITICAL', 'parts': ['Oil_Tank_M_Steel_0', 'Oil_Tank_M_Labels_0', 'Oil_Tank_M_Cobalt_0', 'Oil_Tank_M_PlasticBlack_0'], 'center': mathutils.Vector((-24.756, 105.824, -20.571)), 'angle': math.radians(135.0), 'elevation': math.radians(18.0), 'distance': 95.0},
+            5: {'short': 'GEARBOX VIBRATION', 'comp': 'Propeller Reduction Gearbox (Type 2)', 'tag': 'MINOR', 'parts': ['Gearbox_Type_2_M_Steel_0', 'Gearbox_Type_2_M_MetalPaintedBlack_0', 'Gearbox_Type_2_M_Cobalt_0', 'Gearbox_Type_2_M_PlasticBlack_0', 'Gearbox_Type_2_M_PlasticWhite_0'], 'center': mathutils.Vector((0.966, 18.013, -12.264)), 'angle': math.radians(-90.0), 'elevation': math.radians(14.0), 'distance': 90.0},
+            6: {'short': 'EXHAUST EGT DELTA', 'comp': 'Exhaust Runner Manifold (Runner #3)', 'tag': 'MINOR', 'parts': ['Exhaust_System_M_SteelDark_0', 'Exhaust_System_M_Steel_0', 'Exhaust_System_M_Cobalt_0', 'Exhaust_System_M_Chrome_0', 'Exhaust_System_M_PlasticBlack_0'], 'center': mathutils.Vector((6.679, 38.870, -45.570)), 'angle': math.radians(-45.0), 'elevation': math.radians(-8.0), 'distance': 125.0},
+            7: {'short': 'ALTERNATOR SAG', 'comp': 'Heavy-Duty Alternator & Belt Drive', 'tag': 'MINOR', 'parts': ['External_Alternator_M_Rotax914_Extras_0', 'External_Alternator_M_TimingBelt_0'], 'center': mathutils.Vector((6.560, 17.394, -8.662)), 'angle': math.radians(-35.0), 'elevation': math.radians(20.0), 'distance': 90.0},
+            8: {'short': 'DUAL FADEC DRIFT', 'comp': 'Lane A/B Dual FADEC ECU Assembly', 'tag': 'MINOR', 'parts': ['ECU_M_PlasticBlack_0', 'ECU_M_FuseLight_0', 'ECU_M_Motherboard_0', 'ECU_M_GlassMilky_0', 'ECU_M_Labels_0', 'ECU_M_Chrome_0', 'ECU_M_Copper_0', 'ECU_M_Steel_0', 'ECU_M_PlasticBlue_0', 'ECU_M_PlasticRed_0'], 'center': mathutils.Vector((13.409, 97.572, -16.925)), 'angle': math.radians(80.0), 'elevation': math.radians(26.0), 'distance': 110.0},
         }
     },
     'rotax_914': {
@@ -72,18 +72,18 @@ ENGINE_PROFILES = {
         'fuel_type': 'AVGAS / MOGAS',
         'induction': 'TURBOCHARGED',
         'default_center': mathutils.Vector((1.932, 61.648, -35.324)),
-        'default_distance': 245.0,
-        'default_elevation': math.radians(26.0),
+        'default_distance': 230.0,
+        'default_elevation': math.radians(24.0),
         'rpm_max': 5800.0,
         'faults': {
-            1: {'short': 'TURBO WASTEGATE LEAK', 'comp': 'Turbo Exhaust Wastegate Actuator', 'tag': 'CRITICAL', 'parts': ['Exhaust_System_M_SteelDark_0', 'Exhaust_System_M_Steel_0', 'Exhaust_System_M_Chrome_0', 'Fittings_Metric_Rotax914_Extras_0'], 'center': mathutils.Vector((6.68, 38.87, -45.78)), 'angle': math.radians(-45.0), 'elevation': math.radians(-10.0), 'distance': 140.0},
-            2: {'short': 'INJECTOR #1 CLOG', 'comp': 'Fuel Injector #1 (Lane A)', 'tag': 'MAJOR', 'parts': ['Rotax_912i_Base_M_PlasticGreen_0', 'Rotax_912i_Base_M_Steel_0'], 'center': mathutils.Vector((1.06, 25.69, -8.0)), 'angle': math.radians(-90.0), 'elevation': math.radians(36.0), 'distance': 135.0},
-            3: {'short': 'IGNITION MISFIRE', 'comp': 'Secondary Spark Plug Lead', 'tag': 'MAJOR', 'parts': ['Wiring_Harness_M_Copper_0', 'Rotax_912i_Base_M_Copper_0'], 'center': mathutils.Vector((0.98, 42.0, -12.0)), 'angle': math.radians(-115.0), 'elevation': math.radians(35.0), 'distance': 130.0},
-            4: {'short': 'OIL PRESSURE LOSS', 'comp': 'Dry-Sump Reservoir & Scavenge Line', 'tag': 'CRITICAL', 'parts': ['Oil_Tank_M_Steel_0', 'Oil_Tank_M_Labels_0', 'Oil_Tank_M_Cobalt_0'], 'center': mathutils.Vector((-24.76, 105.82, -20.31)), 'angle': math.radians(140.0), 'elevation': math.radians(18.0), 'distance': 135.0},
-            5: {'short': 'GEARBOX VIBRATION', 'comp': 'Propeller Reduction Gearbox', 'tag': 'MINOR', 'parts': ['Gearbox_Type_2_M_Steel_0', 'Gearbox_Type_2_M_MetalPaintedBlack_0'], 'center': mathutils.Vector((0.97, 18.01, -8.39)), 'angle': math.radians(-90.0), 'elevation': math.radians(14.0), 'distance': 130.0},
-            6: {'short': 'CYL #2 OVERHEAT', 'comp': 'Cylinder #2 Head & Cooling Baffle', 'tag': 'CRITICAL', 'parts': ['Covers_Theme_M_PlasticTheme_0', 'Covers_Theme_M_PlasticGreen_0', 'Cooling_Air_Baffle_M_PlasticWhite_0'], 'center': mathutils.Vector((-22.0, 44.0, -10.0)), 'angle': math.radians(-145.0), 'elevation': math.radians(24.0), 'distance': 145.0},
-            7: {'short': 'ALTERNATOR SAG', 'comp': 'Heavy-Duty Alternator & Belt', 'tag': 'MINOR', 'parts': ['External_Alternator_M_Rotax914_Extras_0', 'External_Alternator_M_TimingBelt_0'], 'center': mathutils.Vector((6.56, 17.39, -8.66)), 'angle': math.radians(-40.0), 'elevation': math.radians(22.0), 'distance': 130.0},
-            8: {'short': 'TCU BOOST CONTROLLER', 'comp': 'Rotax Turbo Control Unit (TCU)', 'tag': 'MAJOR', 'parts': ['ECU_M_PlasticBlack_0', 'ECU_M_FuseLight_0'], 'center': mathutils.Vector((12.52, 101.68, -17.96)), 'angle': math.radians(85.0), 'elevation': math.radians(26.0), 'distance': 140.0},
+            1: {'short': 'TURBO WASTEGATE LEAK', 'comp': 'Turbo Exhaust Wastegate Actuator', 'tag': 'CRITICAL', 'parts': ['Exhaust_System_M_SteelDark_0', 'Exhaust_System_M_Steel_0', 'Exhaust_System_M_Chrome_0', 'Fittings_Metric_Rotax914_Extras_0'], 'center': mathutils.Vector((6.679, 38.870, -45.570)), 'angle': math.radians(-45.0), 'elevation': math.radians(-8.0), 'distance': 120.0},
+            2: {'short': 'INJECTOR #1 CLOG', 'comp': 'Fuel Injector #1 (Lane A)', 'tag': 'MAJOR', 'parts': ['Rotax_912i_Base_M_PlasticGreen_0', 'Rotax_912i_Base_M_Steel_0'], 'center': mathutils.Vector((1.160, 61.687, -15.547)), 'angle': math.radians(-85.0), 'elevation': math.radians(34.0), 'distance': 115.0},
+            3: {'short': 'IGNITION MISFIRE', 'comp': 'Secondary Spark Plug Lead', 'tag': 'MAJOR', 'parts': ['Wiring_Harness_M_Copper_0', 'Rotax_912i_Base_M_Copper_0'], 'center': mathutils.Vector((4.962, 69.016, -15.626)), 'angle': math.radians(-115.0), 'elevation': math.radians(30.0), 'distance': 120.0},
+            4: {'short': 'OIL PRESSURE LOSS', 'comp': 'Dry-Sump Reservoir & Scavenge Line', 'tag': 'CRITICAL', 'parts': ['Oil_Tank_M_Steel_0', 'Oil_Tank_M_Labels_0', 'Oil_Tank_M_Cobalt_0'], 'center': mathutils.Vector((-24.756, 105.824, -20.571)), 'angle': math.radians(135.0), 'elevation': math.radians(18.0), 'distance': 95.0},
+            5: {'short': 'GEARBOX VIBRATION', 'comp': 'Propeller Reduction Gearbox', 'tag': 'MINOR', 'parts': ['Gearbox_Type_2_M_Steel_0', 'Gearbox_Type_2_M_MetalPaintedBlack_0'], 'center': mathutils.Vector((0.966, 18.013, -12.264)), 'angle': math.radians(-90.0), 'elevation': math.radians(14.0), 'distance': 90.0},
+            6: {'short': 'CYL #2 OVERHEAT', 'comp': 'Cylinder #2 Head & Cooling Baffle', 'tag': 'CRITICAL', 'parts': ['Covers_Theme_M_PlasticTheme_0', 'Covers_Theme_M_PlasticGreen_0', 'Cooling_Air_Baffle_M_PlasticWhite_0'], 'center': mathutils.Vector((0.966, 38.400, -10.990)), 'angle': math.radians(-140.0), 'elevation': math.radians(24.0), 'distance': 120.0},
+            7: {'short': 'ALTERNATOR SAG', 'comp': 'Heavy-Duty Alternator & Belt', 'tag': 'MINOR', 'parts': ['External_Alternator_M_Rotax914_Extras_0', 'External_Alternator_M_TimingBelt_0'], 'center': mathutils.Vector((6.560, 17.394, -8.662)), 'angle': math.radians(-35.0), 'elevation': math.radians(20.0), 'distance': 90.0},
+            8: {'short': 'TCU BOOST CONTROLLER', 'comp': 'Rotax Turbo Control Unit (TCU)', 'tag': 'MAJOR', 'parts': ['ECU_M_PlasticBlack_0', 'ECU_M_FuseLight_0'], 'center': mathutils.Vector((13.409, 97.572, -16.925)), 'angle': math.radians(80.0), 'elevation': math.radians(26.0), 'distance': 110.0},
         }
     },
     'rotax_915is': {
@@ -95,18 +95,18 @@ ENGINE_PROFILES = {
         'fuel_type': 'AVGAS / MOGAS',
         'induction': 'TURBO INTERCOOLED',
         'default_center': mathutils.Vector((1.932, 61.648, -35.324)),
-        'default_distance': 245.0,
-        'default_elevation': math.radians(26.0),
+        'default_distance': 230.0,
+        'default_elevation': math.radians(24.0),
         'rpm_max': 5800.0,
         'faults': {
-            1: {'short': 'INTERCOOLER FOULING', 'comp': 'Charge Air Intercooler Core & Baffle', 'tag': 'MAJOR', 'parts': ['Cooling_Air_Baffle_M_PlasticWhite_0', 'Covers_Theme_M_PlasticGreen_0', 'Fittings_Metric_Rotax915_Extras_0'], 'center': mathutils.Vector((-10.0, 50.0, -15.0)), 'angle': math.radians(-110.0), 'elevation': math.radians(30.0), 'distance': 140.0},
-            2: {'short': 'INJECTOR #1 CLOG', 'comp': 'Electronic Fuel Injector #1 (Lane A)', 'tag': 'MAJOR', 'parts': ['Rotax_912i_Base_M_PlasticGreen_0', 'Rotax_912i_Base_M_Steel_0'], 'center': mathutils.Vector((1.06, 25.69, -8.0)), 'angle': math.radians(-90.0), 'elevation': math.radians(36.0), 'distance': 135.0},
-            3: {'short': 'IGNITION MISFIRE', 'comp': 'Dual Spark Plug Harness & Coils', 'tag': 'MAJOR', 'parts': ['Wiring_Harness_M_Copper_0', 'Rotax_912i_Base_M_Copper_0'], 'center': mathutils.Vector((0.98, 42.0, -12.0)), 'angle': math.radians(-115.0), 'elevation': math.radians(35.0), 'distance': 130.0},
-            4: {'short': 'OIL PRESSURE LOSS', 'comp': 'Dry-Sump Reservoir & Scavenge Line', 'tag': 'CRITICAL', 'parts': ['Oil_Tank_M_Steel_0', 'Oil_Tank_M_Labels_0', 'Oil_Tank_M_Cobalt_0'], 'center': mathutils.Vector((-24.76, 105.82, -20.31)), 'angle': math.radians(140.0), 'elevation': math.radians(18.0), 'distance': 135.0},
-            5: {'short': 'GEARBOX VIBRATION', 'comp': 'Propeller Reduction Gearbox & Damper', 'tag': 'MINOR', 'parts': ['Gearbox_Type_2_M_Steel_0', 'Gearbox_Type_2_M_MetalPaintedBlack_0'], 'center': mathutils.Vector((0.97, 18.01, -8.39)), 'angle': math.radians(-90.0), 'elevation': math.radians(14.0), 'distance': 130.0},
-            6: {'short': 'CYL #2 OVERHEAT', 'comp': 'Cylinder #2 Head & Cooling Baffle', 'tag': 'CRITICAL', 'parts': ['Covers_Theme_M_PlasticTheme_0', 'Covers_Theme_M_PlasticGreen_0'], 'center': mathutils.Vector((-22.0, 44.0, -10.0)), 'angle': math.radians(-145.0), 'elevation': math.radians(24.0), 'distance': 145.0},
-            7: {'short': 'ALTERNATOR SAG', 'comp': 'Heavy-Duty Alternator & Belt', 'tag': 'MINOR', 'parts': ['External_Alternator_M_Rotax914_Extras_0', 'External_Alternator_M_TimingBelt_0'], 'center': mathutils.Vector((6.56, 17.39, -8.66)), 'angle': math.radians(-40.0), 'elevation': math.radians(22.0), 'distance': 130.0},
-            8: {'short': 'DUAL FADEC DRIFT', 'comp': 'Lane A/B Dual FADEC ECU Assembly', 'tag': 'MINOR', 'parts': ['ECU_M_PlasticBlack_0', 'ECU_M_FuseLight_0'], 'center': mathutils.Vector((12.52, 101.68, -17.96)), 'angle': math.radians(85.0), 'elevation': math.radians(26.0), 'distance': 140.0},
+            1: {'short': 'INTERCOOLER FOULING', 'comp': 'Charge Air Intercooler Core & Baffle', 'tag': 'MAJOR', 'parts': ['Cooling_Air_Baffle_M_PlasticWhite_0', 'Covers_Theme_M_PlasticGreen_0', 'Fittings_Metric_Rotax915_Extras_0'], 'center': mathutils.Vector((0.966, 38.400, -10.990)), 'angle': math.radians(-110.0), 'elevation': math.radians(28.0), 'distance': 125.0},
+            2: {'short': 'INJECTOR #1 CLOG', 'comp': 'Electronic Fuel Injector #1 (Lane A)', 'tag': 'MAJOR', 'parts': ['Rotax_912i_Base_M_PlasticGreen_0', 'Rotax_912i_Base_M_Steel_0'], 'center': mathutils.Vector((1.160, 61.687, -15.547)), 'angle': math.radians(-85.0), 'elevation': math.radians(34.0), 'distance': 115.0},
+            3: {'short': 'IGNITION MISFIRE', 'comp': 'Dual Spark Plug Harness & Coils', 'tag': 'MAJOR', 'parts': ['Wiring_Harness_M_Copper_0', 'Rotax_912i_Base_M_Copper_0'], 'center': mathutils.Vector((4.962, 69.016, -15.626)), 'angle': math.radians(-115.0), 'elevation': math.radians(30.0), 'distance': 120.0},
+            4: {'short': 'OIL PRESSURE LOSS', 'comp': 'Dry-Sump Reservoir & Scavenge Line', 'tag': 'CRITICAL', 'parts': ['Oil_Tank_M_Steel_0', 'Oil_Tank_M_Labels_0', 'Oil_Tank_M_Cobalt_0'], 'center': mathutils.Vector((-24.756, 105.824, -20.571)), 'angle': math.radians(135.0), 'elevation': math.radians(18.0), 'distance': 95.0},
+            5: {'short': 'GEARBOX VIBRATION', 'comp': 'Propeller Reduction Gearbox & Damper', 'tag': 'MINOR', 'parts': ['Gearbox_Type_2_M_Steel_0', 'Gearbox_Type_2_M_MetalPaintedBlack_0'], 'center': mathutils.Vector((0.966, 18.013, -12.264)), 'angle': math.radians(-90.0), 'elevation': math.radians(14.0), 'distance': 90.0},
+            6: {'short': 'CYL #2 OVERHEAT', 'comp': 'Cylinder #2 Head & Cooling Baffle', 'tag': 'CRITICAL', 'parts': ['Covers_Theme_M_PlasticTheme_0', 'Covers_Theme_M_PlasticGreen_0'], 'center': mathutils.Vector((0.966, 38.400, -10.990)), 'angle': math.radians(-140.0), 'elevation': math.radians(24.0), 'distance': 120.0},
+            7: {'short': 'ALTERNATOR SAG', 'comp': 'Heavy-Duty Alternator & Belt', 'tag': 'MINOR', 'parts': ['External_Alternator_M_Rotax914_Extras_0', 'External_Alternator_M_TimingBelt_0'], 'center': mathutils.Vector((6.560, 17.394, -8.662)), 'angle': math.radians(-35.0), 'elevation': math.radians(20.0), 'distance': 90.0},
+            8: {'short': 'DUAL FADEC DRIFT', 'comp': 'Lane A/B Dual FADEC ECU Assembly', 'tag': 'MINOR', 'parts': ['ECU_M_PlasticBlack_0', 'ECU_M_FuseLight_0'], 'center': mathutils.Vector((13.409, 97.572, -16.925)), 'angle': math.radians(80.0), 'elevation': math.radians(26.0), 'distance': 110.0},
         }
     },
     'austro_ae300': {
@@ -118,18 +118,18 @@ ENGINE_PROFILES = {
         'fuel_type': 'JET-A1 / DIESEL',
         'induction': 'CRDi TURBO DIESEL',
         'default_center': mathutils.Vector((-0.014, 0.30, 0.04)),
-        'default_distance': 2.4,
+        'default_distance': 2.3,
         'default_elevation': math.radians(22.0),
         'rpm_max': 3900.0,
         'faults': {
-            1: {'short': 'COMMON RAIL PRESSURE', 'comp': 'High-Pressure Common Rail & Radial Pump', 'tag': 'CRITICAL', 'parts': ['Common_Rail_M_Steel_0', 'HP_Fuel_Pump_M_SteelDark_0', 'Fuel_Line_1_M_Steel_0', 'Fuel_Line_2_M_Steel_0', 'Fuel_Line_3_M_Steel_0', 'Fuel_Line_4_M_Steel_0', 'Rail_PLV_Valve_M_Steel_0'], 'center': mathutils.Vector((0.085, 0.272, 0.010)), 'angle': math.radians(65.0), 'elevation': math.radians(25.0), 'distance': 1.4},
-            2: {'short': 'CRDi INJECTOR #1', 'comp': 'CRDi Solenoid Injector #1 & Head', 'tag': 'CRITICAL', 'parts': ['Injector_1_M_Steel_0', 'Cylinder_Head_M_CastAluminium_0', 'Injector_Plugs_M_PlasticBlack_0', 'Injector_Hold_Downs_M_SteelDark_0'], 'center': mathutils.Vector((0.0, 0.15, 0.2)), 'angle': math.radians(35.0), 'elevation': math.radians(40.0), 'distance': 1.3},
-            3: {'short': 'VGT TURBO FOULING', 'comp': 'Variable Geometry Turbocharger & Intercooler', 'tag': 'MAJOR', 'parts': ['Turbocharger_M_TurboHousing_0', 'Intercooler_M_CastAluminium_0', 'Boost_Pipe_Hot_M_PolishedAlu_0', 'Boost_Pipe_Cold_M_PolishedAlu_0', 'Heat_Shield_Turbo_M_CrinkleFoil_0', 'Air_Intake_Duct_M_RubberDark_0'], 'center': mathutils.Vector((-0.05, 0.255, 0.048)), 'angle': math.radians(-120.0), 'elevation': math.radians(20.0), 'distance': 1.4},
-            4: {'short': 'OIL PRESSURE LOSS', 'comp': 'Lubrication Sump, Filter & Cooler Lines', 'tag': 'CRITICAL', 'parts': ['Oil_Filter_M_MetalPaintedBlack_0', 'Oil_Sump_M_CastAluminium_0', 'Oil_Cooler_M_CastAluminium_0', 'Turbo_Oil_Feed_Line_M_Steel_0', 'Turbo_Oil_Drain_Line_M_Steel_0'], 'center': mathutils.Vector((0.0, 0.0, -0.1)), 'angle': math.radians(-45.0), 'elevation': math.radians(15.0), 'distance': 1.6},
-            5: {'short': 'DUAL EECS DRIFT', 'comp': 'Dual FADEC EECS Controller & Loom', 'tag': 'MAJOR', 'parts': ['ECU_Lane_A_M_MetalPaintedBlack_0', 'ECU_Lane_B_M_MetalPaintedBlack_0', 'Engine_Harness_Loom_M_PlasticBlack_0', 'ECU_Bayonet_Plugs_M_CastAluminium_0'], 'center': mathutils.Vector((0.2, 0.2, 0.0)), 'angle': math.radians(85.0), 'elevation': math.radians(20.0), 'distance': 1.4},
-            6: {'short': 'GLOW PLUG CIRCUIT', 'comp': 'Cold-Start Glow Plug Preheater Array', 'tag': 'MINOR', 'parts': ['Glow_Plugs_M_Steel_0', 'Glow_Plug_Control_Unit_M_CastAluminium_0'], 'center': mathutils.Vector((0.0, 0.2, 0.15)), 'angle': math.radians(0.0), 'elevation': math.radians(30.0), 'distance': 1.3},
-            7: {'short': 'COOLANT CAVITATION', 'comp': 'High-Efficiency Coolant Pump & Hoses', 'tag': 'MAJOR', 'parts': ['Water_Pump_M_CastAluminium_0', 'Coolant_Hose_Red_M_RedSilicone_0', 'Coolant_Hose_Blue_M_BlueSilicone_0', 'Water_Pump_Inlet_Elbow_M_BlueSilicone_0'], 'center': mathutils.Vector((-0.15, 0.1, 0.0)), 'angle': math.radians(-90.0), 'elevation': math.radians(15.0), 'distance': 1.4},
-            8: {'short': 'GEARBOX VIBRATION', 'comp': 'Reduction Gearbox & PCU Prop Governor', 'tag': 'CRITICAL', 'parts': ['Gearbox_M_CastAluminium_0', 'Prop_Governor_PCU_M_CastAluminium_0', 'Prop_Flange_M_Steel_0', 'PCU_Oil_Line_M_Steel_0', 'Gearbox_Logo_M_CastAluminium_0'], 'center': mathutils.Vector((0.15, 0.35, 0.1)), 'angle': math.radians(45.0), 'elevation': math.radians(20.0), 'distance': 1.3},
+            1: {'short': 'COMMON RAIL PRESSURE', 'comp': 'High-Pressure Common Rail & Radial Pump', 'tag': 'CRITICAL', 'parts': ['Common_Rail_M_Steel_0', 'HP_Fuel_Pump_M_SteelDark_0', 'Fuel_Line_1_M_Steel_0', 'Fuel_Line_2_M_Steel_0', 'Fuel_Line_3_M_Steel_0', 'Fuel_Line_4_M_Steel_0', 'Rail_PLV_Valve_M_Steel_0'], 'center': mathutils.Vector((0.102, 0.300, 0.042)), 'angle': math.radians(55.0), 'elevation': math.radians(28.0), 'distance': 1.20},
+            2: {'short': 'CRDi INJECTOR #1', 'comp': 'CRDi Solenoid Injector #1 & Head', 'tag': 'CRITICAL', 'parts': ['Injector_1_M_Steel_0', 'Cylinder_Head_M_CastAluminium_0', 'Injector_Plugs_M_PlasticBlack_0', 'Injector_Hold_Downs_M_SteelDark_0'], 'center': mathutils.Vector((0.000, 0.293, 0.120)), 'angle': math.radians(35.0), 'elevation': math.radians(36.0), 'distance': 1.15},
+            3: {'short': 'VGT TURBO FOULING', 'comp': 'Variable Geometry Turbocharger & Intercooler', 'tag': 'MAJOR', 'parts': ['Turbocharger_M_TurboHousing_0', 'Intercooler_M_CastAluminium_0', 'Boost_Pipe_Hot_M_PolishedAlu_0', 'Boost_Pipe_Cold_M_PolishedAlu_0', 'Heat_Shield_Turbo_M_CrinkleFoil_0', 'Air_Intake_Duct_M_RubberDark_0'], 'center': mathutils.Vector((-0.050, 0.263, 0.057)), 'angle': math.radians(-115.0), 'elevation': math.radians(22.0), 'distance': 1.30},
+            4: {'short': 'OIL PRESSURE LOSS', 'comp': 'Lubrication Sump, Filter & Cooler Lines', 'tag': 'CRITICAL', 'parts': ['Oil_Filter_M_MetalPaintedBlack_0', 'Oil_Sump_M_CastAluminium_0', 'Oil_Cooler_M_CastAluminium_0', 'Turbo_Oil_Feed_Line_M_Steel_0', 'Turbo_Oil_Drain_Line_M_Steel_0'], 'center': mathutils.Vector((-0.031, 0.271, -0.016)), 'angle': math.radians(-45.0), 'elevation': math.radians(12.0), 'distance': 1.30},
+            5: {'short': 'DUAL EECS DRIFT', 'comp': 'Dual FADEC EECS Controller & Loom', 'tag': 'MAJOR', 'parts': ['ECU_Lane_A_M_MetalPaintedBlack_0', 'ECU_Lane_B_M_MetalPaintedBlack_0', 'Engine_Harness_Loom_M_PlasticBlack_0', 'ECU_Bayonet_Plugs_M_CastAluminium_0'], 'center': mathutils.Vector((-0.035, 0.328, 0.067)), 'angle': math.radians(80.0), 'elevation': math.radians(22.0), 'distance': 1.25},
+            6: {'short': 'GLOW PLUG CIRCUIT', 'comp': 'Cold-Start Glow Plug Preheater Array', 'tag': 'MINOR', 'parts': ['Glow_Plugs_M_Steel_0', 'Glow_Plug_Control_Unit_M_CastAluminium_0'], 'center': mathutils.Vector((-0.128, 0.365, 0.111)), 'angle': math.radians(-15.0), 'elevation': math.radians(35.0), 'distance': 0.95},
+            7: {'short': 'COOLANT CAVITATION', 'comp': 'High-Efficiency Coolant Pump & Hoses', 'tag': 'MAJOR', 'parts': ['Water_Pump_M_CastAluminium_0', 'Coolant_Hose_Red_M_RedSilicone_0', 'Coolant_Hose_Blue_M_BlueSilicone_0', 'Water_Pump_Inlet_Elbow_M_BlueSilicone_0'], 'center': mathutils.Vector((-0.049, 0.165, -0.070)), 'angle': math.radians(-85.0), 'elevation': math.radians(14.0), 'distance': 1.15},
+            8: {'short': 'GEARBOX VIBRATION', 'comp': 'Reduction Gearbox & PCU Prop Governor', 'tag': 'CRITICAL', 'parts': ['Gearbox_M_CastAluminium_0', 'Prop_Governor_PCU_M_CastAluminium_0', 'Prop_Flange_M_Steel_0', 'PCU_Oil_Line_M_Steel_0', 'Gearbox_Logo_M_CastAluminium_0'], 'center': mathutils.Vector((0.005, 0.093, 0.003)), 'angle': math.radians(-90.0), 'elevation': math.radians(16.0), 'distance': 1.10},
         }
     },
     'vrde_jayem_2_2l': {
@@ -141,18 +141,18 @@ ENGINE_PROFILES = {
         'fuel_type': 'JET-A1 / DIESEL',
         'induction': 'CRDi TWIN TURBO DIESEL',
         'default_center': mathutils.Vector((0.00, 0.11, 0.00)),
-        'default_distance': 2.8,
+        'default_distance': 2.6,
         'default_elevation': math.radians(24.0),
         'rpm_max': 4200.0,
         'faults': {
-            1: {'short': 'CRDi INJECTOR COKING', 'comp': 'CRDi Common Rail & Injector Bank 1-4', 'tag': 'CRITICAL', 'parts': ['Common_Rail_M_Steel_0.001', 'HP_Fuel_Pump_M_SteelDark_0.001', 'Injector_1_M_Steel_0.001', 'Injector_2_M_Steel_0.001', 'Injector_3_M_Steel_0.001', 'Injector_4_M_Steel_0.001', 'Fuel_Line_HP_Cyl1_M_Stainless_0', 'Fuel_Line_HP_Cyl2_M_Stainless_0'], 'center': mathutils.Vector((0.0, 0.0, 0.2)), 'angle': math.radians(45.0), 'elevation': math.radians(35.0), 'distance': 1.5},
-            2: {'short': 'TURBO WASTEGATE', 'comp': 'Two-Stage Turbocharger & Red Wastegate', 'tag': 'CRITICAL', 'parts': ['Wastegate_Actuator_Red_M_AnodizedRed_0', 'Wastegate_Actuator_Canister_M_PlasticBlack_0', 'Wastegate_Rod_Red_M_Stainless_0', 'Intercooler_M_CastAluminium_0.001', 'Exhaust_Downpipe_M_Stainless_0', 'Exhaust_Collector_M_HeatTintedSteel_0'], 'center': mathutils.Vector((-0.2, 0.0, 0.1)), 'angle': math.radians(-110.0), 'elevation': math.radians(20.0), 'distance': 1.6},
-            3: {'short': 'HP PUMP CAVITATION', 'comp': 'High Pressure Fuel Pump & Leak-off Rail', 'tag': 'MAJOR', 'parts': ['HP_Fuel_Pump_M_SteelDark_0.001', 'Fuel_Return_LeakOff_Rail_M_Stainless_0', 'Fuel_Hose_ASAK_Feed_M_BraidedSilver_0'], 'center': mathutils.Vector((0.2, -0.2, 0.1)), 'angle': math.radians(65.0), 'elevation': math.radians(25.0), 'distance': 1.5},
-            4: {'short': 'LUBRICATION SCAVENGE', 'comp': 'Heavy Duty Block, Sump & Oil Filter', 'tag': 'CRITICAL', 'parts': ['Engine_Block_M_CastAluminium_0.001', 'Oil_Filter', 'Dipstick_Tube_M_Steel_0', 'Cylinder_Head_M_CastAluminium_0.001'], 'center': mathutils.Vector((0.0, 0.0, -0.2)), 'angle': math.radians(0.0), 'elevation': math.radians(-10.0), 'distance': 1.8},
-            5: {'short': 'DUAL FADEC HARNESS', 'comp': 'DRDO Dual Redundant FADEC & Spine', 'tag': 'MAJOR', 'parts': ['ECU_Lane_A_M_MetalPaintedBlack_0.001', 'ECU_Lane_B_M_MetalPaintedBlack_0.001', 'Harness_Spine_M_PlasticBlack_0'], 'center': mathutils.Vector((0.15, 0.25, 0.0)), 'angle': math.radians(85.0), 'elevation': math.radians(20.0), 'distance': 1.5},
-            6: {'short': 'EXHAUST MANIFOLD', 'comp': 'Stainless Exhaust Downpipe & Collector', 'tag': 'MINOR', 'parts': ['Exhaust_Downpipe_M_Stainless_0', 'Exhaust_Collector_M_HeatTintedSteel_0', 'Intake_Manifold_M_CastAluminium_0.001'], 'center': mathutils.Vector((-0.1, 0.2, 0.15)), 'angle': math.radians(-70.0), 'elevation': math.radians(30.0), 'distance': 1.5},
-            7: {'short': 'COOLING JACKET', 'comp': 'High Flow Coolant Jacket & Water Pump', 'tag': 'MAJOR', 'parts': ['Water_Pump_M_CastAluminium_0.001', 'Coolant_Pipe_Junction_M_CastAluminium_0', 'Coolant_Hose_Upper_M_BlueSilicone_0'], 'center': mathutils.Vector((0.0, -0.3, 0.0)), 'angle': math.radians(-145.0), 'elevation': math.radians(15.0), 'distance': 1.6},
-            8: {'short': 'GLOW PLUG RESISTANCE', 'comp': 'Ceramic Glow Plug Array 1-4', 'tag': 'MINOR', 'parts': ['Glow_Plug_Cyl1_M_Steel_0', 'Glow_Plug_Cyl2_M_Steel_0', 'Glow_Plug_Cyl3_M_Steel_0', 'Glow_Plug_Cyl4_M_Steel_0'], 'center': mathutils.Vector((0.05, 0.1, 0.22)), 'angle': math.radians(20.0), 'elevation': math.radians(45.0), 'distance': 1.3},
+            1: {'short': 'CRDi INJECTOR COKING', 'comp': 'CRDi Common Rail & Injector Bank 1-4', 'tag': 'CRITICAL', 'parts': ['Common_Rail_M_Steel_0.001', 'HP_Fuel_Pump_M_SteelDark_0.001', 'Injector_1_M_Steel_0.001', 'Injector_2_M_Steel_0.001', 'Injector_3_M_Steel_0.001', 'Injector_4_M_Steel_0.001', 'Fuel_Line_HP_Cyl1_M_Stainless_0', 'Fuel_Line_HP_Cyl2_M_Stainless_0'], 'center': mathutils.Vector((-0.026, 0.198, 0.090)), 'angle': math.radians(45.0), 'elevation': math.radians(32.0), 'distance': 1.25},
+            2: {'short': 'TURBO WASTEGATE', 'comp': 'Two-Stage Turbocharger & Red Wastegate', 'tag': 'CRITICAL', 'parts': ['Wastegate_Actuator_Red_M_AnodizedRed_0', 'Wastegate_Actuator_Canister_M_PlasticBlack_0', 'Wastegate_Rod_Red_M_Stainless_0', 'Intercooler_M_CastAluminium_0.001', 'Exhaust_Downpipe_M_Stainless_0', 'Exhaust_Collector_M_HeatTintedSteel_0'], 'center': mathutils.Vector((0.039, 0.297, 0.062)), 'angle': math.radians(-110.0), 'elevation': math.radians(20.0), 'distance': 1.30},
+            3: {'short': 'HP PUMP CAVITATION', 'comp': 'High Pressure Fuel Pump & Leak-off Rail', 'tag': 'MAJOR', 'parts': ['HP_Fuel_Pump_M_SteelDark_0.001', 'Fuel_Return_LeakOff_Rail_M_Stainless_0', 'Fuel_Hose_ASAK_Feed_M_BraidedSilver_0'], 'center': mathutils.Vector((-0.070, 0.305, 0.095)), 'angle': math.radians(65.0), 'elevation': math.radians(24.0), 'distance': 1.35},
+            4: {'short': 'LUBRICATION SCAVENGE', 'comp': 'Heavy Duty Block, Sump & Oil Filter', 'tag': 'CRITICAL', 'parts': ['Engine_Block_M_CastAluminium_0.001', 'Oil_Filter', 'Dipstick_Tube_M_Steel_0', 'Cylinder_Head_M_CastAluminium_0.001'], 'center': mathutils.Vector((0.000, 0.315, 0.040)), 'angle': math.radians(-35.0), 'elevation': math.radians(10.0), 'distance': 1.40},
+            5: {'short': 'DUAL FADEC HARNESS', 'comp': 'DRDO Dual Redundant FADEC & Spine', 'tag': 'MAJOR', 'parts': ['ECU_Lane_A_M_MetalPaintedBlack_0.001', 'ECU_Lane_B_M_MetalPaintedBlack_0.001', 'Harness_Spine_M_PlasticBlack_0'], 'center': mathutils.Vector((0.018, 0.007, 0.000)), 'angle': math.radians(75.0), 'elevation': math.radians(20.0), 'distance': 1.15},
+            6: {'short': 'EXHAUST MANIFOLD', 'comp': 'Stainless Exhaust Downpipe & Collector', 'tag': 'MINOR', 'parts': ['Exhaust_Downpipe_M_Stainless_0', 'Exhaust_Collector_M_HeatTintedSteel_0', 'Intake_Manifold_M_CastAluminium_0.001'], 'center': mathutils.Vector((-0.005, 0.472, 0.117)), 'angle': math.radians(-65.0), 'elevation': math.radians(24.0), 'distance': 1.15},
+            7: {'short': 'COOLING JACKET', 'comp': 'High Flow Coolant Jacket & Water Pump', 'tag': 'MAJOR', 'parts': ['Water_Pump_M_CastAluminium_0.001', 'Coolant_Pipe_Junction_M_CastAluminium_0', 'Coolant_Hose_Upper_M_BlueSilicone_0'], 'center': mathutils.Vector((0.001, -0.050, -0.020)), 'angle': math.radians(-135.0), 'elevation': math.radians(15.0), 'distance': 1.20},
+            8: {'short': 'GLOW PLUG RESISTANCE', 'comp': 'Ceramic Glow Plug Array 1-4', 'tag': 'MINOR', 'parts': ['Glow_Plug_Cyl1_M_Steel_0', 'Glow_Plug_Cyl2_M_Steel_0', 'Glow_Plug_Cyl3_M_Steel_0', 'Glow_Plug_Cyl4_M_Steel_0'], 'center': mathutils.Vector((-0.030, 0.220, 0.120)), 'angle': math.radians(20.0), 'elevation': math.radians(40.0), 'distance': 1.05},
         }
     }
 }
@@ -453,6 +453,14 @@ def switch_engine(engine_id: str):
     # 1. Toggle 3D mesh collection visibility
     switch_engine_collection(engine_id)
     
+    # Initialize baseline nominal telemetry for electrical & fuel system scale
+    if 'rotax' in engine_id:
+        client_state.telemetry['BUS_VOLTAGE'] = 14.1
+        client_state.telemetry['FUEL_RAIL_P'] = 3.0
+    else:
+        client_state.telemetry['BUS_VOLTAGE'] = 28.2
+        client_state.telemetry['FUEL_RAIL_P'] = 1600.0
+    
     # 2. Notify backend server
     def _notify():
         try:
@@ -466,16 +474,28 @@ def switch_engine(engine_id: str):
             pass
     threading.Thread(target=_notify, daemon=True).start()
     
-    # 3. Dynamic camera bounds calculation
+    # 3. Dynamic camera bounds calculation & scale adaptation
     center, dist = compute_engine_bounds(ENGINE_PROFILE['default_center'], ENGINE_PROFILE['default_distance'])
     ENGINE_CENTER = center
     DEFAULT_ORBIT_DISTANCE = dist
     DEFAULT_ORBIT_ELEVATION = ENGINE_PROFILE['default_elevation']
     
     client_state.cam_target = ENGINE_CENTER.copy()
+    client_state.cur_cam_target = ENGINE_CENTER.copy()
+    client_state.orbit_distance = DEFAULT_ORBIT_DISTANCE
     client_state.target_orbit_distance = DEFAULT_ORBIT_DISTANCE
+    client_state.orbit_elevation = DEFAULT_ORBIT_ELEVATION
     client_state.target_orbit_elevation = DEFAULT_ORBIT_ELEVATION
+    client_state.is_auto_orbit = True
+    
+    cx = ENGINE_CENTER.x + DEFAULT_ORBIT_DISTANCE * math.cos(client_state.orbit_angle) * math.cos(DEFAULT_ORBIT_ELEVATION)
+    cy = ENGINE_CENTER.y + DEFAULT_ORBIT_DISTANCE * math.sin(client_state.orbit_angle) * math.cos(DEFAULT_ORBIT_ELEVATION)
+    cz = ENGINE_CENTER.z + DEFAULT_ORBIT_DISTANCE * math.sin(DEFAULT_ORBIT_ELEVATION)
+    client_state.cur_cam_pos = mathutils.Vector((cx, cy, cz))
+    
     client_state.applied_fault_id = -1
+    if hasattr(update_camera_for_backend_fault, "_last_state_key"):
+        delattr(update_camera_for_backend_fault, "_last_state_key")
     
     save_original_materials()
     apply_material_state()
@@ -1319,7 +1339,7 @@ def update_pulsing_emission():
 
 
 def update_camera_for_backend_fault():
-    """Adjusts camera focus target when backend fault or physics attribution changes."""
+    """Adjusts camera focus target and cinematic framing when backend fault or physics attribution changes."""
     diag_id = client_state.active_commanded_fault_id if client_state.active_commanded_fault_id > 0 else client_state.analytics.get('diagnosed_fault_id', 0)
     physics_targets = resolve_fault_targets_from_physics(client_state.engine_id, client_state.telemetry, client_state.analytics)
     
@@ -1328,26 +1348,34 @@ def update_camera_for_backend_fault():
         update_camera_for_backend_fault._last_state_key = current_state_key
         client_state.applied_fault_id = diag_id
         
-        all_targets = set(client_state.analytics.get('target_parts', []))
+        # 1. Preset fault mode active
         if diag_id in FAULT_DATABASE:
-            for p in FAULT_DATABASE[diag_id].get('parts', []):
-                all_targets.add(p)
-        for pt in physics_targets:
-            all_targets.add(pt)
+            f_data = FAULT_DATABASE[diag_id]
+            client_state.is_auto_orbit = False
             
-        if all_targets:
-            center, radius = get_parts_center_and_radius(list(all_targets))
-            if center is not None:
-                client_state.is_auto_orbit = False
-                client_state.cam_target = center
-                client_state.target_orbit_distance = max(DEFAULT_ORBIT_DISTANCE * 0.45, radius * 2.8)
-            elif diag_id in FAULT_DATABASE:
-                f_data = FAULT_DATABASE[diag_id]
-                client_state.is_auto_orbit = False
+            mesh_center, _ = get_parts_center_and_radius(f_data.get('parts', []))
+            if mesh_center is not None:
+                client_state.cam_target = mesh_center
+            else:
                 client_state.cam_target = f_data['center'].copy()
-                client_state.target_orbit_angle = f_data['angle']
-                client_state.target_orbit_elevation = f_data['elevation']
-                client_state.target_orbit_distance = f_data['distance']
+                
+            client_state.target_orbit_angle = f_data['angle']
+            client_state.target_orbit_elevation = f_data['elevation']
+            client_state.target_orbit_distance = f_data['distance']
+            
+        # 2. Generic physics residual triggered without specific fault ID
+        elif physics_targets:
+            client_state.is_auto_orbit = False
+            mesh_center, mesh_radius = get_parts_center_and_radius(physics_targets)
+            if mesh_center is not None:
+                client_state.cam_target = mesh_center
+                client_state.target_orbit_distance = max(DEFAULT_ORBIT_DISTANCE * 0.40, mesh_radius * 2.2)
+                client_state.target_orbit_elevation = math.radians(22.0)
+            else:
+                client_state.cam_target = ENGINE_CENTER.copy()
+                client_state.target_orbit_distance = DEFAULT_ORBIT_DISTANCE * 0.65
+                
+        # 3. System nominal / cleared
         else:
             client_state.is_auto_orbit = True
             client_state.cam_target = ENGINE_CENTER.copy()
@@ -1372,7 +1400,7 @@ class OT_DigitalTwinSimulator(bpy.types.Operator):
         now = time.time()
 
         if event.type == 'TIMER':
-            dt = max(0.001, min(0.02, now - client_state.last_frame_time))
+            dt = max(0.001, min(0.05, now - client_state.last_frame_time))
             client_state.last_frame_time = now
 
             client_state.frame_count += 1
@@ -1394,25 +1422,31 @@ class OT_DigitalTwinSimulator(bpy.types.Operator):
             if client_state.analytics.get('diagnosed_fault_id', 0) > 0 or client_state.active_commanded_fault_id > 0:
                 update_pulsing_emission()
 
+            # Delta-time exponential smoothing factors
+            alpha_target = 1.0 - math.exp(-7.0 * dt)
+            alpha_angle = 1.0 - math.exp(-6.5 * dt)
+            alpha_elev = 1.0 - math.exp(-7.0 * dt)
+            alpha_dist = 1.0 - math.exp(-7.5 * dt)
+
             if client_state.is_auto_orbit and not client_state.is_dragging:
                 client_state.orbit_angle = (client_state.orbit_angle + DEFAULT_ORBIT_SPEED * dt) % (2 * math.pi)
                 client_state.target_orbit_angle = client_state.orbit_angle
-                client_state.orbit_elevation += (DEFAULT_ORBIT_ELEVATION - client_state.orbit_elevation) * 0.08
-                client_state.orbit_distance += (DEFAULT_ORBIT_DISTANCE - client_state.orbit_distance) * 0.08
-                client_state.cur_cam_target = client_state.cur_cam_target.lerp(ENGINE_CENTER, 0.10)
+                client_state.orbit_elevation += (DEFAULT_ORBIT_ELEVATION - client_state.orbit_elevation) * alpha_elev
+                client_state.orbit_distance += (DEFAULT_ORBIT_DISTANCE - client_state.orbit_distance) * alpha_dist
+                client_state.cur_cam_target = client_state.cur_cam_target.lerp(ENGINE_CENTER, alpha_target)
 
-            elif not client_state.is_auto_orbit and not client_state.is_dragging:
+            elif not client_state.is_dragging:
                 angle_diff = (client_state.target_orbit_angle - client_state.orbit_angle + math.pi) % (2 * math.pi) - math.pi
-                client_state.orbit_angle = (client_state.orbit_angle + angle_diff * 0.10) % (2 * math.pi)
-                client_state.orbit_elevation += (client_state.target_orbit_elevation - client_state.orbit_elevation) * 0.10
-                client_state.orbit_distance += (client_state.target_orbit_distance - client_state.orbit_distance) * 0.10
-                client_state.cur_cam_target = client_state.cur_cam_target.lerp(client_state.cam_target, 0.10)
+                client_state.orbit_angle = (client_state.orbit_angle + angle_diff * alpha_angle) % (2 * math.pi)
+                client_state.orbit_elevation += (client_state.target_orbit_elevation - client_state.orbit_elevation) * alpha_elev
+                client_state.orbit_distance += (client_state.target_orbit_distance - client_state.orbit_distance) * alpha_dist
+                client_state.cur_cam_target = client_state.cur_cam_target.lerp(client_state.cam_target, alpha_target)
 
+            # Direct computation of camera location along spherical manifold (zero chord-cutting wobble)
             cx = client_state.cur_cam_target.x + client_state.orbit_distance * math.cos(client_state.orbit_angle) * math.cos(client_state.orbit_elevation)
             cy = client_state.cur_cam_target.y + client_state.orbit_distance * math.sin(client_state.orbit_angle) * math.cos(client_state.orbit_elevation)
             cz = client_state.cur_cam_target.z + client_state.orbit_distance * math.sin(client_state.orbit_elevation)
-            target_pos = mathutils.Vector((cx, cy, cz))
-            client_state.cur_cam_pos = client_state.cur_cam_pos.lerp(target_pos, 0.20)
+            client_state.cur_cam_pos = mathutils.Vector((cx, cy, cz))
 
             cam = context.scene.camera
             if cam:
@@ -1437,6 +1471,7 @@ class OT_DigitalTwinSimulator(bpy.types.Operator):
         # Click on HUD Buttons
         if event.type == 'LEFTMOUSE' and event.value == 'PRESS' and client_state.hovered_button:
             bid = client_state.hovered_button
+            scale = DEFAULT_ORBIT_DISTANCE / 230.0
             if bid.startswith('ENGINE_'):
                 eid = bid.replace('ENGINE_', '')
                 switch_engine(eid)
@@ -1460,18 +1495,18 @@ class OT_DigitalTwinSimulator(bpy.types.Operator):
                 client_state.cam_target = ENGINE_CENTER.copy()
                 client_state.target_orbit_angle = math.radians(-90.0)
                 client_state.target_orbit_elevation = math.radians(5.0)
-                client_state.target_orbit_distance = DEFAULT_ORBIT_DISTANCE * 0.9
+                client_state.target_orbit_distance = DEFAULT_ORBIT_DISTANCE * 0.90
             elif bid == 'CAM_GEARBOX':
                 client_state.is_auto_orbit = False
-                client_state.cam_target = ENGINE_CENTER.copy() + mathutils.Vector((0.0, -10.0, 5.0))
+                client_state.cam_target = ENGINE_CENTER.copy() + mathutils.Vector((0.0, -10.0 * scale, 5.0 * scale))
                 client_state.target_orbit_angle = math.radians(-90.0)
                 client_state.target_orbit_elevation = math.radians(14.0)
                 client_state.target_orbit_distance = DEFAULT_ORBIT_DISTANCE * 0.65
             elif bid == 'CAM_EXHAUST':
                 client_state.is_auto_orbit = False
-                client_state.cam_target = ENGINE_CENTER.copy() + mathutils.Vector((5.0, 10.0, -10.0))
+                client_state.cam_target = ENGINE_CENTER.copy() + mathutils.Vector((5.0 * scale, 10.0 * scale, -10.0 * scale))
                 client_state.target_orbit_angle = math.radians(-45.0)
-                client_state.target_orbit_elevation = math.radians(-10.0)
+                client_state.target_orbit_elevation = math.radians(-8.0)
                 client_state.target_orbit_distance = DEFAULT_ORBIT_DISTANCE * 0.75
             elif bid in {'CAM_GHOST', 'ACTION_GHOST'}:
                 client_state.is_ghost_vision = not client_state.is_ghost_vision
@@ -1498,6 +1533,8 @@ class OT_DigitalTwinSimulator(bpy.types.Operator):
                 client_state.drag_button = event.type
                 client_state.last_mouse_x = event.mouse_x
                 client_state.last_mouse_y = event.mouse_y
+                if event.type in {'LEFTMOUSE', 'MIDDLEMOUSE'}:
+                    client_state.is_auto_orbit = False
             elif event.value == 'RELEASE':
                 client_state.is_dragging = False
                 client_state.drag_button = None
@@ -1509,26 +1546,27 @@ class OT_DigitalTwinSimulator(bpy.types.Operator):
             client_state.last_mouse_y = event.mouse_y
 
             if client_state.drag_button in {'LEFTMOUSE', 'MIDDLEMOUSE'}:
-                client_state.orbit_angle += dx * 0.006
+                client_state.orbit_angle = (client_state.orbit_angle + dx * 0.005) % (2 * math.pi)
                 client_state.target_orbit_angle = client_state.orbit_angle
-                client_state.orbit_elevation = max(0.05, min(1.35, client_state.orbit_elevation + dy * 0.006))
+                client_state.orbit_elevation = max(-0.30, min(1.45, client_state.orbit_elevation + dy * 0.005))
                 client_state.target_orbit_elevation = client_state.orbit_elevation
             elif client_state.drag_button == 'RIGHTMOUSE':
                 cam_mat = context.scene.camera.matrix_world if context.scene.camera else mathutils.Matrix.Identity(4)
                 right = cam_mat.to_3x3() @ mathutils.Vector((1, 0, 0))
                 up = cam_mat.to_3x3() @ mathutils.Vector((0, 1, 0))
-                pan_scale = DEFAULT_ORBIT_DISTANCE * 0.001
-                client_state.cam_target -= (right * dx - up * dy) * pan_scale
+                pan_scale = DEFAULT_ORBIT_DISTANCE * 0.0012
+                pan_delta = (right * dx - up * dy) * pan_scale
+                client_state.cam_target -= pan_delta
+                client_state.cur_cam_target -= pan_delta
 
         elif event.type == 'WHEELUPMOUSE':
-            client_state.orbit_distance = max(DEFAULT_ORBIT_DISTANCE * 0.2, client_state.orbit_distance * 0.9)
-            client_state.target_orbit_distance = client_state.orbit_distance
+            client_state.target_orbit_distance = max(DEFAULT_ORBIT_DISTANCE * 0.20, client_state.target_orbit_distance * 0.88)
         elif event.type == 'WHEELDOWNMOUSE':
-            client_state.orbit_distance = min(DEFAULT_ORBIT_DISTANCE * 3.0, client_state.orbit_distance * 1.1)
-            client_state.target_orbit_distance = client_state.orbit_distance
+            client_state.target_orbit_distance = min(DEFAULT_ORBIT_DISTANCE * 3.5, client_state.target_orbit_distance * 1.14)
 
         # Keyboard Shortcuts
         if event.value == 'PRESS':
+            scale = DEFAULT_ORBIT_DISTANCE / 230.0
             if event.type == 'F1':
                 switch_engine('rotax_912is')
             elif event.type == 'F2':
@@ -1568,7 +1606,7 @@ class OT_DigitalTwinSimulator(bpy.types.Operator):
                 client_state.cam_target = ENGINE_CENTER.copy()
                 client_state.target_orbit_angle = math.radians(-90.0)
                 client_state.target_orbit_elevation = math.radians(5.0)
-                client_state.target_orbit_distance = DEFAULT_ORBIT_DISTANCE * 0.9
+                client_state.target_orbit_distance = DEFAULT_ORBIT_DISTANCE * 0.90
             elif event.type in {'I'}:
                 client_state.is_auto_orbit = False
                 client_state.cam_target = ENGINE_CENTER.copy()
@@ -1678,6 +1716,8 @@ def configure_clean_viewport_workspace():
     if cam.data:
         cam.data.clip_start = 0.01
         cam.data.clip_end = 5000.0
+        cam.data.lens = 55.0
+        cam.data.sensor_width = 36.0
     scene.camera = cam
     cam.animation_data_clear()
 
