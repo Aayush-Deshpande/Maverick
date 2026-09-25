@@ -591,6 +591,102 @@
       "min_altitude_ft": null,
       "max_altitude_ft": null,
       "telemetry_log_path": null
+    },
+    "SORTIE-SRV-20260925-110215": {
+      "sortie_id": "SORTIE-SRV-20260925-110215",
+      "region": "LADAKH",
+      "start_timestamp": 1790314337.7084906,
+      "end_timestamp": null,
+      "flight_hours": 0.0,
+      "final_health_index": 1.0,
+      "status": "ACTIVE",
+      "uav_tail_number": "TAPAS-BH-201-AF01",
+      "start_health_index": 1.0,
+      "min_oat_c": -22.0,
+      "max_oat_c": -22.0,
+      "min_altitude_ft": 20000.0,
+      "max_altitude_ft": 20000.0,
+      "telemetry_log_path": "E:\\backup-llm\\backup-no-llm\\3d_engine\\data\\telemetry\\live_sorties\\SORTIE-SRV-20260925-110215.csv"
+    },
+    "SORTIE-SRV-20260925-115303": {
+      "sortie_id": "SORTIE-SRV-20260925-115303",
+      "region": "LADAKH",
+      "start_timestamp": 1790317386.9553645,
+      "end_timestamp": null,
+      "flight_hours": 0.0,
+      "final_health_index": 1.0,
+      "status": "ACTIVE",
+      "uav_tail_number": "TAPAS-BH-201-AF01",
+      "start_health_index": 1.0,
+      "min_oat_c": -22.0,
+      "max_oat_c": -22.0,
+      "min_altitude_ft": 20000.0,
+      "max_altitude_ft": 20000.0,
+      "telemetry_log_path": "E:\\backup-llm\\backup-no-llm\\3d_engine\\data\\telemetry\\live_sorties\\SORTIE-SRV-20260925-115303.csv"
+    },
+    "SORTIE-SRV-20260925-115709": {
+      "sortie_id": "SORTIE-SRV-20260925-115709",
+      "region": "LADAKH",
+      "start_timestamp": 1790317631.4136906,
+      "end_timestamp": null,
+      "flight_hours": 0.0,
+      "final_health_index": 1.0,
+      "status": "ACTIVE",
+      "uav_tail_number": "TAPAS-BH-201-AF01",
+      "start_health_index": 1.0,
+      "min_oat_c": null,
+      "max_oat_c": null,
+      "min_altitude_ft": null,
+      "max_altitude_ft": null,
+      "telemetry_log_path": null
+    },
+    "SORTIE-SRV-20260925-121003": {
+      "sortie_id": "SORTIE-SRV-20260925-121003",
+      "region": "LADAKH",
+      "start_timestamp": 1790318406.6750321,
+      "end_timestamp": 1790318439.060615,
+      "flight_hours": 0.009,
+      "final_health_index": 0.81,
+      "status": "COMPLETED",
+      "uav_tail_number": "TAPAS-BH-201-AF01",
+      "start_health_index": 1.0,
+      "min_oat_c": -22.0,
+      "max_oat_c": -22.0,
+      "min_altitude_ft": 20000.0,
+      "max_altitude_ft": 20000.0,
+      "telemetry_log_path": "E:\\backup-llm\\backup-no-llm\\3d_engine\\data\\telemetry\\live_sorties\\SORTIE-SRV-20260925-121003.csv"
+    },
+    "SORTIE-SRV-20260925-121930": {
+      "sortie_id": "SORTIE-SRV-20260925-121930",
+      "region": "LADAKH",
+      "start_timestamp": 1790318972.1290271,
+      "end_timestamp": null,
+      "flight_hours": 0.0,
+      "final_health_index": 1.0,
+      "status": "ACTIVE",
+      "uav_tail_number": "TAPAS-BH-201-AF01",
+      "start_health_index": 1.0,
+      "min_oat_c": null,
+      "max_oat_c": null,
+      "min_altitude_ft": null,
+      "max_altitude_ft": null,
+      "telemetry_log_path": null
+    },
+    "SORTIE-SRV-20260925-125347": {
+      "sortie_id": "SORTIE-SRV-20260925-125347",
+      "region": "LADAKH",
+      "start_timestamp": 1790321029.1200812,
+      "end_timestamp": null,
+      "flight_hours": 0.0,
+      "final_health_index": 1.0,
+      "status": "ACTIVE",
+      "uav_tail_number": "TAPAS-BH-201-AF01",
+      "start_health_index": 1.0,
+      "min_oat_c": null,
+      "max_oat_c": null,
+      "min_altitude_ft": null,
+      "max_altitude_ft": null,
+      "telemetry_log_path": null
     }
   },
   "subsystems": {
@@ -600,7 +696,7 @@
       "ata_chapter": "ATA 72-00",
       "target_mesh": "Covers_Theme_M_PlasticTheme_0",
       "current_health": 0.1,
-      "cumulative_stress_hours": 0.0,
+      "cumulative_stress_hours": 0.018,
       "last_inspected_epoch": 0.0
     },
     "SUB_FUEL_SYS": {
@@ -609,7 +705,7 @@
       "ata_chapter": "ATA 73-10",
       "target_mesh": "Rotax_912i_Base_M_PlasticGreen_0",
       "current_health": 0.1,
-      "cumulative_stress_hours": 0.0,
+      "cumulative_stress_hours": 0.018,
       "last_inspected_epoch": 0.0
     },
     "SUB_IGNITION": {
@@ -618,7 +714,7 @@
       "ata_chapter": "ATA 74-20",
       "target_mesh": "Wiring_Harness_M_Copper_0",
       "current_health": 0.1,
-      "cumulative_stress_hours": 0.0,
+      "cumulative_stress_hours": 0.018,
       "last_inspected_epoch": 0.0
     },
     "SUB_LUBRICATION": {
@@ -627,7 +723,7 @@
       "ata_chapter": "ATA 79-00",
       "target_mesh": "Oil_Tank_M_Steel_0",
       "current_health": 0.1,
-      "cumulative_stress_hours": 0.0,
+      "cumulative_stress_hours": 0.018,
       "last_inspected_epoch": 0.0
     },
     "SUB_GEARBOX": {
@@ -636,7 +732,7 @@
       "ata_chapter": "ATA 72-10",
       "target_mesh": "Gearbox_Type_2_M_Steel_0",
       "current_health": 0.1,
-      "cumulative_stress_hours": 0.0,
+      "cumulative_stress_hours": 0.018,
       "last_inspected_epoch": 0.0
     },
     "SUB_EXHAUST": {
@@ -645,7 +741,7 @@
       "ata_chapter": "ATA 78-10",
       "target_mesh": "Exhaust_System_M_SteelDark_0",
       "current_health": 0.1,
-      "cumulative_stress_hours": 0.0,
+      "cumulative_stress_hours": 0.018,
       "last_inspected_epoch": 0.0
     },
     "SUB_ELECTRICAL": {
@@ -654,7 +750,7 @@
       "ata_chapter": "ATA 24-00",
       "target_mesh": "External_Alternator_M_Steel_0",
       "current_health": 0.1,
-      "cumulative_stress_hours": 0.0,
+      "cumulative_stress_hours": 0.018,
       "last_inspected_epoch": 0.0
     },
     "SUB_FADEC": {
@@ -663,7 +759,7 @@
       "ata_chapter": "ATA 76-00",
       "target_mesh": "ECU_M_PlasticBlack_0",
       "current_health": 0.1,
-      "cumulative_stress_hours": 0.0,
+      "cumulative_stress_hours": 0.018,
       "last_inspected_epoch": 0.0
     }
   },
@@ -4060,6 +4156,123 @@
       "ata_chapter": "ATA 74-20",
       "recommended_action": "Switch FADEC ignition arbitration to redundant Lane B coil circuit.",
       "trend_note": "Sub-threshold drift detected in d_VIB_RMS (+278.39/hr)"
+    },
+    "ANOM-0262": {
+      "event_id": "ANOM-0262",
+      "sortie_id": "SORTIE-SRV-20260925-110215",
+      "subsystem_id": "SUB_IGNITION",
+      "timestamp_epoch": 1790314390.9858456,
+      "fault_id": 3,
+      "fault_name": "IGNITION_MISFIRE",
+      "severity": "WARNING",
+      "anomaly_score": 0.5707,
+      "ata_chapter": "ATA 74-20",
+      "recommended_action": "Switch FADEC ignition arbitration to redundant Lane B coil circuit.",
+      "trend_note": null
+    },
+    "ANOM-0263": {
+      "event_id": "ANOM-0263",
+      "sortie_id": "SORTIE-SRV-20260925-115303",
+      "subsystem_id": "SUB_IGNITION",
+      "timestamp_epoch": 1790317485.0295155,
+      "fault_id": 3,
+      "fault_name": "IGNITION_MISFIRE",
+      "severity": "WARNING",
+      "anomaly_score": 0.565,
+      "ata_chapter": "ATA 74-20",
+      "recommended_action": "Switch FADEC ignition arbitration to redundant Lane B coil circuit.",
+      "trend_note": null
+    },
+    "ANOM-0264": {
+      "event_id": "ANOM-0264",
+      "sortie_id": "SORTIE-SRV-20260925-115303",
+      "subsystem_id": "SUB_IGNITION",
+      "timestamp_epoch": 1790317492.6416137,
+      "fault_id": 3,
+      "fault_name": "IGNITION_MISFIRE",
+      "severity": "WARNING",
+      "anomaly_score": 0.5753,
+      "ata_chapter": "ATA 74-20",
+      "recommended_action": "Switch FADEC ignition arbitration to redundant Lane B coil circuit.",
+      "trend_note": null
+    },
+    "ANOM-0265": {
+      "event_id": "ANOM-0265",
+      "sortie_id": "SORTIE-SRV-20260925-115303",
+      "subsystem_id": "SUB_GEARBOX",
+      "timestamp_epoch": 1790317495.1331336,
+      "fault_id": 5,
+      "fault_name": "Gearbox Vibration & Clutch Wear",
+      "severity": "WARNING",
+      "anomaly_score": 0.7328,
+      "ata_chapter": "ATA 72-10",
+      "recommended_action": "Limit rapid throttle transients, avoid critical RPM resonance zones (4,000-4,400 RPM), and schedule post-flight clutch overhaul.",
+      "trend_note": null
+    },
+    "ANOM-0266": {
+      "event_id": "ANOM-0266",
+      "sortie_id": "SORTIE-SRV-20260925-115303",
+      "subsystem_id": "SUB_IGNITION",
+      "timestamp_epoch": 1790317495.306178,
+      "fault_id": 3,
+      "fault_name": "IGNITION_MISFIRE",
+      "severity": "WARNING",
+      "anomaly_score": 0.7475,
+      "ata_chapter": "ATA 74-20",
+      "recommended_action": "Switch FADEC ignition arbitration to redundant Lane B coil circuit.",
+      "trend_note": null
+    },
+    "ANOM-0267": {
+      "event_id": "ANOM-0267",
+      "sortie_id": "SORTIE-SRV-20260925-115303",
+      "subsystem_id": "SUB_GEARBOX",
+      "timestamp_epoch": 1790317502.2674408,
+      "fault_id": 5,
+      "fault_name": "GEARBOX_VIBRATION",
+      "severity": "WARNING",
+      "anomaly_score": 0.932,
+      "ata_chapter": "ATA 72-10",
+      "recommended_action": "Limit rapid throttle transients, avoid critical RPM resonance zones (4,000-4,400 RPM), and schedule post-flight clutch overhaul.",
+      "trend_note": null
+    },
+    "ANOM-0268": {
+      "event_id": "ANOM-0268",
+      "sortie_id": "SORTIE-SRV-20260925-121003",
+      "subsystem_id": "SUB_IGNITION",
+      "timestamp_epoch": 1790318437.7951593,
+      "fault_id": 3,
+      "fault_name": "IGNITION_MISFIRE",
+      "severity": "WARNING",
+      "anomaly_score": 0.5636,
+      "ata_chapter": "ATA 74-20",
+      "recommended_action": "Switch FADEC ignition arbitration to redundant Lane B coil circuit.",
+      "trend_note": null
+    },
+    "ANOM-0269": {
+      "event_id": "ANOM-0269",
+      "sortie_id": "SORTIE-SRV-20260925-121003",
+      "subsystem_id": "SUB_GEARBOX",
+      "timestamp_epoch": 1790318452.203509,
+      "fault_id": 5,
+      "fault_name": "GEARBOX_VIBRATION",
+      "severity": "WARNING",
+      "anomaly_score": 0.9325,
+      "ata_chapter": "ATA 72-10",
+      "recommended_action": "Limit rapid throttle transients, avoid critical RPM resonance zones (4,000-4,400 RPM), and schedule post-flight clutch overhaul.",
+      "trend_note": "Sub-threshold drift detected in d_VIB_RMS (+354.47/hr)"
+    },
+    "ANOM-0270": {
+      "event_id": "ANOM-0270",
+      "sortie_id": "SORTIE-SRV-20260925-121003",
+      "subsystem_id": "SUB_IGNITION",
+      "timestamp_epoch": 1790318476.60968,
+      "fault_id": 3,
+      "fault_name": "IGNITION_MISFIRE",
+      "severity": "WARNING",
+      "anomaly_score": 0.9441,
+      "ata_chapter": "ATA 74-20",
+      "recommended_action": "Switch FADEC ignition arbitration to redundant Lane B coil circuit.",
+      "trend_note": "Sub-threshold drift detected in d_VIB_RMS (+218.03/hr)"
     }
   },
   "maintenance_actions": {
@@ -7442,6 +7655,123 @@
       "limiting_component": "Ignition_Harness",
       "signoff_epoch": null,
       "signoff_inspector": null
+    },
+    "MAINT-0261": {
+      "action_id": "MAINT-0261",
+      "sortie_id": "SORTIE-SRV-20260925-110215",
+      "subsystem_id": "SUB_IGNITION",
+      "ata_chapter": "ATA 74-20",
+      "description": "Perform ignition lead resistance test (nominal 4.5-5.5 kOhm) and replace Lane A coil pack.",
+      "status": "OPEN",
+      "rul_p10_hours": null,
+      "rul_p50_hours": null,
+      "limiting_component": null,
+      "signoff_epoch": null,
+      "signoff_inspector": null
+    },
+    "MAINT-0262": {
+      "action_id": "MAINT-0262",
+      "sortie_id": "SORTIE-SRV-20260925-115303",
+      "subsystem_id": "SUB_IGNITION",
+      "ata_chapter": "ATA 74-20",
+      "description": "Perform ignition lead resistance test (nominal 4.5-5.5 kOhm) and replace Lane A coil pack.",
+      "status": "OPEN",
+      "rul_p10_hours": null,
+      "rul_p50_hours": null,
+      "limiting_component": null,
+      "signoff_epoch": null,
+      "signoff_inspector": null
+    },
+    "MAINT-0263": {
+      "action_id": "MAINT-0263",
+      "sortie_id": "SORTIE-SRV-20260925-115303",
+      "subsystem_id": "SUB_IGNITION",
+      "ata_chapter": "ATA 74-20",
+      "description": "Perform ignition lead resistance test (nominal 4.5-5.5 kOhm) and replace Lane A coil pack.",
+      "status": "OPEN",
+      "rul_p10_hours": null,
+      "rul_p50_hours": null,
+      "limiting_component": null,
+      "signoff_epoch": null,
+      "signoff_inspector": null
+    },
+    "MAINT-0264": {
+      "action_id": "MAINT-0264",
+      "sortie_id": "SORTIE-SRV-20260925-115303",
+      "subsystem_id": "SUB_GEARBOX",
+      "ata_chapter": "ATA 72-10",
+      "description": "Perform gearbox backlash measurement (max allowable 0.05 mm) and dog-clutch spring pack inspection.",
+      "status": "OPEN",
+      "rul_p10_hours": null,
+      "rul_p50_hours": null,
+      "limiting_component": null,
+      "signoff_epoch": null,
+      "signoff_inspector": null
+    },
+    "MAINT-0265": {
+      "action_id": "MAINT-0265",
+      "sortie_id": "SORTIE-SRV-20260925-115303",
+      "subsystem_id": "SUB_IGNITION",
+      "ata_chapter": "ATA 74-20",
+      "description": "Perform ignition lead resistance test (nominal 4.5-5.5 kOhm) and replace Lane A coil pack.",
+      "status": "OPEN",
+      "rul_p10_hours": null,
+      "rul_p50_hours": null,
+      "limiting_component": null,
+      "signoff_epoch": null,
+      "signoff_inspector": null
+    },
+    "MAINT-0266": {
+      "action_id": "MAINT-0266",
+      "sortie_id": "SORTIE-SRV-20260925-115303",
+      "subsystem_id": "SUB_GEARBOX",
+      "ata_chapter": "ATA 72-10",
+      "description": "Perform gearbox backlash measurement (max allowable 0.05 mm) and dog-clutch spring pack inspection.",
+      "status": "OPEN",
+      "rul_p10_hours": null,
+      "rul_p50_hours": null,
+      "limiting_component": null,
+      "signoff_epoch": null,
+      "signoff_inspector": null
+    },
+    "MAINT-0267": {
+      "action_id": "MAINT-0267",
+      "sortie_id": "SORTIE-SRV-20260925-121003",
+      "subsystem_id": "SUB_IGNITION",
+      "ata_chapter": "ATA 74-20",
+      "description": "Perform ignition lead resistance test (nominal 4.5-5.5 kOhm) and replace Lane A coil pack.",
+      "status": "OPEN",
+      "rul_p10_hours": null,
+      "rul_p50_hours": null,
+      "limiting_component": null,
+      "signoff_epoch": null,
+      "signoff_inspector": null
+    },
+    "MAINT-0268": {
+      "action_id": "MAINT-0268",
+      "sortie_id": "SORTIE-SRV-20260925-121003",
+      "subsystem_id": "SUB_GEARBOX",
+      "ata_chapter": "ATA 72-10",
+      "description": "Perform gearbox backlash measurement (max allowable 0.05 mm) and dog-clutch spring pack inspection.",
+      "status": "OPEN",
+      "rul_p10_hours": 0.0,
+      "rul_p50_hours": 0.0,
+      "limiting_component": "Ignition_Harness",
+      "signoff_epoch": null,
+      "signoff_inspector": null
+    },
+    "MAINT-0269": {
+      "action_id": "MAINT-0269",
+      "sortie_id": "SORTIE-SRV-20260925-121003",
+      "subsystem_id": "SUB_IGNITION",
+      "ata_chapter": "ATA 74-20",
+      "description": "Perform ignition lead resistance test (nominal 4.5-5.5 kOhm) and replace Lane A coil pack.",
+      "status": "OPEN",
+      "rul_p10_hours": 0.0,
+      "rul_p50_hours": 0.0,
+      "limiting_component": "Ignition_Harness",
+      "signoff_epoch": null,
+      "signoff_inspector": null
     }
   },
   "sortie_anomalies": {
@@ -7770,7 +8100,25 @@
       "ANOM-0260",
       "ANOM-0261"
     ],
-    "SORTIE-SRV-20260925-105425": []
+    "SORTIE-SRV-20260925-105425": [],
+    "SORTIE-SRV-20260925-110215": [
+      "ANOM-0262"
+    ],
+    "SORTIE-SRV-20260925-115303": [
+      "ANOM-0263",
+      "ANOM-0264",
+      "ANOM-0265",
+      "ANOM-0266",
+      "ANOM-0267"
+    ],
+    "SORTIE-SRV-20260925-115709": [],
+    "SORTIE-SRV-20260925-121003": [
+      "ANOM-0268",
+      "ANOM-0269",
+      "ANOM-0270"
+    ],
+    "SORTIE-SRV-20260925-121930": [],
+    "SORTIE-SRV-20260925-125347": []
   },
   "subsystem_anomalies": {
     "SUB_CYL_2": [
@@ -7884,7 +8232,13 @@
       "ANOM-0256",
       "ANOM-0257",
       "ANOM-0259",
-      "ANOM-0261"
+      "ANOM-0261",
+      "ANOM-0262",
+      "ANOM-0263",
+      "ANOM-0264",
+      "ANOM-0266",
+      "ANOM-0268",
+      "ANOM-0270"
     ],
     "SUB_LUBRICATION": [
       "ANOM-0004",
@@ -7943,7 +8297,10 @@
       "ANOM-0241",
       "ANOM-0255",
       "ANOM-0258",
-      "ANOM-0260"
+      "ANOM-0260",
+      "ANOM-0265",
+      "ANOM-0267",
+      "ANOM-0269"
     ],
     "SUB_EXHAUST": [
       "ANOM-0006",
@@ -8376,6 +8733,24 @@
       "MAINT-0259",
       "MAINT-0260"
     ],
-    "SORTIE-SRV-20260925-105425": []
+    "SORTIE-SRV-20260925-105425": [],
+    "SORTIE-SRV-20260925-110215": [
+      "MAINT-0261"
+    ],
+    "SORTIE-SRV-20260925-115303": [
+      "MAINT-0262",
+      "MAINT-0263",
+      "MAINT-0264",
+      "MAINT-0265",
+      "MAINT-0266"
+    ],
+    "SORTIE-SRV-20260925-115709": [],
+    "SORTIE-SRV-20260925-121003": [
+      "MAINT-0267",
+      "MAINT-0268",
+      "MAINT-0269"
+    ],
+    "SORTIE-SRV-20260925-121930": [],
+    "SORTIE-SRV-20260925-125347": []
   }
 }
