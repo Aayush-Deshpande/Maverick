@@ -30,8 +30,11 @@ import random
 
 # Server connection configuration (default: local server; overridable via env var)
 SERVER_BASE_URL = os.environ.get("ROTAX_BACKEND_URL", "http://127.0.0.1:8000")
-STATE_ENDPOINT = f"{SERVER_BASE_URL}/api/state"
-CONTROL_ENDPOINT = f"{SERVER_BASE_URL}/api/control"
+ENGINE_ID = os.environ.get("ANUMAAN_ENGINE_ID", "rotax_912is")
+STATE_ENDPOINT = f"{SERVER_BASE_URL}/api/engines/{ENGINE_ID}/state"
+LEGACY_STATE_ENDPOINT = f"{SERVER_BASE_URL}/api/state"
+CONTROL_ENDPOINT = f"{SERVER_BASE_URL}/api/engines/{ENGINE_ID}/faults"
+LEGACY_CONTROL_ENDPOINT = f"{SERVER_BASE_URL}/api/control"
 
 # Exact 3D bounding box center of all 109 meshes
 ENGINE_CENTER = mathutils.Vector((1.932, 61.648, -35.324))
@@ -320,50 +323,58 @@ class TelemetryReceiverThread(threading.Thread):
 
     def run(self):
         while self.is_running:
-            try:
-                req = urllib.request.Request(
-                    STATE_ENDPOINT,
-                    headers={'User-Agent': 'RotaxBlenderTwinClient/2.0'}
-                )
-                with urllib.request.urlopen(req, timeout=0.35) as response:
-                    if response.status == 200:
-                        raw = response.read().decode('utf-8')
-                        data = json.loads(raw)
-                        
-                        # Update client state from backend payload
-                        client_state.is_connected = True
-                        client_state.last_packet_time = time.time()
-                        client_state.sortie_id = data.get('sortie_id', client_state.sortie_id)
-                        client_state.is_engine_running = data.get('is_engine_running', True)
-                        client_state.active_commanded_fault_id = data.get('active_commanded_fault_id', 0)
-                        client_state.active_commanded_fault_name = data.get('active_commanded_fault_name', 'NOMINAL')
-                        
-                        if 'telemetry' in data:
-                            client_state.telemetry.update(data['telemetry'])
-                        if 'analytics' in data:
-                            client_state.analytics.update(data['analytics'])
-            except Exception:
-                # Connection dropped or server unreachable
+            data = None
+            for endpoint in [STATE_ENDPOINT, LEGACY_STATE_ENDPOINT]:
+                try:
+                    req = urllib.request.Request(
+                        endpoint,
+                        headers={'User-Agent': 'AnumaanBlenderTwinClient/2.0'}
+                    )
+                    with urllib.request.urlopen(req, timeout=0.35) as response:
+                        if response.status == 200:
+                            raw = response.read().decode('utf-8')
+                            data = json.loads(raw)
+                            break
+                except Exception:
+                    continue
+
+            if data:
+                # Update client state from backend payload
+                client_state.is_connected = True
+                client_state.last_packet_time = time.time()
+                client_state.sortie_id = data.get('sortie_id', client_state.sortie_id)
+                client_state.is_engine_running = data.get('is_engine_running', True)
+                client_state.active_commanded_fault_id = data.get('active_commanded_fault_id', 0)
+                client_state.active_commanded_fault_name = data.get('active_commanded_fault_name', 'NOMINAL')
+                
+                if 'telemetry' in data:
+                    client_state.telemetry.update(data['telemetry'])
+                if 'analytics' in data:
+                    client_state.analytics.update(data['analytics'])
+                elif 'state' in data and isinstance(data['state'], dict):
+                    client_state.telemetry.update(data['state'])
+            else:
                 if time.time() - client_state.last_packet_time > 0.6:
                     client_state.is_connected = False
             
-            time.sleep(0.020)  # 50 Hz state synchronization for smooth 50 FPS rendering
+            time.sleep(0.020)  # 50 Hz state synchronization
 
 
 def send_server_command(action: str, **kwargs):
-    """Sends a control command to the laptop backend in a background thread."""
+    """Sends a control command to the backend in a background thread."""
     def _worker():
         payload = {"action": action, **kwargs}
-        try:
-            req = urllib.request.Request(
-                CONTROL_ENDPOINT,
-                data=json.dumps(payload).encode('utf-8'),
-                headers={'Content-Type': 'application/json'}
-            )
-            with urllib.request.urlopen(req, timeout=0.5) as resp:
-                pass
-        except Exception as e:
-            print(f"[Blender Client] Command send error ({action}): {e}")
+        for endpoint in [CONTROL_ENDPOINT, LEGACY_CONTROL_ENDPOINT]:
+            try:
+                req = urllib.request.Request(
+                    endpoint,
+                    data=json.dumps(payload).encode('utf-8'),
+                    headers={'Content-Type': 'application/json'}
+                )
+                with urllib.request.urlopen(req, timeout=0.5) as resp:
+                    return
+            except Exception as e:
+                continue
     threading.Thread(target=_worker, daemon=True).start()
 
 
