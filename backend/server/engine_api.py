@@ -56,7 +56,9 @@ class SelectBody(BaseModel):
 
 
 class FaultBody(BaseModel):
-    mode: str
+    action: Optional[str] = None
+    fault_id: Optional[int] = None
+    mode: Optional[str] = None
     cylinder: Optional[int] = None
     severity: float = 0.8
     ramp_sec: float = 60.0
@@ -104,8 +106,30 @@ def engine_schema(engine_id: str):
 @router.post("/api/engines/{engine_id}/faults")
 def inject_fault(engine_id: str, body: FaultBody):
     rt = _rt(engine_id)
+    
+    if body.action == "CLEAR_FAULT" or body.fault_id == 0:
+        rt.clear_faults()
+        return {"cleared": True}
+        
+    mode = body.mode
+    cyl = body.cylinder
+    if not mode and body.fault_id is not None and body.fault_id > 0:
+        # Map numeric fault_id (1-8) to available profile faults
+        from backend.runtime.registry import thermal_visible_faults
+        available = thermal_visible_faults(rt.cfg)
+        if 1 <= body.fault_id <= len(available):
+            mode = available[body.fault_id - 1]
+            if mode == "MISFIRE" and cyl is None:
+                cyl = 1
+        else:
+            mode = "MISFIRE"
+            cyl = 1
+            
+    if not mode:
+        raise HTTPException(422, "Either 'mode' or 'fault_id' must be specified.")
+        
     try:
-        return rt.inject_fault(body.mode, body.cylinder, body.severity, body.ramp_sec)
+        return rt.inject_fault(mode, cyl, body.severity, body.ramp_sec)
     except ValueError as e:
         raise HTTPException(422, str(e))
 

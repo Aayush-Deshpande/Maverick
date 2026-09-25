@@ -76,13 +76,13 @@ ENGINE_PROFILES = {
         'default_elevation': math.radians(26.0),
         'rpm_max': 5800.0,
         'faults': {
-            1: {'short': 'TURBO WASTEGATE LEAK', 'comp': 'Turbo Exhaust Wastegate Actuator', 'tag': 'CRITICAL', 'parts': ['Exhaust_System_M_SteelDark_0', 'Exhaust_System_M_Steel_0', 'Exhaust_System_M_Chrome_0'], 'center': mathutils.Vector((6.68, 38.87, -45.78)), 'angle': math.radians(-45.0), 'elevation': math.radians(-10.0), 'distance': 140.0},
+            1: {'short': 'TURBO WASTEGATE LEAK', 'comp': 'Turbo Exhaust Wastegate Actuator', 'tag': 'CRITICAL', 'parts': ['Exhaust_System_M_SteelDark_0', 'Exhaust_System_M_Steel_0', 'Exhaust_System_M_Chrome_0', 'Fittings_Metric_Rotax914_Extras_0'], 'center': mathutils.Vector((6.68, 38.87, -45.78)), 'angle': math.radians(-45.0), 'elevation': math.radians(-10.0), 'distance': 140.0},
             2: {'short': 'INJECTOR #1 CLOG', 'comp': 'Fuel Injector #1 (Lane A)', 'tag': 'MAJOR', 'parts': ['Rotax_912i_Base_M_PlasticGreen_0', 'Rotax_912i_Base_M_Steel_0'], 'center': mathutils.Vector((1.06, 25.69, -8.0)), 'angle': math.radians(-90.0), 'elevation': math.radians(36.0), 'distance': 135.0},
             3: {'short': 'IGNITION MISFIRE', 'comp': 'Secondary Spark Plug Lead', 'tag': 'MAJOR', 'parts': ['Wiring_Harness_M_Copper_0', 'Rotax_912i_Base_M_Copper_0'], 'center': mathutils.Vector((0.98, 42.0, -12.0)), 'angle': math.radians(-115.0), 'elevation': math.radians(35.0), 'distance': 130.0},
-            4: {'short': 'OIL PRESSURE LOSS', 'comp': 'Dry-Sump Reservoir & Scavenge Line', 'tag': 'CRITICAL', 'parts': ['Oil_Tank_M_Steel_0', 'Oil_Tank_M_Labels_0'], 'center': mathutils.Vector((-24.76, 105.82, -20.31)), 'angle': math.radians(140.0), 'elevation': math.radians(18.0), 'distance': 135.0},
+            4: {'short': 'OIL PRESSURE LOSS', 'comp': 'Dry-Sump Reservoir & Scavenge Line', 'tag': 'CRITICAL', 'parts': ['Oil_Tank_M_Steel_0', 'Oil_Tank_M_Labels_0', 'Oil_Tank_M_Cobalt_0'], 'center': mathutils.Vector((-24.76, 105.82, -20.31)), 'angle': math.radians(140.0), 'elevation': math.radians(18.0), 'distance': 135.0},
             5: {'short': 'GEARBOX VIBRATION', 'comp': 'Propeller Reduction Gearbox', 'tag': 'MINOR', 'parts': ['Gearbox_Type_2_M_Steel_0', 'Gearbox_Type_2_M_MetalPaintedBlack_0'], 'center': mathutils.Vector((0.97, 18.01, -8.39)), 'angle': math.radians(-90.0), 'elevation': math.radians(14.0), 'distance': 130.0},
-            6: {'short': 'CYL #2 OVERHEAT', 'comp': 'Cylinder #2 Head & Cooling Baffle', 'tag': 'CRITICAL', 'parts': ['Covers_Theme_M_PlasticTheme_0', 'Covers_Theme_M_PlasticGreen_0'], 'center': mathutils.Vector((-22.0, 44.0, -10.0)), 'angle': math.radians(-145.0), 'elevation': math.radians(24.0), 'distance': 145.0},
-            7: {'short': 'ALTERNATOR SAG', 'comp': 'Heavy-Duty Alternator & Belt', 'tag': 'MINOR', 'parts': ['External_Alternator_M_Rotax914_Extras_0'], 'center': mathutils.Vector((6.56, 17.39, -8.66)), 'angle': math.radians(-40.0), 'elevation': math.radians(22.0), 'distance': 130.0},
+            6: {'short': 'CYL #2 OVERHEAT', 'comp': 'Cylinder #2 Head & Cooling Baffle', 'tag': 'CRITICAL', 'parts': ['Covers_Theme_M_PlasticTheme_0', 'Covers_Theme_M_PlasticGreen_0', 'Cooling_Air_Baffle_M_PlasticWhite_0'], 'center': mathutils.Vector((-22.0, 44.0, -10.0)), 'angle': math.radians(-145.0), 'elevation': math.radians(24.0), 'distance': 145.0},
+            7: {'short': 'ALTERNATOR SAG', 'comp': 'Heavy-Duty Alternator & Belt', 'tag': 'MINOR', 'parts': ['External_Alternator_M_Rotax914_Extras_0', 'External_Alternator_M_TimingBelt_0'], 'center': mathutils.Vector((6.56, 17.39, -8.66)), 'angle': math.radians(-40.0), 'elevation': math.radians(22.0), 'distance': 130.0},
             8: {'short': 'TCU BOOST CONTROLLER', 'comp': 'Rotax Turbo Control Unit (TCU)', 'tag': 'MAJOR', 'parts': ['ECU_M_PlasticBlack_0', 'ECU_M_FuseLight_0'], 'center': mathutils.Vector((12.52, 101.68, -17.96)), 'angle': math.radians(85.0), 'elevation': math.radians(26.0), 'distance': 140.0},
         }
     },
@@ -99,13 +99,13 @@ ENGINE_PROFILES = {
         'default_elevation': math.radians(26.0),
         'rpm_max': 5800.0,
         'faults': {
-            1: {'short': 'INTERCOOLER FOULING', 'comp': 'Charge Air Intercooler Core & Baffle', 'tag': 'MAJOR', 'parts': ['Cooling_Air_Baffle_M_PlasticWhite_0', 'Covers_Theme_M_PlasticGreen_0'], 'center': mathutils.Vector((-10.0, 50.0, -15.0)), 'angle': math.radians(-110.0), 'elevation': math.radians(30.0), 'distance': 140.0},
+            1: {'short': 'INTERCOOLER FOULING', 'comp': 'Charge Air Intercooler Core & Baffle', 'tag': 'MAJOR', 'parts': ['Cooling_Air_Baffle_M_PlasticWhite_0', 'Covers_Theme_M_PlasticGreen_0', 'Fittings_Metric_Rotax915_Extras_0'], 'center': mathutils.Vector((-10.0, 50.0, -15.0)), 'angle': math.radians(-110.0), 'elevation': math.radians(30.0), 'distance': 140.0},
             2: {'short': 'INJECTOR #1 CLOG', 'comp': 'Electronic Fuel Injector #1 (Lane A)', 'tag': 'MAJOR', 'parts': ['Rotax_912i_Base_M_PlasticGreen_0', 'Rotax_912i_Base_M_Steel_0'], 'center': mathutils.Vector((1.06, 25.69, -8.0)), 'angle': math.radians(-90.0), 'elevation': math.radians(36.0), 'distance': 135.0},
             3: {'short': 'IGNITION MISFIRE', 'comp': 'Dual Spark Plug Harness & Coils', 'tag': 'MAJOR', 'parts': ['Wiring_Harness_M_Copper_0', 'Rotax_912i_Base_M_Copper_0'], 'center': mathutils.Vector((0.98, 42.0, -12.0)), 'angle': math.radians(-115.0), 'elevation': math.radians(35.0), 'distance': 130.0},
-            4: {'short': 'OIL PRESSURE LOSS', 'comp': 'Dry-Sump Reservoir & Scavenge Line', 'tag': 'CRITICAL', 'parts': ['Oil_Tank_M_Steel_0', 'Oil_Tank_M_Labels_0'], 'center': mathutils.Vector((-24.76, 105.82, -20.31)), 'angle': math.radians(140.0), 'elevation': math.radians(18.0), 'distance': 135.0},
+            4: {'short': 'OIL PRESSURE LOSS', 'comp': 'Dry-Sump Reservoir & Scavenge Line', 'tag': 'CRITICAL', 'parts': ['Oil_Tank_M_Steel_0', 'Oil_Tank_M_Labels_0', 'Oil_Tank_M_Cobalt_0'], 'center': mathutils.Vector((-24.76, 105.82, -20.31)), 'angle': math.radians(140.0), 'elevation': math.radians(18.0), 'distance': 135.0},
             5: {'short': 'GEARBOX VIBRATION', 'comp': 'Propeller Reduction Gearbox & Damper', 'tag': 'MINOR', 'parts': ['Gearbox_Type_2_M_Steel_0', 'Gearbox_Type_2_M_MetalPaintedBlack_0'], 'center': mathutils.Vector((0.97, 18.01, -8.39)), 'angle': math.radians(-90.0), 'elevation': math.radians(14.0), 'distance': 130.0},
             6: {'short': 'CYL #2 OVERHEAT', 'comp': 'Cylinder #2 Head & Cooling Baffle', 'tag': 'CRITICAL', 'parts': ['Covers_Theme_M_PlasticTheme_0', 'Covers_Theme_M_PlasticGreen_0'], 'center': mathutils.Vector((-22.0, 44.0, -10.0)), 'angle': math.radians(-145.0), 'elevation': math.radians(24.0), 'distance': 145.0},
-            7: {'short': 'ALTERNATOR SAG', 'comp': 'Heavy-Duty Alternator & Belt', 'tag': 'MINOR', 'parts': ['External_Alternator_M_Rotax914_Extras_0'], 'center': mathutils.Vector((6.56, 17.39, -8.66)), 'angle': math.radians(-40.0), 'elevation': math.radians(22.0), 'distance': 130.0},
+            7: {'short': 'ALTERNATOR SAG', 'comp': 'Heavy-Duty Alternator & Belt', 'tag': 'MINOR', 'parts': ['External_Alternator_M_Rotax914_Extras_0', 'External_Alternator_M_TimingBelt_0'], 'center': mathutils.Vector((6.56, 17.39, -8.66)), 'angle': math.radians(-40.0), 'elevation': math.radians(22.0), 'distance': 130.0},
             8: {'short': 'DUAL FADEC DRIFT', 'comp': 'Lane A/B Dual FADEC ECU Assembly', 'tag': 'MINOR', 'parts': ['ECU_M_PlasticBlack_0', 'ECU_M_FuseLight_0'], 'center': mathutils.Vector((12.52, 101.68, -17.96)), 'angle': math.radians(85.0), 'elevation': math.radians(26.0), 'distance': 140.0},
         }
     },
@@ -122,14 +122,14 @@ ENGINE_PROFILES = {
         'default_elevation': math.radians(22.0),
         'rpm_max': 3900.0,
         'faults': {
-            1: {'short': 'COMMON RAIL PRESSURE', 'comp': 'High-Pressure Common Rail & Pump', 'tag': 'CRITICAL', 'parts': ['Common_Rail', 'HP_Fuel_Pump', 'Fuel_Line'], 'center': mathutils.Vector((0.0, 0.40, 0.18)), 'angle': math.radians(65.0), 'elevation': math.radians(25.0), 'distance': 1.4},
-            2: {'short': 'INJECTOR #1 FAILURE', 'comp': 'CRDi Solenoid Injector #1', 'tag': 'CRITICAL', 'parts': ['Injector_1', 'Cylinder_Head'], 'center': mathutils.Vector((0.0, 0.15, 0.2)), 'angle': math.radians(35.0), 'elevation': math.radians(40.0), 'distance': 1.3},
-            3: {'short': 'TURBO FOULING', 'comp': 'VGT Turbocharger & Intercooler', 'tag': 'MAJOR', 'parts': ['Turbocharger', 'Intercooler'], 'center': mathutils.Vector((-0.18, 0.44, 0.16)), 'angle': math.radians(-120.0), 'elevation': math.radians(20.0), 'distance': 1.4},
-            4: {'short': 'OIL PRESSURE LOSS', 'comp': 'Lubrication Pump & Cooler Line', 'tag': 'CRITICAL', 'parts': ['Oil_Filter', 'Engine_Block', 'Oil_Sump'], 'center': mathutils.Vector((0.0, 0.0, -0.1)), 'angle': math.radians(-45.0), 'elevation': math.radians(15.0), 'distance': 1.6},
-            5: {'short': 'DUAL EECS CHANNEL DRIFT', 'comp': 'Dual FADEC EECS Controller', 'tag': 'MAJOR', 'parts': ['ECU_Lane_A', 'ECU_Lane_B', 'Engine_Harness'], 'center': mathutils.Vector((0.2, 0.2, 0.0)), 'angle': math.radians(85.0), 'elevation': math.radians(20.0), 'distance': 1.4},
-            6: {'short': 'GLOW PLUG CIRCUIT', 'comp': 'Cold-Start Glow Plug Preheater', 'tag': 'MINOR', 'parts': ['Glow_Plugs', 'Glow_Plug_Control_Unit'], 'center': mathutils.Vector((0.0, 0.2, 0.15)), 'angle': math.radians(0.0), 'elevation': math.radians(30.0), 'distance': 1.3},
-            7: {'short': 'COOLANT PUMP CAVITATION', 'comp': 'High-Efficiency Coolant Pump', 'tag': 'MAJOR', 'parts': ['Water_Pump', 'Coolant_Hose'], 'center': mathutils.Vector((-0.15, 0.1, 0.0)), 'angle': math.radians(-90.0), 'elevation': math.radians(15.0), 'distance': 1.4},
-            8: {'short': 'HIGH PRESSURE PUMP', 'comp': 'HP Radial Piston Fuel Pump', 'tag': 'CRITICAL', 'parts': ['HP_Fuel_Pump'], 'center': mathutils.Vector((0.15, 0.35, 0.1)), 'angle': math.radians(45.0), 'elevation': math.radians(20.0), 'distance': 1.3},
+            1: {'short': 'COMMON RAIL PRESSURE', 'comp': 'High-Pressure Common Rail & Radial Pump', 'tag': 'CRITICAL', 'parts': ['Common_Rail_M_Steel_0', 'HP_Fuel_Pump_M_SteelDark_0', 'Fuel_Line_1_M_Steel_0', 'Fuel_Line_2_M_Steel_0', 'Fuel_Line_3_M_Steel_0', 'Fuel_Line_4_M_Steel_0', 'Rail_PLV_Valve_M_Steel_0'], 'center': mathutils.Vector((0.085, 0.272, 0.010)), 'angle': math.radians(65.0), 'elevation': math.radians(25.0), 'distance': 1.4},
+            2: {'short': 'CRDi INJECTOR #1', 'comp': 'CRDi Solenoid Injector #1 & Head', 'tag': 'CRITICAL', 'parts': ['Injector_1_M_Steel_0', 'Cylinder_Head_M_CastAluminium_0', 'Injector_Plugs_M_PlasticBlack_0', 'Injector_Hold_Downs_M_SteelDark_0'], 'center': mathutils.Vector((0.0, 0.15, 0.2)), 'angle': math.radians(35.0), 'elevation': math.radians(40.0), 'distance': 1.3},
+            3: {'short': 'VGT TURBO FOULING', 'comp': 'Variable Geometry Turbocharger & Intercooler', 'tag': 'MAJOR', 'parts': ['Turbocharger_M_TurboHousing_0', 'Intercooler_M_CastAluminium_0', 'Boost_Pipe_Hot_M_PolishedAlu_0', 'Boost_Pipe_Cold_M_PolishedAlu_0', 'Heat_Shield_Turbo_M_CrinkleFoil_0', 'Air_Intake_Duct_M_RubberDark_0'], 'center': mathutils.Vector((-0.05, 0.255, 0.048)), 'angle': math.radians(-120.0), 'elevation': math.radians(20.0), 'distance': 1.4},
+            4: {'short': 'OIL PRESSURE LOSS', 'comp': 'Lubrication Sump, Filter & Cooler Lines', 'tag': 'CRITICAL', 'parts': ['Oil_Filter_M_MetalPaintedBlack_0', 'Oil_Sump_M_CastAluminium_0', 'Oil_Cooler_M_CastAluminium_0', 'Turbo_Oil_Feed_Line_M_Steel_0', 'Turbo_Oil_Drain_Line_M_Steel_0'], 'center': mathutils.Vector((0.0, 0.0, -0.1)), 'angle': math.radians(-45.0), 'elevation': math.radians(15.0), 'distance': 1.6},
+            5: {'short': 'DUAL EECS DRIFT', 'comp': 'Dual FADEC EECS Controller & Loom', 'tag': 'MAJOR', 'parts': ['ECU_Lane_A_M_MetalPaintedBlack_0', 'ECU_Lane_B_M_MetalPaintedBlack_0', 'Engine_Harness_Loom_M_PlasticBlack_0', 'ECU_Bayonet_Plugs_M_CastAluminium_0'], 'center': mathutils.Vector((0.2, 0.2, 0.0)), 'angle': math.radians(85.0), 'elevation': math.radians(20.0), 'distance': 1.4},
+            6: {'short': 'GLOW PLUG CIRCUIT', 'comp': 'Cold-Start Glow Plug Preheater Array', 'tag': 'MINOR', 'parts': ['Glow_Plugs_M_Steel_0', 'Glow_Plug_Control_Unit_M_CastAluminium_0'], 'center': mathutils.Vector((0.0, 0.2, 0.15)), 'angle': math.radians(0.0), 'elevation': math.radians(30.0), 'distance': 1.3},
+            7: {'short': 'COOLANT CAVITATION', 'comp': 'High-Efficiency Coolant Pump & Hoses', 'tag': 'MAJOR', 'parts': ['Water_Pump_M_CastAluminium_0', 'Coolant_Hose_Red_M_RedSilicone_0', 'Coolant_Hose_Blue_M_BlueSilicone_0', 'Water_Pump_Inlet_Elbow_M_BlueSilicone_0'], 'center': mathutils.Vector((-0.15, 0.1, 0.0)), 'angle': math.radians(-90.0), 'elevation': math.radians(15.0), 'distance': 1.4},
+            8: {'short': 'GEARBOX VIBRATION', 'comp': 'Reduction Gearbox & PCU Prop Governor', 'tag': 'CRITICAL', 'parts': ['Gearbox_M_CastAluminium_0', 'Prop_Governor_PCU_M_CastAluminium_0', 'Prop_Flange_M_Steel_0', 'PCU_Oil_Line_M_Steel_0', 'Gearbox_Logo_M_CastAluminium_0'], 'center': mathutils.Vector((0.15, 0.35, 0.1)), 'angle': math.radians(45.0), 'elevation': math.radians(20.0), 'distance': 1.3},
         }
     },
     'vrde_jayem_2_2l': {
@@ -145,14 +145,14 @@ ENGINE_PROFILES = {
         'default_elevation': math.radians(24.0),
         'rpm_max': 4200.0,
         'faults': {
-            1: {'short': 'CRDi INJECTOR COKING', 'comp': 'CRDi Common Rail & Injector Bank', 'tag': 'CRITICAL', 'parts': ['Fuel_Rail', 'Injector', 'Rail'], 'center': mathutils.Vector((0.0, 0.0, 0.2)), 'angle': math.radians(45.0), 'elevation': math.radians(35.0), 'distance': 1.5},
-            2: {'short': 'TURBO BEARING DRAG', 'comp': 'Two-Stage Turbocharger Assembly', 'tag': 'CRITICAL', 'parts': ['Turbo', 'Exhaust'], 'center': mathutils.Vector((-0.2, 0.0, 0.1)), 'angle': math.radians(-110.0), 'elevation': math.radians(20.0), 'distance': 1.6},
-            3: {'short': 'HP RAIL PUMP CAVITATION', 'comp': 'Bosch-Type High Pressure Pump', 'tag': 'MAJOR', 'parts': ['Pump', 'Fuel'], 'center': mathutils.Vector((0.2, -0.2, 0.1)), 'angle': math.radians(65.0), 'elevation': math.radians(25.0), 'distance': 1.5},
-            4: {'short': 'LUBRICATION SCAVENGE', 'comp': 'Heavy Duty Oil Pan & Cooler', 'tag': 'CRITICAL', 'parts': ['Oil', 'Crankcase', 'Block'], 'center': mathutils.Vector((0.0, 0.0, -0.2)), 'angle': math.radians(0.0), 'elevation': math.radians(-10.0), 'distance': 1.8},
-            5: {'short': 'DUAL FADEC HARNESS', 'comp': 'DRDO Dual Redundant FADEC Box', 'tag': 'MAJOR', 'parts': ['ECU', 'FADEC', 'Harness', 'Sensor'], 'center': mathutils.Vector((0.15, 0.25, 0.0)), 'angle': math.radians(85.0), 'elevation': math.radians(20.0), 'distance': 1.5},
-            6: {'short': 'EGR VALVE SOOTING', 'comp': 'EGR Valve & Heat Exchanger', 'tag': 'MINOR', 'parts': ['EGR', 'Intake', 'Manifold'], 'center': mathutils.Vector((-0.1, 0.2, 0.15)), 'angle': math.radians(-70.0), 'elevation': math.radians(30.0), 'distance': 1.5},
-            7: {'short': 'COOLING BYPASS FAULT', 'comp': 'High Flow Coolant Jacket', 'tag': 'MAJOR', 'parts': ['Coolant', 'Water', 'Radiator'], 'center': mathutils.Vector((0.0, -0.3, 0.0)), 'angle': math.radians(-145.0), 'elevation': math.radians(15.0), 'distance': 1.6},
-            8: {'short': 'GLOW PLUG RESISTANCE', 'comp': 'Ceramic Glow Plug Array', 'tag': 'MINOR', 'parts': ['Glow', 'Plug'], 'center': mathutils.Vector((0.05, 0.1, 0.22)), 'angle': math.radians(20.0), 'elevation': math.radians(45.0), 'distance': 1.3},
+            1: {'short': 'CRDi INJECTOR COKING', 'comp': 'CRDi Common Rail & Injector Bank 1-4', 'tag': 'CRITICAL', 'parts': ['Common_Rail_M_Steel_0.001', 'HP_Fuel_Pump_M_SteelDark_0.001', 'Injector_1_M_Steel_0.001', 'Injector_2_M_Steel_0.001', 'Injector_3_M_Steel_0.001', 'Injector_4_M_Steel_0.001', 'Fuel_Line_HP_Cyl1_M_Stainless_0', 'Fuel_Line_HP_Cyl2_M_Stainless_0'], 'center': mathutils.Vector((0.0, 0.0, 0.2)), 'angle': math.radians(45.0), 'elevation': math.radians(35.0), 'distance': 1.5},
+            2: {'short': 'TURBO WASTEGATE', 'comp': 'Two-Stage Turbocharger & Red Wastegate', 'tag': 'CRITICAL', 'parts': ['Wastegate_Actuator_Red_M_AnodizedRed_0', 'Wastegate_Actuator_Canister_M_PlasticBlack_0', 'Wastegate_Rod_Red_M_Stainless_0', 'Intercooler_M_CastAluminium_0.001', 'Exhaust_Downpipe_M_Stainless_0', 'Exhaust_Collector_M_HeatTintedSteel_0'], 'center': mathutils.Vector((-0.2, 0.0, 0.1)), 'angle': math.radians(-110.0), 'elevation': math.radians(20.0), 'distance': 1.6},
+            3: {'short': 'HP PUMP CAVITATION', 'comp': 'High Pressure Fuel Pump & Leak-off Rail', 'tag': 'MAJOR', 'parts': ['HP_Fuel_Pump_M_SteelDark_0.001', 'Fuel_Return_LeakOff_Rail_M_Stainless_0', 'Fuel_Hose_ASAK_Feed_M_BraidedSilver_0'], 'center': mathutils.Vector((0.2, -0.2, 0.1)), 'angle': math.radians(65.0), 'elevation': math.radians(25.0), 'distance': 1.5},
+            4: {'short': 'LUBRICATION SCAVENGE', 'comp': 'Heavy Duty Block, Sump & Oil Filter', 'tag': 'CRITICAL', 'parts': ['Engine_Block_M_CastAluminium_0.001', 'Oil_Filter', 'Dipstick_Tube_M_Steel_0', 'Cylinder_Head_M_CastAluminium_0.001'], 'center': mathutils.Vector((0.0, 0.0, -0.2)), 'angle': math.radians(0.0), 'elevation': math.radians(-10.0), 'distance': 1.8},
+            5: {'short': 'DUAL FADEC HARNESS', 'comp': 'DRDO Dual Redundant FADEC & Spine', 'tag': 'MAJOR', 'parts': ['ECU_Lane_A_M_MetalPaintedBlack_0.001', 'ECU_Lane_B_M_MetalPaintedBlack_0.001', 'Harness_Spine_M_PlasticBlack_0'], 'center': mathutils.Vector((0.15, 0.25, 0.0)), 'angle': math.radians(85.0), 'elevation': math.radians(20.0), 'distance': 1.5},
+            6: {'short': 'EXHAUST MANIFOLD', 'comp': 'Stainless Exhaust Downpipe & Collector', 'tag': 'MINOR', 'parts': ['Exhaust_Downpipe_M_Stainless_0', 'Exhaust_Collector_M_HeatTintedSteel_0', 'Intake_Manifold_M_CastAluminium_0.001'], 'center': mathutils.Vector((-0.1, 0.2, 0.15)), 'angle': math.radians(-70.0), 'elevation': math.radians(30.0), 'distance': 1.5},
+            7: {'short': 'COOLING JACKET', 'comp': 'High Flow Coolant Jacket & Water Pump', 'tag': 'MAJOR', 'parts': ['Water_Pump_M_CastAluminium_0.001', 'Coolant_Pipe_Junction_M_CastAluminium_0', 'Coolant_Hose_Upper_M_BlueSilicone_0'], 'center': mathutils.Vector((0.0, -0.3, 0.0)), 'angle': math.radians(-145.0), 'elevation': math.radians(15.0), 'distance': 1.6},
+            8: {'short': 'GLOW PLUG RESISTANCE', 'comp': 'Ceramic Glow Plug Array 1-4', 'tag': 'MINOR', 'parts': ['Glow_Plug_Cyl1_M_Steel_0', 'Glow_Plug_Cyl2_M_Steel_0', 'Glow_Plug_Cyl3_M_Steel_0', 'Glow_Plug_Cyl4_M_Steel_0'], 'center': mathutils.Vector((0.05, 0.1, 0.22)), 'angle': math.radians(20.0), 'elevation': math.radians(45.0), 'distance': 1.3},
         }
     }
 }
@@ -304,15 +304,57 @@ class TelemetryReceiverThread(threading.Thread):
                 client_state.last_packet_time = time.time()
                 client_state.sortie_id = data.get('sortie_id', client_state.sortie_id)
                 client_state.is_engine_running = data.get('is_engine_running', True)
-                client_state.active_commanded_fault_id = data.get('active_commanded_fault_id', 0)
-                client_state.active_commanded_fault_name = data.get('active_commanded_fault_name', 'NOMINAL')
+                client_state.active_commanded_fault_id = data.get('active_commanded_fault_id', client_state.active_commanded_fault_id)
+                client_state.active_commanded_fault_name = data.get('active_commanded_fault_name', client_state.active_commanded_fault_name)
                 
-                if 'telemetry' in data:
+                # 1. Direct telemetry dictionary
+                if 'telemetry' in data and isinstance(data['telemetry'], dict):
                     client_state.telemetry.update(data['telemetry'])
-                if 'analytics' in data:
-                    client_state.analytics.update(data['analytics'])
                 elif 'state' in data and isinstance(data['state'], dict):
                     client_state.telemetry.update(data['state'])
+                    
+                # 2. Canonical channels mapping from EngineRuntime Frame
+                if 'channels' in data and isinstance(data['channels'], dict):
+                    ch = data['channels']
+                    if 'rpm' in ch: client_state.telemetry['ENGINE_RPM'] = float(ch['rpm'])
+                    if 'prop_rpm' in ch: client_state.telemetry['PROP_RPM'] = float(ch['prop_rpm'])
+                    if 'throttle' in ch: client_state.telemetry['TPS'] = float(ch['throttle'])
+                    if 'map_kpa' in ch: client_state.telemetry['MAP'] = float(ch['map_kpa'])
+                    if 'oil_p' in ch: client_state.telemetry['OIL_PRESS'] = float(ch['oil_p'])
+                    if 'oil_t' in ch: client_state.telemetry['OIL_TEMP'] = float(ch['oil_t'])
+                    if 'fuel_flow' in ch: client_state.telemetry['FUEL_FLOW'] = float(ch['fuel_flow'])
+                    if 'rail_p' in ch: client_state.telemetry['FUEL_RAIL_P'] = float(ch['rail_p'])
+                    if 'bus_v' in ch: client_state.telemetry['BUS_VOLTAGE'] = float(ch['bus_v'])
+                    if 'batt_i' in ch: client_state.telemetry['BATTERY_CURRENT'] = float(ch['batt_i'])
+                    if 'alt' in ch: client_state.telemetry['ALTITUDE_FT'] = float(ch['alt'])
+                    if 'oat' in ch: client_state.telemetry['OAT_C'] = float(ch['oat'])
+                    if 'tas' in ch: client_state.telemetry['TAS_KNOTS'] = float(ch['tas'])
+                    for k in range(1, 7):
+                        if f'cht_{k}' in ch: client_state.telemetry[f'CHT_{k}'] = float(ch[f'cht_{k}'])
+                        if f'egt_{k}' in ch: client_state.telemetry[f'EGT_{k}'] = float(ch[f'egt_{k}'])
+
+                if 'cht' in data and isinstance(data['cht'], list):
+                    for idx, v in enumerate(data['cht'], 1):
+                        client_state.telemetry[f'CHT_{idx}'] = float(v)
+                if 'egt' in data and isinstance(data['egt'], list):
+                    for idx, v in enumerate(data['egt'], 1):
+                        client_state.telemetry[f'EGT_{idx}'] = float(v)
+
+                # 3. Direct analytics dictionary
+                if 'analytics' in data and isinstance(data['analytics'], dict):
+                    client_state.analytics.update(data['analytics'])
+                    
+                # 4. Canonical detection & heavy scores mapping
+                if 'detection' in data and data['detection']:
+                    det = data['detection']
+                    scores = det.get('scores', {})
+                    if scores:
+                        client_state.analytics['residuals'] = scores
+                        client_state.analytics['anomaly_score'] = max([float(s) for s in scores.values()] + [0.0])
+                    if det.get('confirmed'):
+                        top = det.get('top_channels', [])
+                        if top:
+                            client_state.analytics['root_cause'] = f"Physics residual anomaly detected on: {', '.join(top[:3])}"
             else:
                 if time.time() - client_state.last_packet_time > 0.6:
                     client_state.is_connected = False
@@ -324,14 +366,28 @@ def send_server_command(action: str, **kwargs):
     """Sends a control command to the backend in a background thread."""
     def _worker():
         payload = {"action": action, **kwargs}
+        fid = kwargs.get("fault_id", 0)
+        
+        # Local client optimistic state update
+        if action == "SET_FAULT":
+            client_state.active_commanded_fault_id = fid
+            f_meta = FAULT_DATABASE.get(fid, {})
+            client_state.active_commanded_fault_name = f_meta.get('short', f'FAULT_{fid}')
+        elif action == "CLEAR_FAULT":
+            client_state.active_commanded_fault_id = 0
+            client_state.active_commanded_fault_name = "NOMINAL"
+            
         dyn_control = f"{SERVER_BASE_URL}/api/engines/{client_state.engine_id}/faults"
         for endpoint in [dyn_control, LEGACY_CONTROL_ENDPOINT]:
             try:
-                req = urllib.request.Request(
-                    endpoint,
-                    data=json.dumps(payload).encode('utf-8'),
-                    headers={'Content-Type': 'application/json'}
-                )
+                if action == "CLEAR_FAULT" and "/faults" in endpoint:
+                    req = urllib.request.Request(endpoint, method='DELETE')
+                else:
+                    req = urllib.request.Request(
+                        endpoint,
+                        data=json.dumps(payload).encode('utf-8'),
+                        headers={'Content-Type': 'application/json'}
+                    )
                 with urllib.request.urlopen(req, timeout=0.5) as resp:
                     return
             except Exception:
@@ -1076,18 +1132,154 @@ def save_original_materials():
                     valid_slots.append(None)
             client_state.original_object_materials[obj.name] = valid_slots
 
+
+def get_parts_center_and_radius(part_names: list[str]):
+    """Dynamically calculates the 3D bounding box center and radius of matching mesh parts in Blender."""
+    if not part_names:
+        return None, None
+    objs = [
+        o for o in bpy.data.objects 
+        if o.type == 'MESH' and not o.hide_viewport and any(p.lower() in o.name.lower() or p.lower() == o.name.lower() for p in part_names)
+    ]
+    if not objs:
+        return None, None
+    min_co = mathutils.Vector((float('inf'), float('inf'), float('inf')))
+    max_co = mathutils.Vector((float('-inf'), float('-inf'), float('-inf')))
+    for obj in objs:
+        for c in obj.bound_box:
+            w = obj.matrix_world @ mathutils.Vector(c)
+            min_co.x = min(min_co.x, w.x)
+            min_co.y = min(min_co.y, w.y)
+            min_co.z = min(min_co.z, w.z)
+            max_co.x = max(max_co.x, w.x)
+            max_co.y = max(max_co.y, w.y)
+            max_co.z = max(max_co.z, w.z)
+    center = (min_co + max_co) * 0.5
+    radius = max(0.1, (max_co - min_co).length * 0.5)
+    return center, radius
+
+
+def resolve_fault_targets_from_physics(engine_id: str, telemetry: dict, analytics: dict) -> list[str]:
+    """
+    PHYSICAL-TO-VISUAL ATTRIBUTION ENGINE (DRDO PS-26054)
+    Examines incoming continuous telemetry, compression readings, and physics residuals (d_MAP, d_CHT, d_EGT, etc.)
+    and returns matching 3D component mesh names to highlight.
+    """
+    targets = []
+    res = analytics.get('residuals', {})
+    
+    # 1. Intake Compression Loss / Boost Leak / Turbo Wastegate / Intercooler
+    d_map = float(res.get('d_MAP', res.get('map_kpa', 0.0)))
+    map_val = float(telemetry.get('MAP', 38.0))
+    tps_val = float(telemetry.get('TPS', 70.0))
+    if d_map < -6.0 or (map_val < 32.0 and tps_val > 50.0):
+        if 'rotax' in engine_id:
+            targets.extend(['Exhaust_System_M_SteelDark_0', 'Exhaust_System_M_Steel_0', 'Exhaust_System_M_Chrome_0', 'Cooling_Air_Baffle_M_PlasticWhite_0', 'Fittings_Metric_Rotax914_Extras_0', 'Fittings_Metric_Rotax915_Extras_0'])
+        elif 'austro' in engine_id:
+            targets.extend(['Turbocharger_M_TurboHousing_0', 'Intercooler_M_CastAluminium_0', 'Boost_Pipe_Hot_M_PolishedAlu_0', 'Boost_Pipe_Cold_M_PolishedAlu_0', 'Heat_Shield_Turbo_M_CrinkleFoil_0', 'Air_Intake_Duct_M_RubberDark_0'])
+        elif 'vrde' in engine_id:
+            targets.extend(['Wastegate_Actuator_Red_M_AnodizedRed_0', 'Wastegate_Actuator_Canister_M_PlasticBlack_0', 'Wastegate_Rod_Red_M_Stainless_0', 'Intercooler_M_CastAluminium_0.001', 'Exhaust_Downpipe_M_Stainless_0'])
+
+    # 2. Cylinder Compression & Thermal Surge (CHT Overheat)
+    for k in range(1, 5):
+        d_cht = float(res.get(f'd_CHT_{k}', res.get(f'cht_{k}', 0.0)))
+        cht_val = float(telemetry.get(f'CHT_{k}', 95.0))
+        if d_cht > 8.0 or cht_val > 115.0:
+            if 'rotax' in engine_id:
+                targets.extend(['Covers_Theme_M_PlasticTheme_0', 'Covers_Theme_M_PlasticGreen_0', 'Cooling_Air_Baffle_M_PlasticWhite_0'])
+            elif 'austro' in engine_id:
+                targets.extend(['Cylinder_Head_M_CastAluminium_0', 'Valve_Cover_M_PlasticBlack_0', 'Water_Pump_M_CastAluminium_0', 'Coolant_Hose_Red_M_RedSilicone_0', 'Coolant_Hose_Blue_M_BlueSilicone_0'])
+            elif 'vrde' in engine_id:
+                targets.extend(['Cylinder_Head_M_CastAluminium_0.001', 'Water_Pump_M_CastAluminium_0.001', 'Coolant_Pipe_Junction_M_CastAluminium_0', 'Coolant_Hose_Upper_M_BlueSilicone_0'])
+            break
+
+    # 3. High-Pressure Injection / Common Rail / Fuel Rail
+    d_rail = float(res.get('d_FUEL_RAIL_P', res.get('rail_p', 0.0)))
+    d_flow = float(res.get('d_FUEL_FLOW', res.get('fuel_flow', 0.0)))
+    rail_p = float(telemetry.get('FUEL_RAIL_P', 3.0))
+    if d_rail < -40.0 or d_flow < -2.0 or (rail_p < 2.4 and 'rotax' in engine_id) or (rail_p < 500.0 and 'rotax' not in engine_id and rail_p > 10.0):
+        if 'rotax' in engine_id:
+            targets.extend(['Rotax_912i_Base_M_PlasticGreen_0', 'Rotax_912i_Base_M_Steel_0', 'Rotax_912i_Base_M_PlasticCable_0', 'Fuel_Pump_M_Steel_0', 'Fuel_Pump_M_Rubber_0'])
+        elif 'austro' in engine_id:
+            targets.extend(['Common_Rail_M_Steel_0', 'HP_Fuel_Pump_M_SteelDark_0', 'Injector_1_M_Steel_0', 'Injector_2_M_Steel_0', 'Injector_3_M_Steel_0', 'Injector_4_M_Steel_0', 'Fuel_Line_1_M_Steel_0', 'Fuel_Line_2_M_Steel_0'])
+        elif 'vrde' in engine_id:
+            targets.extend(['Common_Rail_M_Steel_0.001', 'HP_Fuel_Pump_M_SteelDark_0.001', 'Injector_1_M_Steel_0.001', 'Injector_2_M_Steel_0.001', 'Injector_3_M_Steel_0.001', 'Injector_4_M_Steel_0.001', 'Fuel_Line_HP_Cyl1_M_Stainless_0', 'Fuel_Line_HP_Cyl2_M_Stainless_0'])
+
+    # 4. Combustion Misfire / EGT Delta / Spark / Glow Plugs
+    egts = [float(telemetry.get(f'EGT_{k}', 780.0)) for k in range(1, 5)]
+    d_egts = [float(res.get(f'd_EGT_{k}', res.get(f'egt_{k}', 0.0))) for k in range(1, 5)]
+    if (max(egts) - min(egts) > 35.0) or min(d_egts) < -30.0:
+        if 'rotax' in engine_id:
+            targets.extend(['Wiring_Harness_M_Copper_0', 'Rotax_912i_Base_M_Copper_0', 'Wiring_Harness_M_Cobalt_0', 'Wiring_Harness_M_PlasticCable_0'])
+        elif 'austro' in engine_id:
+            targets.extend(['Glow_Plugs_M_Steel_0', 'Glow_Plug_Control_Unit_M_CastAluminium_0', 'Injector_1_M_Steel_0', 'Injector_2_M_Steel_0'])
+        elif 'vrde' in engine_id:
+            targets.extend(['Glow_Plug_Cyl1_M_Steel_0', 'Glow_Plug_Cyl2_M_Steel_0', 'Glow_Plug_Cyl3_M_Steel_0', 'Glow_Plug_Cyl4_M_Steel_0', 'Injector_1_M_Steel_0.001'])
+
+    # 5. Lubrication & Oil Pressure Loss / Scavenge Anomaly
+    d_oil_p = float(res.get('d_OIL_PRESS', res.get('oil_p', 0.0)))
+    oil_p = float(telemetry.get('OIL_PRESS', 4.8))
+    d_oil_t = float(res.get('d_OIL_TEMP', res.get('oil_t', 0.0)))
+    if d_oil_p < -0.45 or oil_p < 2.2 or d_oil_t > 10.0:
+        if 'rotax' in engine_id:
+            targets.extend(['Oil_Tank_M_Steel_0', 'Oil_Tank_M_Labels_0', 'Oil_Tank_M_Cobalt_0', 'Oil_Tank_M_PlasticBlack_0'])
+        elif 'austro' in engine_id:
+            targets.extend(['Oil_Filter_M_MetalPaintedBlack_0', 'Oil_Sump_M_CastAluminium_0', 'Oil_Cooler_M_CastAluminium_0', 'Turbo_Oil_Feed_Line_M_Steel_0', 'Turbo_Oil_Drain_Line_M_Steel_0'])
+        elif 'vrde' in engine_id:
+            targets.extend(['Engine_Block_M_CastAluminium_0.001', 'Oil_Filter', 'Dipstick_Tube_M_Steel_0'])
+
+    # 6. Propeller Gearbox / Vibration Surge
+    vib = float(telemetry.get('VIB_GEARBOX_RMS', 0.7))
+    if vib > 1.7 or float(res.get('VIB_RMS', res.get('vib_rms', 0.0))) > 1.8:
+        if 'rotax' in engine_id:
+            targets.extend(['Gearbox_Type_2_M_Steel_0', 'Gearbox_Type_2_M_MetalPaintedBlack_0', 'Gearbox_Type_2_M_Cobalt_0', 'Gearbox_Type_2_M_PlasticBlack_0', 'Gearbox_Type_2_M_PlasticWhite_0'])
+        elif 'austro' in engine_id:
+            targets.extend(['Gearbox_M_CastAluminium_0', 'Prop_Governor_PCU_M_CastAluminium_0', 'Prop_Flange_M_Steel_0', 'PCU_Oil_Line_M_Steel_0', 'Gearbox_Logo_M_CastAluminium_0'])
+        elif 'vrde' in engine_id:
+            targets.extend(['Gearbox_M_CastAluminium_0.001', 'Gearbox_FrontCover_M_CastAluminium_0', 'Gearbox_PropBoss_M_CastAluminium_0', 'Gearbox_Governor_M_CastAluminium_0'])
+
+    # 7. Electrical / Alternator Sag
+    v_bus = float(telemetry.get('BUS_VOLTAGE', 14.1))
+    d_v = float(res.get('d_BUS_VOLTAGE', res.get('bus_v', 0.0)))
+    if (v_bus < 12.8 and 'rotax' in engine_id) or (v_bus < 24.0 and 'rotax' not in engine_id) or d_v < -0.8:
+        if 'rotax' in engine_id:
+            targets.extend(['External_Alternator_M_Rotax914_Extras_0', 'External_Alternator_M_TimingBelt_0'])
+        elif 'austro' in engine_id:
+            targets.extend(['Alternator_Details_M_CastAluminium_0', 'Alternator_Bracket_M_SteelDark_0', 'Alternator_Impeller_Fan_M_Steel_0', 'Serpentine_Belt_M_Rubber_0'])
+        elif 'vrde' in engine_id:
+            targets.extend(['Generator_1_M_CastAluminium_0.001', 'Generator_2_M_CastAluminium_0', 'Alternator_Power_Loom_M_PlasticBlack_0', 'Belt_Tensioner_M_SteelDark_0'])
+
+    # 8. Dual FADEC / EECS Desync & Drift
+    if telemetry.get('FADEC_ACTIVE_LANE') == 'LANE_DISAGREE' or float(res.get('d_FADEC', 0.0)) > 0.5:
+        if 'rotax' in engine_id:
+            targets.extend(['ECU_M_PlasticBlack_0', 'ECU_M_FuseLight_0', 'ECU_M_Motherboard_0', 'ECU_M_GlassMilky_0', 'ECU_M_Labels_0', 'ECU_M_Chrome_0', 'ECU_M_Copper_0'])
+        elif 'austro' in engine_id:
+            targets.extend(['ECU_Lane_A_M_MetalPaintedBlack_0', 'ECU_Lane_B_M_MetalPaintedBlack_0', 'Engine_Harness_Loom_M_PlasticBlack_0', 'ECU_Bayonet_Plugs_M_CastAluminium_0'])
+        elif 'vrde' in engine_id:
+            targets.extend(['ECU_Lane_A_M_MetalPaintedBlack_0.001', 'ECU_Lane_B_M_MetalPaintedBlack_0.001', 'Harness_Spine_M_PlasticBlack_0'])
+
+    return targets
+
+
 def apply_material_state():
-    """Slot-Based Material Swapping driven by backend diagnosed fault."""
+    """Slot-Based Material Swapping driven by backend diagnosed fault and physical residuals."""
     ghost_mat, fault_mat = ensure_ghost_materials()
     save_original_materials()
     
     active_fid = client_state.active_commanded_fault_id if client_state.active_commanded_fault_id > 0 else client_state.analytics.get('diagnosed_fault_id', 0)
     target_patterns = set(client_state.analytics.get('target_parts', []))
     
+    # 1. Fault profile target parts
     if active_fid in FAULT_DATABASE:
         for p in FAULT_DATABASE[active_fid].get('parts', []):
             target_patterns.add(p)
 
+    # 2. Physics-based residual target parts
+    physics_targets = resolve_fault_targets_from_physics(client_state.engine_id, client_state.telemetry, client_state.analytics)
+    for pt in physics_targets:
+        target_patterns.add(pt)
+
+    # 3. Apply shader materials to active collection meshes
     for obj in bpy.data.objects:
         if obj.type == 'MESH' and not obj.hide_viewport:
             is_target = False
@@ -1115,6 +1307,7 @@ def apply_material_state():
                         if i < len(obj.material_slots) and orig_m is not None:
                             obj.material_slots[i].material = orig_m
 
+
 def update_pulsing_emission():
     """Update dynamic pulsating emission on the active fault material."""
     fault_mat = bpy.data.materials.get('M_Fault_RedHighlight')
@@ -1124,20 +1317,37 @@ def update_pulsing_emission():
             pulse = 3.5 + 1.8 * math.sin(time.time() * 9.0)
             bsdf.inputs['Emission Strength'].default_value = pulse
 
+
 def update_camera_for_backend_fault():
-    """Adjusts camera focus target when backend fault changes."""
+    """Adjusts camera focus target when backend fault or physics attribution changes."""
     diag_id = client_state.active_commanded_fault_id if client_state.active_commanded_fault_id > 0 else client_state.analytics.get('diagnosed_fault_id', 0)
+    physics_targets = resolve_fault_targets_from_physics(client_state.engine_id, client_state.telemetry, client_state.analytics)
     
-    if diag_id != client_state.applied_fault_id:
+    current_state_key = (diag_id, tuple(sorted(physics_targets)))
+    if current_state_key != getattr(update_camera_for_backend_fault, "_last_state_key", None):
+        update_camera_for_backend_fault._last_state_key = current_state_key
         client_state.applied_fault_id = diag_id
         
+        all_targets = set(client_state.analytics.get('target_parts', []))
         if diag_id in FAULT_DATABASE:
-            f_data = FAULT_DATABASE[diag_id]
-            client_state.is_auto_orbit = False
-            client_state.cam_target = f_data['center'].copy()
-            client_state.target_orbit_angle = f_data['angle']
-            client_state.target_orbit_elevation = f_data['elevation']
-            client_state.target_orbit_distance = f_data['distance']
+            for p in FAULT_DATABASE[diag_id].get('parts', []):
+                all_targets.add(p)
+        for pt in physics_targets:
+            all_targets.add(pt)
+            
+        if all_targets:
+            center, radius = get_parts_center_and_radius(list(all_targets))
+            if center is not None:
+                client_state.is_auto_orbit = False
+                client_state.cam_target = center
+                client_state.target_orbit_distance = max(DEFAULT_ORBIT_DISTANCE * 0.45, radius * 2.8)
+            elif diag_id in FAULT_DATABASE:
+                f_data = FAULT_DATABASE[diag_id]
+                client_state.is_auto_orbit = False
+                client_state.cam_target = f_data['center'].copy()
+                client_state.target_orbit_angle = f_data['angle']
+                client_state.target_orbit_elevation = f_data['elevation']
+                client_state.target_orbit_distance = f_data['distance']
         else:
             client_state.is_auto_orbit = True
             client_state.cam_target = ENGINE_CENTER.copy()
@@ -1465,6 +1675,9 @@ def configure_clean_viewport_workspace():
         cam_data = bpy.data.cameras.new("TurntableCam")
         cam = bpy.data.objects.new("TurntableCam", cam_data)
         scene.collection.objects.link(cam)
+    if cam.data:
+        cam.data.clip_start = 0.01
+        cam.data.clip_end = 5000.0
     scene.camera = cam
     cam.animation_data_clear()
 
