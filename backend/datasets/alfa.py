@@ -1,9 +1,9 @@
-"""ALFA Autonomous Flight UAV Failure Benchmark Loader (B7.4, BENCH-03, D19).
+"""Synthetic ALFA-shaped scenario generator (not an ALFA dataset file loader).
 
 Dataset: Air Lab Failure and Anomaly Dataset (ALFA)
 Focus: Autonomous fixed-wing UAV flights with injected control surface, engine, and actuator faults.
 License: CC BY-NC-SA 4.0 (Research use)
-Evidence Class: PUBLIC_PROXY
+Evidence Class: SIMULATION
 """
 
 from __future__ import annotations
@@ -17,7 +17,7 @@ from backend.datasets.base import BaseDatasetLoader, DatasetManifest, DatasetRec
 
 
 class ALFALoader(BaseDatasetLoader):
-    """Loader for CMU AirLab ALFA flight dataset."""
+    """Generate a synthetic ALFA-shaped scenario; does not parse ALFA source files."""
 
     def __init__(self, data_dir: Optional[Path] = None) -> None:
         super().__init__(data_dir)
@@ -26,7 +26,7 @@ class ALFALoader(BaseDatasetLoader):
         return DatasetManifest(
             name="ALFA_UAV_FAILURE",
             version="1.0",
-            evidence_class=EvidenceClass.PUBLIC_PROXY,
+            evidence_class=EvidenceClass.SIMULATION,
             license="CC BY-NC-SA 4.0",
             citation="Keipour et al., ALFA: A Dataset for UAV Fault Issues Detection and Autonomous Recovery, IJRR 2021",
             is_permissive=False,  # NC license -> labeled research-only
@@ -37,9 +37,9 @@ class ALFALoader(BaseDatasetLoader):
                 "pitch": "pitch_deg",
                 "engine_rpm": "rpm",
             },
-            num_units=47,
-            num_samples=185000,
-            description="Autonomous UAV flight logs with real in-flight control and engine failure transitions.",
+            num_units=len(self.list_units()),
+            num_samples=len(self.list_units()) * 200,
+            description="Synthetic engine-failure demonstration; not evidence from ALFA flight logs.",
         )
 
     def list_units(self) -> List[str]:

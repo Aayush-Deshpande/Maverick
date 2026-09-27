@@ -213,7 +213,7 @@ class EngineRuntime:
     # ---- presentation ------------------------------------------------------------------------
     def profile(self) -> Dict[str, Any]:
         c = self.cfg
-        return {"engine_id": self.engine_id, "n_cylinders": c.cylinder_count, "turbocharged": c.is_turbocharged,
+        return {"engine_id": self.engine_id, "display_name": c.display_name, "n_cylinders": c.cylinder_count, "turbocharged": c.is_turbocharged,
                 "compression_ignition": c.is_compression_ignition, "ready": self.ready,
                 "heavy_ready": self.heavy_ready, "tail_id": self.tail_id,
                 # These are operator commands, not plant truth; returning them lets a UI restore

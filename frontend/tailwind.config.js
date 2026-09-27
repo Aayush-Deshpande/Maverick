@@ -39,8 +39,8 @@ export default {
         // Segoe UI / SF Pro aren't licensed for web embedding, so Inter — the closest
         // widely-used open substitute for both — carries all UI text. One monospace for
         // telemetry values/data is the one deliberate "ops tool" typographic touch.
-        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'system-ui', 'sans-serif'],
-        mono: ['JetBrains Mono', 'SF Mono', 'Consolas', 'monospace'],
+        sans: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'system-ui', 'sans-serif'],
+        mono: ['SF Mono', 'Consolas', 'ui-monospace', 'monospace'],
       },
       boxShadow: {
         // Elevation, not illumination — flat drop shadows instead of colored glows.

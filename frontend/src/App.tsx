@@ -14,6 +14,7 @@ import { PropulsionEngineerPanel } from './components/PropulsionEngineerPanel';
 import { MaintenanceDashboardPanel } from './components/MaintenanceDashboardPanel';
 import { ConnectionModal } from './components/ConnectionModal';
 import { PanelErrorBoundary } from './components/PanelErrorBoundary';
+import { EngineRuntimeConsole } from './components/EngineRuntimeConsole';
 import { GCSRole } from './types/telemetry';
 import {
   WifiOff,
@@ -40,6 +41,7 @@ export function App() {
   } = useTelemetrySocket();
 
   const [activeRole, setActiveRole] = useState<GCSRole>('OPERATOR');
+  const [workspace, setWorkspace] = useState<'runtime' | 'legacy'>('runtime');
   const [activeTab, setActiveTab] = useState<
     'OPERATOR' | 'PROPULSION' | 'MAINTENANCE' | 'AI_DIAGNOSTICS' | 'VOICE_COPILOT' | 'MISSION_REPLAY'
   >('OPERATOR');
@@ -75,10 +77,19 @@ export function App() {
         activeRole={activeRole}
         onSelectRole={handleSelectRole}
         onOpenSettings={() => setIsModalOpen(true)}
+        runtimeMode={workspace === 'runtime'}
       />
 
       <main className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-4 md:p-6 space-y-4">
-        {!isConnected && (
+        <div className="flex items-center justify-between gap-3">
+          <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">ANUMAAN · Ground console</div>
+          <div className="flex rounded border border-surface-border bg-surface-card p-0.5 text-[11px]">
+            <button onClick={() => setWorkspace('runtime')} className={`rounded px-3 py-1.5 ${workspace === 'runtime' ? 'bg-accent-dim text-accent' : 'text-slate-400 hover:text-white'}`}>Engine runtime</button>
+            <button onClick={() => setWorkspace('legacy')} className={`rounded px-3 py-1.5 ${workspace === 'legacy' ? 'bg-accent-dim text-accent' : 'text-slate-400 hover:text-white'}`}>Legacy GCS</button>
+          </div>
+        </div>
+        {workspace === 'runtime' ? <EngineRuntimeConsole serverUrl={serverUrl} /> : <>
+        {workspace === 'legacy' && !isConnected && (
           <div className="surface-panel surface-panel-critical p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-sm bg-critical-dim flex items-center justify-center text-critical shrink-0">
@@ -208,9 +219,10 @@ export function App() {
             <MissionReplayScrubber serverUrl={serverUrl} />
           </PanelErrorBoundary>
         )}
+        </>}
       </main>
 
-      <footer className="bg-surface/80 border-t border-surface-border py-3 px-4 text-center mt-auto">
+      {workspace === 'legacy' ? <footer className="bg-surface/80 border-t border-surface-border py-3 px-4 text-center mt-auto">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-500">
           <div className="flex items-center gap-2">
             <Shield className="w-3.5 h-3.5" />
@@ -230,7 +242,7 @@ export function App() {
             </span>
           </div>
         </div>
-      </footer>
+      </footer> : <footer className="bg-surface/80 border-t border-surface-border py-3 px-4 text-center mt-auto text-[11px] text-slate-500">DRDO / iDEX PS-26054 · Simulation-backed multi-engine condition monitoring demonstrator</footer>}
 
       <ConnectionModal
         isOpen={isModalOpen}

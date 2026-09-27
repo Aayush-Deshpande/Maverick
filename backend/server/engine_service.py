@@ -483,7 +483,12 @@ class EngineStateService:
         # and remain the genuine diagnosis, never the commanded label.
         display_fault_id = self.active_fault_id if self.active_fault_id > 0 else diag_fid
         target_parts = FAULT_TARGET_PARTS.get(display_fault_id, [])
-        target_mesh = target_parts[0] if target_parts else "All"
+        # This engine asset has no separable injector geometry. Preserve its
+        # known visual reference point for clients that can render a locator;
+        # never claim the whole engine body is the injector.
+        target_mesh = target_parts[0] if target_parts else (
+            "INJECTOR_1_LOCATOR" if display_fault_id == 2 else "All"
+        )
         
         # Reuse the report Stage 1 already computed inside process_frame() above for this
         # exact frame — see the caution in DetectionPipeline.process_frame().

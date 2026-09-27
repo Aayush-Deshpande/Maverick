@@ -1,9 +1,9 @@
-"""NASA PCoE Li-Ion Battery Degradation Benchmark Loader (B7.6, BENCH-05, D19).
+"""Synthetic NASA PCoE-shaped scenario generator (not a NASA battery-file loader).
 
 Dataset: NASA Ames Prognostics Center of Excellence Battery Aging Dataset
 Units: B0005, B0006, B0007, B0018 (Charge/Discharge cycles until 70% rated capacity).
 License: NASA Open Data / Public Domain
-Evidence Class: PUBLIC_PROXY
+Evidence Class: SIMULATION
 """
 
 from __future__ import annotations
@@ -26,7 +26,7 @@ class BatteryLoader(BaseDatasetLoader):
         return DatasetManifest(
             name="NASA_PCOE_BATTERY",
             version="1.0",
-            evidence_class=EvidenceClass.PUBLIC_PROXY,
+            evidence_class=EvidenceClass.SIMULATION,
             license="NASA Public Domain / US Gov Work",
             citation="Saha & Goebel, Battery Data Set, NASA Ames Prognostics Data Repository, 2007",
             is_permissive=True,
@@ -37,8 +37,8 @@ class BatteryLoader(BaseDatasetLoader):
                 "capacity": "capacity_ah",
             },
             num_units=4,
-            num_samples=1680,
-            description="Lithium-ion 18650 cell cycle degradation and capacity fade measurements.",
+            num_samples=len(self.list_units()) * 168,
+            description="Synthetic battery-like capacity fade; NASA PCoE source files are not read by this adapter.",
         )
 
     def list_units(self) -> List[str]:

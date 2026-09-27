@@ -1,9 +1,9 @@
-"""NASA C-MAPSS Turbofan Run-to-Failure Benchmark Loader (B7.2, BENCH-01, D19).
+"""Synthetic C-MAPSS-shaped scenario generator (not a NASA C-MAPSS file loader).
 
 Dataset: NASA Commercial Modular Aero-Propulsion System Simulation (C-MAPSS)
 Subsets: FD001 (1 condition, HPC degradation), FD002 (6 conditions), FD003, FD004.
 License: NASA Open Source Agreement / Public Domain
-Evidence Class: PUBLIC_PROXY
+Evidence Class: SIMULATION
 """
 
 from __future__ import annotations
@@ -27,7 +27,7 @@ class CMAPSSLoader(BaseDatasetLoader):
         return DatasetManifest(
             name=f"NASA_CMAPSS_{self.subset}",
             version="1.0",
-            evidence_class=EvidenceClass.PUBLIC_PROXY,
+            evidence_class=EvidenceClass.SIMULATION,
             license="NASA Public Domain / US Gov Work",
             citation="Saxena et al., Damage Propagation Modeling for Aircraft Engine Run-to-Failure Simulation, PHM 2008",
             is_permissive=True,
@@ -47,8 +47,8 @@ class CMAPSSLoader(BaseDatasetLoader):
                 "s21": "t50_lpt_coolant_bleed",
             },
             num_units=100,
-            num_samples=20631,
-            description="Turbofan engine multi-sensor run-to-failure trajectories.",
+            num_samples=sum(150 + (i * 7) % 150 for i in range(1, 101)),
+            description="Synthetic turbofan-like degradation trajectories; not loaded from NASA C-MAPSS files.",
         )
 
     def list_units(self) -> List[str]:

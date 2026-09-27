@@ -1,6 +1,20 @@
 # Frontend Specification — What the ANUMAAN Ground Console Must Show
 
-*24 Sep 2026. Grounded in the existing app (`frontend/`: React 18 + Vite + Tailwind, 4.3k lines, three role tabs OPERATOR / PROPULSION / MAINTENANCE, single-engine `useTelemetrySocket`, hard-coded `CHT_1..4`) and in the new backend (`/api/engines`, `/ws/engines/{id}`, `/ws/fleet`, HealthFrame v2 — see `INTERFACES.md`, `MULTI_ENGINE_ARCHITECTURE.md`, `DECISIONS.md` D29/D36/D37). Backlog: R4 (dropdown/fleet), V1–V10, B9.x. Rule: the UI is a **viewer of one pipeline** (D05) — every number on screen must come from a `/ws` payload, never from a UI-side simulation.*
+*Target specification created 24 Sep 2026; implementation status reconciled 27 Sep 2026. The React app now defaults to `EngineRuntimeConsole` and consumes `/api/engines`, `/api/engines/{id}/schema`, `/ws/engines/{id}`, `/ws/fleet`, and modern fault/lever APIs. The six legacy role views remain under “Legacy GCS” and still consume the old single-engine `/ws/telemetry` path. See the status tracker below before treating any target screen as shipped.*
+
+## 0. Implementation status (27 Sep 2026)
+
+| Slice | Status | What is actually present |
+|---|---|---|
+| Engine selection / fleet strip | **Implemented** | Backend catalog and fleet stream power a five-profile tile strip and selector; selected engine controls the primary stream and warms tier 1 |
+| Operator telemetry | **Implemented, first slice** | Modern frame channels, evidence class, profile metadata/schema units, max cylinder temperatures, detector ratios and persistence gate |
+| Scenario controls | **Implemented, first slice** | Profile-filtered fault modes, cylinder choice, severity, clear, and throttle/altitude/OAT commands use modern backend routes |
+| Tier 1 display | **Implemented with qualification** | Shows reservoir output when present, names it a simulated randomized reservoir classifier, not a connectome or confirmed diagnosis |
+| Legacy role views | **Retained** | Operator/propulsion/maintenance/AI/voice/replay still run against legacy state; do not mix their results with the modern stream |
+| Residual trends, schema limits, cylinder residual heat map | **Not implemented** | Target sections below; current UI shows raw scalar channels and score ratios |
+| Bayesian root cause, calibrated RUL/mission probability, maintenance work package | **Not on modern live path** | Code/evaluation artifacts exist in separate packages, not connected to modern API/UI |
+| Waveform detection / waveform replay | **Not on modern live path** | Source/recorder code and tests exist, but are disconnected from the live runtime and frontend |
+| Edge evidence / research bake-off | **Not implemented in UI** | Simulation evaluation artifacts exist; no evidence dashboard yet |
 
 ## 1. Design principles (why it looks the way it does)
 

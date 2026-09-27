@@ -1,10 +1,10 @@
-"""Case Western Reserve University (CWRU) Bearing Vibration Benchmark Loader (B7.3, BENCH-02, D19).
+"""Synthetic CWRU-shaped scenario generator (not a CWRU signal-file loader).
 
 Dataset: CWRU Bearing Data Center
 Subsets: 12k Drive End Bearing, 48k Drive End Bearing, Fan End Bearing.
 Fault Types: Ball Defect (BD), Inner Race (IR), Outer Race (OR @ 3/6/12 o'clock), Normal.
 License: Public Educational Domain / CWRU
-Evidence Class: PUBLIC_PROXY
+Evidence Class: SIMULATION
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ from backend.datasets.base import BaseDatasetLoader, DatasetManifest, DatasetRec
 
 
 class CWRULoader(BaseDatasetLoader):
-    """Loader for CWRU bearing vibration dataset."""
+    """Generate illustrative scalar scenarios; does not parse CWRU vibration files."""
 
     def __init__(self, data_dir: Optional[Path] = None) -> None:
         super().__init__(data_dir)
@@ -27,7 +27,7 @@ class CWRULoader(BaseDatasetLoader):
         return DatasetManifest(
             name="CWRU_BEARING",
             version="1.0",
-            evidence_class=EvidenceClass.PUBLIC_PROXY,
+            evidence_class=EvidenceClass.SIMULATION,
             license="Public Educational Domain (CWRU)",
             citation="Smith & Randall, Rolling element bearing diagnostics using the Case Western Reserve University data: A benchmark study, MSSP 2015",
             is_permissive=True,
@@ -37,9 +37,9 @@ class CWRULoader(BaseDatasetLoader):
                 "BA_time": "base_accel_g",
                 "RPM": "shaft_rpm",
             },
-            num_units=60,
-            num_samples=120000,
-            description="High-frequency rolling element bearing vibration signals with seeded EDM faults.",
+            num_units=len(self.list_units()),
+            num_samples=len(self.list_units()) * 100,
+            description="Synthetic illustrative bearing-fault scenarios; no CWRU waveform data is loaded.",
         )
 
     def list_units(self) -> List[str]:

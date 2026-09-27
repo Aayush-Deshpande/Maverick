@@ -20,6 +20,7 @@ interface HeaderProps {
   activeRole: GCSRole;
   onSelectRole: (role: GCSRole) => void;
   onOpenSettings: () => void;
+  runtimeMode?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -29,6 +30,7 @@ export const Header: React.FC<HeaderProps> = ({
   activeRole,
   onSelectRole,
   onOpenSettings,
+  runtimeMode = false,
 }) => {
   const isFaulted = state.analytics.diagnosed_fault_id > 0;
   const isEngineOn = state.is_engine_running;
@@ -57,20 +59,20 @@ export const Header: React.FC<HeaderProps> = ({
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-sm font-semibold tracking-tight text-white flex items-center gap-1.5">
-                Rotax 912 iS
-                <span className="text-xs font-normal text-slate-400">Sport</span>
+                {runtimeMode ? 'ANUMAAN' : 'Rotax 912 iS'}
+                {!runtimeMode && <span className="text-xs font-normal text-slate-400">Sport</span>}
               </h1>
               <span className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded-sm bg-white/5 text-slate-400 border border-surface-border">
                 DRDO PS-26054
               </span>
             </div>
             <p className="text-[11px] text-slate-500 hidden sm:flex items-center gap-1.5">
-              <span>MALE UAV Digital Twin GCS</span>
-              <span className="text-slate-700">·</span>
+              <span>{runtimeMode ? 'Multi-engine propulsion health console' : 'MALE UAV Digital Twin GCS'}</span>
+              {!runtimeMode && <><span className="text-slate-700">·</span>
               <span className="text-slate-400 flex items-center gap-1">
                 <Compass className="w-3 h-3" />
                 {theater === 'LADAKH' ? 'Ladakh theater (20k ft)' : 'Thar desert (+44°C)'}
-              </span>
+              </span></>}
             </p>
           </div>
         </div>
@@ -82,7 +84,7 @@ export const Header: React.FC<HeaderProps> = ({
             <span>{utcTime}</span>
           </div>
 
-          <button
+          {runtimeMode ? <div className="flex items-center gap-2 px-2.5 py-1 rounded-full text-xs border bg-surface-card text-slate-300 border-surface-border"><Activity className="w-3.5 h-3.5 text-sky-400" /><span className="font-medium">Engine runtime</span></div> : <button
             onClick={onOpenSettings}
             className={`flex items-center gap-2 px-2.5 py-1 rounded-full text-xs border transition-colors ${
               isConnected
@@ -107,9 +109,9 @@ export const Header: React.FC<HeaderProps> = ({
                 <span className="font-medium">Offline</span>
               </>
             )}
-          </button>
+          </button>}
 
-          <div
+          {!runtimeMode && <div
             className={`hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs border ${
               isEngineOn
                 ? 'bg-accent-dim text-accent border-accent-muted'
@@ -118,9 +120,9 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <Activity className={`w-3.5 h-3.5 ${isEngineOn ? 'text-accent' : 'text-slate-500'}`} />
             <span className="font-medium">{isEngineOn ? 'Propulsion engaged' : 'Standby'}</span>
-          </div>
+          </div>}
 
-          <div
+          {!runtimeMode && <div
             className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
               isFaulted
                 ? 'bg-critical-dim text-critical border-critical-muted'
@@ -130,11 +132,11 @@ export const Header: React.FC<HeaderProps> = ({
             <Zap className={`w-3.5 h-3.5 ${isFaulted ? 'text-critical' : 'text-success'}`} />
             <span>HI</span>
             <span>{(state.analytics.health_index * 100).toFixed(0)}%</span>
-          </div>
+          </div>}
         </div>
 
         {/* Role Selector (VIS-02..04) */}
-        <div className="hidden sm:flex items-center gap-1 p-0.5 rounded bg-surface-card border border-surface-border text-xs">
+        {!runtimeMode && <div className="hidden sm:flex items-center gap-1 p-0.5 rounded bg-surface-card border border-surface-border text-xs">
           {[
             { id: 'OPERATOR' as GCSRole, label: 'Operator', icon: <User className="w-3 h-3" /> },
             { id: 'PROPULSION_ENGINEER' as GCSRole, label: 'Propulsion', icon: <Cpu className="w-3 h-3" /> },
@@ -157,14 +159,14 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
             );
           })}
-        </div>
+        </div>}
 
         {/* Right: Sortie & settings */}
         <div className="flex items-center gap-2">
-          <div className="hidden xl:flex flex-col text-right">
+          {!runtimeMode && <div className="hidden xl:flex flex-col text-right">
             <span className="text-[10px] text-slate-500">Sortie</span>
             <span className="text-xs font-mono text-slate-300">{state.sortie_id}</span>
-          </div>
+          </div>}
 
           <button
             onClick={onOpenSettings}

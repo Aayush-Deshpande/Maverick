@@ -113,17 +113,24 @@ def test_commanded_fault_highlights_immediately(client):
             # A couple of 20 Hz ticks' worth of margin; the background loop ticks
             # independently of this request/response cycle.
             target_parts = []
+            target_mesh = "All"
             for _ in range(10):
                 data = client.get("/api/state").json()
                 target_parts = data["analytics"].get("target_parts", [])
-                if target_parts:
+                target_mesh = data["analytics"].get("target_3d_mesh", "All")
+                if target_parts or target_mesh not in ("", "All"):
                     break
                 time.sleep(0.05)
 
-            assert target_parts, (
-                f"fault {fault_id}: target_parts is empty immediately after commanding "
-                "it -- highlighting is not responding to the commanded fault"
+            assert target_parts or target_mesh not in ("", "All"), (
+                f"fault {fault_id}: neither target_parts nor target_3d_mesh identifies "
+                "a highlight target immediately after commanding it"
             )
+            if fault_id == 2:
+                assert not target_parts and target_mesh == "INJECTOR_1_LOCATOR", (
+                    "fault 2 has no injector mesh in the Rotax 912 asset; publish the "
+                    "documented location as a locator instead of highlighting the whole engine"
+                )
             assert data["active_commanded_fault_id"] == fault_id
     finally:
         client.post("/api/control", json={"action": "CLEAR_FAULT"})

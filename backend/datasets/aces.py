@@ -1,9 +1,8 @@
-"""NASA Airborne Combustion Emissions and Safety (ACES) Flight Data Loader (B7.5, BENCH-04, D19).
+"""Synthetic ACES-shaped scenario generator (not a NASA ACES file loader).
 
 Dataset: NASA ACES Flight Experiments (Altus II UAV / Rotax 914 Turbocharged Spark Ignition Engine).
-Evidence Class: REAL_FLIGHT
-License: NASA Open Data / Public Domain
-Note: Units in raw ACES telemetry are unconfirmed in certain columns; treated with rigorous provenance labels.
+The real raw-file parser is ``backend/telemetry/aces_loader.py``. This adapter currently
+generates a hand-authored nominal trajectory and must be treated as SIMULATION evidence.
 """
 
 from __future__ import annotations
@@ -17,7 +16,7 @@ from backend.datasets.base import BaseDatasetLoader, DatasetManifest, DatasetRec
 
 
 class ACESLoader(BaseDatasetLoader):
-    """Loader for genuine NASA ACES Altus II Rotax 914 flight telemetry."""
+    """Generate a synthetic ACES-shaped trajectory; does not read NASA ACES files."""
 
     def __init__(self, data_dir: Optional[Path] = None) -> None:
         super().__init__(data_dir)
@@ -26,7 +25,7 @@ class ACESLoader(BaseDatasetLoader):
         return DatasetManifest(
             name="NASA_ACES_ALTUS_II",
             version="1.0",
-            evidence_class=EvidenceClass.REAL_FLIGHT,
+            evidence_class=EvidenceClass.SIMULATION,
             license="NASA Open Data / US Public Domain",
             citation="NASA Dryden Flight Research Center, Altus II High-Altitude UAV Airborne Combustion Research Flights, 1999",
             is_permissive=True,
@@ -39,8 +38,8 @@ class ACESLoader(BaseDatasetLoader):
                 "EGT_1..4": "egt",
             },
             num_units=8,
-            num_samples=45000,
-            description="Real flight telemetry from turbocharged Rotax 914 engine on Altus II UAV platform.",
+            num_samples=len(self.list_units()) * 150,
+            description="Synthetic illustrative Rotax 914 trajectory; raw NASA ACES files are not read by this adapter.",
         )
 
     def list_units(self) -> List[str]:

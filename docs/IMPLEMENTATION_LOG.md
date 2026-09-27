@@ -1060,3 +1060,24 @@ Committed the pile in chunks, tagged `pre-dev-2026-09-24`, archived dead code (`
 - Reachability audit: **0 orphan libraries**.
 - Guard tests: zero truth leaks AST verified, engine-agnostic ratchet clean, all engine config provenance entries verified.
 
+## Session 7 — 2026-09-27 (Repository reconciliation + React runtime console)
+
+### Built / corrected
+- Replaced stale `docs/build/MENTAL_MODEL.md` and `CURRENT_STATE.md` claims with a verified two-path architecture map: modern multi-engine `RuntimeHub`/`EngineRuntime` stream versus legacy single-engine `EngineStateService`; documented real source reachability, UI boundaries, detector limits, and next integration slices.
+- Made the modern runtime-backed console the default React view while keeping the six old role panels reachable in “Legacy GCS”. Added five-engine fleet tiles and selection, profile schema units/display names, live per-engine frames, tier-0 residual ratios and persistence state, selected-engine tier-1 candidate readout, levers, and profile-valid fault inject/clear. Labels expose simulation evidence and manual scenarios; tier-1 scores are explicitly not probabilities or a connectome.
+- Added an explicit injector locator target in the legacy API because the Rotax asset has no separate injector mesh. Updated the regression assertion to accept this evidenced locator while still requiring real meshes for other mapped faults; no broad engine-body mesh is falsely identified as the injector.
+- Corrected ACES, ALFA, CWRU, C-MAPSS and NASA battery adapter metadata: current adapter outputs are generated synthetic scenarios, not parsed source data. Evidence is now `SIMULATION`, descriptions say source files are not loaded, and unit/sample counts match what each generator emits.
+- Replaced the over-high engine-agnostic baseline with measured lower counts, as directed by its ratchet update guard. Updated frontend spec/backlog status for the delivered first UI slice.
+
+### Verified
+- `frontend`: `npm run build` — TypeScript and Vite production build succeeded (1,777 modules).
+- Live local browser at `http://127.0.0.1:5173/`: default console rendered all five engines, changing telemetry, detector evidence, channel units, tier-1 output, and scenario controls against the running service at port 8000.
+- Live REST smoke: five engine profiles ready; profile schema endpoint returned 16 channels for the selected profile; latest frame returned simulation evidence and detector payload.
+- Focused regression: `tests/test_engine_agnostic_ratchet.py` + `tests/test_server_api.py` — 10 passed, including all eight legacy fault highlight/locator cases.
+- Full suite excluding Blender-only `tests/test_camera_transitions.py`: **316 passed, 1 strict xfail**. The camera module is uncollectable in system Python because `bpy_extras` is provided by Blender, not ordinary Python.
+
+### Unproven / remaining
+- `tests/test_camera_transitions.py` remains unverified in system Python because Blender's `bpy_extras` is unavailable outside Blender. The camera code was not changed in this session.
+- Full cross-engine UI interaction (select all five, inject/clear scenarios and verify changing detector frames) still needs an automated browser test; backend route tests and live render smoke pass.
+- The modern path remains simulation-only. Waveform, diagnosis, prognosis, maintenance, physical adapters, and dataset ingestion are not connected to this React surface. Dataset source parsing/unit validation is still required before public-data performance claims.
+
