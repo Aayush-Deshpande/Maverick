@@ -10,6 +10,7 @@
 | Operator telemetry | **Implemented, first slice** | Modern frame channels, evidence class, profile metadata/schema units, max cylinder temperatures, detector ratios and persistence gate |
 | Scenario controls | **Implemented, first slice** | Profile-filtered fault modes, cylinder choice, severity, clear, and throttle/altitude/OAT commands use modern backend routes |
 | Tier 1 display | **Implemented with qualification** | Shows reservoir output when present, names it a simulated randomized reservoir classifier, not a connectome or confirmed diagnosis |
+| 3D fault visualization | **Integrated view** | Existing three.js twin is available in the React console; Rotax uses the legacy stream and other profiles use modern runtime routes |
 | Legacy role views | **Retained** | Operator/propulsion/maintenance/AI/voice/replay still run against legacy state; do not mix their results with the modern stream |
 | Residual trends, schema limits, cylinder residual heat map | **Not implemented** | Target sections below; current UI shows raw scalar channels and score ratios |
 | Bayesian root cause, calibrated RUL/mission probability, maintenance work package | **Not on modern live path** | Code/evaluation artifacts exist in separate packages, not connected to modern API/UI |

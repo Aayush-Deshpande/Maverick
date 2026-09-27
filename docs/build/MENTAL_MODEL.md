@@ -36,7 +36,7 @@ API details: `GET /api/engines` lists engine profiles/readiness/valid faults; `G
 - The selector's tier-1 label is a candidate class from simulated training scenarios, not an independently confirmed root-cause diagnosis.
 - The registry has 12 physical/sensor fault modes, filtered for engine applicability. Some are marked waveform-only because the low-rate scalar path cannot observe them. Injection availability does not mean detection capability.
 - Tier-0 is anomaly detection; the modern payload does not provide RUL, mission reliability, causal diagnosis, an evidence-calibrated health index, or maintenance work orders. Do not synthesize these in the frontend.
-- The current React console now consumes this API by default. The 3D three.js page is a separate surface: Rotax 912 uses the legacy route; other engines use modern runtime endpoints. Keep this distinction visible when debugging discrepancies.
+- The current React console consumes this API by default and embeds the 3D three.js application in its **3D twin** view. Rotax 912 uses the legacy route; other engines use modern runtime endpoints. The iframe is a separate application/stream despite living inside the console, so keep this distinction visible when debugging discrepancies.
 
 ### B. Legacy Rotax ground-control stack — retained compatibility workspace
 
@@ -67,7 +67,7 @@ The three.js engine is a presentation layer, not a separate source of physics. V
 
 ## 5. User experience and honest demo story
 
-The first five seconds should answer: which engine is selected, is telemetry arriving, what evidence is abnormal, and how does the operator reproduce/investigate it? The default screen now provides fleet tiles, selected engine, scalar telemetry, tier-0 threshold ratios and gate status, tier-1 candidate scores when warm, profile-valid scenario controls, and a manual-action marker. This is the defensible live story.
+The first five seconds should answer: which engine is selected, is telemetry arriving, what evidence is abnormal, and how does the operator reproduce/investigate it? The default screen now provides fleet tiles, selected engine, scalar telemetry, tier-0 threshold ratios and gate status, tier-1 candidate scores when warm, profile-valid scenario controls, and a manual-action marker. The **3D twin** view brings the orange fault-location/highlight presentation and eased camera transitions into the same console. This is the defensible live story.
 
 Next highest-value slices, in order:
 

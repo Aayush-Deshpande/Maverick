@@ -4,7 +4,7 @@
 
 ## User-facing product today
 
-The React app in `frontend/` now defaults to `EngineRuntimeConsole`. It connects to the newer multi-engine engine API, shows fleet telemetry, lets the operator select a profile, displays tier-0 residual score/threshold ratios and persistence alarm state, shows the selected engine's tier-1 reservoir scores when available, renders incoming profile channels, and posts profile-valid fault and flight-condition commands. Evidence and manual scenario state are labeled. Existing role-based views remain accessible using **Legacy GCS** and still use the old `/api/state`, `/api/control`, and `/ws/telemetry` path.
+The React app in `frontend/` now defaults to `EngineRuntimeConsole`. It connects to the newer multi-engine engine API, shows fleet telemetry, lets the operator select a profile, displays tier-0 residual score/threshold ratios and persistence alarm state, shows the selected engine's tier-1 reservoir scores when available, renders incoming profile channels, and posts profile-valid fault and flight-condition commands. Its **3D twin** view embeds the existing component highlight and camera presentation. Evidence and manual scenario state are labeled. Existing role-based views remain accessible using **Legacy GCS** and still use the old `/api/state`, `/api/control`, and `/ws/telemetry` path.
 
 The page is a simulation demonstrator. The modern runtime payload currently reports `SIMULATION`; do not call its alarm airworthiness-certified or its reservoir label a confirmed diagnosis. It does not surface RUL, mission reliability, Bayesian diagnosis, maintenance work packages, or real aircraft measurements.
 

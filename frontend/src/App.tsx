@@ -41,7 +41,7 @@ export function App() {
   } = useTelemetrySocket();
 
   const [activeRole, setActiveRole] = useState<GCSRole>('OPERATOR');
-  const [workspace, setWorkspace] = useState<'runtime' | 'legacy'>('runtime');
+  const [workspace, setWorkspace] = useState<'runtime' | 'twin' | 'legacy'>('runtime');
   const [activeTab, setActiveTab] = useState<
     'OPERATOR' | 'PROPULSION' | 'MAINTENANCE' | 'AI_DIAGNOSTICS' | 'VOICE_COPILOT' | 'MISSION_REPLAY'
   >('OPERATOR');
@@ -77,7 +77,7 @@ export function App() {
         activeRole={activeRole}
         onSelectRole={handleSelectRole}
         onOpenSettings={() => setIsModalOpen(true)}
-        runtimeMode={workspace === 'runtime'}
+        runtimeMode={workspace !== 'legacy'}
       />
 
       <main className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-4 md:p-6 space-y-4">
@@ -85,10 +85,17 @@ export function App() {
           <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">ANUMAAN · Ground console</div>
           <div className="flex rounded border border-surface-border bg-surface-card p-0.5 text-[11px]">
             <button onClick={() => setWorkspace('runtime')} className={`rounded px-3 py-1.5 ${workspace === 'runtime' ? 'bg-accent-dim text-accent' : 'text-slate-400 hover:text-white'}`}>Engine runtime</button>
+            <button onClick={() => setWorkspace('twin')} className={`rounded px-3 py-1.5 ${workspace === 'twin' ? 'bg-accent-dim text-accent' : 'text-slate-400 hover:text-white'}`}>3D twin</button>
             <button onClick={() => setWorkspace('legacy')} className={`rounded px-3 py-1.5 ${workspace === 'legacy' ? 'bg-accent-dim text-accent' : 'text-slate-400 hover:text-white'}`}>Legacy GCS</button>
           </div>
         </div>
-        {workspace === 'runtime' ? <EngineRuntimeConsole serverUrl={serverUrl} /> : <>
+        {workspace === 'runtime' ? <EngineRuntimeConsole serverUrl={serverUrl} /> : workspace === 'twin' ? <section className="surface-panel overflow-hidden">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-surface-border px-4 py-3">
+            <div><h2 className="text-sm font-semibold text-white">Interactive engine twin</h2><p className="mt-1 text-[11px] text-slate-500">Fault location, component highlighting and eased camera transitions · shares the connected backend</p></div>
+            <span className="text-[10px] uppercase tracking-wider text-slate-500">Web 3D · live backend</span>
+          </div>
+          <iframe title="ANUMAAN interactive engine twin" src={`${serverUrl}/apps/threejs_twin/`} className="block h-[calc(100vh-12rem)] min-h-[680px] w-full bg-[#061019]" allow="fullscreen" />
+        </section> : <>
         {workspace === 'legacy' && !isConnected && (
           <div className="surface-panel surface-panel-critical p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
