@@ -799,6 +799,7 @@ let backendRefreshInFlight = false;
 let backendOfflineNoticeShown = false;
 let activeVisualFaultMode = null;
 let activeVisualFaultOrigin = null;
+let activeVisualFaultModel = null;
 let detectorConfirmed = false;
 let faultOptionSignature = '';
 
@@ -1733,9 +1734,18 @@ function computeFaultCamera(engineId, faultType) {
   const target = ENGINE_FAULT_TARGETS[engineId]?.[faultType];
   if (!target) return computeStationCamera(engineId, 0);
   const bounds = profile.runtimeFaults && profile.runtimeFaults[faultType];
-  const focus = bounds?.center || (target.focusPoint ? new THREE.Vector3(...target.focusPoint) : null);
+  // The legacy 912 fault anchors were authored before the GLB export changed
+  // the model axes. Mesh-derived bounds are already in GLB coordinates; the
+  // hand-authored fallback points need the same (x, z, -y) conversion.
+  const focusPoint = target.focusPoint && engineId === 'rotax_912is'
+    ? [target.focusPoint[0], target.focusPoint[2], -target.focusPoint[1]]
+    : target.focusPoint;
+  const focus = bounds?.center || (focusPoint ? new THREE.Vector3(...focusPoint) : null);
   if (!focus) return computeStationCamera(engineId, 0);
-  const radius = bounds?.radius || Math.max((profile.runtimeOverview?.radius || 20) * 0.12, 4);
+  // A locator-only fault has no component bounds to frame. Give it enough
+  // breathing room to retain surrounding engine context instead of zooming
+  // into an isolated marker at the full-assembly scale.
+  const radius = bounds?.radius || Math.max((profile.runtimeOverview?.radius || 20) * 0.3, 6);
   const dist = fitDistance(radius, bounds ? 1.55 : 2.6);
   const angle = (target.angle || 0) * Math.PI / 180;
   const elevation = (target.elev || 18) * Math.PI / 180;
@@ -1761,7 +1771,9 @@ function setFaultVisual(faultType, origin = 'commanded', evidence = []) {
   const profile = ENGINE_PROFILES[currentEngineId];
   const faultTarget = (ENGINE_FAULT_TARGETS[currentEngineId] || {})[faultType];
   if (!faultTarget) return false;
-  const alreadyFocused = activeVisualFaultMode === faultType && activeVisualFaultOrigin === origin;
+  const alreadyFocused = activeVisualFaultMode === faultType
+    && activeVisualFaultOrigin === origin
+    && activeVisualFaultModel === currentModel;
   activeFault = faultType;
   activeVisualFaultMode = faultType;
   activeVisualFaultOrigin = origin;
@@ -1781,18 +1793,24 @@ function setFaultVisual(faultType, origin = 'commanded', evidence = []) {
   document.getElementById('tk-status').textContent = isDetected ? 'DETECTOR CONFIRMED' : 'FAULT INJECTED';
   document.getElementById('tk-status').style.color = '#ff8a24';
 
-  if (currentModel && !alreadyFocused) {
-    orbitAnimating = false;
+  if (currentModel) {
+    activeVisualFaultModel = currentModel;
     const matched = applyFaultHighlight(currentModel, faultType);
     faultLocator.visible = matched === 0 && !!faultTarget.focusPoint;
     if (faultLocator.visible) {
-      faultLocator.position.set(...faultTarget.focusPoint);
+      const point = currentEngineId === 'rotax_912is'
+        ? [faultTarget.focusPoint[0], faultTarget.focusPoint[2], -faultTarget.focusPoint[1]]
+        : faultTarget.focusPoint;
+      faultLocator.position.set(...point);
       const locatorScale = Math.max((profile.runtimeOverview?.radius || 20) * 0.045, 1.5);
       faultLocator.scale.setScalar(locatorScale);
     }
-    const cam = computeFaultCamera(currentEngineId, faultType);
-    updateCameraClipping(cam.dist, cam.radius);
-    animateCameraTo(cam.pos, cam.target);
+    if (!alreadyFocused) {
+      orbitAnimating = false;
+      const cam = computeFaultCamera(currentEngineId, faultType);
+      updateCameraClipping(cam.dist, cam.radius);
+      animateCameraTo(cam.pos, cam.target);
+    }
   }
   return true;
 }
@@ -1864,6 +1882,7 @@ function clearFaultVisual() {
   activeFault = null;
   activeVisualFaultMode = null;
   activeVisualFaultOrigin = null;
+  activeVisualFaultModel = null;
   document.getElementById('fault-hud-alert').classList.remove('visible');
   document.getElementById('tk-status').textContent = backendSelectionReady ? 'TWIN SYNC ACTIVE' : 'BACKEND OFFLINE';
   document.getElementById('tk-status').style.color = '';
@@ -2082,6 +2101,7 @@ async function selectEngine(engineId) {
   activeFault = commandedFaultByEngine[engineId] || null;
   activeVisualFaultMode = null;
   activeVisualFaultOrigin = null;
+  activeVisualFaultModel = null;
   faultLocator.visible = false;
   backendSelectionReady = !!BACKEND_ENGINE_PROFILES[engineId]?.ready && backendConnected;
   updateFaultOptions(engineId);
