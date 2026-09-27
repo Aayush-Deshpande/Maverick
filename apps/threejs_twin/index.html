@@ -1182,11 +1182,25 @@ function showTopLoader(show) {
 // Computes a real-world bounding sphere (center + radius) from actual loaded
 // geometry, since hardcoded Blender-authored camera distances/targets don't
 // carry over reliably across engines with different export scales.
+function meshMatchesFaultPart(mesh, pattern, exactNames = false, root = null) {
+  if (exactNames) return mesh.name.toLowerCase() === pattern;
+  const normalizedPattern = pattern.replace(/[^a-z0-9]/gi, '').toLowerCase();
+  // Some GLBs store semantic part names on a group node, then put the actual
+  // renderable primitive meshes beneath it with generic or empty names. GLTF
+  // exports can also replace spaces in those group names with underscores.
+  for (let node = mesh; node; node = node.parent) {
+    const normalizedName = node.name.replace(/[^a-z0-9]/gi, '').toLowerCase();
+    if (normalizedName.includes(normalizedPattern)) return true;
+    if (node === root) break;
+  }
+  return false;
+}
+
 function computeBounds(root, patterns, exactNames = false) {
   const entries = [];
   root.traverse((child) => {
     if (!child.isMesh) return;
-    if (patterns && !patterns.some(p => exactNames ? child.name.toLowerCase() === p : child.name.toLowerCase().includes(p))) return;
+    if (patterns && !patterns.some(p => meshMatchesFaultPart(child, p, exactNames, root))) return;
     const box = new THREE.Box3().setFromObject(child);
     if (box.isEmpty()) return;
     entries.push({ box, center: box.getCenter(new THREE.Vector3()) });
@@ -1715,8 +1729,7 @@ function applyFaultHighlight(root, faultType) {
   let matched = 0;
   root.traverse((child) => {
     if (!child.isMesh) return;
-    const meshName = child.name.toLowerCase();
-    const isFaultTarget = targets.some(name => exactNames ? meshName === name : meshName.includes(name));
+    const isFaultTarget = targets.some(name => meshMatchesFaultPart(child, name, exactNames, root));
     child.material = isFaultTarget ? faultMat : ghostMat;
     matched += isFaultTarget ? 1 : 0;
   });
@@ -2104,6 +2117,13 @@ async function selectEngine(engineId) {
   activeVisualFaultModel = null;
   faultLocator.visible = false;
   backendSelectionReady = !!BACKEND_ENGINE_PROFILES[engineId]?.ready && backendConnected;
+  // Fault banners belong to the selected engine. Clear the previous engine's
+  // banner immediately; a persisted command or new detector result for this
+  // engine will restore the correct visualization once its model is ready.
+  document.getElementById('fault-hud-alert').classList.remove('visible');
+  document.getElementById('tk-mode').textContent = 'FULL ASSEMBLY';
+  document.getElementById('tk-status').textContent = backendSelectionReady ? 'TWIN SYNC ACTIVE' : 'BACKEND OFFLINE';
+  document.getElementById('tk-status').style.color = '';
   updateFaultOptions(engineId);
   updateEngineButtons(engineId);
 
