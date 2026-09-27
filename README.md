@@ -99,6 +99,10 @@ python run_app.py pygame          # Hardware-accelerated Pygame desktop GCS
 python run_app.py verify          # Automated scene verification & audit
 ```
 
+The Three.js engine twin is served by the same FastAPI service: start `python run_app.py server`
+and open `http://127.0.0.1:8000/app`. Engine selection, live telemetry, flight-condition
+controls, and fault injection are available in the browser UI; no separate Three.js launcher is needed.
+
 ### Windows one-click launchers
 - `launch_backend_server.bat` — FastAPI telemetry/control backend (`http://127.0.0.1:8000`, docs at `/docs`).
 - `launch_standalone_app.bat` — starts the backend if not already running, then opens the native

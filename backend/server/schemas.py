@@ -138,6 +138,8 @@ class ControlCommand(BaseModel):
     """Incoming command from Mobile Web Frontend or GCS."""
     action: str = Field(..., description="Action: START_ENGINE | STOP_ENGINE | SET_FAULT | CLEAR_FAULT | SET_THROTTLE | SET_ALTITUDE | SET_OAT | SET_REGIME | SET_ROLE | EXPORT_DEBRIEF")
     fault_id: Optional[int] = Field(None, description="Fault ID (0 to 8)")
+    severity: Optional[float] = Field(None, description="Fault severity (0.0 to 1.0)")
+    ramp_duration_sec: Optional[float] = Field(None, description="Fault onset ramp in simulated seconds")
     throttle: Optional[float] = Field(None, description="Throttle percentage (0 - 100%)")
     altitude_ft: Optional[float] = Field(None, description="Altitude MSL (feet)")
     oat_c: Optional[float] = Field(None, description="Outside Air Temp (°C)")

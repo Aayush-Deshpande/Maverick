@@ -1,15 +1,26 @@
 """
-ANUMAAN — MULTI-ENGINE 3D DIGITAL TWIN VISUALIZATION CLIENT (BLENDER)
+ANUMAAN — MULTI-ENGINE 3D DIGITAL TWIN & TECHNICAL SHOWCASE CLIENT (BLENDER)
 DRDO / iDEX Problem Statement ID: 26054
 
-PURE VISUALIZATION CLIENT — ZERO LOCAL SIMULATION:
-- Subscribes in real-time to the Multi-Engine Backend Server (FastAPI / 20 Hz state feed)
-- Instant 0ms In-Memory Collection Swapping across all 5 UAV engines (Rotax 912iS, 914, 915iS, Austro AE300, VRDE 2.2L)
-- Real-time Slot-Based Material Swapping & Dynamic Pulsing Red Emission
-- Holographic Ghost Vision (X-Ray Mode) with semi-transparent ambient body
-- Delta-Time Constant 60 FPS Camera Orbit around stationary engine center
-- Precision Component Framing: Camera glides directly in front of fault components
-- Telemetry Link Watchdog: Prominently indicates if backend server connection drops
+FEATURES:
+- Instant 0ms In-Memory Collection Swapping across all 5 UAV engines:
+  [F1] Rotax 912 iS Sport (100 HP Naturally Aspirated EFI)
+  [F2] Rotax 914 F Turbo (115 HP Turbocharged TCU)
+  [F3] Rotax 915 iS Turbo (141 HP Turbo Intercooled FADEC)
+  [F4] Austro Engine AE300 / AE330 (180 HP Common-Rail Turbo Diesel)
+  [F5] VRDE / Jayem 2.2L (180 HP Indigenous TAPAS Turbodiesel)
+
+- SUBSYSTEM SHOWCASE INSPECTOR:
+  - Default: Full engine in 100% NORMAL SOLID RENDERED PBR MODE with authentic materials.
+  - Continuous 360° beauty orbit: camera revolves in a complete circle facing the engine center.
+  - Number keys [1] to [5] (or bottom dock pills):
+    1. Entire engine transitions to Holographic Ghost Mode (translucent cyan X-ray glass).
+    2. ONLY the inspected subsystem/part remains in NORMAL SOLID RENDERED PBR MODE.
+    3. Smooth cinematic camera glide swoops directly to the hardcoded station angle.
+    4. Displays Aerospace HUD Technical Specification & Information Card (NO metric bars).
+    5. 3D-to-2D screen reticle and leader line pinpointing the component.
+  - Press [0] or [ESC]: Smoothly glides back to Full Assembly and continues 360° orbit.
+  - Engine Selection Reveal: Sweeping camera intro reveal on switching engines ([F1]-[F5]).
 """
 
 import bpy
@@ -17,6 +28,7 @@ import gpu
 from gpu_extras.batch import batch_for_shader
 import blf
 import mathutils
+from bpy_extras.object_utils import world_to_camera_view
 import math
 import time
 import os
@@ -28,15 +40,20 @@ import urllib.error
 import collections
 import random
 
-# Server connection configuration (default: local server; overridable via env var)
+# Server connection configuration
 SERVER_BASE_URL = os.environ.get("ROTAX_BACKEND_URL", "http://127.0.0.1:8000")
 INITIAL_ENGINE_ID = os.environ.get("ANUMAAN_ENGINE_ID", "rotax_912is")
+
+# Check command line args
+for i, arg in enumerate(sys.argv):
+    if arg in ('--engine', '-e') and i + 1 < len(sys.argv):
+        INITIAL_ENGINE_ID = sys.argv[i + 1]
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.abspath(os.path.join(SCRIPT_DIR, "..", ".."))
 
 # ==============================================================================
-# ENGINE PROFILES & FAULT DATABASES (ALL 5 ENGINES)
+# ENGINE PROFILES & HARDCODED CAMERA/SUBSYSTEM DATABASES (ALL 5 ENGINES)
 # ==============================================================================
 
 ENGINE_PROFILES = {
@@ -49,18 +66,118 @@ ENGINE_PROFILES = {
         'fuel_type': 'AVGAS / MOGAS',
         'induction': 'NATURALLY ASPIRATED',
         'default_center': mathutils.Vector((1.932, 61.648, -35.324)),
-        'default_distance': 230.0,
-        'default_elevation': math.radians(24.0),
+        'default_distance': 304.0,
+        'default_elevation': math.radians(22.0),
+        'front_angle': math.radians(-90.0),
         'rpm_max': 5800.0,
+        'subsystems': {
+            1: {
+                'id': 1, 'key': '1',
+                'tag': 'STATION 01 // POWER TRANSMISSION',
+                'name': 'INTEGRATED REDUCTION GEARBOX',
+                'subtitle': 'REDUCTION RATIO 2.43:1 WITH TORSIONAL SLIPPER CLUTCH',
+                'parts': ['Gearbox_Type_2', 'gearbox', 'prop'],
+                'target': mathutils.Vector((0.966, 18.013, -12.264)),
+                'distance': 108.0,
+                'angle': math.radians(-90.0),
+                'elevation': math.radians(14.0),
+                'specs': [
+                    ('GEAR RATIO', 'Reduction Ratio i = 2.43 : 1 (Propeller RPM: 2,387)'),
+                    ('OUTPUT FLANGE', 'AND 20010 8-Bolt PCD Aircraft Propeller Flange'),
+                    ('SLIPPER CLUTCH', 'Integrated Torsional Overload Dog Clutch'),
+                    ('DIRECTION', 'Counter-Clockwise Rotation (Viewed from Front)'),
+                    ('BEARINGS', 'Precision Double Row Angular Contact Thrust Bearings'),
+                    ('LUBRICATION', 'Dedicated Pressure Feed with Magnetic Chip Detector')
+                ],
+                'desc': "Precision aerospace helical reduction geartrain engineered to match engine power curve (5,800 RPM) with propeller aerodynamic efficiency (2,387 RPM). Integrates an internal torsional slipper dog clutch to absorb propeller aerodynamic harmonics, prevent crankshaft shock loads during rapid throttle transitions, and protect drive splines under severe gust loading."
+            },
+            2: {
+                'id': 2, 'key': '2',
+                'tag': 'STATION 02 // INDUCTION & FUEL',
+                'name': 'DUAL ELECTRONIC INJECTION & THROTTLE',
+                'subtitle': 'REDUNDANT DUAL-LANE ENGINE MANAGEMENT (EMS914)',
+                'parts': ['Fuel_Pump', 'Rotax_912i', 'fuel', 'injector'],
+                'target': mathutils.Vector((4.552, 62.943, -17.400)),
+                'distance': 180.0,
+                'angle': math.radians(105.0),
+                'elevation': math.radians(28.0),
+                'specs': [
+                    ('INJECTION TYPE', 'Multi-Point Sequential Port Injection (2× per Cyl)'),
+                    ('THROTTLE BODY', 'Dual Synchronized Electronic Throttle Actuators'),
+                    ('ECU REDUNDANCY', 'Lane A / Lane B Autonomous Fail-Operational FADEC'),
+                    ('FUEL SAVINGS', 'Eco Mode (Lambda 1.05) delivers 35% Lower Cruise Burn'),
+                    ('FUEL PRESSURE', '3.0 bar Constant Delivery from Dual Electric Pumps'),
+                    ('MANIFOLD DESIGN', 'Symmetric Tuned Intake Runners with Cold Air Baffles')
+                ],
+                'desc': "Dual-lane sequential multi-point electronic port injection architecture. Redundant high-pressure electric fuel pumps maintain constant 3.0 bar rail pressure. Dual electronic throttle bodies dynamically balance intake manifold pressure, automatically toggling into lean-burn Eco-Cruise mode for 35% reduced fuel consumption during loiter missions."
+            },
+            3: {
+                'id': 3, 'key': '3',
+                'tag': 'STATION 03 // THERMAL SCAVENGING',
+                'name': 'STAINLESS EXHAUST & RAM COOLING',
+                'subtitle': 'EQUAL-LENGTH SCAVENGING & DUAL AIR DUCTS',
+                'parts': ['Exhaust_System', 'Cooling_Air', 'exhaust', 'baffle'],
+                'target': mathutils.Vector((6.679, 38.160, -40.381)),
+                'distance': 168.0,
+                'angle': math.radians(-45.0),
+                'elevation': math.radians(-8.0),
+                'specs': [
+                    ('EXHAUST MANIFOLD', '4-into-1 AISI 321 Stainless Headers with Silencer'),
+                    ('EGT LIMIT', 'Max Exhaust Gas Temp: 880°C (1,616°F) Continuous'),
+                    ('CYLINDER BAFFLES', 'Engineered Composite Ram-Air Cooling Shrouds'),
+                    ('HEAD COOLING', 'High-Velocity Coolant Jacket (Max CHT: 120°C)'),
+                    ('EXPANSION JOINTS', 'Stainless Tension Springs with Spherical Couplings'),
+                    ('THERMAL BARRIER', 'Ceramic Thermal Barrier Coating on Underbelly Silencer')
+                ],
+                'desc': "Equal-length 4-into-1 AISI 321 stainless steel exhaust scavenging system equipped with spherical ball joints and vibration-damping tension springs. Dissipates peak exhaust gas temperatures up to 880°C. Engineered ram-air cooling baffles direct high-velocity boundary layer air across cylinder barrel fins, supplemented by liquid head jackets."
+            },
+            4: {
+                'id': 4, 'key': '4',
+                'tag': 'STATION 04 // ELECTRICAL GENERATION',
+                'name': 'DUAL INTERNAL GENERATORS & AVIONICS',
+                'subtitle': 'REDUNDANT POWER DISTRIBUTION ARCHITECTURE',
+                'parts': ['External_Alternator', 'Wiring_Harness', 'alternator', 'wiring'],
+                'target': mathutils.Vector((4.962, 62.098, -15.626)),
+                'distance': 176.0,
+                'angle': math.radians(-35.0),
+                'elevation': math.radians(20.0),
+                'specs': [
+                    ('GENERATOR A', 'Internal 16A / 14V Stator for Engine Control (ECU)'),
+                    ('GENERATOR B', 'External 30A / 14V Alternator for Avionics Bus'),
+                    ('FUSEBOX SYSTEM', 'Integrated Solid-State Current Limiting Module'),
+                    ('STARTING SYSTEM', 'Electric Starter with Automatic Overrunning Clutch'),
+                    ('IGNITION BUS', 'Dedicated Engine Generator Power (No Battery Drain)'),
+                    ('HARNESS RATING', 'MIL-DTL-38999 Shielded Twisted-Pair Aero Wiring')
+                ],
+                'desc': "Dual-isolated electrical power generation. Internal permanent-magnet 16A stator alternator provides independent ignition and FADEC power, ensuring the propulsion system runs without aircraft battery support. An external 30A heavy-duty alternator feeds UAV avionics, telemetry transmitters, and flight control actuators."
+            },
+            5: {
+                'id': 5, 'key': '5',
+                'tag': 'STATION 05 // DUAL FADEC & PHM',
+                'name': 'EMS914 FADEC ENGINE MANAGEMENT',
+                'subtitle': 'AUTONOMOUS FAIL-OPERATIONAL DUAL-LANE ENGINE CONTROL',
+                'parts': ['ECU_M', 'ecu', 'fuse', 'motherboard'],
+                'target': mathutils.Vector((13.409, 87.223, -16.925)),
+                'distance': 144.0,
+                'angle': math.radians(80.0),
+                'elevation': math.radians(26.0),
+                'specs': [
+                    ('ARCHITECTURE', 'Dual Lane FADEC (Lane A Master / Lane B Hot Backup)'),
+                    ('IGNITION SYSTEM', 'Dual Digital Transistorized Spark Ignition (2 Plugs/Cyl)'),
+                    ('FUEL DELIVERY', 'Dual High-Pressure Electric Pumps with Return Loop'),
+                    ('ALTITUDE SENSING', 'Barometric Air Density Automatic Closed-Loop Mapping'),
+                    ('FAULT TOLERANCE', 'Seamless Single-Lane Fallback with Zero Power Loss'),
+                    ('BUS PROTOCOL', 'CANaerospace / ARINC 429 Redundant Mission Interface')
+                ],
+                'desc': "Full-authority dual-lane digital engine control unit (EMS914). Simultaneously computes optimized spark timing and fuel injection duration based on barometric pressure, air density, manifold temperature, and throttle position. Features autonomous instantaneous failover between Lane A and Lane B with zero interruption to propeller thrust."
+            }
+        },
         'faults': {
-            1: {'short': 'CYL #2 OVERHEAT', 'comp': 'Cylinder #2 Head & Baffle Assembly', 'tag': 'CRITICAL', 'parts': ['Covers_Theme_M_PlasticTheme_0', 'Covers_Theme_M_PlasticGreen_0', 'Cooling_Air_Baffle_M_PlasticWhite_0'], 'center': mathutils.Vector((0.966, 38.400, -10.990)), 'angle': math.radians(-140.0), 'elevation': math.radians(24.0), 'distance': 120.0},
-            2: {'short': 'INJECTOR #1 CLOG', 'comp': 'Electronic Fuel Injector #1 (Lane A)', 'tag': 'MAJOR', 'parts': ['Rotax_912i_Base_M_PlasticGreen_0', 'Rotax_912i_Base_M_Steel_0', 'Rotax_912i_Base_M_PlasticCable_0', 'Rotax_912i_Base_M_Rubber_0'], 'center': mathutils.Vector((1.160, 61.687, -15.547)), 'angle': math.radians(-85.0), 'elevation': math.radians(34.0), 'distance': 115.0},
-            3: {'short': 'IGNITION MISFIRE', 'comp': 'Secondary Spark Plug Lead & Harness', 'tag': 'MAJOR', 'parts': ['Wiring_Harness_M_Copper_0', 'Rotax_912i_Base_M_Copper_0', 'Wiring_Harness_M_Cobalt_0', 'Wiring_Harness_M_PlasticCable_0'], 'center': mathutils.Vector((4.962, 69.016, -15.626)), 'angle': math.radians(-115.0), 'elevation': math.radians(30.0), 'distance': 120.0},
-            4: {'short': 'OIL PRESSURE LOSS', 'comp': 'Dry-Sump Reservoir & Scavenge Line', 'tag': 'CRITICAL', 'parts': ['Oil_Tank_M_Steel_0', 'Oil_Tank_M_Labels_0', 'Oil_Tank_M_Cobalt_0', 'Oil_Tank_M_PlasticBlack_0'], 'center': mathutils.Vector((-24.756, 105.824, -20.571)), 'angle': math.radians(135.0), 'elevation': math.radians(18.0), 'distance': 95.0},
-            5: {'short': 'GEARBOX VIBRATION', 'comp': 'Propeller Reduction Gearbox (Type 2)', 'tag': 'MINOR', 'parts': ['Gearbox_Type_2_M_Steel_0', 'Gearbox_Type_2_M_MetalPaintedBlack_0', 'Gearbox_Type_2_M_Cobalt_0', 'Gearbox_Type_2_M_PlasticBlack_0', 'Gearbox_Type_2_M_PlasticWhite_0'], 'center': mathutils.Vector((0.966, 18.013, -12.264)), 'angle': math.radians(-90.0), 'elevation': math.radians(14.0), 'distance': 90.0},
-            6: {'short': 'EXHAUST EGT DELTA', 'comp': 'Exhaust Runner Manifold (Runner #3)', 'tag': 'MINOR', 'parts': ['Exhaust_System_M_SteelDark_0', 'Exhaust_System_M_Steel_0', 'Exhaust_System_M_Cobalt_0', 'Exhaust_System_M_Chrome_0', 'Exhaust_System_M_PlasticBlack_0'], 'center': mathutils.Vector((6.679, 38.870, -45.570)), 'angle': math.radians(-45.0), 'elevation': math.radians(-8.0), 'distance': 125.0},
-            7: {'short': 'ALTERNATOR SAG', 'comp': 'Heavy-Duty Alternator & Belt Drive', 'tag': 'MINOR', 'parts': ['External_Alternator_M_Rotax914_Extras_0', 'External_Alternator_M_TimingBelt_0'], 'center': mathutils.Vector((6.560, 17.394, -8.662)), 'angle': math.radians(-35.0), 'elevation': math.radians(20.0), 'distance': 90.0},
-            8: {'short': 'DUAL FADEC DRIFT', 'comp': 'Lane A/B Dual FADEC ECU Assembly', 'tag': 'MINOR', 'parts': ['ECU_M_PlasticBlack_0', 'ECU_M_FuseLight_0', 'ECU_M_Motherboard_0', 'ECU_M_GlassMilky_0', 'ECU_M_Labels_0', 'ECU_M_Chrome_0', 'ECU_M_Copper_0', 'ECU_M_Steel_0', 'ECU_M_PlasticBlue_0', 'ECU_M_PlasticRed_0'], 'center': mathutils.Vector((13.409, 97.572, -16.925)), 'angle': math.radians(80.0), 'elevation': math.radians(26.0), 'distance': 110.0},
+            1: {'short': 'CYL #2 OVERHEAT', 'comp': 'Cylinder #2 Head & Baffle Assembly', 'tag': 'CRITICAL', 'parts': ['Covers_Theme_M_PlasticTheme_0', 'Covers_Theme_M_PlasticGreen_0', 'Cooling_Air_Baffle_M_PlasticWhite_0'], 'center': mathutils.Vector((0.966, 38.400, -10.990)), 'angle': math.radians(-140.0), 'elevation': math.radians(24.0), 'distance': 160.0},
+            2: {'short': 'INJECTOR #1 CLOG', 'comp': 'Electronic Fuel Injector #1 (Lane A)', 'tag': 'MAJOR', 'parts': ['Rotax_912i_Base_M_PlasticGreen_0', 'Rotax_912i_Base_M_Steel_0', 'Rotax_912i_Base_M_PlasticCable_0', 'Rotax_912i_Base_M_Rubber_0'], 'center': mathutils.Vector((1.160, 61.687, -15.547)), 'angle': math.radians(-85.0), 'elevation': math.radians(34.0), 'distance': 152.0},
+            3: {'short': 'IGNITION MISFIRE', 'comp': 'Secondary Spark Plug Lead & Harness', 'tag': 'MAJOR', 'parts': ['Wiring_Harness_M_Copper_0', 'Rotax_912i_Base_M_Copper_0', 'Wiring_Harness_M_Cobalt_0', 'Wiring_Harness_M_PlasticCable_0'], 'center': mathutils.Vector((4.962, 69.016, -15.626)), 'angle': math.radians(-115.0), 'elevation': math.radians(30.0), 'distance': 160.0},
+            4: {'short': 'OIL PRESSURE LOSS', 'comp': 'Dry-Sump Reservoir & Scavenge Line', 'tag': 'CRITICAL', 'parts': ['Oil_Tank_M_Steel_0', 'Oil_Tank_M_Labels_0', 'Oil_Tank_M_Cobalt_0', 'Oil_Tank_M_PlasticBlack_0'], 'center': mathutils.Vector((-24.756, 105.824, -20.571)), 'angle': math.radians(135.0), 'elevation': math.radians(18.0), 'distance': 128.0},
+            5: {'short': 'GEARBOX VIBRATION', 'comp': 'Propeller Reduction Gearbox (Type 2)', 'tag': 'MINOR', 'parts': ['Gearbox_Type_2_M_Steel_0', 'Gearbox_Type_2_M_MetalPaintedBlack_0', 'Gearbox_Type_2_M_Cobalt_0', 'Gearbox_Type_2_M_PlasticBlack_0', 'Gearbox_Type_2_M_PlasticWhite_0'], 'center': mathutils.Vector((0.966, 18.013, -12.264)), 'angle': math.radians(-90.0), 'elevation': math.radians(14.0), 'distance': 120.0}
         }
     },
     'rotax_914': {
@@ -68,22 +185,121 @@ ENGINE_PROFILES = {
         'name': 'ROTAX 914 F',
         'title': 'ROTAX 914 F TURBOCHARGED DIGITAL TWIN',
         'subtitle': '115 HP TURBOCHARGED ROTAX TCU • EXHAUST WASTEGATE ACTUATION',
-        'collection': 'Collection_Rotax_912iS',
+        'collection': 'Collection_Rotax_914',
         'fuel_type': 'AVGAS / MOGAS',
         'induction': 'TURBOCHARGED',
-        'default_center': mathutils.Vector((1.932, 61.648, -35.324)),
-        'default_distance': 230.0,
-        'default_elevation': math.radians(24.0),
+        'default_center': mathutils.Vector((-96.029, -0.100, -48.409)),
+        'default_distance': 1920.0,
+        'default_elevation': math.radians(22.0),
+        'front_angle': 0.0,
         'rpm_max': 5800.0,
+        'subsystems': {
+            1: {
+                'id': 1, 'key': '1',
+                'tag': 'STATION 01 // POWER TRANSMISSION',
+                'name': 'PROP REDUCTION GEARBOX & FLANGE',
+                'subtitle': 'AEROSPACE REDUCTION GEARBOX (i = 2.43:1) WITH DOG CLUTCH',
+                'parts': ['Rotax914_Gearbox_Front', 'Rotax914_Prop_Flange'],
+                'target': mathutils.Vector((147.65, 1.753, 25.500)),
+                'distance': 760.0,
+                'angle': 0.0,
+                'elevation': math.radians(14.0),
+                'specs': [
+                    ('GEAR RATIO', 'Reduction Ratio i = 2.43 : 1 (Propeller RPM: 2,387)'),
+                    ('PROP FLANGE', 'AND 20010 8-Bolt PCD Aircraft Propeller Flange'),
+                    ('DOG CLUTCH', 'Integrated Torsional Overload Spring Dog Clutch'),
+                    ('DIRECTION', 'Counter-Clockwise Rotation (Viewed from Front)'),
+                    ('BEARINGS', 'Precision Double Row Angular Contact Thrust Bearings'),
+                    ('CASING', 'High-Tensile Die-Cast Magnesium-Aluminum Alloy')
+                ],
+                'desc': "Aviation propeller reduction geartrain with an integrated spring-loaded torsional dog clutch. Absorbs cyclic torque pulses from the 4-cylinder engine and provides mechanical overload decoupling in propeller strike incidents. Features dual angular contact thrust bearings rated for high tractor/pusher axial loads."
+            },
+            2: {
+                'id': 2, 'key': '2',
+                'tag': 'STATION 02 // INDUCTION & BOOST',
+                'name': 'DUAL INDUCTION & COMPOSITE AIRBOX',
+                'subtitle': 'BOOST-EQUALIZED MIXTURE & ALTITUDE CONTROL',
+                'parts': ['Rotax914_Intake_Manifold', 'Rotax914_Cylinder_Bank', 'Rotax914_Cylinder_Head'],
+                'target': mathutils.Vector((-86.037, 0.322, 31.386)),
+                'distance': 1160.0,
+                'angle': math.radians(90.0),
+                'elevation': math.radians(28.0),
+                'specs': [
+                    ('CARBURETORS', 'Twin BING 64/32 Constant Velocity (CV) Carburetors'),
+                    ('BOOST PLENUM', 'Carbon-Composite Airbox with Internal Float Balancing'),
+                    ('ALTITUDE CONTROL', 'Barometric Altitude Mixture Automatic Compensation'),
+                    ('FUEL DELIVERY', 'Dual Engine/Electric Pumps (0.25 bar ΔP over Boost)'),
+                    ('INTAKE RUNNERS', 'Equal-Length Aluminum Cross-Flow Induction Manifold'),
+                    ('SEALS', 'Viton Fluoroelastomer Pressure-Sealed Intake Boots')
+                ],
+                'desc': "Pressure-charged induction system featuring twin constant-velocity carburetors enclosed in an engineered carbon-composite airbox. Pressure reference lines equalize fuel bowl pressure with turbocharger boost, ensuring stable stoichiometric mixture delivery across all altitude regimes up to 16,000 ft AMSL."
+            },
+            3: {
+                'id': 3, 'key': '3',
+                'tag': 'STATION 03 // THERMAL EXHAUST',
+                'name': 'STAINLESS EQUAL-LENGTH MANIFOLD',
+                'subtitle': 'HIGH-TEMPERATURE SCAVENGING & DUAL AIR DUCTS',
+                'parts': ['Rotax914_Plumbing_Exhaust', 'Rotax914_Coolant_Line'],
+                'target': mathutils.Vector((-55.632, -0.100, 26.859)),
+                'distance': 1184.0,
+                'angle': math.radians(-90.0),
+                'elevation': math.radians(-10.0),
+                'specs': [
+                    ('EXHAUST MANIFOLD', '4-into-1 AISI 321 Stainless Headers with Silencer'),
+                    ('EGT LIMIT', 'Max Exhaust Gas Temp: 880°C (1,616°F) Continuous'),
+                    ('CYLINDER HEADS', 'High-Velocity Coolant Jacket (Max CHT: 120°C)'),
+                    ('EXPANSION JOINTS', 'Stainless Tension Springs with Spherical Couplings'),
+                    ('HEAT SHIELDING', 'Multi-Layer Inconel Thermal Blanket on Turbine Feed'),
+                    ('MANIFOLD DESIGN', 'Pulse-Tuned Equal Length Scavenging Runners')
+                ],
+                'desc': "Heat-resistant AISI 321 stainless steel pulse-tuned exhaust headers converging into the turbocharger turbine housing. Ball-joint couplings accommodate extreme thermal expansion cycles. Multi-layer Inconel heat shields protect adjacent composite cowling structures from high radiant turbine heat."
+            },
+            4: {
+                'id': 4, 'key': '4',
+                'tag': 'STATION 04 // TURBOCHARGER & WASTEGATE',
+                'name': 'INTEGRATED ROTAX TURBOCHARGER',
+                'subtitle': 'EXHAUST-DRIVEN TURBINE WITH SERVO-CONTROLLED WASTEGATE',
+                'parts': ['Rotax914_Turbo_Compressor', 'Rotax914_Turbo_Turbine', 'Rotax914_Turbo_Wastegate'],
+                'target': mathutils.Vector((-218.243, -5.436, -48.409)),
+                'distance': 1320.0,
+                'angle': math.radians(180.0),
+                'elevation': math.radians(14.0),
+                'specs': [
+                    ('TURBO MODEL', 'Integrated Garrett High-Flow Floating Hydrodynamic Bearings'),
+                    ('WASTEGATE CONTROL', 'Precision DC Servomotor Electronic Actuation'),
+                    ('MAX BOOST LIMIT', '1.39 bar (41.1 inHg / 20.2 PSI) Closed-Loop Regulated'),
+                    ('TURBINE SPEED', 'Max 165,000 RPM Continuous Operating Speed'),
+                    ('LUBRICATION', 'Dedicated Pressure Feed from Main Engine Dry Sump'),
+                    ('SAFETY LIMIT', 'Automatic Wastegate Bleed-Off on Overboost Detection')
+                ],
+                'desc': "Exhaust-driven Garrett turbocharger regulated by an electric servo-actuated wastegate valve. The system precisely modulates exhaust bypass to hold manifold absolute pressure at 1.39 bar for take-off power (115 HP for 5 minutes) and 1.25 bar continuous cruise power (100 HP) regardless of altitude."
+            },
+            5: {
+                'id': 5, 'key': '5',
+                'tag': 'STATION 05 // ENGINE MANAGEMENT & PHM',
+                'name': 'ROTAX TCU & DIGITAL TWIN SUITE',
+                'subtitle': 'TURBO CONTROL UNIT & ANUMAAN PROGNOSTIC DIGITAL TWIN',
+                'parts': ['Rotax914_Crankcase_Block', 'Rotax914_Starter_Motor'],
+                'target': mathutils.Vector((-73.299, 0.210, -10.702)),
+                'distance': 1200.0,
+                'angle': math.radians(45.0),
+                'elevation': math.radians(22.0),
+                'specs': [
+                    ('CONTROL UNIT', 'Rotax Turbo Control Unit (TCU) with Altitude Barometer'),
+                    ('IGNITION SYSTEM', 'Dual Contactless Capacitor Discharge Ignition (CDI)'),
+                    ('LUBRICATION', 'Dry Sump with Camshaft-Driven Trochoid Oil Pump'),
+                    ('MONITORING', 'Dual EGT, CHT, MAP, Engine RPM, Ambient Temp'),
+                    ('OVERBOOST CUT', 'Automatic Wastegate Safety Relief Valve Integration'),
+                    ('DIAGNOSTICS', 'Physics-Informed Causal Fault Tree Real-Time Ingest')
+                ],
+                'desc': "Dedicated microprocessor-driven Turbo Control Unit (TCU) executing closed-loop boost pressure scheduling. Interfaced with dual contactless CDI ignition boxes, pressure transducers, and air temperature sensors. Provides serial data streaming for the ANUMAAN real-time predictive health digital twin."
+            }
+        },
         'faults': {
-            1: {'short': 'TURBO WASTEGATE LEAK', 'comp': 'Turbo Exhaust Wastegate Actuator', 'tag': 'CRITICAL', 'parts': ['Exhaust_System_M_SteelDark_0', 'Exhaust_System_M_Steel_0', 'Exhaust_System_M_Chrome_0', 'Fittings_Metric_Rotax914_Extras_0'], 'center': mathutils.Vector((6.679, 38.870, -45.570)), 'angle': math.radians(-45.0), 'elevation': math.radians(-8.0), 'distance': 120.0},
-            2: {'short': 'INJECTOR #1 CLOG', 'comp': 'Fuel Injector #1 (Lane A)', 'tag': 'MAJOR', 'parts': ['Rotax_912i_Base_M_PlasticGreen_0', 'Rotax_912i_Base_M_Steel_0'], 'center': mathutils.Vector((1.160, 61.687, -15.547)), 'angle': math.radians(-85.0), 'elevation': math.radians(34.0), 'distance': 115.0},
-            3: {'short': 'IGNITION MISFIRE', 'comp': 'Secondary Spark Plug Lead', 'tag': 'MAJOR', 'parts': ['Wiring_Harness_M_Copper_0', 'Rotax_912i_Base_M_Copper_0'], 'center': mathutils.Vector((4.962, 69.016, -15.626)), 'angle': math.radians(-115.0), 'elevation': math.radians(30.0), 'distance': 120.0},
-            4: {'short': 'OIL PRESSURE LOSS', 'comp': 'Dry-Sump Reservoir & Scavenge Line', 'tag': 'CRITICAL', 'parts': ['Oil_Tank_M_Steel_0', 'Oil_Tank_M_Labels_0', 'Oil_Tank_M_Cobalt_0'], 'center': mathutils.Vector((-24.756, 105.824, -20.571)), 'angle': math.radians(135.0), 'elevation': math.radians(18.0), 'distance': 95.0},
-            5: {'short': 'GEARBOX VIBRATION', 'comp': 'Propeller Reduction Gearbox', 'tag': 'MINOR', 'parts': ['Gearbox_Type_2_M_Steel_0', 'Gearbox_Type_2_M_MetalPaintedBlack_0'], 'center': mathutils.Vector((0.966, 18.013, -12.264)), 'angle': math.radians(-90.0), 'elevation': math.radians(14.0), 'distance': 90.0},
-            6: {'short': 'CYL #2 OVERHEAT', 'comp': 'Cylinder #2 Head & Cooling Baffle', 'tag': 'CRITICAL', 'parts': ['Covers_Theme_M_PlasticTheme_0', 'Covers_Theme_M_PlasticGreen_0', 'Cooling_Air_Baffle_M_PlasticWhite_0'], 'center': mathutils.Vector((0.966, 38.400, -10.990)), 'angle': math.radians(-140.0), 'elevation': math.radians(24.0), 'distance': 120.0},
-            7: {'short': 'ALTERNATOR SAG', 'comp': 'Heavy-Duty Alternator & Belt', 'tag': 'MINOR', 'parts': ['External_Alternator_M_Rotax914_Extras_0', 'External_Alternator_M_TimingBelt_0'], 'center': mathutils.Vector((6.560, 17.394, -8.662)), 'angle': math.radians(-35.0), 'elevation': math.radians(20.0), 'distance': 90.0},
-            8: {'short': 'TCU BOOST CONTROLLER', 'comp': 'Rotax Turbo Control Unit (TCU)', 'tag': 'MAJOR', 'parts': ['ECU_M_PlasticBlack_0', 'ECU_M_FuseLight_0'], 'center': mathutils.Vector((13.409, 97.572, -16.925)), 'angle': math.radians(80.0), 'elevation': math.radians(26.0), 'distance': 110.0},
+            1: {'short': 'TURBO WASTEGATE LEAK', 'comp': 'Turbo Exhaust Wastegate Actuator', 'tag': 'CRITICAL', 'parts': ['Rotax914_Turbo_Wastegate', 'Rotax914_Plumbing_Exhaust'], 'center': mathutils.Vector((-218.24, -5.44, -48.41)), 'angle': math.radians(180.0), 'elevation': math.radians(14.0), 'distance': 800.0},
+            2: {'short': 'INTAKE MANIFOLD LEAK', 'comp': 'Composite Intake Manifold Runner', 'tag': 'MAJOR', 'parts': ['Rotax914_Intake_Manifold'], 'center': mathutils.Vector((-86.04, 0.32, 31.39)), 'angle': math.radians(90.0), 'elevation': math.radians(28.0), 'distance': 736.0},
+            3: {'short': 'CYL HEAD OVERHEAT', 'comp': 'Cylinder Head & Rocker Cover', 'tag': 'CRITICAL', 'parts': ['Rotax914_Cylinder_Head', 'Rotax914_Rocker_Cover'], 'center': mathutils.Vector((-96.03, -0.10, -48.41)), 'angle': math.radians(-140.0), 'elevation': math.radians(24.0), 'distance': 784.0},
+            4: {'short': 'GEARBOX VIBRATION', 'comp': 'Propeller Reduction Gearbox Front', 'tag': 'MINOR', 'parts': ['Rotax914_Gearbox_Front', 'Rotax914_Prop_Flange'], 'center': mathutils.Vector((147.65, 1.75, 25.50)), 'angle': 0.0, 'elevation': math.radians(14.0), 'distance': 680.0}
         }
     },
     'rotax_915is': {
@@ -91,22 +307,119 @@ ENGINE_PROFILES = {
         'name': 'ROTAX 915 iS',
         'title': 'ROTAX 915 iS A TURBO INTERCOOLED DIGITAL TWIN',
         'subtitle': '141 HP FULL FADEC TURBOCHARGED INTERCOOLED • CRUISE ALTITUDE 23,000 FT',
-        'collection': 'Collection_Rotax_912iS',
+        'collection': 'Collection_Rotax_915iS',
         'fuel_type': 'AVGAS / MOGAS',
         'induction': 'TURBO INTERCOOLED',
-        'default_center': mathutils.Vector((1.932, 61.648, -35.324)),
-        'default_distance': 230.0,
-        'default_elevation': math.radians(24.0),
+        'default_center': mathutils.Vector((-0.241, -0.076, -0.124)),
+        'default_distance': 3.28,
+        'default_elevation': math.radians(22.0),
+        'front_angle': 0.0,
         'rpm_max': 5800.0,
+        'subsystems': {
+            1: {
+                'id': 1, 'key': '1',
+                'tag': 'STATION 01 // POWER TRANSMISSION',
+                'name': 'REINFORCED REDUCTION GEARBOX',
+                'subtitle': 'HIGH-TORQUE REDUCTION GEARBOX (i = 2.54:1) WITH TORSION DAMPER',
+                'parts': ['Tranny'],
+                'target': mathutils.Vector((0.141, 0.000, 0.074)),
+                'distance': 1.32,
+                'angle': 0.0,
+                'elevation': math.radians(14.0),
+                'specs': [
+                    ('GEAR RATIO', 'Reduction Ratio i = 2.54 : 1 (Propeller RPM: 2,283)'),
+                    ('TORQUE RATING', 'Reinforced Gear Case rated for 150 Nm Continuous'),
+                    ('SLIPPER CLUTCH', 'Heavy-Duty Integrated Torsional Slipper Dog Clutch'),
+                    ('PROP FLANGE', 'AND 20010 Specification / 8-Bolt PCD Aircraft Pattern'),
+                    ('VIBRATION DAMPER', 'Elastomeric Torsional Damper on Input Quill Shaft'),
+                    ('BEARINGS', 'Heavy-Duty Double-Row Cylindrical Roller Thrust Bearings')
+                ],
+                'desc': "Reinforced aerospace reduction gearbox engineered for 141 HP output torque. Features an upgraded ratio of i = 2.54:1 to turn wide-chord composite multi-blade propellers at an acoustic and aerodynamically optimized 2,283 RPM. Includes an internal elastomeric torsional damper and high-capacity slipper dog clutch."
+            },
+            2: {
+                'id': 2, 'key': '2',
+                'tag': 'STATION 02 // CHARGE AIR COOLING',
+                'name': 'ALUMINUM CHARGE AIR INTERCOOLER',
+                'subtitle': 'HIGH-EFFICIENCY AIR-TO-AIR DENSITY BOOSTING',
+                'parts': ['Intercooler', 'Air baffles'],
+                'target': mathutils.Vector((-0.210, -0.087, -0.107)),
+                'distance': 2.08,
+                'angle': math.radians(90.0),
+                'elevation': math.radians(24.0),
+                'specs': [
+                    ('HEAT EXCHANGER', 'High-Flow Bar & Plate Aluminum Intercooler Core'),
+                    ('TEMPERATURE DROP', 'Charge Air ΔT > 50°C Reduction before Throttle Body'),
+                    ('DENSITY BOOST', 'Maintains High Mass Airflow into Combustion Chambers'),
+                    ('CHARGE DUCTING', 'Reinforced Multi-Ply Silicone Couplers & Clamps'),
+                    ('AIR FILTER', 'Dynamic Ram-Air Conical Filter with Water Separator'),
+                    ('CONSTRUCTION', 'Vacuum-Brazed Aircraft-Grade Aluminum Alloy')
+                ],
+                'desc': "Vacuum-brazed aircraft-grade aluminum charge air cooler (intercooler). Reduces compressed intake air temperature by over 50°C before entering the dual throttle bodies. Density augmentation ensures full 141 HP take-off power and prevents pre-ignition knocking at high boost pressures."
+            },
+            3: {
+                'id': 3, 'key': '3',
+                'tag': 'STATION 03 // THERMAL EXHAUST',
+                'name': 'STAINLESS TUNED EXHAUST MANIFOLD',
+                'subtitle': 'HEAT-SHIELDED TURBO INLET RUNNERS',
+                'parts': ['Overboost valve', 'Main engine'],
+                'target': mathutils.Vector((-0.111, -0.076, -0.124)),
+                'distance': 2.32,
+                'angle': math.radians(-135.0),
+                'elevation': math.radians(-10.0),
+                'specs': [
+                    ('EXHAUST MANIFOLD', '4-into-1 AISI 321 Stainless Headers with Silencer'),
+                    ('EGT LIMIT', 'Max Exhaust Gas Temp: 920°C (1,688°F) Continuous'),
+                    ('TURBINE INLET', 'Cast Stainless Exhaust Collector with Inconel Blanket'),
+                    ('HEAD COOLING', 'High-Velocity Coolant Jacket (Max CHT: 120°C)'),
+                    ('EXPANSION JOINTS', 'Stainless Tension Springs with Spherical Couplings'),
+                    ('HEAT SHIELDING', 'Double-Walled Thermal Insulation on Turbo Feed')
+                ],
+                'desc': "Fabricated AISI 321 stainless steel exhaust collector with double-walled Inconel thermal wraps. Directs 920°C exhaust gas pulses directly to the turbine scroll while protecting airframe wiring and fuel delivery lines. Flexible ball joints prevent mechanical fatigue cracking under high acoustic loading."
+            },
+            4: {
+                'id': 4, 'key': '4',
+                'tag': 'STATION 04 // TURBOCHARGER & WASTEGATE',
+                'name': 'INTEGRATED GARRETT TURBOCHARGER',
+                'subtitle': 'HIGH-PRESSURE TURBINE & ELECTRONIC WASTEGATE',
+                'parts': ['Magnetovalve', 'Overboost valve'],
+                'target': mathutils.Vector((-0.376, -0.372, 0.039)),
+                'distance': 1.48,
+                'angle': math.radians(180.0),
+                'elevation': math.radians(14.0),
+                'specs': [
+                    ('TURBO MODEL', 'Garrett High-Flow Floating Hydrodynamic Bearings'),
+                    ('WASTEGATE CONTROL', 'Precision DC Servomotor Electronic Actuation'),
+                    ('MAX BOOST LIMIT', '1.54 bar (45.6 inHg / 22.3 PSI) Closed-Loop Governed'),
+                    ('TURBINE SPEED', 'Max 165,000 RPM Continuous Operating Speed'),
+                    ('CEILING BOOST', 'Maintains Full 141 HP Power to 15,000 ft AMSL'),
+                    ('CRITICAL ALTITUDE', 'Maximum Operating Flight Ceiling: 23,000 ft AMSL')
+                ],
+                'desc': "High-efficiency Garrett turbocharger driven by an electronic high-speed servo wastegate. Delivers up to 1.54 bar absolute manifold pressure, maintaining full sea-level take-off performance up to 15,000 ft critical altitude, with an operational ceiling of 23,000 ft for long-endurance MALE UAV sorties."
+            },
+            5: {
+                'id': 5, 'key': '5',
+                'tag': 'STATION 05 // DUAL FADEC & PHM',
+                'name': 'DUAL REDUNDANT EMS915 FADEC',
+                'subtitle': 'ELECTRONIC ENGINE CONTROL & INJECTION MANAGEMENT',
+                'parts': ['ECU', 'Fusebox', 'Ambient sensor', 'Oil tank'],
+                'target': mathutils.Vector((-0.474, -0.178, 0.014)),
+                'distance': 1.92,
+                'angle': math.radians(45.0),
+                'elevation': math.radians(24.0),
+                'specs': [
+                    ('ARCHITECTURE', 'Dual Lane FADEC (Lane A Master / Lane B Hot Backup)'),
+                    ('IGNITION SYSTEM', 'Dual Digital Transistorized Spark Ignition (2 Plugs/Cyl)'),
+                    ('FUEL DELIVERY', 'Dual High-Pressure Electric Pumps with Return Loop'),
+                    ('ALTITUDE SENSING', 'Barometric Air Density Automatic Closed-Loop Mapping'),
+                    ('FAULT TOLERANCE', 'Seamless Single-Lane Fallback with Zero Power Loss'),
+                    ('INTERFACES', 'Dual Redundant CAN Bus Channels to Flight Management System')
+                ],
+                'desc': "Fully redundant dual-lane Engine Management System (EMS915). Each independent lane possesses dedicated sensors, injection drivers, ignition timing maps, and servo wastegate controls. Synchronous cross-lane health checking guarantees bumpless failover within milliseconds of any detected anomaly."
+            }
+        },
         'faults': {
-            1: {'short': 'INTERCOOLER FOULING', 'comp': 'Charge Air Intercooler Core & Baffle', 'tag': 'MAJOR', 'parts': ['Cooling_Air_Baffle_M_PlasticWhite_0', 'Covers_Theme_M_PlasticGreen_0', 'Fittings_Metric_Rotax915_Extras_0'], 'center': mathutils.Vector((0.966, 38.400, -10.990)), 'angle': math.radians(-110.0), 'elevation': math.radians(28.0), 'distance': 125.0},
-            2: {'short': 'INJECTOR #1 CLOG', 'comp': 'Electronic Fuel Injector #1 (Lane A)', 'tag': 'MAJOR', 'parts': ['Rotax_912i_Base_M_PlasticGreen_0', 'Rotax_912i_Base_M_Steel_0'], 'center': mathutils.Vector((1.160, 61.687, -15.547)), 'angle': math.radians(-85.0), 'elevation': math.radians(34.0), 'distance': 115.0},
-            3: {'short': 'IGNITION MISFIRE', 'comp': 'Dual Spark Plug Harness & Coils', 'tag': 'MAJOR', 'parts': ['Wiring_Harness_M_Copper_0', 'Rotax_912i_Base_M_Copper_0'], 'center': mathutils.Vector((4.962, 69.016, -15.626)), 'angle': math.radians(-115.0), 'elevation': math.radians(30.0), 'distance': 120.0},
-            4: {'short': 'OIL PRESSURE LOSS', 'comp': 'Dry-Sump Reservoir & Scavenge Line', 'tag': 'CRITICAL', 'parts': ['Oil_Tank_M_Steel_0', 'Oil_Tank_M_Labels_0', 'Oil_Tank_M_Cobalt_0'], 'center': mathutils.Vector((-24.756, 105.824, -20.571)), 'angle': math.radians(135.0), 'elevation': math.radians(18.0), 'distance': 95.0},
-            5: {'short': 'GEARBOX VIBRATION', 'comp': 'Propeller Reduction Gearbox & Damper', 'tag': 'MINOR', 'parts': ['Gearbox_Type_2_M_Steel_0', 'Gearbox_Type_2_M_MetalPaintedBlack_0'], 'center': mathutils.Vector((0.966, 18.013, -12.264)), 'angle': math.radians(-90.0), 'elevation': math.radians(14.0), 'distance': 90.0},
-            6: {'short': 'CYL #2 OVERHEAT', 'comp': 'Cylinder #2 Head & Cooling Baffle', 'tag': 'CRITICAL', 'parts': ['Covers_Theme_M_PlasticTheme_0', 'Covers_Theme_M_PlasticGreen_0'], 'center': mathutils.Vector((0.966, 38.400, -10.990)), 'angle': math.radians(-140.0), 'elevation': math.radians(24.0), 'distance': 120.0},
-            7: {'short': 'ALTERNATOR SAG', 'comp': 'Heavy-Duty Alternator & Belt', 'tag': 'MINOR', 'parts': ['External_Alternator_M_Rotax914_Extras_0', 'External_Alternator_M_TimingBelt_0'], 'center': mathutils.Vector((6.560, 17.394, -8.662)), 'angle': math.radians(-35.0), 'elevation': math.radians(20.0), 'distance': 90.0},
-            8: {'short': 'DUAL FADEC DRIFT', 'comp': 'Lane A/B Dual FADEC ECU Assembly', 'tag': 'MINOR', 'parts': ['ECU_M_PlasticBlack_0', 'ECU_M_FuseLight_0'], 'center': mathutils.Vector((13.409, 97.572, -16.925)), 'angle': math.radians(80.0), 'elevation': math.radians(26.0), 'distance': 110.0},
+            1: {'short': 'INTERCOOLER FOULING', 'comp': 'Charge Air Intercooler Core & Baffle', 'tag': 'MAJOR', 'parts': ['Intercooler', 'Air baffles'], 'center': mathutils.Vector((-0.21, -0.09, -0.11)), 'angle': math.radians(90.0), 'elevation': math.radians(24.0), 'distance': 2.00},
+            2: {'short': 'OVERBOOST VALVE STICK', 'comp': 'Turbo Overboost Regulating Valve', 'tag': 'CRITICAL', 'parts': ['Overboost valve', 'Magnetovalve'], 'center': mathutils.Vector((-0.38, -0.37, 0.04)), 'angle': math.radians(180.0), 'elevation': math.radians(14.0), 'distance': 1.44}
         }
     },
     'austro_ae300': {
@@ -117,19 +430,118 @@ ENGINE_PROFILES = {
         'collection': 'Collection_Austro_AE300',
         'fuel_type': 'JET-A1 / DIESEL',
         'induction': 'CRDi TURBO DIESEL',
-        'default_center': mathutils.Vector((-0.014, 0.30, 0.04)),
-        'default_distance': 2.3,
+        'default_center': mathutils.Vector((0.530, 71.049, -33.915)),
+        'default_distance': 244.0,
         'default_elevation': math.radians(22.0),
+        'front_angle': math.radians(-90.0),
         'rpm_max': 3900.0,
+        'subsystems': {
+            1: {
+                'id': 1, 'key': '1',
+                'tag': 'STATION 01 // POWER TRANSMISSION',
+                'name': 'REDUCTION GEARBOX & FLYWHEEL',
+                'subtitle': 'INTEGRATED REDUCTION GEARBOX (i = 1.69:1) WITH DUAL-MASS FLYWHEEL',
+                'parts': ['Gearbox', 'Prop_Flange', 'Prop_Governor'],
+                'target': mathutils.Vector((2.430, 44.325, -34.225)),
+                'distance': 116.0,
+                'angle': math.radians(-90.0),
+                'elevation': math.radians(16.0),
+                'specs': [
+                    ('GEAR RATIO', 'Reduction Ratio i = 1.69 : 1 (Propeller RPM: 2,300)'),
+                    ('TORSIONAL DAMPER', 'Integrated Dual-Mass Flywheel & Spring Slipper Damper'),
+                    ('PROP GOVERNOR', 'Direct Hydraulic PCU Constant-Speed Governor Mount'),
+                    ('PROP FLANGE', 'ARP 502 / SAE Type Propeller Flange 8-Stud PCD'),
+                    ('LUBRICATION', 'Independent Gearbox Oil Circuit with Dedicated Cooler'),
+                    ('HOUSING', 'High-Integrity Cast Aluminum Case with Heavy Ribbing')
+                ],
+                'desc': "Integrated reduction gearbox with a ratio of 1.69:1 mated to a dual-mass torsional flywheel damper. Converts 3,880 RPM diesel crankshaft output into an efficient 2,300 RPM propeller drive. Features an isolated oil lubrication circuit and a direct-mount hydraulic constant-speed governor."
+            },
+            2: {
+                'id': 2, 'key': '2',
+                'tag': 'STATION 02 // COMMON RAIL INJECTION',
+                'name': '1,600 BAR CRDi FUEL SYSTEM',
+                'subtitle': 'BOSCH HIGH-PRESSURE FUEL DELIVERY & SOLENOID INJECTORS',
+                'parts': ['Common_Rail', 'HP_Fuel', 'Injector', 'Fuel_Line'],
+                'target': mathutils.Vector((14.900, 75.015, -16.388)),
+                'distance': 116.0,
+                'angle': math.radians(45.0),
+                'elevation': math.radians(28.0),
+                'specs': [
+                    ('RAIL PRESSURE', 'High-Pressure Accumulator Rail: 1,600 bar (23,200 PSI)'),
+                    ('HP FUEL PUMP', 'Engine-Driven Camshaft Radial-Piston High-Pressure Pump'),
+                    ('INJECTORS', 'Bosch Precision Multi-Hole Fast-Acting Solenoid Injectors'),
+                    ('PILOT INJECTION', 'Micro-Pilot Pre-Injection for Low Noise & Vibration'),
+                    ('FUEL SPILL LINE', 'Thermal Recirculation Cooling Circuit for Fuel Tank'),
+                    ('FUEL COMPATIBILITY', 'Jet-A, Jet-A1, JP-8, Diesel EN 590 Spec Compliant')
+                ],
+                'desc': "Bosch third-generation Common Rail Direct Injection (CRDi) operating at 1,600 bar (23,200 PSI). High-pressure radial pump supplies an accumulator rail feeding precision solenoid injectors capable of multiple pilot and main injections per stroke, enabling smooth diesel combustion with heavy kerosene-based Jet-A1 fuel."
+            },
+            3: {
+                'id': 3, 'key': '3',
+                'tag': 'STATION 03 // THERMAL EXHAUST',
+                'name': 'STAINLESS EXHAUST & HEAT BLANKET',
+                'subtitle': 'CAST STAINLESS EXHAUST COLLECTOR WITH HEAT SHIELD',
+                'parts': ['Exhaust_Downpipe', 'Exhaust_Manifold', 'Heat_Shield'],
+                'target': mathutils.Vector((-12.963, 67.183, -25.712)),
+                'distance': 104.0,
+                'angle': math.radians(-120.0),
+                'elevation': math.radians(12.0),
+                'specs': [
+                    ('EXHAUST MANIFOLD', 'Cast Stainless Exhaust Collector with Heat Blanket'),
+                    ('TIT LIMIT', 'Max Turbine Inlet Temp: 760°C (1,400°F) Continuous'),
+                    ('CYLINDER HEAD', 'High-Thermal Aluminum Alloy Head with Glow Plugs'),
+                    ('EXPANSION JOINTS', 'V-Band Clamp Coupling with Spherical Sealing'),
+                    ('MONITORING', 'CH-03 Turbine Inlet Temperature (TIT) Thermocouple'),
+                    ('INSULATION', 'Encapsulated Stainless Steel Thermal Heat Shield')
+                ],
+                'desc': "Heavy-duty cast stainless steel exhaust collector wrapped in custom stainless-encapsulated thermal insulation blankets. Preserves exhaust gas thermal energy into the turbocharger turbine wheel while restricting cowl bay temperatures to safe limits for airframe composite integrity."
+            },
+            4: {
+                'id': 4, 'key': '4',
+                'tag': 'STATION 04 // VGT TURBOCHARGER',
+                'name': 'VARIABLE GEOMETRY TURBOCHARGER',
+                'subtitle': 'CLOSED-LOOP BOOST MAPPING & INTERCOOLING',
+                'parts': ['Turbocharger_M', 'Intercooler', 'Boost_Pipe', 'Turbo_Coolant'],
+                'target': mathutils.Vector((-3.892, 68.242, -41.232)),
+                'distance': 156.0,
+                'angle': math.radians(-135.0),
+                'elevation': math.radians(22.0),
+                'specs': [
+                    ('TURBO TYPE', 'Garrett Variable Nozzle Turbine (VNT/VGT) Technology'),
+                    ('VANE ACTUATION', 'High-Speed Electronic Stepper Actuator Control'),
+                    ('BOOST PRESSURE', 'Max Boost MAP: 2.25 bar (32.6 PSI absolute)'),
+                    ('INTERCOOLER', 'High-Efficiency Aluminum Cross-Flow Charge Air Cooler'),
+                    ('COOLING', 'Water-Cooled Center Housing with Oil Film Bearings'),
+                    ('ALTITUDE MAPPING', 'Full Sea-Level Manifold Pressure to 14,000 ft AMSL')
+                ],
+                'desc': "Garrett Variable Geometry Turbocharger (VGT) with an electronically controlled variable nozzle vane pack. Continuously optimizes exhaust aspect ratio across the RPM spectrum, delivering instant boost response without turbo lag, achieving 2.25 bar absolute manifold pressure at altitude."
+            },
+            5: {
+                'id': 5, 'key': '5',
+                'tag': 'STATION 05 // DUAL LANE EECU',
+                'name': 'DUAL CHANNEL FADEC SYSTEM (EECU)',
+                'subtitle': 'SINGLE-LEVER POWER MANAGEMENT & BACKUP BATTERY',
+                'parts': ['ECU_Lane', 'Engine_Harness', 'ECU_Bayonet'],
+                'target': mathutils.Vector((-1.544, 76.552, -30.001)),
+                'distance': 148.0,
+                'angle': math.radians(65.0),
+                'elevation': math.radians(22.0),
+                'specs': [
+                    ('CONTROL CHANNELS', 'Dual Lane EECU (Lane A / Lane B Active-Standby)'),
+                    ('PILOT INTERFACE', 'Single-Power Lever (FADEC Computes Prop & Fuel RPM)'),
+                    ('GLOW PLUG UNIT', 'Ceramic High-Temperature Quick-Start Glow Plug Controller'),
+                    ('BACKUP POWER', 'Dual Isolated Engine Backup Batteries for Emergency Power'),
+                    ('CAN BUS COMMS', 'Redundant ARINC 429 / CANaerospace Avionics Interface'),
+                    ('HEALTH MONITOR', 'Microsecond Fault Detection with Auto-Failover Logic')
+                ],
+                'desc': "Aviation-certified dual-channel Electronic Engine Control Unit (EECU). Features single-lever power management: pilot or flight computer demands thrust percentage, and the FADEC automatically coordinates fuel quantity, rail pressure, VGT vane angle, and propeller blade pitch angle."
+            }
+        },
         'faults': {
-            1: {'short': 'COMMON RAIL PRESSURE', 'comp': 'High-Pressure Common Rail & Radial Pump', 'tag': 'CRITICAL', 'parts': ['Common_Rail_M_Steel_0', 'HP_Fuel_Pump_M_SteelDark_0', 'Fuel_Line_1_M_Steel_0', 'Fuel_Line_2_M_Steel_0', 'Fuel_Line_3_M_Steel_0', 'Fuel_Line_4_M_Steel_0', 'Rail_PLV_Valve_M_Steel_0'], 'center': mathutils.Vector((0.102, 0.300, 0.042)), 'angle': math.radians(55.0), 'elevation': math.radians(28.0), 'distance': 1.20},
-            2: {'short': 'CRDi INJECTOR #1', 'comp': 'CRDi Solenoid Injector #1 & Head', 'tag': 'CRITICAL', 'parts': ['Injector_1_M_Steel_0', 'Cylinder_Head_M_CastAluminium_0', 'Injector_Plugs_M_PlasticBlack_0', 'Injector_Hold_Downs_M_SteelDark_0'], 'center': mathutils.Vector((0.000, 0.293, 0.120)), 'angle': math.radians(35.0), 'elevation': math.radians(36.0), 'distance': 1.15},
-            3: {'short': 'VGT TURBO FOULING', 'comp': 'Variable Geometry Turbocharger & Intercooler', 'tag': 'MAJOR', 'parts': ['Turbocharger_M_TurboHousing_0', 'Intercooler_M_CastAluminium_0', 'Boost_Pipe_Hot_M_PolishedAlu_0', 'Boost_Pipe_Cold_M_PolishedAlu_0', 'Heat_Shield_Turbo_M_CrinkleFoil_0', 'Air_Intake_Duct_M_RubberDark_0'], 'center': mathutils.Vector((-0.050, 0.263, 0.057)), 'angle': math.radians(-115.0), 'elevation': math.radians(22.0), 'distance': 1.30},
-            4: {'short': 'OIL PRESSURE LOSS', 'comp': 'Lubrication Sump, Filter & Cooler Lines', 'tag': 'CRITICAL', 'parts': ['Oil_Filter_M_MetalPaintedBlack_0', 'Oil_Sump_M_CastAluminium_0', 'Oil_Cooler_M_CastAluminium_0', 'Turbo_Oil_Feed_Line_M_Steel_0', 'Turbo_Oil_Drain_Line_M_Steel_0'], 'center': mathutils.Vector((-0.031, 0.271, -0.016)), 'angle': math.radians(-45.0), 'elevation': math.radians(12.0), 'distance': 1.30},
-            5: {'short': 'DUAL EECS DRIFT', 'comp': 'Dual FADEC EECS Controller & Loom', 'tag': 'MAJOR', 'parts': ['ECU_Lane_A_M_MetalPaintedBlack_0', 'ECU_Lane_B_M_MetalPaintedBlack_0', 'Engine_Harness_Loom_M_PlasticBlack_0', 'ECU_Bayonet_Plugs_M_CastAluminium_0'], 'center': mathutils.Vector((-0.035, 0.328, 0.067)), 'angle': math.radians(80.0), 'elevation': math.radians(22.0), 'distance': 1.25},
-            6: {'short': 'GLOW PLUG CIRCUIT', 'comp': 'Cold-Start Glow Plug Preheater Array', 'tag': 'MINOR', 'parts': ['Glow_Plugs_M_Steel_0', 'Glow_Plug_Control_Unit_M_CastAluminium_0'], 'center': mathutils.Vector((-0.128, 0.365, 0.111)), 'angle': math.radians(-15.0), 'elevation': math.radians(35.0), 'distance': 0.95},
-            7: {'short': 'COOLANT CAVITATION', 'comp': 'High-Efficiency Coolant Pump & Hoses', 'tag': 'MAJOR', 'parts': ['Water_Pump_M_CastAluminium_0', 'Coolant_Hose_Red_M_RedSilicone_0', 'Coolant_Hose_Blue_M_BlueSilicone_0', 'Water_Pump_Inlet_Elbow_M_BlueSilicone_0'], 'center': mathutils.Vector((-0.049, 0.165, -0.070)), 'angle': math.radians(-85.0), 'elevation': math.radians(14.0), 'distance': 1.15},
-            8: {'short': 'GEARBOX VIBRATION', 'comp': 'Reduction Gearbox & PCU Prop Governor', 'tag': 'CRITICAL', 'parts': ['Gearbox_M_CastAluminium_0', 'Prop_Governor_PCU_M_CastAluminium_0', 'Prop_Flange_M_Steel_0', 'PCU_Oil_Line_M_Steel_0', 'Gearbox_Logo_M_CastAluminium_0'], 'center': mathutils.Vector((0.005, 0.093, 0.003)), 'angle': math.radians(-90.0), 'elevation': math.radians(16.0), 'distance': 1.10},
+            1: {'short': 'COMMON RAIL PRESSURE', 'comp': 'High-Pressure Common Rail & Radial Pump', 'tag': 'CRITICAL', 'parts': ['Common_Rail_M_Steel_0', 'HP_Fuel_Pump_M_SteelDark_0', 'Fuel_Line_1_M_Steel_0'], 'center': mathutils.Vector((14.91, 75.01, -16.39)), 'angle': math.radians(45.0), 'elevation': math.radians(28.0), 'distance': 112.0},
+            2: {'short': 'CRDi INJECTOR #1', 'comp': 'CRDi Solenoid Injector #1 & Head', 'tag': 'CRITICAL', 'parts': ['Injector_1_M_Steel_0', 'Cylinder_Head_M_CastAluminium_0'], 'center': mathutils.Vector((14.91, 75.01, -16.39)), 'angle': math.radians(35.0), 'elevation': math.radians(36.0), 'distance': 108.0},
+            3: {'short': 'VGT TURBO FOULING', 'comp': 'Variable Geometry Turbocharger & Intercooler', 'tag': 'MAJOR', 'parts': ['Turbocharger_M_TurboHousing_0', 'Intercooler_M_CastAluminium_0'], 'center': mathutils.Vector((-3.89, 68.24, -41.23)), 'angle': math.radians(-135.0), 'elevation': math.radians(22.0), 'distance': 128.0},
+            4: {'short': 'GEARBOX VIBRATION', 'comp': 'Reduction Gearbox & PCU Prop Governor', 'tag': 'CRITICAL', 'parts': ['Gearbox_M_CastAluminium_0', 'Prop_Governor_PCU_M_CastAluminium_0', 'Prop_Flange_M_Steel_0'], 'center': mathutils.Vector((2.43, 44.33, -34.22)), 'angle': math.radians(-90.0), 'elevation': math.radians(16.0), 'distance': 104.0}
         }
     },
     'vrde_jayem_2_2l': {
@@ -140,31 +552,129 @@ ENGINE_PROFILES = {
         'collection': 'Collection_VRDE_2_2L',
         'fuel_type': 'JET-A1 / DIESEL',
         'induction': 'CRDi TWIN TURBO DIESEL',
-        'default_center': mathutils.Vector((0.00, 0.11, 0.00)),
-        'default_distance': 2.6,
-        'default_elevation': math.radians(24.0),
+        'default_center': mathutils.Vector((1.905, 93.925, -30.801)),
+        'default_distance': 248.0,
+        'default_elevation': math.radians(22.0),
+        'front_angle': math.radians(-90.0),
         'rpm_max': 4200.0,
+        'subsystems': {
+            1: {
+                'id': 1, 'key': '1',
+                'tag': 'STATION 01 // POWER TRANSMISSION',
+                'name': 'PROP REDUCTION GEARBOX & FRONT COVER',
+                'subtitle': 'INDIGENOUS REDUCTION GEARBOX (i = 1.69:1) WITH PROPELLER GOVERNOR',
+                'parts': ['Gearbox', 'Prop_Flange', 'Prop_Boss', 'GB_'],
+                'target': mathutils.Vector((1.730, 64.700, -33.818)),
+                'distance': 116.0,
+                'angle': math.radians(-90.0),
+                'elevation': math.radians(16.0),
+                'specs': [
+                    ('GEAR RATIO', 'Reduction Ratio i = 1.69 : 1 (Propeller RPM: 2,485)'),
+                    ('PROPELLER BOSS', 'High-Strength Forged Aluminum 8-Stud Aircraft Pattern'),
+                    ('INTEGRATED GOVERNOR', 'Direct-Drive Constant-Speed Hydraulic PCU Unit'),
+                    ('BEARING PACK', 'Dual Angular Contact Heavy-Duty Thrust Bearings'),
+                    ('DESIGN ORIGIN', 'Indigenous DRDO / VRDE Aerospace Geartrain Architecture'),
+                    ('LUBRICATION', 'High-Flow Pressurized Gear Scavenge Circuit')
+                ],
+                'desc': "Indigenous aircraft propeller reduction gearbox developed by DRDO VRDE and Jayem Automotives for the TAPAS BH-201 UAV. Features a 1.69:1 reduction ratio with dual heavy-duty angular contact thrust bearings and an integrated constant-speed propeller governor mount."
+            },
+            2: {
+                'id': 2, 'key': '2',
+                'tag': 'STATION 02 // COMMON RAIL INJECTION',
+                'name': '1,800 BAR CRDi COMMON RAIL & INJECTORS',
+                'subtitle': 'HIGH-PRESSURE ACCUMULATOR & FAST-ACTING SOLENOID BANK',
+                'parts': ['Common_Rail', 'HP_Fuel', 'Injector', 'Fuel_Line'],
+                'target': mathutils.Vector((-5.695, 103.000, -9.300)),
+                'distance': 108.0,
+                'angle': math.radians(45.0),
+                'elevation': math.radians(32.0),
+                'specs': [
+                    ('RAIL PRESSURE', 'Accumulator Rail Operating Pressure: 1,800 bar (26,100 PSI)'),
+                    ('HP PUMP', 'Camshaft-Driven Radial 3-Piston High Pressure Pump'),
+                    ('SOLENOID INJECTORS', 'High-Response Micro-Pilot Solenoid Fuel Injectors'),
+                    ('MULTI-INJECTION', 'Up to 5 Injections per Cycle for Smooth Combustion'),
+                    ('FUEL COMPATIBILITY', 'Aviation Turbine Fuel (Jet-A1 / JP-8 / Indian HSD)'),
+                    ('TEMPERATURE LIMIT', 'Integrated Return Fuel Cooler Circuit')
+                ],
+                'desc': "1,800 bar (26,100 PSI) Common Rail Direct Injection architecture calibrated for Indian defense aviation fuels (Aviation Turbine Fuel Jet-A1, JP-8, and military high-speed diesel). Fast-acting solenoid injectors execute up to 5 injection events per power stroke to suppress pressure spikes and diesel clatter."
+            },
+            3: {
+                'id': 3, 'key': '3',
+                'tag': 'STATION 03 // TWO-STAGE BOOST',
+                'name': 'TWO-STAGE TWIN TURBO & WASTEGATES',
+                'subtitle': 'REGULATED TWO-STAGE TURBOCHARGER WITH ANODIZED WASTEGATES',
+                'parts': ['Turbo_', 'Wastegate_', 'Exhaust_'],
+                'target': mathutils.Vector((22.157, 101.328, -31.227)),
+                'distance': 116.0,
+                'angle': math.radians(30.0),
+                'elevation': math.radians(20.0),
+                'specs': [
+                    ('TURBO CONFIG', 'Two-Stage Regulated Turbocharging (HP Low-End + LP High-End)'),
+                    ('WASTEGATE ACTUATOR', 'Dual Red Anodized High-Precision Pneumatic Canisters'),
+                    ('MAX BOOST LIMIT', 'Absolute Manifold Pressure: 2.85 bar (41.3 PSI)'),
+                    ('ALTITUDE CEILING', 'Full 180 HP Maintained up to 25,000 ft AMSL for TAPAS UAV'),
+                    ('EXHAUST COLLECTOR', 'Heat-Tinted Fabricated Stainless Scavenging Runners'),
+                    ('INTERSTAGE PIPE', 'Seamless High-Nickel Inconel Inter-Turbine Ducting')
+                ],
+                'desc': "Regulated two-stage serial turbocharging system consisting of a small high-pressure turbocharger for immediate low-RPM response and a large low-pressure turbocharger for high-altitude density recovery. Delivers an aggressive 2.85 bar absolute manifold pressure, maintaining full 180 HP power up to 25,000 ft AMSL."
+            },
+            4: {
+                'id': 4, 'key': '4',
+                'tag': 'STATION 04 // STRUCTURAL & LUBRICATION',
+                'name': 'INDIGENOUS BLOCK, SUMP & OIL SCAVENGE',
+                'subtitle': 'CAST ALUMINUM CRANKCASE WITH DRY-SUMP OIL DISTRIBUTION',
+                'parts': ['Engine_Block', 'Oil_Filter', 'Oil_Sump', 'Dipstick'],
+                'target': mathutils.Vector((-1.894, 100.450, -42.050)),
+                'distance': 136.0,
+                'angle': math.radians(-135.0),
+                'elevation': math.radians(10.0),
+                'specs': [
+                    ('BLOCK MATERIAL', 'Cast High-Strength Heat-Treated Aluminum Alloy Monoblock'),
+                    ('DISPLACEMENT', '2,179 cc (2.2L) Inline 4-Cylinder Aerospace Diesel'),
+                    ('LUBRICATION', 'High-Capacity Multi-Stage Trochoid Oil Scavenge Pump'),
+                    ('OIL COOLING', 'Integrated Aluminum Oil-to-Coolant Plate Heat Exchanger'),
+                    ('CYLINDER HEAD', 'Cross-Flow 16-Valve DOHC with Hydraulic Lash Adjusters'),
+                    ('CRANKSHAFT', 'Forged Chrome-Moly Steel with Deep Nitride Hardening')
+                ],
+                'desc': "Cast high-strength heat-treated aluminum alloy monoblock crankcase engineered for extreme structural stiffness. Equipped with a dry-sump multi-stage trochoid oil scavenge pump system that guarantees uninterrupted positive lubrication during steep climb, dive, and banked turn maneuvers."
+            },
+            5: {
+                'id': 5, 'key': '5',
+                'tag': 'STATION 05 // DUAL FADEC & AVIONICS',
+                'name': 'DRDO DUAL-REDUNDANT FADEC & HARNESS',
+                'subtitle': 'INDIGENOUS FULL-AUTHORITY DIGITAL ENGINE CONTROLLER',
+                'parts': ['ECU_Lane', 'Harness_Spine', 'Harness_P'],
+                'target': mathutils.Vector((1.151, 105.682, -25.327)),
+                'distance': 160.0,
+                'angle': math.radians(75.0),
+                'elevation': math.radians(20.0),
+                'specs': [
+                    ('FADEC ARCHITECTURE', 'Dual Redundant Lanes (Lane A / Lane B Dual Hot-Standby)'),
+                    ('FAIL-OPERATIONAL', 'Single-Lane Fail-Safe Transition with Zero Thrust Dip'),
+                    ('HARNESS SPINE', 'MIL-DTL-38999 Ruggedized Aerospace Shielded Wiring Loom'),
+                    ('UAV INTERFACE', 'MIL-STD-1553B / STANAG 4586 GCS Datalink Interface'),
+                    ('DIAGNOSTICS', 'Physics-Informed Causal Fault Tree Active (DRDO PS-26054)'),
+                    ('RUL ESTIMATION', 'Embedded Prognostic Remaining Useful Life Filter > 2,400h')
+                ],
+                'desc': "Indigenous dual-lane Full Authority Digital Engine Controller (FADEC) developed specifically for DRDO UAV requirements. Dual isolated microcontroller cores continuously compare sensor plausibility and control health. Interfaced directly via MIL-STD-1553B avionics bus to the TAPAS flight control computer."
+            }
+        },
         'faults': {
-            1: {'short': 'CRDi INJECTOR COKING', 'comp': 'CRDi Common Rail & Injector Bank 1-4', 'tag': 'CRITICAL', 'parts': ['Common_Rail_M_Steel_0.001', 'HP_Fuel_Pump_M_SteelDark_0.001', 'Injector_1_M_Steel_0.001', 'Injector_2_M_Steel_0.001', 'Injector_3_M_Steel_0.001', 'Injector_4_M_Steel_0.001', 'Fuel_Line_HP_Cyl1_M_Stainless_0', 'Fuel_Line_HP_Cyl2_M_Stainless_0'], 'center': mathutils.Vector((-0.026, 0.198, 0.090)), 'angle': math.radians(45.0), 'elevation': math.radians(32.0), 'distance': 1.25},
-            2: {'short': 'TURBO WASTEGATE', 'comp': 'Two-Stage Turbocharger & Red Wastegate', 'tag': 'CRITICAL', 'parts': ['Wastegate_Actuator_Red_M_AnodizedRed_0', 'Wastegate_Actuator_Canister_M_PlasticBlack_0', 'Wastegate_Rod_Red_M_Stainless_0', 'Intercooler_M_CastAluminium_0.001', 'Exhaust_Downpipe_M_Stainless_0', 'Exhaust_Collector_M_HeatTintedSteel_0'], 'center': mathutils.Vector((0.039, 0.297, 0.062)), 'angle': math.radians(-110.0), 'elevation': math.radians(20.0), 'distance': 1.30},
-            3: {'short': 'HP PUMP CAVITATION', 'comp': 'High Pressure Fuel Pump & Leak-off Rail', 'tag': 'MAJOR', 'parts': ['HP_Fuel_Pump_M_SteelDark_0.001', 'Fuel_Return_LeakOff_Rail_M_Stainless_0', 'Fuel_Hose_ASAK_Feed_M_BraidedSilver_0'], 'center': mathutils.Vector((-0.070, 0.305, 0.095)), 'angle': math.radians(65.0), 'elevation': math.radians(24.0), 'distance': 1.35},
-            4: {'short': 'LUBRICATION SCAVENGE', 'comp': 'Heavy Duty Block, Sump & Oil Filter', 'tag': 'CRITICAL', 'parts': ['Engine_Block_M_CastAluminium_0.001', 'Oil_Filter', 'Dipstick_Tube_M_Steel_0', 'Cylinder_Head_M_CastAluminium_0.001'], 'center': mathutils.Vector((0.000, 0.315, 0.040)), 'angle': math.radians(-35.0), 'elevation': math.radians(10.0), 'distance': 1.40},
-            5: {'short': 'DUAL FADEC HARNESS', 'comp': 'DRDO Dual Redundant FADEC & Spine', 'tag': 'MAJOR', 'parts': ['ECU_Lane_A_M_MetalPaintedBlack_0.001', 'ECU_Lane_B_M_MetalPaintedBlack_0.001', 'Harness_Spine_M_PlasticBlack_0'], 'center': mathutils.Vector((0.018, 0.007, 0.000)), 'angle': math.radians(75.0), 'elevation': math.radians(20.0), 'distance': 1.15},
-            6: {'short': 'EXHAUST MANIFOLD', 'comp': 'Stainless Exhaust Downpipe & Collector', 'tag': 'MINOR', 'parts': ['Exhaust_Downpipe_M_Stainless_0', 'Exhaust_Collector_M_HeatTintedSteel_0', 'Intake_Manifold_M_CastAluminium_0.001'], 'center': mathutils.Vector((-0.005, 0.472, 0.117)), 'angle': math.radians(-65.0), 'elevation': math.radians(24.0), 'distance': 1.15},
-            7: {'short': 'COOLING JACKET', 'comp': 'High Flow Coolant Jacket & Water Pump', 'tag': 'MAJOR', 'parts': ['Water_Pump_M_CastAluminium_0.001', 'Coolant_Pipe_Junction_M_CastAluminium_0', 'Coolant_Hose_Upper_M_BlueSilicone_0'], 'center': mathutils.Vector((0.001, -0.050, -0.020)), 'angle': math.radians(-135.0), 'elevation': math.radians(15.0), 'distance': 1.20},
-            8: {'short': 'GLOW PLUG RESISTANCE', 'comp': 'Ceramic Glow Plug Array 1-4', 'tag': 'MINOR', 'parts': ['Glow_Plug_Cyl1_M_Steel_0', 'Glow_Plug_Cyl2_M_Steel_0', 'Glow_Plug_Cyl3_M_Steel_0', 'Glow_Plug_Cyl4_M_Steel_0'], 'center': mathutils.Vector((-0.030, 0.220, 0.120)), 'angle': math.radians(20.0), 'elevation': math.radians(40.0), 'distance': 1.05},
+            1: {'short': 'CRDi COMMON RAIL LEAK', 'comp': '1800-bar Accumulator Rail & Feed Line', 'tag': 'CRITICAL', 'parts': ['Common_Rail_M_Steel_0', 'HP_Fuel_Pump_M_SteelDark_0'], 'center': mathutils.Vector((-5.70, 103.00, -9.30)), 'angle': math.radians(45.0), 'elevation': math.radians(32.0), 'distance': 104.0},
+            2: {'short': 'TWIN TURBO BOOST DROP', 'comp': 'Two-Stage Twin Turbocharger & Wastegate', 'tag': 'CRITICAL', 'parts': ['Turbo_HP_M_CastIron_0', 'Wastegate_Actuator_M_AnodizedRed_0'], 'center': mathutils.Vector((22.16, 101.33, -31.23)), 'angle': math.radians(30.0), 'elevation': math.radians(20.0), 'distance': 116.0},
+            3: {'short': 'GEARBOX VIBRATION', 'comp': 'Propeller Reduction Gearbox Front', 'tag': 'MAJOR', 'parts': ['Gearbox_Cover_M_CastAluminium_0', 'Prop_Flange_M_Steel_0'], 'center': mathutils.Vector((1.73, 64.70, -33.82)), 'angle': math.radians(-90.0), 'elevation': math.radians(16.0), 'distance': 116.0}
         }
     }
 }
 
 ACTIVE_ENGINE_ID = INITIAL_ENGINE_ID if INITIAL_ENGINE_ID in ENGINE_PROFILES else 'rotax_912is'
 ENGINE_PROFILE = ENGINE_PROFILES[ACTIVE_ENGINE_ID]
-FAULT_DATABASE = ENGINE_PROFILE['faults']
+FAULT_DATABASE = ENGINE_PROFILE.get('faults', {})
 
-ENGINE_CENTER = ENGINE_PROFILE['default_center']
+ENGINE_CENTER = ENGINE_PROFILE['default_center'].copy()
 DEFAULT_ORBIT_DISTANCE = ENGINE_PROFILE['default_distance']
 DEFAULT_ORBIT_ELEVATION = ENGINE_PROFILE['default_elevation']
-DEFAULT_ORBIT_SPEED = math.radians(22.5)
+DEFAULT_ORBIT_SPEED = math.radians(18.0)  # Smooth 360-deg turntable orbit: 18 deg/s (20s per full circle)
 
 STATE_ENDPOINT = f"{SERVER_BASE_URL}/api/engines/{ACTIVE_ENGINE_ID}/state"
 LEGACY_STATE_ENDPOINT = f"{SERVER_BASE_URL}/api/state"
@@ -184,10 +694,18 @@ class DigitalTwinClientState:
         self.engine_id = ACTIVE_ENGINE_ID
         self.engine_profile = ENGINE_PROFILE
         
-        self.sortie_id = "SORTIE-OFFLINE"
+        self.sortie_id = "SORTIE-DRDO-26054"
         self.is_engine_running = True
         self.active_commanded_fault_id = 0
         self.active_commanded_fault_name = "NOMINAL"
+        
+        # Subsystem Technical Showcase Inspector state
+        self.active_subsystem_id = 0
+        self.intro_start_time = time.time()
+        self.intro_duration = 2.5
+        self.intro_title = ENGINE_PROFILE['title']
+        self.intro_subtitle = ENGINE_PROFILE['subtitle']
+        self.subsystem_leader_screen_pos = None
         
         self.telemetry = {
             'ENGINE_RPM': 4680.0, 'PROP_RPM': 1926.0, 'TPS': 72.0,
@@ -213,12 +731,12 @@ class DigitalTwinClientState:
             'ata_chapter': 'ATA 00-00',
             'subsystem': 'PROPULSION_CORE',
             'severity': 'NORMAL',
-            'root_cause': 'Waiting for server connection...',
-            'prescriptive_action': 'Start backend server on port 8000.',
+            'root_cause': 'Autonomous aerospace digital twin active.',
+            'prescriptive_action': 'Maintain standard cruise operational profile.',
             'emergency_checklist': [],
-            'maintenance_order': 'No maintenance required.',
+            'maintenance_order': 'Routine pre-flight visual inspection nominal.',
             'go_no_go': 'GO',
-            'go_no_go_reason': 'Ready.',
+            'go_no_go_reason': 'All subsystems nominal.',
             'rul_p10_hours': 14.2,
             'rul_p50_hours': 18.0,
             'early_warning_trend': None,
@@ -244,8 +762,8 @@ class DigitalTwinClientState:
         
         self.active_tab = "3D ENGINE"
         
-        self.orbit_angle = -1.2
-        self.target_orbit_angle = -1.2
+        self.orbit_angle = ENGINE_PROFILE.get('front_angle', -1.57)
+        self.target_orbit_angle = ENGINE_PROFILE.get('front_angle', -1.57)
         self.orbit_elevation = DEFAULT_ORBIT_ELEVATION
         self.target_orbit_elevation = DEFAULT_ORBIT_ELEVATION
         self.orbit_distance = DEFAULT_ORBIT_DISTANCE
@@ -274,7 +792,7 @@ client_state = DigitalTwinClientState()
 
 
 class TelemetryReceiverThread(threading.Thread):
-    """Background daemon thread fetching 20 Hz state from Multi-Engine Backend."""
+    """Background daemon thread fetching 20 Hz state from Backend, with smooth offline synthesis."""
     def __init__(self):
         super().__init__(daemon=True)
         self.is_running = True
@@ -307,13 +825,11 @@ class TelemetryReceiverThread(threading.Thread):
                 client_state.active_commanded_fault_id = data.get('active_commanded_fault_id', client_state.active_commanded_fault_id)
                 client_state.active_commanded_fault_name = data.get('active_commanded_fault_name', client_state.active_commanded_fault_name)
                 
-                # 1. Direct telemetry dictionary
                 if 'telemetry' in data and isinstance(data['telemetry'], dict):
                     client_state.telemetry.update(data['telemetry'])
                 elif 'state' in data and isinstance(data['state'], dict):
                     client_state.telemetry.update(data['state'])
                     
-                # 2. Canonical channels mapping from EngineRuntime Frame
                 if 'channels' in data and isinstance(data['channels'], dict):
                     ch = data['channels']
                     if 'rpm' in ch: client_state.telemetry['ENGINE_RPM'] = float(ch['rpm'])
@@ -333,30 +849,30 @@ class TelemetryReceiverThread(threading.Thread):
                         if f'cht_{k}' in ch: client_state.telemetry[f'CHT_{k}'] = float(ch[f'cht_{k}'])
                         if f'egt_{k}' in ch: client_state.telemetry[f'EGT_{k}'] = float(ch[f'egt_{k}'])
 
-                if 'cht' in data and isinstance(data['cht'], list):
-                    for idx, v in enumerate(data['cht'], 1):
-                        client_state.telemetry[f'CHT_{idx}'] = float(v)
-                if 'egt' in data and isinstance(data['egt'], list):
-                    for idx, v in enumerate(data['egt'], 1):
-                        client_state.telemetry[f'EGT_{idx}'] = float(v)
-
-                # 3. Direct analytics dictionary
                 if 'analytics' in data and isinstance(data['analytics'], dict):
                     client_state.analytics.update(data['analytics'])
-                    
-                # 4. Canonical detection & heavy scores mapping
-                if 'detection' in data and data['detection']:
-                    det = data['detection']
-                    scores = det.get('scores', {})
-                    if scores:
-                        client_state.analytics['residuals'] = scores
-                        client_state.analytics['anomaly_score'] = max([float(s) for s in scores.values()] + [0.0])
-                    if det.get('confirmed'):
-                        top = det.get('top_channels', [])
-                        if top:
-                            client_state.analytics['root_cause'] = f"Physics residual anomaly detected on: {', '.join(top[:3])}"
             else:
-                if time.time() - client_state.last_packet_time > 0.6:
+                # Offline fallback: Synthesize smooth realistic telemetry
+                now = time.time()
+                t_sin = math.sin(now * 1.2)
+                t_cos = math.cos(now * 0.8)
+                is_diesel = ('austro' in client_state.engine_id or 'vrde' in client_state.engine_id)
+                base_rpm = 3800.0 if is_diesel else 4800.0
+                
+                client_state.telemetry['ENGINE_RPM'] = base_rpm + 35.0 * t_sin
+                client_state.telemetry['PROP_RPM'] = (client_state.telemetry['ENGINE_RPM'] / 2.43)
+                client_state.telemetry['TPS'] = 72.0 + 1.5 * t_cos
+                client_state.telemetry['OIL_PRESS'] = 4.85 + 0.08 * t_sin
+                client_state.telemetry['OIL_TEMP'] = 58.0 + 0.4 * t_cos
+                client_state.telemetry['FUEL_FLOW'] = 11.2 + 0.2 * t_sin
+                client_state.telemetry['MAP'] = 39.0 + 0.4 * t_cos
+                client_state.telemetry['BUS_VOLTAGE'] = 28.2 if is_diesel else 14.1
+                client_state.telemetry['FUEL_RAIL_P'] = 1600.0 if is_diesel else 3.0
+                for k in range(1, 5):
+                    client_state.telemetry[f'CHT_{k}'] = 95.0 + (k * 1.5) + 0.8 * t_sin
+                    client_state.telemetry[f'EGT_{k}'] = 780.0 + (k * 3.0) + 2.0 * t_cos
+
+                if now - client_state.last_packet_time > 1.0:
                     client_state.is_connected = False
             
             time.sleep(0.020)
@@ -368,19 +884,29 @@ def send_server_command(action: str, **kwargs):
         payload = {"action": action, **kwargs}
         fid = kwargs.get("fault_id", 0)
         
-        # Local client optimistic state update
         if action == "SET_FAULT":
             client_state.active_commanded_fault_id = fid
             f_meta = FAULT_DATABASE.get(fid, {})
-            client_state.active_commanded_fault_name = f_meta.get('short', f'FAULT_{fid}')
+            client_state.active_commanded_fault_name = f_meta.get("short", "UNKNOWN_FAULT")
+            if fid in FAULT_DATABASE:
+                finfo = FAULT_DATABASE[fid]
+                client_state.target_orbit_angle = finfo.get('angle', client_state.orbit_angle)
+                client_state.target_orbit_elevation = finfo.get('elevation', DEFAULT_ORBIT_ELEVATION)
+                client_state.target_orbit_distance = finfo.get('distance', DEFAULT_ORBIT_DISTANCE * 0.75)
+                client_state.cam_target = finfo.get('center', ENGINE_CENTER).copy()
+                client_state.is_auto_orbit = False
+                
         elif action == "CLEAR_FAULT":
             client_state.active_commanded_fault_id = 0
             client_state.active_commanded_fault_name = "NOMINAL"
-            
-        dyn_control = f"{SERVER_BASE_URL}/api/engines/{client_state.engine_id}/faults"
-        for endpoint in [dyn_control, LEGACY_CONTROL_ENDPOINT]:
+            client_state.target_orbit_elevation = DEFAULT_ORBIT_ELEVATION
+            client_state.target_orbit_distance = DEFAULT_ORBIT_DISTANCE
+            client_state.cam_target = ENGINE_CENTER.copy()
+            client_state.is_auto_orbit = True
+
+        for endpoint in [CONTROL_ENDPOINT, LEGACY_CONTROL_ENDPOINT]:
             try:
-                if action == "CLEAR_FAULT" and "/faults" in endpoint:
+                if action == "CLEAR_FAULT":
                     req = urllib.request.Request(endpoint, method='DELETE')
                 else:
                     req = urllib.request.Request(
@@ -395,29 +921,14 @@ def send_server_command(action: str, **kwargs):
     threading.Thread(target=_worker, daemon=True).start()
 
 
-def compute_engine_bounds(fallback_center=None, fallback_distance=None):
-    """Dynamically computes the bounding center and orbit distance for the currently visible 3D engine mesh model."""
-    mesh_objs = [o for o in bpy.data.objects if o.type == 'MESH' and not o.hide_viewport]
-    if not mesh_objs:
-        return fallback_center or mathutils.Vector((0.0, 0.0, 0.0)), fallback_distance or 200.0
-    
-    min_co = mathutils.Vector((float('inf'), float('inf'), float('inf')))
-    max_co = mathutils.Vector((float('-inf'), float('-inf'), float('-inf')))
-    
-    for obj in mesh_objs:
-        for corner in obj.bound_box:
-            world_corner = obj.matrix_world @ mathutils.Vector(corner)
-            min_co.x = min(min_co.x, world_corner.x)
-            min_co.y = min(min_co.y, world_corner.y)
-            min_co.z = min(min_co.z, world_corner.z)
-            max_co.x = max(max_co.x, world_corner.x)
-            max_co.y = max(max_co.y, world_corner.y)
-            max_co.z = max(max_co.z, world_corner.z)
-            
-    center = (min_co + max_co) * 0.5
-    size = (max_co - min_co).length
-    dist = max(1.5, size * 1.35)
-    return center, dist
+def get_mw(obj):
+    """Evaluates true world matrix taking parent/basis into account for CAD imports."""
+    mw = obj.matrix_world.copy()
+    if mw.to_translation().length_squared < 1e-4 and obj.location.length_squared > 1e-4:
+        if obj.parent:
+            return get_mw(obj.parent) @ obj.matrix_basis
+        return obj.matrix_basis.copy()
+    return mw
 
 
 def switch_engine_collection(engine_id: str):
@@ -433,19 +944,21 @@ def switch_engine_collection(engine_id: str):
                 col.hide_viewport = not is_active
                 col.hide_render = not is_active
                 for obj in col.objects:
-                    obj.hide_viewport = not is_active
-                    obj.hide_render = not is_active
+                    if obj is not None and hasattr(obj, 'hide_viewport'):
+                        obj.hide_viewport = not is_active
+                        obj.hide_render = not is_active
+    bpy.context.view_layer.update()
 
 
 def switch_engine(engine_id: str):
-    """Seamlessly switches active engine context in real-time."""
+    """Seamlessly switches active engine context in real-time with smooth camera intro."""
     global ACTIVE_ENGINE_ID, ENGINE_PROFILE, FAULT_DATABASE, ENGINE_CENTER, DEFAULT_ORBIT_DISTANCE, DEFAULT_ORBIT_ELEVATION
     if engine_id not in ENGINE_PROFILES:
         return
     
     ACTIVE_ENGINE_ID = engine_id
     ENGINE_PROFILE = ENGINE_PROFILES[engine_id]
-    FAULT_DATABASE = ENGINE_PROFILE['faults']
+    FAULT_DATABASE = ENGINE_PROFILE.get('faults', {})
     
     client_state.engine_id = engine_id
     client_state.engine_profile = ENGINE_PROFILE
@@ -453,15 +966,33 @@ def switch_engine(engine_id: str):
     # 1. Toggle 3D mesh collection visibility
     switch_engine_collection(engine_id)
     
-    # Initialize baseline nominal telemetry for electrical & fuel system scale
-    if 'rotax' in engine_id:
-        client_state.telemetry['BUS_VOLTAGE'] = 14.1
-        client_state.telemetry['FUEL_RAIL_P'] = 3.0
-    else:
-        client_state.telemetry['BUS_VOLTAGE'] = 28.2
-        client_state.telemetry['FUEL_RAIL_P'] = 1600.0
+    # 2. Reset Subsystem Inspection & Restore authentic 100% solid materials
+    clear_subsystem_inspection()
     
-    # 2. Notify backend server
+    # 3. Dynamic camera bounds calibration
+    ENGINE_CENTER = ENGINE_PROFILE['default_center'].copy()
+    DEFAULT_ORBIT_DISTANCE = ENGINE_PROFILE['default_distance']
+    DEFAULT_ORBIT_ELEVATION = ENGINE_PROFILE['default_elevation']
+    
+    client_state.cam_target = ENGINE_CENTER.copy()
+    client_state.cur_cam_target = ENGINE_CENTER.copy()
+    client_state.orbit_distance = DEFAULT_ORBIT_DISTANCE
+    client_state.target_orbit_distance = DEFAULT_ORBIT_DISTANCE
+    client_state.orbit_elevation = DEFAULT_ORBIT_ELEVATION
+    client_state.target_orbit_elevation = DEFAULT_ORBIT_ELEVATION
+    client_state.is_auto_orbit = True
+    
+    # 4. Engine Intro Reveal Animation (smooth sweeping orbit entry from front angle)
+    front_ang = ENGINE_PROFILE.get('front_angle', -1.57)
+    client_state.intro_start_time = time.time()
+    client_state.intro_title = ENGINE_PROFILE['title']
+    client_state.intro_subtitle = ENGINE_PROFILE['subtitle']
+    client_state.orbit_angle = (front_ang - math.pi * 0.75) % (2 * math.pi)
+    client_state.orbit_elevation = DEFAULT_ORBIT_ELEVATION + 0.15
+    client_state.target_orbit_angle = front_ang
+    client_state.target_orbit_elevation = DEFAULT_ORBIT_ELEVATION
+    
+    # 5. Notify backend server
     def _notify():
         try:
             req = urllib.request.Request(
@@ -473,36 +1004,252 @@ def switch_engine(engine_id: str):
         except Exception:
             pass
     threading.Thread(target=_notify, daemon=True).start()
-    
-    # 3. Dynamic camera bounds calculation & scale adaptation
-    center, dist = compute_engine_bounds(ENGINE_PROFILE['default_center'], ENGINE_PROFILE['default_distance'])
-    ENGINE_CENTER = center
-    DEFAULT_ORBIT_DISTANCE = dist
-    DEFAULT_ORBIT_ELEVATION = ENGINE_PROFILE['default_elevation']
-    
-    client_state.cam_target = ENGINE_CENTER.copy()
-    client_state.cur_cam_target = ENGINE_CENTER.copy()
-    client_state.orbit_distance = DEFAULT_ORBIT_DISTANCE
-    client_state.target_orbit_distance = DEFAULT_ORBIT_DISTANCE
-    client_state.orbit_elevation = DEFAULT_ORBIT_ELEVATION
-    client_state.target_orbit_elevation = DEFAULT_ORBIT_ELEVATION
-    client_state.is_auto_orbit = True
-    
-    cx = ENGINE_CENTER.x + DEFAULT_ORBIT_DISTANCE * math.cos(client_state.orbit_angle) * math.cos(DEFAULT_ORBIT_ELEVATION)
-    cy = ENGINE_CENTER.y + DEFAULT_ORBIT_DISTANCE * math.sin(client_state.orbit_angle) * math.cos(DEFAULT_ORBIT_ELEVATION)
-    cz = ENGINE_CENTER.z + DEFAULT_ORBIT_DISTANCE * math.sin(DEFAULT_ORBIT_ELEVATION)
-    client_state.cur_cam_pos = mathutils.Vector((cx, cy, cz))
-    
-    client_state.applied_fault_id = -1
-    if hasattr(update_camera_for_backend_fault, "_last_state_key"):
-        delattr(update_camera_for_backend_fault, "_last_state_key")
-    
-    save_original_materials()
-    apply_material_state()
 
 
 # ==============================================================================
-# 2. 2D HUD GPU DRAWING ENGINE
+# 2. BLENDER SCENE & SHADER CONTROLLER (GHOST & SUBSYSTEM ISOLATION)
+# ==============================================================================
+
+ORIGINAL_PBR_MATERIALS = {}
+
+def ensure_ghost_materials():
+    """Ensure reusable Holographic Ghost Vision and Fault Red materials exist."""
+    ghost_mat = bpy.data.materials.get('M_GhostVision_XRay')
+    if not ghost_mat:
+        ghost_mat = bpy.data.materials.new(name='M_GhostVision_XRay')
+        ghost_mat.use_nodes = True
+        ghost_mat.use_fake_user = True
+        bsdf = ghost_mat.node_tree.nodes.get('Principled BSDF')
+        if bsdf:
+            bsdf.inputs['Base Color'].default_value = (0.05, 0.60, 0.90, 1.0)
+            if 'Alpha' in bsdf.inputs:
+                bsdf.inputs['Alpha'].default_value = 0.20
+            if 'Transmission' in bsdf.inputs:
+                bsdf.inputs['Transmission'].default_value = 0.85
+            elif 'Transmission Weight' in bsdf.inputs:
+                bsdf.inputs['Transmission Weight'].default_value = 0.85
+            if 'Roughness' in bsdf.inputs:
+                bsdf.inputs['Roughness'].default_value = 0.15
+            if 'Emission Color' in bsdf.inputs:
+                bsdf.inputs['Emission Color'].default_value = (0.0, 0.75, 1.0, 1.0)
+                bsdf.inputs['Emission Strength'].default_value = 0.50
+        if hasattr(ghost_mat, 'blend_method'):
+            ghost_mat.blend_method = 'HASHED'
+        if hasattr(ghost_mat, 'shadow_method'):
+            ghost_mat.shadow_method = 'NONE'
+
+    fault_mat = bpy.data.materials.get('M_Fault_RedHighlight')
+    if not fault_mat:
+        fault_mat = bpy.data.materials.new(name='M_Fault_RedHighlight')
+        fault_mat.use_nodes = True
+        fault_mat.use_fake_user = True
+        f_bsdf = fault_mat.node_tree.nodes.get('Principled BSDF')
+        if f_bsdf:
+            f_bsdf.inputs['Base Color'].default_value = (1.0, 0.08, 0.02, 1.0)
+            f_bsdf.inputs['Roughness'].default_value = 0.18
+            f_bsdf.inputs['Alpha'].default_value = 1.0
+            if 'Emission Color' in f_bsdf.inputs:
+                f_bsdf.inputs['Emission Color'].default_value = (1.0, 0.08, 0.02, 1.0)
+                f_bsdf.inputs['Emission Strength'].default_value = 4.5
+
+    return ghost_mat, fault_mat
+
+
+def cache_authentic_materials():
+    """Cache pristine original PBR materials for all mesh objects across all engine collections."""
+    for col in bpy.data.collections:
+        if col.name.startswith("Collection_"):
+            for obj in col.objects:
+                if obj is not None and obj.type == 'MESH' and obj.name not in ORIGINAL_PBR_MATERIALS:
+                    slots = []
+                    for slot in obj.material_slots:
+                        if slot.material and not slot.material.name.startswith(('M_Ghost', 'M_Fault')):
+                            slots.append(slot.material)
+                        else:
+                            slots.append(None)
+                    ORIGINAL_PBR_MATERIALS[obj.name] = slots
+
+
+def restore_all_solid_materials():
+    """
+    Guarantees 100% AUTHENTIC NORMAL SOLID RENDERED PBR MODE across the active engine.
+    Ensures ghost mode is NEVER active on startup or when returning to full assembly (Station 0).
+    """
+    cache_authentic_materials()
+    ghost_mat, fault_mat = ensure_ghost_materials()
+    
+    prof = client_state.engine_profile
+    col_name = prof.get('collection', '')
+    active_col = bpy.data.collections.get(col_name)
+    target_objs = [o for o in active_col.objects if o is not None and o.type == 'MESH'] if active_col else [o for o in bpy.data.objects if o is not None and o.type == 'MESH' and not o.hide_viewport]
+    
+    for obj in target_objs:
+        orig_slots = ORIGINAL_PBR_MATERIALS.get(obj.name, [])
+        for i, orig_m in enumerate(orig_slots):
+            if i < len(obj.material_slots) and orig_m is not None:
+                obj.material_slots[i].material = orig_m
+        
+        # Strip any stray appended ghost materials
+        while len(obj.material_slots) > max(1, len(orig_slots)):
+            obj.data.materials.pop(index=len(obj.material_slots) - 1)
+            
+        # Verify no slot retains ghost material
+        for slot in obj.material_slots:
+            if slot.material == ghost_mat or (slot.material and slot.material.name.startswith('M_Ghost')):
+                if orig_slots and orig_slots[0] is not None:
+                    slot.material = orig_slots[0]
+
+
+def get_parts_center_and_radius(part_names: list):
+    """Dynamically calculates 3D center and radius of matching mesh parts with get_mw() evaluation."""
+    if not part_names:
+        return None, None
+    bpy.context.view_layer.update()
+    prof = client_state.engine_profile
+    col_name = prof.get('collection', '')
+    active_col = bpy.data.collections.get(col_name)
+    target_pool = [o for o in active_col.objects if o is not None and o.type == 'MESH'] if active_col else [o for o in bpy.data.objects if o is not None and o.type == 'MESH' and not o.hide_viewport]
+    
+    objs = [
+        o for o in target_pool 
+        if any(p.lower() in o.name.lower() or p.lower() == o.name.lower() for p in part_names)
+    ]
+    if not objs:
+        return None, None
+    min_co = mathutils.Vector((float('inf'), float('inf'), float('inf')))
+    max_co = mathutils.Vector((float('-inf'), float('-inf'), float('-inf')))
+    for obj in objs:
+        mw = get_mw(obj)
+        for c in obj.bound_box:
+            w = mw @ mathutils.Vector(c)
+            min_co.x = min(min_co.x, w.x)
+            min_co.y = min(min_co.y, w.y)
+            min_co.z = min(min_co.z, w.z)
+            max_co.x = max(max_co.x, w.x)
+            max_co.y = max(max_co.y, w.y)
+            max_co.z = max(max_co.z, w.z)
+    center = (min_co + max_co) * 0.5
+    radius = max(0.1, (max_co - min_co).length * 0.5)
+    return center, radius
+
+
+def apply_material_state():
+    """
+    Applies Material Swapping:
+    1. Subsystem Inspection Mode (active_subsystem_id > 0):
+       - Entire engine goes into Holographic Ghost Mode.
+       - ONLY inspected subsystem meshes retain authentic NORMAL SOLID RENDERED PBR materials.
+    2. Full Engine Mode (active_subsystem_id == 0):
+       - Restores 100% authentic normal solid PBR materials across all engine meshes.
+    """
+    if client_state.active_subsystem_id == 0 and not client_state.is_ghost_vision:
+        restore_all_solid_materials()
+        return
+
+    ghost_mat, fault_mat = ensure_ghost_materials()
+    cache_authentic_materials()
+    
+    prof = client_state.engine_profile
+    col_name = prof.get('collection', '')
+    active_col = bpy.data.collections.get(col_name)
+    target_objs = [o for o in active_col.objects if o is not None and o.type == 'MESH'] if active_col else [o for o in bpy.data.objects if o is not None and o.type == 'MESH' and not o.hide_viewport]
+
+    # CASE A: SUBSYSTEM INSPECTION ACTIVE (User pressed 1-5)
+    if client_state.active_subsystem_id > 0:
+        subsystems = prof.get('subsystems', {})
+        subsys = subsystems.get(client_state.active_subsystem_id, {})
+        subsys_parts = subsys.get('parts', [])
+        
+        for obj in target_objs:
+            is_inspected = any(p.lower() in obj.name.lower() or p.lower() == obj.name.lower() for p in subsys_parts)
+            if is_inspected:
+                # Keep inspected component in authentic NORMAL SOLID RENDERED PBR MODE
+                orig_slots = ORIGINAL_PBR_MATERIALS.get(obj.name, [])
+                for i, orig_m in enumerate(orig_slots):
+                    if i < len(obj.material_slots) and orig_m is not None:
+                        obj.material_slots[i].material = orig_m
+            else:
+                # Translucent holographic cyan ghost on rest of the engine
+                if len(obj.material_slots) == 0:
+                    obj.data.materials.append(ghost_mat)
+                else:
+                    for slot in obj.material_slots:
+                        slot.material = ghost_mat
+        return
+
+    # CASE B: MANUAL FULL-ENGINE GHOST VISION TOGGLED (via G key)
+    if client_state.is_ghost_vision:
+        for obj in target_objs:
+            if len(obj.material_slots) == 0:
+                obj.data.materials.append(ghost_mat)
+            else:
+                for slot in obj.material_slots:
+                    slot.material = ghost_mat
+
+
+def apply_subsystem_inspection(subsystem_id: int):
+    """
+    Subsystem Technical Showcase Inspector:
+    1. Entire engine transitions into Holographic Ghost Mode.
+    2. ONLY inspected subsystem/part remains in NORMAL SOLID RENDERED PBR MODE.
+    3. Smooth cinematic camera glide swoops directly to the component.
+    4. Activates Technical Specification Card and screen-space reticle.
+    """
+    global ENGINE_CENTER, DEFAULT_ORBIT_DISTANCE
+    prof = client_state.engine_profile
+    subsystems = prof.get('subsystems', {})
+    if subsystem_id not in subsystems:
+        return
+    
+    subsys = subsystems[subsystem_id]
+    client_state.active_subsystem_id = subsystem_id
+    client_state.is_auto_orbit = False
+    
+    # 1. Hardcoded component camera framing
+    if 'target' in subsys:
+        client_state.cam_target = subsys['target'].copy()
+    else:
+        parts = subsys.get('parts', [])
+        mesh_center, _ = get_parts_center_and_radius(parts)
+        client_state.cam_target = mesh_center if mesh_center is not None else ENGINE_CENTER.copy()
+
+    if 'distance' in subsys:
+        client_state.target_orbit_distance = subsys['distance']
+    else:
+        client_state.target_orbit_distance = DEFAULT_ORBIT_DISTANCE * 0.45
+
+    client_state.target_orbit_angle = subsys.get('angle', -1.2)
+    client_state.target_orbit_elevation = subsys.get('elevation', math.radians(20.0))
+    
+    # 2. Material isolation (part in solid PBR, rest in ghost)
+    apply_material_state()
+    print(f"[INSPECTION] Active Subsystem: {subsys['name']}")
+
+
+def clear_subsystem_inspection():
+    """Restores 100% FULL NORMAL SOLID RENDERED PBR MODE across the engine and returns to 360° beauty orbit."""
+    client_state.active_subsystem_id = 0
+    client_state.is_ghost_vision = False
+    client_state.cam_target = ENGINE_CENTER.copy()
+    client_state.target_orbit_distance = DEFAULT_ORBIT_DISTANCE
+    client_state.target_orbit_elevation = DEFAULT_ORBIT_ELEVATION
+    client_state.is_auto_orbit = True
+    client_state.subsystem_leader_screen_pos = None
+    restore_all_solid_materials()
+
+
+def update_pulsing_emission():
+    """Update dynamic pulsating emission on fault material."""
+    fault_mat = bpy.data.materials.get('M_Fault_RedHighlight')
+    if fault_mat and fault_mat.use_nodes:
+        bsdf = fault_mat.node_tree.nodes.get('Principled BSDF')
+        if bsdf and 'Emission Strength' in bsdf.inputs:
+            pulse = 3.5 + 1.8 * math.sin(time.time() * 9.0)
+            bsdf.inputs['Emission Strength'].default_value = pulse
+
+
+# ==============================================================================
+# 3. 2D HUD GPU DRAWING ENGINE
 # ==============================================================================
 
 class HUDDrawer:
@@ -545,23 +1292,37 @@ class HUDDrawer:
         self.sh_smooth.bind()
         batch.draw(self.sh_smooth)
 
-    def draw_ring(self, cx, cy, radius, thickness, color, fill_ratio=1.0):
+    def draw_line(self, x1, y1, x2, y2, color, width=1.0):
         self.init_shaders()
-        segments = 40
-        num_fill = max(2, int(segments * max(0.05, min(1.0, fill_ratio))))
-        coords = []
-        for i in range(num_fill + 1):
-            theta = -math.pi / 2 + (2 * math.pi * (i / segments))
-            ox = cx + radius * math.cos(theta)
-            oy = cy + radius * math.sin(theta)
-            ix = cx + (radius - thickness) * math.cos(theta)
-            iy = cy + (radius - thickness) * math.sin(theta)
-            coords.append((ox, oy))
-            coords.append((ix, iy))
-        batch = batch_for_shader(self.sh_uni, 'TRI_STRIP', {"pos": coords})
+        coords = [(x1, y1), (x2, y2)]
+        batch = batch_for_shader(self.sh_uni, 'LINES', {"pos": coords})
         self.sh_uni.bind()
         self.sh_uni.uniform_float("color", color)
+        gpu.state.line_width_set(width)
         batch.draw(self.sh_uni)
+        gpu.state.line_width_set(1.0)
+
+    def draw_circle(self, cx, cy, radius, color, width=1.0):
+        self.init_shaders()
+        segments = 32
+        coords = []
+        for i in range(segments + 1):
+            theta = 2 * math.pi * (i / segments)
+            coords.append((cx + radius * math.cos(theta), cy + radius * math.sin(theta)))
+        batch = batch_for_shader(self.sh_uni, 'LINE_STRIP', {"pos": coords})
+        self.sh_uni.bind()
+        self.sh_uni.uniform_float("color", color)
+        gpu.state.line_width_set(width)
+        batch.draw(self.sh_uni)
+        gpu.state.line_width_set(1.0)
+
+    def draw_reticle(self, cx, cy, color=(0.0, 0.90, 1.0, 0.95)):
+        self.draw_circle(cx, cy, 14, color, width=1.5)
+        self.draw_circle(cx, cy, 5, color, width=1.0)
+        self.draw_line(cx - 22, cy, cx - 16, cy, color, width=1.5)
+        self.draw_line(cx + 16, cy, cx + 22, cy, color, width=1.5)
+        self.draw_line(cx, cy - 22, cx, cy - 16, color, width=1.5)
+        self.draw_line(cx, cy + 16, cx, cy + 22, color, width=1.5)
 
     def draw_text(self, text, x, y, size=11, color=(1.0, 1.0, 1.0, 1.0)):
         blf.size(self.font_id, size)
@@ -576,88 +1337,22 @@ class HUDDrawer:
         blf.size(self.font_id, size)
         return blf.dimensions(self.font_id, text)[0]
 
-    def draw_multiline_text(self, text, x, y, max_width=250, size=10, line_height=15, max_lines=4, color=(1.0, 1.0, 1.0, 1.0)):
-        words = text.split(' ')
+    def wrap_text(self, text: str, max_width: float, size: float = 8.5) -> list:
+        """Splits narrative into lines fitting inside max_width pixels."""
+        words = text.split()
         lines = []
-        cur_line = []
-        for word in words:
-            test_line = ' '.join(cur_line + [word])
-            if self.get_text_width(test_line, size=size) <= max_width:
-                cur_line.append(word)
+        curr = ""
+        for w in words:
+            test = (curr + " " + w).strip()
+            if self.get_text_width(test, size=size) <= max_width:
+                curr = test
             else:
-                if cur_line:
-                    lines.append(' '.join(cur_line))
-                cur_line = [word]
-        if cur_line:
-            lines.append(' '.join(cur_line))
-
-        cur_y = y
-        for i, line in enumerate(lines[:max_lines]):
-            if i == max_lines - 1 and len(lines) > max_lines:
-                line = line[:len(line) - 3] + "..."
-            self.draw_text(line, x, cur_y, size=size, color=color)
-            cur_y -= line_height
-
-    def draw_gauge_card(self, x, y, w, h, icon, label, norm_label, val_str, norm_val, min_label, max_label, is_warn, is_crit):
-        if is_crit:
-            bg_col = (0.28, 0.04, 0.06, 0.95)
-            border_c = (0.95, 0.25, 0.30, 0.95)
-            border_w = 1.5
-            bar_col = (1.0, 0.25, 0.25, 1.0)
-            lbl_col = (1.0, 0.50, 0.50, 1.0)
-            val_col = (1.0, 0.92, 0.92, 1.0)
-            val_box_bg = (0.50, 0.08, 0.08, 0.85)
-        elif is_warn:
-            bg_col = (0.22, 0.13, 0.02, 0.92)
-            border_c = (0.95, 0.72, 0.12, 0.92)
-            border_w = 1.5
-            bar_col = (1.0, 0.75, 0.12, 0.98)
-            lbl_col = (1.0, 0.88, 0.35, 1.0)
-            val_col = (1.0, 0.96, 0.75, 1.0)
-            val_box_bg = (0.40, 0.22, 0.04, 0.8)
-        else:
-            bg_col = (0.04, 0.07, 0.11, 0.85)
-            border_c = (0.12, 0.24, 0.38, 0.45)
-            border_w = 1.0
-            bar_col = (0.0, 0.85, 1.0, 0.90)
-            lbl_col = (0.82, 0.92, 1.0, 0.95)
-            val_col = (1.0, 1.0, 1.0, 1.0)
-            val_box_bg = None
-
-        self.draw_rect(x, y, w, h, bg_col)
-        self.draw_rect_outline(x, y, w, h, border_c, width=border_w)
-
-        if icon:
-            self.draw_text(icon, x + 8, y + h - 17, size=12.0, color=bar_col)
-            label_x = x + 24
-        else:
-            label_x = x + 8
-            
-        self.draw_text(label, label_x, y + h - 17, size=10.5, color=lbl_col)
-        self.draw_text(norm_label, label_x, y + h - 29, size=9.0, color=(0.48, 0.65, 0.82, 0.85))
-
-        val_w = self.get_text_width(val_str, size=12.0)
-        val_x = x + w - val_w - 10
-        if val_box_bg:
-            self.draw_rect(val_x - 6, y + h - 29, val_w + 12, 20, val_box_bg)
-            self.draw_rect_outline(val_x - 6, y + h - 29, val_w + 12, 20, border_c, width=1.0)
-        self.draw_text(val_str, val_x, y + h - 19, size=12.0, color=val_col)
-
-        track_y = y + 7
-        track_h = 4
-        min_w = self.get_text_width(min_label, size=8.0)
-        max_w = self.get_text_width(max_label, size=8.0)
-        
-        self.draw_text(min_label, x + 8, track_y - 2, size=8.0, color=(0.45, 0.60, 0.75, 0.75))
-        self.draw_text(max_label, x + w - max_w - 8, track_y - 2, size=8.0, color=(0.45, 0.60, 0.75, 0.75))
-
-        track_x = x + 8 + min_w + 5
-        track_w = w - 16 - min_w - max_w - 10
-        self.draw_rect(track_x, track_y, track_w, track_h, (0.06, 0.10, 0.16, 0.95))
-        self.draw_rect_outline(track_x, track_y, track_w, track_h, (0.15, 0.25, 0.35, 0.40), width=1.0)
-
-        fill_w = max(2, min(track_w, int(track_w * max(0.0, min(1.0, norm_val)))))
-        self.draw_rect(track_x, track_y, fill_w, track_h, bar_col)
+                if curr:
+                    lines.append(curr)
+                curr = w
+        if curr:
+            lines.append(curr)
+        return lines
 
     def render(self, width, height, state: DigitalTwinClientState):
         if not state.is_hud_visible:
@@ -666,723 +1361,231 @@ class HUDDrawer:
 
         gpu.state.blend_set('ALPHA')
         state.button_rects.clear()
-
         prof = state.engine_profile
 
         # ======================================================================
-        # A. TOP HEADER BAR + ENGINE SWITCHER
+        # A. TOP AEROSPACE COMMAND HEADER
         # ======================================================================
-        top_h = 74
+        top_h = 56
         top_y = height - top_h
-        self.draw_gradient_rect(0, top_y, width, top_h, (0.03, 0.06, 0.10, 0.95), (0.01, 0.02, 0.04, 0.98))
-        self.draw_rect_outline(0, top_y, width, top_h, (0.08, 0.18, 0.28, 0.40))
-        self.draw_rect(0, height - 2, width, 2, (0.0, 0.85, 1.0, 1.0))
+        
+        self.draw_gradient_rect(0, top_y, width, top_h, (0.015, 0.035, 0.075, 0.96), (0.008, 0.018, 0.038, 0.98))
+        self.draw_line(0, top_y, width, top_y, (0.0, 0.80, 1.0, 0.75), width=1.5)
+        self.draw_line(0, top_y + 1, width, top_y + 1, (0.0, 0.40, 0.65, 0.35), width=1.0)
 
-        # 1. Left Title Block
-        self.draw_text(prof['title'], 20, top_y + 48, size=13.5, color=(1.0, 1.0, 1.0, 1.0))
-        self.draw_text(prof['subtitle'], 20, top_y + 32, size=9.5, color=(0.0, 0.80, 0.95, 0.85))
+        # Title & Engine ID
+        self.draw_text("DRDO // ANUMAAN DIGITAL TWIN PROGRAM", 24, top_y + 34, size=12.0, color=(0.0, 0.95, 1.0, 1.0))
+        self.draw_text(f"{prof['name']}  •  {prof['induction']}  •  {prof['fuel_type']}", 24, top_y + 14, size=9.5, color=(0.70, 0.85, 0.98, 0.90))
 
-        # 2. Engine Selection Ribbon
-        engine_list = [
-            ("F1: ROTAX 912 iS", "rotax_912is"),
-            ("F2: ROTAX 914 TURBO", "rotax_914"),
-            ("F3: ROTAX 915 iS", "rotax_915is"),
-            ("F4: AUSTRO AE300", "austro_ae300"),
-            ("F5: VRDE 2.2L CRDi", "vrde_jayem_2_2l")
+        # Center Engine Quick-Switch Tabs [F1]-[F5]
+        tab_engines = [
+            ('rotax_912is', '[F1] ROTAX 912'),
+            ('rotax_914', '[F2] ROTAX 914'),
+            ('rotax_915is', '[F3] ROTAX 915'),
+            ('austro_ae300', '[F4] AUSTRO AE300'),
+            ('vrde_jayem_2_2l', '[F5] VRDE 2.2L')
         ]
-        eng_x = 20
-        eng_y = top_y + 6
-        eng_btn_h = 20
-        for label, eid in engine_list:
+        
+        tab_x = (width - (len(tab_engines) * 115)) // 2
+        for eid, elabel in tab_engines:
             is_active = (state.engine_id == eid)
             is_hover = (state.hovered_button == f"ENGINE_{eid}")
             
-            t_w = self.get_text_width(label, size=9.0)
-            btn_w = t_w + 16
+            tb_bg = (0.0, 0.40, 0.65, 0.85) if is_active else ((0.08, 0.20, 0.32, 0.65) if is_hover else (0.03, 0.07, 0.12, 0.60))
+            tb_bd = (0.0, 0.95, 1.0, 0.95) if is_active else ((0.0, 0.60, 0.85, 0.60) if is_hover else (0.10, 0.25, 0.40, 0.45))
+            txt_col = (1.0, 1.0, 1.0, 1.0) if is_active else (0.75, 0.88, 0.98, 0.85)
+
+            self.draw_rect(tab_x, top_y + 12, 108, 30, tb_bg)
+            self.draw_rect_outline(tab_x, top_y + 12, 108, 30, tb_bd, width=1.0)
             
-            if is_active:
-                b_bg = (0.0, 0.45, 0.75, 0.95)
-                b_bd = (0.0, 0.90, 1.0, 1.0)
-                t_col = (1.0, 1.0, 1.0, 1.0)
-            elif is_hover:
-                b_bg = (0.12, 0.28, 0.42, 0.85)
-                b_bd = (0.0, 0.80, 0.95, 0.80)
-                t_col = (0.90, 0.95, 1.0, 1.0)
-            else:
-                b_bg = (0.05, 0.09, 0.14, 0.70)
-                b_bd = (0.15, 0.25, 0.35, 0.45)
-                t_col = (0.65, 0.78, 0.90, 0.85)
-                
-            self.draw_rect(eng_x, eng_y, btn_w, eng_btn_h, b_bg)
-            self.draw_rect_outline(eng_x, eng_y, btn_w, eng_btn_h, b_bd, width=1.0)
-            self.draw_text(label, eng_x + 8, eng_y + 5, size=9.0, color=t_col)
+            lbl_w = self.get_text_width(elabel, size=8.5)
+            self.draw_text(elabel, int(tab_x + (108 - lbl_w) / 2), top_y + 21, size=8.5, color=txt_col)
             
-            state.button_rects.append((eng_x, eng_y, btn_w, eng_btn_h, f"ENGINE_{eid}"))
-            eng_x += btn_w + 8
+            state.button_rects.append((tab_x, top_y + 12, 108, 30, f"ENGINE_{eid}"))
+            tab_x += 115
 
-        # 3. Central Status Alert Banner
-        active_fid = state.active_commanded_fault_id if state.active_commanded_fault_id > 0 else state.analytics.get('diagnosed_fault_id', 0)
-        alert_w = 360
-        alert_x = (width - alert_w) // 2
-        alert_y = top_y + 30
-        alert_h = 34
-
-        if not state.is_connected:
-            self.draw_rect(alert_x, alert_y, alert_w, alert_h, (0.24, 0.05, 0.05, 0.92))
-            self.draw_rect_outline(alert_x, alert_y, alert_w, alert_h, (0.95, 0.25, 0.25, 0.95), width=1.5)
-            self.draw_text("⚠ TELEMETRY LINK OFFLINE — WAITING FOR SERVER", alert_x + 14, alert_y + 11, size=10.5, color=(1.0, 0.4, 0.4, 1.0))
-        elif active_fid > 0:
-            f_title = state.analytics.get('diagnosed_fault_name', '') or state.active_commanded_fault_name
-            f_title = f_title.replace('_', ' ')
-            if len(f_title) > 22:
-                f_title = f_title[:20] + ".."
-            self.draw_rect(alert_x, alert_y, alert_w, alert_h, (0.26, 0.04, 0.06, 0.92))
-            self.draw_rect_outline(alert_x, alert_y, alert_w, alert_h, (0.95, 0.25, 0.30, 0.95), width=1.5)
-            self.draw_text(f"⚠ {f_title}", alert_x + 14, alert_y + 11, size=11.5, color=(1.0, 0.35, 0.35, 1.0))
-            self.draw_text(f"HEALTH: {state.analytics['health_index']*100:.0f}%", alert_x + alert_w - 95, alert_y + 11, size=11.0, color=(1.0, 0.45, 0.45, 1.0))
-        elif not state.is_engine_running:
-            self.draw_rect(alert_x, alert_y, alert_w, alert_h, (0.15, 0.18, 0.25, 0.90))
-            self.draw_rect_outline(alert_x, alert_y, alert_w, alert_h, (0.45, 0.55, 0.70, 0.90), width=1.0)
-            self.draw_text("⏸ ENGINE SHUTDOWN / STANDBY", alert_x + 16, alert_y + 11, size=11.5, color=(0.85, 0.90, 1.0, 1.0))
-        else:
-            self.draw_rect(alert_x, alert_y, alert_w, alert_h, (0.03, 0.16, 0.08, 0.90))
-            self.draw_rect_outline(alert_x, alert_y, alert_w, alert_h, (0.18, 0.80, 0.45, 0.80), width=1.0)
-            self.draw_text("● PROPULSION NOMINAL", alert_x + 16, alert_y + 11, size=11.5, color=(0.35, 1.0, 0.55, 1.0))
-            self.draw_text(f"HEALTH: {state.analytics['health_index']*100:.0f}%", alert_x + alert_w - 95, alert_y + 11, size=11.0, color=(0.40, 1.0, 0.60, 1.0))
-
-        # 4. Mission Readiness Badge
-        gng_w = 120
-        gng_x = alert_x + alert_w + 10
-        gng_status = state.analytics.get('go_no_go', 'GO')
-        if gng_status == "NO_GO":
-            gng_bg = (0.25, 0.05, 0.08, 0.92)
-            gng_border = (0.95, 0.25, 0.25, 0.95)
-            gng_col = (1.0, 0.35, 0.35, 1.0)
-        elif gng_status == "CAUTION":
-            gng_bg = (0.22, 0.13, 0.02, 0.90)
-            gng_border = (0.95, 0.72, 0.12, 0.92)
-            gng_col = (1.0, 0.85, 0.20, 1.0)
-        else:
-            gng_bg = (0.03, 0.14, 0.08, 0.88)
-            gng_border = (0.15, 0.75, 0.40, 0.75)
-            gng_col = (0.35, 1.0, 0.55, 1.0)
-            
-        self.draw_rect(gng_x, alert_y, gng_w, alert_h, gng_bg)
-        self.draw_rect_outline(gng_x, alert_y, gng_w, alert_h, gng_border, width=1.0)
-        self.draw_text(f"MISSION: {gng_status}", gng_x + 10, alert_y + 11, size=10.0, color=gng_col)
-
-        # 5. Right Stats Block (Elapsed Time & Large FPS)
-        m, s = divmod(int(state.flight_time), 60)
-        time_str = f"T+{m//60:02d}:{m%60:02d}:{s:02d}"
-        self.draw_text(time_str, width - 200, top_y + 48, size=12.0, color=(1.0, 1.0, 1.0, 1.0))
-        self.draw_text("ELAPSED TIME", width - 200, top_y + 32, size=8.5, color=(0.48, 0.65, 0.82, 0.80))
-
-        fps_val = f"{int(round(state.fps))}"
-        self.draw_text(fps_val, width - 65, top_y + 44, size=16.0, color=(0.35, 1.0, 0.55, 1.0))
-        self.draw_text("FPS", width - 65, top_y + 30, size=8.5, color=(0.35, 1.0, 0.55, 0.85))
-
-        # ======================================================================
-        # B. LEFT PANEL — "PROPULSION TELEMETRY" (320px width)
-        # ======================================================================
-        bot_h = 165
-        left_w = 320
-        left_x = 18
-        left_y = bot_h + 16
-        left_h = height - top_h - left_y - 10
-
-        self.draw_gradient_rect(left_x, left_y, left_w, left_h, (0.03, 0.06, 0.10, 0.90), (0.01, 0.02, 0.04, 0.94))
-        self.draw_rect_outline(left_x, left_y, left_w, left_h, (0.10, 0.22, 0.35, 0.45))
-        self.draw_text(f"{prof['name']} TELEMETRY (20 HZ)", left_x + 12, left_y + left_h - 20, size=11.5, color=(0.0, 0.88, 1.0, 1.0))
-
+        # Right Telemetry Strip
         t = state.telemetry
-        res = state.analytics.get('residuals', {})
-        fid_cmd = state.active_commanded_fault_id
-        is_diesel = ("diesel" in prof['induction'].lower() or "crdi" in prof['induction'].lower())
+        rpm = t.get('ENGINE_RPM', 0.0)
+        oil_p = t.get('OIL_PRESS', 0.0)
+        fuel_p = t.get('FUEL_RAIL_P', 0.0)
+        is_diesel = ('austro' in state.engine_id or 'vrde' in state.engine_id)
+        rail_unit = "bar" if is_diesel else "psi"
+        
+        rx = width - 360
+        self.draw_text("ENGINE RPM", rx, top_y + 34, size=8.5, color=(0.50, 0.70, 0.85, 0.85))
+        self.draw_text(f"{rpm:5.0f}", rx, top_y + 14, size=13.0, color=(0.0, 0.95, 0.60, 1.0))
 
-        if is_diesel:
-            rail_p = t.get('FUEL_RAIL_P', 1600.0)
-            if rail_p < 200.0:
-                rail_p = rail_p * 500.0
-            gauges_config = [
-                ("⚙", "ENGINE SPEED", f"Prop: {t.get('PROP_RPM', 1900):.0f} | Load: {t.get('TPS', 70):.0f}%", f"{t.get('ENGINE_RPM', 3800):.0f} RPM", t.get('ENGINE_RPM', 3800) / prof['rpm_max'], "0", f"{int(prof['rpm_max'])}", t.get('ENGINE_RPM', 0) > prof['rpm_max'] * 0.95, t.get('ENGINE_RPM', 0) > prof['rpm_max']),
-                ("⛽", "CRDi RAIL PRESSURE", f"Δ {res.get('d_FUEL_RAIL_P', 0.0):+.0f}b [NORM 1600b]", f"{rail_p:.0f} BAR", rail_p / 2000.0, "0", "2000", abs(res.get('d_FUEL_RAIL_P', 0.0)) > 150.0 or fid_cmd in (1, 8), abs(res.get('d_FUEL_RAIL_P', 0.0)) > 300.0 or rail_p < 400.0),
-                ("📊", "BOOST PRESSURE", f"Δ {res.get('d_MAP', 0.0):+.1f} kPa [VGT Turbo]", f"{t.get('MAP', 180.0):.1f} kPa", t.get('MAP', 180.0) / 250.0, "0", "250", abs(res.get('d_MAP', 0.0)) > 15.0 or fid_cmd in (2, 3), abs(res.get('d_MAP', 0.0)) > 30.0),
-                ("🌡", "COOLANT TEMP", f"Δ {res.get('d_CHT_1', 0.0):+.1f}°C [NORM 88°C]", f"{t.get('CHT_1', 88.0):.1f} °C", (t.get('CHT_1', 88.0)) / 130.0, "0", "130", t.get('CHT_1', 88.0) > 105.0 or fid_cmd in (6, 7), t.get('CHT_1', 88.0) > 118.0),
-                ("💧", "OIL PRESSURE", f"Δ {res.get('d_OIL_PRESS', 0.0):+.2f}b [NORM 4.5b]", f"{t.get('OIL_PRESS', 4.5):.2f} BAR", t.get('OIL_PRESS', 4.5) / 10.0, "0", "10", res.get('d_OIL_PRESS', 0.0) < -0.6 or fid_cmd == 4, res.get('d_OIL_PRESS', 0.0) < -1.2 or t.get('OIL_PRESS', 4.5) < 2.0),
-                ("🔥", "EXHAUST TEMP (EGT)", f"Δ {res.get('d_EGT_1', 0.0):+.0f}°C [Turbine Inlet]", f"{t.get('EGT_1', 650.0):.0f} °C", t.get('EGT_1', 650.0) / 900.0, "0", "900", t.get('EGT_1', 650.0) > 750.0 or fid_cmd in (2, 3), t.get('EGT_1', 650.0) > 830.0),
-                ("⚡", "28V AVIONICS BUS", f"Bat: {t.get('BATTERY_CURRENT', 4.2):+.1f}A | EECS FADEC", f"{t.get('BUS_VOLTAGE', 28.0):.1f} V", (t.get('BUS_VOLTAGE', 28.0) - 20.0) / 12.0, "20", "32", t.get('BUS_VOLTAGE', 28.0) < 24.0 or fid_cmd == 5, t.get('BUS_VOLTAGE', 28.0) < 22.5),
-                ("⚠", "ANOMALY SCORE", f"Confidence: {state.analytics.get('diagnosed_confidence', 0.99)*100:.0f}%", f"{state.analytics['anomaly_score']*100:.1f}%", state.analytics['anomaly_score'], "0", "100", state.analytics['anomaly_score'] > 0.35, state.analytics['anomaly_score'] > 0.65),
-            ]
-        else:
-            gauges_config = [
-                ("⚙", "ENGINE RPM", f"Prop: {t['PROP_RPM']:.0f} | TPS: {t['TPS']:.0f}%", f"{t['ENGINE_RPM']:.0f} RPM", t['ENGINE_RPM'] / prof['rpm_max'], "0", f"{int(prof['rpm_max'])}", t['ENGINE_RPM'] > 5500 or fid_cmd in (2, 3, 5), t['ENGINE_RPM'] > 5750 or (t['ENGINE_RPM'] < 3800 and state.is_engine_running)),
-                ("🌡", "OIL TEMP", f"Δ {res.get('d_OIL_TEMP', 0.0):+.1f}°C [NORM 92°C]", f"{t['OIL_TEMP']:.1f} °C", (t['OIL_TEMP'] + 20.0) / 170.0, "-20", "150", res.get('d_OIL_TEMP', 0.0) > 8.0 or fid_cmd in (1, 4, 5), res.get('d_OIL_TEMP', 0.0) > 18.0 or t['OIL_TEMP'] > 125.0),
-                ("💧", "OIL PRESSURE", f"Δ {res.get('d_OIL_PRESS', 0.0):+.2f}b [NORM 3.8b]", f"{t['OIL_PRESS']:.2f} BAR", t['OIL_PRESS'] / 10.0, "0", "10", (res.get('d_OIL_PRESS', 0.0) < -0.4 and state.is_engine_running) or fid_cmd == 4, (res.get('d_OIL_PRESS', 0.0) < -0.9 or t['OIL_PRESS'] < 2.0) and state.is_engine_running),
-                ("⛽", "FUEL FLOW", f"Rail {t['FUEL_RAIL_P']:.1f}b | Δ {res.get('d_FUEL_FLOW', 0.0):+.1f} L/h", f"{t['FUEL_FLOW']:.1f} L/H", t['FUEL_FLOW'] / 30.0, "0", "30", abs(res.get('d_FUEL_FLOW', 0.0)) > 2.5 or fid_cmd in (2, 8), res.get('d_FUEL_FLOW', 0.0) < -4.5 or (t['FUEL_FLOW'] < 2.5 and state.is_engine_running)),
-                ("🔥", "EXHAUST EGT #3", f"Δ {res.get('d_EGT_3', 0.0):+.0f}°C [E1-4: {t['EGT_1']:.0f}/{t['EGT_2']:.0f}/{t['EGT_3']:.0f}/{t['EGT_4']:.0f}]", f"{t['EGT_3']:.0f} °C", t['EGT_3'] / 1000.0, "0", "1000", abs(res.get('d_EGT_3', 0.0)) > 25.0 or fid_cmd in (3, 6, 8), abs(res.get('d_EGT_3', 0.0)) > 45.0 or t['EGT_3'] > 910.0),
-                ("📊", "MANIFOLD PRESSURE", f"Δ {res.get('d_MAP', 0.0):+.1f} kPa [{t['FADEC_ACTIVE_LANE']}]", f"{t['MAP']:.1f} kPa", t['MAP'] / 100.0, "0", "100", abs(res.get('d_MAP', 0.0)) > 3.5 or fid_cmd in (5, 8), abs(res.get('d_MAP', 0.0)) > 7.0),
-                ("⚡", "DC BUS VOLT", f"Bat: {t['BATTERY_CURRENT']:+.1f}A | Δ {res.get('d_BUS_VOLTAGE', 0.0):+.1f}V", f"{t['BUS_VOLTAGE']:.1f} V", (t['BUS_VOLTAGE'] - 11.0) / 5.0, "11", "16", res.get('d_BUS_VOLTAGE', 0.0) < -0.8 or fid_cmd == 7, res.get('d_BUS_VOLTAGE', 0.0) < -1.5 or t['BUS_VOLTAGE'] < 12.6),
-                ("⚠", "ANOMALY SCORE", f"Confidence: {state.analytics.get('diagnosed_confidence', 0.99)*100:.0f}%", f"{state.analytics['anomaly_score']*100:.1f}%", state.analytics['anomaly_score'], "0", "100", state.analytics['anomaly_score'] > 0.35, state.analytics['anomaly_score'] > 0.65),
-            ]
+        rx += 105
+        self.draw_text("OIL PRESS", rx, top_y + 34, size=8.5, color=(0.50, 0.70, 0.85, 0.85))
+        self.draw_text(f"{oil_p:4.2f} bar", rx, top_y + 14, size=13.0, color=(0.0, 0.90, 1.0, 1.0))
 
-        avail_card_space = left_h - 34
-        card_step = avail_card_space / 8.0
-        card_h = max(34, int(card_step - 4))
-        c_y = left_y + left_h - 32 - card_h
+        rx += 115
+        self.draw_text("FUEL RAIL", rx, top_y + 34, size=8.5, color=(0.50, 0.70, 0.85, 0.85))
+        self.draw_text(f"{fuel_p:4.0f} {rail_unit}", rx, top_y + 14, size=13.0, color=(0.95, 0.85, 0.15, 1.0))
 
-        for icon, label, norm_lbl, val_str, norm_val, min_lbl, max_lbl, is_warn, is_crit in gauges_config:
-            self.draw_gauge_card(left_x + 8, int(c_y), left_w - 16, card_h, icon, label, norm_lbl, val_str, norm_val, min_lbl, max_lbl, is_warn, is_crit)
-            c_y -= card_step
+        # Status Pill
+        rx += 110
+        status_col = (0.0, 0.95, 0.50, 1.0) if not state.active_commanded_fault_id else (1.0, 0.15, 0.15, 1.0)
+        status_txt = "ALL NOMINAL" if not state.active_commanded_fault_id else "FAULT SIM"
+        self.draw_rect(rx - 8, top_y + 15, 100, 24, (0.02, 0.08, 0.05, 0.70) if not state.active_commanded_fault_id else (0.15, 0.02, 0.02, 0.70))
+        self.draw_rect_outline(rx - 8, top_y + 15, 100, 24, status_col, width=1.0)
+        self.draw_text(status_txt, rx, top_y + 22, size=8.5, color=status_col)
 
         # ======================================================================
-        # C. RIGHT SPLIT PANELS — "FAULT MATRIX" & "SYSTEM HEALTH"
+        # B. ENGINE INTRO REVEAL BANNER (Animated on switch)
         # ======================================================================
-        right_w = 320
-        right_x = width - right_w - 18
-        avail_r_h = height - top_h - bot_h - 26
+        now = time.time()
+        if now - state.intro_start_time < state.intro_duration:
+            banner_w = 600
+            banner_h = 52
+            banner_x = (width - banner_w) // 2
+            banner_y = height - top_h - banner_h - 16
+            fade = 1.0 - (now - state.intro_start_time) / state.intro_duration
+            alpha = min(1.0, fade * 1.8)
+            
+            self.draw_gradient_rect(banner_x, banner_y, banner_w, banner_h, (0.02, 0.08, 0.18, 0.95 * alpha), (0.01, 0.03, 0.08, 0.98 * alpha))
+            self.draw_rect_outline(banner_x, banner_y, banner_w, banner_h, (0.0, 0.85, 1.0, alpha), width=1.5)
+            self.draw_text(f"▶ {state.intro_title}", banner_x + 20, banner_y + 28, size=12.5, color=(1.0, 1.0, 1.0, alpha))
+            self.draw_text(state.intro_subtitle, banner_x + 20, banner_y + 12, size=9.5, color=(0.0, 0.85, 1.0, alpha))
 
-        # 1. Fault Matrix (Top Right)
-        fm_h = max(240, int(avail_r_h * 0.56))
-        fm_y = left_y + left_h - fm_h
+        # ======================================================================
+        # C. SUBSYSTEM TECHNICAL SPECIFICATION & INFORMATION CARD
+        # ======================================================================
+        if state.active_subsystem_id > 0:
+            subsystems = prof.get('subsystems', {})
+            subsys = subsystems.get(state.active_subsystem_id)
+            if subsys:
+                card_w = 420
+                card_h = 470
+                card_x = width - card_w - 24
+                card_y = (height - card_h) // 2 + 10
 
-        self.draw_gradient_rect(right_x, fm_y, right_w, fm_h, (0.03, 0.06, 0.10, 0.90), (0.01, 0.02, 0.04, 0.94))
-        self.draw_rect_outline(right_x, fm_y, right_w, fm_h, (0.10, 0.22, 0.35, 0.45))
-        self.draw_text(f"{prof['name']} FAULT MATRIX", right_x + 12, fm_y + fm_h - 20, size=11.5, color=(1.0, 1.0, 1.0, 1.0))
+                # Card Body Glassmorphic Panel
+                self.draw_gradient_rect(card_x, card_y, card_w, card_h, (0.025, 0.065, 0.125, 0.96), (0.010, 0.025, 0.055, 0.98))
+                self.draw_rect_outline(card_x, card_y, card_w, card_h, (0.0, 0.85, 1.0, 0.95), width=1.5)
+                self.draw_rect(card_x, card_y + card_h - 3, card_w, 3, (0.0, 0.95, 1.0, 1.0))
 
-        fm_btn_h = 22
-        fm_spacing = (fm_h - 36) / 8.0
-        btn_y = fm_y + fm_h - 28 - fm_btn_h
+                # Header Tag & Title
+                self.draw_text(subsys['tag'], card_x + 16, card_y + card_h - 24, size=9.0, color=(0.0, 0.95, 1.0, 1.0))
+                self.draw_text(subsys['name'], card_x + 16, card_y + card_h - 44, size=12.5, color=(1.0, 1.0, 1.0, 1.0))
+                self.draw_text(subsys['subtitle'], card_x + 16, card_y + card_h - 62, size=8.5, color=(0.60, 0.85, 1.0, 0.85))
+                self.draw_line(card_x + 16, card_y + card_h - 70, card_x + card_w - 16, card_y + card_h - 70, (0.15, 0.35, 0.55, 0.60), width=1.0)
 
-        for i in range(1, 9):
-            f_id = f'FAULT_{i}'
-            f_data = FAULT_DATABASE.get(i, FAULT_DATABASE.get(f_id, {'short': f'FAULT #{i}', 'tag': 'MINOR'}))
-            is_active = (state.analytics.get('diagnosed_fault_id', 0) == i or state.active_commanded_fault_id == i)
-            is_hover = (state.hovered_button == f_id)
-            sev_tag = f_data.get('tag', f_data.get('severity_tag', 'MINOR'))
+                # Specifications Table (Key Engineering Metrics)
+                spec_y = card_y + card_h - 94
+                for idx, (spec_k, spec_v) in enumerate(subsys.get('specs', [])[:5]):
+                    row_bg = (0.04, 0.09, 0.16, 0.60) if idx % 2 == 0 else (0.02, 0.05, 0.10, 0.60)
+                    self.draw_rect(card_x + 14, spec_y - 5, card_w - 28, 20, row_bg)
+                    self.draw_text(spec_k, card_x + 20, spec_y, size=8.2, color=(0.0, 0.85, 1.0, 0.95))
+                    
+                    val_txt = spec_v
+                    if len(val_txt) > 42:
+                        val_txt = val_txt[:40] + ".."
+                    self.draw_text(val_txt, card_x + 125, spec_y, size=8.2, color=(0.95, 0.95, 0.95, 0.95))
+                    spec_y -= 23
 
+                # TECHNICAL DESCRIPTION & OPERATIONAL OVERVIEW BOX (Replaces metrics/bars)
+                info_header_y = spec_y - 8
+                self.draw_text("TECHNICAL OVERVIEW & OPERATIONAL ROLE", card_x + 16, info_header_y, size=8.5, color=(0.0, 0.95, 1.0, 1.0))
+                self.draw_line(card_x + 16, info_header_y - 6, card_x + card_w - 16, info_header_y - 6, (0.15, 0.35, 0.55, 0.60), width=1.0)
+                
+                desc_text = subsys.get('desc', 'Standard aerospace component meeting high-reliability airworthiness criteria.')
+                wrapped_lines = self.wrap_text(desc_text, max_width=card_w - 48, size=8.2)
+                
+                box_y = info_header_y - 14
+                box_h = max(70, len(wrapped_lines) * 16 + 16)
+                self.draw_rect(card_x + 14, box_y - box_h, card_w - 28, box_h, (0.02, 0.05, 0.10, 0.85))
+                self.draw_rect_outline(card_x + 14, box_y - box_h, card_w - 28, box_h, (0.12, 0.30, 0.45, 0.60), width=1.0)
+                
+                line_y = box_y - 18
+                for line in wrapped_lines:
+                    self.draw_text(line, card_x + 24, line_y, size=8.2, color=(0.85, 0.92, 0.98, 0.95))
+                    line_y -= 16
+
+                # Return Button
+                ret_btn_w = card_w - 32
+                ret_btn_h = 24
+                ret_btn_x = card_x + 16
+                ret_btn_y = card_y + 14
+                is_ret_hover = (state.hovered_button == 'SUBSYS_RESET')
+                ret_bg = (0.15, 0.35, 0.55, 0.90) if is_ret_hover else (0.06, 0.14, 0.24, 0.80)
+                ret_bd = (0.0, 0.95, 1.0, 1.0) if is_ret_hover else (0.15, 0.35, 0.55, 0.60)
+                
+                self.draw_rect(ret_btn_x, ret_btn_y, ret_btn_w, ret_btn_h, ret_bg)
+                self.draw_rect_outline(ret_btn_x, ret_btn_y, ret_btn_w, ret_btn_h, ret_bd, width=1.0)
+                ret_text = "[0] RETURN TO FULL ASSEMBLY (ESC)"
+                t_w = self.get_text_width(ret_text, size=8.8)
+                self.draw_text(ret_text, int(ret_btn_x + (ret_btn_w - t_w) / 2), ret_btn_y + 6, size=8.8, color=(1.0, 1.0, 1.0, 1.0))
+                state.button_rects.append((ret_btn_x, ret_btn_y, ret_btn_w, ret_btn_h, 'SUBSYS_RESET'))
+
+                # 3D-to-2D Reticle & Leader Line
+                if state.subsystem_leader_screen_pos:
+                    px, py = state.subsystem_leader_screen_pos
+                    if 30 <= px <= width - 30 and 30 <= py <= height - 30:
+                        self.draw_reticle(px, py, color=(0.0, 0.95, 1.0, 0.95))
+                        knee_x = min(card_x - 30, px + 60)
+                        knee_y = py
+                        target_y = card_y + card_h // 2
+                        self.draw_line(px, py, knee_x, knee_y, (0.0, 0.85, 1.0, 0.75), width=1.5)
+                        self.draw_line(knee_x, knee_y, card_x, target_y, (0.0, 0.85, 1.0, 0.75), width=1.5)
+                        self.draw_circle(card_x, target_y, 3, (0.0, 1.0, 1.0, 1.0), width=1.0)
+
+        # ======================================================================
+        # D. BOTTOM SUBSYSTEM INSPECTOR DOCK (Always visible for easy access)
+        # ======================================================================
+        dock_h = 36
+        dock_y = 16
+        subsystems = prof.get('subsystems', {})
+        
+        dock_items = [
+            (1, subsystems.get(1, {}).get('name', 'STATION 1')[:18]),
+            (2, subsystems.get(2, {}).get('name', 'STATION 2')[:18]),
+            (3, subsystems.get(3, {}).get('name', 'STATION 3')[:18]),
+            (4, subsystems.get(4, {}).get('name', 'STATION 4')[:18]),
+            (5, subsystems.get(5, {}).get('name', 'STATION 5')[:18]),
+            (0, "FULL ASSEMBLY")
+        ]
+        
+        pill_w = min(175, int((width - 60) / len(dock_items)) - 8)
+        total_dock_w = len(dock_items) * (pill_w + 8)
+        dock_x = (width - total_dock_w) // 2
+
+        # Dock Background Bar
+        self.draw_gradient_rect(dock_x - 8, dock_y - 4, total_dock_w + 8, dock_h + 8, (0.02, 0.05, 0.10, 0.90), (0.01, 0.02, 0.05, 0.95))
+        self.draw_rect_outline(dock_x - 8, dock_y - 4, total_dock_w + 8, dock_h + 8, (0.08, 0.22, 0.35, 0.60), width=1.0)
+
+        curr_x = dock_x
+        for sid, sname in dock_items:
+            is_active = (state.active_subsystem_id == sid) if sid > 0 else (state.active_subsystem_id == 0)
+            is_hover = (state.hovered_button == f"SUBSYS_{sid}")
+            
             if is_active:
-                row_bg = (0.85, 0.14, 0.14, 0.95)
-                row_border = (1.0, 0.45, 0.45, 1.0)
-                badge_bg = (0.50, 0.08, 0.08, 1.0)
-                badge_col = (1.0, 0.9, 0.9, 1.0)
-                text_col = (1.0, 1.0, 1.0, 1.0)
+                p_bg = (0.0, 0.45, 0.75, 0.95) if sid > 0 else (0.05, 0.25, 0.40, 0.90)
+                p_bd = (0.0, 0.95, 1.0, 1.0)
+                p_col = (1.0, 1.0, 1.0, 1.0)
             elif is_hover:
-                row_bg = (0.10, 0.28, 0.45, 0.90)
-                row_border = (0.0, 0.90, 1.0, 0.90)
-                badge_bg = (0.05, 0.18, 0.30, 0.9)
-                badge_col = (0.0, 0.90, 1.0, 1.0)
-                text_col = (1.0, 1.0, 1.0, 1.0)
+                p_bg = (0.12, 0.28, 0.45, 0.85)
+                p_bd = (0.0, 0.80, 0.95, 0.80)
+                p_col = (0.90, 0.95, 1.0, 1.0)
             else:
-                row_bg = (0.04, 0.07, 0.11, 0.70)
-                row_border = (0.12, 0.22, 0.32, 0.35)
-                if sev_tag == 'CRITICAL':
-                    badge_bg = (0.35, 0.06, 0.08, 0.8)
-                    badge_col = (1.0, 0.35, 0.35, 1.0)
-                elif sev_tag == 'MAJOR':
-                    badge_bg = (0.30, 0.18, 0.02, 0.8)
-                    badge_col = (1.0, 0.75, 0.15, 1.0)
-                else:
-                    badge_bg = (0.08, 0.14, 0.20, 0.8)
-                    badge_col = (0.55, 0.70, 0.85, 0.8)
-                text_col = (0.82, 0.88, 0.95, 0.90)
+                p_bg = (0.04, 0.08, 0.14, 0.70)
+                p_bd = (0.12, 0.22, 0.32, 0.50)
+                p_col = (0.65, 0.80, 0.90, 0.85)
 
-            self.draw_rect(right_x + 8, int(btn_y), right_w - 16, fm_btn_h, row_bg)
-            self.draw_rect_outline(right_x + 8, int(btn_y), right_w - 16, fm_btn_h, row_border)
-
-            self.draw_text(str(i), right_x + 16, int(btn_y) + 5, size=10.0, color=text_col)
-            self.draw_text(f_data['short'], right_x + 34, int(btn_y) + 5, size=9.5, color=text_col)
-
-            b_w = self.get_text_width(sev_tag, size=8.5) + 12
-            b_x = right_x + right_w - 16 - b_w
-            self.draw_rect(b_x, int(btn_y) + 2, b_w, 18, badge_bg)
-            self.draw_text(sev_tag, b_x + 6, int(btn_y) + 5, size=8.5, color=badge_col)
-
-            state.button_rects.append((right_x + 8, int(btn_y), right_w - 16, fm_btn_h, f_id))
-            btn_y -= fm_spacing
-
-        # 2. System Health
-        sh_h = max(180, left_h - fm_h - 10)
-        sh_y = left_y
-
-        self.draw_gradient_rect(right_x, sh_y, right_w, sh_h, (0.03, 0.06, 0.10, 0.90), (0.01, 0.02, 0.04, 0.94))
-        self.draw_rect_outline(right_x, sh_y, right_w, sh_h, (0.10, 0.22, 0.35, 0.45))
-        self.draw_text("SYSTEM HEALTH", right_x + 12, sh_y + sh_h - 20, size=12.0, color=(1.0, 1.0, 1.0, 1.0))
-
-        overall_health = state.analytics.get('health_index', 1.0)
-        ring_cx = right_x + 52
-        ring_cy = sh_y + (sh_h // 2) - 8
-        ring_r = 32
-        
-        if overall_health < 0.60:
-            ring_col = (1.0, 0.25, 0.25, 1.0)
-        elif overall_health < 0.85:
-            ring_col = (1.0, 0.75, 0.15, 1.0)
-        else:
-            ring_col = (0.25, 0.95, 0.55, 1.0)
-
-        self.draw_ring(ring_cx, ring_cy, ring_r, 5, (0.10, 0.18, 0.25, 0.5), fill_ratio=1.0)
-        self.draw_ring(ring_cx, ring_cy, ring_r, 5, ring_col, fill_ratio=overall_health)
-        
-        pct_txt = f"{int(round(overall_health * 100))}%"
-        p_w = self.get_text_width(pct_txt, size=13.0)
-        self.draw_text(pct_txt, ring_cx - (p_w // 2), ring_cy - 4, size=13.0, color=(1.0, 1.0, 1.0, 1.0))
-        self.draw_text("OVERALL", ring_cx - 18, ring_cy - 16, size=7.5, color=(0.60, 0.75, 0.90, 0.80))
-        self.draw_text("HEALTH", ring_cx - 16, ring_cy - 25, size=7.5, color=(0.60, 0.75, 0.90, 0.80))
-
-        subsys_x = right_x + 105
-        subsys_w = right_w - 118
-        subsys_y = sh_y + sh_h - 38
-        
-        subsystems = [
-            ("PROPULSION", 0.94 if active_fid in (0, 7, 8) else 0.42),
-            ("FUEL SYSTEM", 0.99 if active_fid != 2 else 0.35),
-            ("ELECTRICAL", 1.00 if active_fid != 7 else 0.55),
-            ("THERMAL", 0.99 if active_fid not in (1, 6) else 0.40),
-            ("MECHANICAL", 1.00 if active_fid not in (4, 5) else 0.30),
-        ]
-
-        for s_name, s_val in subsystems:
-            if active_fid > 0:
-                s_val = min(s_val, overall_health + 0.05)
+            self.draw_rect(curr_x, dock_y, pill_w, dock_h, p_bg)
+            self.draw_rect_outline(curr_x, dock_y, pill_w, dock_h, p_bd, width=1.0)
             
-            s_bar_col = (0.25, 0.95, 0.55, 1.0) if s_val > 0.80 else ((1.0, 0.75, 0.15, 1.0) if s_val > 0.60 else (1.0, 0.25, 0.25, 1.0))
+            p_label = f"[{sid}] {sname}"
+            lbl_w = self.get_text_width(p_label, size=9.0)
+            self.draw_text(p_label, int(curr_x + (pill_w - lbl_w) / 2), dock_y + 11, size=9.0, color=p_col)
             
-            self.draw_text(f"● {s_name}", subsys_x, subsys_y, size=8.5, color=(0.75, 0.88, 0.98, 0.90))
-            val_t = f"{int(s_val*100)}%"
-            v_w = self.get_text_width(val_t, size=8.5)
-            self.draw_text(val_t, subsys_x + subsys_w - v_w, subsys_y, size=8.5, color=s_bar_col)
-            
-            self.draw_rect(subsys_x + 65, subsys_y + 3, subsys_w - 95, 3, (0.10, 0.18, 0.25, 0.6))
-            fill_len = max(2, int((subsys_w - 95) * s_val))
-            self.draw_rect(subsys_x + 65, subsys_y + 3, fill_len, 3, s_bar_col)
-            
-            subsys_y -= 22
-
-        # ======================================================================
-        # D. BOTTOM SPLIT DECKS — "AI DIAGNOSTIC DIRECTIVE" & "SOP"
-        # ======================================================================
-        bot_y = 14
-        mid_space = 16
-        deck_w1 = (width - left_w - right_w - 36 - mid_space) * 0.58
-        deck_w2 = (width - left_w - right_w - 36 - mid_space) * 0.42
-        deck_x1 = left_x + left_w + 12
-        deck_x2 = deck_x1 + deck_w1 + mid_space
-
-        self.draw_gradient_rect(deck_x1, bot_y, deck_w1, bot_h, (0.03, 0.06, 0.10, 0.92), (0.01, 0.02, 0.04, 0.95))
-        self.draw_rect_outline(deck_x1, bot_y, deck_w1, bot_h, (0.10, 0.22, 0.35, 0.50))
-        self.draw_text("AI DIAGNOSTIC DIRECTIVE & PHYSICAL CAUSAL CHAIN", deck_x1 + 14, bot_y + bot_h - 22, size=12.0, color=(0.0, 0.85, 1.0, 1.0))
-
-        ata_str = state.analytics.get('ata_chapter', 'ATA 00-00')
-        subsys_str = state.analytics.get('subsystem', 'PROPULSION_CORE')
-        
-        b1_w = self.get_text_width(ata_str, size=9.0) + 14
-        b1_x = deck_x1 + deck_w1 - b1_w - 14
-        self.draw_rect(b1_x, bot_y + bot_h - 26, b1_w, 20, (0.05, 0.22, 0.32, 0.8))
-        self.draw_rect_outline(b1_x, bot_y + bot_h - 26, b1_w, 20, (0.0, 0.85, 1.0, 0.75))
-        self.draw_text(ata_str, b1_x + 7, bot_y + bot_h - 22, size=9.0, color=(0.0, 0.92, 1.0, 1.0))
-
-        b2_w = self.get_text_width(subsys_str, size=9.0) + 14
-        b2_x = b1_x - b2_w - 8
-        self.draw_rect(b2_x, bot_y + bot_h - 26, b2_w, 20, (0.08, 0.20, 0.35, 0.65))
-        self.draw_rect_outline(b2_x, bot_y + bot_h - 26, b2_w, 20, (0.25, 0.60, 0.85, 0.55))
-        self.draw_text(subsys_str, b2_x + 7, bot_y + bot_h - 22, size=9.0, color=(0.85, 0.92, 1.0, 0.95))
-
-        diag_name = state.analytics.get('diagnosed_fault_name', 'NOMINAL_FLIGHT')
-        diag_conf = state.analytics.get('diagnosed_confidence', 0.99) * 100
-        diag_col = (1.0, 0.35, 0.35, 1.0) if active_fid > 0 else (0.35, 1.0, 0.55, 1.0)
-        self.draw_text(f"DIAGNOSIS: {diag_name} ({diag_conf:.0f}% confidence)", deck_x1 + 14, bot_y + bot_h - 44, size=11.5, color=diag_col)
-
-        causal_steps = state.analytics.get('causal_chain', [])
-        if not causal_steps:
-            causal_steps = [
-                f"All 27 telemetry channels within FAA/EASA certified limits for {prof['name']}.",
-                "Continuous physics residual autoencoder loss < 0.05.",
-                "Zero sub-threshold sensor drift detected across fleet.",
-                "Subsystem health index nominal at 100.0%."
-            ]
-
-        max_causal_rows = 3
-        step_y = bot_y + bot_h - 64
-        for idx, step in enumerate(causal_steps[:max_causal_rows], 1):
-            step_txt = f"{idx}. {step}"
-            if len(step_txt) > 85:
-                step_txt = step_txt[:82] + "..."
-            self.draw_text(step_txt, deck_x1 + 16, step_y, size=10.0, color=(0.85, 0.92, 1.0, 0.95) if active_fid > 0 else (0.75, 0.88, 0.95, 0.85))
-            step_y -= 19
-
-        ai_diag = state.analytics.get('ai_diagnosis', {}) or {}
-        ai_status = ai_diag.get('status', 'IDLE')
-        if ai_status == 'IDLE':
-            self.draw_text("🧠 QWEN3-4B: AI standby (activates on fault onset or operator query)", deck_x1 + 16, step_y, size=9.5, color=(0.60, 0.50, 0.85, 0.75))
-        elif ai_status == 'THINKING':
-            self.draw_text(f"🧠 QWEN3-4B: Analyzing causal chain against {prof['name']} manuals...", deck_x1 + 16, step_y, size=9.5, color=(0.75, 0.55, 1.0, 0.90))
-        elif ai_status == 'READY':
-            ai_text = ai_diag.get('explanation', '')
-            ai_line = f"🧠 QWEN3-4B: {ai_text}"
-            if len(ai_line) > 90:
-                ai_line = ai_line[:87] + "..."
-            self.draw_text(ai_line, deck_x1 + 16, step_y, size=9.5, color=(0.85, 0.70, 1.0, 0.95))
-        elif ai_status == 'ERROR':
-            self.draw_text("🧠 QWEN3-4B: AI reasoning layer unavailable (deterministic diagnosis unaffected).", deck_x1 + 16, step_y, size=9.0, color=(0.55, 0.55, 0.60, 0.75))
-
-        self.draw_gradient_rect(deck_x2, bot_y, deck_w2, bot_h, (0.03, 0.06, 0.10, 0.92), (0.01, 0.02, 0.04, 0.95))
-        self.draw_rect_outline(deck_x2, bot_y, deck_w2, bot_h, (0.10, 0.22, 0.35, 0.50))
-        self.draw_text("PRESCRIPTIVE DIRECTIVE & SOP", deck_x2 + 14, bot_y + bot_h - 22, size=12.0, color=(1.0, 0.75, 0.15, 1.0))
-
-        rec_action = state.analytics.get('prescriptive_action', 'Maintain standard flight profile.')
-        self.draw_text("🔧 ACTION:", deck_x2 + 14, bot_y + bot_h - 45, size=10.0, color=(1.0, 0.85, 0.25, 1.0))
-        self.draw_multiline_text(rec_action, deck_x2 + 78, bot_y + bot_h - 45, max_width=deck_w2 - 92, size=9.5, line_height=14, max_lines=2, color=(0.35, 1.0, 0.55, 1.0) if active_fid > 0 else (0.85, 0.92, 1.0, 0.90))
-
-        m_order = state.analytics.get('maintenance_order', 'No maintenance required.')
-        self.draw_text("🛠 ORDER:", deck_x2 + 14, bot_y + bot_h - 78, size=10.0, color=(0.0, 0.85, 1.0, 0.95))
-        self.draw_multiline_text(m_order, deck_x2 + 78, bot_y + bot_h - 78, max_width=deck_w2 - 92, size=9.5, line_height=14, max_lines=2, color=(0.80, 0.88, 0.98, 0.85))
-
-        actions_list = [
-            ("[SPACE] ORBIT", 'ACTION_ORBIT'),
-            ("[G] GHOST", 'ACTION_GHOST'),
-            ("[D] DEBRIEF", 'ACTION_DEBRIEF'),
-            ("[0] RESET", 'ACTION_RESET'),
-        ]
-        act_x = deck_x2 + 14
-        act_y = bot_y + 12
-        btn_w = (deck_w2 - 28 - (len(actions_list) - 1) * 8) / len(actions_list)
-
-        for act_title, act_id in actions_list:
-            is_hover = (state.hovered_button == act_id)
-            if act_id == 'ACTION_GHOST' and state.is_ghost_vision:
-                b_bg = (0.45, 0.15, 0.65, 0.90)
-                b_bd = (0.85, 0.45, 1.0, 1.0)
-            elif is_hover:
-                b_bg = (0.12, 0.35, 0.55, 0.90)
-                b_bd = (0.0, 0.90, 1.0, 0.95)
-            else:
-                b_bg = (0.06, 0.12, 0.20, 0.80)
-                b_bd = (0.16, 0.30, 0.45, 0.50)
-
-            self.draw_rect(int(act_x), act_y, int(btn_w), 24, b_bg)
-            self.draw_rect_outline(int(act_x), act_y, int(btn_w), 24, b_bd)
-            
-            t_w = self.get_text_width(act_title, size=9.0)
-            self.draw_text(act_title, int(act_x + (btn_w - t_w) / 2), act_y + 6, size=9.0, color=(1.0, 1.0, 1.0, 1.0))
-            
-            state.button_rects.append((int(act_x), act_y, int(btn_w), 24, act_id))
-            act_x += btn_w + 8
-
-        presets = [
-            ("ISO", 'CAM_ISO'),
-            ("TOP", 'CAM_TOP'),
-            ("FRONT", 'CAM_FRONT'),
-            ("FOCUSED", 'CAM_GEARBOX'),
-            ("MANIFOLD", 'CAM_EXHAUST'),
-            ("GHOST", 'CAM_GHOST'),
-            ("RESET", 'CAM_RESET')
-        ]
-        p_w = 54
-        p_h = 20
-        p_total_w = len(presets) * (p_w + 6)
-        p_x = (width - p_total_w) // 2
-        p_y = bot_y + bot_h + 12
-
-        for p_label, p_id in presets:
-            is_hover = (state.hovered_button == p_id)
-            if is_hover:
-                self.draw_rect(p_x, p_y, p_w, p_h, (0.0, 0.45, 0.70, 0.90))
-                self.draw_rect_outline(p_x, p_y, p_w, p_h, (0.0, 0.90, 1.0, 0.95))
-            else:
-                self.draw_rect(p_x, p_y, p_w, p_h, (0.05, 0.10, 0.16, 0.75))
-                self.draw_rect_outline(p_x, p_y, p_w, p_h, (0.18, 0.32, 0.48, 0.50))
-            
-            txt_w = self.get_text_width(p_label, size=8.5)
-            self.draw_text(p_label, p_x + (p_w - txt_w) // 2, p_y + 5, size=8.5, color=(0.85, 0.95, 1.0, 0.95))
-            state.button_rects.append((p_x, p_y, p_w, p_h, p_id))
-            p_x += p_w + 6
+            state.button_rects.append((curr_x, dock_y, pill_w, dock_h, f"SUBSYS_{sid}"))
+            curr_x += pill_w + 8
 
         gpu.state.blend_set('NONE')
 
 hud_drawer = HUDDrawer()
-
-
-# ==============================================================================
-# 3. BLENDER SCENE & SHADER CONTROLLER
-# ==============================================================================
-
-def ensure_ghost_materials():
-    """Ensure reusable Ghost Vision and Fault Red materials exist in Blender datablocks"""
-    ghost_mat = bpy.data.materials.get('M_GhostVision_XRay')
-    if not ghost_mat:
-        ghost_mat = bpy.data.materials.new(name='M_GhostVision_XRay')
-        ghost_mat.use_nodes = True
-        bsdf = ghost_mat.node_tree.nodes.get('Principled BSDF')
-        if bsdf:
-            bsdf.inputs['Base Color'].default_value = (0.06, 0.22, 0.38, 1.0)
-            bsdf.inputs['Metallic'].default_value = 0.1
-            bsdf.inputs['Roughness'].default_value = 0.15
-            bsdf.inputs['Alpha'].default_value = 0.22
-            if 'Transmission Weight' in bsdf.inputs:
-                bsdf.inputs['Transmission Weight'].default_value = 0.8
-            if 'Emission Color' in bsdf.inputs:
-                bsdf.inputs['Emission Color'].default_value = (0.01, 0.08, 0.18, 1.0)
-                bsdf.inputs['Emission Strength'].default_value = 0.6
-
-    fault_mat = bpy.data.materials.get('M_Fault_RedHighlight')
-    if not fault_mat:
-        fault_mat = bpy.data.materials.new(name='M_Fault_RedHighlight')
-        fault_mat.use_nodes = True
-        f_bsdf = fault_mat.node_tree.nodes.get('Principled BSDF')
-        if f_bsdf:
-            f_bsdf.inputs['Base Color'].default_value = (0.92, 0.04, 0.02, 1.0)
-            f_bsdf.inputs['Metallic'].default_value = 0.2
-            f_bsdf.inputs['Roughness'].default_value = 0.1
-            f_bsdf.inputs['Alpha'].default_value = 1.0
-            if 'Emission Color' in f_bsdf.inputs:
-                f_bsdf.inputs['Emission Color'].default_value = (1.0, 0.08, 0.02, 1.0)
-                f_bsdf.inputs['Emission Strength'].default_value = 4.5
-
-    return ghost_mat, fault_mat
-
-def save_original_materials():
-    """Cache authentic materials for all mesh objects in scene."""
-    for obj in bpy.data.objects:
-        if obj.type == 'MESH' and obj.name not in client_state.original_object_materials:
-            valid_slots = []
-            for slot in obj.material_slots:
-                if slot.material and slot.material.name not in {'M_GhostVision_XRay', 'M_Fault_RedHighlight'}:
-                    valid_slots.append(slot.material)
-                else:
-                    valid_slots.append(None)
-            client_state.original_object_materials[obj.name] = valid_slots
-
-
-def get_parts_center_and_radius(part_names: list[str]):
-    """Dynamically calculates the 3D bounding box center and radius of matching mesh parts in Blender."""
-    if not part_names:
-        return None, None
-    objs = [
-        o for o in bpy.data.objects 
-        if o.type == 'MESH' and not o.hide_viewport and any(p.lower() in o.name.lower() or p.lower() == o.name.lower() for p in part_names)
-    ]
-    if not objs:
-        return None, None
-    min_co = mathutils.Vector((float('inf'), float('inf'), float('inf')))
-    max_co = mathutils.Vector((float('-inf'), float('-inf'), float('-inf')))
-    for obj in objs:
-        for c in obj.bound_box:
-            w = obj.matrix_world @ mathutils.Vector(c)
-            min_co.x = min(min_co.x, w.x)
-            min_co.y = min(min_co.y, w.y)
-            min_co.z = min(min_co.z, w.z)
-            max_co.x = max(max_co.x, w.x)
-            max_co.y = max(max_co.y, w.y)
-            max_co.z = max(max_co.z, w.z)
-    center = (min_co + max_co) * 0.5
-    radius = max(0.1, (max_co - min_co).length * 0.5)
-    return center, radius
-
-
-def resolve_fault_targets_from_physics(engine_id: str, telemetry: dict, analytics: dict) -> list[str]:
-    """
-    PHYSICAL-TO-VISUAL ATTRIBUTION ENGINE (DRDO PS-26054)
-    Examines incoming continuous telemetry, compression readings, and physics residuals (d_MAP, d_CHT, d_EGT, etc.)
-    and returns matching 3D component mesh names to highlight.
-    """
-    targets = []
-    res = analytics.get('residuals', {})
-    
-    # 1. Intake Compression Loss / Boost Leak / Turbo Wastegate / Intercooler
-    d_map = float(res.get('d_MAP', res.get('map_kpa', 0.0)))
-    map_val = float(telemetry.get('MAP', 38.0))
-    tps_val = float(telemetry.get('TPS', 70.0))
-    if d_map < -6.0 or (map_val < 32.0 and tps_val > 50.0):
-        if 'rotax' in engine_id:
-            targets.extend(['Exhaust_System_M_SteelDark_0', 'Exhaust_System_M_Steel_0', 'Exhaust_System_M_Chrome_0', 'Cooling_Air_Baffle_M_PlasticWhite_0', 'Fittings_Metric_Rotax914_Extras_0', 'Fittings_Metric_Rotax915_Extras_0'])
-        elif 'austro' in engine_id:
-            targets.extend(['Turbocharger_M_TurboHousing_0', 'Intercooler_M_CastAluminium_0', 'Boost_Pipe_Hot_M_PolishedAlu_0', 'Boost_Pipe_Cold_M_PolishedAlu_0', 'Heat_Shield_Turbo_M_CrinkleFoil_0', 'Air_Intake_Duct_M_RubberDark_0'])
-        elif 'vrde' in engine_id:
-            targets.extend(['Wastegate_Actuator_Red_M_AnodizedRed_0', 'Wastegate_Actuator_Canister_M_PlasticBlack_0', 'Wastegate_Rod_Red_M_Stainless_0', 'Intercooler_M_CastAluminium_0.001', 'Exhaust_Downpipe_M_Stainless_0'])
-
-    # 2. Cylinder Compression & Thermal Surge (CHT Overheat)
-    for k in range(1, 5):
-        d_cht = float(res.get(f'd_CHT_{k}', res.get(f'cht_{k}', 0.0)))
-        cht_val = float(telemetry.get(f'CHT_{k}', 95.0))
-        if d_cht > 8.0 or cht_val > 115.0:
-            if 'rotax' in engine_id:
-                targets.extend(['Covers_Theme_M_PlasticTheme_0', 'Covers_Theme_M_PlasticGreen_0', 'Cooling_Air_Baffle_M_PlasticWhite_0'])
-            elif 'austro' in engine_id:
-                targets.extend(['Cylinder_Head_M_CastAluminium_0', 'Valve_Cover_M_PlasticBlack_0', 'Water_Pump_M_CastAluminium_0', 'Coolant_Hose_Red_M_RedSilicone_0', 'Coolant_Hose_Blue_M_BlueSilicone_0'])
-            elif 'vrde' in engine_id:
-                targets.extend(['Cylinder_Head_M_CastAluminium_0.001', 'Water_Pump_M_CastAluminium_0.001', 'Coolant_Pipe_Junction_M_CastAluminium_0', 'Coolant_Hose_Upper_M_BlueSilicone_0'])
-            break
-
-    # 3. High-Pressure Injection / Common Rail / Fuel Rail
-    d_rail = float(res.get('d_FUEL_RAIL_P', res.get('rail_p', 0.0)))
-    d_flow = float(res.get('d_FUEL_FLOW', res.get('fuel_flow', 0.0)))
-    rail_p = float(telemetry.get('FUEL_RAIL_P', 3.0))
-    if d_rail < -40.0 or d_flow < -2.0 or (rail_p < 2.4 and 'rotax' in engine_id) or (rail_p < 500.0 and 'rotax' not in engine_id and rail_p > 10.0):
-        if 'rotax' in engine_id:
-            targets.extend(['Rotax_912i_Base_M_PlasticGreen_0', 'Rotax_912i_Base_M_Steel_0', 'Rotax_912i_Base_M_PlasticCable_0', 'Fuel_Pump_M_Steel_0', 'Fuel_Pump_M_Rubber_0'])
-        elif 'austro' in engine_id:
-            targets.extend(['Common_Rail_M_Steel_0', 'HP_Fuel_Pump_M_SteelDark_0', 'Injector_1_M_Steel_0', 'Injector_2_M_Steel_0', 'Injector_3_M_Steel_0', 'Injector_4_M_Steel_0', 'Fuel_Line_1_M_Steel_0', 'Fuel_Line_2_M_Steel_0'])
-        elif 'vrde' in engine_id:
-            targets.extend(['Common_Rail_M_Steel_0.001', 'HP_Fuel_Pump_M_SteelDark_0.001', 'Injector_1_M_Steel_0.001', 'Injector_2_M_Steel_0.001', 'Injector_3_M_Steel_0.001', 'Injector_4_M_Steel_0.001', 'Fuel_Line_HP_Cyl1_M_Stainless_0', 'Fuel_Line_HP_Cyl2_M_Stainless_0'])
-
-    # 4. Combustion Misfire / EGT Delta / Spark / Glow Plugs
-    egts = [float(telemetry.get(f'EGT_{k}', 780.0)) for k in range(1, 5)]
-    d_egts = [float(res.get(f'd_EGT_{k}', res.get(f'egt_{k}', 0.0))) for k in range(1, 5)]
-    if (max(egts) - min(egts) > 35.0) or min(d_egts) < -30.0:
-        if 'rotax' in engine_id:
-            targets.extend(['Wiring_Harness_M_Copper_0', 'Rotax_912i_Base_M_Copper_0', 'Wiring_Harness_M_Cobalt_0', 'Wiring_Harness_M_PlasticCable_0'])
-        elif 'austro' in engine_id:
-            targets.extend(['Glow_Plugs_M_Steel_0', 'Glow_Plug_Control_Unit_M_CastAluminium_0', 'Injector_1_M_Steel_0', 'Injector_2_M_Steel_0'])
-        elif 'vrde' in engine_id:
-            targets.extend(['Glow_Plug_Cyl1_M_Steel_0', 'Glow_Plug_Cyl2_M_Steel_0', 'Glow_Plug_Cyl3_M_Steel_0', 'Glow_Plug_Cyl4_M_Steel_0', 'Injector_1_M_Steel_0.001'])
-
-    # 5. Lubrication & Oil Pressure Loss / Scavenge Anomaly
-    d_oil_p = float(res.get('d_OIL_PRESS', res.get('oil_p', 0.0)))
-    oil_p = float(telemetry.get('OIL_PRESS', 4.8))
-    d_oil_t = float(res.get('d_OIL_TEMP', res.get('oil_t', 0.0)))
-    if d_oil_p < -0.45 or oil_p < 2.2 or d_oil_t > 10.0:
-        if 'rotax' in engine_id:
-            targets.extend(['Oil_Tank_M_Steel_0', 'Oil_Tank_M_Labels_0', 'Oil_Tank_M_Cobalt_0', 'Oil_Tank_M_PlasticBlack_0'])
-        elif 'austro' in engine_id:
-            targets.extend(['Oil_Filter_M_MetalPaintedBlack_0', 'Oil_Sump_M_CastAluminium_0', 'Oil_Cooler_M_CastAluminium_0', 'Turbo_Oil_Feed_Line_M_Steel_0', 'Turbo_Oil_Drain_Line_M_Steel_0'])
-        elif 'vrde' in engine_id:
-            targets.extend(['Engine_Block_M_CastAluminium_0.001', 'Oil_Filter', 'Dipstick_Tube_M_Steel_0'])
-
-    # 6. Propeller Gearbox / Vibration Surge
-    vib = float(telemetry.get('VIB_GEARBOX_RMS', 0.7))
-    if vib > 1.7 or float(res.get('VIB_RMS', res.get('vib_rms', 0.0))) > 1.8:
-        if 'rotax' in engine_id:
-            targets.extend(['Gearbox_Type_2_M_Steel_0', 'Gearbox_Type_2_M_MetalPaintedBlack_0', 'Gearbox_Type_2_M_Cobalt_0', 'Gearbox_Type_2_M_PlasticBlack_0', 'Gearbox_Type_2_M_PlasticWhite_0'])
-        elif 'austro' in engine_id:
-            targets.extend(['Gearbox_M_CastAluminium_0', 'Prop_Governor_PCU_M_CastAluminium_0', 'Prop_Flange_M_Steel_0', 'PCU_Oil_Line_M_Steel_0', 'Gearbox_Logo_M_CastAluminium_0'])
-        elif 'vrde' in engine_id:
-            targets.extend(['Gearbox_M_CastAluminium_0.001', 'Gearbox_FrontCover_M_CastAluminium_0', 'Gearbox_PropBoss_M_CastAluminium_0', 'Gearbox_Governor_M_CastAluminium_0'])
-
-    # 7. Electrical / Alternator Sag
-    v_bus = float(telemetry.get('BUS_VOLTAGE', 14.1))
-    d_v = float(res.get('d_BUS_VOLTAGE', res.get('bus_v', 0.0)))
-    if (v_bus < 12.8 and 'rotax' in engine_id) or (v_bus < 24.0 and 'rotax' not in engine_id) or d_v < -0.8:
-        if 'rotax' in engine_id:
-            targets.extend(['External_Alternator_M_Rotax914_Extras_0', 'External_Alternator_M_TimingBelt_0'])
-        elif 'austro' in engine_id:
-            targets.extend(['Alternator_Details_M_CastAluminium_0', 'Alternator_Bracket_M_SteelDark_0', 'Alternator_Impeller_Fan_M_Steel_0', 'Serpentine_Belt_M_Rubber_0'])
-        elif 'vrde' in engine_id:
-            targets.extend(['Generator_1_M_CastAluminium_0.001', 'Generator_2_M_CastAluminium_0', 'Alternator_Power_Loom_M_PlasticBlack_0', 'Belt_Tensioner_M_SteelDark_0'])
-
-    # 8. Dual FADEC / EECS Desync & Drift
-    if telemetry.get('FADEC_ACTIVE_LANE') == 'LANE_DISAGREE' or float(res.get('d_FADEC', 0.0)) > 0.5:
-        if 'rotax' in engine_id:
-            targets.extend(['ECU_M_PlasticBlack_0', 'ECU_M_FuseLight_0', 'ECU_M_Motherboard_0', 'ECU_M_GlassMilky_0', 'ECU_M_Labels_0', 'ECU_M_Chrome_0', 'ECU_M_Copper_0'])
-        elif 'austro' in engine_id:
-            targets.extend(['ECU_Lane_A_M_MetalPaintedBlack_0', 'ECU_Lane_B_M_MetalPaintedBlack_0', 'Engine_Harness_Loom_M_PlasticBlack_0', 'ECU_Bayonet_Plugs_M_CastAluminium_0'])
-        elif 'vrde' in engine_id:
-            targets.extend(['ECU_Lane_A_M_MetalPaintedBlack_0.001', 'ECU_Lane_B_M_MetalPaintedBlack_0.001', 'Harness_Spine_M_PlasticBlack_0'])
-
-    return targets
-
-
-def apply_material_state():
-    """Slot-Based Material Swapping driven by backend diagnosed fault and physical residuals."""
-    ghost_mat, fault_mat = ensure_ghost_materials()
-    save_original_materials()
-    
-    active_fid = client_state.active_commanded_fault_id if client_state.active_commanded_fault_id > 0 else client_state.analytics.get('diagnosed_fault_id', 0)
-    target_patterns = set(client_state.analytics.get('target_parts', []))
-    
-    # 1. Fault profile target parts
-    if active_fid in FAULT_DATABASE:
-        for p in FAULT_DATABASE[active_fid].get('parts', []):
-            target_patterns.add(p)
-
-    # 2. Physics-based residual target parts
-    physics_targets = resolve_fault_targets_from_physics(client_state.engine_id, client_state.telemetry, client_state.analytics)
-    for pt in physics_targets:
-        target_patterns.add(pt)
-
-    # 3. Apply shader materials to active collection meshes
-    for obj in bpy.data.objects:
-        if obj.type == 'MESH' and not obj.hide_viewport:
-            is_target = False
-            for pat in target_patterns:
-                if pat.lower() in obj.name.lower() or obj.name == pat:
-                    is_target = True
-                    break
-            
-            if is_target:
-                if len(obj.material_slots) == 0:
-                    obj.data.materials.append(fault_mat)
-                else:
-                    for slot in obj.material_slots:
-                        slot.material = fault_mat
-            else:
-                if client_state.is_ghost_vision:
-                    if len(obj.material_slots) == 0:
-                        obj.data.materials.append(ghost_mat)
-                    else:
-                        for slot in obj.material_slots:
-                            slot.material = ghost_mat
-                else:
-                    orig_slots = client_state.original_object_materials.get(obj.name, [])
-                    for i, orig_m in enumerate(orig_slots):
-                        if i < len(obj.material_slots) and orig_m is not None:
-                            obj.material_slots[i].material = orig_m
-
-
-def update_pulsing_emission():
-    """Update dynamic pulsating emission on the active fault material."""
-    fault_mat = bpy.data.materials.get('M_Fault_RedHighlight')
-    if fault_mat and fault_mat.use_nodes:
-        bsdf = fault_mat.node_tree.nodes.get('Principled BSDF')
-        if bsdf and 'Emission Strength' in bsdf.inputs:
-            pulse = 3.5 + 1.8 * math.sin(time.time() * 9.0)
-            bsdf.inputs['Emission Strength'].default_value = pulse
-
-
-def update_camera_for_backend_fault():
-    """Adjusts camera focus target and cinematic framing when backend fault or physics attribution changes."""
-    diag_id = client_state.active_commanded_fault_id if client_state.active_commanded_fault_id > 0 else client_state.analytics.get('diagnosed_fault_id', 0)
-    physics_targets = resolve_fault_targets_from_physics(client_state.engine_id, client_state.telemetry, client_state.analytics)
-    
-    current_state_key = (diag_id, tuple(sorted(physics_targets)))
-    if current_state_key != getattr(update_camera_for_backend_fault, "_last_state_key", None):
-        update_camera_for_backend_fault._last_state_key = current_state_key
-        client_state.applied_fault_id = diag_id
-        
-        # 1. Preset fault mode active
-        if diag_id in FAULT_DATABASE:
-            f_data = FAULT_DATABASE[diag_id]
-            client_state.is_auto_orbit = False
-            
-            mesh_center, _ = get_parts_center_and_radius(f_data.get('parts', []))
-            if mesh_center is not None:
-                client_state.cam_target = mesh_center
-            else:
-                client_state.cam_target = f_data['center'].copy()
-                
-            client_state.target_orbit_angle = f_data['angle']
-            client_state.target_orbit_elevation = f_data['elevation']
-            client_state.target_orbit_distance = f_data['distance']
-            
-        # 2. Generic physics residual triggered without specific fault ID
-        elif physics_targets:
-            client_state.is_auto_orbit = False
-            mesh_center, mesh_radius = get_parts_center_and_radius(physics_targets)
-            if mesh_center is not None:
-                client_state.cam_target = mesh_center
-                client_state.target_orbit_distance = max(DEFAULT_ORBIT_DISTANCE * 0.40, mesh_radius * 2.2)
-                client_state.target_orbit_elevation = math.radians(22.0)
-            else:
-                client_state.cam_target = ENGINE_CENTER.copy()
-                client_state.target_orbit_distance = DEFAULT_ORBIT_DISTANCE * 0.65
-                
-        # 3. System nominal / cleared
-        else:
-            client_state.is_auto_orbit = True
-            client_state.cam_target = ENGINE_CENTER.copy()
-            client_state.target_orbit_distance = DEFAULT_ORBIT_DISTANCE
-            client_state.target_orbit_elevation = DEFAULT_ORBIT_ELEVATION
-            
-        apply_material_state()
 
 
 # ==============================================================================
@@ -1395,6 +1598,22 @@ class OT_DigitalTwinSimulator(bpy.types.Operator):
 
     _handle_2d = None
     _timer = None
+
+    def cancel(self, context):
+        if self._handle_2d is not None:
+            try:
+                bpy.types.SpaceView3D.draw_handler_remove(self._handle_2d, 'WINDOW')
+            except Exception:
+                pass
+            self._handle_2d = None
+        if self._timer is not None:
+            try:
+                wm = context.window_manager
+                wm.event_timer_remove(self._timer)
+            except Exception:
+                pass
+            self._timer = None
+        print("[BLENDER CLIENT] Digital twin simulator operator clean shutdown.")
 
     def modal(self, context, event):
         now = time.time()
@@ -1417,32 +1636,38 @@ class OT_DigitalTwinSimulator(bpy.types.Operator):
                 client_state.history_oil_press.append(t.get('OIL_PRESS', 4.89))
                 client_state.history_rpm.append(t.get('ENGINE_RPM', 4680.0))
 
-            update_camera_for_backend_fault()
-            
             if client_state.analytics.get('diagnosed_fault_id', 0) > 0 or client_state.active_commanded_fault_id > 0:
                 update_pulsing_emission()
 
-            # Delta-time exponential smoothing factors
-            alpha_target = 1.0 - math.exp(-7.0 * dt)
-            alpha_angle = 1.0 - math.exp(-6.5 * dt)
-            alpha_elev = 1.0 - math.exp(-7.0 * dt)
-            alpha_dist = 1.0 - math.exp(-7.5 * dt)
+            # Delta-time exponential smoothing factors for silky smooth cinematic glides
+            alpha_target = 1.0 - math.exp(-3.5 * dt)
+            alpha_angle = 1.0 - math.exp(-3.2 * dt)
+            alpha_elev = 1.0 - math.exp(-3.5 * dt)
+            alpha_dist = 1.0 - math.exp(-3.5 * dt)
 
-            if client_state.is_auto_orbit and not client_state.is_dragging:
-                client_state.orbit_angle = (client_state.orbit_angle + DEFAULT_ORBIT_SPEED * dt) % (2 * math.pi)
-                client_state.target_orbit_angle = client_state.orbit_angle
+            # CAMERA BEHAVIOR:
+            # 1. Full Assembly Mode (Station 0): Continuous 360-degree turntable orbit around engine center
+            if client_state.active_subsystem_id == 0 and not client_state.is_dragging:
+                if client_state.is_auto_orbit:
+                    client_state.orbit_angle = (client_state.orbit_angle + DEFAULT_ORBIT_SPEED * dt) % (2 * math.pi)
+                    client_state.target_orbit_angle = client_state.orbit_angle
                 client_state.orbit_elevation += (DEFAULT_ORBIT_ELEVATION - client_state.orbit_elevation) * alpha_elev
                 client_state.orbit_distance += (DEFAULT_ORBIT_DISTANCE - client_state.orbit_distance) * alpha_dist
                 client_state.cur_cam_target = client_state.cur_cam_target.lerp(ENGINE_CENTER, alpha_target)
 
-            elif not client_state.is_dragging:
+            # 2. Subsystem Inspection Mode: Smooth slerp to hardcoded component angle, with subtle micro-drift
+            elif client_state.active_subsystem_id > 0 and not client_state.is_dragging:
+                # Gentle living micro-drift during inspection
+                drift = math.sin(now * 0.45) * 0.008
+                client_state.target_orbit_angle = (client_state.target_orbit_angle + drift * dt) % (2 * math.pi)
+
                 angle_diff = (client_state.target_orbit_angle - client_state.orbit_angle + math.pi) % (2 * math.pi) - math.pi
                 client_state.orbit_angle = (client_state.orbit_angle + angle_diff * alpha_angle) % (2 * math.pi)
                 client_state.orbit_elevation += (client_state.target_orbit_elevation - client_state.orbit_elevation) * alpha_elev
                 client_state.orbit_distance += (client_state.target_orbit_distance - client_state.orbit_distance) * alpha_dist
                 client_state.cur_cam_target = client_state.cur_cam_target.lerp(client_state.cam_target, alpha_target)
 
-            # Direct computation of camera location along spherical manifold (zero chord-cutting wobble)
+            # Camera placement along spherical manifold
             cx = client_state.cur_cam_target.x + client_state.orbit_distance * math.cos(client_state.orbit_angle) * math.cos(client_state.orbit_elevation)
             cy = client_state.cur_cam_target.y + client_state.orbit_distance * math.sin(client_state.orbit_angle) * math.cos(client_state.orbit_elevation)
             cz = client_state.cur_cam_target.z + client_state.orbit_distance * math.sin(client_state.orbit_elevation)
@@ -1450,9 +1675,25 @@ class OT_DigitalTwinSimulator(bpy.types.Operator):
 
             cam = context.scene.camera
             if cam:
+                if cam.parent:
+                    cam.parent = None
+                    cam.matrix_parent_inverse.identity()
                 cam.location = client_state.cur_cam_pos
                 direction = client_state.cur_cam_target - cam.location
                 cam.rotation_euler = direction.to_track_quat('-Z', 'Y').to_euler()
+
+                # Calculate screen-space projection of inspected target
+                if client_state.active_subsystem_id > 0 and context.region:
+                    try:
+                        co_ndc = world_to_camera_view(context.scene, cam, client_state.cur_cam_target)
+                        if co_ndc.z > 0:
+                            px = int(co_ndc.x * context.region.width)
+                            py = int(co_ndc.y * context.region.height)
+                            client_state.subsystem_leader_screen_pos = (px, py)
+                        else:
+                            client_state.subsystem_leader_screen_pos = None
+                    except Exception:
+                        client_state.subsystem_leader_screen_pos = None
 
             if context.space_data and context.space_data.type == 'VIEW_3D':
                 context.space_data.region_3d.view_perspective = 'CAMERA'
@@ -1471,58 +1712,22 @@ class OT_DigitalTwinSimulator(bpy.types.Operator):
         # Click on HUD Buttons
         if event.type == 'LEFTMOUSE' and event.value == 'PRESS' and client_state.hovered_button:
             bid = client_state.hovered_button
-            scale = DEFAULT_ORBIT_DISTANCE / 230.0
             if bid.startswith('ENGINE_'):
                 eid = bid.replace('ENGINE_', '')
                 switch_engine(eid)
-            elif bid.startswith('FAULT_'):
-                fid = int(bid.split('_')[1])
-                send_server_command("SET_FAULT", fault_id=fid)
-            elif bid == 'CAM_ISO':
-                client_state.is_auto_orbit = False
-                client_state.cam_target = ENGINE_CENTER.copy()
-                client_state.target_orbit_angle = -1.2
-                client_state.target_orbit_elevation = DEFAULT_ORBIT_ELEVATION
-                client_state.target_orbit_distance = DEFAULT_ORBIT_DISTANCE
-            elif bid == 'CAM_TOP':
-                client_state.is_auto_orbit = False
-                client_state.cam_target = ENGINE_CENTER.copy()
-                client_state.target_orbit_angle = 0.0
-                client_state.target_orbit_elevation = math.radians(88.0)
-                client_state.target_orbit_distance = DEFAULT_ORBIT_DISTANCE * 1.15
-            elif bid == 'CAM_FRONT':
-                client_state.is_auto_orbit = False
-                client_state.cam_target = ENGINE_CENTER.copy()
-                client_state.target_orbit_angle = math.radians(-90.0)
-                client_state.target_orbit_elevation = math.radians(5.0)
-                client_state.target_orbit_distance = DEFAULT_ORBIT_DISTANCE * 0.90
-            elif bid == 'CAM_GEARBOX':
-                client_state.is_auto_orbit = False
-                client_state.cam_target = ENGINE_CENTER.copy() + mathutils.Vector((0.0, -10.0 * scale, 5.0 * scale))
-                client_state.target_orbit_angle = math.radians(-90.0)
-                client_state.target_orbit_elevation = math.radians(14.0)
-                client_state.target_orbit_distance = DEFAULT_ORBIT_DISTANCE * 0.65
-            elif bid == 'CAM_EXHAUST':
-                client_state.is_auto_orbit = False
-                client_state.cam_target = ENGINE_CENTER.copy() + mathutils.Vector((5.0 * scale, 10.0 * scale, -10.0 * scale))
-                client_state.target_orbit_angle = math.radians(-45.0)
-                client_state.target_orbit_elevation = math.radians(-8.0)
-                client_state.target_orbit_distance = DEFAULT_ORBIT_DISTANCE * 0.75
-            elif bid in {'CAM_GHOST', 'ACTION_GHOST'}:
-                client_state.is_ghost_vision = not client_state.is_ghost_vision
-                apply_material_state()
-            elif bid in {'CAM_RESET', 'ACTION_RESET'}:
-                send_server_command("CLEAR_FAULT")
-                client_state.is_auto_orbit = True
-                client_state.cam_target = ENGINE_CENTER.copy()
-                client_state.target_orbit_distance = DEFAULT_ORBIT_DISTANCE
-                client_state.target_orbit_elevation = DEFAULT_ORBIT_ELEVATION
+            elif bid.startswith('SUBSYS_'):
+                sid = int(bid.replace('SUBSYS_', ''))
+                if sid == 0:
+                    clear_subsystem_inspection()
+                else:
+                    apply_subsystem_inspection(sid)
+            elif bid == 'SUBSYS_RESET':
+                clear_subsystem_inspection()
             elif bid == 'ACTION_ORBIT':
                 client_state.is_auto_orbit = not client_state.is_auto_orbit
-            elif bid == 'ACTION_DEBRIEF':
-                send_server_command("EXPORT_DEBRIEF")
-                client_state.debrief_msg = "Debrief report requested on laptop server."
-                client_state.debrief_time = time.time()
+            elif bid == 'ACTION_GHOST':
+                client_state.is_ghost_vision = not client_state.is_ghost_vision
+                apply_material_state()
             context.area.tag_redraw()
             return {'RUNNING_MODAL'}
 
@@ -1566,7 +1771,7 @@ class OT_DigitalTwinSimulator(bpy.types.Operator):
 
         # Keyboard Shortcuts
         if event.value == 'PRESS':
-            scale = DEFAULT_ORBIT_DISTANCE / 230.0
+            # Engine Selection: [F1] to [F5]
             if event.type == 'F1':
                 switch_engine('rotax_912is')
             elif event.type == 'F2':
@@ -1578,54 +1783,26 @@ class OT_DigitalTwinSimulator(bpy.types.Operator):
             elif event.type == 'F5':
                 switch_engine('vrde_jayem_2_2l')
                 
+            # Subsystem Inspection: [1] to [5]
             elif event.type in {'ONE', 'NUMPAD_1'}:
-                send_server_command("SET_FAULT", fault_id=1)
+                apply_subsystem_inspection(1)
             elif event.type in {'TWO', 'NUMPAD_2'}:
-                send_server_command("SET_FAULT", fault_id=2)
+                apply_subsystem_inspection(2)
             elif event.type in {'THREE', 'NUMPAD_3'}:
-                send_server_command("SET_FAULT", fault_id=3)
+                apply_subsystem_inspection(3)
             elif event.type in {'FOUR', 'NUMPAD_4'}:
-                send_server_command("SET_FAULT", fault_id=4)
+                apply_subsystem_inspection(4)
             elif event.type in {'FIVE', 'NUMPAD_5'}:
-                send_server_command("SET_FAULT", fault_id=5)
-            elif event.type in {'SIX', 'NUMPAD_6'}:
-                send_server_command("SET_FAULT", fault_id=6)
-            elif event.type in {'SEVEN', 'NUMPAD_7'}:
-                send_server_command("SET_FAULT", fault_id=7)
-            elif event.type in {'EIGHT', 'NUMPAD_8'}:
-                send_server_command("SET_FAULT", fault_id=8)
+                apply_subsystem_inspection(5)
                 
-            elif event.type in {'T'}:
-                client_state.is_auto_orbit = False
-                client_state.cam_target = ENGINE_CENTER.copy()
-                client_state.target_orbit_angle = 0.0
-                client_state.target_orbit_elevation = math.radians(88.0)
-                client_state.target_orbit_distance = DEFAULT_ORBIT_DISTANCE * 1.15
-            elif event.type in {'F'}:
-                client_state.is_auto_orbit = False
-                client_state.cam_target = ENGINE_CENTER.copy()
-                client_state.target_orbit_angle = math.radians(-90.0)
-                client_state.target_orbit_elevation = math.radians(5.0)
-                client_state.target_orbit_distance = DEFAULT_ORBIT_DISTANCE * 0.90
-            elif event.type in {'I'}:
-                client_state.is_auto_orbit = False
-                client_state.cam_target = ENGINE_CENTER.copy()
-                client_state.target_orbit_angle = -1.2
-                client_state.target_orbit_elevation = DEFAULT_ORBIT_ELEVATION
-                client_state.target_orbit_distance = DEFAULT_ORBIT_DISTANCE
+            # Reset to Full Assembly: [0] or [ESC]
+            elif event.type in {'ZERO', 'NUMPAD_0', 'ESC'}:
+                clear_subsystem_inspection()
+                
+            # Additional Controls
             elif event.type in {'G', 'X'}:
                 client_state.is_ghost_vision = not client_state.is_ghost_vision
                 apply_material_state()
-            elif event.type == 'D':
-                send_server_command("EXPORT_DEBRIEF")
-                client_state.debrief_msg = "Debrief report requested on laptop server."
-                client_state.debrief_time = time.time()
-            elif event.type in {'ZERO', 'NUMPAD_0', 'ESC'}:
-                send_server_command("CLEAR_FAULT")
-                client_state.is_auto_orbit = True
-                client_state.cam_target = ENGINE_CENTER.copy()
-                client_state.target_orbit_distance = DEFAULT_ORBIT_DISTANCE
-                client_state.target_orbit_elevation = DEFAULT_ORBIT_ELEVATION
             elif event.type == 'SPACE':
                 client_state.is_auto_orbit = not client_state.is_auto_orbit
             elif event.type in {'H', 'TAB'}:
@@ -1656,23 +1833,44 @@ def draw_callback_px(op, context):
 # ==============================================================================
 
 def ensure_studio_lighting():
-    """Configures high-definition 3-point studio lighting if lights are absent."""
+    """Configures high-definition 3-point aerospace studio lighting and dark background."""
     scene = bpy.context.scene
+    
+    # Deep aerospace charcoal background
+    world = scene.world
+    if not world:
+        world = bpy.data.worlds.new("Anumaan_Aerospace_World")
+        scene.world = world
+    world.use_nodes = True
+    bg = world.node_tree.nodes.get('Background')
+    if bg:
+        bg.inputs['Color'].default_value = (0.012, 0.018, 0.028, 1.0)
+        bg.inputs['Strength'].default_value = 1.0
+        
     lights = [o for o in bpy.data.objects if o.type == 'LIGHT']
     if not lights:
         light_data1 = bpy.data.lights.new(name="Studio_Key_Sun", type="SUN")
-        light_data1.energy = 4.0
+        light_data1.energy = 4.5
         light_data1.color = (1.0, 0.98, 0.95)
         light_obj1 = bpy.data.objects.new(name="Studio_Key_Sun", object_data=light_data1)
         scene.collection.objects.link(light_obj1)
         light_obj1.rotation_euler = (math.radians(45), math.radians(30), math.radians(60))
         
         light_data2 = bpy.data.lights.new(name="Studio_Fill_Sun", type="SUN")
-        light_data2.energy = 2.0
+        light_data2.energy = 2.5
         light_data2.color = (0.85, 0.92, 1.0)
         light_obj2 = bpy.data.objects.new(name="Studio_Fill_Sun", object_data=light_data2)
         scene.collection.objects.link(light_obj2)
         light_obj2.rotation_euler = (math.radians(-45), math.radians(-30), math.radians(-120))
+
+    rim_light = bpy.data.objects.get("Studio_Rim_Cyan")
+    if not rim_light:
+        rim_data = bpy.data.lights.new(name="Studio_Rim_Cyan", type="SUN")
+        rim_data.energy = 3.5
+        rim_data.color = (0.0, 0.75, 1.0)
+        rim_obj = bpy.data.objects.new(name="Studio_Rim_Cyan", object_data=rim_data)
+        scene.collection.objects.link(rim_obj)
+        rim_obj.rotation_euler = (math.radians(-60), math.radians(45), math.radians(150))
 
 
 def configure_clean_viewport_workspace():
@@ -1691,21 +1889,26 @@ def configure_clean_viewport_workspace():
         if obj.type == 'MESH':
             obj.animation_data_clear()
 
-    # 3. Setup Studio Lighting
+    # 3. Setup Studio Lighting & Aerospace charcoal background
     ensure_studio_lighting()
 
     # 4. Activate initial engine collection
     switch_engine_collection(ACTIVE_ENGINE_ID)
 
-    # 5. Auto-compute bounds and camera distance
-    center, dist = compute_engine_bounds(ENGINE_PROFILE['default_center'], ENGINE_PROFILE['default_distance'])
-    global ENGINE_CENTER, DEFAULT_ORBIT_DISTANCE
-    ENGINE_CENTER = center
-    DEFAULT_ORBIT_DISTANCE = dist
+    # 5. Set calibrated camera bounds and orbit distance
+    global ENGINE_CENTER, DEFAULT_ORBIT_DISTANCE, DEFAULT_ORBIT_ELEVATION
+    ENGINE_CENTER = ENGINE_PROFILE['default_center'].copy()
+    DEFAULT_ORBIT_DISTANCE = ENGINE_PROFILE['default_distance']
+    DEFAULT_ORBIT_ELEVATION = ENGINE_PROFILE['default_elevation']
+    
     client_state.cam_target = ENGINE_CENTER.copy()
     client_state.cur_cam_target = ENGINE_CENTER.copy()
     client_state.orbit_distance = DEFAULT_ORBIT_DISTANCE
     client_state.target_orbit_distance = DEFAULT_ORBIT_DISTANCE
+    client_state.orbit_elevation = DEFAULT_ORBIT_ELEVATION
+    client_state.target_orbit_elevation = DEFAULT_ORBIT_ELEVATION
+    client_state.orbit_angle = ENGINE_PROFILE.get('front_angle', -1.57)
+    client_state.target_orbit_angle = client_state.orbit_angle
 
     # 6. Setup Camera
     cam = bpy.data.objects.get("TurntableCam") or bpy.data.objects.get("MainCamera")
@@ -1713,16 +1916,21 @@ def configure_clean_viewport_workspace():
         cam_data = bpy.data.cameras.new("TurntableCam")
         cam = bpy.data.objects.new("TurntableCam", cam_data)
         scene.collection.objects.link(cam)
+    if cam.parent:
+        cam.parent = None
+    cam.matrix_parent_inverse.identity()
+    cam.constraints.clear()
     if cam.data:
         cam.data.clip_start = 0.01
         cam.data.clip_end = 5000.0
-        cam.data.lens = 55.0
+        cam.data.lens = 50.0
         cam.data.sensor_width = 36.0
     scene.camera = cam
     cam.animation_data_clear()
 
-    # 7. Cache master materials
-    save_original_materials()
+    # 7. Cache master materials & ensure 100% solid beauty render
+    cache_authentic_materials()
+    clear_subsystem_inspection()
 
     # 8. Lock Viewport to Camera View + Rendered Shading + Hide Gizmos
     for screen in bpy.data.screens:
@@ -1746,7 +1954,7 @@ def configure_clean_viewport_workspace():
         receiver = TelemetryReceiverThread()
         receiver.start()
         configure_clean_viewport_workspace._receiver_started = True
-        print(f"[BLENDER CLIENT] Connecting to Multi-Engine Backend Server at: {SERVER_BASE_URL}")
+        print(f"[BLENDER CLIENT] Digital Twin initialized for {ENGINE_PROFILE['name']}")
 
     # 10. Maximize 3D Viewport & invoke modal
     for window in bpy.context.window_manager.windows:
@@ -1762,17 +1970,20 @@ def configure_clean_viewport_workspace():
                             print(f"[NOTE] Viewport maximized: {e}")
                         return
 
+
 def register():
     try:
         bpy.utils.register_class(OT_DigitalTwinSimulator)
     except ValueError:
         pass
 
+
 def unregister():
     try:
         bpy.utils.unregister_class(OT_DigitalTwinSimulator)
     except ValueError:
         pass
+
 
 if __name__ == "__main__":
     register()

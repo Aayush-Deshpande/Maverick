@@ -1,7 +1,54 @@
 import sys
 import os
 import math
-import mathutils
+
+import unittest.mock as mock
+
+try:
+    import bpy
+except ImportError:
+    mock_bpy = mock.MagicMock()
+    sys.modules['bpy'] = mock_bpy
+    sys.modules['gpu'] = mock.MagicMock()
+    sys.modules['gpu_extras'] = mock.MagicMock()
+    sys.modules['gpu_extras.batch'] = mock.MagicMock()
+    sys.modules['blf'] = mock.MagicMock()
+
+try:
+    import mathutils
+except ImportError:
+    class MockVector:
+        def __init__(self, vals=(0, 0, 0)):
+            self.vals = list(vals)
+        @property
+        def x(self): return self.vals[0]
+        @x.setter
+        def x(self, v): self.vals[0] = v
+        @property
+        def y(self): return self.vals[1]
+        @y.setter
+        def y(self, v): self.vals[1] = v
+        @property
+        def z(self): return self.vals[2]
+        @z.setter
+        def z(self, v): self.vals[2] = v
+        def copy(self): return MockVector(self.vals.copy())
+        @property
+        def length(self): return math.sqrt(sum(v*v for v in self.vals))
+        def normalized(self):
+            l = self.length
+            return MockVector([v/l for v in self.vals]) if l > 0 else MockVector((0,0,0))
+        def lerp(self, o, factor):
+            return MockVector([a + (b - a) * factor for a, b in zip(self.vals, o.vals)])
+        def __add__(self, o): return MockVector([a + b for a, b in zip(self.vals, o.vals)])
+        def __sub__(self, o): return MockVector([a - b for a, b in zip(self.vals, o.vals)])
+        def __mul__(self, s): return MockVector([a * s for a in self.vals])
+        def __rmul__(self, s): return MockVector([a * s for a in self.vals])
+        def __repr__(self): return f"Vector(({self.x}, {self.y}, {self.z}))"
+    class MockMathUtils:
+        Vector = MockVector
+    mathutils = MockMathUtils()
+    sys.modules['mathutils'] = mathutils
 
 REPO_ROOT = r"e:\backup-llm\backup-no-llm\3d_engine"
 sys.path.insert(0, os.path.join(REPO_ROOT, "apps", "blender_twin"))

@@ -50,7 +50,29 @@ def main():
 
     print(f"[BUILDER] Linked {len(rotax_objs)} meshes into Collection_Rotax_912iS")
 
-    # 3. Append Austro AE330 objects
+    # 3. Append Rotax 914 F Turbo CAD objects
+    rotax_914_blend = os.path.join(REPO_ROOT, "assets", "blender", "rotax_914.blend")
+    if os.path.exists(rotax_914_blend):
+        print(f"[BUILDER] Appending Rotax 914 Turbo from {rotax_914_blend}...")
+        with bpy.data.libraries.load(rotax_914_blend) as (data_from, data_to):
+            data_to.objects = [name for name in data_from.objects if name.startswith("Rotax914_")]
+        for obj in data_to.objects:
+            if obj is not None:
+                col_rotax_914.objects.link(obj)
+        print(f"[BUILDER] Appended {len(data_to.objects)} Rotax 914 CAD meshes into Collection_Rotax_914")
+
+    # 4. Append Rotax 915 iS Turbo objects
+    rotax_915_blend = os.path.join(REPO_ROOT, "assets", "blender", "rotax_915.blend")
+    if os.path.exists(rotax_915_blend):
+        print(f"[BUILDER] Appending Rotax 915 from {rotax_915_blend}...")
+        with bpy.data.libraries.load(rotax_915_blend) as (data_from, data_to):
+            data_to.objects = [name for name in data_from.objects if name != "Camera" and name != "Light" and not name.startswith("Studio_")]
+        for obj in data_to.objects:
+            if obj is not None:
+                col_rotax_915.objects.link(obj)
+        print(f"[BUILDER] Appended {len(data_to.objects)} Rotax 915 meshes into Collection_Rotax_915")
+
+    # 5. Append Austro AE330 objects
     print(f"[BUILDER] Appending Austro AE330 from {AUSTRO_BLEND}...")
     with bpy.data.libraries.load(AUSTRO_BLEND) as (data_from, data_to):
         data_to.objects = [name for name in data_from.objects if name != "Camera" and name != "Light" and not name.startswith("Studio_")]
@@ -64,7 +86,7 @@ def main():
 
     print(f"[BUILDER] Appended {len(data_to.objects)} Austro meshes into Collection_Austro_AE300")
 
-    # 4. Append VRDE TEI PD170 objects
+    # 6. Append VRDE TEI PD170 objects
     print(f"[BUILDER] Appending VRDE TEI PD170 from {VRDE_BLEND}...")
     with bpy.data.libraries.load(VRDE_BLEND) as (data_from, data_to):
         data_to.objects = [name for name in data_from.objects if name != "Camera" and name != "Light" and not name.startswith("Studio_")]
@@ -78,7 +100,7 @@ def main():
 
     print(f"[BUILDER] Appended {len(data_to.objects)} VRDE meshes into Collection_VRDE_2_2L")
 
-    # 5. Default Visibility: Show Rotax 912, hide others
+    # 7. Default Visibility: Show Rotax 912, hide others
     col_rotax_912.hide_viewport = False
     col_rotax_914.hide_viewport = True
     col_rotax_915.hide_viewport = True

@@ -40,8 +40,6 @@ logger = logging.getLogger("EngineService")
 FAULT_TARGET_PARTS: Dict[int, List[str]] = {
     0: [],
     1: [
-        'Covers_Theme_M_PlasticTheme_0',
-        'Covers_Theme_M_PlasticGreen_0',
         'Cooling_Air_Baffle_M_PlasticWhite_0',
         # 'Cooling_Air_Baffle_M_PlasticCable_0' removed -- no such object in
         # assets/blender/rotax_912_is_sport.blend; only a PlasticWhite variant
@@ -49,15 +47,11 @@ FAULT_TARGET_PARTS: Dict[int, List[str]] = {
         # scratch/real_objects.txt). Kept as a comment, not silently dropped,
         # in case a future asset revision reintroduces a cable-material variant.
     ],
-    2: [
-        'Rotax_912i_Base_M_PlasticGreen_0',
-        'Rotax_912i_Base_M_Steel_0',
-        'Rotax_912i_Base_M_PlasticCable_0',
-        'Rotax_912i_Base_M_Rubber_0'
-    ],
+    # The exported 3D asset does not contain a separable injector-1 mesh. The
+    # Three.js client marks its known location instead of glowing broad engine-body meshes.
+    2: [],
     3: [
         'Wiring_Harness_M_Copper_0',
-        'Rotax_912i_Base_M_Copper_0',
         'Wiring_Harness_M_Cobalt_0',
         'Wiring_Harness_M_PlasticCable_0'
     ],
@@ -650,7 +644,9 @@ class EngineStateService:
                 self.is_engine_running = True
                 self.active_fault_id = fid
                 self.fault_start_time = time.time()
-                self.streamer.set_fault(fid, severity=self.fault_severity, ramp_duration_sec=6.0)
+                self.fault_severity = max(0.0, min(1.0, float(cmd.severity if cmd.severity is not None else 1.0)))
+                ramp_duration_sec = max(0.1, float(cmd.ramp_duration_sec if cmd.ramp_duration_sec is not None else 6.0))
+                self.streamer.set_fault(fid, severity=self.fault_severity, ramp_duration_sec=ramp_duration_sec)
                 self.pipeline.reset(sortie_id=self.sortie_id)
                 # Without this, DegradationTrendAnalyser keeps fitting curves across score
                 # history from whatever scenario was active before this command, and the

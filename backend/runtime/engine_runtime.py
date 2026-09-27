@@ -216,6 +216,9 @@ class EngineRuntime:
         return {"engine_id": self.engine_id, "n_cylinders": c.cylinder_count, "turbocharged": c.is_turbocharged,
                 "compression_ignition": c.is_compression_ignition, "ready": self.ready,
                 "heavy_ready": self.heavy_ready, "tail_id": self.tail_id,
+                # These are operator commands, not plant truth; returning them lets a UI restore
+                # its commanded-fault badge after a reconnect without exposing TruthRecord.
+                "commanded_faults": list(self.injected),
                 "faults": [{"mode": s.mode, "per_cylinder": s.per_cylinder, "scalar_visible": s.scalar_visible,
                             "layer": s.layer, "description": s.description} for s in faults_for(c)]}
 

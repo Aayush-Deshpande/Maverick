@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 >nul
 title ANUMAAN — 3D DIGITAL TWIN VISUALIZATION CLIENT
 color 0B
 
@@ -23,6 +24,8 @@ if "%ANUMAAN_ENGINE_ID%"=="" (
     echo   [5] VRDE / JAYEM 2.2L    (180 hp Indigenous DRDO CRDi Diesel)
     echo.
     echo   [NOTE] You can switch engines anytime in-app using keys [F1] to [F5]!
+    echo   [NOTE] Press [1]-[5] to Inspect Subsystems (Ghost Isolation + HUD Specs)!
+    echo   [NOTE] Press [0] or [ESC] to Reset to Full Assembly!
     echo.
     choice /c 12345 /t 4 /d 1 /m "Select initial engine [1-5] (Auto-selects [1] in 4s): "
     if errorlevel 5 set "ANUMAAN_ENGINE_ID=vrde_jayem_2_2l"
@@ -58,19 +61,15 @@ if not defined BLENDER_EXE (
     exit /b 1
 )
 
-echo [1/2] Checking Backend Server status on port 8000...
-powershell -NoProfile -Command "try { Invoke-WebRequest -Uri 'http://127.0.0.1:8000/api/health' -TimeoutSec 2 -UseBasicParsing | Out-Null; exit 0 } catch { exit 1 }" >nul 2>&1
+echo [1/2] Checking Backend Server link on port 8000...
+powershell -NoProfile -Command "try { Invoke-WebRequest -Uri 'http://127.0.0.1:8000/api/health' -TimeoutSec 1 -UseBasicParsing | Out-Null; exit 0 } catch { exit 1 }" >nul 2>&1
 if errorlevel 1 (
-    echo [INFO] Backend server not detected - launching it now in a separate window...
-    start "ANUMAAN BACKEND SERVER" cmd /k "%~dp0launch_backend_server.bat"
-    echo [INFO] Waiting for the backend to initialize...
-    timeout /t 5 /nobreak >nul
+    echo [INFO] Backend server offline - starting in Autonomous Digital Twin Mode.
 ) else (
-    echo [OK] Backend server already running.
+    echo [OK] Backend server connected (20 Hz live telemetry active).
 )
 
-echo [2/2] Connecting to Backend Server (http://127.0.0.1:8000)...
-echo [OK] Launching 3D Digital Twin Client (EEVEE Viewport Mode)...
+echo [2/2] Launching 3D Digital Twin Client (EEVEE Viewport Mode)...
 echo.
 
 "%BLENDER_EXE%" "%TARGET_BLEND%" --python "%~dp0apps\blender_twin\standalone_digital_twin_app.py"

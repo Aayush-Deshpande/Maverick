@@ -14,6 +14,7 @@ import json
 import logging
 import sys
 import uuid
+from pathlib import Path
 from dataclasses import asdict
 from typing import Set, List, Optional
 from contextlib import asynccontextmanager
@@ -33,6 +34,8 @@ for _stream in (sys.stdout, sys.stderr):
         _stream.reconfigure(encoding="utf-8", errors="backslashreplace")
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, UploadFile, File, Form
+from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
 from pydantic import BaseModel
@@ -108,6 +111,18 @@ app = FastAPI(
 )
 
 app.include_router(engine_router)
+
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+_THREEJS_TWIN = _REPO_ROOT / "apps" / "threejs_twin"
+
+
+@app.get("/app", include_in_schema=False)
+def serve_threejs_twin():
+    """Serve the browser twin from the same local service as its simulation APIs."""
+    return RedirectResponse("/apps/threejs_twin/")
+
+
+app.mount("/apps/threejs_twin", StaticFiles(directory=_THREEJS_TWIN, html=True), name="threejs-twin-assets")
 
 # Enable permissive CORS for Vercel cloud and local development
 app.add_middleware(
