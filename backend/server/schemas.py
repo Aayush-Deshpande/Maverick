@@ -127,6 +127,8 @@ class UnifiedTelemetryState(BaseModel):
     """The unified, single source of truth broadcast to all clients at 20 Hz."""
     timestamp: float = Field(..., description="UNIX epoch timestamp in seconds")
     sortie_id: str = Field(..., description="Active Sortie Identifier")
+    engine_id: str = Field("engine_active", description="Active propulsion engine profile ID")
+    engine_name: str = Field("Active Propulsion Unit", description="Active propulsion engine display name")
     is_engine_running: bool = Field(True, description="Whether engine is running")
     active_commanded_fault_id: int = Field(0, description="Commanded fault scenario ID (0..8)")
     active_commanded_fault_name: str = Field("NOMINAL", description="Commanded fault name")
@@ -136,8 +138,12 @@ class UnifiedTelemetryState(BaseModel):
 
 class ControlCommand(BaseModel):
     """Incoming command from Mobile Web Frontend or GCS."""
-    action: str = Field(..., description="Action: START_ENGINE | STOP_ENGINE | SET_FAULT | CLEAR_FAULT | SET_THROTTLE | SET_ALTITUDE | SET_OAT | SET_REGIME | SET_ROLE | EXPORT_DEBRIEF")
+    action: str = Field(..., description="Action: START_ENGINE | STOP_ENGINE | SET_FAULT | CLEAR_FAULT | SET_THROTTLE | SET_ALTITUDE | SET_OAT | SET_REGIME | SET_ROLE | SELECT_ENGINE | EXPORT_DEBRIEF")
+    engine_id: Optional[str] = Field(None, description="Active engine profile identifier from configs/engines")
     fault_id: Optional[int] = Field(None, description="Fault ID (0 to 8)")
+    fault_type: Optional[str] = Field(None, description="Fault type name: INJECTOR_CLOGGING | OIL_LEAK etc.")
+    severity: Optional[float] = Field(None, description="Fault severity (0.0 to 1.0)")
+    ramp_duration_sec: Optional[float] = Field(None, description="Fault onset ramp in simulated seconds")
     throttle: Optional[float] = Field(None, description="Throttle percentage (0 - 100%)")
     altitude_ft: Optional[float] = Field(None, description="Altitude MSL (feet)")
     oat_c: Optional[float] = Field(None, description="Outside Air Temp (°C)")

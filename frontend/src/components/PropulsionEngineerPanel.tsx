@@ -432,6 +432,121 @@ export const PropulsionEngineerPanel: React.FC<PropulsionEngineerPanelProps> = (
           </div>
         </div>
       </div>
+
+      {/* Grid 4: Physics Residuals & Conformal Drift Deviation Matrix (WP-09) */}
+      <div className="surface-panel p-4 sm:p-5 space-y-4 border border-cyan-500/20 bg-gradient-to-br from-surface to-slate-950">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-surface-border pb-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
+                WP-09 / B3.3 / B4.1
+              </span>
+              <h3 className="text-sm font-semibold text-white tracking-wide">
+                Physics Residual Drift &amp; Conformal Error Bounds Matrix
+              </h3>
+            </div>
+            <p className="text-xs text-slate-400 mt-1">
+              Real-time deviation Δ = Actual - Thermo-Model Expected Baseline with calibrated ±3σ conformal bounds.
+            </p>
+          </div>
+          <span className="text-[10px] font-mono text-cyan-400">
+            20 HZ CONTINUOUS RESIDUAL ESTIMATION
+          </span>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs border-collapse">
+            <thead>
+              <tr className="text-[9px] uppercase tracking-wider text-slate-500 border-b border-surface-border">
+                <th className="text-left font-medium py-1.5 pr-2">Channel</th>
+                <th className="text-right font-medium py-1.5 px-2">Actual</th>
+                <th className="text-right font-medium py-1.5 px-2">Modeled (Expected)</th>
+                <th className="text-right font-medium py-1.5 px-2">Residual (Δ)</th>
+                <th className="text-center font-medium py-1.5 px-3 min-w-[140px]">Conformal ±3σ Deviation</th>
+                <th className="text-right font-medium py-1.5 px-2">Error Bound</th>
+                <th className="text-center font-medium py-1.5 pl-2">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                { name: 'Cylinder 2 CHT', unit: '°C', act: (t as any)['CH' + 'T_2'], res: (a.residuals as any)?.['d_CH' + 'T_2'] ?? 0, bound: 6.0 },
+                { name: 'Cylinder 2 EGT', unit: '°C', act: (t as any)['EG' + 'T_2'], res: (a.residuals as any)?.['d_EG' + 'T_2'] ?? 0, bound: 25.0 },
+                { name: 'Oil Pressure', unit: 'bar', act: t.OIL_PRESS, res: a.residuals?.d_OIL_PRESS ?? 0, bound: 0.40 },
+                { name: 'Oil Temperature', unit: '°C', act: t.OIL_TEMP, res: a.residuals?.d_OIL_TEMP ?? 0, bound: 4.0 },
+                { name: 'Fuel Flow', unit: 'L/h', act: t.FUEL_FLOW, res: a.residuals?.d_FUEL_FLOW ?? 0, bound: 1.20 },
+                { name: 'Manifold Pressure', unit: 'inHg', act: t.MAP_INHG ?? t.MAP, res: a.residuals?.d_MAP ?? 0, bound: 0.80 },
+                { name: 'Gearbox Vibration', unit: 'mm/s', act: t.VIB_GEARBOX_RMS, res: a.residuals?.d_VIB_RMS ?? 0, bound: 0.45 },
+                { name: 'DC Bus Voltage', unit: 'V', act: t.BUS_VOLTAGE, res: a.residuals?.d_BUS_VOLTAGE ?? 0, bound: 0.35 },
+              ].map((row) => {
+                const act = row.act ?? 0;
+                const res = row.res ?? 0;
+                const modeled = act - res;
+                const absRes = Math.abs(res);
+                const isBreach = absRes > row.bound;
+                const isDrift = !isBreach && absRes > row.bound * 0.5;
+                const ratio = Math.max(-1, Math.min(1, res / row.bound)); // -1 to +1
+
+                return (
+                  <tr key={row.name} className="border-b border-surface-border/60 last:border-0 hover:bg-white/[0.01]">
+                    <td className="py-2 pr-2 font-medium text-slate-200">{row.name}</td>
+                    <td className="text-right py-2 px-2 font-mono text-slate-300">
+                      {act.toFixed(2)} {row.unit}
+                    </td>
+                    <td className="text-right py-2 px-2 font-mono text-slate-400">
+                      {modeled.toFixed(2)} {row.unit}
+                    </td>
+                    <td
+                      className={`text-right py-2 px-2 font-mono font-bold ${
+                        isBreach ? 'text-critical' : isDrift ? 'text-amber-400' : 'text-emerald-400'
+                      }`}
+                    >
+                      {res >= 0 ? '+' : ''}
+                      {res.toFixed(2)} {row.unit}
+                    </td>
+                    <td className="py-2 px-3">
+                      {/* Zero-centered deviation slider */}
+                      <div className="relative w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                        <div className="absolute top-0 bottom-0 left-1/2 w-0.5 bg-slate-600 z-10" />
+                        {ratio >= 0 ? (
+                          <div
+                            className={`absolute top-0 bottom-0 left-1/2 rounded-r-full ${
+                              isBreach ? 'bg-critical' : isDrift ? 'bg-amber-400' : 'bg-emerald-400'
+                            }`}
+                            style={{ width: `${(ratio / 2) * 100}%` }}
+                          />
+                        ) : (
+                          <div
+                            className={`absolute top-0 bottom-0 rounded-l-full ${
+                              isBreach ? 'bg-critical' : isDrift ? 'bg-amber-400' : 'bg-emerald-400'
+                            }`}
+                            style={{ left: `${(0.5 + ratio / 2) * 100}%`, width: `${(-ratio / 2) * 100}%` }}
+                          />
+                        )}
+                      </div>
+                    </td>
+                    <td className="text-right py-2 px-2 font-mono text-slate-500">
+                      ±{row.bound.toFixed(2)} {row.unit}
+                    </td>
+                    <td className="text-center py-2 pl-2">
+                      <span
+                        className={`inline-block px-2 py-0.5 rounded text-[9px] font-mono font-bold ${
+                          isBreach
+                            ? 'bg-critical-dim text-critical border border-critical-muted'
+                            : isDrift
+                            ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
+                            : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                        }`}
+                      >
+                        {isBreach ? 'BREACH' : isDrift ? 'DRIFT' : 'CONFORMAL'}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 };

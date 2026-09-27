@@ -80,6 +80,11 @@ def select_engine(body: SelectBody):
         hub.select(body.engine_id)
     except KeyError:
         raise HTTPException(404, f"unknown engine {body.engine_id!r}")
+    try:
+        from backend.server.engine_service import EngineStateService
+        EngineStateService.get_instance().set_active_engine(body.engine_id)
+    except Exception:
+        pass
     return {"selected": hub.selected}
 
 

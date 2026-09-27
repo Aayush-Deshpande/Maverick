@@ -20,6 +20,8 @@ export interface EngineTelemetry {
   FUEL_FLOW: number;
   FUEL_RAIL_P: number;
   MAP: number;
+  MAP_INHG?: number;
+  OIL_PRESS_BAR?: number;
   VIB_GEARBOX_RMS: number;
   BUS_VOLTAGE: number;
   BATTERY_CURRENT: number;
@@ -125,6 +127,8 @@ export interface AnalyticsState {
 export interface UnifiedTelemetryState {
   timestamp: number;
   sortie_id: string;
+  engine_id?: string;
+  engine_name?: string;
   is_engine_running: boolean;
   active_commanded_fault_id: number;
   active_commanded_fault_name: string;
@@ -135,8 +139,9 @@ export interface UnifiedTelemetryState {
 export type GCSRole = 'OPERATOR' | 'PROPULSION_ENGINEER' | 'MAINTENANCE_CREW';
 
 export interface ControlCommand {
-  action: 'START_ENGINE' | 'STOP_ENGINE' | 'SET_FAULT' | 'CLEAR_FAULT' | 'SET_THROTTLE' | 'SET_ALTITUDE' | 'SET_OAT' | 'SET_REGIME' | 'SET_ROLE' | 'EXPORT_DEBRIEF';
+  action: 'START_ENGINE' | 'STOP_ENGINE' | 'SET_FAULT' | 'CLEAR_FAULT' | 'SET_THROTTLE' | 'SET_ALTITUDE' | 'SET_OAT' | 'SET_REGIME' | 'SET_ROLE' | 'EXPORT_DEBRIEF' | 'SELECT_ENGINE' | 'SET_ENGINE';
   fault_id?: number;
+  engine_id?: string;
   throttle?: number;
   altitude_ft?: number;
   oat_c?: number;

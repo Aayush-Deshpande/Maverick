@@ -1,12 +1,28 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
+const backendProxy = {
+  '/api': {
+    target: 'http://localhost:8000',
+    changeOrigin: true,
+  },
+  '/apps': {
+    target: 'http://localhost:8000',
+    changeOrigin: true,
+  },
+  '/ws': {
+    target: 'ws://localhost:8000',
+    ws: true,
+  },
+};
+
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
-    host: '0.0.0.0'
+    host: '0.0.0.0',
+    proxy: backendProxy,
   },
   // `vite preview` (serves the production build - see launch_web_dashboard.bat) does not
   // reliably inherit `server.host`/`server.port` in every Vite version, so this is spelled
@@ -15,6 +31,7 @@ export default defineConfig({
   // (a phone hitting the laptop's LAN IP) even though `npm run dev` on the same machine works.
   preview: {
     port: 5173,
-    host: '0.0.0.0'
+    host: '0.0.0.0',
+    proxy: backendProxy,
   }
 });

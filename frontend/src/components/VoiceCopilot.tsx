@@ -211,6 +211,7 @@ export const VoiceCopilot: React.FC<VoiceCopilotProps> = ({
   const [llmStatus, setLlmStatus] = useState<EngineStatusPayload | null>(null);
   const [isWarmingUp, setIsWarmingUp] = useState(false);
   const [thinkingText, setThinkingText] = useState('');
+  const [textInput, setTextInput] = useState('');
 
   const sessionIdRef = useRef<string>(getOrCreateSessionId());
   const continuousModeRef = useRef(false); // mirrors state, read inside the async continuous loop
@@ -541,11 +542,143 @@ export const VoiceCopilot: React.FC<VoiceCopilotProps> = ({
     else enableContinuousMode();
   };
 
+  // ── Web Speech API Fallback (WP-07) ──────────────────────────────────────────────
+  const startBrowserSpeechFallback = () => {
+    const SpeechRec = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRec) {
+      setErrorMsg('Neither local Whisper STT nor browser Web Speech API is available. You can type in the prompt box below.');
+      setMicState('unsupported');
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRec();
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.onstart = () => {
+        setMicState('capturing');
+        setErrorMsg(null);
+      };
+
+      recognition.onerror = (e: any) => {
+        console.warn('Speech recognition error:', e);
+        setMicState('idle');
+        setErrorMsg(`Speech recognition: ${e.error || 'Failed to capture voice'}`);
+      };
+
+      recognition.onend = () => {
+        if (micState === 'capturing') setMicState('processing');
+      };
+
+      recognition.onresult = async (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        if (!transcript) {
+          setMicState('idle');
+          return;
+        }
+
+        const now = Date.now();
+        setMessages((prev) => [...prev, { role: 'user', text: transcript, ts: now }]);
+        setMicState('processing');
+
+        try {
+          const res = await fetch(`${serverUrl}/api/ai/ask`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'ngrok-skip-browser-warning': '69420',
+            },
+            body: JSON.stringify({ query: transcript }),
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            const reply = data.response || 'No response returned.';
+            setMessages((prev) => [
+              ...prev,
+              { role: 'assistant', text: reply, citations: data.citations || [], ts: now + 1 },
+            ]);
+
+            // Browser Speech Synthesis TTS Fallback
+            if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+              setMicState('speaking');
+              const cleanText = reply.replace(/[*#_`]/g, '');
+              const utterance = new SpeechSynthesisUtterance(cleanText);
+              utterance.rate = 1.05;
+              utterance.pitch = 1.0;
+              utterance.onend = () => setMicState('idle');
+              utterance.onerror = () => setMicState('idle');
+              window.speechSynthesis.speak(utterance);
+            } else {
+              setMicState('idle');
+            }
+          } else {
+            setErrorMsg(`AI server returned HTTP ${res.status}`);
+            setMicState('idle');
+          }
+        } catch (err: any) {
+          setErrorMsg(`AI fallback query failed: ${err.message || err}`);
+          setMicState('idle');
+        }
+      };
+
+      recognition.start();
+    } catch (e: any) {
+      setMicState('denied');
+      setErrorMsg(`Failed to start Web Speech recognition: ${e.message}`);
+    }
+  };
+
+  const handleSendText = async () => {
+    const query = textInput.trim();
+    if (!query || micState === 'processing') return;
+    setTextInput('');
+    const now = Date.now();
+    setMessages((prev) => [...prev, { role: 'user', text: query, ts: now }]);
+    setMicState('processing');
+    try {
+      const res = await fetch(`${serverUrl}/api/ai/ask`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': '69420',
+        },
+        body: JSON.stringify({ query }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const reply = data.response || 'No response returned.';
+        setMessages((prev) => [
+          ...prev,
+          { role: 'assistant', text: reply, citations: data.citations || [], ts: now + 1 },
+        ]);
+        if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+          setMicState('speaking');
+          const cleanText = reply.replace(/[*#_`]/g, '');
+          const utterance = new SpeechSynthesisUtterance(cleanText);
+          utterance.onend = () => setMicState('idle');
+          utterance.onerror = () => setMicState('idle');
+          window.speechSynthesis.speak(utterance);
+        } else {
+          setMicState('idle');
+        }
+      } else {
+        setErrorMsg(`AI server returned HTTP ${res.status}`);
+        setMicState('idle');
+      }
+    } catch (e: any) {
+      setErrorMsg(`AI query failed: ${e.message}`);
+      setMicState('idle');
+    }
+  };
+
   // ── Manual push-to-talk (works independently of continuous mode) ─────────────────────
   const startManualRecording = async () => {
     setErrorMsg(null);
     if (!voiceReady) {
-      setErrorMsg('Voice engines are still warming up - please wait for STT and TTS to show READY.');
+      startBrowserSpeechFallback();
       return;
     }
     if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
@@ -654,7 +787,7 @@ export const VoiceCopilot: React.FC<VoiceCopilotProps> = ({
       : sttStatus?.status === 'ERROR' || ttsStatus?.status === 'ERROR'
       ? 'VOICE ENGINE ERROR — SEE STATUS ABOVE'
       : !voiceReady
-      ? 'WARMING UP VOICE ENGINES...'
+      ? 'BROWSER SPEECH FALLBACK READY (TAP MIC OR TYPE BELOW)'
       : continuousMode
       ? 'STARTING CONTINUOUS LISTENING...'
       : 'TAP TO TALK, OR ENABLE CONTINUOUS MODE';
@@ -862,6 +995,25 @@ export const VoiceCopilot: React.FC<VoiceCopilotProps> = ({
               </div>
             )
           )}
+        </div>
+
+        {/* Text Input Box Fallback (WP-07) */}
+        <div className="flex items-center gap-2 mt-4 pt-3 border-t border-surface-border">
+          <input
+            type="text"
+            value={textInput}
+            onChange={(e) => setTextInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSendText()}
+            placeholder="Type query or command for AI Copilot (Browser Speech Fallback enabled)..."
+            className="flex-1 bg-surface-card border border-surface-border text-xs rounded-lg px-3 py-2 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500 font-sans"
+          />
+          <button
+            onClick={handleSendText}
+            disabled={!textInput.trim() || micState === 'processing'}
+            className="px-3.5 py-2 rounded-lg bg-cyan-600 text-white text-xs font-medium hover:bg-cyan-500 disabled:opacity-50 transition-colors"
+          >
+            Send
+          </button>
         </div>
       </div>
     </div>

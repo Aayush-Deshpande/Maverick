@@ -121,6 +121,8 @@ class EngineStateService:
         self.is_engine_running = True
         
         # Environmental & Controls
+        self.active_engine_id = "default"
+        self.engine_name = "Propulsion Engine"
         self.throttle_pct = 72.0
         self.altitude_ft = 20000.0
         self.oat_c = -22.0
@@ -224,7 +226,7 @@ class EngineStateService:
         self.prognostics.start()
         
         # State tracking
-        self.state_lock = threading.Lock()
+        self.state_lock = threading.RLock()
         self.prev_actual: Optional[EnginePhysicalState] = None
         self.latest_state: Optional[UnifiedTelemetryState] = None
         self.subscribers: Set[asyncio.Queue] = set()
@@ -608,6 +610,8 @@ class EngineStateService:
         self.latest_state = UnifiedTelemetryState(
             timestamp=time.time(),
             sortie_id=self.sortie_id,
+            engine_id=self.active_engine_id,
+            engine_name=self.engine_name,
             is_engine_running=self.is_engine_running,
             active_commanded_fault_id=self.active_fault_id,
             active_commanded_fault_name=commanded_name,
@@ -618,6 +622,22 @@ class EngineStateService:
     # ──────────────────────────────────────────────────────────────────────────
     # Thread-Safe Command Handlers
     # ──────────────────────────────────────────────────────────────────────────
+
+    def set_active_engine(self, engine_id: str) -> Dict[str, Any]:
+        """Switches active engine configuration and updates baseline limits."""
+        if not engine_id:
+            return {"status": "ERROR", "message": "Missing engine_id"}
+        engine_id_clean = engine_id.lower().replace("-", "_")
+        parts = [p.upper() if p in ("is", "uav", "hp") else p.title() for p in engine_id_clean.split("_")]
+        dyn_name = " ".join(parts)
+        with self.state_lock:
+            self.active_engine_id = engine_id_clean
+            self.engine_name = dyn_name
+            if self.latest_state:
+                self.latest_state.engine_id = self.active_engine_id
+                self.latest_state.engine_name = self.engine_name
+        logger.info(f"[EngineService] Active engine profile set to: {self.engine_name} ({self.active_engine_id})")
+        return {"status": "SUCCESS", "engine_id": self.active_engine_id, "engine_name": self.engine_name}
 
     def set_fault(self, fault_id: int, severity: float = 1.0, ramp_duration_sec: float = 6.0):
         """Convenience method to command a fault directly."""
@@ -643,8 +663,16 @@ class EngineStateService:
                 self.is_engine_running = False
                 res = {"status": "SUCCESS", "message": "Engine Shutdown Complete"}
                 
-            elif action == "SET_FAULT":
-                fid = cmd.fault_id if cmd.fault_id is not None else 0
+            elif action in ("SET_FAULT", "INJECT_FAULT"):
+                fid = cmd.fault_id
+                if fid is None and getattr(cmd, "fault_type", None):
+                    ft = str(cmd.fault_type).strip().upper()
+                    for k, defn in DRDO_FAULT_DEFINITIONS.items():
+                        if defn.get("name", "").upper() == ft or str(k) == ft:
+                            fid = k
+                            break
+                if fid is None:
+                    fid = 0
                 if fid not in DRDO_FAULT_DEFINITIONS:
                     return {"status": "ERROR", "message": f"Invalid fault ID: {fid}. Must be 0..8."}
                 self.is_engine_running = True
@@ -699,6 +727,10 @@ class EngineStateService:
                         self.active_role = role
                         res = {"status": "SUCCESS", "message": f"GCS active role set to {role}"}
                     
+            elif action in ("SELECT_ENGINE", "SET_ENGINE"):
+                if cmd.engine_id:
+                    res = self.set_active_engine(cmd.engine_id)
+
             elif action == "EXPORT_DEBRIEF":
                 path = self.export_debrief()
                 return {"status": "SUCCESS", "message": f"Debrief exported to {path}", "report_path": path}

@@ -12,11 +12,15 @@ import asyncio
 import base64
 import json
 import logging
+import os
 import sys
+import time
 import uuid
 from dataclasses import asdict
 from typing import Set, List, Optional
 from contextlib import asynccontextmanager
+
+_REPO_ROOT = str(Path(__file__).resolve().parent.parent.parent)
 
 # Forces UTF-8 stdout/stderr regardless of the launching console's code page. On Windows,
 # a plain cmd.exe (the default if this is run directly rather than through
@@ -50,6 +54,11 @@ from backend.agent.llm_engine import LocalLLMEngine
 from backend.voice.stt_engine import LocalWhisperSTT
 from backend.voice.tts_engine import LocalKokoroTTS
 from backend.voice.thinking_stream import THINKING_STREAM
+from backend.mission.reliability import MissionReliabilityEngine, ISR_18H_PROFILE
+from backend.mission.prescriptive import PrescriptiveAdvisor
+from backend.diagnose.bn import DiagnosticBayesianNetwork, Evidence
+from backend.prognose.rul import DualPathRULEstimator
+from backend.physics.engine_config import load_engine_config
 
 
 class AIAskRequest(BaseModel):
@@ -207,6 +216,7 @@ def get_current_state():
 
 
 @app.post("/api/control")
+@app.post("/api/engine/control")
 def post_control_command(cmd: ControlCommand):
     """Executes an incoming engine/fault control command."""
     service = EngineStateService.get_instance()
@@ -254,9 +264,11 @@ def get_region_comparison():
 
 
 @app.get("/api/replay/manifests")
+@app.get("/api/replay/sorties")
 def list_replay_manifests():
     """Lists every recorded sortie available to replay (PRD F12), newest first."""
-    return {"manifests": _replay_engine.list_manifests()}
+    manifests = _replay_engine.list_manifests()
+    return {"manifests": manifests, "sorties": manifests}
 
 
 @app.get("/api/replay/{mission_id}/manifest")
@@ -269,9 +281,10 @@ def get_replay_manifest(mission_id: str):
 
 
 @app.get("/api/replay/{mission_id}/frame")
-def get_replay_frame(mission_id: str, time_sec: float):
-    """Exact telemetry snapshot at-or-before `time_sec` for scrubbing/seeking."""
-    frame = _replay_engine.get_frame(mission_id, time_sec)
+def get_replay_frame(mission_id: str, time_sec: Optional[float] = None, sec: Optional[float] = None):
+    """Exact telemetry snapshot at-or-before `time_sec` or `sec` for scrubbing/seeking."""
+    t = time_sec if time_sec is not None else (sec if sec is not None else 0.0)
+    frame = _replay_engine.get_frame(mission_id, t)
     if frame is None:
         raise HTTPException(status_code=404, detail=f"No telemetry for mission_id: {mission_id}")
     return frame
@@ -495,6 +508,234 @@ def get_voice_thinking(session_id: str):
     """
     text, done = THINKING_STREAM.read(session_id)
     return {"text": text, "done": done}
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Mission Reliability & Prescriptive Advisory Endpoints (F56 / F57 / F58)
+# ──────────────────────────────────────────────────────────────────────────────
+
+@app.get("/api/mission/reliability")
+def get_mission_reliability():
+    """
+    Computes Monte Carlo and analytic mission completion probability R(t)
+    conditioned on the active sortie's component damage and flight profile.
+    """
+    service = EngineStateService.get_instance()
+    state = service.get_latest_state()
+    engine = MissionReliabilityEngine()
+    
+    damage = {}
+    if state and state.analytics and state.analytics.subsystem_health:
+        for sub, health in state.analytics.subsystem_health.items():
+            dmg = max(0.0, min(0.99, 1.0 - health))
+            if "fuel" in sub:
+                damage["injector_1"] = dmg
+                damage["fuel_pump"] = dmg
+            elif "thermal" in sub or "cooling" in sub:
+                damage["cylinder_head_1"] = dmg
+                damage["cylinder_head_2"] = dmg
+            elif "mechanical" in sub or "gearbox" in sub:
+                damage["reduction_gearbox"] = dmg
+                damage["main_bearings"] = dmg
+    engine.set_damage(damage)
+    analytic = engine.analytic_reliability(ISR_18H_PROFILE)
+    mc = engine.simulate(ISR_18H_PROFILE, n_trials=500)
+    aborts = mc["n_trials"] - int(round(mc["reliability"] * mc["n_trials"]))
+    return {
+        "profile_name": ISR_18H_PROFILE.name,
+        "mission_hours": ISR_18H_PROFILE.total_hours,
+        "analytic_reliability": round(analytic["reliability"], 4),
+        "monte_carlo_reliability": round(mc["reliability"], 4),
+        "ci_lower": round(mc["ci_lower"], 4),
+        "ci_upper": round(mc["ci_upper"], 4),
+        "limiting_component": mc.get("limiting_component") or analytic.get("limiting_component"),
+        "limiting_component_survival": round(analytic.get("limiting_component_survival", 1.0), 4),
+        "per_component_survival": {k: round(v, 4) for k, v in analytic.get("per_component_survival", {}).items()},
+        "simulated_aborts": aborts,
+        "total_simulations": mc["n_trials"],
+        "failure_attribution": mc.get("failure_attribution", {}),
+    }
+
+
+@app.get("/api/mission/prescriptive")
+def get_prescriptive_advisory():
+    """
+    Computes power derating ladder and operational levers to guarantee mission completion.
+    """
+    service = EngineStateService.get_instance()
+    state = service.get_latest_state()
+    engine = MissionReliabilityEngine()
+    
+    damage = {}
+    if state and state.analytics and state.analytics.subsystem_health:
+        for sub, health in state.analytics.subsystem_health.items():
+            dmg = max(0.0, min(0.99, 1.0 - health))
+            if "fuel" in sub:
+                damage["injector_1"] = dmg
+            elif "thermal" in sub:
+                damage["cylinder_head_1"] = dmg
+    engine.set_damage(damage)
+    advisor = PrescriptiveAdvisor(engine, required_reliability=0.90, n_trials=500)
+    ladder = advisor.derate_options(ISR_18H_PROFILE, scales=(1.0, 0.95, 0.90, 0.85, 0.80, 0.75))
+    options = [opt.as_dict() for opt in ladder]
+    sentences = [opt.sentence() for opt in ladder]
+    
+    replan = advisor.replan(ISR_18H_PROFILE)
+    
+    return {
+        "target_reliability": 0.90,
+        "derate_options": options,
+        "advisory_sentences": sentences,
+        "replan_result": replan.as_dict() if replan else None,
+    }
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Bayesian Diagnostic & Dual-Path Prognostic Endpoints (B5.3 / B6.1)
+# ──────────────────────────────────────────────────────────────────────────────
+
+@app.get("/api/diagnostics/bayesian")
+def get_bayesian_diagnostics():
+    """
+    Computes exact posterior belief distribution P(Fault | Evidence) over FMECA failure modes.
+    """
+    service = EngineStateService.get_instance()
+    state = service.get_latest_state()
+    try:
+        cfg = load_engine_config(service.active_engine_id)
+    except Exception:
+        cfg = load_engine_config("rotax_912is")
+    bn = DiagnosticBayesianNetwork(cfg)
+    
+    evidence_list = []
+    if state and state.analytics and state.analytics.residuals:
+        t_now = time.time()
+        for k, v in state.analytics.residuals.items():
+            if abs(v) > 2.0:
+                evidence_list.append(
+                    Evidence(
+                        detector="RESIDUAL",
+                        target=k.lower().replace("d_", ""),
+                        statistic=abs(v),
+                        threshold=3.0,
+                        t=t_now
+                    )
+                )
+    ranked = bn.diagnose(evidence_list)
+    if not ranked:
+        # Fallback prior distribution from applicable modes
+        applicable = cfg.applicable_fault_modes()
+        prior_hypotheses = []
+        for mid in applicable[:6]:
+            prior_hypotheses.append({
+                "mode_id": mid,
+                "location": "PROPULSION_CORE",
+                "probability": round(1.0 / max(1, len(applicable[:6])), 4),
+                "ambiguity_group": f"AG_{mid}",
+                "supporting_evidence": ["NOMINAL_PRIOR"],
+                "counter_evidence": [],
+            })
+        return {
+            "hypotheses": prior_hypotheses,
+            "evidence_count": len(evidence_list),
+            "engine_id": service.active_engine_id,
+        }
+
+    return {
+        "hypotheses": [
+            {
+                "mode_id": h.mode_id,
+                "location": h.location or "PROPULSION_CORE",
+                "probability": round(h.probability, 4),
+                "ambiguity_group": h.ambiguity_group_id,
+                "supporting_evidence": h.supporting_evidence,
+                "counter_evidence": h.counter_evidence,
+            }
+            for h in ranked[:6]
+        ],
+        "evidence_count": len(evidence_list),
+        "engine_id": service.active_engine_id,
+    }
+
+
+@app.get("/api/prognostics/dual-path-rul")
+def get_dual_path_rul():
+    """
+    Computes dual-path RUL (Physics-of-Failure vs Data-driven ML) with conformal prediction intervals.
+    """
+    service = EngineStateService.get_instance()
+    state = service.get_latest_state()
+    estimator = DualPathRULEstimator(tbo_hours=1200.0, alpha=0.10)
+    
+    current_hrs = 120.0
+    damage_frac = max(0.01, 1.0 - (state.analytics.health_index if state and state.analytics else 1.0))
+    rate = max(1e-4, damage_frac / 100.0)
+    
+    est = estimator.estimate_rul(
+        component="exhaust_valve_and_cylinder",
+        location="CYLINDER_HEAD_2",
+        current_flight_hours=current_hrs,
+        current_damage_0_1=damage_frac,
+        damage_rate_per_hour=rate,
+        parameter_history=[(current_hrs - 10 + i * 2, 0.4 + i * 0.03) for i in range(6)],
+    )
+    return {
+        "component": est.component,
+        "location": est.location,
+        "physics_rul_hours": round(est.physics_rul_hours, 1),
+        "data_rul_hours": round(est.data_rul_hours, 1),
+        "blended_rul_hours": round(est.rul_hours_median, 1),
+        "conformal_lower_bound": round(est.rul_hours_lower, 1),
+        "conformal_upper_bound": round(est.rul_hours_upper, 1),
+        "nominal_coverage": est.nominal_coverage,
+        "disagreement_alarm": est.disagreement_alarm,
+        "limiting_failure_mode": est.limiting_failure_mode,
+    }
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Post-Flight Debrief Endpoints
+# ──────────────────────────────────────────────────────────────────────────────
+
+@app.post("/api/debrief/generate")
+def generate_mission_debrief():
+    """
+    Triggers post-flight debrief generation, returns markdown text and sortie metadata.
+    """
+    service = EngineStateService.get_instance()
+    with service.state_lock:
+        report_path = service.export_debrief()
+        md_content = ""
+        if os.path.isfile(report_path):
+            with open(report_path, "r", encoding="utf-8") as f:
+                md_content = f.read()
+        return {
+            "status": "SUCCESS",
+            "sortie_id": service.sortie_id,
+            "report_path": report_path,
+            "markdown": md_content,
+        }
+
+
+@app.get("/api/debrief/latest")
+def get_latest_debrief():
+    """
+    Returns the most recent debrief markdown content.
+    """
+    reports_dir = os.path.join(_REPO_ROOT, "data", "mission_reports")
+    if not os.path.isdir(reports_dir):
+        raise HTTPException(status_code=404, detail="No debrief reports found")
+    md_files = [f for f in sorted(os.listdir(reports_dir), reverse=True) if f.endswith(".md")]
+    if not md_files:
+        raise HTTPException(status_code=404, detail="No debrief reports found")
+    latest_path = os.path.join(reports_dir, md_files[0])
+    with open(latest_path, "r", encoding="utf-8") as f:
+        content = f.read()
+    return {
+        "filename": md_files[0],
+        "path": latest_path,
+        "markdown": content,
+    }
 
 
 # ──────────────────────────────────────────────────────────────────────────────

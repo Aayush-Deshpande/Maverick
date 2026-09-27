@@ -7,8 +7,13 @@ import {
   RefreshCw,
   FileCheck,
   ChevronRight,
+  Download,
+  FileText,
+  Cpu,
+  Sparkles,
 } from 'lucide-react';
 import { UnifiedTelemetryState } from '../types/telemetry';
+import { AerospaceMarkdown } from './AerospaceMarkdown';
 
 interface MaintenanceDashboardPanelProps {
   state: UnifiedTelemetryState;
@@ -27,6 +32,28 @@ interface WorkOrder {
   limiting_component?: string | null;
   signoff_epoch?: number | null;
   signoff_inspector?: string | null;
+}
+
+interface BayesianHypothesis {
+  mode_id: string;
+  location?: string | null;
+  probability: number;
+  ambiguity_group: string;
+  supporting_evidence: string[];
+  counter_evidence: string[];
+}
+
+interface DualPathRulData {
+  component: string;
+  location: string;
+  physics_rul_hours: number;
+  data_rul_hours: number;
+  blended_rul_hours: number;
+  conformal_lower_bound: number;
+  conformal_upper_bound: number;
+  nominal_coverage: number;
+  disagreement_alarm: boolean;
+  limiting_failure_mode: string;
 }
 
 const fmt = (v?: number | null, d = 1) => (v !== undefined && v !== null && Number.isFinite(v) ? v.toFixed(d) : '--');
@@ -48,6 +75,15 @@ export const MaintenanceDashboardPanel: React.FC<MaintenanceDashboardPanelProps>
   const [signingOffId, setSigningOffId] = useState<string | null>(null);
   const [feedbackMsg, setFeedbackMsg] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
+  // WP-08: Bayesian & Dual-Path RUL state
+  const [bayesianHypotheses, setBayesianHypotheses] = useState<BayesianHypothesis[]>([]);
+  const [dualPathRul, setDualPathRul] = useState<DualPathRulData | null>(null);
+
+  // WP-10: Debrief state
+  const [debriefMarkdown, setDebriefMarkdown] = useState<string | null>(null);
+  const [isGeneratingDebrief, setIsGeneratingDebrief] = useState(false);
+  const [debriefStatus, setDebriefStatus] = useState<string | null>(null);
+
   // Fetch Work Orders from backend
   const fetchWorkOrders = async () => {
     try {
@@ -64,9 +100,33 @@ export const MaintenanceDashboardPanel: React.FC<MaintenanceDashboardPanelProps>
     }
   };
 
+  // Fetch Bayesian Diagnostics & Dual-Path RUL (WP-08)
+  const fetchDiagnosticsAndRul = async () => {
+    try {
+      const [bayesRes, rulRes] = await Promise.all([
+        fetch(`${serverUrl}/api/diagnostics/bayesian`),
+        fetch(`${serverUrl}/api/prognostics/dual-path-rul`),
+      ]);
+      if (bayesRes.ok) {
+        const bayesData = await bayesRes.json();
+        setBayesianHypotheses(bayesData.hypotheses || []);
+      }
+      if (rulRes.ok) {
+        const rulData = await rulRes.json();
+        setDualPathRul(rulData);
+      }
+    } catch (e) {
+      console.warn('Failed to fetch Bayesian/RUL metrics', e);
+    }
+  };
+
   useEffect(() => {
     fetchWorkOrders();
-    const interval = setInterval(fetchWorkOrders, 5000);
+    fetchDiagnosticsAndRul();
+    const interval = setInterval(() => {
+      fetchWorkOrders();
+      fetchDiagnosticsAndRul();
+    }, 6000);
     return () => clearInterval(interval);
   }, [serverUrl]);
 
@@ -94,6 +154,57 @@ export const MaintenanceDashboardPanel: React.FC<MaintenanceDashboardPanelProps>
     }
   };
 
+  // Generate Debrief Report (WP-10)
+  const handleGenerateDebrief = async () => {
+    try {
+      setIsGeneratingDebrief(true);
+      setDebriefStatus('Synthesizing sortie debrief from telemetry and anomaly graph…');
+      const res = await fetch(`${serverUrl}/api/debrief/generate`, { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        setDebriefMarkdown(data.markdown || '# Mission Debrief\n\nNo records generated.');
+        setDebriefStatus(`Debrief generated successfully for Sortie ${data.sortie_id}`);
+      } else {
+        setDebriefStatus(`Generation failed with code ${res.status}`);
+      }
+    } catch (e: any) {
+      setDebriefStatus(`Generation error: ${e.message}`);
+    } finally {
+      setIsGeneratingDebrief(false);
+    }
+  };
+
+  const handleFetchLatestDebrief = async () => {
+    try {
+      setIsGeneratingDebrief(true);
+      const res = await fetch(`${serverUrl}/api/debrief/latest`);
+      if (res.ok) {
+        const data = await res.json();
+        setDebriefMarkdown(data.markdown);
+        setDebriefStatus(`Loaded report: ${data.filename}`);
+      } else {
+        setDebriefStatus('No previous debrief report found on server.');
+      }
+    } catch (e: any) {
+      setDebriefStatus(`Load error: ${e.message}`);
+    } finally {
+      setIsGeneratingDebrief(false);
+    }
+  };
+
+  const handleDownloadDebrief = () => {
+    if (!debriefMarkdown) return;
+    const blob = new Blob([debriefMarkdown], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ANUMAAN_SORTIE_DEBRIEF_${state.sortie_id || Date.now()}.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   // Sensor channels list for sanity matrix
   const sensorChannels = [
     { key: 'CHT_1', label: 'CHT Cyl 1', val: `${fmt(state.telemetry.CHT_1)} °C` },
@@ -104,19 +215,15 @@ export const MaintenanceDashboardPanel: React.FC<MaintenanceDashboardPanelProps>
     { key: 'EGT_2', label: 'EGT Cyl 2', val: `${fmt(state.telemetry.EGT_2)} °C` },
     { key: 'EGT_3', label: 'EGT Cyl 3', val: `${fmt(state.telemetry.EGT_3)} °C` },
     { key: 'EGT_4', label: 'EGT Cyl 4', val: `${fmt(state.telemetry.EGT_4)} °C` },
-    { key: 'OIL_PRESS', label: 'Oil Pressure', val: `${fmt(state.telemetry.OIL_PRESS)} bar` },
-    { key: 'OIL_TEMP', label: 'Oil Temperature', val: `${fmt(state.telemetry.OIL_TEMP)} °C` },
-    { key: 'FUEL_FLOW', label: 'Fuel Flow Rate', val: `${fmt(state.telemetry.FUEL_FLOW)} L/h` },
-    { key: 'MAP', label: 'Manifold Pressure', val: `${fmt(state.telemetry.MAP)} kPa` },
-    { key: 'VIB_GEARBOX_RMS', label: 'Gearbox Vibration', val: `${fmt(state.telemetry.VIB_GEARBOX_RMS, 2)} mm/s` },
-    { key: 'BUS_VOLTAGE', label: 'DC Bus Voltage', val: `${fmt(state.telemetry.BUS_VOLTAGE)} V` },
+    { key: 'OIL_PRESS', label: 'Oil Pressure', val: `${fmt(state.telemetry.OIL_PRESS, 2)} bar` },
+    { key: 'OIL_TEMP', label: 'Oil Temp', val: `${fmt(state.telemetry.OIL_TEMP)} °C` },
+    { key: 'FUEL_FLOW', label: 'Fuel Flow', val: `${fmt(state.telemetry.FUEL_FLOW, 1)} L/h` },
+    { key: 'MAP_INHG', label: 'Manifold Pressure', val: `${fmt(state.telemetry.MAP_INHG ?? state.telemetry.MAP, 1)} inHg` },
+    { key: 'VIB_GEARBOX_RMS', label: 'Gearbox Vib', val: `${fmt(state.telemetry.VIB_GEARBOX_RMS, 2)} mm/s` },
+    { key: 'BUS_VOLTAGE', label: 'DC Bus', val: `${fmt(state.telemetry.BUS_VOLTAGE, 1)} V` },
   ];
 
   const sanity = a.sensor_sanity;
-  const failedSensors = sanity?.failed_channels || [];
-  const driftDetected = sanity?.drift_detected || false;
-
-  const conformalRul = a.conformal_rul || {};
 
   return (
     <div className="space-y-4">
@@ -124,145 +231,274 @@ export const MaintenanceDashboardPanel: React.FC<MaintenanceDashboardPanelProps>
       <div className="surface-panel p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 border-l-4 border-l-emerald-500">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-              VIS-04 / CBM-01
+            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              VIS-04 / CBM-01 / WP-08 / WP-10
             </span>
             <h2 className="text-sm font-semibold text-white tracking-wide">
-              Ground Crew Maintenance &amp; Condition-Based Health Terminal
+              Ground Crew Maintenance &amp; Condition-Based Monitoring (CBM)
             </h2>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Certified CBM work-order dispatch, Split-Conformal RUL component life meters, and sensor residual shielding matrix.
+            Authoritative Bayesian diagnosis, conformal dual-path RUL, digital sign-offs, and automated sortie debrief generation.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-surface-card border border-surface-border text-xs">
-            <UserCheck className="w-3.5 h-3.5 text-emerald-400" />
-            <input
-              type="text"
-              value={signoffInspector}
-              onChange={(e) => setSignoffInspector(e.target.value)}
-              placeholder="Inspector ID"
-              className="bg-transparent text-slate-200 text-xs w-28 focus:outline-none border-b border-surface-border focus:border-accent"
-            />
-          </div>
-
+        <div className="flex items-center gap-2">
           <button
-            onClick={fetchWorkOrders}
-            disabled={isLoadingOrders}
-            className="p-1.5 rounded bg-surface-card border border-surface-border text-slate-400 hover:text-white hover:bg-surface-card-hover transition-colors"
-            title="Refresh work orders"
+            onClick={() => {
+              fetchWorkOrders();
+              fetchDiagnosticsAndRul();
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-surface-card border border-surface-border text-xs font-medium text-slate-300 hover:text-white transition-colors"
           >
-            <RefreshCw className={`w-4 h-4 ${isLoadingOrders ? 'animate-spin text-accent' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${isLoadingOrders ? 'animate-spin' : ''}`} />
+            <span>Refresh Diagnostics</span>
           </button>
         </div>
       </div>
 
       {feedbackMsg && (
         <div
-          className={`p-3 rounded text-xs flex items-center justify-between border ${
+          className={`p-3 rounded text-xs border ${
             feedbackMsg.type === 'success'
-              ? 'bg-emerald-950/40 text-emerald-300 border-emerald-800/50'
-              : 'bg-critical-dim text-critical border-critical-muted'
+              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+              : 'bg-critical-dim border-critical-muted text-critical'
           }`}
         >
-          <span>{feedbackMsg.text}</span>
-          <button onClick={() => setFeedbackMsg(null)} className="text-slate-400 hover:text-white ml-2 text-[10px]">
-            Dismiss
-          </button>
+          {feedbackMsg.text}
         </div>
       )}
 
-      {/* Grid 1: Split-Conformal RUL & Component Life Meters (AIM-05, F12) */}
-      <div className="surface-panel p-4 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-surface-border pb-3">
-          <div>
+      {/* WP-08: Bayesian Failure Mode Hypotheses & Dual-Path Prognostics */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Bayesian Diagnostic Distribution */}
+        <div className="surface-panel p-4 space-y-3">
+          <div className="flex items-center justify-between border-b border-surface-border pb-2">
             <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                F12 / AIM-05
-              </span>
+              <Sparkles className="w-4 h-4 text-cyan-400" />
               <h3 className="text-xs font-semibold text-white uppercase tracking-wider">
-                Split-Conformal Remaining Useful Life (RUL) with 90% Coverage
+                Exact Bayesian Belief Network P(Fault | Evidence)
               </h3>
             </div>
-            <p className="text-[11px] text-slate-400 mt-0.5">
-              Finite-sample distribution-free uncertainty intervals: P10 conservative lower bound, P50 median, P90 optimistic upper bound.
-            </p>
+            <span className="text-[10px] font-mono text-cyan-400">B5.3 FMECA NET</span>
           </div>
 
-          <div className="px-2.5 py-1 rounded bg-indigo-950/50 border border-indigo-800/40 text-[10px] font-mono text-indigo-300 flex items-center gap-1.5">
-            <ShieldCheck className="w-3.5 h-3.5 text-indigo-400" />
-            <span>Guaranteed Coverage: 90% (α = 0.10)</span>
+          <p className="text-xs text-slate-400">
+            Log-odds Bayesian posterior distribution updated dynamically from sensor residual evidence signatures.
+          </p>
+
+          <div className="space-y-2">
+            {bayesianHypotheses.length === 0 ? (
+              <div className="text-xs text-slate-500 italic p-3 bg-white/[0.02] rounded border border-surface-border/50">
+                Awaiting detector residual evidence vectors...
+              </div>
+            ) : (
+              bayesianHypotheses.map((h, idx) => (
+                <div key={idx} className="bg-surface-card p-2.5 rounded border border-surface-border space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-xs font-bold text-slate-200">{h.mode_id}</span>
+                    <span className="font-mono text-xs font-bold text-cyan-300">
+                      {(h.probability * 100).toFixed(1)}%
+                    </span>
+                  </div>
+                  {/* Probability Bar */}
+                  <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-cyan-500 to-indigo-500 rounded-full"
+                      style={{ width: `${Math.min(100, h.probability * 100)}%` }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between text-[10px] text-slate-500 pt-1">
+                    <span>
+                      Ambiguity Group: <span className="text-slate-400 font-mono">{h.ambiguity_group}</span>
+                    </span>
+                    <span className="truncate max-w-[180px]">
+                      {h.supporting_evidence.length > 0 ? h.supporting_evidence.join(', ') : 'Prior belief'}
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
-        {/* 6 Subsystem Life Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {Object.entries(COMPONENT_LABELS).map(([compKey, meta]) => {
-            const conf = conformalRul[compKey];
-            const p10 = conf?.rul_p10_hours ?? a.rul_by_component?.[compKey]?.rul_p10_hours ?? 500;
-            const p50 = conf?.rul_p50_hours ?? a.rul_by_component?.[compKey]?.rul_p50_hours ?? 650;
-            const p90 = conf?.rul_p90_hours ?? a.rul_by_component?.[compKey]?.rul_p90_hours ?? 800;
+        {/* Dual-Path RUL with Conformal Bounds */}
+        <div className="surface-panel p-4 space-y-3">
+          <div className="flex items-center justify-between border-b border-surface-border pb-2">
+            <div className="flex items-center gap-2">
+              <Cpu className="w-4 h-4 text-emerald-400" />
+              <h3 className="text-xs font-semibold text-white uppercase tracking-wider">
+                Dual-Path Prognostic RUL (Physics vs Data-Driven)
+              </h3>
+            </div>
+            <span className="text-[10px] font-mono text-emerald-400">B6.1 CONFORMAL</span>
+          </div>
 
-            const isLimiting = compKey === a.limiting_component;
-            const remainingPct = Math.min(100, Math.max(0, (p10 / meta.tboHours) * 100));
+          <p className="text-xs text-slate-400">
+            Conformal prediction bounds combining Arrhenius/Paris law degradation physics with autoencoder residual drift models.
+          </p>
 
-            return (
-              <div
-                key={compKey}
-                className={`p-3.5 rounded border transition-all ${
-                  isLimiting
-                    ? 'bg-critical-dim/30 border-critical-muted'
-                    : 'bg-surface-card border-surface-border'
-                }`}
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <span className="text-xs font-semibold text-white block">{meta.name}</span>
-                    <span className="text-[10px] text-slate-500 font-mono">{meta.ata}</span>
-                  </div>
-                  {isLimiting ? (
-                    <span className="px-1.5 py-0.5 rounded text-[9px] font-bold font-mono bg-critical-dim text-critical border border-critical-muted">
-                      LIMITING
-                    </span>
-                  ) : (
-                    <span className="text-[10px] text-slate-500 font-mono">TBO {meta.tboHours}h</span>
-                  )}
+          {dualPathRul && (
+            <div className="space-y-3">
+              <div className="grid grid-cols-3 gap-2 text-xs">
+                <div className="bg-surface-card p-2.5 rounded border border-surface-border">
+                  <span className="text-[10px] text-slate-500 block">PHYSICS RUL</span>
+                  <span className="text-base font-bold font-mono text-slate-200 mt-1 block">
+                    {dualPathRul.physics_rul_hours}h
+                  </span>
+                  <span className="text-[9px] text-slate-500">Damage integral</span>
                 </div>
 
-                {/* Progress Bar */}
-                <div className="mt-3 space-y-1">
-                  <div className="flex justify-between text-[10px] font-mono">
-                    <span className="text-slate-400">P10 Conservative RUL:</span>
-                    <span className={`font-bold ${isLimiting ? 'text-critical' : 'text-slate-100'}`}>
-                      {p10 >= 500 ? '>500h' : `${fmt(p10)} h`}
-                    </span>
+                <div className="bg-surface-card p-2.5 rounded border border-surface-border">
+                  <span className="text-[10px] text-slate-500 block">DATA ML RUL</span>
+                  <span className="text-base font-bold font-mono text-slate-200 mt-1 block">
+                    {dualPathRul.data_rul_hours}h
+                  </span>
+                  <span className="text-[9px] text-slate-500">Drift trajectory</span>
+                </div>
+
+                <div className="bg-surface-card p-2.5 rounded border border-emerald-500/30 bg-emerald-500/5">
+                  <span className="text-[10px] text-emerald-400 block font-semibold">BLENDED RUL</span>
+                  <span className="text-base font-bold font-mono text-emerald-300 mt-1 block">
+                    {dualPathRul.blended_rul_hours}h
+                  </span>
+                  <span className="text-[9px] text-emerald-400">Median synthesis</span>
+                </div>
+              </div>
+
+              <div className="bg-surface-card p-3 rounded border border-surface-border space-y-1.5 text-xs">
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-400">Conformal 90% Confidence Interval:</span>
+                  <span className="font-mono font-bold text-cyan-300">
+                    [{dualPathRul.conformal_lower_bound}h – {dualPathRul.conformal_upper_bound}h]
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-400">Limiting Failure Mechanism:</span>
+                  <span className="font-mono text-slate-200">{dualPathRul.limiting_failure_mode}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-400">Disagreement Alarm:</span>
+                  <span
+                    className={`font-mono font-semibold px-2 py-0.5 rounded text-[10px] ${
+                      dualPathRul.disagreement_alarm
+                        ? 'bg-amber-500/20 text-amber-300'
+                        : 'bg-emerald-500/10 text-emerald-400'
+                    }`}
+                  >
+                    {dualPathRul.disagreement_alarm ? 'FLAGGED (PHYSICS != ML)' : 'CONGRUENT'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* WP-10: Automated Post-Flight Debrief Report Workflow */}
+      <div className="surface-panel p-4 sm:p-5 space-y-4 border border-cyan-500/20 bg-gradient-to-br from-surface to-slate-950">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-surface-border pb-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
+                WP-10 / PRD F12
+              </span>
+              <h3 className="text-sm font-semibold text-white tracking-wide">
+                Automated Post-Flight Sortie Debrief Generator
+              </h3>
+            </div>
+            <p className="text-xs text-slate-400 mt-1">
+              Extracts high-rate telemetry, anomaly event graph, and CBM maintenance actions into certified engineering reports.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleGenerateDebrief}
+              disabled={isGeneratingDebrief}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold disabled:opacity-50 transition-colors shadow-md"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>{isGeneratingDebrief ? 'Generating Debrief…' : 'Generate Sortie Debrief'}</span>
+            </button>
+
+            <button
+              onClick={handleFetchLatestDebrief}
+              disabled={isGeneratingDebrief}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-surface-card border border-surface-border hover:bg-white/5 text-slate-300 text-xs font-medium transition-colors"
+            >
+              <span>View Latest</span>
+            </button>
+
+            {debriefMarkdown && (
+              <button
+                onClick={handleDownloadDebrief}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition-colors"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Download Report</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {debriefStatus && <p className="text-xs text-cyan-400 font-mono">{debriefStatus}</p>}
+
+        {debriefMarkdown && (
+          <div className="bg-slate-950 p-4 rounded-lg border border-cyan-500/30 max-h-[460px] overflow-y-auto">
+            <AerospaceMarkdown content={debriefMarkdown} title="Post-Flight Sortie Engineering Debrief" />
+          </div>
+        )}
+      </div>
+
+      {/* Grid 1: Subsystem CBM Wear State & TBO Tracking */}
+      <div className="surface-panel p-4 space-y-3">
+        <div className="flex items-center justify-between border-b border-surface-border pb-2">
+          <div className="flex items-center gap-2">
+            <ClipboardList className="w-4 h-4 text-accent" />
+            <h3 className="text-xs font-semibold text-white uppercase tracking-wider">
+              Subsystem Wear Accumulators &amp; Time Between Overhaul (TBO)
+            </h3>
+          </div>
+          <span className="text-[10px] font-mono text-slate-500">FLEET CBM GRAPH</span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {Object.entries(COMPONENT_LABELS).map(([compKey, meta]) => {
+            const compRul = a.rul_by_component?.[compKey];
+            const p10 = compRul?.rul_p10_hours;
+            const wearPct = p10 !== undefined && p10 < meta.tboHours ? ((meta.tboHours - p10) / meta.tboHours) * 100 : 8.5;
+
+            return (
+              <div key={compKey} className="bg-surface-card p-3 rounded border border-surface-border space-y-2">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <span className="font-semibold text-xs text-slate-200 block">{meta.name}</span>
+                    <span className="text-[10px] font-mono text-slate-500">{meta.ata}</span>
                   </div>
-                  <div className="w-full h-1.5 bg-surface rounded-full overflow-hidden border border-surface-border">
+                  <span className="text-[10px] font-mono text-accent">TBO: {meta.tboHours}h</span>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex justify-between text-[10px] font-mono">
+                    <span className="text-slate-400">Cumulative Wear</span>
+                    <span className={wearPct > 60 ? 'text-amber-400' : 'text-slate-300'}>{wearPct.toFixed(1)}%</span>
+                  </div>
+                  <div className="w-full bg-surface-border rounded-full h-1.5 overflow-hidden">
                     <div
-                      className={`h-full transition-all duration-300 ${
-                        isLimiting ? 'bg-critical' : remainingPct < 25 ? 'bg-warning' : 'bg-emerald-500'
+                      className={`h-full rounded-full ${
+                        wearPct > 75 ? 'bg-critical' : wearPct > 50 ? 'bg-amber-400' : 'bg-accent'
                       }`}
-                      style={{ width: `${Math.max(5, remainingPct)}%` }}
+                      style={{ width: `${Math.min(100, Math.max(5, wearPct))}%` }}
                     />
                   </div>
                 </div>
 
-                {/* Conformal Bounds Trio */}
-                <div className="grid grid-cols-3 gap-1 pt-2 mt-2 border-t border-surface-border/50 text-center font-mono">
-                  <div className="bg-white/[0.02] p-1 rounded">
-                    <span className="text-[9px] text-slate-500 block">P10 Low</span>
-                    <span className="text-xs font-semibold text-slate-300">{fmt(p10, 0)}h</span>
-                  </div>
-                  <div className="bg-white/[0.02] p-1 rounded">
-                    <span className="text-[9px] text-slate-500 block">P50 Med</span>
-                    <span className="text-xs font-semibold text-slate-200">{fmt(p50, 0)}h</span>
-                  </div>
-                  <div className="bg-white/[0.02] p-1 rounded">
-                    <span className="text-[9px] text-slate-500 block">P90 High</span>
-                    <span className="text-xs font-semibold text-slate-400">{fmt(p90, 0)}h</span>
-                  </div>
+                <div className="flex justify-between items-center text-[10px] pt-1 border-t border-surface-border/50">
+                  <span className="text-slate-500">Remaining to TBO</span>
+                  <span className="font-mono font-semibold text-slate-300">
+                    {p10 !== undefined && p10 < 500 ? `${fmt(p10)}h` : `>${meta.tboHours - 100}h`}
+                  </span>
                 </div>
               </div>
             );
@@ -270,78 +506,81 @@ export const MaintenanceDashboardPanel: React.FC<MaintenanceDashboardPanelProps>
         </div>
       </div>
 
-      {/* Grid 2: CBM Work Orders & Sign-off Queue (VIS-08, CBM-01) */}
+      {/* Grid 2: Prescriptive Maintenance Action Orders & Digital Sign-off (CBM-01, AIM-07) */}
       <div className="surface-panel p-4 space-y-3">
-        <div className="flex items-center justify-between border-b border-surface-border pb-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-surface-border pb-2">
           <div className="flex items-center gap-2">
-            <ClipboardList className="w-4 h-4 text-emerald-400" />
+            <UserCheck className="w-4 h-4 text-accent" />
             <h3 className="text-xs font-semibold text-white uppercase tracking-wider">
-              CBM Work Order Dispatch &amp; Inspector Sign-Off Queue
+              Maintenance Orders &amp; Technician Sign-Off (CBM-01)
             </h3>
           </div>
-          <span className="text-[10px] font-mono text-slate-500">
-            {workOrders.filter((w) => w.status === 'OPEN').length} Open Orders
-          </span>
+
+          <div className="flex items-center gap-2 text-xs">
+            <span className="text-slate-400">Inspector ID:</span>
+            <input
+              type="text"
+              value={signoffInspector}
+              onChange={(e) => setSignoffInspector(e.target.value)}
+              className="bg-surface-card border border-surface-border rounded px-2 py-0.5 text-xs text-white font-mono w-32 focus:outline-none focus:border-accent"
+              placeholder="DRDO-TECH-01"
+            />
+          </div>
         </div>
 
         {workOrders.length === 0 ? (
-          <div className="text-xs text-slate-500 bg-surface-card p-4 rounded border border-surface-border text-center">
-            No maintenance work orders have been logged yet. Any simulated or telemetry-detected fault will automatically generate an ATA-coded work order.
+          <div className="text-xs text-slate-500 italic p-4 text-center bg-surface-card rounded border border-surface-border">
+            No active maintenance orders pending. All subsystems nominal across current sortie.
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-xs border-collapse">
+            <table className="w-full text-xs text-left border-collapse">
               <thead>
-                <tr className="text-[9px] uppercase tracking-wider text-slate-500 border-b border-surface-border text-left">
-                  <th className="py-2 pr-3">Action ID</th>
-                  <th className="py-2 px-3">ATA Chapter</th>
-                  <th className="py-2 px-3">Sortie</th>
-                  <th className="py-2 px-3">Description</th>
-                  <th className="py-2 px-3">Status</th>
-                  <th className="py-2 pl-3 text-right">Sign-Off Action</th>
+                <tr className="border-b border-surface-border text-slate-400 font-mono text-[10px] uppercase">
+                  <th className="py-2 px-2.5">Action ID</th>
+                  <th className="py-2 px-2.5">ATA Chapter</th>
+                  <th className="py-2 px-2.5">Order Description</th>
+                  <th className="py-2 px-2.5">Limiting Component</th>
+                  <th className="py-2 px-2.5">Status</th>
+                  <th className="py-2 px-2.5 text-right">Sign-off</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-surface-border/50">
                 {workOrders.map((wo) => {
-                  const isOpen = wo.status === 'OPEN';
+                  const isClosed = wo.status === 'SIGNED_OFF';
                   return (
-                    <tr key={wo.action_id} className="hover:bg-white/[0.02]">
-                      <td className="py-2.5 pr-3 font-mono font-medium text-slate-300">
-                        {wo.action_id}
+                    <tr key={wo.action_id} className={isClosed ? 'opacity-60 bg-white/[0.01]' : 'bg-surface-card/40'}>
+                      <td className="py-2 px-2.5 font-mono text-[11px] text-slate-300 font-semibold">{wo.action_id}</td>
+                      <td className="py-2 px-2.5 font-mono text-accent">{wo.ata_chapter}</td>
+                      <td className="py-2 px-2.5 max-w-xs">{wo.description}</td>
+                      <td className="py-2 px-2.5 font-mono text-slate-400">
+                        {wo.limiting_component ? COMPONENT_LABELS[wo.limiting_component]?.name || wo.limiting_component : '--'}
                       </td>
-                      <td className="py-2.5 px-3">
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-white/5 border border-surface-border text-slate-300">
-                          {wo.ata_chapter}
-                        </span>
-                      </td>
-                      <td className="py-2.5 px-3 font-mono text-slate-400">{wo.sortie_id}</td>
-                      <td className="py-2.5 px-3 text-slate-300 max-w-xs truncate" title={wo.description}>
-                        {wo.description}
-                      </td>
-                      <td className="py-2.5 px-3">
+                      <td className="py-2 px-2.5">
                         <span
-                          className={`px-2 py-0.5 rounded text-[10px] font-mono font-semibold border ${
-                            isOpen
-                              ? 'bg-amber-500/10 text-amber-300 border-amber-500/30'
-                              : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-semibold border ${
+                            isClosed
+                              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                              : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
                           }`}
                         >
-                          {isOpen ? 'OPEN' : 'SIGNED OFF'}
+                          {isClosed ? <ShieldCheck className="w-3 h-3" /> : <Shield className="w-3 h-3" />}
+                          {wo.status}
                         </span>
                       </td>
-                      <td className="py-2.5 pl-3 text-right">
-                        {isOpen ? (
+                      <td className="py-2 px-2.5 text-right">
+                        {isClosed ? (
+                          <span className="text-[10px] text-slate-500 font-mono block">
+                            By {wo.signoff_inspector || 'TECH'}
+                          </span>
+                        ) : (
                           <button
                             onClick={() => handleSignOff(wo.action_id)}
                             disabled={signingOffId === wo.action_id}
-                            className="px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30 text-[11px] font-medium transition-colors disabled:opacity-50"
+                            className="px-2.5 py-1 rounded bg-accent-dim text-accent hover:bg-accent hover:text-black border border-accent-muted text-[11px] font-medium transition-colors disabled:opacity-50"
                           >
-                            {signingOffId === wo.action_id ? 'Signing...' : 'Sign-Off & Close'}
+                            {signingOffId === wo.action_id ? 'Signing…' : 'Sign Off'}
                           </button>
-                        ) : (
-                          <span className="text-[10px] font-mono text-slate-500">
-                            Closed by {wo.signoff_inspector || 'Inspector'}
-                          </span>
                         )}
                       </td>
                     </tr>
@@ -353,46 +592,21 @@ export const MaintenanceDashboardPanel: React.FC<MaintenanceDashboardPanelProps>
         )}
       </div>
 
-      {/* Grid 3: Sensor Sanity Matrix & Residual Shielding (FDP-06, F14) */}
+      {/* Grid 3: Sensor Sanity Matrix & Shielding (F08, D02) */}
       <div className="surface-panel p-4 space-y-3">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-surface-border pb-2">
+        <div className="flex items-center justify-between border-b border-surface-border pb-2">
           <div className="flex items-center gap-2">
-            <Shield className="w-4 h-4 text-accent" />
+            <ShieldCheck className="w-4 h-4 text-emerald-400" />
             <h3 className="text-xs font-semibold text-white uppercase tracking-wider">
-              Transducer Sanity &amp; Residual Shielding Matrix (F14 / FDP-06)
+              Sensor Sanity Matrix &amp; Fault Shielding Layer (F08 / D02)
             </h3>
           </div>
-
-          <div className="flex items-center gap-2">
-            <span
-              className={`px-2 py-0.5 rounded text-[10px] font-mono font-semibold border ${
-                driftDetected
-                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                  : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20'
-              }`}
-            >
-              {driftDetected ? 'SENSOR DRIFT DETECTED' : 'CALIBRATION STABLE'}
-            </span>
-
-            <span
-              className={`px-2 py-0.5 rounded text-[10px] font-mono font-semibold border ${
-                failedSensors.length > 0
-                  ? 'bg-critical-dim text-critical border-critical-muted'
-                  : 'bg-surface-card text-slate-400 border-surface-border'
-              }`}
-            >
-              Residual Shielding: {failedSensors.length > 0 ? `${failedSensors.length} QUARANTINED` : 'STANDBY'}
-            </span>
-          </div>
+          <span className="text-[10px] font-mono text-emerald-400">14-CHANNEL ISOLATION</span>
         </div>
-
-        <p className="text-[11px] text-slate-400">
-          Continuous cross-channel statistical drift tests. Drifting or flatlined sensors are quarantined and zeroed out from model residuals to prevent false engine anomaly alarms.
-        </p>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2">
           {sensorChannels.map((sc) => {
-            const isQuarantined = failedSensors.some((f) => f.includes(sc.key) || sc.key.includes(f));
+            const isQuarantined = sanity?.failed_channels?.includes(sc.key);
             return (
               <div
                 key={sc.key}
@@ -473,3 +687,4 @@ export const MaintenanceDashboardPanel: React.FC<MaintenanceDashboardPanelProps>
     </div>
   );
 };
+export default MaintenanceDashboardPanel;

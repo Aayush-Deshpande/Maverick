@@ -20,6 +20,9 @@ interface HeaderProps {
   activeRole: GCSRole;
   onSelectRole: (role: GCSRole) => void;
   onOpenSettings: () => void;
+  runtimeMode?: boolean;
+  activeEngineId?: string;
+  onSelectEngine?: (engineId: string) => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -29,6 +32,9 @@ export const Header: React.FC<HeaderProps> = ({
   activeRole,
   onSelectRole,
   onOpenSettings,
+  runtimeMode = false,
+  activeEngineId,
+  onSelectEngine,
 }) => {
   const isFaulted = state.analytics.diagnosed_fault_id > 0;
   const isEngineOn = state.is_engine_running;
@@ -57,15 +63,14 @@ export const Header: React.FC<HeaderProps> = ({
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-sm font-semibold tracking-tight text-white flex items-center gap-1.5">
-                Rotax 912 iS
-                <span className="text-xs font-normal text-slate-400">Sport</span>
+                {state.engine_name || 'Rotax 912 iS'}
               </h1>
               <span className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded-sm bg-white/5 text-slate-400 border border-surface-border">
                 DRDO PS-26054
               </span>
             </div>
             <p className="text-[11px] text-slate-500 hidden sm:flex items-center gap-1.5">
-              <span>MALE UAV Digital Twin GCS</span>
+              <span>MALE UAV Propulsion Digital Twin</span>
               <span className="text-slate-700">·</span>
               <span className="text-slate-400 flex items-center gap-1">
                 <Compass className="w-3 h-3" />
@@ -75,6 +80,23 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
+        {/* Global Engine Selector (WP-03 / WP-05) */}
+        <div className="flex items-center gap-1.5 bg-surface-card border border-surface-border rounded px-2 py-1">
+          <Cpu className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+          <select
+            value={activeEngineId || state.engine_id || 'rotax_912is'}
+            onChange={(e) => onSelectEngine && onSelectEngine(e.target.value)}
+            className="bg-transparent text-cyan-300 text-xs font-mono font-semibold focus:outline-none cursor-pointer"
+            title="Switch Global Active Engine Profile"
+          >
+            <option value="rotax_912is" className="bg-slate-900 text-slate-200">Rotax 912 iS (100 HP EFI)</option>
+            <option value="rotax_914" className="bg-slate-900 text-slate-200">Rotax 914 Turbo (115 HP)</option>
+            <option value="rotax_915is" className="bg-slate-900 text-slate-200">Rotax 915 iS Turbo (141 HP)</option>
+            <option value="austro_ae300" className="bg-slate-900 text-slate-200">Austro AE300 (170 HP Heavy Fuel)</option>
+            <option value="vrde_jayem_2_2l" className="bg-slate-900 text-slate-200">VRDE Jayem 2.2L (Indigenous CI)</option>
+          </select>
+        </div>
+
         {/* Center: Live status badges */}
         <div className="flex items-center gap-2">
           <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-surface-card border border-surface-border text-xs font-mono text-slate-400">
@@ -82,7 +104,7 @@ export const Header: React.FC<HeaderProps> = ({
             <span>{utcTime}</span>
           </div>
 
-          <button
+          {runtimeMode ? <div className="flex items-center gap-2 px-2.5 py-1 rounded-full text-xs border bg-surface-card text-slate-300 border-surface-border"><Activity className="w-3.5 h-3.5 text-sky-400" /><span className="font-medium">Engine runtime</span></div> : <button
             onClick={onOpenSettings}
             className={`flex items-center gap-2 px-2.5 py-1 rounded-full text-xs border transition-colors ${
               isConnected
@@ -107,9 +129,9 @@ export const Header: React.FC<HeaderProps> = ({
                 <span className="font-medium">Offline</span>
               </>
             )}
-          </button>
+          </button>}
 
-          <div
+          {!runtimeMode && <div
             className={`hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs border ${
               isEngineOn
                 ? 'bg-accent-dim text-accent border-accent-muted'
@@ -118,9 +140,9 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <Activity className={`w-3.5 h-3.5 ${isEngineOn ? 'text-accent' : 'text-slate-500'}`} />
             <span className="font-medium">{isEngineOn ? 'Propulsion engaged' : 'Standby'}</span>
-          </div>
+          </div>}
 
-          <div
+          {!runtimeMode && <div
             className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
               isFaulted
                 ? 'bg-critical-dim text-critical border-critical-muted'
@@ -130,11 +152,11 @@ export const Header: React.FC<HeaderProps> = ({
             <Zap className={`w-3.5 h-3.5 ${isFaulted ? 'text-critical' : 'text-success'}`} />
             <span>HI</span>
             <span>{(state.analytics.health_index * 100).toFixed(0)}%</span>
-          </div>
+          </div>}
         </div>
 
         {/* Role Selector (VIS-02..04) */}
-        <div className="hidden sm:flex items-center gap-1 p-0.5 rounded bg-surface-card border border-surface-border text-xs">
+        {!runtimeMode && <div className="hidden sm:flex items-center gap-1 p-0.5 rounded bg-surface-card border border-surface-border text-xs">
           {[
             { id: 'OPERATOR' as GCSRole, label: 'Operator', icon: <User className="w-3 h-3" /> },
             { id: 'PROPULSION_ENGINEER' as GCSRole, label: 'Propulsion', icon: <Cpu className="w-3 h-3" /> },
@@ -157,14 +179,14 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
             );
           })}
-        </div>
+        </div>}
 
         {/* Right: Sortie & settings */}
         <div className="flex items-center gap-2">
-          <div className="hidden xl:flex flex-col text-right">
+          {!runtimeMode && <div className="hidden xl:flex flex-col text-right">
             <span className="text-[10px] text-slate-500">Sortie</span>
             <span className="text-xs font-mono text-slate-300">{state.sortie_id}</span>
-          </div>
+          </div>}
 
           <button
             onClick={onOpenSettings}
