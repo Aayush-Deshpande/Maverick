@@ -16,6 +16,7 @@ import os
 import sys
 import time
 import uuid
+from pathlib import Path
 from dataclasses import asdict
 from typing import Set, List, Optional
 from contextlib import asynccontextmanager
@@ -38,6 +39,8 @@ for _stream in (sys.stdout, sys.stderr):
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import RedirectResponse
 
 from pydantic import BaseModel
 
@@ -126,6 +129,25 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Mount static assets for 3D Twin, Models, and Reports
+_REPO_PATH = Path(_REPO_ROOT)
+_THREEJS_TWIN = _REPO_PATH / "apps" / "threejs_twin"
+_ASSETS_DIR = _REPO_PATH / "assets"
+_REPORTS_DIR = _REPO_PATH / "reports"
+
+if _THREEJS_TWIN.exists():
+    app.mount("/apps/threejs_twin", StaticFiles(directory=_THREEJS_TWIN, html=True), name="threejs-twin-assets")
+
+    @app.get("/twin")
+    def serve_twin_redirect():
+        return RedirectResponse("/apps/threejs_twin/")
+
+if _ASSETS_DIR.exists():
+    app.mount("/assets", StaticFiles(directory=_ASSETS_DIR), name="static-assets")
+
+if _REPORTS_DIR.exists():
+    app.mount("/reports", StaticFiles(directory=_REPORTS_DIR), name="static-reports")
 
 
 async def broadcast_telemetry_loop(service: EngineStateService):

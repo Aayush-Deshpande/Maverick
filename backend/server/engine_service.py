@@ -630,6 +630,25 @@ class EngineStateService:
         engine_id_clean = engine_id.lower().replace("-", "_")
         parts = [p.upper() if p in ("is", "uav", "hp") else p.title() for p in engine_id_clean.split("_")]
         dyn_name = " ".join(parts)
+
+        # 1. Load authoritative EngineConfig if available
+        try:
+            from backend.physics.engine_config import load_engine_config
+            cfg = load_engine_config(engine_id_clean)
+            if cfg and cfg.display_name:
+                dyn_name = cfg.display_name
+        except Exception as e:
+            logger.debug(f"[EngineService] Custom config load fallback for {engine_id_clean}: {e}")
+
+        # 2. Synchronize with multi-engine RuntimeHub if initialized
+        try:
+            from backend.server.engine_api import get_hub
+            hub = get_hub()
+            if engine_id_clean in hub.runtimes:
+                hub.select(engine_id_clean)
+        except Exception as e:
+            logger.debug(f"[EngineService] Hub sync bypassed: {e}")
+
         with self.state_lock:
             self.active_engine_id = engine_id_clean
             self.engine_name = dyn_name

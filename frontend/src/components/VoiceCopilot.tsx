@@ -39,6 +39,7 @@ interface VoiceMessage {
 interface EngineStatusPayload {
   status: 'NOT_LOADED' | 'LOADING' | 'READY' | 'ERROR';
   error?: string | null;
+  provider?: string | null;
 }
 
 const SESSION_STORAGE_KEY = 'rotax_voice_session_id';
