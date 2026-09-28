@@ -1,0 +1,330 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "project": "ANUMAAN",
+  "title": "Mission Planning & Simulation Implementation Blueprint",
+  "document_id": "PLAN-2026-MP-001",
+  "version": "1.0.0",
+  "date": "2026-09-28",
+  "author": "Antigravity (Advanced Agentic Coding)",
+  "overview": {
+    "goal": "Implement an end-to-end, web-native Mission Planning and Mission Simulation layer for Project ANUMAAN, seamlessly integrating with the existing 5-engine physical runtime, FlyHash novelty gate, Bayesian diagnostic network, 3D WebGL twin, and sortie replay engine.",
+    "execution_target": "Entirely inside the Web Application (React + Three.js + FastAPI)",
+    "supported_engines": [
+      "rotax_912is",
+      "rotax_914",
+      "rotax_915is",
+      "austro_ae300",
+      "vrde_jayem_2_2l"
+    ],
+    "environmental_presets": [
+      "LADAKH_HIGH_COLD",
+      "THAR_HOT_HIGH",
+      "COASTAL_MARITIME",
+      "RAPID_TRANSIENTS"
+    ]
+  },
+  "contracts": {
+    "api_endpoints": [
+      {
+        "method": "GET",
+        "path": "/api/missions/templates",
+        "description": "List standard mission templates (Ladakh, Thar, Maritime, Canyon Dash)",
+        "response_schema": "Array<MissionDefinition>"
+      },
+      {
+        "method": "POST",
+        "path": "/api/missions/validate",
+        "description": "Validate mission route and compute preflight analytic reliability",
+        "request_schema": "MissionDefinition",
+        "response_schema": "{ valid: boolean, errors: string[], preflight_reliability: number, limiting_component: string }"
+      },
+      {
+        "method": "POST",
+        "path": "/api/missions/start",
+        "description": "Instantiate and run the time-stepped mission executive",
+        "request_schema": "{ mission: MissionDefinition, initial_time_scale?: number }",
+        "response_schema": "{ session_id: string, status: string, start_time: number }"
+      },
+      {
+        "method": "POST",
+        "path": "/api/missions/pause",
+        "description": "Pause active mission simulation clock",
+        "request_schema": "{ session_id: string }",
+        "response_schema": "{ session_id: string, status: 'PAUSED' }"
+      },
+      {
+        "method": "POST",
+        "path": "/api/missions/resume",
+        "description": "Resume active mission simulation with optional time-scale update",
+        "request_schema": "{ session_id: string, time_scale?: number }",
+        "response_schema": "{ session_id: string, status: 'RUNNING', time_scale: number }"
+      },
+      {
+        "method": "POST",
+        "path": "/api/missions/abort",
+        "description": "Abort mission simulation and command immediate RTB vector",
+        "request_schema": "{ session_id: string, reason: string }",
+        "response_schema": "{ session_id: string, status: 'ABORTING', rtb_waypoint: object }"
+      },
+      {
+        "method": "POST",
+        "path": "/api/missions/derate",
+        "description": "Apply prescriptive power derate to active mission profile",
+        "request_schema": "{ session_id: string, power_scale: number }",
+        "response_schema": "{ applied_power_scale: number, updated_reliability: number, endurance_penalty_min: number }"
+      },
+      {
+        "method": "GET",
+        "path": "/api/missions/state",
+        "description": "Fetch instantaneous snapshot of the active mission state",
+        "response_schema": "MissionState"
+      },
+      {
+        "method": "POST",
+        "path": "/api/missions/export",
+        "description": "Finalize completed/aborted mission and write replayable sortie files",
+        "request_schema": "{ session_id: string }",
+        "response_schema": "{ sortie_id: string, csv_path: string, manifest_path: string, debrief_path: string }"
+      }
+    ],
+    "websocket_channels": [
+      {
+        "path": "/ws/mission",
+        "direction": "SERVER_TO_CLIENT",
+        "rate_hz": 20,
+        "message_schema": {
+          "type": "MISSION_FRAME",
+          "t": "number",
+          "status": "string",
+          "phase": "string",
+          "kinematics": {
+            "pos": "[number, number, number]",
+            "agl_m": "number",
+            "speed_ktas": "number",
+            "heading_deg": "number",
+            "pitch_deg": "number",
+            "roll_deg": "number"
+          },
+          "atmosphere": {
+            "oat_c": "number",
+            "pressure_hpa": "number",
+            "density_alt_ft": "number"
+          },
+          "engine": {
+            "engine_id": "string",
+            "throttle_pct": "number",
+            "rpm": "number",
+            "cht": "number[]",
+            "egt": "number[]",
+            "oil_press_bar": "number"
+          },
+          "phm": {
+            "residual_alarm": "boolean",
+            "confirmed_anomaly": "boolean",
+            "flyhash_score": "number",
+            "is_novel": "boolean",
+            "reliability": "number",
+            "limiting_component": "string",
+            "prescriptive_advisory": "string"
+          }
+        }
+      }
+    ]
+  },
+  "phases": [
+    {
+      "phase_id": "PHASE_1",
+      "title": "Mission Core Models & Simulation Executive",
+      "description": "Build the canonical data models, waypoint interpolator, atmospheric ISA engine, and time-stepped simulation runner.",
+      "tasks": [
+        {
+          "id": "T1.1",
+          "name": "Implement Canonical Mission Models",
+          "file": "backend/mission/models.py",
+          "dependencies": [],
+          "acceptance_criteria": "Dataclasses for Waypoint, ScheduledEvent, EnvironmentalConditions, MissionDefinition, and MissionState with Pydantic serialization."
+        },
+        {
+          "id": "T1.2",
+          "name": "Implement Atmospheric & Kinematics Engine",
+          "file": "backend/mission/kinematics.py",
+          "dependencies": ["T1.1"],
+          "acceptance_criteria": "Calculates standard atmospheric temperature, pressure, density altitude, coordinated turn bank angle, and waypoint progress at 20 Hz."
+        },
+        {
+          "id": "T1.3",
+          "name": "Implement Mission Executive Runner",
+          "file": "backend/mission/executive.py",
+          "dependencies": ["T1.1", "T1.2"],
+          "acceptance_criteria": "Supports START, PAUSE, RESUME, ABORT, variable time compression (1x, 2x, 5x, 10x), and enforces all flight phases."
+        }
+      ]
+    },
+    {
+      "phase_id": "PHASE_2",
+      "title": "EngineRuntime Levers & Fault Dispatch Integration",
+      "description": "Connect the time-stepped MissionExecutive to the authoritative concurrent RuntimeHub for all 5 engines.",
+      "tasks": [
+        {
+          "id": "T2.1",
+          "name": "Wire Mission Executive to EngineRuntime Levers",
+          "file": "backend/mission/executive.py",
+          "dependencies": ["T1.3"],
+          "acceptance_criteria": "Executive pushes instantaneous (throttle_pct, altitude_ft, oat_c) into EngineRuntime.set_levers() at 20 Hz for whichever engine is active."
+        },
+        {
+          "id": "T2.2",
+          "name": "Dual-Mode Fault Dispatch Engine",
+          "file": "backend/mission/fault_dispatcher.py",
+          "dependencies": ["T2.1"],
+          "acceptance_criteria": "Executes scheduled events at mission elapsed time T and accepts operator live injection through the same canonical Runtime.inject_fault() pipeline."
+        },
+        {
+          "id": "T2.3",
+          "name": "Multi-Engine Validation Suite",
+          "file": "tests/test_mission_multi_engine.py",
+          "dependencies": ["T2.1", "T2.2"],
+          "acceptance_criteria": "Pytest verifies all 5 engine configurations run through a climb-cruise-descent profile with unique physical responses."
+        }
+      ]
+    },
+    {
+      "phase_id": "PHASE_3",
+      "title": "FlyHash Novelty & Dynamic Reliability Integration",
+      "description": "Wire the FlyHash sparse random projection gate and dynamic Weibull survival updating into the active simulation loop.",
+      "tasks": [
+        {
+          "id": "T3.1",
+          "name": "Wire FlyHash Novelty Gate into EngineRuntime Ingest",
+          "file": "backend/runtime/engine_runtime.py",
+          "dependencies": ["T2.1"],
+          "acceptance_criteria": "ResidualVector and order features are encoded by FlyNoveltyDetector; tick payload carries novelty_score and is_novel flag."
+        },
+        {
+          "id": "T3.2",
+          "name": "Dynamic In-Flight Mission Reliability Updates",
+          "file": "backend/mission/reliability_tracker.py",
+          "dependencies": ["T3.1"],
+          "acceptance_criteria": "Recalculates R(remaining_sortie) and PrescriptiveAdvisor derate schedules whenever damage accumulates or anomaly is confirmed."
+        }
+      ]
+    },
+    {
+      "phase_id": "PHASE_4",
+      "title": "Web 3D Canyon Flight Twin (Three.js WebGL)",
+      "description": "Port the desktop Blender canyon flight simulator into a high-performance web-native Three.js component.",
+      "tasks": [
+        {
+          "id": "T4.1",
+          "name": "Migrate 3D Assets to Public Directory",
+          "file": "frontend/public/models/",
+          "dependencies": [],
+          "acceptance_criteria": "delta-pbr.glb and terrain.glb are accessible via frontend Vite dev server and build bundle."
+        },
+        {
+          "id": "T4.2",
+          "name": "Build WebGL Canyon Flight Scene",
+          "file": "frontend/src/components/CanyonFlightViewer.tsx",
+          "dependencies": ["T4.1"],
+          "acceptance_criteria": "Renders terrain mesh, atmospheric fog, tactical lighting, and delta airframe at >= 60 FPS."
+        },
+        {
+          "id": "T4.3",
+          "name": "Implement Flight Kinematics & Waypoint Visualizer",
+          "file": "frontend/src/components/CanyonFlightViewer.tsx",
+          "dependencies": ["T4.2"],
+          "acceptance_criteria": "Interpolates aircraft position along 3D waypoints, animates propeller, renders active flight corridor, and provides Auto-GCAS warning cone."
+        }
+      ]
+    },
+    {
+      "phase_id": "PHASE_5",
+      "title": "Mission Planning & Simulation Web Interface",
+      "description": "Build the user-facing GCS Mission Operations interface in React with clean engineering aesthetics.",
+      "tasks": [
+        {
+          "id": "T5.1",
+          "name": "Build Mission Planner Form & Route Builder",
+          "file": "frontend/src/components/MissionPlannerForm.tsx",
+          "dependencies": ["T1.1"],
+          "acceptance_criteria": "Allows operator to select theater presets, customize waypoints, schedule faults, select engine, and review pre-flight reliability."
+        },
+        {
+          "id": "T5.2",
+          "name": "Build Mission Execution Cockpit",
+          "file": "frontend/src/components/MissionCockpitView.tsx",
+          "dependencies": ["T4.3", "T5.1"],
+          "acceptance_criteria": "Displays WebGL 3D flight canvas, virtual gauges, mission timeline scrubber, and active phase indicators."
+        },
+        {
+          "id": "T5.3",
+          "name": "Build Prescriptive Decision & Operator Response Panel",
+          "file": "frontend/src/components/PrescriptiveDecisionPanel.tsx",
+          "dependencies": ["T3.2", "T5.2"],
+          "acceptance_criteria": "Provides one-click execution of recommended power derating, divert vectors, or emergency RTB with updated ETA."
+        },
+        {
+          "id": "T5.4",
+          "name": "Integrate Mission Operations into App Navigation",
+          "file": "frontend/src/App.tsx",
+          "dependencies": ["T5.2", "T5.3"],
+          "acceptance_criteria": "Wires the full mission suite into the unified GCS navigation shell under 'Mission / Operations'."
+        }
+      ]
+    },
+    {
+      "phase_id": "PHASE_6",
+      "title": "Autonomous Sortie Packaging & Seamless Replay Bridge",
+      "description": "Automatically package completed or aborted simulation runs into standard replayable sorties without fabricated data.",
+      "tasks": [
+        {
+          "id": "T6.1",
+          "name": "Implement Sortie Archive Generator",
+          "file": "backend/mission/sortie_exporter.py",
+          "dependencies": ["T1.3", "T2.1"],
+          "acceptance_criteria": "Writes actual 20 Hz simulation ticks to data/telemetry/{id}.csv, generates {id}_manifest.json, and produces debrief markdown."
+        },
+        {
+          "id": "T6.2",
+          "name": "Bridge Simulation Completion to Replay Scrubber",
+          "file": "frontend/src/components/MissionCompletionSummary.tsx",
+          "dependencies": ["T6.1", "T5.2"],
+          "acceptance_criteria": "Presents sortie debrief summary with a direct 'Open in Historical Replay' action that immediately switches to the Replay tab."
+        }
+      ]
+    },
+    {
+      "phase_id": "PHASE_7",
+      "title": "Comprehensive Regression Testing & Visual QA",
+      "description": "Ensure zero regressions across existing tests, 100% build health, and verify multi-engine mission simulation end-to-end.",
+      "tasks": [
+        {
+          "id": "T7.1",
+          "name": "Backend Mission Simulation Test Suite",
+          "file": "tests/test_mission_simulation_e2e.py",
+          "dependencies": ["T6.1"],
+          "acceptance_criteria": "Pytest suite tests preflight validation, 10x accelerated simulation, fault injection, and sortie export across all 5 engines."
+        },
+        {
+          "id": "T7.2",
+          "name": "Playwright Browser Verification Script",
+          "file": "scripts/verify_mission_simulation.cjs",
+          "dependencies": ["T5.4", "T6.2"],
+          "acceptance_criteria": "Automated headless browser script creates a mission, simulates flight, verifies WebGL 3D canyon, injects a fault, applies derate, and verifies replay."
+        }
+      ]
+    }
+  ],
+  "acceptance_checklist": [
+    "Mission Planning is 100% web-native with zero dependency on desktop Blender.",
+    "All 5 engines (Rotax 912/914/915, Austro AE300, VRDE Jayem) run through realistic mission flight profiles.",
+    "Flight profile dynamically sets altitude, OAT, ambient pressure, and throttle into EngineRuntime.",
+    "Ladakh High-Altitude Cold vs. Thar Hot-and-High presets produce distinct, physics-backed thermal behavior.",
+    "Scheduled and Live fault injections follow the identical plant-to-PHM pipeline.",
+    "FlyHash novelty detector is active in the live tick loop as an unsupervised novelty gate.",
+    "Prescriptive derate recommendations allow operator in-flight response to preserve the airframe.",
+    "Completed simulations automatically export authentic CSV sorties directly readable by Mission Replay.",
+    "The 3D WebGL canyon twin renders authentic Blender-derived delta airframe and Ladakh terrain meshes.",
+    "No AI slop, fake HUDs, glowing decorative cards, or fabricated telemetry numbers."
+  ]
+}

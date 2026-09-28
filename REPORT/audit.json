@@ -1,0 +1,297 @@
+{
+    "project": "DRDO Aero-Twin (Project ANUMAAN)",
+    "problem_statement": "SIH-26054: AI/ML Powered Digital Twin of UAV Propulsion System",
+    "audit_reference": "REPORT/frontend_backend_integration_audit.md",
+    "generated_at": "2026-09-27T15:46:00+05:30",
+    "version": "1.0.0",
+    "summary": {
+        "total_tasks": 10,
+        "p0_critical": 2,
+        "p1_high": 3,
+        "p2_medium": 3,
+        "p3_low": 2
+    },
+    "tasks": [
+        {
+            "id": "WP-01-REPLAY-PATH",
+            "title": "Fix ReplayEngine Telemetry CSV File Path Lookup",
+            "category": "Backend Telemetry / Replay",
+            "priority": "P0",
+            "frontend_files": [
+                "frontend/src/components/ReplayScrubber.tsx",
+                "frontend/src/services/api.ts"
+            ],
+            "backend_files": ["backend/telemetry/replay_engine.py"],
+            "current_state": "backend/telemetry/replay_engine.py looks for report_dump/<mission_id>/readings/telemetry_log.csv. Sorties are actually saved in data/telemetry/live_sorties/<mission_id>.csv. Every call to /api/replay/{id}/frame returns HTTP 404.",
+            "target_state": "ReplayEngine checks both data/telemetry/live_sorties/ and report_dump/ with fallback discovery. /api/replay/{id}/frame streams frames accurately to frontend ReplayScrubber component.",
+            "api_or_ws": "REST GET /api/replay/{id}/frame?frame_idx={idx} and GET /api/replay/missions",
+            "data_schema": {
+                "request": { "id": "string", "frame_idx": "number" },
+                "response": {
+                    "frame_idx": "number",
+                    "total_frames": "number",
+                    "timestamp": "number",
+                    "telemetry": "EngineTelemetry"
+                }
+            },
+            "dependencies": [],
+            "acceptance_criteria": [
+                "Navigating to Mission Replay tab and selecting any live sortie loads the full frame count without 404.",
+                "Scrubbing slider smoothly interpolates telemetry readings in GCS gauges."
+            ],
+            "verification_method": "curl -s http://127.0.0.1:8000/api/replay/live_sorties_mission_001/frame?frame_idx=0 returns 200 with telemetry json."
+        },
+        {
+            "id": "WP-02-TEST-PATH-FIX",
+            "title": "Fix Hardcoded Drive Path in test_camera_transitions.py",
+            "category": "Testing / QA",
+            "priority": "P0",
+            "frontend_files": [],
+            "backend_files": ["tests/test_camera_transitions.py"],
+            "current_state": "tests/test_camera_transitions.py line 53 hardcodes 'e:\\backup-llm\\backup-no-llm\\3d_engine', causing pytest test collection to fail unless explicitly ignored.",
+            "target_state": "Path is resolved relative to Path(__file__).resolve().parent.parent / '3d_engine', with graceful skip if asset folder is absent in CI.",
+            "api_or_ws": "N/A",
+            "data_schema": {},
+            "dependencies": [],
+            "acceptance_criteria": [
+                "Running `pytest tests/` passes cleanly without requiring `--ignore=tests/test_camera_transitions.py`."
+            ],
+            "verification_method": "pytest tests/test_camera_transitions.py completes with 0 errors."
+        },
+        {
+            "id": "WP-03-UNIFIED-APP-LAYOUT",
+            "title": "Unify Split App.tsx Architecture into Single Multi-View Navigation",
+            "category": "Frontend Architecture / UX",
+            "priority": "P1",
+            "frontend_files": [
+                "frontend/src/App.tsx",
+                "frontend/src/components/Navigation.tsx",
+                "frontend/src/components/Header.tsx"
+            ],
+            "backend_files": [],
+            "current_state": "frontend/src/App.tsx uses useState<'runtime' | 'legacy'>('runtime'). It defaults to EngineRuntimeConsole, completely hiding the 6-tab GCS (Flight Deck, Propulsion, Maintenance, AI Diagnostics, Voice, Replay) and the 3D twin behind a toggle button.",
+            "target_state": "Header features a global Engine Selection dropdown (Rotax 912 iS, 914, 915 iS, Austro AE300, VRDE Jayem). Top-level tab navigation offers: 1. Mission Control (Flight Deck), 2. Propulsion Engineering (Telemetry/Residuals), 3. 3D Digital Twin, 4. Fleet & Multi-Engine Runtime, 5. Maintenance & CBM, 6. AI Copilot & Voice, 7. Mission Replay.",
+            "api_or_ws": "REST GET /api/engines, WS /ws/telemetry",
+            "data_schema": {
+                "activeTab": "string",
+                "selectedEngine": "string"
+            },
+            "dependencies": [],
+            "acceptance_criteria": [
+                "User can access 3D Twin, Engine Runtime Console, and all 6 GCS views from top navigation without toggling legacy mode.",
+                "Active engine switch updates telemetry header across all views."
+            ],
+            "verification_method": "npm run build succeeds; browser subagent verifies tab navigation renders all views without console errors."
+        },
+        {
+            "id": "WP-04-3D-TWIN-EMBEDDING",
+            "title": "Deep Embed Three.js 3D Digital Twin into Dedicated View with Bi-Directional Event Sync",
+            "category": "Frontend / 3D Visualization",
+            "priority": "P1",
+            "frontend_files": [
+                "frontend/src/components/DigitalTwinViewer.tsx",
+                "frontend/src/components/TwinIframeView.tsx",
+                "frontend/src/App.tsx",
+                "apps/threejs_twin/index.html",
+                "apps/threejs_twin/twin_app.js"
+            ],
+            "backend_files": ["backend/server/main.py"],
+            "current_state": "The rich Three.js twin exists in apps/threejs_twin/ served at /apps/threejs_twin/ with Draco-compressed UAV and engine GLB models, heatmap shaders, and X-ray cuts, but is only linked via target='_blank' in Header.tsx.",
+            "target_state": "3D Twin is embedded in an active tab via TwinIframeView with postMessage bridge transmitting live RPM, temperatures, and active injected faults to drive Three.js thermal mesh coloring and camera focus.",
+            "api_or_ws": "Iframe postMessage + GET /apps/threejs_twin/",
+            "data_schema": {
+                "type": "TELEMETRY_UPDATE | FAULT_TRIGGERED | CAMERA_FOCUS",
+                "payload": {
+                    "rpm": "number",
+                    "egt": "number",
+                    "cht": "number",
+                    "active_faults": "string[]"
+                }
+            },
+            "dependencies": ["WP-03-UNIFIED-APP-LAYOUT"],
+            "acceptance_criteria": [
+                "Clicking '3D Digital Twin' renders the interactive Three.js viewport directly inside the main UI frame.",
+                "Injecting an EGT or CHT fault in the control panel highlights the corresponding cylinder head in red within the 3D twin."
+            ],
+            "verification_method": "Inspect iframe DOM, verify postMessage listener receives state updates."
+        },
+        {
+            "id": "WP-05-MULTI-ENGINE-TELEMETRY-SYNC",
+            "title": "Synchronize EngineRuntimeHub Multi-Engine State with Telemetry Services",
+            "category": "Backend Integration / Telemetry",
+            "priority": "P1",
+            "frontend_files": [
+                "frontend/src/services/api.ts",
+                "frontend/src/components/EngineRuntimeConsole.tsx",
+                "frontend/src/components/Header.tsx"
+            ],
+            "backend_files": [
+                "backend/server/main.py",
+                "backend/engines/runtime_hub.py",
+                "backend/server/engine_service.py"
+            ],
+            "current_state": "Switching active engine in /api/engines/{id}/activate changes RuntimeHub active engine, but EngineStateService continues running Rotax 912 iS physics independently.",
+            "target_state": "Selecting an engine in Header updates EngineStateService model parameters (displacement, max RPM, turbocharger presence, thermal baselines) matching the selected engine specification.",
+            "api_or_ws": "POST /api/engines/{id}/activate and WS /ws/telemetry",
+            "data_schema": {
+                "engine_id": "rotax_912_is | rotax_914 | rotax_915_is | austro_ae300 | vrde_jayem_2_2l"
+            },
+            "dependencies": ["WP-03-UNIFIED-APP-LAYOUT"],
+            "acceptance_criteria": [
+                "Selecting Austro AE300 updates telemetry baselines to diesel turbo parameters (Common rail pressure, Jet A-1 fuel flow).",
+                "Telemetry gauge labels and operating limits adjust dynamically."
+            ],
+            "verification_method": "Call POST /api/engines/austro_ae300/activate; verify GET /api/state reflects AE300 specifications."
+        },
+        {
+            "id": "WP-06-MISSION-RELIABILITY-EXPOSURE",
+            "title": "Expose MissionReliabilityEngine and PrescriptiveAdvisor in Frontend",
+            "category": "Backend API / Frontend Visualization",
+            "priority": "P2",
+            "frontend_files": [
+                "frontend/src/components/MissionReadinessCard.tsx",
+                "frontend/src/components/FlightDeck.tsx",
+                "frontend/src/services/api.ts"
+            ],
+            "backend_files": [
+                "backend/server/main.py",
+                "backend/mission/reliability.py",
+                "backend/mission/prescriptive.py"
+            ],
+            "current_state": "backend/mission/reliability.py and backend/mission/prescriptive.py calculate Monte Carlo mission reliability probability and power derating actions, but lack API endpoints and are omitted from FlightDeck.",
+            "target_state": "Expose GET /api/mission/reliability and GET /api/mission/prescriptive. Visualize mission completion probability R(t), failure risks, and recommended RPM derate ladder in MissionReadinessCard.",
+            "api_or_ws": "REST GET /api/mission/reliability and GET /api/mission/prescriptive",
+            "data_schema": {
+                "reliability": {
+                    "completion_probability": "number",
+                    "remaining_flight_time_min": "number",
+                    "risk_factors": "string[]"
+                },
+                "prescriptive": {
+                    "derate_percent": "number",
+                    "max_allowable_rpm": "number",
+                    "recommended_action": "string"
+                }
+            },
+            "dependencies": [],
+            "acceptance_criteria": [
+                "Flight Deck shows live Mission Reliability score (e.g. 98.4%) calculated by Monte Carlo simulation.",
+                "When an injector clog is injected, PrescriptiveAdvisor suggests derating RPM with recommended throttle cap."
+            ],
+            "verification_method": "Run curl http://127.0.0.1:8000/api/mission/reliability; verify valid JSON response and rendering on FlightDeck."
+        },
+        {
+            "id": "WP-07-VOICE-SPEECH-FALLBACK",
+            "title": "Implement Browser Web Speech Fallback for Voice Copilot",
+            "category": "Frontend / AI Voice Assistant",
+            "priority": "P2",
+            "frontend_files": [
+                "frontend/src/components/VoiceCopilot.tsx",
+                "frontend/src/services/api.ts"
+            ],
+            "backend_files": ["backend/server/main.py"],
+            "current_state": "backend/voice/ routes require whisper ggml-tiny.en.bin and Kokoro TTS models which are absent from git repository, causing /api/voice/converse to fail with 500 error when invoked.",
+            "target_state": "VoiceCopilot detects if backend voice synthesis is unavailable and seamlessly falls back to window.webkitSpeechRecognition / SpeechRecognition and window.speechSynthesis, while routing queries to /api/ai/ask.",
+            "api_or_ws": "REST POST /api/ai/ask + Browser SpeechSynthesis API",
+            "data_schema": {
+                "query": "string",
+                "context": "EngineContext",
+                "response": { "answer": "string", "citations": "string[]" }
+            },
+            "dependencies": [],
+            "acceptance_criteria": [
+                "Clicking microphone button records speech in modern browsers even if backend whisper binary is missing.",
+                "AI response is vocalized using local speech synthesis and cited against OEM manuals."
+            ],
+            "verification_method": "Test VoiceCopilot UI in browser with audio input, verifying immediate speech response."
+        },
+        {
+            "id": "WP-08-DIAGNOSTIC-BN-RUL-EXPOSURE",
+            "title": "Expose Diagnostic Bayesian Network and DualPath RUL in CBM Views",
+            "category": "Backend Integration / Prognostics",
+            "priority": "P2",
+            "frontend_files": [
+                "frontend/src/components/MaintenanceCBM.tsx",
+                "frontend/src/components/AIDiagnostics.tsx",
+                "frontend/src/services/api.ts"
+            ],
+            "backend_files": [
+                "backend/server/main.py",
+                "backend/diagnose/bn.py",
+                "backend/prognose/rul.py"
+            ],
+            "current_state": "DiagnosticBayesianNetwork and DualPathRULEstimator exist as unit-tested offline modules but are not wired into FastAPI /api/cbm or /api/diagnostics routes.",
+            "target_state": "Expose GET /api/diagnostics/bayesian and GET /api/prognostics/dual-path-rul endpoints. Display posterior probability distribution and physics-ML blended RUL confidence bounds in MaintenanceCBM.",
+            "api_or_ws": "REST GET /api/diagnostics/bayesian, GET /api/prognostics/dual-path-rul",
+            "data_schema": {
+                "bn_posteriors": "Record<string, number>",
+                "dual_path_rul": {
+                    "physics_rul_hours": "number",
+                    "ml_rul_hours": "number",
+                    "blended_rul_hours": "number",
+                    "confidence_interval": "[number, number]"
+                }
+            },
+            "dependencies": [],
+            "acceptance_criteria": [
+                "Maintenance & CBM tab displays dual-path RUL with clear physics vs ML breakdown.",
+                "Diagnostic view shows Bayesian network node belief probabilities."
+            ],
+            "verification_method": "pytest tests/test_diagnostics_bn.py and pytest tests/test_rul_dual_path.py pass; GET returns valid payload."
+        },
+        {
+            "id": "WP-09-RESIDUAL-DRIFT-CHARTS",
+            "title": "Add Physics vs ML Residual Tracking and Drift Visualizer",
+            "category": "Frontend / Diagnostics Visualization",
+            "priority": "P3",
+            "frontend_files": [
+                "frontend/src/components/PropulsionEngineer.tsx",
+                "frontend/src/components/ResidualDriftChart.tsx"
+            ],
+            "backend_files": ["backend/server/engine_service.py"],
+            "current_state": "Backend computes 14 residuals (EGT, CHT, MAP, Fuel Flow, Oil Pressure, etc.) and split-conformal p-values, but frontend only shows a subset of raw residuals without threshold bands.",
+            "target_state": "Propulsion Engineer tab includes dedicated ResidualDriftChart showing raw vs modeled values, dynamic 3-sigma error bounds, and conformal calibration status.",
+            "api_or_ws": "WS /ws/telemetry",
+            "data_schema": {
+                "residuals": "Record<string, {actual: number, modeled: number, delta: number, sigma: number}>"
+            },
+            "dependencies": ["WP-03-UNIFIED-APP-LAYOUT"],
+            "acceptance_criteria": [
+                "Engineers can inspect real-time residual drift curves with alert thresholds for all 14 monitored parameters."
+            ],
+            "verification_method": "Inject sensor bias fault and verify residual curve crosses threshold with visual alert."
+        },
+        {
+            "id": "WP-10-DEBRIEF-EXPORT-WORKFLOW",
+            "title": "Integrate Automatic Sortie Debrief Generation and PDF/Markdown Download",
+            "category": "Frontend / Operations Reporting",
+            "priority": "P3",
+            "frontend_files": [
+                "frontend/src/components/MaintenanceCBM.tsx",
+                "frontend/src/components/DebriefModal.tsx",
+                "frontend/src/services/api.ts"
+            ],
+            "backend_files": [
+                "backend/server/main.py",
+                "backend/debrief/post_flight.py"
+            ],
+            "current_state": "backend/debrief/post_flight.py provides comprehensive post-flight debriefing with JSON/Markdown export, but the UI has no button to trigger generation or download the report.",
+            "target_state": "Add 'Generate Mission Debrief' button in Flight Deck / Maintenance views opening DebriefModal with live markdown preview and one-click download.",
+            "api_or_ws": "REST POST /api/debrief/generate and GET /api/debrief/download/{id}",
+            "data_schema": {
+                "sortie_id": "string",
+                "debrief": {
+                    "executive_summary": "string",
+                    "anomalies_detected": "number",
+                    "maintenance_actions": "string[]",
+                    "markdown": "string"
+                }
+            },
+            "dependencies": [],
+            "acceptance_criteria": [
+                "Clicking 'Generate Debrief' calls backend debrief engine, presents formatted sortie summary, and allows export."
+            ],
+            "verification_method": "Trigger debrief generation via UI; verify exported markdown matches backend output."
+        }
+    ]
+}

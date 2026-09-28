@@ -34,6 +34,7 @@ if sys.stderr is not None and hasattr(sys.stderr, "reconfigure"):
 PROJECT_ROOT = Path(__file__).resolve().parent
 
 CANDIDATE_BLENDER_PATHS = [
+    r"D:\Blender\blender.exe",
     r"E:\Blender\blender.exe",
     r"C:\Program Files\Blender Foundation\Blender 5.2\blender.exe",
     r"C:\Program Files\Blender Foundation\Blender 5.1\blender.exe",
@@ -56,7 +57,11 @@ def launch_canyon_sim():
         print("[ERROR] Blender executable could not be found.")
         return 1
 
-    blend_file = PROJECT_ROOT / "Models" / "terrain.blend"
+    candidate_terrains = [
+        PROJECT_ROOT / "assets" / "models" / "terrain.blend",
+        PROJECT_ROOT / "Models" / "terrain.blend",
+    ]
+    blend_file = next((f for f in candidate_terrains if f.exists()), candidate_terrains[0])
     app_script = PROJECT_ROOT / "apps" / "blender_twin" / "standalone_canyon_flight_app.py"
 
     if not blend_file.exists():
@@ -85,7 +90,11 @@ def launch_blender_twin():
         print("[ERROR] Blender executable could not be found.")
         return 1
 
-    blend_file = PROJECT_ROOT / "3d_models" / "rotax_912_is_sport.blend"
+    candidate_engines = [
+        PROJECT_ROOT / "assets" / "blender" / "rotax_912_is_sport.blend",
+        PROJECT_ROOT / "3d_models" / "rotax_912_is_sport.blend",
+    ]
+    blend_file = next((f for f in candidate_engines if f.exists()), candidate_engines[0])
     app_script = PROJECT_ROOT / "apps" / "blender_twin" / "standalone_digital_twin_app.py"
 
     if not blend_file.exists():

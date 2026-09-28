@@ -85,3 +85,5 @@ report_dump/
 data/telemetry/live_sorties/
 *.blend1
 archive/
+.playwright-mcp/
+graphify-out/
