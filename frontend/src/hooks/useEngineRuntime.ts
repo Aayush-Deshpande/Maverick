@@ -19,6 +19,18 @@ export interface EngineProfile {
   commanded_faults: Array<{ mode: string; cylinder?: number | null; severity: number; origin: string }>;
   faults: EngineFault[];
 }
+export interface EngineDiagnosisHypothesis {
+  mode_id: string;
+  location: string | null;
+  probability: number;
+  ambiguity_group_id: string;
+  supporting_evidence: string[];
+  operator_text: string;
+  engineer_text: string;
+  maintainer_text: string;
+  ata_chapter: string;
+}
+
 export interface EngineFrame {
   engine_id: string;
   t: number;
@@ -29,6 +41,7 @@ export interface EngineFrame {
   egt: number[];
   detection: null | { scores: Record<string, number>; ratios: Record<string, number>; raw_alarm: boolean; confirmed: boolean; top_channels: Array<string | [string, number]> };
   heavy: null | { label: string; classes: string[]; scores: number[] };
+  diagnosis?: EngineDiagnosisHypothesis[] | null;
 }
 interface EngineIndex { selected: string; tick: number; engines: EngineProfile[] }
 export interface EngineSchema { channels: Array<{ name: string; unit: string; kind: string; cylinder: number | null; required: boolean }>; operating_limits: Record<string, unknown>; components: string[]; provenance_summary: Record<string, number> }

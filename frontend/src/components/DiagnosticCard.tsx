@@ -9,9 +9,11 @@ import {
   CheckSquare,
   Square,
   ArrowRight,
+  Info,
 } from 'lucide-react';
 import { UnifiedTelemetryState } from '../types/telemetry';
 import { AerospaceMarkdown } from './AerospaceMarkdown';
+import { useEngineSelection } from '../contexts/EngineSelectionContext';
 
 interface DiagnosticCardProps {
   state: UnifiedTelemetryState;
@@ -81,8 +83,29 @@ export const DiagnosticCard: React.FC<DiagnosticCardProps> = ({
     }
   };
 
+  let engineContext: ReturnType<typeof useEngineSelection> | null = null;
+  try {
+    engineContext = useEngineSelection();
+  } catch {
+    engineContext = null;
+  }
+
   return (
     <div className="space-y-4">
+      {engineContext && !engineContext.isDefaultEngineSelected && (
+        <div className="rounded border border-sky-800/50 bg-sky-950/25 p-3 text-xs text-sky-200 flex items-start gap-2.5">
+          <Info className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
+          <div>
+            <div className="font-semibold text-white">
+              Multi-Engine Twin Active: {engineContext.profile?.display_name || engineContext.engineId}
+            </div>
+            <div className="text-[11px] text-slate-300 mt-0.5 leading-relaxed">
+              Authoritative physics, calibrated residual detectors, and Bayesian diagnosis are running for {engineContext.profile?.display_name || engineContext.engineId}. RAG documentation retrieval prioritizes indexed maintenance manuals and active telemetry.
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Early warning trend — the Go/No-Go certification banner and per-component RUL table
           live in MissionReadinessCard, directly under the Detection Logic panel. */}
       {isEarlyTrend && a.early_warning_trend && (

@@ -44,6 +44,19 @@ interface EngineStatusPayload {
 
 const SESSION_STORAGE_KEY = 'rotax_voice_session_id';
 
+const SpeechRecognitionAPI =
+  typeof window !== 'undefined'
+    ? (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    : undefined;
+
+function cleanReplyForSpeech(text: string): string {
+  return text
+    .replace(/\[\^?\d+\]/g, '') // remove citation numbers e.g. [1]
+    .replace(/[*#`_~]/g, '')     // remove markdown formatting
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 // Continuous listening tuning. Kept as named constants (rather than inline magic numbers)
 // because these are the knobs to turn if end-of-speech detection feels too twitchy or cuts
 // people off — see captureCommandWithVad() and the continuous loop below.
@@ -220,6 +233,13 @@ export const VoiceCopilot: React.FC<VoiceCopilotProps> = ({
   const singleShotRecorderRef = useRef<MediaRecorder | null>(null);
   const audioElRef = useRef<HTMLAudioElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const browserRecognitionRef = useRef<any>(null);
+
+  const voiceReady = sttStatus?.status === 'READY' && ttsStatus?.status === 'READY';
+  const hasBrowserSpeech = Boolean(SpeechRecognitionAPI);
+  const hasBrowserSynthesis = typeof window !== 'undefined' && 'speechSynthesis' in window;
+  const isBrowserFallbackActive = !voiceReady && hasBrowserSpeech;
+  const isVoiceUsable = voiceReady || isBrowserFallbackActive;
 
   const refreshEngineStatus = useCallback(async () => {
     try {
@@ -491,10 +511,163 @@ export const VoiceCopilot: React.FC<VoiceCopilotProps> = ({
     setMicState('idle');
   }, [serverUrl]);
 
+  const sendBrowserTextTurn = async (queryText: string): Promise<void> => {
+    setMicState('processing');
+    setErrorMsg(null);
+    setThinkingText('Consulting Mission Copilot RAG & reasoning engine...');
+    const now = Date.now();
+    setMessages((prev) => [...prev, { role: 'user', text: queryText, ts: now }]);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 45000);
+    try {
+      const res = await fetch(`${serverUrl}/api/ai/ask`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': '69420',
+        },
+        body: JSON.stringify({ query: queryText }),
+        signal: controller.signal,
+      });
+
+      if (!res.ok) {
+        setErrorMsg(`AI query returned status ${res.status}`);
+        setMicState('idle');
+        return;
+      }
+
+      const data = await res.json();
+      const reply = data.response || 'No response returned from copilot.';
+      const citations = data.citations || [];
+
+      setMessages((prev) => [
+        ...prev,
+        { role: 'assistant', text: reply, citations, ts: Date.now() },
+      ]);
+
+      if (hasBrowserSynthesis && reply) {
+        setMicState('speaking');
+        const clean = cleanReplyForSpeech(reply);
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(clean);
+
+        const onFinished = () => {
+          setMicState('idle');
+          if (continuousModeRef.current) {
+            playReadyChime();
+            setTimeout(() => {
+              if (continuousModeRef.current) {
+                startBrowserListening();
+              }
+            }, 300);
+          }
+        };
+
+        utterance.onend = onFinished;
+        utterance.onerror = onFinished;
+        window.speechSynthesis.speak(utterance);
+      } else {
+        setMicState('idle');
+        if (continuousModeRef.current) {
+          playReadyChime();
+          setTimeout(() => {
+            if (continuousModeRef.current) {
+              startBrowserListening();
+            }
+          }, 300);
+        }
+      }
+    } catch (err: any) {
+      const message =
+        err?.name === 'AbortError'
+          ? 'Request timed out after 45s — AI engine unreachable.'
+          : err?.message || err;
+      setErrorMsg(`AI query failed: ${message}`);
+      setMicState('idle');
+    } finally {
+      clearTimeout(timeoutId);
+      setThinkingText('');
+    }
+  };
+
+  const startBrowserListening = () => {
+    if (!SpeechRecognitionAPI) {
+      setMicState('unsupported');
+      return;
+    }
+    setErrorMsg(null);
+    try {
+      if (browserRecognitionRef.current) {
+        try {
+          browserRecognitionRef.current.abort();
+        } catch {}
+      }
+
+      const recognition = new SpeechRecognitionAPI();
+      browserRecognitionRef.current = recognition;
+      recognition.lang = 'en-US';
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.onstart = () => {
+        setMicState('capturing');
+      };
+
+      recognition.onresult = (event: any) => {
+        const transcript = event.results?.[0]?.[0]?.transcript?.trim();
+        if (transcript) {
+          sendBrowserTextTurn(transcript);
+        } else {
+          setMicState('idle');
+        }
+      };
+
+      recognition.onerror = (event: any) => {
+        if (event.error === 'no-speech') {
+          if (continuousModeRef.current) {
+            setTimeout(() => {
+              if (continuousModeRef.current) startBrowserListening();
+            }, 300);
+            return;
+          }
+          setMicState('idle');
+        } else if (event.error === 'not-allowed') {
+          setMicState('denied');
+          setErrorMsg('Microphone access was denied in browser permissions.');
+          disableContinuousMode();
+        } else {
+          setMicState('idle');
+          if (event.error !== 'aborted') {
+            setErrorMsg(`Speech recognition error: ${event.error}`);
+          }
+        }
+      };
+
+      recognition.onend = () => {
+        if (micState === 'capturing' && !continuousModeRef.current) {
+          setMicState('idle');
+        }
+      };
+
+      recognition.start();
+    } catch (e: any) {
+      setErrorMsg(`Failed to start browser speech recognition: ${e?.message || e}`);
+      setMicState('idle');
+    }
+  };
+
   const enableContinuousMode = async () => {
     setErrorMsg(null);
-    if (!voiceReady) {
-      setErrorMsg('Voice engines are still warming up - please wait for STT and TTS to show READY.');
+    if (!isVoiceUsable) {
+      setErrorMsg('Voice engines are unavailable and browser speech recognition is not supported.');
+      return;
+    }
+    if (isBrowserFallbackActive) {
+      continuousModeRef.current = true;
+      setContinuousMode(true);
+      startBrowserListening();
       return;
     }
     if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
@@ -502,20 +675,10 @@ export const VoiceCopilot: React.FC<VoiceCopilotProps> = ({
       return;
     }
     try {
-      // Echo cancellation matters more here than in manual mode: the mic stays open and
-      // monitored (for barge-in) while the reply plays out of the same device's speakers, so
-      // without it the assistant's own voice can bleed back in and look like an interruption.
-      // Deliberately NOT requesting noiseSuppression/autoGainControl: AGC continuously
-      // renormalizes the mic level toward a target loudness, which fights the fixed-RMS-
-      // threshold VAD used everywhere in this file — silence gets boosted until it reads as
-      // "speech," so captureCommandWithVad() never sees a quiet enough window to stop on, and
-      // barge-in's own threshold gets thrown off the same way. Reported directly: recording
-      // would start but never auto-stop, and speaking over a reply didn't interrupt it.
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: { echoCancellation: true },
       });
       stream.getAudioTracks()[0].onended = () => {
-        // Permission revoked or device unplugged mid-session — fall back cleanly.
         disableContinuousMode();
       };
       persistentStreamRef.current = stream;
@@ -531,6 +694,14 @@ export const VoiceCopilot: React.FC<VoiceCopilotProps> = ({
   const disableContinuousMode = () => {
     continuousModeRef.current = false;
     setContinuousMode(false);
+    if (browserRecognitionRef.current) {
+      try {
+        browserRecognitionRef.current.abort();
+      } catch {}
+    }
+    if (hasBrowserSynthesis) {
+      window.speechSynthesis.cancel();
+    }
     persistentStreamRef.current?.getTracks().forEach((t) => t.stop());
     persistentStreamRef.current = null;
     audioElRef.current?.pause();
@@ -545,8 +716,12 @@ export const VoiceCopilot: React.FC<VoiceCopilotProps> = ({
   // ── Manual push-to-talk (works independently of continuous mode) ─────────────────────
   const startManualRecording = async () => {
     setErrorMsg(null);
-    if (!voiceReady) {
-      setErrorMsg('Voice engines are still warming up - please wait for STT and TTS to show READY.');
+    if (!isVoiceUsable) {
+      setErrorMsg('Voice engines are unavailable and browser speech recognition is not supported.');
+      return;
+    }
+    if (isBrowserFallbackActive) {
+      startBrowserListening();
       return;
     }
     if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
@@ -579,17 +754,36 @@ export const VoiceCopilot: React.FC<VoiceCopilotProps> = ({
   };
 
   const handleMicClick = () => {
+    if (isBrowserFallbackActive) {
+      if (continuousMode) {
+        if (micState === 'speaking') {
+          if (hasBrowserSynthesis) window.speechSynthesis.cancel();
+          setMicState('capturing');
+          startBrowserListening();
+          return;
+        }
+        disableContinuousMode();
+        return;
+      }
+      if (micState === 'idle' || micState === 'denied' || micState === 'unsupported') {
+        startBrowserListening();
+      } else if (micState === 'capturing') {
+        try {
+          browserRecognitionRef.current?.stop();
+        } catch {}
+        setMicState('idle');
+      } else if (micState === 'speaking') {
+        if (hasBrowserSynthesis) window.speechSynthesis.cancel();
+        setMicState('idle');
+      }
+      return;
+    }
+
     if (continuousMode) {
       if (micState === 'speaking') {
-        // Manual barge-in fallback: the automatic RMS-based detector in
-        // playReplyAudioInterruptible() can miss real speech depending on mic/speaker
-        // acoustics, so tapping the mic while it's talking always works as a guaranteed
-        // way to cut in — interrupts the reply and goes straight back to listening,
-        // without fully stopping continuous mode.
         manualInterruptRef.current = true;
         return;
       }
-      // Any other state: acts as an emergency stop for the whole continuous-listening flow.
       disableContinuousMode();
       return;
     }
@@ -607,6 +801,14 @@ export const VoiceCopilot: React.FC<VoiceCopilotProps> = ({
     return () => {
       continuousModeRef.current = false;
       persistentStreamRef.current?.getTracks().forEach((t) => t.stop());
+      if (browserRecognitionRef.current) {
+        try {
+          browserRecognitionRef.current.abort();
+        } catch {}
+      }
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
     };
   }, []);
 
@@ -625,33 +827,32 @@ export const VoiceCopilot: React.FC<VoiceCopilotProps> = ({
 
   const engineReady = sttStatus?.status === 'READY' && ttsStatus?.status === 'READY' && llmStatus?.status === 'READY';
   const engineLoading = sttStatus?.status === 'LOADING' || ttsStatus?.status === 'LOADING' || llmStatus?.status === 'LOADING';
-  // STT and TTS are hard requirements for a voice turn - unlike the LLM (which fails soft into
-  // a fast deterministic fallback inside ask_voice() if Ollama is unavailable), there is no
-  // fallback path if whisper.cpp or Kokoro aren't loaded yet. Gating only on these two (not
-  // requiring LLM===READY) lets voice work immediately via the grounded fallback when Ollama
-  // simply isn't running, while still blocking the one scenario that actually hangs: starting
-  // a turn before STT/TTS have finished their one-time cold load. Confirmed by direct repro -
-  // Kokoro's first load alone measured 24.4s on this project's own dev machine, stacking with
-  // whatever else is still warming up inline into the request instead of finishing in the
-  // background first, which is exactly what produced the ~40-60s "request timed out" error
-  // this gate exists to prevent.
-  const voiceReady = sttStatus?.status === 'READY' && ttsStatus?.status === 'READY';
 
   const micLabel =
     micState === 'capturing'
       ? continuousMode
-        ? 'LISTENING — SPEAK ANYTIME'
+        ? isBrowserFallbackActive
+          ? 'LISTENING (BROWSER FALLBACK) — SPEAK ANYTIME'
+          : 'LISTENING — SPEAK ANYTIME'
+        : isBrowserFallbackActive
+        ? 'LISTENING (BROWSER FALLBACK) — SPEAK NOW'
         : 'RECORDING — TAP TO STOP'
       : micState === 'processing'
       ? 'THINKING...'
       : micState === 'speaking'
       ? continuousMode
         ? 'SPEAKING — JUST TALK TO INTERRUPT'
+        : isBrowserFallbackActive
+        ? 'SPEAKING (BROWSER SYNTHESIS) — TAP TO STOP'
         : 'SPEAKING — TAP TO INTERRUPT'
       : micState === 'denied'
       ? 'MICROPHONE BLOCKED'
       : micState === 'unsupported'
       ? 'VOICE NOT SUPPORTED IN THIS BROWSER'
+      : isBrowserFallbackActive
+      ? continuousMode
+        ? 'STARTING CONTINUOUS LISTENING...'
+        : 'BROWSER SPEECH READY — TAP TO TALK'
       : sttStatus?.status === 'ERROR' || ttsStatus?.status === 'ERROR'
       ? 'VOICE ENGINE ERROR — SEE STATUS ABOVE'
       : !voiceReady
@@ -701,6 +902,14 @@ export const VoiceCopilot: React.FC<VoiceCopilotProps> = ({
             >
               LLM: {llmStatus?.status || 'UNKNOWN'}
             </span>
+            {isBrowserFallbackActive && (
+              <span
+                id="voice-browser-fallback-chip"
+                className="text-[10px] font-mono px-2 py-1 rounded-lg border bg-amber-500/10 text-amber-400 border-amber-500/30"
+              >
+                Browser speech fallback — local voice engine unavailable
+              </span>
+            )}
             {!engineReady && (
               <button
                 onClick={handleWarmup}
@@ -746,7 +955,7 @@ export const VoiceCopilot: React.FC<VoiceCopilotProps> = ({
           </div>
           <button
             onClick={toggleContinuousMode}
-            disabled={!voiceReady && !continuousMode}
+            disabled={!isVoiceUsable && !continuousMode}
             className={`relative w-11 h-6 rounded-full transition-colors shrink-0 disabled:opacity-40 disabled:cursor-not-allowed ${
               continuousMode ? 'bg-success' : 'bg-white/10'
             }`}
@@ -763,7 +972,7 @@ export const VoiceCopilot: React.FC<VoiceCopilotProps> = ({
         <div className="flex flex-col items-center justify-center gap-3 py-4">
           <button
             onClick={handleMicClick}
-            disabled={micState === 'processing' || (!voiceReady && micState === 'idle')}
+            disabled={micState === 'processing' || (!isVoiceUsable && micState === 'idle')}
             className={`relative w-24 h-24 rounded-full flex items-center justify-center border transition-colors ${
               micState === 'capturing'
                 ? continuousMode
@@ -775,7 +984,7 @@ export const VoiceCopilot: React.FC<VoiceCopilotProps> = ({
                 ? 'bg-warning-dim border-warning-muted/60'
                 : micState === 'denied' || micState === 'unsupported'
                 ? 'bg-white/5 border-surface-border'
-                : !voiceReady
+                : !isVoiceUsable
                 ? 'bg-white/5 border-surface-border opacity-50 cursor-not-allowed'
                 : 'bg-accent-dim border-accent-muted hover:bg-accent-dim/70'
             }`}
