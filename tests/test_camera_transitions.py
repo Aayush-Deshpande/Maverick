@@ -13,6 +13,8 @@ except ImportError:
     sys.modules['gpu_extras'] = mock.MagicMock()
     sys.modules['gpu_extras.batch'] = mock.MagicMock()
     sys.modules['blf'] = mock.MagicMock()
+    sys.modules['bpy_extras'] = mock.MagicMock()
+    sys.modules['bpy_extras.object_utils'] = mock.MagicMock()
 
 try:
     import mathutils
@@ -50,12 +52,19 @@ except ImportError:
     mathutils = MockMathUtils()
     sys.modules['mathutils'] = mathutils
 
-REPO_ROOT = r"e:\backup-llm\backup-no-llm\3d_engine"
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, os.path.join(REPO_ROOT, "apps", "blender_twin"))
 
 import standalone_digital_twin_app as app
 
 def test_camera_movement_and_zooms():
+    # NOTE: as of the current baseline, standalone_digital_twin_app.py no longer has an
+    # update_camera_for_backend_fault() that maps an injected backend fault_id directly to
+    # a camera framing (git history shows it existed as of commit 3b96052 but was already
+    # gone by b6df594, well before this repo's revert point - not a regression introduced
+    # here). Camera framing today is driven by apply_subsystem_inspection(subsystem_id),
+    # triggered by manual keypresses (1-5), independent of active_commanded_fault_id. This
+    # test now verifies that real, current path instead of a removed function.
     print("Testing Engine Switching & Camera Coordinate Rescaling...")
     for eid in ['rotax_912is', 'rotax_914', 'rotax_915is', 'austro_ae300', 'vrde_jayem_2_2l']:
         app.switch_engine(eid)
@@ -64,28 +73,27 @@ def test_camera_movement_and_zooms():
         assert not math.isnan(app.client_state.cur_cam_pos.z)
         assert app.client_state.orbit_distance > 0.5
         print(f"  [OK] {eid}: center={app.ENGINE_CENTER}, dist={app.DEFAULT_ORBIT_DISTANCE:.2f}, pos={app.client_state.cur_cam_pos}")
-        
-        # Test all 8 faults for each engine
-        for fid in range(1, 9):
-            app.client_state.active_commanded_fault_id = fid
-            app.update_camera_for_backend_fault()
+
+        # Test all 5 subsystem inspection stations for each engine
+        for sid in range(1, 6):
+            app.apply_subsystem_inspection(sid)
+            assert app.client_state.active_subsystem_id == sid
             assert app.client_state.target_orbit_distance > 0.1
             assert not math.isnan(app.client_state.cam_target.x)
             assert not math.isnan(app.client_state.target_orbit_angle)
             assert not math.isnan(app.client_state.target_orbit_elevation)
-            
-        # Test clear fault
-        app.client_state.active_commanded_fault_id = 0
-        app.update_camera_for_backend_fault()
+
+        # Test clear subsystem inspection (back to full-assembly auto orbit)
+        app.clear_subsystem_inspection()
         assert app.client_state.is_auto_orbit is True
-        print(f"  [OK] All 8 fault camera frames and reset nominal passed for {eid}")
+        assert app.client_state.active_subsystem_id == 0
+        print(f"  [OK] All 5 subsystem camera frames and reset-to-full-assembly passed for {eid}")
 
     print("\nTesting Modal Kinematic Smoothing & Mouse Controls...")
     app.switch_engine('rotax_912is')
-    
-    # 1. Trigger Fault 1 (CYL #2 OVERHEAT)
-    app.client_state.active_commanded_fault_id = 1
-    app.update_camera_for_backend_fault()
+
+    # 1. Trigger subsystem inspection station 1 (integrated reduction gearbox)
+    app.apply_subsystem_inspection(1)
     assert app.client_state.is_auto_orbit is False
     
     # Step simulation 60 frames (1 second)
