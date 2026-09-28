@@ -482,6 +482,12 @@
       <button class="engine-option" id="engine-option-rotax_915is" role="menuitem" onclick="selectEngine('rotax_915is')">
         <span class="engine-option-code">915 iS</span><span class="engine-option-copy"><strong>ROTAX 915 iS</strong><small>141 HP · Turbocharged · Intercooled</small></span><span class="engine-option-check"></span>
       </button>
+      <button class="engine-option" id="engine-option-austro_ae300" role="menuitem" onclick="selectEngine('austro_ae300')">
+        <span class="engine-option-code">AE300</span><span class="engine-option-copy"><strong>AUSTRO ENGINE AE300</strong><small>168 HP · Turbocharged · Compression ignition (Jet A-1)</small></span><span class="engine-option-check"></span>
+      </button>
+      <button class="engine-option" id="engine-option-vrde_jayem_2_2l" role="menuitem" onclick="selectEngine('vrde_jayem_2_2l')">
+        <span class="engine-option-code">VRDE</span><span class="engine-option-copy"><strong>VRDE-JAYEM 2.2L</strong><small>180 HP · Two-stage turbocharged · Aero-diesel</small></span><span class="engine-option-check"></span>
+      </button>
     </div>
   </div>
   <div class="tool-sep"></div>
@@ -783,10 +789,122 @@ const ENGINE_PROFILES = {
       4: { tag:'STATION 04 // TURBOCHARGER & WASTEGATE', name:'INTEGRATED GARRETT TURBOCHARGER', subtitle:'HIGH-PRESSURE TURBINE & ELECTRONIC WASTEGATE', parts:['Magnetovalve','Overboost valve'], camPos:[0,0,1.48], camTarget:[-0.376,-0.372,0.039], camAngle:180, camElev:14, desc:'High-efficiency Garrett turbocharger driven by an electronic high-speed servo wastegate. Delivers 1.54 bar manifold pressure, maintaining full sea-level take-off power to 15,000 ft, with 23,000 ft operational ceiling.', specs:[['TURBO MODEL','Garrett High-Flow Floating Hydrodynamic'],['WASTEGATE CTRL','Precision DC Servomotor Electronic'],['MAX BOOST','1.54 bar (45.6 inHg / 22.3 PSI) Closed-Loop'],['TURBINE SPEED','Max 165,000 RPM Continuous'],['CEILING BOOST','Full 141 HP to 15,000 ft AMSL'],['CRITICAL ALT','Max Operating Ceiling: 23,000 ft AMSL']] },
       5: { tag:'STATION 05 // DUAL FADEC & PHM', name:'DUAL REDUNDANT EMS915 FADEC', subtitle:'ELECTRONIC ENGINE CONTROL & INJECTION MANAGEMENT', parts:['ECU','Fusebox','Ambient sensor','Oil tank'], camPos:[0,0,1.92], camTarget:[-0.474,-0.178,0.014], camAngle:45, camElev:24, desc:'Fully redundant dual-lane Engine Management System (EMS915). Each independent lane has dedicated sensors, injection drivers, ignition timing maps, and servo wastegate controls. Cross-lane health checking guarantees bumpless failover within milliseconds.', specs:[['ARCHITECTURE','Dual Lane FADEC (Lane A / Lane B Hot Backup)'],['IGNITION','Dual Digital Transistorized (2 Plugs/Cyl)'],['FUEL DELIVERY','Dual HP Electric Pumps + Return Loop'],['ALTITUDE','Barometric Air Density Closed-Loop Mapping'],['FAULT TOLERANCE','Seamless Single-Lane Fallback'],['INTERFACES','Dual Redundant CAN Bus to Flight Mgmt']] }
     }
+  },
+  austro_ae300: {
+    id: 'austro_ae300',
+    name: 'AUSTRO AE300',
+    title: 'AUSTRO ENGINE AE300 (E4)',
+    subtitle: '168 HP COMMON-RAIL TURBODIESEL • JET A-1 / DIESEL • DUAL EECU',
+    glb: 'assets/models/draco/austro_ae300.glb',
+    camPos: [0, 0, 500],
+    camTarget: [0, 0, 0],
+    subsystems: {
+      1: {
+        tag: 'STATION 01 // POWER TRANSMISSION',
+        name: 'INTEGRATED REDUCTION GEARBOX & PCU',
+        subtitle: 'PROPELLER REDUCTION GEARBOX WITH INTEGRATED GOVERNOR',
+        parts: ['Gearbox_M', 'Prop_Flange', 'Prop_Governor_PCU'],
+        camPos: [0, 0, 300], camTarget: [0, 0, 0], camAngle: 0, camElev: 14,
+        desc: 'Integrated spur reduction gearbox engineered for heavy-fuel aero-diesel torque output. Features integrated constant-speed propeller governor (PCU) and torsional vibration damping quill shaft.',
+        specs: [['GEAR RATIO','i = 1.69 : 1 (Prop RPM: 2,300)'],['TORQUE RATING','560 Nm Peak Output Torque'],['PROPELLER CTRL','Hydraulic Constant-Speed PCU'],['DAMPER','Elastomeric Torsional Vibration Isolator'],['BEARINGS','Preloaded Angular Contact Bearings'],['LUBRICATION','Dedicated Dual-Stage Gearbox Oil Circuit']]
+      },
+      2: {
+        tag: 'STATION 02 // COMMON RAIL FUEL & INJECTION',
+        name: 'HIGH PRESSURE COMMON RAIL (1600 BAR)',
+        subtitle: 'BOSCH HIGH-PRESSURE ACCUMULATOR & SOLENOID INJECTORS',
+        parts: ['Common_Rail', 'HP_Fuel_Pump', 'Injector_1', 'Injector_2', 'Injector_3', 'Injector_4'],
+        camPos: [0, 0, 300], camTarget: [0, 0, 0], camAngle: 90, camElev: 28,
+        desc: '1,600 bar Bosch common-rail direct fuel injection architecture. Camshaft-driven high-pressure radial pump supplies constant rail pressure with multi-pilot injection for whisper-quiet Jet A-1 combustion.',
+        specs: [['RAIL PRESSURE','1,600 bar (23,200 PSI) Modulated'],['INJECTORS','High-Speed Solenoid Direct Injectors'],['HP PUMP','Cam-Driven Radial 3-Piston Pump'],['FUEL SUITABILITY','Jet A-1, Jet-A, TS-1, Diesel EN 590'],['PRESSURE SENSOR','High-Precision Piezoresistive Transducer'],['PILOT STAGES','Twin Pre-Injection + Main Pulse']]
+      },
+      3: {
+        tag: 'STATION 03 // THERMAL & HEAT EXCHANGERS',
+        name: 'LIQUID COOLING & OIL HEAT EXCHANGER',
+        subtitle: 'EXTREME THERMAL REJECTION DUAL-LOOP SYSTEM',
+        parts: ['Water_Pump', 'Coolant_Hose', 'Oil_Cooler', 'Exhaust_Manifold'],
+        camPos: [0, 0, 300], camTarget: [0, 0, 0], camAngle: -45, camElev: -10,
+        desc: 'Pressurized water-glycol head and block cooling loop coupled with integrated plate-type oil heat exchanger. Maintains optimum thermal stabilization under sustained high-altitude loiter conditions.',
+        specs: [['COOLING TYPE','Liquid Head & Block + Plate Oil Cooler'],['MAX CHT','105°C Continuous Regulated'],['OIL CAPACITY','7.0 L Aero-Diesel Synthetic 5W-30'],['WATER PUMP','Centrifugal Mechanical Impeller'],['HEAT BALANCE','Liquid-to-Oil Internal Heat Exchanger'],['THERMOSTAT','Dual-Stage Integrated Thermostatic Valve']]
+      },
+      4: {
+        tag: 'STATION 04 // TURBOCHARGER & INTERCOOLER',
+        name: 'VARIABLE GEOMETRY TURBOCHARGER (VGT)',
+        subtitle: 'EXHAUST-DRIVEN VGT WITH ALUMINUM CHARGE INTERCOOLER',
+        parts: ['Turbocharger_M', 'Intercooler_M', 'Boost_Pipe'],
+        camPos: [0, 0, 300], camTarget: [0, 0, 0], camAngle: 180, camElev: 14,
+        desc: 'Exhaust gas turbocharger with electronically controlled variable turbine geometry (VGT) paired with a high-capacity charge-air cooler. Delivers critical altitude performance up to FL180 without manifold pressure drop.',
+        specs: [['TURBO DESIGN','Variable Geometry Turbine (VGT)'],['ACTUATION','High-Speed Electronic Stepper Actuator'],['MAX MANIFOLD','2.50 bar Absolute Boost Pressure'],['INTERCOOLER','High-Efficiency Vacuum-Brazed Aluminum'],['CRITICAL ALT','Full 168 HP Rated to 16,400 ft AMSL'],['TEMP DROP','Intercooler ΔT > 45°C Across Core']]
+      },
+      5: {
+        tag: 'STATION 05 // DUAL EECU & PHM',
+        name: 'DUAL EECU LANE A/B ENGINE CONTROLLER',
+        subtitle: 'CERTIFIED FULL-AUTHORITY DIGITAL ENGINE CONTROL',
+        parts: ['ECU_Lane_A', 'ECU_Lane_B', 'Wiring_Harness'],
+        camPos: [0, 0, 300], camTarget: [0, 0, 0], camAngle: 60, camElev: 24,
+        desc: 'Dual-channel Electronic Engine Control Unit (EECU) with active Lane A / Lane B cross-monitoring and instantaneous voter arbitration. Directly integrates with ANUMAAN predictive health diagnostic stack.',
+        specs: [['ARCHITECTURE','Dual Galvanically Isolated EECU Lanes'],['VOTER LOGIC','Hardware & Software Redundancy Arbitration'],['PROP GOVERNANCE','Single-Lever Power Management Control'],['GLOW CONTROL','Automated High-Altitude Cold Restart'],['DIAGNOSTICS','ARINC 429 & CANaerospace Telemetry'],['FAILSAFE','Bumpless Sub-50ms Lane Transfer']]
+      }
+    }
+  },
+  vrde_jayem_2_2l: {
+    id: 'vrde_jayem_2_2l',
+    name: 'VRDE-JAYEM 2.2L',
+    title: 'VRDE-JAYEM 2.2L TURBODIESEL',
+    subtitle: '180 HP TWO-STAGE TURBOCHARGED AERO-DIESEL • DRDO / VRDE',
+    glb: 'assets/models/draco/vrde_jayem_2_2l.glb',
+    camPos: [0, 0, 500],
+    camTarget: [0, 0, 0],
+    subsystems: {
+      1: {
+        tag: 'STATION 01 // POWER TRANSMISSION',
+        name: 'VRDE HEAVY-DUTY PROPELLER GEARBOX',
+        subtitle: 'HIGH-TORQUE SPUR REDUCTION GEARBOX FOR MALE UAV',
+        parts: ['Gearbox_M', 'Prop_Flange', 'Gearbox_Governor'],
+        camPos: [0, 0, 300], camTarget: [0, 0, 0], camAngle: 0, camElev: 14,
+        desc: 'Indigenous heavy-duty propeller reduction gearbox developed for DRDO MALE UAV class missions. High tensile aerospace alloy construction absorbs heavy diesel compression impulses.',
+        specs: [['GEAR RATIO','i = 1.82 : 1 (Prop RPM: 2,200)'],['POWER RATING','180 HP (134 kW) Continuous'],['PROP INTERFACE','Standard SAE No. 2 Flange PCD'],['DAMPER','Heavy-Duty Multi-Element Torsional Damper'],['BEARINGS','Heavy Cylindrical Roller + Thrust Bearings'],['SENSORS','Gearbox Vibration & Oil Temp Monitoring']]
+      },
+      2: {
+        tag: 'STATION 02 // COMMON RAIL INJECTION',
+        name: '2000 BAR COMMON RAIL DIESEL SYSTEM',
+        subtitle: 'HIGH-PRESSURE MIL-SPEC FUEL INJECTION & COMMON RAIL',
+        parts: ['Common_Rail', 'HP_Fuel_Pump', 'Injector_1', 'Injector_2', 'Injector_3', 'Injector_4'],
+        camPos: [0, 0, 300], camTarget: [0, 0, 0], camAngle: 90, camElev: 28,
+        desc: 'Advanced 2,000 bar common-rail fuel system engineered for multi-fuel military operation (Aviation Turbine Fuel ATF K-50, Jet A-1, High-Flash HSD). Features high-pressure radial delivery pump and precision micro-sac injectors.',
+        specs: [['PEAK PRESSURE','2,000 bar High-Pressure Common Rail'],['FUEL FLEXIBILITY','ATF K-50, Jet A-1, Military Spec Diesel'],['INJECTION SYSTEM','Multi-Hole Solenoid Direct Nozzles'],['PUMP DESIGN','Camshaft-Driven Heavy-Duty HP Pump'],['RETURN CIRCUIT','Filtered & De-aerated Fuel Return Loop'],['FILTRATION','ASAK Micro-Filtration + Water Separator']]
+      },
+      3: {
+        tag: 'STATION 03 // THERMAL MANAGEMENT',
+        name: 'HEAVY THERMAL REJECTION CIRCUIT',
+        subtitle: 'HIGH-ALTITUDE EXTENDED ENDURANCE LIQUID COOLING',
+        parts: ['Water_Pump', 'Coolant_Pipe', 'Oil_Cooler', 'Oil_Sump'],
+        camPos: [0, 0, 300], camTarget: [0, 0, 0], camAngle: -45, camElev: -10,
+        desc: 'Heavy thermal management system built for desert ground idle (+45°C ambient) through extreme altitude loiter (-50°C Ladakh airspace). Dedicated heat exchangers regulate lubricant and jacket temperatures.',
+        specs: [['COOLANT','50/50 Ethylene Glycol / Distilled Water'],['OIL SUMP','Cast Aluminum Deep Reservoir with Baffles'],['OIL CAPACITY','8.5 Liters Synthetic Aero Lubricant'],['WATER PUMP','High-Flow Engine-Driven Impeller'],['OIL COOLING','Full-Flow Water-to-Oil Heat Exchanger'],['CHAMBERS','Symmetric Cross-Flow Head Cooling']]
+      },
+      4: {
+        tag: 'STATION 04 // TWO-STAGE TURBOCHARGER',
+        name: 'SEQUENTIAL HP/LP TURBOCHARGER & INTERCOOLER',
+        subtitle: 'REGULATED TWO-STAGE TURBOCHARGING FOR 30,000 FT CEILING',
+        parts: ['Turbo_HP', 'Turbo_LP', 'Wastegate', 'Intercooler'],
+        camPos: [0, 0, 300], camTarget: [0, 0, 0], camAngle: 180, camElev: 14,
+        desc: 'Two-stage sequential turbocharger system incorporating high-pressure (HP) and low-pressure (LP) turbine stages with interstage bypass. Enables MALE UAV operations up to 30,000 ft AMSL without power degradation.',
+        specs: [['TURBO CONFIG','Sequential 2-Stage (LP + HP Turbines)'],['MAX BOOST','2.85 bar Absolute Manifold Pressure'],['WASTEGATE','Dual Electronic Wastegate Modulators'],['SERVICE CEILING','30,000 ft (9,144 m) Operational Ceiling'],['INTERSTAGE DUCT','Stainless Equalized Crossover Piping'],['INTERCOOLER','Dual-Core Large-Volume Air-to-Air Core']]
+      },
+      5: {
+        tag: 'STATION 05 // FADEC AVIONICS & SENSORS',
+        name: 'MIL-SPEC ENGINE CONTROLLER & SENSOR HARNESS',
+        subtitle: 'RUGGEDIZED FULL-AUTHORITY DIGITAL PROPULSION HARNESS',
+        parts: ['Connector_Mil', 'Sensor', 'Alternator'],
+        camPos: [0, 0, 300], camTarget: [0, 0, 0], camAngle: 60, camElev: 24,
+        desc: 'MIL-STD-810G ruggedized dual-channel engine controller with MIL-DTL-38999 circular connectors and braided silver EMI-shielded harness. Directly streams propulsion diagnostics to ANUMAAN tactical ground station.',
+        specs: [['STANDARDS','MIL-STD-810G Environmental & Vibration'],['CONNECTORS','MIL-DTL-38999 Series III Circular'],['HARNESS','Braided Silver Shielded Twisted-Pair'],['SENSORS','Redundant Crank, Cam, MAP, MAT, Oil & Fuel'],['DATA BUS','Dual Redundant MIL-STD-1553B / CAN Bus'],['DIAGNOSTICS','Full Real-Time Residuals & CBM Ingest']]
+      }
+    }
   }
 };
 
-const ENGINE_ORDER = ['rotax_912is','rotax_914','rotax_915is'];
+const ENGINE_ORDER = ['rotax_912is', 'rotax_914', 'rotax_915is', 'austro_ae300', 'vrde_jayem_2_2l'];
 const API_BASE = `${window.location.protocol === 'https:' ? 'https:' : 'http:'}//${window.location.hostname || '127.0.0.1'}:8000`;
 const WS_BASE = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.hostname || '127.0.0.1'}:8000`;
 const BACKEND_ENGINE_PROFILES = {};
@@ -908,6 +1026,130 @@ const ENGINE_FAULT_TARGETS = {
       parts: ['Main engine'], angle: -45, elev: 18,
       label: 'CYLINDER HEAD SENSOR DRIFT', shortLabel: 'SENSOR DRIFT',
       description: 'A cylinder-head temperature channel drifts away from its true plant value.'
+    }
+  },
+  austro_ae300: {
+    MISFIRE: {
+      parts: ['Cylinder_Head_M', 'Engine_Block_M', 'Injector_1_M'], angle: -45, elev: 18,
+      label: 'CYLINDER MISFIRE', shortLabel: 'MISFIRE',
+      description: 'Combustion imbalance detected. The cylinder head and common-rail injectors are highlighted for inspection.'
+    },
+    COOLING_DEGRADATION: {
+      parts: ['Coolant_Hose', 'Water_Pump_M', 'Cylinder_Head_M'], angle: -25, elev: 24,
+      label: 'COOLING DEGRADATION', shortLabel: 'COOLING',
+      description: 'The coolant circuit and water pump are highlighted while the plant models reduced heat rejection.'
+    },
+    OIL_PRESSURE_LOSS: {
+      parts: ['Oil_Sump_M', 'Oil_Cooler_M', 'Oil_Filter_M'], angle: 135, elev: 20,
+      label: 'OIL PRESSURE LOSS', shortLabel: 'OIL PRESSURE',
+      description: 'The oil sump, cooler, and filter assembly are highlighted as system context for oil circuit pressure decay.'
+    },
+    AIR_FILTER_BLOCKAGE: {
+      parts: ['Air_Filter_Box_M', 'Air_Intake_Duct_M', 'Air_Filter_Duct_M'], angle: 90, elev: 24,
+      label: 'AIR FILTER BLOCKAGE', shortLabel: 'AIRFLOW',
+      description: 'The composite air cleaner housing and induction ducting are highlighted as airflow-system context.'
+    },
+    BOOST_LEAK: {
+      parts: ['Boost_Pipe_Cold_M', 'Boost_Pipe_Hot_M', 'Intercooler_M'], angle: 90, elev: 22,
+      label: 'BOOST LEAK', shortLabel: 'BOOST LEAK',
+      description: 'Charge-air pressure loss is active; the polished boost pipes and intercooler core are highlighted.'
+    },
+    WASTEGATE_STUCK_OPEN: {
+      parts: ['Turbocharger_M', 'Heat_Shield_Turbo_M', 'Exhaust_Downpipe_M'], angle: 180, elev: 16,
+      label: 'WASTEGATE STUCK OPEN', shortLabel: 'WASTEGATE',
+      description: 'Boost pressure is below commanded value. The turbocharger hot section and downpipe are highlighted.'
+    },
+    TURBO_BEARING_WEAR: {
+      parts: ['Turbocharger_M', 'Turbo_Oil_Feed_Line_M', 'Turbo_Oil_Drain_Line_M'], angle: 180, elev: 18,
+      label: 'TURBO BEARING WEAR', shortLabel: 'TURBO BEARINGS',
+      description: 'Turbo shaft vibration/waveform anomaly; the turbo housing and lubrication lines are highlighted.'
+    },
+    INJECTOR_COKING: {
+      parts: ['Injector_1_M', 'Injector_2_M', 'Injector_3_M', 'Injector_4_M', 'Common_Rail_M'], angle: -60, elev: 28,
+      label: 'INJECTOR COKING', shortLabel: 'INJECTOR COKE',
+      description: 'Common-rail injector nozzle orifice restriction; the solenoid injectors and high-pressure rail are highlighted.'
+    },
+    INJECTOR_NEEDLE_STICK: {
+      parts: ['Injector_1_M', 'Injector_2_M', 'Injector_3_M', 'Injector_4_M'], angle: -60, elev: 28,
+      label: 'INJECTOR NEEDLE STICK', shortLabel: 'NEEDLE STICK',
+      description: 'High-pressure injector needle mechanical sticking; individual injector assemblies are highlighted.'
+    },
+    RAIL_PRESSURE_DECAY: {
+      parts: ['Common_Rail_M', 'HP_Fuel_Pump_M', 'Sensor_Fuel_Rail_Press_M', 'Rail_PLV_Valve_M'], angle: 45, elev: 25,
+      label: 'COMMON RAIL PRESSURE DECAY', shortLabel: 'RAIL PRESSURE',
+      description: 'Common-rail pressure drop detected; the Bosch high-pressure fuel pump, common rail, and PLV valve are highlighted.'
+    },
+    SENSOR_STUCK: {
+      parts: ['Sensor_Coolant_Temp_M', 'Sensor_Oil_Temp_M', 'Sensor_Boost_M'], angle: -45, elev: 18,
+      label: 'SENSOR STUCK', shortLabel: 'SENSOR STUCK',
+      description: 'A propulsion temperature/pressure transducer is frozen while plant state continues to evolve.'
+    },
+    SENSOR_BIAS_DRIFT: {
+      parts: ['Sensor_Coolant_Temp_M', 'Sensor_Oil_Temp_M', 'Sensor_Boost_M'], angle: -45, elev: 18,
+      label: 'SENSOR DRIFT', shortLabel: 'SENSOR DRIFT',
+      description: 'A propulsion sensor channel drifts away from its true plant value.'
+    }
+  },
+  vrde_jayem_2_2l: {
+    MISFIRE: {
+      parts: ['Cylinder_Head_M', 'Glow_Plug_Cyl1_M', 'Injector_1_M'], angle: -45, elev: 18,
+      label: 'CYLINDER MISFIRE', shortLabel: 'MISFIRE',
+      description: 'Combustion imbalance detected. The cylinder head, glow plugs, and direct injection nozzles are highlighted.'
+    },
+    COOLING_DEGRADATION: {
+      parts: ['Water_Pump_M', 'Coolant_Pipe_Junction_M', 'Coolant_Rail_Runner_M', 'Coolant_Pipe_Insulated_M'], angle: -25, elev: 24,
+      label: 'COOLING DEGRADATION', shortLabel: 'COOLING',
+      description: 'The water pump, cooling rail runners, and insulated coolant piping are highlighted while the plant models reduced heat rejection.'
+    },
+    OIL_PRESSURE_LOSS: {
+      parts: ['Oil_Sump_M', 'Oil_Cooler_M', 'Oil_Filter_M', 'Sensor_Oil_Press_M'], angle: 135, elev: 20,
+      label: 'OIL PRESSURE LOSS', shortLabel: 'OIL PRESSURE',
+      description: 'Oil sump, cooler, filter, and pressure sensor are highlighted for oil circuit pressure decay.'
+    },
+    AIR_FILTER_BLOCKAGE: {
+      parts: ['ASAK_Filter_Black_Label_Band', 'Intercooler_M'], angle: 90, elev: 24,
+      label: 'AIR FILTER BLOCKAGE', shortLabel: 'AIRFLOW',
+      description: 'Induction filtration assembly and intake lines are highlighted as airflow-system context.'
+    },
+    BOOST_LEAK: {
+      parts: ['Turbo_LP_CompressorVolute_M', 'Turbo_HP_CompressorVolute_M', 'Turbo_Interstage_Duct_M', 'Intercooler_M'], angle: 90, elev: 22,
+      label: 'BOOST LEAK', shortLabel: 'BOOST LEAK',
+      description: 'Two-stage turbo interstage ducting, compressor volutes, and charge air cooler are highlighted for boost leakage.'
+    },
+    WASTEGATE_STUCK_OPEN: {
+      parts: ['Wastegate_Actuator_Canister_M', 'Wastegate_Actuator_Red_M', 'Wastegate_Rod_Red_M', 'Turbo_HP_Wastegate_VacLine_M'], angle: 180, elev: 16,
+      label: 'WASTEGATE STUCK OPEN', shortLabel: 'WASTEGATE',
+      description: 'The electronic wastegate actuator canister, control rod, and vacuum lines are highlighted for boost regulation loss.'
+    },
+    TURBO_BEARING_WEAR: {
+      parts: ['Turbo_HP_CHRA_M', 'Turbo_LP_CHRA_M', 'Turbo_Oil_Drain_M'], angle: 180, elev: 18,
+      label: 'TURBO BEARING WEAR', shortLabel: 'TURBO BEARINGS',
+      description: 'Two-stage turbo rotating core center housings (CHRA) and oil drains are highlighted for bearing degradation.'
+    },
+    INJECTOR_COKING: {
+      parts: ['Injector_1_M', 'Injector_2_M', 'Injector_3_M', 'Injector_4_M', 'Common_Rail_M'], angle: -60, elev: 28,
+      label: 'INJECTOR COKING', shortLabel: 'INJECTOR COKE',
+      description: 'Common-rail injector nozzle deposits; high-pressure injector bodies and common rail are highlighted.'
+    },
+    INJECTOR_NEEDLE_STICK: {
+      parts: ['Injector_1_M', 'Injector_2_M', 'Injector_3_M', 'Injector_4_M'], angle: -60, elev: 28,
+      label: 'INJECTOR NEEDLE STICK', shortLabel: 'NEEDLE STICK',
+      description: 'Direct diesel injector needle mechanical sticking; individual injector units are highlighted.'
+    },
+    RAIL_PRESSURE_DECAY: {
+      parts: ['Common_Rail_M', 'HP_Fuel_Pump_M', 'Fuel_Line_HP_Cyl1_M', 'Fuel_Line_HP_Cyl2_M'], angle: 45, elev: 25,
+      label: 'COMMON RAIL PRESSURE DECAY', shortLabel: 'RAIL PRESSURE',
+      description: 'High-pressure fuel pump, accumulator rail, and delivery lines are highlighted for rail pressure decay.'
+    },
+    SENSOR_STUCK: {
+      parts: ['Sensor_Oil_Press_M', 'Sensor_Oil_Temp_M', 'Sensor_Vibration_Gearbox_M'], angle: -45, elev: 18,
+      label: 'SENSOR STUCK', shortLabel: 'SENSOR STUCK',
+      description: 'Propulsion instrumentation sensor channel is frozen while plant state continues to evolve.'
+    },
+    SENSOR_BIAS_DRIFT: {
+      parts: ['Sensor_Oil_Press_M', 'Sensor_Oil_Temp_M', 'Sensor_Vibration_Gearbox_M'], angle: -45, elev: 18,
+      label: 'SENSOR DRIFT', shortLabel: 'SENSOR DRIFT',
+      description: 'Propulsion sensor transducer calibration has drifted from nominal calibration curve.'
     }
   }
 };
@@ -1464,7 +1706,9 @@ function updateEngineButtons(engineId) {
   const meta = {
     rotax_912is: '100 HP · NATURALLY ASPIRATED',
     rotax_914: '115 HP · TURBOCHARGED',
-    rotax_915is: '141 HP · INTERCOOLED TURBO'
+    rotax_915is: '141 HP · INTERCOOLED TURBO',
+    austro_ae300: '168 HP · JET A-1 TURBODIESEL',
+    vrde_jayem_2_2l: '180 HP · TWO-STAGE TURBODIESEL'
   };
   document.getElementById('engine-select-name').textContent = profile.name;
   document.getElementById('engine-select-meta').textContent = meta[engineId] || 'ENGINE PROFILE';
@@ -2101,6 +2345,11 @@ async function selectEngine(engineId) {
   if (engineId === currentEngineId && modelCache[engineId]) {
     selectStation(0);
     syncBackendEngineSelection(engineId);
+    try {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'ANUMAAN_ENGINE_CHANGED', engineId }, '*');
+      }
+    } catch (_) {}
     return;
   }
 
@@ -2170,12 +2419,26 @@ async function selectEngine(engineId) {
     showTopLoader(false);
 
     syncBackendEngineSelection(engineId);
+    try {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'ANUMAAN_ENGINE_CHANGED', engineId }, '*');
+      }
+    } catch (_) {}
 
   } catch (err) {
     console.error('Failed to load engine:', engineId, err);
     showTopLoader(false);
   }
 }
+
+// Parent <-> iframe bidirectional engine synchronisation
+window.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'ANUMAAN_SELECT_ENGINE' && event.data.engineId) {
+    if (event.data.engineId !== currentEngineId && ENGINE_PROFILES[event.data.engineId]) {
+      selectEngine(event.data.engineId);
+    }
+  }
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // STATION SELECTION
@@ -2238,6 +2501,8 @@ document.addEventListener('keydown', (e) => {
     case 'F1': e.preventDefault(); selectEngine('rotax_912is'); break;
     case 'F2': e.preventDefault(); selectEngine('rotax_914'); break;
     case 'F3': e.preventDefault(); selectEngine('rotax_915is'); break;
+    case 'F4': e.preventDefault(); selectEngine('austro_ae300'); break;
+    case 'F5': e.preventDefault(); selectEngine('vrde_jayem_2_2l'); break;
     case 'x': case 'X': toggleExplodedView(); break;
     case 't': case 'T': toggleThermalHeatmap(); break;
     case 'w': case 'W': toggleWireframe(); break;

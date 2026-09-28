@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ANUMAAN // Tactical Canyon UAV Autopilot Simulation</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --cyan: #00e5ff;
+      --cyan-dim: rgba(0, 229, 255, 0.15);
+      --cyan-border: rgba(0, 229, 255, 0.35);
+      --amber: #ffb300;
+      --red: #ff3366;
+      --green: #00e676;
+      --bg: #030a12;
+      --bg2: rgba(3, 10, 18, 0.88);
+      --white: #f0f6fc;
+      --dim: rgba(240, 246, 252, 0.6);
+      --font-mono: 'JetBrains Mono', monospace;
+      --font-ui: 'Inter', system-ui, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%; height: 100%; overflow: hidden;
+      background: var(--bg); font-family: var(--font-ui); color: var(--white);
+    }
+    #canvas-wrap { position: absolute; inset: 0; z-index: 1; }
+    #flight-canvas { width: 100%; height: 100%; display: block; }
+
+    /* Top Telemetry Strip - hidden in embedded console view to prevent duplicate chrome */
+    .sim-ticker { display: none !important; }
+
+    /* Controls Bar Top-Right */
+    .sim-actions {
+      display: flex; align-items: center; gap: 6px;
+    }
+    .act-btn {
+      background: rgba(0, 229, 255, 0.08); border: 1px solid var(--cyan-border); color: var(--cyan);
+      font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+      padding: 4px 10px; border-radius: 4px; cursor: pointer; transition: all .2s;
+    }
+    .act-btn:hover { background: rgba(0, 229, 255, 0.25); color: #fff; }
+    .act-btn.warn { border-color: var(--amber); color: var(--amber); background: rgba(255, 179, 0, 0.1); }
+    .act-btn.warn:hover { background: rgba(255, 179, 0, 0.25); }
+    .act-btn.danger { border-color: var(--red); color: var(--red); background: rgba(255, 51, 102, 0.1); }
+    .act-btn.danger:hover { background: rgba(255, 51, 102, 0.25); }
+
+    /* Camera Switcher Controls Bottom-Left */
+    .cam-controls {
+      position: absolute; bottom: 16px; left: 16px; z-index: 10;
+      display: flex; gap: 6px; background: rgba(2, 8, 16, 0.75); padding: 5px;
+      border-radius: 6px; border: 1px solid rgba(0, 229, 255, 0.25); backdrop-filter: blur(10px);
+    }
+    .cam-btn {
+      background: transparent; border: 1px solid transparent; color: var(--dim);
+      font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+      padding: 5px 10px; border-radius: 4px; cursor: pointer; transition: all .2s;
+    }
+    .cam-btn:hover { color: var(--white); background: var(--cyan-dim); }
+    .cam-btn.active { color: var(--cyan); background: rgba(0, 229, 255, 0.18); border-color: var(--cyan-border); }
+
+    /* HUD Overlay */
+    .hud-overlay {
+      position: absolute; inset: 0; z-index: 5; pointer-events: none;
+      display: flex; flex-direction: column; justify-content: space-between;
+      padding: 20px;
+    }
+    
+    /* Compass Tape - hidden in clean embedded view */
+    .compass-wrap { display: none !important; }
+
+    /* PFD Flight Tapes Left & Right - hidden in clean embedded view */
+    .pfd-container { display: none !important; }
+
+    /* Center Pitch Waterline Reticle */
+    .reticle-wrap {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 140px; height: 140px; pointer-events: none; opacity: 0.6;
+    }
+    .waterline {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      width: 50px; height: 2px; background: var(--cyan);
+    }
+    .waterline::before, .waterline::after {
+      content: ''; position: absolute; width: 12px; height: 5px; border: 1.5px solid var(--cyan);
+    }
+    .waterline::before { left: -14px; border-right: none; }
+    .waterline::after { right: -14px; border-left: none; }
+
+    /* Auto-GCAS Alert Banner */
+    .alert-banner {
+      position: absolute; top: 24px; left: 50%; transform: translateX(-50%);
+      background: rgba(255, 51, 102, 0.92); color: #fff; font-family: var(--font-mono);
+      font-weight: 800; font-size: 12px; letter-spacing: 0.15em; padding: 6px 20px;
+      border-radius: 4px; box-shadow: 0 0 24px rgba(255, 51, 102, 0.85);
+      display: none; animation: alert-flash 0.7s infinite;
+    }
+    @keyframes alert-flash { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+
+    /* Inset Telemetry & PHM Card - hidden in embedded view (parent console displays real telemetry) */
+    .engine-telemetry-card { display: none !important; }
+
+    /* Diagnostic Overlay Box Top-Left - hidden by default, toggled with [V] */
+    .diag-box {
+      position: absolute; top: 20px; left: 20px; z-index: 10;
+      background: rgba(2, 8, 16, 0.92); border: 1px solid var(--cyan-border);
+      border-radius: 6px; padding: 12px; width: 340px; font-family: var(--font-mono);
+      font-size: 10px; color: var(--dim); backdrop-filter: blur(12px); line-height: 1.5;
+      display: none;
+    }
+    .diag-title { font-weight: 800; color: var(--cyan); margin-bottom: 6px; display: flex; justify-content: space-between; }
+    .diag-val { color: #fff; font-weight: 700; }
+  </style>
+
+  <!-- 3D Engine & Loaders (Local vendor scripts) -->
+  <script src="js/vendor/three.min.js"></script>
+  <script src="js/vendor/OrbitControls.js"></script>
+  <script src="js/vendor/DRACOLoader.js"></script>
+  <script src="js/vendor/GLTFLoader.js"></script>
+</head>
+<body>
+
+  <div id="canvas-wrap">
+    <canvas id="flight-canvas"></canvas>
+  </div>
+
+  <!-- Top Strip (Hidden: Parent React C2 console provides primary controls) -->
+  <div class="sim-ticker" style="display: none !important;">
+    <div class="ticker-group">
+      <span class="status-badge" id="hud-status">READY</span>
+      <span class="status-badge amber" style="font-size:9px" title="The authoritative simulation engine is native Blender (launch_canyon_simulation.bat)">PROTOTYPE ECHO</span>
+      <span style="color: var(--dim)">AIRFRAME: <strong id="hud-airframe" style="color: var(--white)">Bayraktar TB3</strong></span>
+      <span style="color: var(--dim)">ENGINE: <strong id="hud-engine-id" style="color: var(--cyan)">rotax_912is</strong></span>
+      <span style="color: var(--dim)">PHASE: <strong id="hud-phase" style="color: var(--amber)">PREFLIGHT</strong></span>
+    </div>
+    <div class="ticker-group">
+      <span>T+ <strong id="hud-time-elapsed" style="color: var(--cyan)">00:00</strong></span>
+      <span>COMPRESSION: <strong id="hud-time-scale" style="color: var(--green)">1.0x</strong></span>
+      <div class="sim-actions">
+        <button class="act-btn" id="btn-launch-blender" style="border-color:#00e5ff; color:#00e5ff; background:rgba(0,229,255,0.2)" title="Launch Authoritative Native Blender Cockpit">🎮 LAUNCH BLENDER</button>
+        <button class="act-btn" id="btn-toggle-diag">DIAG [V]</button>
+        <button class="act-btn warn" id="btn-derate">DERATE 85%</button>
+        <button class="act-btn" id="btn-divert" title="Divert to Nubra Valley alternate field">DIVERT</button>
+        <button class="act-btn danger" id="btn-abort">ABORT RTB</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Center HUD Overlay (Hidden: clean 3D cockpit view) -->
+  <div class="hud-overlay" style="display: none !important;">
+    <!-- Compass Top Tape -->
+    <div class="compass-wrap" style="display: none !important;">
+      <div class="compass-center-caret"></div>
+      <div class="compass-track" id="hud-compass-track">
+        &nbsp;&nbsp;&nbsp;330&nbsp;&nbsp;&nbsp;340&nbsp;&nbsp;&nbsp;350&nbsp;&nbsp;&nbsp;N&nbsp;&nbsp;&nbsp;010&nbsp;&nbsp;&nbsp;020&nbsp;&nbsp;&nbsp;030&nbsp;&nbsp;&nbsp;040&nbsp;&nbsp;&nbsp;050&nbsp;&nbsp;&nbsp;060&nbsp;&nbsp;&nbsp;070&nbsp;&nbsp;&nbsp;080&nbsp;&nbsp;&nbsp;E&nbsp;&nbsp;&nbsp;100&nbsp;&nbsp;&nbsp;110&nbsp;&nbsp;&nbsp;120&nbsp;&nbsp;&nbsp;130&nbsp;&nbsp;&nbsp;140&nbsp;&nbsp;&nbsp;150&nbsp;&nbsp;&nbsp;160&nbsp;&nbsp;&nbsp;170&nbsp;&nbsp;&nbsp;S&nbsp;&nbsp;&nbsp;190&nbsp;&nbsp;&nbsp;200&nbsp;&nbsp;&nbsp;210&nbsp;&nbsp;&nbsp;220&nbsp;&nbsp;&nbsp;230&nbsp;&nbsp;&nbsp;240&nbsp;&nbsp;&nbsp;250&nbsp;&nbsp;&nbsp;260&nbsp;&nbsp;&nbsp;W&nbsp;&nbsp;&nbsp;280&nbsp;&nbsp;&nbsp;290&nbsp;&nbsp;&nbsp;300&nbsp;&nbsp;&nbsp;310&nbsp;&nbsp;&nbsp;320&nbsp;&nbsp;&nbsp;330
+      </div>
+    </div>
+
+    <!-- Reticle Center -->
+    <div class="reticle-wrap" id="hud-reticle">
+      <div class="waterline"></div>
+    </div>
+
+    <!-- PFD Tapes -->
+    <div class="pfd-container" style="display: none !important;">
+      <!-- Speed Left Tape -->
+      <div class="flight-tape">
+        <span class="tape-title">AIRSPEED</span>
+        <div class="tape-readout"><span id="hud-kias">0</span> <small style="font-size:9px">KT</small></div>
+        <div class="tape-sub">TAS: <span id="hud-ktas" style="color:var(--white)">0</span></div>
+        <div class="tape-sub">GS: <span id="hud-gs" style="color:var(--white)">0</span> m/s</div>
+      </div>
+
+      <!-- Altitude Right Tape -->
+      <div class="flight-tape">
+        <span class="tape-title">ALTITUDE</span>
+        <div class="tape-readout"><span id="hud-alt-msl">3200</span> <small style="font-size:9px">M</small></div>
+        <div class="tape-sub">AGL: <span id="hud-agl" style="color:var(--white)">102</span> m</div>
+        <div class="tape-sub">D-ALT: <span id="hud-dalt" style="color:var(--white)">10500</span> ft</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alert Banner -->
+  <div class="alert-banner" id="hud-alert-banner">TERRAIN PULL UP // AUTO-GCAS ENVELOPE</div>
+
+  <!-- Diagnostic Overlay Box (Hidden by default) -->
+  <div class="diag-box" id="hud-diag-box" style="display: none !important;">
+    <div class="diag-title">
+      <span>AUTOPILOT & SIMULATION DIAGNOSTICS</span>
+      <span id="diag-fps">60 FPS</span>
+    </div>
+    <div>UAV ASSET: <span class="diag-val" id="diag-uav-status">Loading bayraktar_tb3.glb...</span></div>
+    <div>TERRAIN ASSET: <span class="diag-val" id="diag-terrain-status">Loading ladakh_canyon_terrain.glb...</span></div>
+    <div>UAV WORLD POS: <span class="diag-val" id="diag-uav-pos">X: 0.0, Y: 0.0, Z: 0.0</span></div>
+    <div>TERRAIN ELEVATION: <span class="diag-val" id="diag-ground-elev">0.0 m (AGL: 0.0 m)</span></div>
+    <div>AUTOPILOT ATTITUDE: <span class="diag-val" id="diag-attitude">HDG: 0°, PIT: 0°, BNK: 0°</span></div>
+    <div>WAYPOINT TARGET: <span class="diag-val" id="diag-target-wp">WP 1 / 5 (Dist: 0 m)</span></div>
+    <div>PROPELLER ROTATION: <span class="diag-val" id="diag-prop-rpm">0 RPM (0.0 rad/s)</span></div>
+    <div>CAMERA WORLD POS: <span class="diag-val" id="diag-cam-pos">0, 0, 0 (MODE: CHASE)</span></div>
+    <div>RENDERER VIEWPORT: <span class="diag-val" id="diag-viewport">1920 x 1080</span></div>
+  </div>
+
+  <!-- Camera Controls (Clean bottom-left bar) -->
+  <div class="cam-controls">
+    <button class="cam-btn active" data-cam="CHASE">CHASE CAM</button>
+    <button class="cam-btn" data-cam="CINEMATIC">CINEMATIC FOLLOW</button>
+    <button class="cam-btn" data-cam="COCKPIT">FPV NOSE</button>
+    <button class="cam-btn" data-cam="ORBIT">FREE ORBIT</button>
+    <button class="cam-btn" data-cam="SAT">SAT OVERHEAD</button>
+  </div>
+
+  <!-- Inset Telemetry Card (Hidden: parent React C2 console displays high-res telemetry) -->
+  <div class="engine-telemetry-card" style="display: none !important;">
+    <div class="card-title">PROPULSION & PHM TELEMETRY</div>
+    <div class="metric-row"><span>THROTTLE:</span><span class="metric-val" id="hud-tps">0.0%</span></div>
+    <div class="metric-row"><span>ENGINE RPM:</span><span class="metric-val" id="hud-rpm">0</span></div>
+    <div class="metric-row"><span>MAX CHT:</span><span class="metric-val" id="hud-cht">80.0 °C</span></div>
+    <div class="metric-row"><span>MAX EGT:</span><span class="metric-val" id="hud-egt">780.0 °C</span></div>
+    <div class="metric-row"><span>OIL PRESS:</span><span class="metric-val" id="hud-oil">4.50 bar</span></div>
+    <div class="metric-row"><span>FLYHASH NOVELTY:</span><span class="metric-val" id="hud-flyhash">0.00</span></div>
+    <div class="metric-row"><span>RELIABILITY (R):</span><span class="metric-val" id="hud-rel" style="color:var(--green)">100%</span></div>
+    <div class="metric-row" id="hud-fault-row" style="display:none; color:var(--red); font-weight:700">
+      <span>FAULT:</span><span id="hud-fault-name">-</span>
+    </div>
+  </div>
+
+  <script>
+    // ------------------------------------------------------------------------
+    // Scene Setup, Camera & Renderer
+    // ------------------------------------------------------------------------
+    const canvas = document.getElementById('flight-canvas');
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 0.85;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    const scene = new THREE.Scene();
+    // High-altitude Ladakh atmospheric background & haze
+    scene.background = new THREE.Color(0x0e2438);
+    scene.fog = new THREE.FogExp2(0x1a334a, 0.00004);
+
+    // Primary Camera
+    const camera = new THREE.PerspectiveCamera(52, window.innerWidth / window.innerHeight, 0.5, 60000);
+    camera.position.set(0, 3215, -7465);
+
+    // Controls for free orbit inspection mode
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.08;
+    controls.maxDistance = 1500;
+    controls.minDistance = 3;
+    controls.enabled = false;
+
+    // Lighting
+    const hemiLight = new THREE.HemisphereLight(0x8ec7f5, 0x3d3025, 0.45);
+    scene.add(hemiLight);
+
+    const dirLight = new THREE.DirectionalLight(0xfff1dc, 0.95);
+    dirLight.position.set(8000, 14000, -6000);
+    dirLight.castShadow = true;
+    dirLight.shadow.mapSize.width = 2048;
+    dirLight.shadow.mapSize.height = 2048;
+    dirLight.shadow.camera.near = 10;
+    dirLight.shadow.camera.far = 40000;
+    dirLight.shadow.camera.left = -1500;
+    dirLight.shadow.camera.right = 1500;
+    dirLight.shadow.camera.top = 1500;
+    dirLight.shadow.camera.bottom = -1500;
+    scene.add(dirLight);
+
+    // ------------------------------------------------------------------------
+    // Autopilot Simulated State & Kinematics
+    // ------------------------------------------------------------------------
+    const uavGroup = new THREE.Group();
+    scene.add(uavGroup);
+
+    let uavAirframe = null;
+    let uavPropeller = null;
+    let terrainMesh = null;
+    let currentCamMode = 'CHASE';
+
+    // Simulation Autopilot State Vectors
+    const uavSim = {
+      pos: new THREE.Vector3(0, 3200, 0),
+      vel: new THREE.Vector3(0, 0, -40),
+      quat: new THREE.Quaternion(),
+      heading: 0,          // radians (0 = North, + = East)
+      pitch: 0,            // radians
+      roll: 0,             // radians (banking)
+      speed: 40,           // m/s
+      targetSpeed: 40,
+      targetHeading: 0,
+      targetPitch: 0,
+      targetRoll: 0,
+      targetAltitude: 3200,
+      groundElevation: 3097.64,
+      agl: 102.36,
+      rpm: 2400,
+      engineThrottle: 65.0,
+      activeFault: null
+    };
+
+    // Camera follow smoothed vectors
+    const camSmoothed = {
+      pos: new THREE.Vector3(0, 3210, -7460),
+      lookAt: new THREE.Vector3(0, 3200, -7500)
+    };
+
+    // ------------------------------------------------------------------------
+    // Model Loaders (GLTF + DRACO)
+    // ------------------------------------------------------------------------
+    const dracoLoader = new THREE.DRACOLoader();
+    dracoLoader.setDecoderPath('js/vendor/draco/');
+
+    const gltfLoader = new THREE.GLTFLoader();
+    gltfLoader.setDRACOLoader(dracoLoader);
+
+    // 1. Load Actual Bayraktar TB3 UAV Master Digital Twin
+    gltfLoader.load('assets/models/bayraktar_tb3.glb', (gltf) => {
+      uavAirframe = gltf.scene;
+      // Bayraktar TB3 naturally has 14m wingspan (or ~9.4m unscaled); scale 1.489 to match 14.0m exactly
+      uavAirframe.scale.set(1.489, 1.489, 1.489);
+      
+      uavAirframe.traverse((child) => {
+        if (child.isMesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+          if (child.material) {
+            child.material.metalness = Math.max(0.2, child.material.metalness || 0.2);
+            child.material.roughness = Math.min(0.65, child.material.roughness || 0.4);
+          }
+        }
+        // Identify Propeller node
+        if (child.name === 'Pivot_Propeller' || child.name.toLowerCase().includes('propeller')) {
+          if (!uavPropeller) uavPropeller = child;
+        }
+      });
+
+      uavGroup.add(uavAirframe);
+      const bbox = new THREE.Box3().setFromObject(uavAirframe);
+      const sz = new THREE.Vector3();
+      bbox.getSize(sz);
+      document.getElementById('diag-uav-status').textContent = `bayraktar_tb3.glb (${sz.x.toFixed(1)}m x ${sz.z.toFixed(1)}m, Pusher Prop Rigged)`;
+      console.log('Bayraktar TB3 Digital Twin Loaded successfully:', sz);
+    }, undefined, (err) => {
+      console.error('Failed to load bayraktar_tb3.glb:', err);
+      document.getElementById('diag-uav-status').textContent = 'ERROR loading bayraktar_tb3.glb';
+    });
+
+    // 2. Load Authentic Copernicus DEM Ladakh Canyon Terrain
+    gltfLoader.load('assets/models/ladakh_canyon_terrain.glb', (gltf) => {
+      terrainMesh = gltf.scene;
+      
+      terrainMesh.traverse((child) => {
+        if (child.isMesh) {
+          child.receiveShadow = true;
+          child.castShadow = true;
+          
+          // Apply Himalayan altitude & slope gradient vertex shading
+          const geom = child.geometry;
+          if (geom && geom.attributes.position) {
+            geom.computeVertexNormals();
+            const count = geom.attributes.position.count;
+            const colors = [];
+            for (let i = 0; i < count; i++) {
+              const y = geom.attributes.position.getY(i);
+              let r, g, b;
+              if (y < 3500) {
+                // Alluvial canyon riverbed / gorge floor (rich sandstone/clay tones)
+                const t = Math.max(0, (y - 3050) / 450);
+                r = 0.28 + 0.08 * t; g = 0.24 + 0.07 * t; b = 0.19 + 0.06 * t;
+              } else if (y < 5000) {
+                // High mountain crags / Ladakh granite ridges (darker slate rock)
+                const t = (y - 3500) / 1500;
+                r = 0.32 + 0.10 * t; g = 0.29 + 0.09 * t; b = 0.26 + 0.08 * t;
+              } else {
+                // Alpine snow-capped peaks (>5000m Chang La & Khardung passes)
+                const t = Math.min(1.0, (y - 5000) / 800);
+                r = 0.44 + 0.18 * t; g = 0.46 + 0.18 * t; b = 0.50 + 0.20 * t;
+              }
+              colors.push(r, g, b);
+            }
+            geom.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+            child.material = new THREE.MeshStandardMaterial({
+              vertexColors: true,
+              roughness: 0.88,
+              metalness: 0.04,
+              flatShading: true
+            });
+          }
+        }
+      });
+
+      scene.add(terrainMesh);
+      const tBBox = new THREE.Box3().setFromObject(terrainMesh);
+      const tSz = new THREE.Vector3();
+      tBBox.getSize(tSz);
+      document.getElementById('diag-terrain-status').textContent = `ladakh_canyon_terrain.glb (${(tSz.x/1000).toFixed(1)}km x ${(tSz.z/1000).toFixed(1)}km DEM)`;
+      console.log('Ladakh Canyon Terrain Loaded:', tBBox);
+    }, undefined, (err) => {
+      console.error('Failed to load ladakh_canyon_terrain.glb:', err);
+      document.getElementById('diag-terrain-status').textContent = 'ERROR loading terrain.glb';
+    });
+
+    // ------------------------------------------------------------------------
+    // Flight Corridor Ribbon & Waypoints
+    // ------------------------------------------------------------------------
+    const ribbonMat = new THREE.LineBasicMaterial({ color: 0x00e5ff, linewidth: 2, transparent: true, opacity: 0.7 });
+    let corridorLine = null;
+    const waypointMarkersGroup = new THREE.Group();
+    scene.add(waypointMarkersGroup);
+
+    let activeWaypoints = [];
+
+    function updateFlightCorridor(waypoints) {
+      if (!waypoints || waypoints.length === 0) return;
+      activeWaypoints = waypoints;
+
+      while (waypointMarkersGroup.children.length > 0) {
+        waypointMarkersGroup.remove(waypointMarkersGroup.children[0]);
+      }
+      if (corridorLine) scene.remove(corridorLine);
+
+      const refLat = waypoints[0].lat;
+      const refLon = waypoints[0].lon;
+      const cosLat = Math.cos(refLat * Math.PI / 180);
+      const points = [];
+
+      waypoints.forEach((wp, idx) => {
+        const xEast = (wp.lon - refLon) * (Math.PI / 180) * 6371000 * cosLat;
+        const yNorth = (wp.lat - refLat) * (Math.PI / 180) * 6371000;
+        const zAlt = wp.alt_msl_m;
+
+        // In Three.js: X=East, Y=Alt, Z=-North
+        const p3d = new THREE.Vector3(xEast, zAlt, -yNorth);
+        points.push(p3d);
+
+        // Waypoint Light Beacon Column
+        const colGeo = new THREE.CylinderGeometry(4, 4, 300, 16);
+        const colMat = new THREE.MeshBasicMaterial({ color: idx === 0 ? 0x00e676 : 0x00e5ff, transparent: true, opacity: 0.35, wireframe: true });
+        const beacon = new THREE.Mesh(colGeo, colMat);
+        beacon.position.set(p3d.x, p3d.y + 150, p3d.z);
+        waypointMarkersGroup.add(beacon);
+
+        // Ground Radar Ring
+        const ringGeo = new THREE.RingGeometry(25, 35, 32);
+        ringGeo.rotateX(-Math.PI / 2);
+        const ringMat = new THREE.MeshBasicMaterial({ color: 0x00e5ff, side: THREE.DoubleSide, transparent: true, opacity: 0.4 });
+        const ring = new THREE.Mesh(ringGeo, ringMat);
+        ring.position.set(p3d.x, (wp.terrain_alt_m || 3097.64) + 2, p3d.z);
+        waypointMarkersGroup.add(ring);
+      });
+
+      if (points.length >= 2) {
+        const curve = new THREE.CatmullRomCurve3(points);
+        const curvePoints = curve.getPoints(200);
+        const lineGeo = new THREE.BufferGeometry().setFromPoints(curvePoints);
+        corridorLine = new THREE.Line(lineGeo, ribbonMat);
+        scene.add(corridorLine);
+      }
+    }
+
+    // Forward GCAS Safety Beam (hidden: wireframe cage was obstructing chase camera)
+    const gcasBeamGeo = new THREE.ConeGeometry(8, 90, 12);
+    gcasBeamGeo.rotateX(-Math.PI / 2);
+    gcasBeamGeo.translate(0, 0, -45);
+    const gcasBeamMat = new THREE.MeshBasicMaterial({ color: 0x00e676, transparent: true, opacity: 0.22, wireframe: true });
+    const gcasBeam = new THREE.Mesh(gcasBeamGeo, gcasBeamMat);
+    gcasBeam.visible = false; // Authoritative cockpit & radar are rendered in Blender
+    uavGroup.add(gcasBeam);
+
+    // ------------------------------------------------------------------------
+    // Down & Forward Raycasters (Terrain Probing & Auto-GCAS)
+    // ------------------------------------------------------------------------
+    const downRaycaster = new THREE.Raycaster();
+    const forwardRaycaster = new THREE.Raycaster();
+
+    function sampleGroundElevation(x, z) {
+      if (!terrainMesh) return 3097.64;
+      downRaycaster.set(new THREE.Vector3(x, 7500, z), new THREE.Vector3(0, -1, 0));
+      const hits = downRaycaster.intersectObject(terrainMesh, true);
+      if (hits.length > 0) {
+        return hits[0].point.y;
+      }
+      return 3097.64;
+    }
+
+    function evaluateAutoGcas(pos, quat, speed) {
+      if (!terrainMesh) return false;
+      const fwd = new THREE.Vector3(0, 0, -1).applyQuaternion(quat);
+      forwardRaycaster.set(pos, fwd);
+      forwardRaycaster.far = Math.max(400, speed * 6.0); // 6 sec lookahead
+      const hits = forwardRaycaster.intersectObject(terrainMesh, true);
+      if (hits.length > 0) {
+        const dist = hits[0].distance;
+        const tti = dist / Math.max(10, speed);
+        if (tti < 3.5 || dist < 100) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    // ------------------------------------------------------------------------
+    // WebSocket 20 Hz State Bridge
+    // ------------------------------------------------------------------------
+    let ws = null;
+    let lastAuthoritativeState = null;
+
+    function connectWebSocket() {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const host = window.location.host || '127.0.0.1:8000';
+      const wsUrl = `${protocol}//${host}/api/missions/ws`;
+
+      ws = new WebSocket(wsUrl);
+      ws.onopen = () => {
+        document.getElementById('hud-status').textContent = '20 Hz WS ACTIVE';
+        document.getElementById('hud-status').className = 'status-badge';
+        console.log('Canyon simulation connected to authoritative WebSocket:', wsUrl);
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const s = JSON.parse(event.data);
+          applyAuthoritativeState(s);
+        } catch (e) {
+          console.warn('Failed to parse state:', e);
+        }
+      };
+
+      ws.onclose = () => {
+        document.getElementById('hud-status').textContent = 'RECONNECTING';
+        document.getElementById('hud-status').className = 'status-badge amber';
+        setTimeout(connectWebSocket, 1500);
+      };
+
+      ws.onerror = (err) => console.warn('WebSocket error:', err);
+    }
+
+    connectWebSocket();
+
+    function applyAuthoritativeState(s) {
+      lastAuthoritativeState = s;
+
+      // Extract target coordinates from canonical MissionState
+      const posX = s.pos_x_m || 0;
+      const posY = s.pos_y_m || 0;
+      const altMsl = s.pos_z_m || (s.uav ? s.uav.altitude_msl_m : 3200);
+
+      // In Three.js: X=East, Y=Alt, Z=-North
+      uavSim.targetAltitude = altMsl;
+      const targetPos = new THREE.Vector3(posX, altMsl, -posY);
+
+      // Desired kinematics
+      uavSim.targetHeading = THREE.MathUtils.degToRad(s.heading_deg || 0);
+      uavSim.targetPitch = THREE.MathUtils.degToRad(s.pitch_deg || 0);
+      uavSim.targetRoll = THREE.MathUtils.degToRad(s.roll_bank_deg || 0);
+      uavSim.targetSpeed = s.ground_speed_mps || (s.true_airspeed_ktas ? s.true_airspeed_ktas * 0.5144 : 45.0);
+      uavSim.rpm = s.rpm || (s.engine ? s.engine.rpm : 2400);
+      uavSim.engineThrottle = s.commanded_throttle_pct || 65.0;
+
+      // Soft alignment of simulation state with backend
+      uavSim.pos.lerp(targetPos, 0.12);
+
+      // Safe helper for text
+      const setTextSafe = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+
+      // HUD Ticker Updates (if rendered)
+      setTextSafe('hud-engine-id', s.engine_id || (s.engine ? s.engine.profile_id : 'rotax_912is'));
+      setTextSafe('hud-phase', s.phase || 'CRUISE');
+      
+      const elMin = Math.floor((s.time_elapsed_sec || 0) / 60).toString().padStart(2, '0');
+      const elSec = Math.floor((s.time_elapsed_sec || 0) % 60).toString().padStart(2, '0');
+      setTextSafe('hud-time-elapsed', `${elMin}:${elSec}`);
+      setTextSafe('hud-time-scale', `${(s.time_scale || 1.0).toFixed(1)}x`);
+
+      const badge = document.getElementById('hud-status');
+      if (badge) {
+        badge.textContent = s.status || 'RUNNING';
+        if (s.status === 'ABORTED' || s.confirmed_anomaly) {
+          badge.className = 'status-badge red';
+        } else if (s.status === 'DERATED') {
+          badge.className = 'status-badge amber';
+        } else {
+          badge.className = 'status-badge';
+        }
+      }
+
+      // Left & Right PFD Tapes (if rendered)
+      setTextSafe('hud-kias', Math.round(s.indicated_airspeed_kias || (uavSim.speed * 1.944)));
+      setTextSafe('hud-ktas', Math.round(s.true_airspeed_ktas || (uavSim.speed * 1.944)));
+      setTextSafe('hud-gs', Math.round(uavSim.speed));
+      setTextSafe('hud-alt-msl', Math.round(uavSim.pos.y));
+      setTextSafe('hud-dalt', Math.round(s.density_altitude_ft || (uavSim.pos.y * 3.28084)));
+
+      // Telemetry Card (if rendered)
+      setTextSafe('hud-tps', `${(s.commanded_throttle_pct || 0).toFixed(1)}%`);
+      setTextSafe('hud-rpm', Math.round(uavSim.rpm));
+      setTextSafe('hud-cht', `${(s.max_cht_c || 82.0).toFixed(1)} °C`);
+      setTextSafe('hud-egt', `${(s.max_egt_c || 780.0).toFixed(1)} °C`);
+      setTextSafe('hud-oil', `${(s.oil_press_bar || 4.5).toFixed(2)} bar`);
+      setTextSafe('hud-flyhash', (s.flyhash_novelty_score || 0).toFixed(3));
+      const relPct = Math.round((s.mission_reliability !== undefined ? s.mission_reliability : 1.0) * 100);
+      const hudRel = document.getElementById('hud-rel');
+      if (hudRel) {
+        hudRel.textContent = `${relPct}%`;
+        hudRel.style.color = relPct < 75 ? 'var(--red)' : relPct < 90 ? 'var(--amber)' : 'var(--green)';
+      }
+
+      // Active Fault row
+      const faultRow = document.getElementById('hud-fault-row');
+      if (faultRow) {
+        if (s.active_faults && s.active_faults.length > 0) {
+          faultRow.style.display = 'flex';
+          setTextSafe('hud-fault-name', s.active_faults[0].fault_mode || 'ACTIVE FAULT');
+        } else {
+          faultRow.style.display = 'none';
+        }
+      }
+    }
+
+    // ------------------------------------------------------------------------
+    // Operator Actions Handlers (Safe optional chaining)
+    // ------------------------------------------------------------------------
+    document.getElementById('btn-derate')?.addEventListener('click', async () => {
+      try {
+        await fetch('/api/missions/derate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ scale: 0.85 })
+        });
+        console.log('Derate 85% sent.');
+      } catch (err) { console.warn('Derate error:', err); }
+    });
+
+    document.getElementById('btn-abort')?.addEventListener('click', async () => {
+      try {
+        await fetch('/api/missions/abort', { method: 'POST' });
+        console.log('Abort commanded.');
+      } catch (err) { console.warn('Abort error:', err); }
+    });
+
+    // ------------------------------------------------------------------------
+    // Manual Flight Control (optional, Blender-sim feel): W/S=pitch, A/D=turn, E/Q=throttle.
+    // Held key state is sent to the backend over this same WebSocket; the authoritative
+    // AutopilotFlightModel integrates it server-side, so this is not a client-side fake --
+    // releasing all keys hands control back to the autopilot automatically.
+    // ------------------------------------------------------------------------
+    const manualKeys = {
+      pitch_up: false, pitch_down: false,
+      turn_left: false, turn_right: false,
+      throttle_up: false, throttle_down: false,
+    };
+    const KEY_MAP = {
+      'w': 'pitch_up', 's': 'pitch_down',
+      'a': 'turn_left', 'd': 'turn_right',
+      'e': 'throttle_up', 'q': 'throttle_down',
+    };
+    let manualKeysDirty = false;
+    function sendManualKeys() {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'MANUAL_KEYS', keys: manualKeys }));
+      }
+    }
+    window.addEventListener('keydown', (e) => {
+      const field = KEY_MAP[e.key.toLowerCase()];
+      if (field && !manualKeys[field]) {
+        manualKeys[field] = true;
+        sendManualKeys();
+      }
+    });
+    window.addEventListener('keyup', (e) => {
+      const field = KEY_MAP[e.key.toLowerCase()];
+      if (field && manualKeys[field]) {
+        manualKeys[field] = false;
+        sendManualKeys();
+      }
+    });
+    // Safety: if the tab loses focus while a key is held, the keyup never fires --
+    // release everything so the aircraft doesn't get stuck turning/climbing forever.
+    window.addEventListener('blur', () => {
+      let any = false;
+      for (const k in manualKeys) { if (manualKeys[k]) any = true; manualKeys[k] = false; }
+      if (any) sendManualKeys();
+    });
+
+    document.getElementById('btn-divert')?.addEventListener('click', async () => {
+      try {
+        // Nubra Valley alternate field -- a real point within the loaded terrain's
+        // coverage, not an arbitrary off-map coordinate.
+        await fetch('/api/missions/divert', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ lat: 34.70, lon: 77.60, name: 'ALTERNATE_FIELD' })
+        });
+        console.log('Divert commanded.');
+      } catch (err) { console.warn('Divert error:', err); }
+    });
+
+    document.getElementById('btn-launch-blender')?.addEventListener('click', async () => {
+      try {
+        const res = await fetch('/api/missions/launch-blender', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mode: 'client' })
+        });
+        const data = await res.json();
+        console.log('Blender launched:', data);
+      } catch (err) {
+        console.warn('Blender launch error:', err);
+      }
+    });
+
+    const diagBox = document.getElementById('hud-diag-box');
+    document.getElementById('btn-toggle-diag')?.addEventListener('click', () => {
+      if (diagBox) diagBox.style.display = diagBox.style.display === 'none' ? 'block' : 'none';
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if ((e.key === 'v' || e.key === 'V') && diagBox) {
+        diagBox.style.display = diagBox.style.display === 'none' ? 'block' : 'none';
+      }
+    });
+
+    // ------------------------------------------------------------------------
+    // Camera Switching Logic
+    // ------------------------------------------------------------------------
+    const camButtons = document.querySelectorAll('.cam-btn');
+    camButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        camButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        setCameraMode(btn.getAttribute('data-cam'));
+      });
+    });
+
+    function setCameraMode(mode) {
+      currentCamMode = mode;
+      controls.enabled = (mode === 'ORBIT');
+      console.log('Camera mode switched to:', mode);
+    }
+
+    // Listen to parent window commands
+    window.addEventListener('message', (event) => {
+      if (!event.data) return;
+      if (event.data.type === 'ANUMAAN_SET_MISSION_DEFINITION') {
+        if (event.data.definition && event.data.definition.waypoints) {
+          updateFlightCorridor(event.data.definition.waypoints);
+        }
+      } else if (event.data.type === 'ANUMAAN_SET_CAMERA') {
+        setCameraMode(event.data.mode);
+      }
+    });
+
+    // Fetch initial definition from backend
+    fetch('/api/missions/definition')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.waypoints) updateFlightCorridor(data.waypoints);
+      })
+      .catch(() => console.log('Awaiting mission load...'));
+
+    // ------------------------------------------------------------------------
+    // Main 60 FPS Autopilot & Flight Dynamics Loop
+    // ------------------------------------------------------------------------
+    let lastTime = performance.now();
+    let frameCount = 0;
+    let lastFpsTime = performance.now();
+
+    function animate(now) {
+      requestAnimationFrame(animate);
+
+      const dt = Math.min(0.1, (now - lastTime) / 1000);
+      lastTime = now;
+
+      // Calculate FPS
+      frameCount++;
+      if (now - lastFpsTime >= 1000) {
+        document.getElementById('diag-fps').textContent = `${frameCount} FPS`;
+        frameCount = 0;
+        lastFpsTime = now;
+      }
+
+      // 1. Continuous Autopilot Controller Updates
+      // Smooth Speed Integration
+      const speedDiff = uavSim.targetSpeed - uavSim.speed;
+      uavSim.speed += speedDiff * Math.min(1.0, 1.5 * dt);
+
+      // Smooth Heading Integration (shortest arc)
+      let hdgDiff = uavSim.targetHeading - uavSim.heading;
+      while (hdgDiff > Math.PI) hdgDiff -= Math.PI * 2;
+      while (hdgDiff < -Math.PI) hdgDiff += Math.PI * 2;
+      
+      const turnRate = THREE.MathUtils.clamp(hdgDiff * 2.0, -0.65, 0.65);
+      uavSim.heading += turnRate * dt;
+
+      // Coordinated Turn Bank Angle (Roll into turn: tan(phi) = v * turnRate / g)
+      const targetRoll = THREE.MathUtils.clamp(turnRate * (uavSim.speed / 9.80665) * 1.3, -0.75, 0.75);
+      uavSim.roll += (targetRoll - uavSim.roll) * Math.min(1.0, 4.0 * dt);
+
+      // Smooth Pitch Integration
+      uavSim.pitch += (uavSim.targetPitch - uavSim.pitch) * Math.min(1.0, 3.0 * dt);
+
+      // Construct Smooth Flight Quaternion (Yaw -> Pitch -> Roll)
+      const qYaw = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), -uavSim.heading);
+      const qPitch = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), uavSim.pitch);
+      const qRoll = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -uavSim.roll);
+
+      const targetQuat = new THREE.Quaternion().copy(qYaw).multiply(qPitch).multiply(qRoll);
+      uavSim.quat.slerp(targetQuat, Math.min(1.0, 8.0 * dt));
+
+      // Velocity vector in world coordinates
+      const forwardDir = new THREE.Vector3(0, 0, -1).applyQuaternion(uavSim.quat);
+      uavSim.vel.copy(forwardDir).multiplyScalar(uavSim.speed);
+
+      // Advance position smoothly
+      uavSim.pos.addScaledVector(uavSim.vel, dt);
+
+      // Apply to 3D UAV Object Group
+      uavGroup.position.copy(uavSim.pos);
+      uavGroup.quaternion.copy(uavSim.quat);
+
+      // 2. Propeller Rotation driven by Actual Engine RPM
+      if (uavPropeller && uavSim.rpm > 0) {
+        const dTheta = (uavSim.rpm / 60) * Math.PI * 2 * dt;
+        uavPropeller.rotation.z += dTheta;
+      }
+
+      // 3. Ground Elevation Probing & Auto-GCAS
+      uavSim.groundElevation = sampleGroundElevation(uavSim.pos.x, uavSim.pos.z);
+      uavSim.agl = Math.max(0, uavSim.pos.y - uavSim.groundElevation);
+      const hudAgl = document.getElementById('hud-agl');
+      if (hudAgl) hudAgl.textContent = Math.round(uavSim.agl);
+
+      const gcasTriggered = evaluateAutoGcas(uavSim.pos, uavSim.quat, uavSim.speed);
+      const alertBanner = document.getElementById('hud-alert-banner');
+      if (alertBanner) {
+        if (gcasTriggered || uavSim.agl < 45.0) {
+          alertBanner.style.display = 'block';
+          gcasBeamMat.color.setHex(0xff3366);
+        } else {
+          alertBanner.style.display = 'none';
+          gcasBeamMat.color.setHex(0x00e676);
+        }
+      }
+
+      // 4. Update Compass Tape (if rendered)
+      const compassTrack = document.getElementById('hud-compass-track');
+      if (compassTrack) {
+        const degHdg = (THREE.MathUtils.radToDeg(uavSim.heading) % 360 + 360) % 360;
+        const compassOffset = (degHdg / 360) * 600 - 150;
+        compassTrack.style.transform = `translateX(${-compassOffset}px)`;
+      }
+
+      // Center waterline reticle pitch & roll rotation
+      const reticle = document.getElementById('hud-reticle');
+      if (reticle) {
+        const pitchPixels = THREE.MathUtils.radToDeg(uavSim.pitch) * 2.5;
+        const rollDeg = THREE.MathUtils.radToDeg(uavSim.roll);
+        reticle.style.transform = `translate(-50%, calc(-50% + ${pitchPixels}px)) rotate(${rollDeg}deg)`;
+      }
+
+      // 5. Dynamic Camera Modes Execution
+      if (currentCamMode === 'CHASE') {
+        // Hero trailing camera behind pusher propeller with smooth banking lag
+        const offset = new THREE.Vector3(0, 8.5, 34.0).applyQuaternion(uavSim.quat);
+        const desiredCamPos = new THREE.Vector3().copy(uavSim.pos).add(offset);
+        const desiredLookAt = new THREE.Vector3().copy(uavSim.pos).add(forwardDir.clone().multiplyScalar(40.0));
+
+        camSmoothed.pos.lerp(desiredCamPos, 0.08);
+        camSmoothed.lookAt.lerp(desiredLookAt, 0.12);
+
+        camera.position.copy(camSmoothed.pos);
+        camera.lookAt(camSmoothed.lookAt);
+
+      } else if (currentCamMode === 'CINEMATIC') {
+        // Wider cinematic dynamic spring follow showing terrain canyons
+        const offset = new THREE.Vector3(12.0, 16.0, 65.0).applyQuaternion(uavSim.quat);
+        const desiredCamPos = new THREE.Vector3().copy(uavSim.pos).add(offset);
+        const desiredLookAt = new THREE.Vector3().copy(uavSim.pos);
+
+        camSmoothed.pos.lerp(desiredCamPos, 0.05);
+        camSmoothed.lookAt.lerp(desiredLookAt, 0.08);
+
+        camera.position.copy(camSmoothed.pos);
+        camera.lookAt(camSmoothed.lookAt);
+
+      } else if (currentCamMode === 'COCKPIT') {
+        // FPV nose-mounted optical sensor camera looking forward
+        const noseOffset = new THREE.Vector3(0, 1.2, -4.2).applyQuaternion(uavSim.quat);
+        camera.position.copy(uavSim.pos).add(noseOffset);
+        camera.quaternion.copy(uavSim.quat);
+
+      } else if (currentCamMode === 'ORBIT') {
+        controls.target.copy(uavSim.pos);
+        controls.update();
+
+      } else if (currentCamMode === 'SAT') {
+        // High altitude satellite reconnaissance overhead view
+        camera.position.set(uavSim.pos.x, uavSim.pos.y + 2500, uavSim.pos.z + 100);
+        camera.lookAt(uavSim.pos);
+      }
+
+      // 6. Diagnostics HUD Box Live Text Updates (if open)
+      if (diagBox && diagBox.style.display !== 'none') {
+        const setD = (id, t) => { const el = document.getElementById(id); if (el) el.textContent = t; };
+        setD('diag-uav-pos', `X: ${uavSim.pos.x.toFixed(1)}, Y: ${uavSim.pos.y.toFixed(1)}, Z: ${uavSim.pos.z.toFixed(1)}`);
+        setD('diag-ground-elev', `${uavSim.groundElevation.toFixed(1)} m (AGL: ${uavSim.agl.toFixed(1)} m)`);
+        if (lastAuthoritativeState && (lastAuthoritativeState.phase_duration_sec > 0 || (lastAuthoritativeState.current_phase_idx !== undefined && lastAuthoritativeState.current_phase_idx >= 0))) {
+          const phIdx = (lastAuthoritativeState.current_phase_idx || 0) + 1;
+          const phName = lastAuthoritativeState.phase || 'PHASE';
+          const phEl = (lastAuthoritativeState.elapsed_in_phase_sec || 0).toFixed(0);
+          const phDur = (lastAuthoritativeState.phase_duration_sec || 0).toFixed(0);
+          setD('diag-target-wp', `PHASE ${phIdx}: ${phName} (${phEl}s / ${phDur}s)`);
+        } else {
+          setD('diag-target-wp', `WP ${lastAuthoritativeState ? lastAuthoritativeState.current_waypoint_idx || 1 : 1} (Dist: ${lastAuthoritativeState ? (lastAuthoritativeState.waypoint_distance_remaining_m || 0).toFixed(0) : 0} m)`);
+        }
+        setD('diag-cam-pos', `${camera.position.x.toFixed(0)}, ${camera.position.y.toFixed(0)}, ${camera.position.z.toFixed(0)} (MODE: ${currentCamMode})`);
+        setD('diag-viewport', `${window.innerWidth} x ${window.innerHeight}`);
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    requestAnimationFrame(animate);
+
+    // Resize Handler
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>
