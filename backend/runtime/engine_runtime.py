@@ -18,6 +18,17 @@ import numpy as np
 
 from backend.core.frame import Frame, TruthRecord
 from backend.detect import DetectionResult, Reservoir, ResidualDetector
+from backend.diagnose.bn import DiagnosticBayesianNetwork
+from backend.diagnose.evidence_adapter import build_evidence
+from backend.diagnose.explain import ExplanationGenerator
+from backend.ml.flyhash_novelty import (
+    FlyNoveltyDetector,
+    NoveltyReport,
+    residual_and_order_features,
+)
+from backend.mission.engine_components import components_for
+from backend.mission.prescriptive import PrescriptiveAdvisor
+from backend.mission.reliability import ISR_18H_PROFILE, MissionProfile, MissionReliabilityEngine
 from backend.physics.engine_config import EngineConfig, load_engine_config
 from backend.runtime.levers import Levers
 from backend.runtime.registry import FAULT_REGISTRY, faults_for, thermal_visible_faults
@@ -36,6 +47,8 @@ class Tick:
     truth: TruthRecord
     detection: Optional[DetectionResult]
     heavy: Optional[Dict[str, Any]]
+    diagnosis: Optional[List[Dict[str, Any]]] = None
+    novelty: Optional[NoveltyReport] = None
 
 
 class EngineRuntime:
@@ -51,6 +64,11 @@ class EngineRuntime:
         self.buffer: Deque[Tick] = deque(maxlen=buffer_len)
         self.detector: Optional[ResidualDetector] = None
         self.reservoir: Optional[Reservoir] = None
+        self.bn: DiagnosticBayesianNetwork = DiagnosticBayesianNetwork(self.cfg)
+        self.explainer: ExplanationGenerator = ExplanationGenerator()
+        self.reliability_engine: MissionReliabilityEngine = MissionReliabilityEngine(components_for(self.cfg), seed=seed)
+        self.advisor: PrescriptiveAdvisor = PrescriptiveAdvisor(self.reliability_engine, n_trials=500)
+        self.flyhash: FlyNoveltyDetector = FlyNoveltyDetector(seed=seed, calibration_frames=100)
         self.manual_origin = False
         self.injected: List[Dict[str, Any]] = []
         self._lock = threading.RLock()
@@ -72,6 +90,14 @@ class EngineRuntime:
                 frames.append(f)
         with self._lock:
             self.detector = ResidualDetector.calibrate(frames, alpha=0.01)
+            # Fold nominal frames into FlyHash seen dictionary
+            self.flyhash.reset_calibration()
+            for f in frames:
+                z = self.detector.cal.z(f)
+                names = self.detector.cal.channel_names()
+                res_dict = {k: float(v) for k, v in zip(names, z)}
+                vec = residual_and_order_features(res_dict, getattr(f, "order_features", None))
+                self.flyhash.observe_nominal(vec)
             self.levers = Levers()
             self.ready = True
 
@@ -187,7 +213,36 @@ class EngineRuntime:
                 hv = {"label": str(label), "classes": [str(c) for c in self.reservoir.classes_],
                       "scores": [round(float(s), 3) for s in scores]}
 
-            t = Tick(self.engine_id, frame, truth, det, hv)
+            diag: Optional[List[Dict[str, Any]]] = None
+            if det is not None and (det.raw_alarm or det.confirmed or det.top_channels):
+                evidence = build_evidence(det, frame, self.cfg)
+                if evidence:
+                    hypotheses = self.bn.diagnose(evidence)
+                    if hypotheses:
+                        diag = []
+                        for h in hypotheses:
+                            exp = self.explainer.explain(h, {"rpm": getattr(frame, "rpm", 0)})
+                            diag.append({
+                                "mode_id": h.mode_id,
+                                "location": h.location,
+                                "probability": round(h.probability, 4),
+                                "ambiguity_group_id": h.ambiguity_group_id,
+                                "supporting_evidence": h.supporting_evidence,
+                                "operator_text": exp.operator_text,
+                                "engineer_text": exp.engineer_text,
+                                "maintainer_text": exp.maintainer_text,
+                                "ata_chapter": exp.ata_chapter,
+                            })
+
+            novelty_rep: Optional[NoveltyReport] = None
+            if self.detector is not None:
+                z = self.detector.cal.z(frame)
+                names = self.detector.cal.channel_names()
+                res_dict = {k: float(v) for k, v in zip(names, z)}
+                vec = residual_and_order_features(res_dict, getattr(frame, "order_features", None))
+                novelty_rep = self.flyhash.score(vec)
+
+            t = Tick(self.engine_id, frame, truth, det, hv, diag, novelty_rep)
             self.buffer.append(t)
             return t
 
@@ -222,6 +277,32 @@ class EngineRuntime:
                 "faults": [{"mode": s.mode, "per_cylinder": s.per_cylinder, "scalar_visible": s.scalar_visible,
                             "layer": s.layer, "description": s.description} for s in faults_for(c)]}
 
+    def mission_reliability(self, hours: float = 18.0, profile: Optional[MissionProfile] = None) -> Dict[str, Any]:
+        """Compute mission reliability and prescriptive derate options for this engine.
+
+        `profile`, when given, is the ACTUAL mission profile being flown (built from a live
+        phase-based mission's real remaining phases -- see
+        backend/mission/executive.py's `_build_live_reliability_profile()`) and is used
+        directly instead of the generic canned `ISR_18H_PROFILE`. Falls back to the generic
+        profile (truncated to `hours`) only when no real mission profile is available, e.g.
+        the standalone `/api/engines/{id}/reliability` endpoint with no mission loaded.
+        """
+        if profile is None:
+            profile = ISR_18H_PROFILE.truncated_to(hours) if hours != 18.0 else ISR_18H_PROFILE
+        res = self.reliability_engine.analytic_reliability(profile)
+        derates = self.advisor.derate_options(profile, scales=(1.0, 0.95, 0.90, 0.85, 0.80))
+        rec = self.advisor.recommend_derate(profile)
+        return {
+            "engine_id": self.engine_id,
+            "mission_hours": hours,
+            "reliability": round(res["reliability"], 4),
+            "limiting_component": res["limiting_component"],
+            "limiting_component_survival": round(res.get("limiting_component_survival", 1.0), 4),
+            "per_component_survival": {k: round(v, 4) for k, v in res.get("per_component_survival", {}).items()},
+            "derate_options": [d.as_dict() for d in derates],
+            "recommendation": rec.sentence() if rec else "Nominal operation meets reliability target.",
+        }
+
     @staticmethod
     def payload(t: Tick) -> Dict[str, Any]:
         f, d = t.frame, t.detection
@@ -232,4 +313,14 @@ class EngineRuntime:
                 "scores": d.scores, "ratios": d.ratios, "raw_alarm": d.raw_alarm, "confirmed": d.confirmed,
                 "top_channels": d.top_channels},
             "heavy": t.heavy,
+            "diagnosis": t.diagnosis,
+            "novelty": None if t.novelty is None else {
+                "novelty_score": t.novelty.novelty_score,
+                "is_novel": t.novelty.is_novel,
+                "calibrated": t.novelty.calibrated,
+                "calibration_frames_seen": t.novelty.calibration_frames_seen,
+                "active_bits": t.novelty.active_bits,
+                "unseen_bits": t.novelty.unseen_bits,
+                "novelty_threshold": 0.6,
+            },
         }

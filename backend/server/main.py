@@ -48,6 +48,7 @@ from backend.server.schemas import (
 )
 from backend.server.engine_service import EngineStateService
 from backend.server.engine_api import router as engine_router
+from backend.server.mission_api import router as mission_router
 from backend.telemetry.replay_engine import ReplayEngine
 from backend.agent.llm_engine import LocalLLMEngine
 from backend.voice.stt_engine import LocalWhisperSTT
@@ -111,9 +112,11 @@ app = FastAPI(
 )
 
 app.include_router(engine_router)
+app.include_router(mission_router)
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _THREEJS_TWIN = _REPO_ROOT / "apps" / "threejs_twin"
+_CANYON_FLIGHT = _REPO_ROOT / "apps" / "canyon_flight"
 
 
 @app.get("/app", include_in_schema=False)
@@ -123,6 +126,7 @@ def serve_threejs_twin():
 
 
 app.mount("/apps/threejs_twin", StaticFiles(directory=_THREEJS_TWIN, html=True), name="threejs-twin-assets")
+app.mount("/apps/canyon_flight", StaticFiles(directory=_CANYON_FLIGHT, html=True), name="canyon-flight-assets")
 
 # Enable permissive CORS for Vercel cloud and local development
 app.add_middleware(

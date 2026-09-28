@@ -103,6 +103,28 @@ def engine_schema(engine_id: str):
         raise HTTPException(404, f"unknown engine {engine_id!r}")
 
 
+@router.get("/api/engines/{engine_id}/diagnosis")
+def engine_diagnosis(engine_id: str):
+    rt = _rt(engine_id)
+    if not rt.buffer:
+        raise HTTPException(503, "engine still calibrating")
+    payload = EngineRuntime.payload(rt.buffer[-1])
+    return {
+        "engine_id": engine_id,
+        "t": payload["t"],
+        "diagnosis": payload.get("diagnosis") or [],
+    }
+
+
+@router.get("/api/engines/{engine_id}/reliability")
+def engine_reliability(engine_id: str, hours: float = 18.0):
+    rt = _rt(engine_id)
+    if not rt.buffer:
+        raise HTTPException(503, "engine still calibrating")
+    return rt.mission_reliability(hours=hours)
+
+
+
 @router.post("/api/engines/{engine_id}/faults")
 def inject_fault(engine_id: str, body: FaultBody):
     rt = _rt(engine_id)
