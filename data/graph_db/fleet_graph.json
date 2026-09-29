@@ -911,6 +911,54 @@
       "min_altitude_ft": 5667.0,
       "max_altitude_ft": 20000.0,
       "telemetry_log_path": "E:\\backup-llm\\backup-no-llm\\3d_engine\\data\\telemetry\\live_sorties\\SORTIE-SRV-20260929-114630.csv"
+    },
+    "SORTIE-SRV-20260929-132157": {
+      "sortie_id": "SORTIE-SRV-20260929-132157",
+      "region": "LADAKH",
+      "start_timestamp": 1790668320.6773717,
+      "end_timestamp": null,
+      "flight_hours": 0.0,
+      "final_health_index": 1.0,
+      "status": "ACTIVE",
+      "uav_tail_number": "TAPAS-BH-201-AF01",
+      "start_health_index": 1.0,
+      "min_oat_c": null,
+      "max_oat_c": null,
+      "min_altitude_ft": null,
+      "max_altitude_ft": null,
+      "telemetry_log_path": null
+    },
+    "SORTIE-SRV-20260929-150303": {
+      "sortie_id": "SORTIE-SRV-20260929-150303",
+      "region": "LADAKH",
+      "start_timestamp": 1790674387.1564453,
+      "end_timestamp": null,
+      "flight_hours": 0.0,
+      "final_health_index": 1.0,
+      "status": "ACTIVE",
+      "uav_tail_number": "TAPAS-BH-201-AF01",
+      "start_health_index": 1.0,
+      "min_oat_c": null,
+      "max_oat_c": null,
+      "min_altitude_ft": null,
+      "max_altitude_ft": null,
+      "telemetry_log_path": null
+    },
+    "SORTIE-SRV-20260929-151809": {
+      "sortie_id": "SORTIE-SRV-20260929-151809",
+      "region": "LADAKH",
+      "start_timestamp": 1790675293.6922429,
+      "end_timestamp": null,
+      "flight_hours": 0.0,
+      "final_health_index": 1.0,
+      "status": "ACTIVE",
+      "uav_tail_number": "TAPAS-BH-201-AF01",
+      "start_health_index": 1.0,
+      "min_oat_c": null,
+      "max_oat_c": null,
+      "min_altitude_ft": null,
+      "max_altitude_ft": null,
+      "telemetry_log_path": null
     }
   },
   "subsystems": {
@@ -11409,7 +11457,10 @@
       "ANOM-0381",
       "ANOM-0382",
       "ANOM-0383"
-    ]
+    ],
+    "SORTIE-SRV-20260929-132157": [],
+    "SORTIE-SRV-20260929-150303": [],
+    "SORTIE-SRV-20260929-151809": []
   },
   "subsystem_anomalies": {
     "SUB_CYL_2": [
@@ -12284,6 +12335,9 @@
       "MAINT-0380",
       "MAINT-0381",
       "MAINT-0382"
-    ]
+    ],
+    "SORTIE-SRV-20260929-132157": [],
+    "SORTIE-SRV-20260929-150303": [],
+    "SORTIE-SRV-20260929-151809": []
   }
 }

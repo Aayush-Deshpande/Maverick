@@ -124,6 +124,18 @@ def serve_threejs_twin():
 
 app.mount("/apps/threejs_twin", StaticFiles(directory=_THREEJS_TWIN, html=True), name="threejs-twin-assets")
 
+_MODELS_DIR = _REPO_ROOT / "frontend" / "public" / "models"
+if _MODELS_DIR.exists():
+    app.mount("/models", StaticFiles(directory=_MODELS_DIR), name="static-models")
+
+_DRACO_DIR = _REPO_ROOT / "frontend" / "public" / "draco"
+if _DRACO_DIR.exists():
+    app.mount("/draco", StaticFiles(directory=_DRACO_DIR), name="static-draco")
+
+_IMAGES_DIR = _REPO_ROOT / "frontend" / "public" / "images"
+if _IMAGES_DIR.exists():
+    app.mount("/images", StaticFiles(directory=_IMAGES_DIR), name="static-images")
+
 # Enable permissive CORS for Vercel cloud and local development
 app.add_middleware(
     CORSMiddleware,

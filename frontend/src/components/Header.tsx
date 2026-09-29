@@ -21,6 +21,7 @@ interface HeaderProps {
   onSelectRole: (role: GCSRole) => void;
   onOpenSettings: () => void;
   runtimeMode?: boolean;
+  onGoLanding?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -31,6 +32,7 @@ export const Header: React.FC<HeaderProps> = ({
   onSelectRole,
   onOpenSettings,
   runtimeMode = false,
+  onGoLanding,
 }) => {
   const isFaulted = state.analytics.diagnosed_fault_id > 0;
   const isEngineOn = state.is_engine_running;
@@ -53,9 +55,14 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
         {/* Left: Identity */}
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-sm bg-accent-dim border border-surface-border flex items-center justify-center text-accent">
+          <button
+            onClick={onGoLanding}
+            disabled={!onGoLanding}
+            className="w-9 h-9 rounded-sm bg-accent-dim border border-surface-border flex items-center justify-center text-accent hover:border-accent transition-colors disabled:cursor-default"
+            title={onGoLanding ? 'Return to Platform Overview' : undefined}
+          >
             <Shield className="w-4 h-4" />
-          </div>
+          </button>
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-sm font-semibold tracking-tight text-white flex items-center gap-1.5">

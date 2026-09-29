@@ -36,8 +36,14 @@ export default {
         'ai-accent-muted': 'rgba(192,132,252,0.4)',
       },
       fontFamily: {
-        sans: ['"Pixel Code"', 'monospace'],
-        mono: ['"Pixel Code"', 'monospace'],
+        sans: ['"Inter"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+        display: ['"Space Grotesk"', '"Archivo Narrow"', '"Archivo"', 'sans-serif'],
+        hud: ['"Rajdhani"', '"Space Grotesk"', 'sans-serif'],
+        tactical: ['"Rajdhani"', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'monospace'],
+        pixel: ['"Pixel Code"', 'monospace'],
+        serif: ['"Times New Roman"', 'Times', 'serif'],
+        editorial: ['"Times New Roman"', 'Times', 'serif'],
       },
       boxShadow: {
         // Elevation, not illumination — flat drop shadows instead of colored glows.

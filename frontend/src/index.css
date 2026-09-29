@@ -5,16 +5,39 @@
 
 :root {
   color-scheme: dark;
-}
-
-*, *::before, *::after {
-  font-family: 'Pixel Code', monospace !important;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Space Grotesk', 'Archivo Narrow', 'Archivo', sans-serif;
+  --font-hud: 'Rajdhani', 'Space Grotesk', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-pixel: 'Pixel Code', monospace;
 }
 
 body {
-  background-color: #0e0e10;
-  color: #f2f2f3;
-  font-family: 'Pixel Code', monospace !important;
+  background-color: #080a0f;
+  color: #f1f5f9;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.font-display, h1, h2, h3, .font-heading {
+  font-family: var(--font-display);
+}
+
+.font-hud, .font-tactical {
+  font-family: var(--font-hud);
+}
+
+.font-mono, code, pre, .mono-val {
+  font-family: var(--font-mono);
+}
+
+.font-pixel {
+  font-family: var(--font-pixel);
+}
+
+.font-editorial, .font-serif, [class*="font-editorial"], [class*="font-serif"] {
+  font-family: 'Times New Roman', Times, serif !important;
 }
 
 /* Minimal scrollbar — visible on hover intent, not a decorative element */
@@ -232,3 +255,28 @@ input[type="range"] {
   padding: 0;
   color: #e2e8f0;
 }
+
+/* Aerospace Tactical Utilities */
+.brand-devanagari {
+  font-family: 'Noto Sans Devanagari', sans-serif !important;
+}
+
+.tactical-grid-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image: 
+    linear-gradient(rgba(0, 240, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 240, 255, 0.025) 1px, transparent 1px);
+  background-size: 48px 48px;
+  z-index: 0;
+}
+
+.vignette-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 50%, transparent 45%, rgba(4, 6, 10, 0.85) 100%);
+  z-index: 0;
+}
+

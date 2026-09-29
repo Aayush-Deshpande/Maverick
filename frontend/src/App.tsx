@@ -15,6 +15,7 @@ import { MaintenanceDashboardPanel } from './components/MaintenanceDashboardPane
 import { ConnectionModal } from './components/ConnectionModal';
 import { PanelErrorBoundary } from './components/PanelErrorBoundary';
 import { EngineRuntimeConsole } from './components/EngineRuntimeConsole';
+import { LandingPage } from './components/landing/LandingPage';
 import { GCSRole } from './types/telemetry';
 import {
   WifiOff,
@@ -41,7 +42,7 @@ export function App() {
   } = useTelemetrySocket();
 
   const [activeRole, setActiveRole] = useState<GCSRole>('OPERATOR');
-  const [workspace, setWorkspace] = useState<'runtime' | 'twin' | 'legacy'>('runtime');
+  const [workspace, setWorkspace] = useState<'landing' | 'runtime' | 'twin' | 'legacy'>('landing');
   const [activeTab, setActiveTab] = useState<
     'OPERATOR' | 'PROPULSION' | 'MAINTENANCE' | 'AI_DIAGNOSTICS' | 'VOICE_COPILOT' | 'MISSION_REPLAY'
   >('OPERATOR');
@@ -68,6 +69,10 @@ export function App() {
     }
   };
 
+  if (workspace === 'landing') {
+    return <LandingPage onLaunchConsole={(target) => setWorkspace(target || 'runtime')} />;
+  }
+
   return (
     <div className="min-h-screen bg-background text-[#f2f2f3] flex flex-col selection:bg-accent selection:text-white">
       <Header
@@ -78,12 +83,20 @@ export function App() {
         onSelectRole={handleSelectRole}
         onOpenSettings={() => setIsModalOpen(true)}
         runtimeMode={workspace !== 'legacy'}
+        onGoLanding={() => setWorkspace('landing')}
       />
 
       <main className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-4 md:p-6 space-y-4">
         <div className="flex items-center justify-between gap-3">
           <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">ANUMAAN · Ground console</div>
           <div className="flex rounded border border-surface-border bg-surface-card p-0.5 text-[11px]">
+            <button
+              onClick={() => setWorkspace('landing')}
+              className="rounded px-2.5 py-1.5 text-slate-400 hover:text-white flex items-center gap-1 transition-colors"
+              title="Return to Platform Overview"
+            >
+              <span className="text-xs">&larr;</span> Overview
+            </button>
             <button onClick={() => setWorkspace('runtime')} className={`rounded px-3 py-1.5 ${workspace === 'runtime' ? 'bg-accent-dim text-accent' : 'text-slate-400 hover:text-white'}`}>Engine runtime</button>
             <button onClick={() => setWorkspace('twin')} className={`rounded px-3 py-1.5 ${workspace === 'twin' ? 'bg-accent-dim text-accent' : 'text-slate-400 hover:text-white'}`}>3D twin</button>
             <button onClick={() => setWorkspace('legacy')} className={`rounded px-3 py-1.5 ${workspace === 'legacy' ? 'bg-accent-dim text-accent' : 'text-slate-400 hover:text-white'}`}>Legacy GCS</button>
