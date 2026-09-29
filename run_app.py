@@ -34,8 +34,9 @@ if sys.stderr is not None and hasattr(sys.stderr, "reconfigure"):
 PROJECT_ROOT = Path(__file__).resolve().parent
 
 try:
-    from dotenv import load_dotenv
-    load_dotenv(dotenv_path=PROJECT_ROOT / ".env")
+    if "PYTEST_CURRENT_TEST" not in os.environ:
+        from dotenv import load_dotenv
+        load_dotenv(dotenv_path=PROJECT_ROOT / ".env")
 except ImportError:
     pass
 

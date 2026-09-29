@@ -52,7 +52,7 @@ except ImportError:
     mathutils = MockMathUtils()
     sys.modules['mathutils'] = mathutils
 
-REPO_ROOT = r"e:\backup-llm\backup-no-llm\3d_engine"
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, os.path.join(REPO_ROOT, "apps", "blender_twin"))
 
 import standalone_digital_twin_app as app

@@ -70,9 +70,10 @@ OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
 # ANUMAAN_LLM_MODEL_ID overrides the tag for any provider, including "local-other"
 # for a self-hosted/self-pulled model not in this registry.
 try:
-    from dotenv import load_dotenv
-    _env_path = Path(__file__).resolve().parent.parent.parent / ".env"
-    load_dotenv(dotenv_path=_env_path)
+    if "PYTEST_CURRENT_TEST" not in os.environ:
+        from dotenv import load_dotenv
+        _env_path = Path(__file__).resolve().parent.parent.parent / ".env"
+        load_dotenv(dotenv_path=_env_path)
 except ImportError:
     pass
 

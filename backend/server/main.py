@@ -12,6 +12,7 @@ import asyncio
 import base64
 import json
 import logging
+import os
 import sys
 import uuid
 from pathlib import Path
@@ -34,9 +35,10 @@ for _stream in (sys.stdout, sys.stderr):
         _stream.reconfigure(encoding="utf-8", errors="backslashreplace")
 
 try:
-    from dotenv import load_dotenv
-    _env_path = Path(__file__).resolve().parent.parent.parent / ".env"
-    load_dotenv(dotenv_path=_env_path)
+    if "PYTEST_CURRENT_TEST" not in os.environ:
+        from dotenv import load_dotenv
+        _env_path = Path(__file__).resolve().parent.parent.parent / ".env"
+        load_dotenv(dotenv_path=_env_path)
 except ImportError:
     pass
 
