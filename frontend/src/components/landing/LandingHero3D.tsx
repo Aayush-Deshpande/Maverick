@@ -3,7 +3,8 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { Eye, RotateCcw, Image as ImageIcon, Box } from 'lucide-react';
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
+import { Eye, RotateCcw, Image as ImageIcon, Box, Compass } from 'lucide-react';
 
 export interface LineupItem {
   id: string;
@@ -27,7 +28,7 @@ export const AERO_LINEUP: LineupItem[] = [
     keyBadge: 'F1',
     name: 'Rotax 912 iS Sport',
     code: 'ROTAX 912 iS',
-    subtitle: '100 HP Naturally Aspirated Aero-EFI · Dual FADEC (Lane A/B)',
+    subtitle: '100 HP Naturally Aspirated Aero-EFI · Dual FADEC (Primary Ref)',
     category: 'MALE UAV PRIMARY PROPULSION',
     specs: [
       { label: 'RATED POWER', value: '100 HP @ 5800 RPM' },
@@ -37,7 +38,7 @@ export const AERO_LINEUP: LineupItem[] = [
     ],
     modelPath: '/models/rotax_912is.glb',
     imagePath: '/images/lineup/render_912is_beauty.png',
-    camDist: 2.2,
+    camDist: 2.4,
     camElevation: 0.36,
     camAngle: -1.2,
   },
@@ -56,7 +57,7 @@ export const AERO_LINEUP: LineupItem[] = [
     ],
     modelPath: '/models/rotax_914.glb',
     imagePath: '/images/lineup/render_914_solid.png',
-    camDist: 2.2,
+    camDist: 2.4,
     camElevation: 0.36,
     camAngle: -1.2,
   },
@@ -75,24 +76,62 @@ export const AERO_LINEUP: LineupItem[] = [
     ],
     modelPath: '/models/rotax_915is.glb',
     imagePath: '/images/lineup/render_915is_framing.png',
-    camDist: 2.2,
+    camDist: 2.4,
     camElevation: 0.36,
     camAngle: -1.2,
   },
   {
-    id: 'bayraktar_tb3',
+    id: 'austro_ae300',
     keyBadge: 'F4',
-    name: 'Bayraktar TB3 MALE UAV',
-    code: 'BAYRAKTAR TB3',
-    subtitle: 'Carrier-Capable MALE UAV · Foldable Wings · Rotax 915 iS / PD170',
+    name: 'Austro Engine AE300',
+    code: 'AUSTRO AE300',
+    subtitle: '2.0L Turbo Diesel · 168 HP · Common-Rail Heavy Fuel Injection',
+    category: 'COMMON-RAIL DIESEL UAV PROPULSION',
+    specs: [
+      { label: 'MAX POWER', value: '168 HP @ 3880 RPM' },
+      { label: 'FUEL COMPATIBILITY', value: 'Jet-A1 / Diesel Fuel' },
+      { label: 'INJECTION SYSTEM', value: '1800-bar Common Rail' },
+      { label: 'EFFICIENCY', value: '214 g/kWh Low BSFC' },
+    ],
+    modelPath: '/models/austro_ae300.glb',
+    imagePath: '/images/lineup/render_austro_ae300.png',
+    camDist: 2.4,
+    camElevation: 0.36,
+    camAngle: -1.2,
+  },
+  {
+    id: 'vrde_jayem',
+    keyBadge: 'F5',
+    name: 'VRDE Jayem 2.2L',
+    code: 'VRDE 2.2L',
+    subtitle: '2.2L CI Turbocharged · 180 HP · DRDO Indigenized Heavy Fuel',
+    category: 'DRDO INDIGENOUS AERO-ENGINE (VRDE)',
+    specs: [
+      { label: 'MAX POWER', value: '180 HP @ 4000 RPM' },
+      { label: 'ASPIRATION', value: 'VGT Turbo + Intercooler' },
+      { label: 'INDIGENOUS CONTENT', value: '100% Indian Manufacture' },
+      { label: 'DEFENCE APPLICATION', value: 'Tactical Long-Range UAV' },
+    ],
+    modelPath: '/models/vrde_jayem_2_2l.glb',
+    imagePath: '/images/lineup/render_vrde_jayem.png',
+    camDist: 2.4,
+    camElevation: 0.36,
+    camAngle: -1.2,
+  },
+  {
+    id: 'uav_predator',
+    keyBadge: 'F6',
+    name: 'Predator-Class MALE UAV',
+    code: 'MALE AIRFRAME',
+    subtitle: 'Medium-Altitude Long-Endurance · Pusher Propulsion Configuration',
     category: 'TACTICAL MALE STRATEGIC DRONE (32H+ LOITER)',
     specs: [
-      { label: 'POWERPLANT', value: 'Rotax 915 iS / PD170 (141 HP)' },
-      { label: 'FLIGHT ENDURANCE', value: '32+ Hours SATCOM Loiter' },
+      { label: 'PROPULSION', value: 'Rotax 914 / 915 iS Pusher' },
+      { label: 'ENDURANCE', value: '32+ Hours SATCOM Loiter' },
       { label: 'SERVICE CEILING', value: '30,000 ft MSL' },
-      { label: 'MAX PAYLOAD / MTOW', value: '280 kg / 1,450 kg MTOW' },
+      { label: 'PAYLOAD / MTOW', value: '350 kg / 1,450 kg MTOW' },
     ],
-    modelPath: '/models/bayraktar_tb3.glb',
+    modelPath: '/models/uav_predator.glb',
     imagePath: '/images/lineup/sc_bayraktar_tb3.png',
     camDist: 3.2,
     camElevation: 0.38,
@@ -122,7 +161,9 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
   const [isWireframe, setIsWireframe] = useState(false);
   const [isAutoOrbit, setIsAutoOrbit] = useState(true);
   const isAutoOrbitRef = useRef(true);
-  isAutoOrbitRef.current = isAutoOrbit; // Keep ref in sync so animate closure reads live value
+  isAutoOrbitRef.current = isAutoOrbit;
+
+  const [modelStats, setModelStats] = useState<{ meshes: number; triangles: number }>({ meshes: 0, triangles: 0 });
 
   // Three.js instances
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -135,11 +176,11 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
   const modelCache = useRef<Map<string, THREE.Group>>(new Map());
   const activeModelGroup = useRef<THREE.Group | null>(null);
 
-  const originalMats = useRef<Map<string, THREE.Material>>(new Map());
+  const originalMats = useRef<Map<string, THREE.Material | THREE.Material[]>>(new Map());
   const wireframeMats = useRef<Map<string, THREE.Material>>(new Map());
 
   const targetLookAt = useRef(new THREE.Vector3(0, 0, 0));
-  const targetCamPos = useRef(new THREE.Vector3(0, 0.36, 2.2));
+  const targetCamPos = useRef(new THREE.Vector3(0, 0.36, 2.4));
 
   const activeAsset = AERO_LINEUP[activeIndex];
 
@@ -148,6 +189,7 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
     modelCache.current.forEach((grp, key) => {
       grp.visible = (key === targetId);
     });
+
     const scene = sceneRef.current;
     if (scene) {
       scene.children.forEach((child) => {
@@ -174,6 +216,22 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
       cached.visible = true;
       activeModelGroup.current = cached;
       enforceModelVisibility(item.id);
+
+      // Re-calculate stats from cached model
+      let mCount = 0;
+      let tCount = 0;
+      cached.traverse((child: THREE.Object3D) => {
+        if ((child as THREE.Mesh).isMesh) {
+          const m = child as THREE.Mesh;
+          mCount++;
+          if (m.geometry) {
+            tCount += m.geometry.index
+              ? m.geometry.index.count / 3
+              : (m.geometry.attributes.position ? m.geometry.attributes.position.count / 3 : 0);
+          }
+        }
+      });
+      setModelStats({ meshes: mCount, triangles: Math.round(tCount) });
       setModelLoading(false);
       return;
     }
@@ -182,10 +240,10 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
     setModelLoading(true);
 
     const techWireMat = new THREE.MeshBasicMaterial({
-      color: 0xbd4b2b,
+      color: 0xd67658,
       wireframe: true,
       transparent: true,
-      opacity: 0.5,
+      opacity: 0.6,
     });
 
     gltfLoader.load(
@@ -195,74 +253,75 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
         const group = new THREE.Group();
         group.name = `Model_${item.id}`;
 
-        // Compute raw bounding box
+        // Compute raw bounding box & dimensions
         const rawBox = new THREE.Box3().setFromObject(model);
-        const rawSize = new THREE.Vector3();
-        rawBox.getSize(rawSize);
-        const maxDim = Math.max(rawSize.x, rawSize.y, rawSize.z);
+        const center = rawBox.getCenter(new THREE.Vector3());
+        const size = rawBox.getSize(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z);
 
-        // Normalize scale:
-        // Engines: exactly 1.05m diameter (Rotax 912, 914, 915 will have identical proportional scale!)
-        // Drone: 2.2m wingspan
-        const targetSpan = item.isDrone ? 2.2 : 1.05;
-        const s = targetSpan / (maxDim || 1);
-        model.scale.set(s, s, s);
+        // Normalize scale matching docs_site:
+        // Engines: exactly 1.7m visual span; Airframe: 2.3m wingspan
+        const targetSpan = item.isDrone ? 2.3 : 1.7;
+        const scale = targetSpan / (maxDim || 1);
 
-        // Precise mathematical centering at origin (0, 0, 0)
-        const scaledBox = new THREE.Box3().setFromObject(model);
-        const center = new THREE.Vector3();
-        scaledBox.getCenter(center);
-        model.position.sub(center);
+        model.scale.setScalar(scale);
+        model.position.sub(center.multiplyScalar(scale));
+        model.position.y += 0.02;
 
-        // Material enhancement — tuned per asset type
-        model.traverse((child) => {
+        let meshCount = 0;
+        let triCount = 0;
+
+        // PBR Material enhancement & sanitization (matching docs_site ModelViewerModal standard)
+        model.traverse((child: THREE.Object3D) => {
           if ((child as THREE.Mesh).isMesh) {
             const mesh = child as THREE.Mesh;
+            meshCount++;
             mesh.castShadow = true;
             mesh.receiveShadow = true;
 
-            const hasVertexColors = !!(mesh.geometry?.attributes?.color);
-
-            if (hasVertexColors) {
-              // Vertex-colored mesh (common in Blender exports) — keep colors, calibrate PBR params
-              mesh.material = new THREE.MeshStandardMaterial({
-                vertexColors: true,
-                roughness: item.isDrone ? 0.72 : 0.38,   // Drone: more matte; engines: shinier
-                metalness: item.isDrone ? 0.18 : 0.30,   // Drone: composite body; engines: aluminum
-              });
-            } else if (!mesh.material) {
-              // No material at all — apply a sensible default
-              mesh.material = new THREE.MeshStandardMaterial({
-                color: item.isDrone ? 0x4a5568 : 0x8a9ab0,  // Drone: dark grey-green; engines: aluminium
-                roughness: item.isDrone ? 0.75 : 0.40,
-                metalness: item.isDrone ? 0.15 : 0.40,
-              });
-            } else if ((mesh.material as THREE.MeshStandardMaterial).isMeshStandardMaterial) {
-              const m = mesh.material as THREE.MeshStandardMaterial;
-              if (item.isDrone) {
-                // Bayraktar: fuselage panels should be dark composite, NOT white metallic
-                // Clamp metalness down and push roughness up for matte drone body
-                m.roughness = Math.max(m.roughness ?? 0.72, 0.65);
-                m.metalness = Math.min(m.metalness ?? 0.18, 0.22);
-                // If the base color is very bright (near white), darken it to a realistic drone grey
-                if (m.color && m.color.r > 0.8 && m.color.g > 0.8 && m.color.b > 0.8) {
-                  m.color.set(0x4a5568);
-                }
-              } else {
-                // Engines: ensure they are bright enough to not look dark
-                m.roughness = Math.min(m.roughness ?? 0.40, 0.55);
-                m.metalness = Math.max(m.metalness ?? 0.40, 0.35);
-                // Ensure emissive is not killing the material brightness
-                if (m.emissive) m.emissive.set(0x000000);
-              }
-              m.needsUpdate = true;
+            if (mesh.geometry) {
+              triCount += mesh.geometry.index
+                ? mesh.geometry.index.count / 3
+                : (mesh.geometry.attributes.position ? mesh.geometry.attributes.position.count / 3 : 0);
             }
 
-            originalMats.current.set(mesh.uuid, mesh.material as THREE.Material);
-            wireframeMats.current.set(mesh.uuid, techWireMat);
+            if (mesh.material) {
+              const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+              originalMats.current.set(mesh.uuid, mesh.material);
+              wireframeMats.current.set(mesh.uuid, techWireMat);
+
+              materials.forEach((m) => {
+                const mat = m as THREE.MeshStandardMaterial;
+
+                // CRITICAL FIX: Sanitize blown-out emissive values baked into Austro and VRDE models
+                if (mat.emissive) {
+                  if (mat.emissive.r > 0.35 && mat.emissive.g > 0.35 && mat.emissive.b > 0.35) {
+                    mat.emissive.setHex(0x000000);
+                  }
+                }
+
+                // If base color is blown-out pure white without texture, give it realistic cast titanium alloy finish
+                if (mat.color && mat.color.r > 0.90 && mat.color.g > 0.90 && mat.color.b > 0.90 && !mat.map) {
+                  mat.color.setHex(item.isDrone ? 0x4a5568 : 0x767472); // Cast alloy metallic gray
+                  mat.metalness = item.isDrone ? 0.20 : 0.55;
+                  mat.roughness = item.isDrone ? 0.70 : 0.42;
+                } else if (item.isDrone) {
+                  // Drone panels: composite matte finish
+                  mat.metalness = Math.min(mat.metalness ?? 0.20, 0.25);
+                  mat.roughness = Math.max(mat.roughness ?? 0.70, 0.60);
+                } else {
+                  // Engine components: realistic machined metal finish
+                  mat.metalness = Math.max(mat.metalness ?? 0.45, 0.35);
+                  mat.roughness = Math.min(mat.roughness ?? 0.45, 0.55);
+                }
+
+                mat.needsUpdate = true;
+              });
+            }
           }
         });
 
+        setModelStats({ meshes: meshCount, triangles: Math.round(triCount) });
         group.add(model);
         scene.add(group);
 
@@ -295,71 +354,80 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
     const width = container.clientWidth || 800;
     const height = container.clientHeight || 520;
 
-    // Flat warm studio background matching the editorial Overview.
     const scene = new THREE.Scene();
     sceneRef.current = scene;
-    scene.background = new THREE.Color(0xe8e7df);
 
     // Camera
-    const camera = new THREE.PerspectiveCamera(38, width / height, 0.1, 100);
-    camera.position.set(0, 0.36, 2.2);
+    const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 100);
+    camera.position.set(0, 0.36, 2.4);
     cameraRef.current = camera;
 
-    // WebGL Renderer
+    // WebGL Renderer with ACES ToneMapping & soft shadows
     const renderer = new THREE.WebGLRenderer({
       canvas,
       antialias: true,
+      alpha: true,
       powerPreference: 'high-performance',
     });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(width, height);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.35;  // Slightly brighter base exposure for engine visibility
+    renderer.toneMappingExposure = 1.15;
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     rendererRef.current = renderer;
 
-    // Orbit Controls
+    // PMREM Environment for realistic metallic PBR reflections (identical to docs_site)
+    const pmremGenerator = new THREE.PMREMGenerator(renderer);
+    pmremGenerator.compileEquirectangularShader();
+    const roomEnv = new RoomEnvironment();
+    scene.environment = pmremGenerator.fromScene(roomEnv, 0.04).texture;
+    roomEnv.dispose();
+
+    // Orbit Controls with damping
     const controls = new OrbitControls(camera, canvas);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controls.maxDistance = 8.0;
     controls.minDistance = 0.8;
-    controls.maxPolarAngle = Math.PI / 2 + 0.05;
+    controls.maxPolarAngle = Math.PI / 2 + 0.06;
     controls.target.set(0, 0, 0);
     controlsRef.current = controls;
 
-    // Studio Lighting — calibrated for engine AND drone models
-    // Engines need higher ambient to reveal aluminum detail without overexposing
-    // Drones need controlled exposure so composite panels don't wash out to white
-    const amb = new THREE.AmbientLight(0xffffff, 1.05);  // Raised from 0.85 for engine visibility
+    // Calibrated Studio 3-Point Lighting
+    const amb = new THREE.AmbientLight(0xffffff, 0.45);
     scene.add(amb);
 
-    const keyLight = new THREE.DirectionalLight(0xffffff, 1.6);
-    keyLight.position.set(5, 7, 5);
+    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x1a2b36, 0.4);
+    hemiLight.position.set(0, 20, 0);
+    scene.add(hemiLight);
+
+    const keyLight = new THREE.DirectionalLight(0xfffbf2, 1.25);
+    keyLight.position.set(5, 8, 5);
     keyLight.castShadow = true;
     keyLight.shadow.mapSize.width = 1024;
     keyLight.shadow.mapSize.height = 1024;
     scene.add(keyLight);
 
-    // Warm front-fill to reduce harsh shadows on engine bodies
-    const fillLight = new THREE.DirectionalLight(0xe8f4fd, 0.55);
-    fillLight.position.set(-4, 2, 4);
+    const fillLight = new THREE.DirectionalLight(0xe4edf5, 0.6);
+    fillLight.position.set(-5, 3, -4);
     scene.add(fillLight);
 
-    // Subtle warm accent from rear-left, kept close to the Overview's rust.
-    const accentLight = new THREE.DirectionalLight(0xbd4b2b, 0.18);
-    accentLight.position.set(-6, 3, -3);
-    scene.add(accentLight);
-
-    // Subtle bottom fill (prevents pure black undersides)
-    const rimLight = new THREE.DirectionalLight(0xffffff, 0.40);
-    rimLight.position.set(0, -3, -4);
+    const rimLight = new THREE.DirectionalLight(0xffffff, 0.45);
+    rimLight.position.set(0, -3, -5);
     scene.add(rimLight);
 
-    // A quiet studio keeps attention on the physical engine model.
+    // Subtle warm aerospace rim accent
+    const accentLight = new THREE.DirectionalLight(0xd67658, 0.35);
+    accentLight.position.set(-4, -1, 3);
+    scene.add(accentLight);
 
-    // Draco + GLTF Setup (Local hosted Draco wasm decoders for zero-latency offline hosting)
+    // Aerospace ground grid turntable
+    const grid = new THREE.GridHelper(6, 24, 0x223340, 0x142028);
+    grid.position.y = -0.55;
+    scene.add(grid);
+
+    // Draco + GLTF Setup
     const dracoLoader = new DRACOLoader();
     dracoLoader.setDecoderPath('/draco/');
     dracoLoader.setDecoderConfig({ type: 'wasm' });
@@ -368,7 +436,7 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
     gltfLoader.setDRACOLoader(dracoLoader);
     gltfLoaderRef.current = gltfLoader;
 
-    // Initial load: Only load the active 01 Rotax 912 on first visit
+    // Initial load: Rotax 912 on first visit
     loadOrShowModel(0);
 
     // Animation Render Loop
@@ -385,7 +453,7 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
         controls.target.lerp(targetLookAt.current, Math.min(delta * 4.0, 1));
 
         if (isAutoOrbitRef.current) {
-          currentOrbitAngle += delta * 0.15;
+          currentOrbitAngle += delta * 0.16;
           const currentIdx = activeIndexRef.current;
           const targetItem = AERO_LINEUP[currentIdx];
           const dist = targetItem.camDist;
@@ -402,7 +470,7 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
         controls.update();
       }
 
-      // Continuous per-frame mutual exclusivity: strictly ensure only the active selection is visible
+      // Continuous per-frame mutual exclusivity
       const currentActiveItem = AERO_LINEUP[activeIndexRef.current];
       if (currentActiveItem && scene) {
         scene.children.forEach((child) => {
@@ -439,6 +507,7 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
       cancelAnimationFrame(animationFrameId);
       resizeObserver.disconnect();
       dracoLoader.dispose();
+      pmremGenerator.dispose();
       renderer.dispose();
     };
   }, [loadOrShowModel]);
@@ -460,25 +529,16 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
       Math.cos(angle) * dist
     );
 
-    // Per-asset tone mapping: drone needs lower exposure to avoid white washout,
-    // engines need higher exposure to show aluminum detail
-    if (rendererRef.current) {
-      rendererRef.current.toneMappingExposure = item.isDrone ? 0.90 : 1.35;
-    }
-
     if (onSelectAsset) {
       onSelectAsset(activeIndex);
     }
   }, [activeIndex, loadOrShowModel, onSelectAsset]);
 
-  // Fix: When switching back from RENDER SC → 3D CAD, explicitly re-enforce model visibility.
-  // The animate loop does this every frame but there can be a 1-frame gap on mode switch
-  // that leaves the scene in an unexpected state on low-end devices.
+  // Visibility resync when toggling 3D/Image mode
   useEffect(() => {
     if (viewMode === '3d') {
       const activeItem = AERO_LINEUP[activeIndexRef.current];
       enforceModelVisibility(activeItem.id);
-      // Also ensure the active model group ref is correct
       const cached = modelCache.current.get(activeItem.id);
       if (cached) {
         cached.visible = true;
@@ -493,7 +553,7 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
     setIsWireframe(next);
 
     modelCache.current.forEach((grp) => {
-      grp.traverse((child) => {
+      grp.traverse((child: THREE.Object3D) => {
         if ((child as THREE.Mesh).isMesh) {
           const mesh = child as THREE.Mesh;
           if (next) {
@@ -508,34 +568,103 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
     });
   };
 
-  const engineLineup = AERO_LINEUP.slice(0, 3);
-  const uavDrone = AERO_LINEUP[3];
+  const resetCamera = () => {
+    const item = AERO_LINEUP[activeIndex];
+    targetLookAt.current.set(0, 0, 0);
+    targetCamPos.current.set(
+      Math.sin(item.camAngle) * item.camDist,
+      item.camElevation * item.camDist + 0.05,
+      Math.cos(item.camAngle) * item.camDist
+    );
+    setIsAutoOrbit(true);
+  };
 
   return (
     <div className="an-engine-showcase">
       <div className="an-engine-select" aria-label="Select an engine or airframe">
-        {[...engineLineup, uavDrone].map((item, idx) => (
-          <button key={item.id} aria-pressed={activeIndex === idx} onClick={() => { setActiveIndex(idx); setIsAutoOrbit(true); }}>
-            <span>{item.code}</span><small>{item.specs[0].value}</small>
+        {AERO_LINEUP.map((item, idx) => (
+          <button
+            key={item.id}
+            aria-pressed={activeIndex === idx}
+            onClick={() => {
+              setActiveIndex(idx);
+              setIsAutoOrbit(true);
+            }}
+          >
+            <span>{item.code}</span>
+            <small>{item.specs[0].value.split(' ')[0]} {item.specs[0].value.split(' ')[1] || ''}</small>
           </button>
         ))}
       </div>
       <figure className="an-engine-stage">
         <div ref={containerRef} className="an-engine-canvas">
           <canvas ref={canvasRef} className={viewMode === '3d' ? 'an-canvas' : 'an-canvas an-canvas-hidden'} />
-          {viewMode === 'image' && <div className="an-render-view"><img src={activeAsset.imagePath} alt={activeAsset.name} /></div>}
+          {viewMode === 'image' && (
+            <div className="an-render-view">
+              <img src={activeAsset.imagePath} alt={activeAsset.name} />
+            </div>
+          )}
           <div className="an-engine-toolbar">
-            <button aria-pressed={viewMode === '3d'} onClick={() => setViewMode('3d')} title="Interactive 3D view"><Box size={14} /> 3D</button>
-            <button aria-pressed={viewMode === 'image'} onClick={() => setViewMode('image')} title="Studio render"><ImageIcon size={14} /> Image</button>
-            {viewMode === '3d' && <button aria-pressed={isAutoOrbit} onClick={() => setIsAutoOrbit(!isAutoOrbit)} title="Toggle slow rotation"><RotateCcw size={14} /> {isAutoOrbit ? 'Rotate' : 'Still'}</button>}
-            {viewMode === '3d' && <button aria-pressed={isWireframe} onClick={toggleWireframe} title="Toggle wireframe"><Eye size={14} /> {isWireframe ? 'Solid' : 'Wire'}</button>}
+            <button
+              aria-pressed={viewMode === '3d'}
+              onClick={() => setViewMode('3d')}
+              title="Interactive 3D view"
+            >
+              <Box size={14} /> 3D
+            </button>
+            <button
+              aria-pressed={viewMode === 'image'}
+              onClick={() => setViewMode('image')}
+              title="Studio render"
+            >
+              <ImageIcon size={14} /> Image
+            </button>
+            {viewMode === '3d' && (
+              <>
+                <button
+                  aria-pressed={isAutoOrbit}
+                  onClick={() => setIsAutoOrbit(!isAutoOrbit)}
+                  title="Toggle slow rotation"
+                >
+                  <RotateCcw size={14} /> {isAutoOrbit ? 'Rotate' : 'Still'}
+                </button>
+                <button
+                  aria-pressed={isWireframe}
+                  onClick={toggleWireframe}
+                  title="Toggle wireframe inspection"
+                >
+                  <Eye size={14} /> {isWireframe ? 'Solid' : 'Wire'}
+                </button>
+                <button
+                  onClick={resetCamera}
+                  title="Reset perspective orientation"
+                >
+                  <Compass size={14} /> Reset
+                </button>
+              </>
+            )}
           </div>
-          {modelLoading && <div className="an-model-loading">Loading engine model…</div>}
-          <figcaption className="an-model-caption"><strong>{activeAsset.name}</strong><span>{activeAsset.subtitle}</span></figcaption>
-          <span className="an-orbit-hint">Drag to inspect · Scroll to zoom</span>
+
+          {modelLoading && <div className="an-model-loading">Loading aerospace digital twin…</div>}
+
+          <figcaption className="an-model-caption">
+            <strong>{activeAsset.name}</strong>
+            <span>{activeAsset.subtitle}</span>
+          </figcaption>
+
+          {modelStats.triangles > 0 && (
+            <div className="an-orbit-hint" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <span>{modelStats.meshes} MESHES · {modelStats.triangles.toLocaleString()} TRIS</span>
+              <span>· DRAG TO INSPECT</span>
+            </div>
+          )}
         </div>
       </figure>
-      <div className="an-selected-specs"><span>{activeAsset.category}</span><strong>{activeAsset.specs[0].value}</strong><small>{activeAsset.specs[1]?.value}</small></div>
+      <div className="an-selected-specs">
+        <span>{activeAsset.category}</span>
+        <strong>{activeAsset.specs[0].value}</strong>
+        <small>{activeAsset.specs[1]?.value} · {activeAsset.specs[2]?.value}</small>
+      </div>
     </div>
   );
 };
