@@ -237,7 +237,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenModelViewe
                 { label: 'FLEET PROFILES', val: '5 Engines', sub: 'Rotax 912/914/915, AE300, VRDE' },
                 { label: 'PS FAULT MODES', val: '8 Faults', sub: 'Physics-derived signatures' },
                 { label: 'FMECA TAXONOMY', val: '20 Modes', sub: 'MIL-STD-1629A RPN scored' },
-                { label: 'MISSION RISK', val: 'P(Sortie)', sub: 'Monte Carlo hazard rate' },
+                { label: 'MISSION RISK', val: 'P(Mission)', sub: 'Monte Carlo hazard rate' },
                 { label: 'INTEROPERABILITY', val: 'STANAG 4586', sub: 'Level of Interoperability 2' },
               ].map((stat, i) => (
                 <div key={i} className="p-4 bg-white flex flex-col justify-between">
@@ -484,7 +484,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onOpenModelViewe
             <ArticleCard
               category="MISSION RELIABILITY"
               title="Mission Executive &amp; Monte Carlo Hazard R(t)"
-              description="Computes mission reliability R = P(sortie completes without abort | health, profile, environment) via Monte Carlo integration over per-component hazard rates across 10 flight phases."
+              description="Computes mission reliability R = P(mission completes without abort | health, profile, environment) via Monte Carlo integration over per-component hazard rates across 10 flight phases."
               slug="technical/17-mission-reliability"
               metrics={[
                 { label: 'RISK INTEGRATION', value: 'Monte Carlo', subtext: 'Hazard rate composition' },

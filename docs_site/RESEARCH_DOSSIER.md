@@ -83,7 +83,7 @@ Source: `docs/study/01_big_picture.md`, `10_digital_twin.md`, `24_combustion_cyc
 
 Presented as a layered stack of distinct problems, not one model:
 
-physics residual generation, feeding Bio-Inspired Sparse Novelty Coding (is this unusual), feeding fault diagnosis (which fault hypothesis is consistent with the evidence), feeding degradation and RUL estimation (how much life remains), feeding mission reasoning (what does this mean for the current sortie), feeding operator advisory (what should the operator do).
+physics residual generation, feeding Bio-Inspired Sparse Novelty Coding (is this unusual), feeding fault diagnosis (which fault hypothesis is consistent with the evidence), feeding degradation and RUL estimation (how much life remains), feeding mission reasoning (what does this mean for the current mission), feeding operator advisory (what should the operator do).
 
 **Bio-Inspired Sparse Novelty Coding.** Modeled on the fruit fly olfactory circuit's expand-and-sparsify scheme: roughly 50 input channels project onto a larger population of cells, each sampling a small random subset of inputs, with a winner-take-all step keeping only the most active few percent, producing a sparse high-dimensional code in which similar inputs produce similar codes. Formalized in the machine learning literature as FlyHash, a locality-sensitive hashing method that, unlike classical hashing, produces sparse rather than dense codes and needs no backpropagation to construct its projection. Applied here to order-domain vibration features and physics residuals: a sparse random projection into a high-dimensional space, a sparsifying step, and a novelty score derived from how well the resulting code matches a memory of previously seen nominal codes. It runs continuously, every tick, in the residual detection layer.
 
@@ -102,19 +102,19 @@ Source: `docs/study/07_anomaly_detection.md` through `09_rul_prognostics.md`, `2
 Mission reliability is treated as a defined, computable quantity rather than a health-index badge:
 
 ```
-R = P(the planned sortie completes without a propulsion-induced abort |
+R = P(the planned mission completes without a propulsion-induced abort |
       current component health, planned profile, forecast environment)
 ```
 
-This is computed by Monte Carlo simulation over per-component hazard models, phase by phase through the mission profile, reporting a confidence interval and identifying the limiting component, the specific part actually driving mission risk, which is the quantity a mission commander can act on. Hazard rates are used rather than a threshold on a dimensionless health index because hazard rates carry units of failures per hour and compose correctly with exposure time: an eighteen-hour endurance sortie is genuinely riskier than a two-hour transit at identical engine health, and a sustained high-power climb carries more risk per minute than a loiter segment. A health-index threshold cannot express either fact.
+This is computed by Monte Carlo simulation over per-component hazard models, phase by phase through the mission profile, reporting a confidence interval and identifying the limiting component, the specific part actually driving mission risk, which is the quantity a mission commander can act on. Hazard rates are used rather than a threshold on a dimensionless health index because hazard rates carry units of failures per hour and compose correctly with exposure time: an eighteen-hour endurance mission is genuinely riskier than a two-hour transit at identical engine health, and a sustained high-power climb carries more risk per minute than a loiter segment. A health-index threshold cannot express either fact.
 
 **The mission executive.** A single authoritative state machine advances UAV kinematics (geodetic position, local projected coordinates, altitude, speed, bank angle) and ISA atmospheric conditions (temperature lapse, barometric pressure, density altitude) each tick, driving throttle, altitude, and ambient targets into the selected engine's physics runtime. The mission phase model spans taxi out, takeoff, climb, cruise or transit, loiter or reconnaissance, dash, descent, approach and landing, taxi in, and shutdown.
 
-**Prescriptive advisory.** When reliability degrades mid-sortie, the system escalates through a defined sequence: a reliability report identifying the limiting component, a throttle derate recommendation, and, if needed, an alternative achievable mission profile, rather than a single generic warning.
+**Prescriptive advisory.** When reliability degrades mid-mission, the system escalates through a defined sequence: a reliability report identifying the limiting component, a throttle derate recommendation, and, if needed, an alternative achievable mission profile, rather than a single generic warning.
 
 **Operator workflow.** A three-part mission operations interface covers pre-flight planning, live mission simulation with fault injection, and post-flight debrief with full replay.
 
-**Recording and replay.** Completed sorties are written as persistent report bundles with CSV telemetry logs and JSON manifests, retrievable through a replay engine that supports scrubbing to any point and seeking to event markers, and are also indexed into a mission knowledge graph tracking sorties, anomalies, and maintenance history across the fleet.
+**Recording and replay.** Completed missions are written as persistent report bundles with CSV telemetry logs and JSON manifests, retrievable through a replay engine that supports scrubbing to any point and seeking to event markers, and are also indexed into a mission knowledge graph tracking missions, anomalies, and maintenance history across the fleet.
 
 Source: `backend/mission/reliability.py` and `executive.py` (read these directly for their own precise language), `backend/mission/kinematics.py`, `phase_engine.py`, `prescriptive.py`, `docs/study/11_mission_simulation.md`, `frontend/src/components/MissionOperationsPanel.tsx`.
 

@@ -1,6 +1,9 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
 import { ChevronRight, ArrowLeft, ArrowRight, BookOpen, Clock, Layers, ShieldCheck, Check, Copy } from 'lucide-react';
 import { DocArticle, technicalNavGroups, journeyNavGroups, articleBySlug, technicalArticles, journeyArticles } from '../lib/content';
 import { MermaidDiagram } from '../components/MermaidDiagram';
@@ -267,6 +270,8 @@ export const DocArticlePage: React.FC<DocArticlePageProps> = ({ slug, onNavigate
               {article.abstract && (
                 <div className="p-4 rounded-[2px] border-l-2 border-stone-800 bg-stone-100/80 text-stone-800 text-sm leading-relaxed italic">
                   <ReactMarkdown
+                    remarkPlugins={[remarkGfm, remarkMath]}
+                    rehypePlugins={[rehypeKatex]}
                     components={{
                       p: ({ children }: any) => <p className="m-0 italic">{children}</p>,
                       a: ({ href, children }: any) => {
@@ -312,7 +317,8 @@ export const DocArticlePage: React.FC<DocArticlePageProps> = ({ slug, onNavigate
             {/* Rendered Prose Content */}
             <article className="prose-technical py-8">
               <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
+                remarkPlugins={[remarkGfm, remarkMath]}
+                rehypePlugins={[rehypeKatex]}
                 components={{
                   // Custom heading IDs for on-page table of contents
                   h2: ({ children }) => {

@@ -53,19 +53,27 @@ flowchart LR
 
 ## Mathematics / algorithms
 
-The projection step maps an input feature vector `x` of dimension `d` into an expanded space of dimension `k`, where `k` is much larger than `d`, using a fixed sparse random matrix `W` in which each row samples only a small number of the `d` inputs rather than all of them:
+The projection step maps an input feature vector $\mathbf{x} \in \mathbb{R}^d$ (combining order-band vibration features and physics residuals) into a high-dimensional representation $\mathbf{y} \in \mathbb{R}^m$, where expansion ratio $m / d \gg 1$ (typically $m = 2000, d = 32$), using a fixed sparse random projection matrix $\mathbf{W} \in \{0, 1\}^{m \times d}$:
 
-```
-y = W x
-```
+$$
+\mathbf{y} = \mathbf{W} \mathbf{x}
+$$
 
-The sparsifying step keeps only the top fraction `rho` of the `k` values in `y` (typically a few percent), zeroing the rest, to produce the sparse code `s`:
+where each row of $\mathbf{W}$ connects to exactly $p \ll d$ randomly sampled input channels (modeling the sparse axonal projections from olfactory projection neurons to Kenyon cells).
 
-```
-s = top_k(y, rho * k)
-```
+The non-linear sparsification step implements winner-take-all lateral inhibition, preserving only the top fraction $\rho$ (typically $\rho = 0.05$, yielding 5% activation sparsity) and zeroing all other activations:
 
-The novelty score compares `s` against the stored memory of nominal codes, using an overlap or distance measure between sparse codes, such as the fraction of active units in `s` that also appear active in the nearest stored nominal codes. A low overlap to everything in memory is scored as high novelty. Because `W` is fixed by a random seed rather than learned, there is no gradient-based training step anywhere in this pipeline, and the memory of nominal codes can be built incrementally as ordinary operating data accumulates.
+$$
+\mathbf{s} = \text{TopK}\left(\mathbf{y}, \, \lfloor \rho \cdot m \rfloor\right) \in \{0, 1\}^m
+$$
+
+Novelty scoring compares the binary sparse code $\mathbf{s}_t$ at tick $t$ against the nominal reference hash store $\mathcal{M}_{\text{nominal}}$ via Jaccard distance or Hamming overlap:
+
+$$
+\text{Novelty}(\mathbf{s}_t) = 1 - \max_{\mathbf{m} \in \mathcal{M}_{\text{nominal}}} \frac{|\mathbf{s}_t \cap \mathbf{m}|}{|\mathbf{s}_t \cup \mathbf{m}|}
+$$
+
+Because $\mathbf{W}$ is deterministically initialized via a fixed pseudo-random seed, no backpropagation, iterative optimization, or gradient step is required, yielding deterministic $\mathcal{O}(m \cdot p)$ execution time suitable for 20 Hz edge microcontroller or DSP execution.
 
 ## Example
 

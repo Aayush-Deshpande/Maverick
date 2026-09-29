@@ -12,61 +12,86 @@ The physics core is built from published, verifiable Rotax specifications. The R
 
 ## Slider-crank kinematics
 
-Piston position, velocity, and acceleration are derived from the classical slider-crank relationship, with crank radius `r` equal to half the stroke, connecting rod length `l`, and `lambda = r / l`:
+Piston position, velocity, and acceleration are derived from the classical slider-crank relationship, with crank radius $r$ equal to half the stroke ($r = S/2$), connecting rod length $l$, and rod-to-crank ratio $\lambda = r / l$:
 
-```
-Piston displacement from TDC:
-    x(theta) = r(1 - cos theta) + l(1 - sqrt(1 - lambda^2 sin^2 theta))
+$$
+x(\theta) = r(1 - \cos\theta) + l\left(1 - \sqrt{1 - \lambda^2 \sin^2\theta}\right)
+$$
 
-Piston velocity (per unit crank rate):
-    dx/dtheta = r sin theta * [1 + (lambda cos theta) / sqrt(1 - lambda^2 sin^2 theta)]
-```
+$$
+\frac{dx}{d\theta} = r \sin\theta \left[1 + \frac{\lambda \cos\theta}{\sqrt{1 - \lambda^2 \sin^2\theta}}\right]
+$$
 
-Cylinder volume follows directly from piston position: swept volume from bore and stroke, clearance volume from the compression ratio, and total volume `V(theta)` as clearance volume plus piston area times displacement. This kinematic chain is computed once per crank angle and reused throughout the cycle, since it depends only on crank angle, not on engine state.
+Cylinder volume follows directly from piston position: swept volume $V_d = \frac{\pi}{4} B^2 S$, clearance volume $V_c = \frac{V_d}{r_c - 1}$ from compression ratio $r_c$, and total instantaneous cylinder volume:
+
+$$
+V(\theta) = V_c + A_p \cdot x(\theta)
+$$
+
+This kinematic chain is computed once per crank angle and reused throughout the cycle, since it depends only on crank angle, not on engine state.
 
 ## Wiebe heat release
 
-Combustion is modeled with the Wiebe function, the standard empirical burn-rate correlation used in zero-dimensional combustion simulation. Mass fraction burned as a function of crank angle is:
+Combustion is modeled with the Wiebe function, the standard empirical burn-rate correlation used in zero-dimensional combustion simulation. Mass fraction burned $x_b$ as a function of crank angle $\theta$ is:
 
-```
-x_b(theta) = 1 - exp(-a * ((theta - theta_0) / delta_theta)^(m+1))
-```
+$$
+x_b(\theta) = 1 - \exp\left(-a \left(\frac{\theta - \theta_0}{\Delta\theta}\right)^{m+1}\right), \quad \theta_0 \le \theta \le \theta_0 + \Delta\theta
+$$
 
-for crank angle between combustion start `theta_0` and `theta_0 + delta_theta`, with `x_b = 0` before ignition and `x_b = 1` after burn completion. The burn rate `dx_b/dtheta`, obtained by differentiating this expression, multiplied by total heat release `Q_total` (fuel mass per cycle times lower heating value times combustion efficiency), gives the heat release rate `dQ/dtheta` that drives cylinder pressure.
+with shape parameter $a = 5.0$ and Wiebe exponent $m = 2.0$. The burn rate $\frac{dx_b}{d\theta}$, obtained by differentiating this expression, multiplied by total heat release $Q_{\text{total}} = m_f \cdot \text{LHV} \cdot \eta_{\text{comb}}$ (fuel mass per cycle times lower heating value times combustion efficiency), gives the heat release rate driving pressure:
 
-This is the single point in the model where combustion faults are introduced, and it is what keeps the approach physically honest: a misfire sets `Q_total` to zero for one cylinder on one cycle. A partial burn or injector fault scales `Q_total` down rather than zeroing it. A slow burn from degraded ignition stretches the burn duration `delta_theta`. Combustion instability applies cycle-to-cycle random jitter to `theta_0`, `delta_theta`, and `Q_total` together. Every fault is a modification to a physical parameter feeding the heat release equation, never a direct edit to an output waveform.
+$$
+\frac{dQ}{d\theta} = Q_{\text{total}} \cdot \frac{dx_b}{d\theta}
+$$
+
+This is the single point in the model where combustion faults are introduced, and it is what keeps the approach physically honest: a misfire sets $Q_{\text{total}}$ to zero for one cylinder on one cycle. A partial burn or injector fault scales $Q_{\text{total}}$ down rather than zeroing it. A slow burn from degraded ignition stretches the burn duration $\Delta\theta$. Combustion instability applies cycle-to-cycle random jitter to $\theta_0$, $\Delta\theta$, and $Q_{\text{total}}$ together. Every fault is a modification to a physical parameter feeding the heat release equation, never a direct edit to an output waveform.
 
 ## Cylinder pressure to torque to crank dynamics
 
 Cylinder pressure is obtained by integrating the single-zone first law of thermodynamics over the 720-degree four-stroke cycle:
 
-```
-dp/dtheta = (gamma - 1) / V(theta) * dQ/dtheta - gamma * p / V(theta) * dV/dtheta
-```
+$$
+\frac{dp}{d\theta} = \frac{\gamma - 1}{V(\theta)} \frac{dQ}{d\theta} - \frac{\gamma p}{V(\theta)} \frac{dV}{d\theta}
+$$
 
-with the ratio of specific heats `gamma` around 1.35 for the burned mixture, integrated across intake, compression (polytropic), combustion and expansion (the equation above), and exhaust phases.
+with the ratio of specific heats $\gamma \approx 1.35$ for the burned mixture, integrated across intake, polytropic compression, combustion and expansion, and exhaust phases.
 
-Pressure converts to torque through two components. Gas torque comes from the pressure force acting through the slider-crank geometry: `F_gas(theta) = (p(theta) - p_crankcase) * A_p`, then `T_gas(theta) = F_gas(theta) * dx/dtheta`. Inertial torque comes from the reciprocating mass being accelerated by the crank motion itself, and it is not a negligible refinement: it is comparable in magnitude to gas torque at cruise and higher engine speeds, and a model that omits it produces an unrealistically clean angular velocity waveform that would not transfer to a detector meant to work on real data. The four cylinders' torque contributions are summed, phased 180 degrees apart following the 1-4-2-3 firing order, to give total instantaneous torque.
+Pressure converts to torque through two physical components. Gas torque arises from cylinder differential pressure acting through the slider-crank geometry:
 
-Total torque then drives the crank dynamics equation directly:
+$$
+F_{\text{gas}}(\theta) = (p(\theta) - p_{\text{crankcase}}) A_p, \quad T_{\text{gas}}(\theta) = F_{\text{gas}}(\theta) \cdot \frac{dx}{d\theta}
+$$
 
-```
-J * domega/dt = T_total(theta) - T_load(omega)
-dtheta/dt = omega
-```
+Inertial torque comes from reciprocating mass $m_{\text{recip}}$ accelerated by the crank mechanism:
+
+$$
+T_{\text{inert}}(\theta) \approx -m_{\text{recip}} \cdot r^2 \omega^2 \left(\sin\theta + \frac{\lambda}{2} \sin(2\theta)\right) \cdot \frac{dx}{d\theta}
+$$
+
+Total instantaneous engine torque sums contributions across all four cylinders phased by $180^\circ$ according to the Rotax 1-4-2-3 firing order:
+
+$$
+T_{\text{total}}(\theta) = \sum_{k=1}^4 \left(T_{\text{gas}, k}(\theta - \phi_k) + T_{\text{inert}, k}(\theta - \phi_k)\right)
+$$
+
+Total torque drives crankshaft angular acceleration directly:
+
+$$
+J \frac{d\omega}{dt} = T_{\text{total}}(\theta) - T_{\text{load}}(\omega), \quad \frac{d\theta}{dt} = \omega
+$$
 
 where `J` is crank and flywheel inertia and `T_load` is the propeller load through the reduction gearbox plus accessory drag. Integrating this equation over crank angle produces the model's key output signal: `omega(theta)`, instantaneous crankshaft angular velocity.
 
 ```mermaid
 flowchart LR
-    Wiebe[Wiebe heat release] --> Press[Cylinder pressure, first law]
-    Press --> GasT[Gas torque]
-    Kin[Slider-crank kinematics] --> GasT
-    Kin --> InertT[Inertial torque]
-    GasT --> Sum[Total torque, 4 cylinders phased 1-4-2-3]
+    Wiebe["Wiebe heat release"] --> Press["Cylinder pressure, first law"]
+    Press --> GasT["Gas torque"]
+    Kin["Slider-crank kinematics"] --> GasT
+    Kin --> InertT["Inertial torque"]
+    GasT --> Sum["Total torque, 4 cylinders phased 1-4-2-3"]
     InertT --> Sum
-    Sum --> Crank[Crank dynamics: J domega/dt = T minus load]
-    Crank --> Omega[omega(theta)]
+    Sum --> Crank["Crank dynamics: J domega/dt = T minus load"]
+    Crank --> Omega["omega(theta)"]
 ```
 *Caption: the physics chain from combustion heat release to instantaneous crank angular velocity.*
 

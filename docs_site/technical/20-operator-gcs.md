@@ -6,7 +6,7 @@ The station is not one screen but two coordinated workspaces inside a single app
 
 ## The problem
 
-An operator monitoring a MALE UAV propulsion system during a long sortie needs two things that pull in different directions. They need breadth, a sense of the whole fleet's condition at a glance, so that attention goes to the aircraft that needs it. They also need depth, the ability to drop into one engine's full diagnostic picture, trace a specific anomaly to a specific component, and understand why the system believes what it believes. A single screen tuned for one of these needs is poorly suited to the other. A fleet overview cluttered with per-cylinder waveform detail is unreadable at a glance; a deep diagnostic view stripped down to fit a fleet tile loses the evidence a maintainer needs to trust a conclusion.
+An operator monitoring a MALE UAV propulsion system during a long mission needs two things that pull in different directions. They need breadth, a sense of the whole fleet's condition at a glance, so that attention goes to the aircraft that needs it. They also need depth, the ability to drop into one engine's full diagnostic picture, trace a specific anomaly to a specific component, and understand why the system believes what it believes. A single screen tuned for one of these needs is poorly suited to the other. A fleet overview cluttered with per-cylinder waveform detail is unreadable at a glance; a deep diagnostic view stripped down to fit a fleet tile loses the evidence a maintainer needs to trust a conclusion.
 
 ## Why it matters
 
@@ -35,12 +35,12 @@ The console also carries the controls needed to exercise the system: profile-val
 ![Operator Throttle Derate Advisory Execution](/assets/playwright/05_operator_derated.png)
 *Figure 3: Prescriptive advisory panel issuing throttle derate recommendation with mission reliability impact projection.*
 
-![Post-Mission Sortie Debrief Report](/assets/playwright/06_sortie_debrief.png)
-*Figure 4: Post-mission sortie debrief showing timeline replay, stress cycle counts, and component remaining useful life delta.*
+![Post-Mission Debrief Report](/assets/playwright/06_sortie_debrief.png)
+*Figure 4: Post-mission debrief showing timeline replay, stress cycle counts, and component remaining useful life delta.*
 
 ### The Rotax-deep workspace
 
-The second workspace concentrates ANUMAAN's full diagnostic depth on the Rotax 912 iS. It carries real-time telemetry and the same fault injection controls as the fleet console, but adds the reasoning layers that are, at present, scoped to this one engine: Bayesian-style diagnosis ranking fault hypotheses against observed evidence, remaining-useful-life estimation with a calibrated confidence interval, a conversational copilot grounded in reference documentation, and a full mission replay environment for reviewing a completed sortie event by event.
+The second workspace concentrates ANUMAAN's full diagnostic depth on the Rotax 912 iS. It carries real-time telemetry and the same fault injection controls as the fleet console, but adds the reasoning layers that are, at present, scoped to this one engine: Bayesian-style diagnosis ranking fault hypotheses against observed evidence, remaining-useful-life estimation with a calibrated confidence interval, a conversational copilot grounded in reference documentation, and a full mission replay environment for reviewing a completed mission event by event.
 
 This asymmetry is deliberate rather than incidental. The multi-engine runtime demonstrates that ANUMAAN's physics and residual architecture generalizes across five distinct platforms. The Rotax workspace demonstrates how far the diagnostic reasoning built on top of that architecture can go for one platform when fully exercised. Together they answer two different evaluation questions: does the architecture scale across engines, and how deep can the reasoning go on one.
 
@@ -66,7 +66,7 @@ flowchart LR
 
 *One operator investigation cycle, from engine selection to the mission-level consequence of what was found.*
 
-An operator enters at either workspace, selects an engine, watches its live telemetry, drops into the residual and classifier evidence behind any alarm, follows that evidence into the diagnostic and 3D twin views to localize the fault, and finally checks what the finding means for the current sortie through the mission reliability and prescriptive advisory panels covered in [Mission Reliability](17-mission-reliability.md).
+An operator enters at either workspace, selects an engine, watches its live telemetry, drops into the residual and classifier evidence behind any alarm, follows that evidence into the diagnostic and 3D twin views to localize the fault, and finally checks what the finding means for the current mission through the mission reliability and prescriptive advisory panels covered in [Mission Reliability](17-mission-reliability.md).
 
 ## Integration
 

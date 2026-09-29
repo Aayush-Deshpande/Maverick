@@ -13,7 +13,7 @@ A propulsion health system has to answer several genuinely different questions, 
 - Is the current engine state unusual at all, compared to everything seen before it?
 - If it is unusual, which specific fault mode is consistent with the evidence?
 - Given that fault, how is damage accumulating, and how much operating life remains?
-- Given the remaining life and the planned sortie, does the mission still complete?
+- Given the remaining life and the planned mission, does the flight still complete?
 - Given all of that, what should the operator actually do right now?
 
 Collapsing these into one model produces a system that cannot explain itself. A single opaque score cannot tell a maintainer whether the concern is a misfire, a cooling problem, or a sensor gone bad, and it cannot tell a mission commander whether ten more minutes of climb is survivable. Each question needs its own evidence and its own answer.
@@ -30,14 +30,14 @@ ANUMAAN structures the AI layer as six sequential stages, each owned by a distin
 2. **Bio-Inspired Sparse Novelty Coding.** A sparse random-projection method modeled on the fruit fly olfactory circuit asks the first and cheapest question: does this pattern of residuals and vibration features resemble anything in the memory of nominal operation, or not. It runs every tick, requires no labeled fault data, and produces a novelty score with no training step.
 3. **Fault diagnosis.** Once something is flagged as unusual, a Bayesian network reasons over the FMECA failure-mode taxonomy and channel-level isolability signatures to rank which specific fault is consistent with the evidence, paired with a deterministic diagnostic agent that turns a ranked fault into a concrete ATA-chapter maintenance directive.
 4. **Degradation and RUL.** Rainflow cycle counting and Miner's linear damage rule track how thermal and mechanical stress cycles accumulate into wear over operating hours, feeding a dual-path remaining useful life estimate, physics-of-failure and data-driven, calibrated with split conformal prediction.
-5. **Mission reasoning.** The mission reliability engine takes component health and RUL and asks what they mean for the sortie actually being flown: does it complete, and which component is the limiting factor.
+5. **Mission reasoning.** The mission reliability engine takes component health and RUL and asks what they mean for the mission actually being flown: does it complete, and which component is the limiting factor.
 6. **Operator advisory.** The prescriptive layer turns a degrading reliability picture into a defined escalation: a reliability report, a throttle derate recommendation, and, if needed, an alternative achievable mission profile.
 
 Each stage answers a narrower, better-posed question than the one before it, and each stage's output is legible on its own: a novelty score, a ranked fault hypothesis, an RUL interval, a reliability probability, an advisory. Nothing downstream depends on a single black-box judgment upstream.
 
 ## How it works
 
-Data flows in one direction through the stack, tick by tick, for whichever engine platform is currently selected in the runtime. The physics core computes the frame's expected values; the residual detector computes the departure; the novelty layer scores that departure against its memory of nominal codes; if the score crosses its threshold, the diagnostic layer is engaged to rank fault hypotheses; the degradation and RUL layer updates its accumulated damage estimate and remaining-life interval on every tick regardless of whether a fault is currently flagged, since damage accrues continuously; the mission reliability engine folds the current health picture into the Monte Carlo hazard simulation for the active sortie profile; and the advisory layer only speaks when the reliability picture actually changes the operator's options.
+Data flows in one direction through the stack, tick by tick, for whichever engine platform is currently selected in the runtime. The physics core computes the frame's expected values; the residual detector computes the departure; the novelty layer scores that departure against its memory of nominal codes; if the score crosses its threshold, the diagnostic layer is engaged to rank fault hypotheses; the degradation and RUL layer updates its accumulated damage estimate and remaining-life interval on every tick regardless of whether a fault is currently flagged, since damage accrues continuously; the mission reliability engine folds the current health picture into the Monte Carlo hazard simulation for the active mission profile; and the advisory layer only speaks when the reliability picture actually changes the operator's options.
 
 ## Architecture
 
@@ -62,11 +62,11 @@ flowchart LR
     A --> B --> C --> D --> E --> F
 ```
 
-*Each stage answers one narrower question than the last: unusual, which fault, how much life, what it means for the sortie, what to do.*
+*Each stage answers one narrower question than the last: unusual, which fault, how much life, what it means for the mission, what to do.*
 
 ## Example
 
-Consider a slow rise in cylinder 2 cylinder head temperature that stays within its absolute limit throughout. A threshold system never fires, because no value is ever exceeded. In ANUMAAN's stack: the physics residual against the thermodynamic CHT model starts to grow even while the absolute reading is legal. The novelty layer's sparse code for that residual pattern drifts away from the memory of nominal codes and the novelty score crosses threshold. The diagnostic Bayesian network checks the evidence against the FMECA signature set and finds it consistent with cooling degradation rather than, say, an injector fault, because the correlated pattern across cylinders and coolant temperature matches that mode's isolability signature. The degradation layer folds the sustained thermal residual into its damage accumulation and produces an RUL interval. The mission reliability engine checks whether the current sortie's remaining duration still fits inside that interval with margin, and if it does not, the advisory layer escalates from a reliability report to a throttle derate recommendation.
+Consider a slow rise in cylinder 2 cylinder head temperature that stays within its absolute limit throughout. A threshold system never fires, because no value is ever exceeded. In ANUMAAN's stack: the physics residual against the thermodynamic CHT model starts to grow even while the absolute reading is legal. The novelty layer's sparse code for that residual pattern drifts away from the memory of nominal codes and the novelty score crosses threshold. The diagnostic Bayesian network checks the evidence against the FMECA signature set and finds it consistent with cooling degradation rather than, say, an injector fault, because the correlated pattern across cylinders and coolant temperature matches that mode's isolability signature. The degradation layer folds the sustained thermal residual into its damage accumulation and produces an RUL interval. The mission reliability engine checks whether the current mission's remaining duration still fits inside that interval with margin, and if it does not, the advisory layer escalates from a reliability report to a throttle derate recommendation.
 
 ## Integration
 

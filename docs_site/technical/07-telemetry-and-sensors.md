@@ -39,15 +39,15 @@ That difference in nature produces a difference in transport. Roughly thirty sca
 ```mermaid
 flowchart LR
     subgraph Onboard
-        Sensors[Sensors: RPM, CHT, EGT, oil, fuel, vibration, electrical, timing]
-        Sensors --> Validity[Sensor integrity validation]
-        Validity --> Cond[Signal conditioning and scaling]
+        Sensors["Sensors: RPM, CHT, EGT, oil, fuel, vibration, electrical, timing"]
+        Sensors --> Validity["Sensor integrity validation"]
+        Validity --> Cond["Signal conditioning and scaling"]
     end
-    Cond --> Scalars[Scalar channels, direct]
-    Cond --> VibProc[Vibration: onboard order tracking and feature extraction]
-    Scalars --> Link[Downlink]
+    Cond --> Scalars["Scalar channels, direct"]
+    Cond --> VibProc["Vibration: onboard order tracking and feature extraction"]
+    Scalars --> Link["Downlink"]
     VibProc --> Link
-    Link --> GCS[Ground control station]
+    Link --> GCS["Ground control station"]
 ```
 *Caption: sensor signals validated and conditioned onboard, with scalar channels crossing the link directly and vibration reduced to features first.*
 

@@ -6,7 +6,7 @@ The statement asks for something specific and bounded: a digital twin, not a das
 
 ## Background
 
-Medium Altitude Long Endurance UAVs fly long Intelligence, Surveillance, and Reconnaissance missions, communication relay, maritime surveillance, and strategic defence sorties, often many hours in duration. Propulsion reliability is central to all of them, because a piston-engine failure in flight can end a mission in one of three ways: an aborted sortie, the loss of the airframe, or a forced recovery under unsafe conditions. None of these outcomes are acceptable on a routine basis for a platform expected to fly repeated long-endurance missions.
+Medium Altitude Long Endurance UAVs fly long Intelligence, Surveillance, and Reconnaissance missions, communication relay, maritime surveillance, and strategic defence flights, often many hours in duration. Propulsion reliability is central to all of them, because a piston-engine failure in flight can end a mission in one of three ways: an aborted mission, the loss of the airframe, or a forced recovery under unsafe conditions. None of these outcomes are acceptable on a routine basis for a platform expected to fly repeated long-endurance missions.
 
 The problem statement identifies a specific weakness in how these engines are currently watched. Conventional UAV engine monitoring is threshold-based and reactive: a parameter crosses a fixed limit, a warning fires, and by that point the fault has typically already progressed past its earliest, most treatable stage. These systems offer limited or no estimate of Remaining Useful Life, no meaningful degradation trend tracking, and no way to simulate how the engine would behave under a specific future mission profile before that mission is flown.
 

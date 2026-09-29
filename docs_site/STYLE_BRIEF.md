@@ -51,7 +51,7 @@ A Mermaid diagram (see rules below).
 ## Mathematics / algorithms
 Where the subsystem has real mathematical content, explain it. Use inline
 LaTeX-style notation in plain text or code blocks as appropriate for Markdown
-(e.g. `R = P(sortie completes | health, profile, environment)`), not invented
+(e.g. `R = P(mission completes | health, profile, environment)`), not invented
 imagery.
 
 ## Example

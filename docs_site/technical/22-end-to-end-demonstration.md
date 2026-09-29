@@ -1,12 +1,12 @@
 # End to End Demonstration
 
-Every article in this documentation describes one piece of ANUMAAN in isolation: the physics core, the novelty layer, Bayesian diagnosis, mission reliability, the 3D twin. None of those pieces demonstrates its value alone. The value is in the chain, one fault, observed as a physics deviation, becoming a ranked diagnosis, becoming a highlighted component, becoming a mission-level consequence, becoming a recorded record an operator can revisit. This article walks that chain from end to end, as a single operational scenario, to show how the subsystems actually connect during a sortie.
+Every article in this documentation describes one piece of ANUMAAN in isolation: the physics core, the novelty layer, Bayesian diagnosis, mission reliability, the 3D twin. None of those pieces demonstrates its value alone. The value is in the chain, one fault, observed as a physics deviation, becoming a ranked diagnosis, becoming a highlighted component, becoming a mission-level consequence, becoming a recorded record an operator can revisit. This article walks that chain from end to end, as a single operational scenario, to show how the subsystems actually connect during a mission.
 
 The scenario below uses one fault from the DRDO fault matrix, a cylinder CHT overheat on the Rotax 912 iS, as a concrete thread through the entire pipeline. The mechanism generalizes to any of the eight fault modes; this one is chosen because it has a clean, physically direct signature that makes the chain easy to follow.
 
 ## The scenario
 
-An operator opens the ground control station and selects the Rotax 912 iS from the fleet console described in [Operator Ground Control Station](20-operator-gcs.md). They set a mission profile, an endurance sortie spanning taxi, climb, a cruise transit, an extended loiter for reconnaissance, and a return, using the phase model described in [Mission Reliability](17-mission-reliability.md). The mission executive begins advancing the sortie tick by tick: UAV kinematics, ISA atmospheric conditions for the current altitude, and the throttle, altitude, and ambient targets appropriate to whichever phase the sortie is currently in, all driving into the selected engine's physics runtime.
+An operator opens the ground control station and selects the Rotax 912 iS from the fleet console described in [Operator Ground Control Station](20-operator-gcs.md). They set a mission profile, an endurance mission spanning taxi, climb, a cruise transit, an extended loiter for reconnaissance, and a return, using the phase model described in [Mission Reliability](17-mission-reliability.md). The mission executive begins advancing the mission tick by tick: UAV kinematics, ISA atmospheric conditions for the current altitude, and the throttle, altitude, and ambient targets appropriate to whichever phase the mission is currently in, all driving into the selected engine's physics runtime.
 
 Telemetry begins streaming over the engine's WebSocket channel. On the fleet console, the operator watches RPM, cylinder head temperatures, EGT, oil pressure, and the rest of the scalar channels settle into the pattern expected for a climb, then a cruise, then a loiter. The tier-0 residual detector is running every tick underneath this display, comparing each observed channel against what the physics model expects at the current operating point, and reporting nothing unusual because there is, so far, nothing unusual to report.
 
@@ -30,15 +30,15 @@ The 3D twin, running in the same browser session and synchronized over the same 
 
 ### Mission consequence
 
-The mission reliability engine, computing R, the probability the planned sortie completes without a propulsion-induced abort, recalculates against the degraded component health. Because hazard rates carry units of failures per hour and compose with exposure time, an extended loiter at degraded cylinder health carries more accumulated risk than the same degradation would during a short transit, and the reliability figure reflects that directly rather than through a static health-index badge. The engine identifies cylinder #2's cooling path as the limiting component, the specific part actually driving the drop in mission risk.
+The mission reliability engine, computing R, the probability the planned mission completes without a propulsion-induced abort, recalculates against the degraded component health. Because hazard rates carry units of failures per hour and compose with exposure time, an extended loiter at degraded cylinder health carries more accumulated risk than the same degradation would during a short transit, and the reliability figure reflects that directly rather than through a static health-index badge. The engine identifies cylinder #2's cooling path as the limiting component, the specific part actually driving the drop in mission risk.
 
 ### Prescriptive escalation
 
-As reliability drops, the prescriptive advisor escalates through its defined sequence. First, a reliability report naming the limiting component. If the degradation is severe enough, a throttle derate recommendation, reducing damage accumulation rate at the cost of an endurance penalty, computed and stated together rather than as a bare instruction. If the planned sortie is no longer achievable at the required reliability even with a derate, an alternative achievable mission profile: a shorter loiter, a lower altitude, or both, found by searching the profile space for the nearest plan that restores the required reliability.
+As reliability drops, the prescriptive advisor escalates through its defined sequence. First, a reliability report naming the limiting component. If the degradation is severe enough, a throttle derate recommendation, reducing damage accumulation rate at the cost of an endurance penalty, computed and stated together rather than as a bare instruction. If the planned mission is no longer achievable at the required reliability even with a derate, an alternative achievable mission profile: a shorter loiter, a lower altitude, or both, found by searching the profile space for the nearest plan that restores the required reliability.
 
 ### Record and review
 
-Throughout, the mission executive is logging telemetry. When the sortie ends, whether completed as planned, completed under a derated profile, or aborted, it is written as a persistent report bundle: a CSV telemetry log and a JSON manifest, retrievable afterward through the replay engine described in [Operator Ground Control Station](20-operator-gcs.md), which supports scrubbing to any point in the sortie and seeking directly to the fault-injection event marker. The sortie is also indexed into the mission knowledge graph, alongside the fleet's other recorded sorties, anomalies, and maintenance history, so this cylinder #2 event becomes part of that tail's traceable history rather than a one-off observation.
+Throughout, the mission executive is logging telemetry. When the mission ends, whether completed as planned, completed under a derated profile, or aborted, it is written as a persistent report bundle: a CSV telemetry log and a JSON manifest, retrievable afterward through the replay engine described in [Operator Ground Control Station](20-operator-gcs.md), which supports scrubbing to any point in the mission and seeking directly to the fault-injection event marker. The mission is also indexed into the mission knowledge graph, alongside the fleet's other recorded missions, anomalies, and maintenance history, so this cylinder #2 event becomes part of that tail's traceable history rather than a one-off observation.
 
 ![Telemetry and Nominal Operations](/assets/playwright/01_runtime_workspace.png)
 *Figure 1: Step 1: Ground control station operating at nominal 20 Hz telemetry across five selectable engine platforms.*
@@ -49,14 +49,14 @@ Throughout, the mission executive is logging telemetry. When the sortie ends, wh
 ![Prescriptive Advisory Throttle Derate](/assets/playwright/05_operator_derated.png)
 *Figure 3: Step 3: Prescriptive advisory issues candidate power derate with calculated mission reliability recovery.*
 
-![Post-Mission Sortie Debrief Report](/assets/playwright/06_sortie_debrief.png)
-*Figure 4: Step 4: Completed sortie debrief logging stress cycles, timeline events, and persistent mission graph record.*
+![Post-Mission Debrief Report](/assets/playwright/06_sortie_debrief.png)
+*Figure 4: Step 4: Completed mission debrief logging stress cycles, timeline events, and persistent mission graph record.*
 
 ## Architecture
 
 ```mermaid
 flowchart TB
-    A[Initialize sortie] --> B[Set mission condition]
+    A[Initialize mission] --> B[Set mission condition]
     B --> C[Start telemetry]
     C --> D[Inject fault]
     D --> E[Residual divergence]
@@ -65,7 +65,7 @@ flowchart TB
     G --> H[Operator review]
 ```
 
-*The demonstration chain from sortie initialization through operator review, with each stage feeding the next.*
+*The demonstration chain from mission initialization through operator review, with each stage feeding the next.*
 
 ## Why this chain matters
 

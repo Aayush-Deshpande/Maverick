@@ -18,12 +18,12 @@ This single idea is why raw sensor values are insufficient on their own. A cylin
 
 ```mermaid
 flowchart LR
-    OP[Operating point: altitude, OAT, throttle, airspeed] --> Model[Physics model]
-    Model --> Expected[Expected value]
-    Sensor[Observed telemetry] --> Diff((minus))
+    OP["Operating point: altitude, OAT, throttle, airspeed"] --> Model["Physics model"]
+    Model --> Expected["Expected value"]
+    Sensor["Observed telemetry"] --> Diff((minus))
     Expected --> Diff
-    Diff --> Residual[Residual]
-    Residual --> Detect[Novelty coding and diagnosis]
+    Diff --> Residual["Residual"]
+    Residual --> Detect["Novelty coding and diagnosis"]
 ```
 *Caption: a residual is computed at every tick as observed telemetry minus the physics-expected value at the current operating point.*
 
@@ -39,13 +39,13 @@ ANUMAAN addresses this directly with an independent plant model, `backend/plant/
 
 ```mermaid
 flowchart TB
-    subgraph Default[Default mode]
-        Gen[Synthetic generator] --> Exp1[Expected]
-        Gen --> Obs1[Observed]
+    subgraph Default["Default mode"]
+        Gen["Synthetic generator"] --> Exp1["Expected"]
+        Gen --> Obs1["Observed"]
     end
-    subgraph Independent[Independent plant mode, G01]
-        VE[VirtualEngine: separate build, own bias, lag, noise] --> Obs2[Observed telemetry]
-        Physics[Physics core expectation model] --> Exp2[Expected]
+    subgraph Independent["Independent plant mode, G01"]
+        VE["VirtualEngine: separate build, own bias, lag, noise"] --> Obs2["Observed telemetry"]
+        Physics["Physics core expectation model"] --> Exp2["Expected"]
         Obs2 --> R2((residual))
         Exp2 --> R2
     end

@@ -24,7 +24,7 @@ ANUMAAN's reasoning chain has six stages, each covered in depth by its own artic
 
 **Diagnosis.** Residual evidence, including a novelty score from Bio-Inspired Sparse Novelty Coding, feeds a Bayesian network reasoning over a defined taxonomy of failure modes, producing a ranked fault hypothesis rather than a single flag, paired with a deterministic diagnostic agent that turns an identified fault into a concrete maintenance directive.
 
-**Degradation and mission consequence.** Diagnosed faults and ongoing stress cycles feed damage accumulation and Remaining Useful Life estimation, which in turn feed a mission reliability computation: the probability that the currently planned sortie completes without a propulsion-induced abort, given current component health, the planned profile, and the forecast environment.
+**Degradation and mission consequence.** Diagnosed faults and ongoing stress cycles feed damage accumulation and Remaining Useful Life estimation, which in turn feed a mission reliability computation: the probability that the currently planned mission completes without a propulsion-induced abort, given current component health, the planned profile, and the forecast environment.
 
 ```mermaid
 flowchart LR

@@ -1,6 +1,6 @@
 # Remaining Useful Life Estimation
 
-Knowing that a component is degrading is not the same as knowing how much operating time remains before it should be pulled. Remaining useful life estimation is where ANUMAAN turns a damage accumulation trend into an actionable number, and it is also where the project takes its most deliberate stance on honesty: an RUL estimate is only useful to the degree that its uncertainty is quantified correctly, and a bare point estimate, or an interval with no guarantee behind it, is not good enough for a decision that affects whether an aircraft completes its sortie.
+Knowing that a component is degrading is not the same as knowing how much operating time remains before it should be pulled. Remaining useful life estimation is where ANUMAAN turns a damage accumulation trend into an actionable number, and it is also where the project takes its most deliberate stance on honesty: an RUL estimate is only useful to the degree that its uncertainty is quantified correctly, and a bare point estimate, or an interval with no guarantee behind it, is not good enough for a decision that affects whether an aircraft completes its mission.
 
 ## The problem
 
@@ -22,7 +22,7 @@ Split conformal prediction, also called inductive conformal prediction, works by
 
 This calibration step is what separates a conformal interval from an ordinary statistical confidence interval. An ordinary interval typically assumes a particular error distribution, often Gaussian, which RUL errors are not; a conformal interval makes no such assumption. It is distribution-free, meaning it works regardless of the true shape of the error distribution, and it is a finite-sample guarantee, meaning it holds at the actual size of the calibration set used, not only as that size grows toward infinity, which is the more common and weaker kind of guarantee. It is also model-agnostic: it wraps the existing dual-path RUL estimator without requiring any change to how that estimator computes its point prediction. The calibration is a layer added on top, not a replacement for the underlying physics-of-failure and data-driven reasoning.
 
-The resulting lower bound is the number that should drive a go or no-go decision for a planned sortie, compared directly against the sortie's remaining planned duration, rather than comparing the planned duration against the raw point estimate or the interval's center, since the lower bound is the quantity the coverage guarantee actually protects.
+The resulting lower bound is the number that should drive a go or no-go decision for a planned mission, compared directly against the mission's remaining planned duration, rather than comparing the planned duration against the raw point estimate or the interval's center, since the lower bound is the quantity the coverage guarantee actually protects.
 
 ## Architecture
 
@@ -45,29 +45,29 @@ flowchart TB
 
 ## Mathematics / algorithms
 
-Given a calibration set of `n` samples, each with a true remaining life `RUL_true` and a model prediction `RUL_pred`, the signed nonconformity score for calibration sample `j` is:
+Given a held-out calibration set of $n$ complete mission trajectories, each with ground-truth remaining useful life $\text{RUL}_{\text{true}, j}$ and dual-path model prediction $\widehat{\text{RUL}}_j$, the signed nonconformity score for calibration instance $j \in \{1, \dots, n\}$ is defined as:
 
-```
-s_j = RUL_true_j - RUL_pred_j
-```
+$$
+s_j = \text{RUL}_{\text{true}, j} - \widehat{\text{RUL}}_j
+$$
 
-The one-sided lower-bound correction at miscoverage level `alpha` is the appropriate lower-tail quantile of these scores, using the finite-sample correction rather than the plain empirical quantile, since the plain quantile under-covers at small calibration set sizes:
+Under inductive split conformal prediction, the one-sided lower-bound correction at target miscoverage rate $\alpha \in (0, 1)$ utilizes the finite-sample adjusted empirical quantile:
 
-```
-q_lo = Quantile({s_j}, alpha)
-```
+$$
+q_{\text{lower}} = \text{Quantile}\left(\{s_j\}_{j=1}^n, \, \frac{\lceil (n+1)\alpha \rceil}{n}\right)
+$$
 
-For a new prediction, the calibrated lower bound is:
+For an incoming operational inference $\widehat{\text{RUL}}_{n+1}$, the certified conservative lower bound is computed as:
 
-```
-RUL_lower = RUL_pred + q_lo
-```
+$$
+\text{RUL}_{\text{lower}} = \widehat{\text{RUL}}_{n+1} + q_{\text{lower}}
+$$
 
-with the guarantee:
+which provides the finite-sample distribution-free coverage guarantee:
 
-```
-P(RUL_true >= RUL_lower) >= 1 - alpha
-```
+$$
+\mathbb{P}\left(\text{RUL}_{\text{true}, n+1} \ge \text{RUL}_{\text{lower}}\right) \ge 1 - \alpha
+$$
 
 This guarantee rests on an exchangeability assumption between the calibration data and the data the bound is later applied to. Because consecutive samples within a single mission's degradation trajectory are correlated rather than independent, the correct exchangeable unit is the mission itself, not the individual sample, which is why the calibration split is performed by mission rather than by time step within a mission. A genuinely novel fault, one that violates the assumption that test conditions resemble calibration conditions, breaks this guarantee outright, which is part of why the novelty layer described in Bio-Inspired Sparse Novelty Coding exists as a separate check: conformal prediction states how wrong the model usually is under conditions it has effectively seen before, not how wrong it might be on something genuinely unprecedented.
 
@@ -75,11 +75,11 @@ Because RUL predictability is not uniform, a nearly new component and one near e
 
 ## Example
 
-Consider a component with a physics-of-failure path estimating ten hours of remaining life from its current damage accumulation rate, and a data-driven path extrapolating a comparable trend from a degrading efficiency parameter to its own failure limit, arriving at a similar point estimate. The combined point estimate sits close to ten hours. A calibration set of held-out missions produces a lower-tail correction reflecting how far actual remaining life has fallen below predicted remaining life historically at a ninety percent target coverage. Applying that correction to the ten-hour point estimate produces a calibrated lower bound below the raw point estimate, and it is this lower, conservative number that is compared against a planned eighteen-hour endurance sortie. If the lower bound falls short of the planned duration, the mission reliability engine and prescriptive advisory layer engage, rather than the system waiting until the point estimate itself, unadjusted, falls below the planned duration.
+Consider a component with a physics-of-failure path estimating ten hours of remaining life from its current damage accumulation rate, and a data-driven path extrapolating a comparable trend from a degrading efficiency parameter to its own failure limit, arriving at a similar point estimate. The combined point estimate sits close to ten hours. A calibration set of held-out missions produces a lower-tail correction reflecting how far actual remaining life has fallen below predicted remaining life historically at a ninety percent target coverage. Applying that correction to the ten-hour point estimate produces a calibrated lower bound below the raw point estimate, and it is this lower, conservative number that is compared against a planned eighteen-hour endurance mission. If the lower bound falls short of the planned duration, the mission reliability engine and prescriptive advisory layer engage, rather than the system waiting until the point estimate itself, unadjusted, falls below the planned duration.
 
 ## Integration
 
-Remaining useful life estimation consumes the cumulative damage fraction produced by [Degradation Modeling](13-degradation-modeling.md) as its physics-of-failure input, and it can be engaged by fault hypotheses ranked in [Fault Diagnosis](11-fault-diagnosis.md) when a diagnosed fault carries a degradation-relevant signature. Its calibrated lower bound feeds directly into ANUMAAN's mission reliability computation, where the limiting component's remaining life is weighed against the planned sortie's remaining duration and forecast environment, and from there into the prescriptive advisory escalation that recommends a throttle derate or an alternative mission profile when margin narrows.
+Remaining useful life estimation consumes the cumulative damage fraction produced by [Degradation Modeling](13-degradation-modeling.md) as its physics-of-failure input, and it can be engaged by fault hypotheses ranked in [Fault Diagnosis](11-fault-diagnosis.md) when a diagnosed fault carries a degradation-relevant signature. Its calibrated lower bound feeds directly into ANUMAAN's mission reliability computation, where the limiting component's remaining life is weighed against the planned mission's remaining duration and forecast environment, and from there into the prescriptive advisory escalation that recommends a throttle derate or an alternative mission profile when margin narrows.
 
 ## Validation
 

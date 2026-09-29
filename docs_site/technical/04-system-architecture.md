@@ -38,13 +38,13 @@ Within a single engine runtime, telemetry moves through a fixed sequence of stag
 
 ```mermaid
 flowchart LR
-    Config[Engine config] --> Plant[Plant source]
-    Plant --> Frame[Frame: observable telemetry]
-    Plant --> Truth[TruthRecord: evaluation only]
-    Frame --> Residual[Tier 0: residual detector plus novelty coding]
-    Residual --> Classifier[Tier 1: reservoir classifier, warmed on selection]
-    Classifier --> WS[WebSocket: /ws/fleet, /ws/engines/id]
-    WS --> GCS[Ground control station display]
+    Config["Engine config"] --> Plant["Plant source"]
+    Plant --> Frame["Frame: observable telemetry"]
+    Plant --> Truth["TruthRecord: evaluation only"]
+    Frame --> Residual["Tier 0: residual detector plus novelty coding"]
+    Residual --> Classifier["Tier 1: reservoir classifier, warmed on selection"]
+    Classifier --> WS["WebSocket: /ws/fleet, /ws/engines/id"]
+    WS --> GCS["Ground control station display"]
 ```
 *Caption: how one telemetry tick moves from plant source to operator display, with the truth record kept out of the transmitted path.*
 

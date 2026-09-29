@@ -2,7 +2,7 @@
 
 [Introducing PS-26054](01-introducing-ps26054.md) laid out what DRDO asked for. This article goes one level deeper, into why the conventional answer to engine health monitoring falls short on a MALE UAV, and why the gap is not a matter of adding more sensors or tighter alarm limits, but a different category of system.
 
-A piston engine on a Medium Altitude Long Endurance UAV is not a convenience. It is the sortie. ISR missions, communication relay, and maritime surveillance flights run many hours at a stretch, often over terrain or water where a forced landing is not a survivable option for the airframe and may not be a safe option for anything underneath it. When the engine's condition is uncertain, the mission's outcome is uncertain, and on an uncrewed platform there is no pilot in the loop to feel a rough-running cylinder through the airframe and throttle back early. Whatever judgment exists has to be built into the monitoring system itself.
+A piston engine on a Medium Altitude Long Endurance UAV is not a convenience. It is the mission. ISR missions, communication relay, and maritime surveillance flights run many hours at a stretch, often over terrain or water where a forced landing is not a survivable option for the airframe and may not be a safe option for anything underneath it. When the engine's condition is uncertain, the mission's outcome is uncertain, and on an uncrewed platform there is no pilot in the loop to feel a rough-running cylinder through the airframe and throttle back early. Whatever judgment exists has to be built into the monitoring system itself.
 
 ## The problem
 
@@ -14,9 +14,9 @@ This creates two failure modes at once. Real degradation below the threshold goe
 
 ## Why it matters
 
-The stakes are specific to the MALE mission profile. These are long sorties, frequently flown beyond visual range, often in surveillance or relay roles where losing the aircraft mid-mission is not just an equipment loss but a mission failure with operational consequences. Three outcomes sit at the end of an unmanaged propulsion fault: an aborted sortie, loss of the airframe, or a forced recovery under conditions that are not fully controlled. None of these is a tolerable routine outcome for a platform meant to fly repeated long-endurance missions.
+The stakes are specific to the MALE mission profile. These are long missions, frequently flown beyond visual range, often in surveillance or relay roles where losing the aircraft mid-mission is not just an equipment loss but a mission failure with operational consequences. Three outcomes sit at the end of an unmanaged propulsion fault: an aborted mission, loss of the airframe, or a forced recovery under conditions that are not fully controlled. None of these is a tolerable routine outcome for a platform meant to fly repeated long-endurance missions.
 
-Threshold-based monitoring also has nothing to say about the future. It reports the present state of a parameter and nothing about what a specific upcoming mission segment, an eighteen-hour ISR loiter instead of a two-hour transit, a sustained high-power climb over mountainous terrain, will demand of an engine that is already showing early wear. A commander deciding whether to launch or continue a sortie needs an answer conditioned on the actual mission profile ahead, not a static badge describing the engine's condition in isolation.
+Threshold-based monitoring also has nothing to say about the future. It reports the present state of a parameter and nothing about what a specific upcoming mission segment, an eighteen-hour ISR loiter instead of a two-hour transit, a sustained high-power climb over mountainous terrain, will demand of an engine that is already showing early wear. A commander deciding whether to launch or continue a mission needs an answer conditioned on the actual mission profile ahead, not a static badge describing the engine's condition in isolation.
 
 ```mermaid
 flowchart TD
@@ -29,7 +29,7 @@ flowchart TD
         A1["Physics Model Expected State"] --> A2["Continuous Residual Generation"]
         A2 --> A3["20 Hz FlyHash Novelty Flag"]
         A3 --> A4["Exact Bayesian Fault Isolation"]
-        A4 --> A5["Conformal RUL & Mission R(t)"]
+        A4 --> A5["Conformal RUL and Mission R(t)"]
         A5 --> A6["Preemptive Throttle Derate & Safe Recovery"]
     end
 ```
@@ -43,7 +43,7 @@ Once an engine model can compute what a parameter should read at the current ope
 
 ## From problem to system
 
-Answering the problem statement's third outcome, mission reliability enhancement, requires going further still. It is not enough to know that a component is degraded. The operationally useful question is what that degradation means for whether the currently planned sortie can still be completed, and that requires connecting engine physics, fault diagnosis, and a mission profile into a single reasoning chain. That is the subject of the next article, which introduces ANUMAAN as a complete system.
+Answering the problem statement's third outcome, mission reliability enhancement, requires going further still. It is not enough to know that a component is degraded. The operationally useful question is what that degradation means for whether the currently planned mission can still be completed, and that requires connecting engine physics, fault diagnosis, and a mission profile into a single reasoning chain. That is the subject of the next article, which introduces ANUMAAN as a complete system.
 
 ## Related systems
 
