@@ -5,17 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PROJECT ANUMAAN // Digital Twin & Predictive Health Monitoring for Aero-Piston Engines</title>
   
-  <!-- Fonts -->
+  <!-- Fonts: Pixel Code & Google Fonts -->
+  <link rel="stylesheet" href="css/pixelcode.css">
+  <link rel="stylesheet" href="https://qwerasd205.github.io/PixelCode/dist/css/all.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Outfit:wght@400;500;600;700;800;900&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
   
   <!-- CSS Stylesheets -->
-  <link rel="stylesheet" href="css/design-system.css">
-  <link rel="stylesheet" href="css/story-runway.css">
-  <link rel="stylesheet" href="css/viewport-director.css">
-  <link rel="stylesheet" href="css/gcs-dashboard.css">
-  <link rel="stylesheet" href="css/deep-dive.css">
+  <link rel="stylesheet" href="css/pixelcode.css?v=2.2">
+  <link rel="stylesheet" href="css/design-system.css?v=2.2">
+  <link rel="stylesheet" href="css/story-runway.css?v=2.2">
+  <link rel="stylesheet" href="css/viewport-director.css?v=2.2">
+  <link rel="stylesheet" href="css/gcs-dashboard.css?v=2.2">
+  <link rel="stylesheet" href="css/deep-dive.css?v=2.2">
 
   <!-- Local Vendor 3D Libraries (Offline-First) -->
   <script src="js/vendor/three.min.js"></script>
@@ -85,9 +88,7 @@
     <div class="story-container">
       
       <!-- 3D Canvas Viewport -->
-      <div class="story-canvas-viewport" id="story-viewport-wrapper">
-        <canvas id="story-webgl-canvas"></canvas>
-      </div>
+      <div class="story-canvas-viewport" id="story-viewport-wrapper"></div>
 
       <!-- Backdrop Photo Plane -->
       <div class="story-image-backdrop" id="story-image-backdrop"></div>
@@ -217,7 +218,6 @@
 
       <!-- Center Stage: 3D Viewport -->
       <div class="viewport-center-stage" id="viewport-stage-wrapper">
-        <canvas id="viewport-webgl-canvas"></canvas>
         <div class="viewport-grid-reticle"></div>
 
         <!-- 3D Engine Model Selector Toolbar (0ms Instant In-Memory Switcher) -->
@@ -1002,14 +1002,14 @@
   </section>
 
   <!-- Application Coordinator Script -->
-  <script src="js/core/state.js"></script>
-  <script src="js/core/audio-synth.js"></script>
-  <script src="js/3d/engine-model.js"></script>
-  <script src="js/3d/drone-model.js"></script>
-  <script src="js/3d/camera-director.js"></script>
-  <script src="js/story/mission-runner.js"></script>
-  <script src="js/telemetry/sim-engine.js"></script>
-  <script src="js/app.js"></script>
+  <script src="js/core/state.js?v=2.2"></script>
+  <script src="js/core/audio-synth.js?v=2.2"></script>
+  <script src="js/3d/engine-model.js?v=2.2"></script>
+  <script src="js/3d/drone-model.js?v=2.2"></script>
+  <script src="js/3d/camera-director.js?v=2.2"></script>
+  <script src="js/story/mission-runner.js?v=2.2"></script>
+  <script src="js/telemetry/sim-engine.js?v=2.2"></script>
+  <script src="js/app.js?v=2.2"></script>
 
 </body>
 </html>

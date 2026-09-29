@@ -37,6 +37,22 @@ class DetectionResult:
     top_channels: List[tuple]          # [(channel, z)] largest |z| first
     evidence_class: str = "SIMULATION"  # set by the caller's source; PLANT frames -> SIMULATION
 
+    @property
+    def score(self) -> float:
+        return float(self.scores.get("mahalanobis", max(self.scores.values()) if self.scores else 0.0))
+
+    @property
+    def threshold(self) -> float:
+        m_score = self.scores.get("mahalanobis", 0.0)
+        m_ratio = self.ratios.get("mahalanobis", 1.0)
+        if m_ratio > 0:
+            return float(m_score / m_ratio)
+        return 1.0
+
+    @property
+    def alarm(self) -> bool:
+        return self.raw_alarm
+
 
 class PersistenceGate:
     """Confirm only when >= k of the last n raw alarms fired (edge downlink gate, D34)."""
@@ -84,8 +100,8 @@ class ResidualDetector:
         return cls(cal, scorers, thr, alpha, gate)
 
     # ---- inference -----------------------------------------------------------------------
-    def score(self, frame: Frame, top_k: int = 3) -> DetectionResult:
-        z = self.cal.z(frame)
+    def score(self, frame: Frame, top_k: int = 3, shielded_channels: Sequence[str] | None = None) -> DetectionResult:
+        z = self.cal.z(frame, shielded_channels=shielded_channels)
         feat = self.cal.features(z)[None, :]
         scores = {n: float(s.score(feat)[0]) for n, s in self.scorers.items()}
         ratios = {n: scores[n] / max(self.thresholds[n], 1e-12) for n in scores}

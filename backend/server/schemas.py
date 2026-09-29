@@ -54,6 +54,9 @@ class EngineTelemetry(BaseModel):
     BSFC_G_KWH: float = Field(270.0, description="Brake Specific Fuel Consumption (g/kWh)")
     POWER_KW: float = Field(65.0, description="Engine brake shaft power (kW)")
     THERMAL_EFFICIENCY: float = Field(0.31, description="Engine brake thermal efficiency (0.0 - 1.0)")
+    vibration_orders: Dict[str, float] = Field(default_factory=dict, description="1X, 2X, 3X vibration order components")
+    virtual_sensors: Dict[str, float] = Field(default_factory=dict, description="P_max, TIT, h_min, P_ind virtual sensor values")
+
 
 
 class AnalyticsState(BaseModel):
@@ -111,6 +114,10 @@ class AnalyticsState(BaseModel):
         default_factory=list,
         description="Multi-step physical and mechanical causal propagation chain"
     )
+    twin_validity: Dict[str, Any] = Field(default_factory=dict, description="Continuous self-assessment and 3-way attribution")
+    glide_assessment: Dict[str, Any] = Field(default_factory=dict, description="UAV glide polar and emergency airfield diversion margins")
+    mission_reliability: Dict[str, Any] = Field(default_factory=dict, description="Mission reliability R(t) and limiting component attribution")
+
 
     ai_diagnosis: Dict[str, Any] = Field(
         default_factory=lambda: {"status": "IDLE", "fault_name": "NOMINAL_FLIGHT", "explanation": "", "citations": []},

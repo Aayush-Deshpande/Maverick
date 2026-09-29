@@ -36,6 +36,8 @@ export interface EngineTelemetry {
   BSFC_G_KWH?: number;
   POWER_KW?: number;
   THERMAL_EFFICIENCY?: number;
+  vibration_orders?: Record<string, number>;
+  virtual_sensors?: Record<string, number>;
 }
 
 export interface EarlyWarningTrend {
@@ -76,6 +78,37 @@ export interface ComponentRUL {
   confidence: number;
 }
 
+export interface ReachableAirfield {
+  id: string;
+  name: string;
+  distance_km: number;
+  reachable: boolean;
+  margin_km: number;
+}
+
+export interface GlideAssessment {
+  glide_ratio: number;
+  still_air_range_km: number;
+  altitude_ft: number;
+  speed_best_glide_kt: number;
+  reachable_airfields: ReachableAirfield[];
+}
+
+export interface TwinValidity {
+  verdict: string;
+  nis_chi2: number;
+  whiteness_p_value: number;
+  explanation: string;
+  attribution: string;
+}
+
+export interface MissionReliability {
+  mission_reliability: number;
+  limiting_component: string;
+  limiting_component_survival: number;
+  mission_hours: number;
+}
+
 export interface AnalyticsState {
   residuals: Record<string, number>;
   anomaly_score: number;
@@ -101,6 +134,9 @@ export interface AnalyticsState {
   rul_by_component?: Record<string, ComponentRUL>;
   sensor_sanity?: SensorSanity;
   early_warning_trend?: EarlyWarningTrend | null;
+  twin_validity?: TwinValidity;
+  glide_assessment?: GlideAssessment;
+  mission_reliability?: MissionReliability;
   threshold_baseline?: {
     conventional_breached: boolean;
     breached_parameters: string[];

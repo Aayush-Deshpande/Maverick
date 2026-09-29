@@ -36,11 +36,8 @@ export default {
         'ai-accent-muted': 'rgba(192,132,252,0.4)',
       },
       fontFamily: {
-        // Segoe UI / SF Pro aren't licensed for web embedding, so Inter — the closest
-        // widely-used open substitute for both — carries all UI text. One monospace for
-        // telemetry values/data is the one deliberate "ops tool" typographic touch.
-        sans: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'system-ui', 'sans-serif'],
-        mono: ['SF Mono', 'Consolas', 'ui-monospace', 'monospace'],
+        sans: ['"Pixel Code"', 'monospace'],
+        mono: ['"Pixel Code"', 'monospace'],
       },
       boxShadow: {
         // Elevation, not illumination — flat drop shadows instead of colored glows.

@@ -122,6 +122,78 @@ export const MissionReadinessCard: React.FC<MissionReadinessCardProps> = ({ stat
           </div>
         )}
       </div>
+
+      {/* Live Mission Reliability & Limiting Subsystem */}
+      {a.mission_reliability && (
+        <div className="border-t border-surface-border pt-3">
+          <div className="flex items-baseline gap-2 mb-2">
+            <span className="text-[10px] font-mono text-slate-600">06</span>
+            <h3 className="text-[11px] font-semibold uppercase tracking-wide text-slate-300">Live Mission Reliability (18h ISR Sortie)</h3>
+            <span className="text-[10px] text-slate-600">— Weibull-Markov multi-stress system model</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <div className="bg-surface-card p-2.5 rounded border border-surface-border">
+              <span className="text-[10px] text-slate-500 block">SYSTEM RELIABILITY R(18h)</span>
+              <span className={`text-base font-bold font-mono ${a.mission_reliability.mission_reliability < 0.90 ? 'text-critical' : a.mission_reliability.mission_reliability < 0.97 ? 'text-warning' : 'text-emerald-400'}`}>
+                {(a.mission_reliability.mission_reliability * 100).toFixed(2)}%
+              </span>
+            </div>
+            <div className="bg-surface-card p-2.5 rounded border border-surface-border">
+              <span className="text-[10px] text-slate-500 block">LIMITING SUBSYSTEM</span>
+              <span className="text-xs font-semibold text-slate-200 mt-1 block truncate">
+                {a.mission_reliability.limiting_component.replace('_', ' ')}
+              </span>
+            </div>
+            <div className="bg-surface-card p-2.5 rounded border border-surface-border">
+              <span className="text-[10px] text-slate-500 block">COMPONENT SURVIVAL</span>
+              <span className="text-base font-bold font-mono text-slate-200">
+                {(a.mission_reliability.limiting_component_survival * 100).toFixed(2)}%
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Emergency Glide Polar & Diversion Airfield Reachability */}
+      {a.glide_assessment && (
+        <div className="border-t border-surface-border pt-3">
+          <div className="flex items-baseline justify-between mb-2">
+            <div className="flex items-baseline gap-2">
+              <span className="text-[10px] font-mono text-slate-600">07</span>
+              <h3 className="text-[11px] font-semibold uppercase tracking-wide text-slate-300">Emergency Glide Reachability &amp; Diversion Bases</h3>
+            </div>
+            <span className="text-[10px] font-mono text-accent">
+              L/D {a.glide_assessment.glide_ratio.toFixed(1)}:1 | Range {a.glide_assessment.still_air_range_km.toFixed(1)} km | V_glide {a.glide_assessment.speed_best_glide_kt.toFixed(0)} kt
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+            {a.glide_assessment.reachable_airfields.map((af) => (
+              <div
+                key={af.id}
+                className={`p-2 rounded border text-xs flex flex-col justify-between ${
+                  af.reachable
+                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+                    : 'bg-critical-dim border-critical-muted text-slate-400'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold truncate">{af.name}</span>
+                  <span className={`text-[9px] font-mono font-bold px-1 rounded ${af.reachable ? 'bg-emerald-500/20 text-emerald-300' : 'bg-red-500/20 text-red-300'}`}>
+                    {af.reachable ? 'REACHABLE' : 'UNREACHABLE'}
+                  </span>
+                </div>
+                <div className="mt-1 flex items-baseline justify-between text-[10px] font-mono">
+                  <span>{af.distance_km.toFixed(1)} km</span>
+                  <span className={af.margin_km >= 0 ? 'text-emerald-400' : 'text-critical'}>
+                    {af.margin_km >= 0 ? `+${af.margin_km.toFixed(1)}` : af.margin_km.toFixed(1)} km
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

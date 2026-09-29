@@ -17,7 +17,7 @@ class TelemetrySimEngine {
     this.residualHistory = [];
     this.maxHistoryLength = 200;
 
-    // Base nominal parameters (TEI-PD170 / Austro AE300 turbodiesel aero-piston class)
+    // Base nominal parameters (Rotax 912 iS / Austro AE300 / DRDO MALE UAV powerplant)
     this.nominal = {
       rpm: 2350,
       map: 1.95, // bar

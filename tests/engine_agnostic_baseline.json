@@ -36,7 +36,7 @@
   },
   "backend/physics/sensor_validator.py": {
     "brand": 1,
-    "cyl": 70,
+    "cyl": 62,
     "model": 1
   },
   "backend/physics/thermo_model.py": {

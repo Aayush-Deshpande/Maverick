@@ -13,6 +13,7 @@ Operates 100% offline, air-gapped, zero cloud or external API dependencies.
 from dataclasses import dataclass, field, asdict
 from typing import Dict, Any, List, Optional
 import os
+import re
 import sys
 
 
@@ -33,6 +34,10 @@ class DiagnosticDirective:
     maintenance_order: str
     confidence: float
     relevance_score: float
+    # 1-based index of the cylinder this directive is about, or None for engine-level
+    # faults. The UI uses this to highlight one cylinder rather than the whole bank, so
+    # it must reflect the cylinder actually implicated rather than the template's.
+    cylinder: Optional[int] = None
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
@@ -41,6 +46,7 @@ class DiagnosticDirective:
 # Authoritative DRDO / Rotax 912 iS ATA Expert Knowledge Dictionary
 ROTAX_ATA_FAULT_DIRECTIVES: Dict[int, Dict[str, Any]] = {
     1: {
+        "template_cylinder": 2,
         "fault_name": "Cylinder #2 CHT Overheat",
         "ata_chapter": "ATA 72-00",
         "manual_reference": "Rotax 912 iS MM Chapter 72-00-00, Section 4.2 (Cylinder Head Cooling)",
@@ -64,6 +70,7 @@ ROTAX_ATA_FAULT_DIRECTIVES: Dict[int, Dict[str, Any]] = {
         "maintenance_order": "Inspect Cylinder #2 cooling shroud and baffle elastomeric seals for tears, deformation, or dislodgement."
     },
     2: {
+        "template_cylinder": 1,
         "fault_name": "Fuel Injector #1 Clog",
         "ata_chapter": "ATA 73-10",
         "manual_reference": "Rotax 912 iS MM Chapter 73-10-00, Section 3.1 (High-Pressure Fuel Injection)",
@@ -87,6 +94,7 @@ ROTAX_ATA_FAULT_DIRECTIVES: Dict[int, Dict[str, Any]] = {
         "maintenance_order": "Remove Injector #1 and perform ultrasonic nozzle backflush and flow-rate calibration."
     },
     3: {
+        "template_cylinder": 2,
         "fault_name": "Ignition Misfire (Lane A)",
         "ata_chapter": "ATA 74-20",
         "manual_reference": "Rotax 912 iS MM Chapter 74-20-00, Section 2.4 (Dual Ignition System)",
@@ -154,6 +162,7 @@ ROTAX_ATA_FAULT_DIRECTIVES: Dict[int, Dict[str, Any]] = {
         "maintenance_order": "Perform gearbox backlash measurement (max allowable 0.05 mm) and dog-clutch spring pack inspection."
     },
     6: {
+        "template_cylinder": 3,
         "fault_name": "Exhaust EGT Imbalance",
         "ata_chapter": "ATA 78-10",
         "manual_reference": "Rotax 912 iS MM Chapter 78-10-00, Section 2.1 (Exhaust Manifold & Tuning)",
@@ -232,8 +241,21 @@ class DiagnosticAgent:
     def __init__(self, **kwargs):
         self.directives = ROTAX_ATA_FAULT_DIRECTIVES
 
+    @staticmethod
+    def _retarget_cylinder(text: str, template_cyl: int, actual_cyl: int) -> str:
+        """Rewrite `#<template_cyl>` cylinder references to the cylinder actually implicated.
+
+        The directive prose is authored around one example cylinder (e.g. fault 3 reads
+        "drops EGT #2"). Injecting that fault on cylinder 3 used to emit the template's
+        number verbatim, so the explanation contradicted the telemetry beside it. Only
+        `#N` forms are substituted, which leaves checklist ordinals ("Step 1:") and
+        specification figures ("4.5-5.5 kOhm") untouched.
+        """
+        return re.sub(rf"#\s*{template_cyl}\b", f"#{actual_cyl}", text)
+
     def diagnose(self, fault_id: int, confidence: float = 0.95,
-                 trigger_residuals: Optional[Dict[str, Any]] = None) -> DiagnosticDirective:
+                 trigger_residuals: Optional[Dict[str, Any]] = None,
+                 cylinder: Optional[int] = None) -> DiagnosticDirective:
         """
         Generate an ATA-grounded diagnostic directive for a given fault.
 
@@ -241,6 +263,8 @@ class DiagnosticAgent:
             fault_id: DRDO canonical fault ID (1..8).
             confidence: ML classification confidence from Plane 1.
             trigger_residuals: Real-time sensor residuals triggering the event.
+            cylinder: 1-based cylinder the live evidence points at. For directives whose
+                prose is cylinder-specific, every `#N` reference is retargeted to it.
 
         Returns:
             DiagnosticDirective with full OEM manual citations, causal chain, and step-by-step checklist.
@@ -291,19 +315,29 @@ class DiagnosticAgent:
 
         explanation = f"{data['root_cause_explanation']}{residual_summary}"
 
+        # Retarget cylinder-specific prose onto the cylinder the live evidence implicates.
+        # Engine-level directives carry no template_cylinder and pass through unchanged.
+        template_cyl = data.get("template_cylinder")
+        resolved_cyl = cylinder if (template_cyl and cylinder) else template_cyl
+        if template_cyl and cylinder and cylinder != template_cyl:
+            retarget = lambda s: self._retarget_cylinder(s, template_cyl, cylinder)
+        else:
+            retarget = lambda s: s
+
         return DiagnosticDirective(
             fault_id=fault_id,
-            fault_name=data["fault_name"],
+            fault_name=retarget(data["fault_name"]),
             ata_chapter=data["ata_chapter"],
             manual_reference=data["manual_reference"],
             subsystem=data["subsystem"],
             target_3d_mesh=data["target_3d_mesh"],
             severity=data["severity"],
-            root_cause_explanation=explanation,
-            causal_chain=data.get("causal_chain", []),
-            prescriptive_action=data["prescriptive_action"],
-            emergency_checklist=data["emergency_checklist"],
-            maintenance_order=data["maintenance_order"],
+            root_cause_explanation=retarget(explanation),
+            causal_chain=[retarget(step) for step in data.get("causal_chain", [])],
+            prescriptive_action=retarget(data["prescriptive_action"]),
+            emergency_checklist=[retarget(step) for step in data["emergency_checklist"]],
+            maintenance_order=retarget(data["maintenance_order"]),
             confidence=confidence,
             relevance_score=1.0,
+            cylinder=resolved_cyl,
         )

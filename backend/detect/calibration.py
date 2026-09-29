@@ -20,7 +20,7 @@ from typing import Dict, Iterable, List, Sequence
 
 import numpy as np
 
-from backend.core.frame import Frame
+from backend.core.frame import Frame, Q_SHIELDED
 
 CALIBRATION_SCHEMA = "tail_calibration/1"
 SCALAR_CHANNELS = ("oil_p", "oil_t", "fuel_flow", "map_kpa", "rpm")
@@ -87,11 +87,21 @@ class TailCalibration:
         return cls(f0.engine_config_id, f0.tail_id, n_cyl, scalars, coef, intercept, sigma, len(frames))
 
     # ---- apply ---------------------------------------------------------------------------
-    def z(self, frame: Frame) -> np.ndarray:
+    def z(self, frame: Frame, shielded_channels: Sequence[str] | None = None) -> np.ndarray:
         """Per-channel z-scored residual, order: cht[0..n), egt[0..n), *scalars."""
         thr, alt, oat = _command(frame)
         pred = _design(np.array([thr]), np.array([alt]), np.array([oat]))[0] @ self.coef + self.intercept
-        z = (_measure(frame, self.n_cyl, self.scalars) - pred) / self.sigma
+        meas = _measure(frame, self.n_cyl, self.scalars)
+        z = (meas - pred) / self.sigma
+        names = self.channel_names()
+        shielded = set(s.lower() for s in (shielded_channels or []))
+        q = getattr(frame, "quality", {}) or {}
+        for i, ch in enumerate(names):
+            ch_low = ch.lower()
+            if (ch_low in shielded or
+                (q.get(ch, 0) & Q_SHIELDED != 0) or
+                (q.get(ch_low, 0) & Q_SHIELDED != 0)):
+                z[i] = 0.0
         return np.clip(z, -Z_CLIP, Z_CLIP)
 
     def channel_names(self) -> List[str]:

@@ -13,6 +13,8 @@ except ImportError:
     sys.modules['gpu_extras'] = mock.MagicMock()
     sys.modules['gpu_extras.batch'] = mock.MagicMock()
     sys.modules['blf'] = mock.MagicMock()
+    sys.modules['bpy_extras'] = mock.MagicMock()
+    sys.modules['bpy_extras.object_utils'] = mock.MagicMock()
 
 try:
     import mathutils

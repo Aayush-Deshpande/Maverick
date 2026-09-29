@@ -22,7 +22,7 @@ class MissionStoryRunner {
         fault: "none",
         hud: [
           { label: "TWIN STATUS", val: "BOOT_SEQUENCE_COMPLETE", highlight: "cyan" },
-          { label: "ENGINE TYPE", val: "TEI-PD170 TURBODIESEL", highlight: "cyan" },
+          { label: "ENGINE TYPE", val: "ROTAX 912 iS SPORT (100 HP)", highlight: "cyan" },
           { label: "TELEMETRY BUS", val: "27 CHANNELS @ 20 Hz", highlight: "cyan" },
           { label: "PHYSICS MODEL", val: "TATTVA V2.4 [SYNCED]", highlight: "cyan" }
         ],
@@ -41,7 +41,7 @@ class MissionStoryRunner {
         fault: "none",
         hud: [
           { label: "TARGET FLEET", val: "INDIA MALE UAVs (TAPAS / ARCHER)", highlight: "cyan" },
-          { label: "PROPULSION", val: "SINGLE AERO-PISTON TURBODIESEL", highlight: "cyan" },
+          { label: "PROPULSION", val: "ROTAX 912 iS / 915 iS AERO EFI", highlight: "cyan" },
           { label: "MISSION PROFILE", val: "HIGH-ALTITUDE LONG ENDURANCE", highlight: "cyan" },
           { label: "SURVEILLANCE", val: "24–45 HOUR SORTIES", highlight: "cyan" }
         ],
@@ -61,7 +61,7 @@ class MissionStoryRunner {
         hud: [
           { label: "REDUNDANCY", val: "SINGLE ENGINE (ZERO FAILOVER)", highlight: "amber" },
           { label: "MISHAP SHARE", val: "41% PROPULSION-CAUSED", highlight: "red" },
-          { label: "RECOVERY COST", val: "$18M PER AIRFRAME LOSS", highlight: "red" },
+          { label: "RECOVERY COST", val: "₹150 CR ($18M) PER AIRFRAME", highlight: "red" },
           { label: "CREW AT RISK", val: "UNMANNED / HIGH STRATEGIC VALUE", highlight: "cyan" }
         ],
         backdropImage: "assets/01_hero_front_left.png",
@@ -73,7 +73,7 @@ class MissionStoryRunner {
         phase: "OPERATIONAL SORTIE",
         title: "Meet The Aircraft: FL250 at Dawn",
         caption: "MALE UAV cruising at 25,000 ft over the northern frontier. Outside air temperature: -31°C. Mission elapsed time: T+14:02.",
-        citation: "Operational Envelope · Tapas-BH-201 / Bayraktar TB3 Class UAV",
+        citation: "Operational Envelope · Tapas-BH-201 / Archer-NG Class MALE UAV",
         camPreset: "hero",
         shading: "pbr",
         fault: "none",
@@ -90,17 +90,17 @@ class MissionStoryRunner {
       {
         id: "engine",
         phase: "PROPULSION ARCHITECTURE",
-        title: "Meet The Engine: TEI-PD170 Architecture",
-        caption: "170 hp turbodiesel, 2.1L inline-4, dual-stage sequential turbochargers, common rail injection at 1,600 bar, dual-lane FADEC.",
-        citation: "TEI-PD170 Propulsion Technical Specification & Type Certificate",
+        title: "Meet The Engine: Rotax 912 iS Architecture",
+        caption: "100 hp horizontally-opposed 4-cylinder, dual FADEC (Lane A/Lane B), electronic fuel injection, dry sump lubrication, 5,800 max RPM.",
+        citation: "Rotax 912 iS Sport Operators Manual & DRDO PS-26054 §3.B",
         camPreset: "turbo",
         shading: "pbr",
         fault: "none",
         hud: [
-          { label: "RATED POWER", val: "170 HP @ 2,300 PROP RPM", highlight: "cyan" },
-          { label: "ASPIRATION", val: "2-STAGE SEQUENTIAL TURBO", highlight: "cyan" },
-          { label: "FUEL SYSTEM", val: "COMMON RAIL (1,600 BAR)", highlight: "cyan" },
-          { label: "DRY WEIGHT", val: "162 KG DUAL-LANE FADEC", highlight: "cyan" }
+          { label: "RATED POWER", val: "100 HP @ 5,800 RPM", highlight: "cyan" },
+          { label: "CONFIGURATION", val: "4-CYL HORIZONTALLY OPPOSED", highlight: "cyan" },
+          { label: "MANAGEMENT", val: "DUAL FADEC (LANE A / LANE B)", highlight: "cyan" },
+          { label: "LUBRICATION", val: "DRY SUMP / INTEGRAL REDUCTION", highlight: "cyan" }
         ],
         backdropImage: "assets/03_closeup_turbo.png",
         splitScreen: false,
@@ -233,7 +233,7 @@ class MissionStoryRunner {
           { label: "MISSION STATUS", val: "ASSET RECOVERED SECURE", highlight: "cyan" },
           { label: "WORK ORDER", val: "#WO-7102 DISPATCHED", highlight: "cyan" },
           { label: "MAINT ACTION", val: "INSPECT INJECTOR 3 / OIL PUMP", highlight: "cyan" },
-          { label: "SAVINGS", val: "$18M ASSET PRESERVED", highlight: "cyan" }
+          { label: "SAVINGS", val: "₹150 CR ASSET PRESERVED (TAPAS UAV)", highlight: "cyan" }
         ],
         backdropImage: "assets/05_closeup_gearbox.png",
         splitScreen: false,

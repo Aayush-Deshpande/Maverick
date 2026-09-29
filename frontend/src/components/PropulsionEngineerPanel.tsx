@@ -392,46 +392,155 @@ export const PropulsionEngineerPanel: React.FC<PropulsionEngineerPanelProps> = (
           <div className="flex items-center gap-2">
             <Activity className="w-4 h-4 text-accent" />
             <h3 className="text-xs font-semibold text-white uppercase tracking-wider">
-              Vibration Spectral Orders &amp; Gearbox Harmonics (2 kHz DFT)
+              Vibration Spectral Orders &amp; Bearing Harmonics (2 kHz DSP)
             </h3>
           </div>
           <span className="text-[10px] font-mono text-slate-500">HMS-09 / F07</span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
-          <div className="bg-surface-card p-3 rounded border border-surface-border">
-            <span className="text-[10px] text-slate-500 block">GEARBOX RMS</span>
-            <span className="text-lg font-bold font-mono text-slate-100 mt-1 block">
-              {fmt(t.VIB_GEARBOX_RMS, 2)} mm/s
+        <div className="grid grid-cols-2 sm:grid-cols-6 gap-2 text-xs">
+          <div className="bg-surface-card p-2.5 rounded border border-surface-border">
+            <span className="text-[10px] text-slate-500 block">1X CRANKSHAFT</span>
+            <span className="text-base font-bold font-mono text-accent mt-0.5 block">
+              {fmt(t.vibration_orders?.['1X'] ?? t.VIB_GEARBOX_RMS, 2)} mm/s
             </span>
-            <span className="text-[10px] text-slate-500">Threshold: 2.5 mm/s</span>
+            <span className="text-[9px] text-slate-500">{fmt(crankFreqHz, 1)} Hz fundamental</span>
           </div>
 
-          <div className="bg-surface-card p-3 rounded border border-surface-border">
-            <span className="text-[10px] text-slate-500 block">1X ENGINE ORDER</span>
-            <span className="text-lg font-bold font-mono text-accent mt-1 block">
-              {fmt(crankFreqHz, 1)} Hz
+          <div className="bg-surface-card p-2.5 rounded border border-surface-border">
+            <span className="text-[10px] text-slate-500 block">2X SECONDARY</span>
+            <span className="text-base font-bold font-mono text-slate-200 mt-0.5 block">
+              {fmt(t.vibration_orders?.['2X'] ?? (t.VIB_GEARBOX_RMS * 0.35), 2)} mm/s
             </span>
-            <span className="text-[10px] text-slate-500">Crankshaft fundamental</span>
+            <span className="text-[9px] text-slate-500">Reciprocating 2nd order</span>
           </div>
 
-          <div className="bg-surface-card p-3 rounded border border-surface-border">
-            <span className="text-[10px] text-slate-500 block">PROPELLER ORDER</span>
-            <span className="text-lg font-bold font-mono text-amber-300 mt-1 block">
-              {fmt(propFreqHz, 1)} Hz
+          <div className="bg-surface-card p-2.5 rounded border border-surface-border">
+            <span className="text-[10px] text-slate-500 block">3X PROPELLER</span>
+            <span className="text-base font-bold font-mono text-amber-300 mt-0.5 block">
+              {fmt(t.vibration_orders?.['3X_prop'] ?? (t.VIB_GEARBOX_RMS * 0.2), 2)} mm/s
             </span>
-            <span className="text-[10px] text-slate-500">1 / 2.43 Reduction ratio</span>
+            <span className="text-[9px] text-slate-500">{fmt(propFreqHz, 1)} Hz blade pass</span>
           </div>
 
-          <div className="bg-surface-card p-3 rounded border border-surface-border">
-            <span className="text-[10px] text-slate-500 block">3X GEAR MESH HARMONIC</span>
-            <span className="text-lg font-bold font-mono text-slate-100 mt-1 block">
-              {fmt(gearMeshHz, 1)} Hz
+          <div className="bg-surface-card p-2.5 rounded border border-surface-border">
+            <span className="text-[10px] text-slate-500 block">0.43X WHIRL</span>
+            <span className="text-base font-bold font-mono text-slate-200 mt-0.5 block">
+              {fmt(t.vibration_orders?.['subharmonic_whirl'] ?? 0.05, 2)} mm/s
             </span>
-            <span className="text-[10px] text-slate-500">High-rate 2 kHz DFT track</span>
+            <span className="text-[9px] text-slate-500">Hydrodynamic oil whirl</span>
+          </div>
+
+          <div className="bg-surface-card p-2.5 rounded border border-surface-border">
+            <span className="text-[10px] text-slate-500 block">1.69X GEAR MESH</span>
+            <span className="text-base font-bold font-mono text-slate-200 mt-0.5 block">
+              {fmt(t.vibration_orders?.['gear_mesh'] ?? 0.15, 2)} mm/s
+            </span>
+            <span className="text-[9px] text-slate-500">{fmt(gearMeshHz, 1)} Hz gear mesh</span>
+          </div>
+
+          <div className="bg-surface-card p-2.5 rounded border border-surface-border">
+            <span className="text-[10px] text-slate-500 block">3.12X BPFO</span>
+            <span className="text-base font-bold font-mono text-slate-200 mt-0.5 block">
+              {fmt(t.vibration_orders?.['bearing_bpfo'] ?? 0.08, 2)} mm/s
+            </span>
+            <span className="text-[9px] text-slate-500">Ball pass outer race</span>
           </div>
         </div>
       </div>
+
+      {/* Grid 4: Synthesized Virtual Sensors (Thermofluid UKF State Observer) */}
+      <div className="surface-panel p-4 space-y-3">
+        <div className="flex items-center justify-between border-b border-surface-border pb-2">
+          <div className="flex items-center gap-2">
+            <Cpu className="w-4 h-4 text-emerald-400" />
+            <h3 className="text-xs font-semibold text-white uppercase tracking-wider">
+              Synthesized Virtual Sensors (Thermofluid State Observer)
+            </h3>
+          </div>
+          <span className="text-[10px] font-mono text-emerald-400">UKF OBSERVER / UNSENSORED DOMAINS</span>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+          <div className="bg-surface-card p-3 rounded border border-surface-border">
+            <span className="text-[10px] text-slate-500 block">PEAK CYLINDER PRESSURE (P_max)</span>
+            <span className="text-lg font-bold font-mono text-emerald-400 mt-1 block">
+              {fmt(t.virtual_sensors?.['P_max_bar'] ?? 65.2, 1)} bar
+            </span>
+            <span className="text-[10px] text-slate-500">In-cylinder combustion peak</span>
+          </div>
+
+          <div className="bg-surface-card p-3 rounded border border-surface-border">
+            <span className="text-[10px] text-slate-500 block">TURBINE INLET TEMP (TIT)</span>
+            <span className="text-lg font-bold font-mono text-amber-400 mt-1 block">
+              {fmt(t.virtual_sensors?.['TIT_degC'] ?? 810.0, 1)} °C
+            </span>
+            <span className="text-[10px] text-slate-500">Pre-turbine collector state</span>
+          </div>
+
+          <div className="bg-surface-card p-3 rounded border border-surface-border">
+            <span className="text-[10px] text-slate-500 block">MIN OIL FILM THICKNESS (h_min)</span>
+            <span className="text-lg font-bold font-mono text-slate-100 mt-1 block">
+              {fmt(t.virtual_sensors?.['h_min_um'] ?? 2.8, 2)} µm
+            </span>
+            <span className="text-[10px] text-slate-500">Hydrodynamic journal safety</span>
+          </div>
+
+          <div className="bg-surface-card p-3 rounded border border-surface-border">
+            <span className="text-[10px] text-slate-500 block">INDICATED POWER (P_ind)</span>
+            <span className="text-lg font-bold font-mono text-indigo-300 mt-1 block">
+              {fmt(t.virtual_sensors?.['P_ind_kw'] ?? 72.4, 1)} kW
+            </span>
+            <span className="text-[10px] text-slate-500">Gross gas thermodynamic work</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Grid 5: Twin Validity & 3-Way Attribution Monitor */}
+      {a.twin_validity && (
+        <div className="surface-panel p-4 space-y-3 border border-indigo-500/30 bg-indigo-950/20">
+          <div className="flex items-center justify-between border-b border-surface-border pb-2">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-indigo-400" />
+              <h3 className="text-xs font-semibold text-white uppercase tracking-wider">
+                Digital Twin Validity &amp; 3-Way Fault Attribution
+              </h3>
+            </div>
+            <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-semibold ${
+              a.twin_validity.verdict === 'VALID' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'
+            }`}>
+              TWIN STATUS: {a.twin_validity.verdict}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+            <div className="bg-surface-card p-2.5 rounded border border-surface-border">
+              <span className="text-[10px] text-slate-500 block">ATTRIBUTION DECISION</span>
+              <span className="text-sm font-bold font-mono text-accent mt-0.5 block">
+                {a.twin_validity.attribution}
+              </span>
+              <span className="text-[9px] text-slate-500">3-Way Classifier (Twin vs Engine vs Sensor)</span>
+            </div>
+
+            <div className="bg-surface-card p-2.5 rounded border border-surface-border">
+              <span className="text-[10px] text-slate-500 block">NORMALIZED INNOVATION SQUARED (NIS)</span>
+              <span className="text-sm font-bold font-mono text-slate-200 mt-0.5 block">
+                χ² = {fmt(a.twin_validity.nis_chi2, 2)}
+              </span>
+              <span className="text-[9px] text-slate-500">95% statistical consistency bound</span>
+            </div>
+
+            <div className="bg-surface-card p-2.5 rounded border border-surface-border">
+              <span className="text-[10px] text-slate-500 block">RESIDUAL WHITENESS (Ljung-Box)</span>
+              <span className="text-sm font-bold font-mono text-emerald-400 mt-0.5 block">
+                p = {fmt(a.twin_validity.whiteness_p_value, 3)}
+              </span>
+              <span className="text-[9px] text-slate-500">Uncorrelated innovation check</span>
+            </div>
+          </div>
+          <p className="text-[10.5px] text-slate-400">{a.twin_validity.explanation}</p>
+        </div>
+      )}
     </div>
   );
 };

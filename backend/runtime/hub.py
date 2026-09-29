@@ -42,7 +42,15 @@ class RuntimeHub:
         out = {}
         for e, r in self.runtimes.items():
             if r.ready:
-                out[e] = r.tick(heavy=(e == self.selected))
+                t = r.tick(heavy=(e == self.selected))
+                out[e] = t
+                if e == "rotax_912is":
+                    try:
+                        from backend.server.engine_service import EngineStateService
+                        if EngineStateService._instance is not None:
+                            EngineStateService._instance.sync_from_tick(t)
+                    except Exception:
+                        pass
         self.latest = out
         self.tick_count += 1
         return out

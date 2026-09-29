@@ -1,0 +1,263 @@
+{
+  "engine_id": "rotax_915is",
+  "display_name": "Rotax 915 iS",
+  "manifest_version": 2,
+  "generated_by": "scripts/generate_rotax_manifests.py",
+  "glb": "apps/threejs_twin/assets/models/draco/rotax_915is.glb",
+  "prop_reduction": 2.43,
+  "node_count": 15,
+  "resolves_cylinders": false,
+  "thermal_coverage": {
+    "monitored_components": 6,
+    "total_components": 15
+  },
+  "components": {
+    "5608_@OIS@": {
+      "subsystem": "Unclassified",
+      "objects": [
+        "5608_@OIS@_5081"
+      ],
+      "thermal_channel": null,
+      "cylinder": null,
+      "prop_driven": false
+    },
+    "6270_@OIS@": {
+      "subsystem": "Unclassified",
+      "objects": [
+        "6270_@OIS@_5818"
+      ],
+      "thermal_channel": null,
+      "cylinder": null,
+      "prop_driven": false
+    },
+    "6289_@OIS@": {
+      "subsystem": "Unclassified",
+      "objects": [
+        "6289_@OIS@_5818"
+      ],
+      "thermal_channel": null,
+      "cylinder": null,
+      "prop_driven": false
+    },
+    "7767_@OIS@": {
+      "subsystem": "Unclassified",
+      "objects": [
+        "7767_@OIS@_7310"
+      ],
+      "thermal_channel": null,
+      "cylinder": null,
+      "prop_driven": false
+    },
+    "7786_@OIS@": {
+      "subsystem": "Unclassified",
+      "objects": [
+        "7786_@OIS@_7310"
+      ],
+      "thermal_channel": null,
+      "cylinder": null,
+      "prop_driven": false
+    },
+    "Air baffles": {
+      "subsystem": "Intake_Charge_Air",
+      "objects": [
+        "Air baffles"
+      ],
+      "thermal_channel": "oat",
+      "cylinder": null,
+      "prop_driven": false
+    },
+    "Ambient sensor": {
+      "subsystem": "Accessories",
+      "objects": [
+        "Ambient sensor"
+      ],
+      "thermal_channel": null,
+      "cylinder": null,
+      "prop_driven": false
+    },
+    "ECU": {
+      "subsystem": "Electrical_Control",
+      "objects": [
+        "ECU"
+      ],
+      "thermal_channel": null,
+      "cylinder": null,
+      "prop_driven": false
+    },
+    "Fusebox": {
+      "subsystem": "Electrical_Control",
+      "objects": [
+        "Fusebox"
+      ],
+      "thermal_channel": null,
+      "cylinder": null,
+      "prop_driven": false
+    },
+    "Intercooler": {
+      "subsystem": "Intake_Charge_Air",
+      "objects": [
+        "Intercooler"
+      ],
+      "thermal_channel": "oat",
+      "cylinder": null,
+      "prop_driven": false
+    },
+    "Magnetovalve": {
+      "subsystem": "Turbocharger",
+      "objects": [
+        "Magnetovalve"
+      ],
+      "thermal_channel": "egt_max",
+      "cylinder": null,
+      "prop_driven": false
+    },
+    "Main engine": {
+      "subsystem": "Block_Cylinders",
+      "objects": [
+        "Main engine"
+      ],
+      "thermal_channel": "cht_max",
+      "cylinder": null,
+      "prop_driven": false
+    },
+    "Oil tank": {
+      "subsystem": "Lubrication",
+      "objects": [
+        "Oil tank"
+      ],
+      "thermal_channel": "oil_t",
+      "cylinder": null,
+      "prop_driven": false
+    },
+    "Overboost valve": {
+      "subsystem": "Turbocharger",
+      "objects": [
+        "Overboost valve"
+      ],
+      "thermal_channel": "egt_max",
+      "cylinder": null,
+      "prop_driven": false
+    },
+    "Tranny": {
+      "subsystem": "Gearbox_Prop_Drive",
+      "objects": [
+        "Tranny"
+      ],
+      "thermal_channel": null,
+      "cylinder": null,
+      "prop_driven": false
+    }
+  },
+  "faults": {
+    "MISFIRE": {
+      "description": "Combustion imbalance detected. This asset does not separate cylinders, so the engine core is highlighted and the cylinder identity is carried by the 2D cylinder instrument.",
+      "affected_components": [
+        "Main engine"
+      ],
+      "camera": {
+        "azimuth_deg": -45,
+        "elevation_deg": 18
+      },
+      "per_cylinder": false,
+      "unresolved_components": []
+    },
+    "COOLING_DEGRADATION": {
+      "description": "The engine and its cooling baffles are highlighted while the plant models reduced heat rejection.",
+      "affected_components": [
+        "Air baffles",
+        "Main engine"
+      ],
+      "camera": {
+        "azimuth_deg": -35,
+        "elevation_deg": 23
+      },
+      "per_cylinder": false,
+      "unresolved_components": []
+    },
+    "OIL_PRESSURE_LOSS": {
+      "description": "Oil pressure loss is active in the physics plant; the reservoir is highlighted as system context.",
+      "affected_components": [
+        "Oil tank"
+      ],
+      "camera": {
+        "azimuth_deg": 130,
+        "elevation_deg": 22
+      },
+      "per_cylinder": false,
+      "unresolved_components": []
+    },
+    "AIR_FILTER_BLOCKAGE": {
+      "description": "The intake filter is not separately named in this asset; the intake-air baffles are highlighted as context.",
+      "affected_components": [
+        "Air baffles"
+      ],
+      "camera": {
+        "azimuth_deg": 75,
+        "elevation_deg": 24
+      },
+      "per_cylinder": false,
+      "unresolved_components": []
+    },
+    "BOOST_LEAK": {
+      "description": "Charge-air pressure loss is active; the intercooler and charge-air path are highlighted.",
+      "affected_components": [
+        "Intercooler"
+      ],
+      "camera": {
+        "azimuth_deg": 90,
+        "elevation_deg": 22
+      },
+      "per_cylinder": false,
+      "unresolved_components": []
+    },
+    "WASTEGATE_STUCK_OPEN": {
+      "description": "Boost control is outside its expected range. The overboost and control valves are highlighted.",
+      "affected_components": [
+        "Magnetovalve",
+        "Overboost valve"
+      ],
+      "camera": {
+        "azimuth_deg": 180,
+        "elevation_deg": 18
+      },
+      "per_cylinder": false,
+      "unresolved_components": []
+    },
+    "TURBO_BEARING_WEAR": {
+      "description": "Turbo internals are not separated in this asset; the engine assembly is highlighted as visual context.",
+      "affected_components": [
+        "Main engine"
+      ],
+      "camera": {
+        "azimuth_deg": 180,
+        "elevation_deg": 18
+      },
+      "per_cylinder": false,
+      "unresolved_components": []
+    },
+    "SENSOR_STUCK": {
+      "description": "A temperature channel is frozen while the plant continues to evolve. The ECU stands in for the affected sensor lane.",
+      "affected_components": [
+        "ECU"
+      ],
+      "camera": {
+        "azimuth_deg": 45,
+        "elevation_deg": 22
+      },
+      "per_cylinder": false,
+      "unresolved_components": []
+    },
+    "SENSOR_BIAS_DRIFT": {
+      "description": "A temperature channel drifts away from its true plant value. The ECU stands in for the affected sensor lane.",
+      "affected_components": [
+        "ECU"
+      ],
+      "camera": {
+        "azimuth_deg": 45,
+        "elevation_deg": 22
+      },
+      "per_cylinder": false,
+      "unresolved_components": []
+    }
+  }
+}

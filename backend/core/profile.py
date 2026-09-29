@@ -57,6 +57,31 @@ class EngineProfile:
             return {}
         return self.asset_manifest.get("components", {})
 
+    def get_fault_targets(self) -> Dict[str, Any]:
+        """Return the per-fault 3D targets (components, camera, cylinder awareness).
+
+        This is the server-side authority for "which meshes does this fault light up".
+        An engine with no asset manifest returns {}, and the viewport falls back to a
+        position locator rather than highlighting the wrong geometry.
+        """
+        if not self.asset_manifest:
+            return {}
+        return self.asset_manifest.get("faults", {})
+
+    @property
+    def resolves_cylinders(self) -> bool:
+        """Whether this engine's 3D asset separates individual cylinders.
+
+        False means per-cylinder faults can only be shown at subsystem level in 3D, and
+        the 2D cylinder instrument has to carry the cylinder identity. Exposed so the UI
+        degrades explicitly instead of highlighting a whole bank as if it were one
+        cylinder.
+        """
+        manifest = self.asset_manifest or {}
+        if "resolves_cylinders" in manifest:
+            return bool(manifest["resolves_cylinders"])
+        return any(c.get("cylinder") for c in self.get_components().values())
+
     def to_schema(self) -> Dict[str, Any]:
         """Generate full API / UI schema dictionary for this engine profile."""
         return {
@@ -85,6 +110,15 @@ class EngineProfile:
             "operating_limits": self.config.operating_limits,
             "fault_modes": self.fault_modes,
             "components": list(self.get_components().keys()),
+            # Full component records, not just their names. The Three.js viewport needs the
+            # mesh names to highlight, the telemetry channel that measures each part, and
+            # the cylinder it belongs to. Serving that here is what lets the client stop
+            # carrying its own hardcoded mesh table and name-matched thermal guesses.
+            "component_map": self.get_components(),
+            "fault_targets": self.get_fault_targets(),
+            "resolves_cylinders": self.resolves_cylinders,
+            "thermal_coverage": (self.asset_manifest or {}).get("thermal_coverage", {}),
+            "prop_reduction": (self.asset_manifest or {}).get("prop_reduction"),
             "provenance_summary": self.provenance_summary,
             "tbo_hours": self.config.tbo_hours,
             "rated_power_kw": self.config.rated_power_kw,

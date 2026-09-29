@@ -878,6 +878,36 @@ class TelemetryReceiverThread(threading.Thread):
             time.sleep(0.020)
 
 
+def update_camera_for_backend_fault():
+    """
+    Updates camera targets and auto-orbit state based on the active fault.
+    Prioritizes commanded fault if set (>0), otherwise checks genuine diagnosed fault.
+    If no fault active, restores camera framing to full assembly orbit.
+    """
+    fid = client_state.active_commanded_fault_id
+    if fid == 0 and isinstance(client_state.analytics, dict):
+        fid = client_state.analytics.get('diagnosed_fault_id', 0)
+
+    if fid > 0:
+        if fid in FAULT_DATABASE:
+            finfo = FAULT_DATABASE[fid]
+            client_state.target_orbit_angle = finfo.get('angle', client_state.orbit_angle)
+            client_state.target_orbit_elevation = finfo.get('elevation', DEFAULT_ORBIT_ELEVATION)
+            client_state.target_orbit_distance = finfo.get('distance', DEFAULT_ORBIT_DISTANCE * 0.75)
+            client_state.cam_target = finfo.get('center', ENGINE_CENTER).copy()
+        else:
+            client_state.target_orbit_angle = client_state.orbit_angle
+            client_state.target_orbit_elevation = DEFAULT_ORBIT_ELEVATION
+            client_state.target_orbit_distance = DEFAULT_ORBIT_DISTANCE * 0.75
+            client_state.cam_target = ENGINE_CENTER.copy()
+        client_state.is_auto_orbit = False
+    else:
+        client_state.target_orbit_elevation = DEFAULT_ORBIT_ELEVATION
+        client_state.target_orbit_distance = DEFAULT_ORBIT_DISTANCE
+        client_state.cam_target = ENGINE_CENTER.copy()
+        client_state.is_auto_orbit = True
+
+
 def send_server_command(action: str, **kwargs):
     """Sends a control command to the backend in a background thread."""
     def _worker():
@@ -888,21 +918,12 @@ def send_server_command(action: str, **kwargs):
             client_state.active_commanded_fault_id = fid
             f_meta = FAULT_DATABASE.get(fid, {})
             client_state.active_commanded_fault_name = f_meta.get("short", "UNKNOWN_FAULT")
-            if fid in FAULT_DATABASE:
-                finfo = FAULT_DATABASE[fid]
-                client_state.target_orbit_angle = finfo.get('angle', client_state.orbit_angle)
-                client_state.target_orbit_elevation = finfo.get('elevation', DEFAULT_ORBIT_ELEVATION)
-                client_state.target_orbit_distance = finfo.get('distance', DEFAULT_ORBIT_DISTANCE * 0.75)
-                client_state.cam_target = finfo.get('center', ENGINE_CENTER).copy()
-                client_state.is_auto_orbit = False
+            update_camera_for_backend_fault()
                 
         elif action == "CLEAR_FAULT":
             client_state.active_commanded_fault_id = 0
             client_state.active_commanded_fault_name = "NOMINAL"
-            client_state.target_orbit_elevation = DEFAULT_ORBIT_ELEVATION
-            client_state.target_orbit_distance = DEFAULT_ORBIT_DISTANCE
-            client_state.cam_target = ENGINE_CENTER.copy()
-            client_state.is_auto_orbit = True
+            update_camera_for_backend_fault()
 
         for endpoint in [CONTROL_ENDPOINT, LEGACY_CONTROL_ENDPOINT]:
             try:

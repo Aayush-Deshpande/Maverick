@@ -93,6 +93,76 @@ def engine_state(engine_id: str):
     return EngineRuntime.payload(rt.buffer[-1])
 
 
+@router.get("/api/engines/{engine_id}/history")
+def engine_history(engine_id: str, n: int = 600, channels: Optional[str] = None,
+                   step: int = 1):
+    """Recent frames from the runtime's ring buffer, oldest first.
+
+    The buffer already holds up to 3600 ticks per engine; without this route the client
+    had no way to reach them, so every chart opened empty and could only grow forward
+    from the moment the page loaded. That made trend, drift and threshold-approach
+    unanswerable for the first minute of a session.
+
+    `channels` is a comma-separated allowlist (plus the always-present cht/egt arrays),
+    and `step` decimates server-side so a 1200-point request over a 3600-tick buffer
+    stays a single small response instead of shipping the whole frame payload 1200 times.
+    """
+    rt = _rt(engine_id)
+    if not rt.buffer:
+        raise HTTPException(503, "engine still calibrating")
+    n = max(1, min(int(n), rt.buffer.maxlen or 3600))
+    step = max(1, min(int(step), 60))
+    wanted = {c.strip() for c in channels.split(",") if c.strip()} if channels else None
+
+    # deque slicing is O(n) per index, so materialise the tail once.
+    ticks = list(rt.buffer)[-(n * step):][::step]
+    samples = []
+    for t in ticks:
+        f = t.frame
+        chans = f.channels()
+        samples.append({
+            "t": f.t,
+            "channels": {k: v for k, v in chans.items() if k in wanted} if wanted else chans,
+            "cht": f.cht,
+            "egt": f.egt,
+            # Enough detector/prognostic context to draw the score and RUL series without
+            # a second request; everything else stays in the live frame.
+            "ratios": (t.detection.ratios if t.detection else None),
+            "raw_alarm": (t.detection.raw_alarm if t.detection else None),
+            "confirmed": (t.detection.confirmed if t.detection else None),
+            "rul": ((t.prognostics or {}).get("rul") or {}).get("rul_point"),
+            "rul_lower": ((t.prognostics or {}).get("rul") or {}).get("rul_p_lower"),
+            "rul_upper": ((t.prognostics or {}).get("rul") or {}).get("rul_p_upper"),
+            "damage": ((t.prognostics or {}).get("damage") or {}).get("damage_total"),
+            "mission_reliability": (t.reliability or {}).get("mission_reliability"),
+        })
+    return {
+        "engine_id": engine_id,
+        "count": len(samples),
+        "step": step,
+        "buffer_len": len(rt.buffer),
+        "evidence_class": "SIMULATION",
+        "samples": samples,
+    }
+
+
+@router.get("/api/engines/{engine_id}/events")
+def engine_events(engine_id: str, since_seq: int = 0, limit: int = 100):
+    """Retained state-transition events, oldest first.
+
+    Live frames carry only the events raised on that tick, so a client that just
+    connected (or reconnected) uses this to backfill its timeline. `since_seq` makes the
+    catch-up incremental rather than re-sending the whole log.
+    """
+    rt = _rt(engine_id)
+    events = [e for e in rt.events if e["seq"] > int(since_seq)]
+    return {
+        "engine_id": engine_id,
+        "latest_seq": rt.event_seq,
+        "events": events[-max(1, min(int(limit), 200)):],
+    }
+
+
 @router.get("/api/engines/{engine_id}/schema")
 def engine_schema(engine_id: str):
     from backend.core.profile import load_profile

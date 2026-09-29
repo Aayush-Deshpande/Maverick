@@ -2,7 +2,7 @@
  * PROJECT ANUMAAN — 3D DRONE AIRFRAME & TERRAIN LOADER
  * Loads the authentic USAvionix tactical Delta UAV (delta-pbr.glb),
  * flight animations (drone-animations.glb), and 3D terrain (terrain.glb).
- * Integrates with the TEI-PD170 aero-piston digital twin.
+ * Integrates with the Rotax 912 iS / 915 iS aero-piston digital twin.
  */
 
 class DroneAirframeModel {
@@ -22,7 +22,13 @@ class DroneAirframeModel {
     this.isLoaded = false;
     this.mode = 'combined'; // 'drone' | 'engine' | 'combined' | 'flight'
 
+    this.dracoLoader = new THREE.DRACOLoader();
+    this.dracoLoader.setDecoderPath('js/vendor/draco/');
+    this.dracoLoader.setDecoderConfig({ type: 'js' });
+    this.dracoLoader.preload();
+
     this.loader = new THREE.GLTFLoader();
+    this.loader.setDRACOLoader(this.dracoLoader);
     this.loadAssets();
   }
 

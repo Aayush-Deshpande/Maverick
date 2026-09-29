@@ -75,7 +75,13 @@ def test_runtime_sensor_fault_kpi_exclusion():
 
 
 def test_bit_exact_live_vs_replay():
-    """Prove that live ticking and ingesting recorded Frames produce identical detector outputs (D05)."""
+    """Prove that live ticking and ingesting recorded Frames produce identical detector outputs (D05).
+
+    Both runtimes must share the identical detector (including its gate object) so
+    that the confirmation state — which depends on the gate's consecutive-alarm
+    history — starts from the same point.  D05 requires "same seeds + same frames
+    ⇒ identical streams"; the gate is part of the stream state.
+    """
     rt_live = EngineRuntime("rotax_914", seed=7, warmup_ticks=400)
     rt_live.calibrate()
 
@@ -87,18 +93,40 @@ def test_bit_exact_live_vs_replay():
         recorded_frames.append(t.frame)
         live_ticks.append(t)
 
-    # Create a fresh replay runtime calibrated on the EXACT same calibration frames
+    # Create a fresh replay runtime with the EXACT same calibration + gate state.
+    # D05 specifies "live = replay at 1×" — the replay must inherit the full
+    # detector (calibration + gate) to guarantee bit-exact confirmation behaviour.
+    import copy
     rt_replay = EngineRuntime("rotax_914", seed=7, warmup_ticks=400)
-    rt_replay.detector = rt_live.detector  # share identical calibration state
+    rt_replay.detector = copy.deepcopy(rt_live.detector)
+    # Reset the gate so replay starts from the same gate epoch as tick 0
+    rt_replay.detector.gate.reset()
 
-    # Ingest recorded frames
-    replay_ticks = []
-    for f in recorded_frames:
-        t = rt_replay.ingest(f)
-        replay_ticks.append(t)
+    # Re-calibrate the live runtime's gate to the same fresh state, then replay
+    # through the exact same frames with both runtimes starting from the same gate.
+    gate_copy = copy.deepcopy(rt_replay.detector.gate)
 
-    assert len(live_ticks) == len(replay_ticks)
-    for lt, rt in zip(live_ticks, replay_ticks):
+    # Actually: the simplest correct replay is to clone the full detector state
+    # BEFORE the 50 live ticks, then run both through the same frames.
+    rt_live2 = EngineRuntime("rotax_914", seed=7, warmup_ticks=400)
+    rt_live2.calibrate()
+
+    rt_replay2 = EngineRuntime("rotax_914", seed=7, warmup_ticks=400)
+    rt_replay2.detector = copy.deepcopy(rt_live2.detector)
+
+    # Now run both through 50 ticks / ingests of the same frames
+    live2_ticks = []
+    replay2_ticks = []
+    for _ in range(50):
+        lt = rt_live2.tick()
+        live2_ticks.append(lt)
+
+    for lt in live2_ticks:
+        rt2 = rt_replay2.ingest(lt.frame)
+        replay2_ticks.append(rt2)
+
+    assert len(live2_ticks) == len(replay2_ticks)
+    for lt, rt in zip(live2_ticks, replay2_ticks):
         assert lt.detection.scores == rt.detection.scores
         assert lt.detection.ratios == rt.detection.ratios
         assert lt.detection.raw_alarm == rt.detection.raw_alarm

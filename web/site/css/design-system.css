@@ -3,6 +3,7 @@
    Inspired by USAvionix & Next-Generation Defense Tactical Displays
    ========================================================================== */
 
+@import url('pixelcode.css');
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Outfit:wght@400;500;600;700;800;900&family=Syne:wght@600;700;800&display=swap');
 
 :root {
@@ -34,10 +35,11 @@
   --state-green: #10b981;         /* Go / Verified / Torque Seal */
   --state-green-glow: rgba(16, 185, 129, 0.25);
 
-  /* Typography */
+  /* Typography — User Directive: Pixel Code */
   --font-display: 'Outfit', 'Syne', -apple-system, sans-serif;
   --font-body: 'Inter', -apple-system, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Space Mono', monospace;
+  --font-mono: 'Pixel Code', 'JetBrains Mono', monospace;
+  --font-pixel: 'Pixel Code', monospace;
 
   /* Elevation & Glows */
   --shadow-panel: 0 16px 36px -8px rgba(0, 0, 0, 0.8), 0 0 1px 1px rgba(255, 255, 255, 0.08);
@@ -65,6 +67,20 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+}
+
+button {
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+#anumaan-webgl-canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
 }
 
 html {

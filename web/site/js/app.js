@@ -38,6 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Single High-Performance WebGL Renderer
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.domElement.id = 'anumaan-webgl-canvas';
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.2;
@@ -132,6 +133,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const wrapper = document.getElementById('viewport-stage-wrapper');
       if (wrapper && renderer.domElement.parentElement !== wrapper) {
         wrapper.appendChild(renderer.domElement);
+      }
+      if (cameraDirector) {
+        cameraDirector.adaptToEngine(engineModel ? engineModel.activeEngineId : 'rotax_912is');
       }
     }
 

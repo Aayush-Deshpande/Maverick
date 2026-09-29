@@ -100,6 +100,9 @@ class Frame:
     tas: Optional[float] = None           # kt
     phase: Optional[str] = None
 
+    vibration_orders: Dict[str, float] = field(default_factory=dict)   # 1X, 2X, 3X order amplitudes (mm/s)
+    virtual_sensors: Dict[str, float] = field(default_factory=dict)    # Pmax, TIT, h_min synthesized by UKF
+
     quality: Dict[str, int] = field(default_factory=dict)
     schema_version: str = FRAME_SCHEMA_VERSION
 
@@ -126,6 +129,10 @@ class Frame:
                                ("fadec_trim", self.fadec_trim), ("fadec_adapt", self.fadec_adapt)):
             for i, v in enumerate(series, start=1):
                 out[f"{prefix}_{i}"] = v
+        for k, v in self.vibration_orders.items():
+            out[f"vib_order_{k}"] = v
+        for k, v in self.virtual_sensors.items():
+            out[f"virt_{k}"] = v
         return out
 
     @classmethod

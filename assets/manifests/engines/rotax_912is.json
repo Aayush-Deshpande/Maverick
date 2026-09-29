@@ -1,0 +1,373 @@
+{
+  "engine_id": "rotax_912is",
+  "display_name": "Rotax 912 iS Sport",
+  "manifest_version": 2,
+  "generated_by": "scripts/generate_rotax_manifests.py",
+  "glb": "apps/threejs_twin/assets/models/draco/rotax_912is.glb",
+  "prop_reduction": 2.43,
+  "node_count": 106,
+  "resolves_cylinders": false,
+  "thermal_coverage": {
+    "monitored_components": 5,
+    "total_components": 22
+  },
+  "components": {
+    "Cert_912iSSport": {
+      "subsystem": "Cosmetic",
+      "objects": [
+        "Cert_912iSSport_M_Chrome_0",
+        "Cert_912iSSport_M_Labels_0"
+      ],
+      "thermal_channel": null,
+      "cylinder": null,
+      "prop_driven": false
+    },
+    "Cooling_Air_Baffle": {
+      "subsystem": "Intake_Charge_Air",
+      "objects": [
+        "Cooling_Air_Baffle_M_PlasticWhite_0"
+      ],
+      "thermal_channel": "oat",
+      "cylinder": null,
+      "prop_driven": false
+    },
+    "Covers_Theme": {
+      "subsystem": "Cosmetic",
+      "objects": [
+        "Covers_Theme_M_Chrome_0",
+        "Covers_Theme_M_Cobalt_0",
+        "Covers_Theme_M_PlasticBlack_0",
+        "Covers_Theme_M_PlasticCable_0",
+        "Covers_Theme_M_PlasticGreen_0",
+        "Covers_Theme_M_PlasticTheme_0",
+        "Covers_Theme_M_PlasticWhite_0",
+        "Covers_Theme_M_Steel_0",
+        "Covers_Theme_M_Steel_0.001",
+        "Covers_Theme_M_SteelDark_0"
+      ],
+      "thermal_channel": null,
+      "cylinder": null,
+      "prop_driven": false
+    },
+    "ECU": {
+      "subsystem": "Electrical_Control",
+      "objects": [
+        "ECU_M_Chrome_0",
+        "ECU_M_Copper_0",
+        "ECU_M_FuseLight_0",
+        "ECU_M_Glass_0",
+        "ECU_M_GlassMilky_0",
+        "ECU_M_Labels_0",
+        "ECU_M_Motherboard_0",
+        "ECU_M_PlasticBegue_0",
+        "ECU_M_PlasticBlack_0",
+        "ECU_M_PlasticBlack_0.001",
+        "ECU_M_PlasticBlack_0.002",
+        "ECU_M_PlasticBlack_0.003",
+        "ECU_M_PlasticBlack_0.004",
+        "ECU_M_PlasticBlue_0",
+        "ECU_M_PlasticLightBlue_0",
+        "ECU_M_PlasticRed_0",
+        "ECU_M_PlasticRedDarker_0",
+        "ECU_M_PlasticYellow_0",
+        "ECU_M_Steel_0",
+        "ECU_M_SteelDark_0"
+      ],
+      "thermal_channel": null,
+      "cylinder": null,
+      "prop_driven": false
+    },
+    "Engine_Suspension_Frame": {
+      "subsystem": "Structure",
+      "objects": [
+        "Engine_Suspension_Frame_M_Cobalt_0",
+        "Engine_Suspension_Frame_M_PlasticWhite_0"
+      ],
+      "thermal_channel": null,
+      "cylinder": null,
+      "prop_driven": false
+    },
+    "Exhaust_System": {
+      "subsystem": "Exhaust",
+      "objects": [
+        "Exhaust_System_M_Chrome_0",
+        "Exhaust_System_M_Cobalt_0",
+        "Exhaust_System_M_PlasticBlack_0",
+        "Exhaust_System_M_Steel_0",
+        "Exhaust_System_M_SteelDark_0"
+      ],
+      "thermal_channel": "egt_max",
+      "cylinder": null,
+      "prop_driven": false
+    },
+    "External_Alternator": {
+      "subsystem": "Electrical_Control",
+      "objects": [
+        "External_Alternator_M_TimingBelt_0"
+      ],
+      "thermal_channel": null,
+      "cylinder": null,
+      "prop_driven": false
+    },
+    "External_Alternator_M_Rotax914_Extras": {
+      "subsystem": "Electrical_Control",
+      "objects": [
+        "External_Alternator_M_Rotax914_Extras_0"
+      ],
+      "thermal_channel": null,
+      "cylinder": null,
+      "prop_driven": false
+    },
+    "Fittings_Metric_Rotax914_A12": {
+      "subsystem": "Hardware",
+      "objects": [
+        "Fittings_Metric_Rotax914_A12_0"
+      ],
+      "thermal_channel": null,
+      "cylinder": null,
+      "prop_driven": false
+    },
+    "Fittings_Metric_Rotax914_Extras": {
+      "subsystem": "Hardware",
+      "objects": [
+        "Fittings_Metric_Rotax914_Extras_0"
+      ],
+      "thermal_channel": null,
+      "cylinder": null,
+      "prop_driven": false
+    },
+    "Fittings_Metric_Rotax915_A12": {
+      "subsystem": "Hardware",
+      "objects": [
+        "Fittings_Metric_Rotax915_A12_0"
+      ],
+      "thermal_channel": null,
+      "cylinder": null,
+      "prop_driven": false
+    },
+    "Fittings_Metric_Rotax915_Extras": {
+      "subsystem": "Hardware",
+      "objects": [
+        "Fittings_Metric_Rotax915_Extras_0"
+      ],
+      "thermal_channel": null,
+      "cylinder": null,
+      "prop_driven": false
+    },
+    "Fittings_UNF": {
+      "subsystem": "Hardware",
+      "objects": [
+        "Fittings_UNF_M_Cobalt_0"
+      ],
+      "thermal_channel": null,
+      "cylinder": null,
+      "prop_driven": false
+    },
+    "Fuel_Pump": {
+      "subsystem": "Fuel_System",
+      "objects": [
+        "Fuel_Pump_M_Chrome_0",
+        "Fuel_Pump_M_Cobalt_0",
+        "Fuel_Pump_M_PlasticBlack_0",
+        "Fuel_Pump_M_Rubber_0",
+        "Fuel_Pump_M_Steel_0",
+        "Fuel_Pump_M_SteelDark_0"
+      ],
+      "thermal_channel": "fuel_t",
+      "cylinder": null,
+      "prop_driven": false
+    },
+    "Gearbox_Type_2": {
+      "subsystem": "Gearbox_Prop_Drive",
+      "objects": [
+        "Gearbox_Type_2_M_Cobalt_0",
+        "Gearbox_Type_2_M_MetalPaintedBlack_0",
+        "Gearbox_Type_2_M_PlasticBlack_0",
+        "Gearbox_Type_2_M_PlasticWhite_0",
+        "Gearbox_Type_2_M_Steel_0"
+      ],
+      "thermal_channel": null,
+      "cylinder": null,
+      "prop_driven": false
+    },
+    "Oil_Tank": {
+      "subsystem": "Lubrication",
+      "objects": [
+        "Oil_Tank_M_Cobalt_0",
+        "Oil_Tank_M_Labels_0",
+        "Oil_Tank_M_PlasticBlack_0",
+        "Oil_Tank_M_Steel_0"
+      ],
+      "thermal_channel": "oil_t",
+      "cylinder": null,
+      "prop_driven": false
+    },
+    "Rotax_912i_Base": {
+      "subsystem": "Block_Cylinders",
+      "objects": [
+        "Rotax_912i_Base_M_Black_0",
+        "Rotax_912i_Base_M_Chrome_0",
+        "Rotax_912i_Base_M_Chrome_0.001",
+        "Rotax_912i_Base_M_Cobalt_0",
+        "Rotax_912i_Base_M_Cobalt_0.001",
+        "Rotax_912i_Base_M_Copper_0",
+        "Rotax_912i_Base_M_Labels_0",
+        "Rotax_912i_Base_M_Motherboard_0",
+        "Rotax_912i_Base_M_PlasticBlack_0",
+        "Rotax_912i_Base_M_PlasticBlack_0.001",
+        "Rotax_912i_Base_M_PlasticCable_0",
+        "Rotax_912i_Base_M_PlasticCable_0.001",
+        "Rotax_912i_Base_M_PlasticGreen_0",
+        "Rotax_912i_Base_M_Rubber_0",
+        "Rotax_912i_Base_M_Steel_0",
+        "Rotax_912i_Base_M_Steel_0.001",
+        "Rotax_912i_Base_M_Steel_0.002",
+        "Rotax_912i_Base_M_Steel_0.003",
+        "Rotax_912i_Base_M_Steel_0.004",
+        "Rotax_912i_Base_M_SteelBlack_0",
+        "Rotax_912i_Base_M_SteelDark_0"
+      ],
+      "thermal_channel": "cht_max",
+      "cylinder": null,
+      "prop_driven": false
+    },
+    "Starter_09Kw": {
+      "subsystem": "Electrical_Control",
+      "objects": [
+        "Starter_09Kw_M_Labels_0",
+        "Starter_09Kw_M_Steel_0"
+      ],
+      "thermal_channel": null,
+      "cylinder": null,
+      "prop_driven": false
+    },
+    "Starter_Relay": {
+      "subsystem": "Electrical_Control",
+      "objects": [
+        "Starter_Relay_M_Chrome_0",
+        "Starter_Relay_M_Cobalt_0",
+        "Starter_Relay_M_PlasticBlack_0",
+        "Starter_Relay_M_PlasticCable_0",
+        "Starter_Relay_M_Steel_0"
+      ],
+      "thermal_channel": null,
+      "cylinder": null,
+      "prop_driven": false
+    },
+    "Vacuum_Pump_Drive": {
+      "subsystem": "Accessories",
+      "objects": [
+        "Vacuum_Pump_Drive_M_Chrome_0",
+        "Vacuum_Pump_Drive_M_Rubber_0"
+      ],
+      "thermal_channel": null,
+      "cylinder": null,
+      "prop_driven": false
+    },
+    "Water_Hoses": {
+      "subsystem": "Cooling",
+      "objects": [
+        "Water_Hoses_M_Chrome_0",
+        "Water_Hoses_M_Cobalt_0",
+        "Water_Hoses_M_Labels_0",
+        "Water_Hoses_M_PlasticBlack_0",
+        "Water_Hoses_M_Rubber_0",
+        "Water_Hoses_M_Steel_0",
+        "Water_Hoses_M_SteelDark_0"
+      ],
+      "thermal_channel": null,
+      "cylinder": null,
+      "prop_driven": false
+    },
+    "Wiring_Harness": {
+      "subsystem": "Electrical_Control",
+      "objects": [
+        "Wiring_Harness_M_Chrome_0",
+        "Wiring_Harness_M_Cobalt_0",
+        "Wiring_Harness_M_Copper_0",
+        "Wiring_Harness_M_PlasticBlack_0",
+        "Wiring_Harness_M_PlasticCable_0",
+        "Wiring_Harness_M_PlasticCable_0.001",
+        "Wiring_Harness_M_Steel_0"
+      ],
+      "thermal_channel": null,
+      "cylinder": null,
+      "prop_driven": false
+    }
+  },
+  "faults": {
+    "MISFIRE": {
+      "description": "Ignition harness meshes are highlighted. The harness is shared across cylinders in this asset, so no cylinder-specific lead is claimed.",
+      "affected_components": [
+        "Wiring_Harness"
+      ],
+      "camera": {
+        "azimuth_deg": -115,
+        "elevation_deg": 30
+      },
+      "per_cylinder": false,
+      "unresolved_components": []
+    },
+    "COOLING_DEGRADATION": {
+      "description": "Cooling baffle and coolant hoses are highlighted while the plant models reduced heat rejection.",
+      "affected_components": [
+        "Cooling_Air_Baffle",
+        "Water_Hoses"
+      ],
+      "camera": {
+        "azimuth_deg": -140,
+        "elevation_deg": 24
+      },
+      "per_cylinder": false,
+      "unresolved_components": []
+    },
+    "OIL_PRESSURE_LOSS": {
+      "description": "Oil reservoir meshes are highlighted; the scavenge pump and lines are not separately named in this asset.",
+      "affected_components": [
+        "Oil_Tank"
+      ],
+      "camera": {
+        "azimuth_deg": 135,
+        "elevation_deg": 18
+      },
+      "per_cylinder": false,
+      "unresolved_components": []
+    },
+    "AIR_FILTER_BLOCKAGE": {
+      "description": "The intake filter is not a separate mesh in this asset; the intake-air baffle is highlighted as airflow-system context.",
+      "affected_components": [
+        "Cooling_Air_Baffle"
+      ],
+      "camera": {
+        "azimuth_deg": 75,
+        "elevation_deg": 24
+      },
+      "per_cylinder": false,
+      "unresolved_components": []
+    },
+    "SENSOR_STUCK": {
+      "description": "A temperature channel is frozen while the plant continues to evolve. The ECU enclosure stands in for the affected sensor lane, which this asset does not separate.",
+      "affected_components": [
+        "ECU"
+      ],
+      "camera": {
+        "azimuth_deg": 45,
+        "elevation_deg": 24
+      },
+      "per_cylinder": false,
+      "unresolved_components": []
+    },
+    "SENSOR_BIAS_DRIFT": {
+      "description": "A temperature channel drifts away from its true plant value. The ECU enclosure stands in for the affected sensor lane.",
+      "affected_components": [
+        "ECU"
+      ],
+      "camera": {
+        "azimuth_deg": 45,
+        "elevation_deg": 24
+      },
+      "per_cylinder": false,
+      "unresolved_components": []
+    }
+  }
+}

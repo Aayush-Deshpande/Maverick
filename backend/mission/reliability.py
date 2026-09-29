@@ -45,7 +45,51 @@ __all__ = [
     "MissionReliabilityEngine",
     "DEFAULT_COMPONENTS",
     "ISR_18H_PROFILE",
+    "FAULT_COMPONENT_IMPACT",
+    "components_for_fault",
 ]
+
+
+# ---------------------------------------------------------------------------
+# Fault -> damaged component attribution
+# ---------------------------------------------------------------------------
+# Which components a given plant fault mode actually degrades. Without this, the only
+# damage ever applied was to cylinder heads, so `limiting_component` reported whichever
+# component happened to carry the highest base hazard rate no matter what had failed --
+# a confirmed misfire still blamed the fuel pump.
+#
+# `{cyl}` is substituted with the 1-based cylinder index when the fault is localised to
+# one. Attribution follows the fault's physical path, not its symptom: a stuck sensor
+# degrades an ECU lane (deliberately not mission-critical), not the engine.
+FAULT_COMPONENT_IMPACT: Dict[str, Tuple[str, ...]] = {
+    "MISFIRE": ("cylinder_head_{cyl}", "injector_{cyl}", "ecu_lane_a"),
+    "COOLING_DEGRADATION": ("cylinder_head_1", "cylinder_head_2",
+                            "cylinder_head_3", "cylinder_head_4"),
+    "OIL_PRESSURE_LOSS": ("oil_pump", "main_bearings"),
+    "AIR_FILTER_BLOCKAGE": ("air_filter", "turbocharger"),
+    "BOOST_LEAK": ("turbocharger",),
+    "WASTEGATE_STUCK_OPEN": ("turbocharger",),
+    "TURBO_BEARING_WEAR": ("turbocharger", "main_bearings"),
+    "GEARBOX_VIBRATION": ("reduction_gearbox", "main_bearings"),
+    "ALTERNATOR_FAILURE": ("alternator",),
+    "SENSOR_STUCK": ("ecu_lane_a",),
+    "SENSOR_BIAS_DRIFT": ("ecu_lane_a",),
+}
+
+
+def components_for_fault(mode: str, cylinder: Optional[int] = None) -> Tuple[str, ...]:
+    """Resolve a fault mode to the component names it degrades.
+
+    Matching is substring-based so registry variants (`MISFIRE_CYL2`,
+    `COOLING_DEGRADATION_L2`) resolve to the same physical impact as their base mode.
+    Returns an empty tuple for an unmapped mode, which leaves reliability untouched
+    rather than inventing an attribution.
+    """
+    upper = (mode or "").upper()
+    for key, comps in FAULT_COMPONENT_IMPACT.items():
+        if key in upper:
+            return tuple(c.format(cyl=cylinder or 1) for c in comps)
+    return ()
 
 
 # ---------------------------------------------------------------------------

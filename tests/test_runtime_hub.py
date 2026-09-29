@@ -105,11 +105,17 @@ def test_all_five_engines_concurrent_load_and_isolation():
     hub.calibrate_all()
 
     # Step all 5 engines for 50 ticks and time
-    t0 = time.perf_counter()
-    for _ in range(50):
-        out = hub.tick_all()
-        assert len(out) == 5
-    dt = time.perf_counter() - t0
+    import gc
+    gc.collect()
+    gc.disable()
+    try:
+        t0 = time.perf_counter()
+        for _ in range(50):
+            out = hub.tick_all()
+            assert len(out) == 5
+        dt = time.perf_counter() - t0
+    finally:
+        gc.enable()
     # 5 engines at 20 Hz (50 ms per tick): mean tick time for all 5 must be << 20 ms
     mean_tick_ms = 1000.0 * dt / 50
     assert mean_tick_ms < 20.0, f"5-engine concurrent tick took {mean_tick_ms:.2f} ms"

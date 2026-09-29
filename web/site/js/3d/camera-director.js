@@ -28,12 +28,17 @@ class BlenderCameraDirector {
     this.fromFov = 45;
     this.toFov = 45;
 
-    // Presets
+    // Presets matching DCC / Blender Camera Rig
     this.presets = {
-      hero: { name: "Cam_Hero (3/4 ISO)", angle: -1.2, elevation: 0.42, distMult: 1.0, lens: 55.0 },
-      top: { name: "Cam_Top (Ortho View)", angle: 0.0, elevation: 1.45, distMult: 1.15, lens: 55.0 },
-      front: { name: "Cam_Front (Shaft View)", angle: -Math.PI / 2, elevation: 0.10, distMult: 0.90, lens: 55.0 },
-      gearbox: { name: "Cam_Gearbox", angle: -Math.PI / 2, elevation: 0.25, distMult: 0.65, lens: 55.0 },
+      hero: { name: "Cam_Hero (3/4 ISO)", angle: -1.2, elevation: 0.42, distMult: 1.0, lens: 75.0 },
+      turbo: { name: "Cam_Turbo", angle: -0.78, elevation: -0.14, distMult: 0.70, lens: 65.0 },
+      fuel: { name: "Cam_Fuel_System", angle: -1.48, elevation: 0.59, distMult: 0.65, lens: 55.0 },
+      gearbox: { name: "Cam_Gearbox", angle: -1.57, elevation: 0.24, distMult: 0.60, lens: 60.0 },
+      ortho: { name: "Cam_Ortho (Diagnostic)", angle: 0.0, elevation: 1.50, distMult: 1.10, lens: 90.0 },
+      wireframe: { name: "Cam_Wireframe", angle: -2.1, elevation: 0.35, distMult: 0.95, lens: 70.0 },
+      fault_cyl3: { name: "Cam_Fault_Cyl2", angle: -2.44, elevation: 0.42, distMult: 0.60, lens: 60.0 },
+      top: { name: "Cam_Top", angle: 0.0, elevation: 1.45, distMult: 1.15, lens: 55.0 },
+      front: { name: "Cam_Front", angle: -Math.PI / 2, elevation: 0.10, distMult: 0.90, lens: 55.0 },
       exhaust: { name: "Cam_Exhaust", angle: -Math.PI / 4, elevation: -0.15, distMult: 0.75, lens: 55.0 }
     };
 

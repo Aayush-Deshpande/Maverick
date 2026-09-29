@@ -94,6 +94,7 @@ class ValidityVerdict:
     reasons: List[str] = field(default_factory=list)
 
     def as_dict(self) -> dict:
+        v_str = "VALID" if self.trustworthy else ("DEGRADED" if self.confidence > 0.3 else "INVALID")
         return {
             "TWIN_TRUSTWORTHY": self.trustworthy,
             "TWIN_CONFIDENCE": round(self.confidence, 4),
@@ -105,6 +106,12 @@ class ValidityVerdict:
             "TWIN_BIASED_CHANNELS": self.bias_channels,
             "TWIN_OUT_OF_ENVELOPE": self.out_of_envelope,
             "TWIN_REASONS": self.reasons,
+            # Dual-compatible contract aliases for frontend and API
+            "verdict": v_str,
+            "attribution": self.attribution,
+            "nis_chi2": round(self.nis, 4),
+            "whiteness_p_value": round(self.whiteness_p, 4),
+            "explanation": self.sentence(),
         }
 
     def sentence(self) -> str:
@@ -264,8 +271,16 @@ class TwinValidityMonitor:
         # fault explains it better than either.
         if envelope:
             attribution = "OUT_OF_ENVELOPE"
-        elif quarantined and set(quarantined) & set(biased):
-            attribution = "SENSOR_FAULT"
+        elif quarantined:
+            # When sensors are quarantined by the sanity validator / parity space:
+            # If an engine fault is independently suspected on healthy (non-quarantined)
+            # channels, engine fault is reported; otherwise, the quarantined sensor
+            # explains the anomaly and avoids misattributing sensor glitch to engine.
+            non_quarantined_biased = [b for b in biased if b not in quarantined]
+            if fault_suspected and not in_bounds and len(non_quarantined_biased) > 0:
+                attribution = "ENGINE_FAULT"
+            else:
+                attribution = "SENSOR_FAULT"
         elif fault_suspected and not in_bounds:
             attribution = "ENGINE_FAULT"
         elif (not in_bounds or whiteness_p < 0.05) and not fault_suspected:

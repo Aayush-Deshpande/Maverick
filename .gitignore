@@ -85,3 +85,8 @@ report_dump/
 data/telemetry/live_sorties/
 *.blend1
 archive/
+scratch/
+FedNeMo/
+mission-planning/
+.codex/
+*.stl

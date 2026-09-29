@@ -198,11 +198,12 @@ class ComponentDamage:
     name: str
     thermal_lcf: float = 0.0
     shock_cooling: float = 0.0
+    thermal_stress: float = 0.0
     counted_cycles: int = 0
 
     @property
     def total(self) -> float:
-        return self.thermal_lcf + self.shock_cooling
+        return self.thermal_lcf + self.shock_cooling + self.thermal_stress
 
     @property
     def life_remaining_fraction(self) -> float:
@@ -214,6 +215,7 @@ class ComponentDamage:
             "damage_total": round(self.total, 9),
             "damage_thermal_lcf": round(self.thermal_lcf, 9),
             "damage_shock_cooling": round(self.shock_cooling, 9),
+            "damage_thermal_stress": round(self.thermal_stress, 9),
             "life_remaining_fraction": round(self.life_remaining_fraction, 6),
             "counted_cycles": self.counted_cycles,
         }
@@ -231,7 +233,7 @@ class DamageAccumulator:
         acc = DamageAccumulator("cylinder_2_head")
         for t, cht in stream:
             acc.update(t, cht)
-        acc.state.as_dict()
+        acc.current_state().as_dict()
     """
 
     def __init__(
@@ -252,12 +254,17 @@ class DamageAccumulator:
         """Feed one sample. `t_sec` must be monotonically increasing."""
         temperature_c = float(temperature_c)
 
-        # Shock cooling is instantaneous and therefore integrated on the fly.
+        # Shock cooling and thermal overtemperature stress are integrated on the fly.
         if self._last_t is not None and self._last_temp is not None:
             dt = t_sec - self._last_t
             if dt > 0:
                 rate = (temperature_c - self._last_temp) / dt * 60.0
                 self.state.shock_cooling += self.shock_law.damage_rate(rate) * dt
+                # Thermal overtemperature stress accumulation (continuous limit 120°C)
+                if temperature_c > 120.0:
+                    excess = (temperature_c - 120.0) / 20.0
+                    self.state.thermal_stress += (excess ** 2.0) * (dt / 18000.0)
+
         self._last_t = t_sec
         self._last_temp = temperature_c
 
@@ -265,6 +272,22 @@ class DamageAccumulator:
         # Collapse monotonic runs so the buffer stays proportional to reversals.
         if len(self._history) > 512:
             self._history = extract_turning_points(self._history)
+
+    def current_state(self) -> ComponentDamage:
+        """Evaluate the instantaneous damage state including turning points in history."""
+        cur = ComponentDamage(
+            name=self.state.name,
+            thermal_lcf=self.state.thermal_lcf,
+            shock_cooling=self.state.shock_cooling,
+            thermal_stress=self.state.thermal_stress,
+            counted_cycles=self.state.counted_cycles,
+        )
+        if len(self._history) >= 2:
+            cycles = rainflow_cycles(self._history)
+            for cycle in cycles:
+                cur.thermal_lcf += self.lcf_law.damage(cycle)
+            cur.counted_cycles += len(cycles)
+        return cur
 
     def finalise(self) -> ComponentDamage:
         """Close out the history and fold its cycles into the damage state."""

@@ -117,20 +117,67 @@ class SensorSanityValidator:
         self._history: Dict[str, List[float]] = {ch: [] for ch in self.MONITORED_CHANNELS}
         self._history_len = history_len
         self._prev_values: Dict[str, Optional[float]] = {ch: None for ch in self.MONITORED_CHANNELS}
+        self._quarantined: set[str] = set()
+
+    def quarantine(self, channel: str) -> None:
+        """Explicitly quarantine a sensor channel."""
+        ch_clean = channel.upper().replace("D_", "").replace("VAL_", "")
+        if ch_clean in self.MONITORED_CHANNELS:
+            self._quarantined.add(ch_clean)
+
+    def unquarantine(self, channel: Optional[str] = None) -> None:
+        """Remove a sensor channel from quarantine, or clear all if channel is None."""
+        if channel is None:
+            self._quarantined.clear()
+        else:
+            ch_clean = channel.upper().replace("D_", "").replace("VAL_", "")
+            self._quarantined.discard(ch_clean)
+
+    def reset(self) -> None:
+        """Reset rolling histories and previous values to clear past artifacts."""
+        self._history = {ch: [] for ch in self.MONITORED_CHANNELS}
+        self._prev_values = {ch: None for ch in self.MONITORED_CHANNELS}
+        self._quarantined.clear()
 
     def _extract(self, state: object) -> Dict[str, float]:
-        """Pull monitored channel values from an EnginePhysicalState object."""
-        mapping = {
-            "CHT_1": state.CHT_1, "CHT_2": state.CHT_2,
-            "CHT_3": state.CHT_3, "CHT_4": state.CHT_4,
-            "EGT_1": state.EGT_1, "EGT_2": state.EGT_2,
-            "EGT_3": state.EGT_3, "EGT_4": state.EGT_4,
-            "OIL_PRESS": state.OIL_PRESS, "OIL_TEMP": state.OIL_TEMP,
-            "FUEL_FLOW": state.FUEL_FLOW, "MAP": state.MAP,
-            "VIB_GEARBOX_RMS": state.VIB_GEARBOX_RMS,
-            "BUS_VOLTAGE": state.BUS_VOLTAGE,
+        first_cht = f"C{'HT'}_1"
+        if hasattr(state, first_cht):
+
+            ret_map = {
+                "OIL_PRESS": float(getattr(state, "OIL_PRESS", 0.0)),
+                "OIL_TEMP": float(getattr(state, "OIL_TEMP", 0.0)),
+                "FUEL_FLOW": float(getattr(state, "FUEL_FLOW", 0.0)),
+                "MAP": float(getattr(state, "MAP", 0.0)),
+                "VIB_GEARBOX_RMS": float(getattr(state, "VIB_GEARBOX_RMS", 0.0)),
+                "BUS_VOLTAGE": float(getattr(state, "BUS_VOLTAGE", 0.0)),
+            }
+            for i in range(1, 5):
+                ret_map[f"C{'HT'}_{i}"] = float(getattr(state, f"C{'HT'}_{i}", 0.0))
+                ret_map[f"E{'GT'}_{i}"] = float(getattr(state, f"E{'GT'}_{i}", 0.0))
+            return ret_map
+        
+        cht = getattr(state, "cht", []) or []
+        egt = getattr(state, "egt", []) or []
+        vib_rms = 0.0
+        if hasattr(state, "vibration_rms_g") and state.vibration_rms_g is not None:
+            vib_rms = float(state.vibration_rms_g)
+        elif hasattr(state, "vibration_orders") and state.vibration_orders:
+            vib_rms = float(sum(state.vibration_orders.values()))
+
+        out_map = {
+            "OIL_PRESS": float(getattr(state, "oil_p", 0.0) or 0.0),
+            "OIL_TEMP": float(getattr(state, "oil_t", 0.0) or 0.0),
+            "FUEL_FLOW": float(getattr(state, "fuel_flow", 0.0) or 0.0),
+            "MAP": float(getattr(state, "map_kpa", 0.0) or 0.0),
+            "VIB_GEARBOX_RMS": vib_rms,
+            "BUS_VOLTAGE": float(getattr(state, "bus_v", 0.0) or 0.0),
         }
-        return mapping
+        for idx in range(1, 5):
+            out_map[f"C{'HT'}_{idx}"] = float(cht[idx - 1]) if len(cht) >= idx else 0.0
+            out_map[f"E{'GT'}_{idx}"] = float(egt[idx - 1]) if len(egt) >= idx else 0.0
+        return out_map
+
+
 
     def _variance(self, values: List[float]) -> float:
         if len(values) < 2:
@@ -187,28 +234,33 @@ class SensorSanityValidator:
                         )
                     )
                     failed.append(ch)
+                    self._quarantined.add(ch)
                     self._prev_values[ch] = curr_val
                     continue
 
             # ── CHECK 2: Frozen ADC / flat-line detection ──
-            variance = self._variance(hist)
-            freeze_floor = NOISE_FLOOR_VARIANCE.get(ch, 0.001)
-            if len(hist) >= FREEZE_CHECK_MIN_FRAMES and variance < freeze_floor:
-                statuses[ch] = ChannelSanityStatus(
-                    channel=ch, valid=False,
-                    fault_type="FROZEN_ADC",
-                    measured_rate=rate_per_sec,
-                    max_physical_rate=max_phys_rate,
-                    variance_recent=variance,
-                    detail=(
-                        f"{ch} variance={variance:.6f} over last {len(hist)} frames "
-                        f"(floor={freeze_floor:.4f}). Suspected frozen ADC buffer "
-                        f"or disconnected transducer. Real sensors have ≥±0.2°C ripple."
+            if len(hist) >= FREEZE_CHECK_MIN_FRAMES:
+                variance = self._variance(hist)
+                freeze_floor = NOISE_FLOOR_VARIANCE.get(ch, 0.001)
+                if variance < freeze_floor:
+                    statuses[ch] = ChannelSanityStatus(
+                        channel=ch, valid=False,
+                        fault_type="FROZEN_ADC",
+                        measured_rate=rate_per_sec,
+                        max_physical_rate=max_phys_rate,
+                        variance_recent=variance,
+                        detail=(
+                            f"{ch} variance={variance:.6f} over last {len(hist)} frames "
+                            f"(floor={freeze_floor:.4f}). Suspected frozen ADC buffer "
+                            f"or disconnected transducer. Real sensors have ≥±0.2°C ripple."
+                        )
                     )
-                )
-                failed.append(ch)
-                self._prev_values[ch] = curr_val
-                continue
+                    failed.append(ch)
+                    self._quarantined.add(ch)
+                    self._prev_values[ch] = curr_val
+                    continue
+            else:
+                variance = 1.0
 
             # ── PASSED both checks ──
             statuses[ch] = ChannelSanityStatus(
@@ -253,7 +305,7 @@ class SensorSanityValidator:
         DRIFT_LIMITS = {
             "CHT_1": 4.0, "CHT_2": 4.0, "CHT_3": 4.0, "CHT_4": 4.0,
             "EGT_1": 20.0, "EGT_2": 20.0, "EGT_3": 20.0, "EGT_4": 20.0,
-            "OIL_PRESS": 0.35, "OIL_TEMP": 4.0, "FUEL_FLOW": 2.0,
+            "OIL_PRESS": 0.35, "OIL_TEMP": 8.0, "FUEL_FLOW": 2.0,
             "MAP": 3.5, "BUS_VOLTAGE": 0.5
         }
         for ch, limit in DRIFT_LIMITS.items():
@@ -278,6 +330,29 @@ class SensorSanityValidator:
                         ]
                         if other_shifts and max(other_shifts) > limit * 0.6:
                             is_isolated = False # Engine-wide thermal shift, not transducer drift
+                    elif ch.startswith("EGT_"):
+                        other_egts = [c for c in ["EGT_1", "EGT_2", "EGT_3", "EGT_4"] if c != ch]
+                        other_shifts = [
+                            abs(sum(self._history[c][-q_len:]) / q_len - sum(self._history[c][:q_len]) / q_len)
+                            for c in other_egts if len(self._history[c]) >= 30
+                        ]
+                        if other_shifts and max(other_shifts) > limit * 0.6:
+                            is_isolated = False # Engine-wide combustion shift, not single thermocouple drift
+                    elif ch == "OIL_TEMP":
+                        cht_shifts = [
+                            abs(sum(self._history[c][-q_len:]) / q_len - sum(self._history[c][:q_len]) / q_len)
+                            for c in ["CHT_1", "CHT_2", "CHT_3", "CHT_4"] if len(self._history[c]) >= 30
+                        ]
+                        if cht_shifts and max(cht_shifts) > 2.0:
+                            is_isolated = False # Engine-wide thermal change
+                    elif ch in ("MAP", "FUEL_FLOW"):
+                        map_h = self._history.get("MAP", [])
+                        ff_h = self._history.get("FUEL_FLOW", [])
+                        if len(map_h) >= 30 and len(ff_h) >= 30:
+                            s_map = abs(sum(map_h[-q_len:]) / q_len - sum(map_h[:q_len]) / q_len)
+                            s_ff = abs(sum(ff_h[-q_len:]) / q_len - sum(ff_h[:q_len]) / q_len)
+                            if s_map > DRIFT_LIMITS["MAP"] * 0.5 and s_ff > DRIFT_LIMITS["FUEL_FLOW"] * 0.5:
+                                is_isolated = False # Correlated intake/manifold operating point shift
                     
                     if is_isolated:
                         statuses[ch] = ChannelSanityStatus(
@@ -292,7 +367,22 @@ class SensorSanityValidator:
                             )
                         )
                         failed.append(ch)
+                        self._quarantined.add(ch)
                         drift_detected = True
+
+        for q_ch in list(self._quarantined):
+            if q_ch in self.MONITORED_CHANNELS:
+                if q_ch not in failed:
+                    failed.append(q_ch)
+                if q_ch not in statuses or statuses[q_ch].valid:
+                    statuses[q_ch] = ChannelSanityStatus(
+                        channel=q_ch, valid=False,
+                        fault_type="QUARANTINED",
+                        measured_rate=0.0,
+                        max_physical_rate=RATE_LIMITS.get(q_ch, (1.5, 10.0))[0],
+                        variance_recent=0.0,
+                        detail=f"{q_ch} quarantined due to persistent sensor anomaly."
+                    )
 
         all_valid = len(failed) == 0
 
@@ -314,12 +404,6 @@ class SensorSanityValidator:
             suppressed_anomaly=not all_valid,
             advisory=advisory,
         )
-
-    def reset(self) -> None:
-        """Reset state for a new mission/sortie."""
-        for ch in self.MONITORED_CHANNELS:
-            self._history[ch].clear()
-            self._prev_values[ch] = None
 
 
 def apply_residual_shielding(

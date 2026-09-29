@@ -56,7 +56,9 @@ def launch_canyon_sim():
         print("[ERROR] Blender executable could not be found.")
         return 1
 
-    blend_file = PROJECT_ROOT / "Models" / "terrain.blend"
+    blend_file = PROJECT_ROOT / "assets" / "models" / "terrain.blend"
+    if not blend_file.exists():
+        blend_file = PROJECT_ROOT / "Models" / "terrain.blend"
     app_script = PROJECT_ROOT / "apps" / "blender_twin" / "standalone_canyon_flight_app.py"
 
     if not blend_file.exists():
@@ -85,7 +87,9 @@ def launch_blender_twin():
         print("[ERROR] Blender executable could not be found.")
         return 1
 
-    blend_file = PROJECT_ROOT / "3d_models" / "rotax_912_is_sport.blend"
+    blend_file = PROJECT_ROOT / "assets" / "blender" / "rotax_912_is_sport.blend"
+    if not blend_file.exists():
+        blend_file = PROJECT_ROOT / "3d_models" / "rotax_912_is_sport.blend"
     app_script = PROJECT_ROOT / "apps" / "blender_twin" / "standalone_digital_twin_app.py"
 
     if not blend_file.exists():
@@ -125,7 +129,9 @@ def run_verification():
         print("[ERROR] Blender executable needed for verification could not be found.")
         return 1
 
-    blend_file = PROJECT_ROOT / "3d_models" / "rotax_912_is_sport.blend"
+    blend_file = PROJECT_ROOT / "assets" / "blender" / "rotax_912_is_sport.blend"
+    if not blend_file.exists():
+        blend_file = PROJECT_ROOT / "3d_models" / "rotax_912_is_sport.blend"
     verify_script = PROJECT_ROOT / "apps" / "blender_twin" / "verify_app.py"
 
     print("=" * 75)
