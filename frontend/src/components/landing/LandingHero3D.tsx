@@ -298,7 +298,7 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
     // Authentic dark aerospace studio background (inspired by web/site/css/viewport-director.css)
     const scene = new THREE.Scene();
     sceneRef.current = scene;
-    scene.background = new THREE.Color(0xe4e7e1);
+    scene.background = new THREE.Color(0x0d151c);
 
     // Camera
     const camera = new THREE.PerspectiveCamera(38, width / height, 0.1, 100);
