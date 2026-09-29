@@ -1,0 +1,14 @@
+# Allowlist: exclude everything, then re-include only what the backend reads at runtime.
+*
+!backend
+!configs
+!data
+!assets/manifests
+!docs/reliability
+!apps/threejs_twin
+!frontend/public/models
+!frontend/public/draco
+!frontend/public/images
+!requirements-server.txt
+**/__pycache__
+**/*.pyc

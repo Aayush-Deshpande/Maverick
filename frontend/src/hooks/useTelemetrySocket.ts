@@ -79,6 +79,9 @@ export function useTelemetrySocket() {
   const [serverUrl, setServerUrlState] = useState<string>(() => {
     const saved = localStorage.getItem('rotax_backend_url');
     if (saved) return saved;
+    // Deployed builds (e.g. Vercel) set VITE_API_URL to the hosted backend's public HTTPS URL.
+    const envUrl = import.meta.env.VITE_API_URL as string | undefined;
+    if (envUrl) return envUrl.trim().replace(/\/+$/, '');
     const host = (typeof window !== 'undefined' && window.location.hostname && window.location.hostname !== 'localhost')
       ? window.location.hostname
       : '127.0.0.1';

@@ -145,11 +145,13 @@ _IMAGES_DIR = _REPO_ROOT / "frontend" / "public" / "images"
 if _IMAGES_DIR.exists():
     app.mount("/images", StaticFiles(directory=_IMAGES_DIR), name="static-images")
 
-# Enable permissive CORS for Vercel cloud and local development
+# CORS: permissive by default for local development; set ANUMAAN_CORS_ORIGINS to a comma-separated
+# list of frontend origins (e.g. https://anumaan.vercel.app) in production.
+_CORS_ORIGINS = [o.strip() for o in os.environ.get("ANUMAAN_CORS_ORIGINS", "*").split(",") if o.strip()] or ["*"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=_CORS_ORIGINS,
+    allow_credentials=_CORS_ORIGINS != ["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )

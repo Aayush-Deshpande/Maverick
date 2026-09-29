@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: anumaan-backend
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: ANUMAAN_LLM_PROVIDER
+        value: none
+      # Set to the frontend's Vercel origin(s), comma-separated, e.g. https://anumaan.vercel.app
+      - key: ANUMAAN_CORS_ORIGINS
+        sync: false
