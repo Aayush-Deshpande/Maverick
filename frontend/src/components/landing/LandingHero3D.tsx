@@ -181,6 +181,7 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
 
   const targetLookAt = useRef(new THREE.Vector3(0, 0, 0));
   const targetCamPos = useRef(new THREE.Vector3(0, 0.36, 2.4));
+  const transitionUntil = useRef(0);
 
   const activeAsset = AERO_LINEUP[activeIndex];
 
@@ -293,27 +294,19 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
               materials.forEach((m) => {
                 const mat = m as THREE.MeshStandardMaterial;
 
-                // CRITICAL FIX: Sanitize blown-out emissive values baked into Austro and VRDE models
-                if (mat.emissive) {
+                // Keep the authored PBR values (same as Blender). Only neutralise baked
+                // white emissive with no emissive texture, which blows out Austro/VRDE.
+                if (mat.emissive && !mat.emissiveMap) {
                   if (mat.emissive.r > 0.35 && mat.emissive.g > 0.35 && mat.emissive.b > 0.35) {
                     mat.emissive.setHex(0x000000);
                   }
                 }
 
-                // If base color is blown-out pure white without texture, give it realistic cast titanium alloy finish
-                if (mat.color && mat.color.r > 0.90 && mat.color.g > 0.90 && mat.color.b > 0.90 && !mat.map) {
-                  mat.color.setHex(item.isDrone ? 0x4a5568 : 0x767472); // Cast alloy metallic gray
-                  mat.metalness = item.isDrone ? 0.20 : 0.55;
-                  mat.roughness = item.isDrone ? 0.70 : 0.42;
-                } else if (item.isDrone) {
-                  // Drone panels: composite matte finish
-                  mat.metalness = Math.min(mat.metalness ?? 0.20, 0.25);
-                  mat.roughness = Math.max(mat.roughness ?? 0.70, 0.60);
-                } else {
-                  // Engine components: realistic machined metal finish
-                  mat.metalness = Math.max(mat.metalness ?? 0.45, 0.35);
-                  mat.roughness = Math.min(mat.roughness ?? 0.45, 0.55);
-                }
+                // Sharper textures at grazing angles
+                const maxAniso = rendererRef.current?.capabilities.getMaxAnisotropy() ?? 1;
+                [mat.map, mat.normalMap, mat.roughnessMap, mat.metalnessMap, mat.aoMap, mat.emissiveMap].forEach((t) => {
+                  if (t) t.anisotropy = maxAniso;
+                });
 
                 mat.needsUpdate = true;
               });
@@ -371,8 +364,9 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
     });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(width, height);
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.15;
+    // Khronos PBR Neutral keeps authored base colors (ACES desaturates them)
+    renderer.toneMapping = THREE.NeutralToneMapping;
+    renderer.toneMappingExposure = 1.0;
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     rendererRef.current = renderer;
@@ -389,38 +383,30 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controls.maxDistance = 8.0;
-    controls.minDistance = 0.8;
+    controls.minDistance = 0.3;
     controls.maxPolarAngle = Math.PI / 2 + 0.06;
     controls.target.set(0, 0, 0);
     controlsRef.current = controls;
 
-    // Calibrated Studio 3-Point Lighting
-    const amb = new THREE.AmbientLight(0xffffff, 0.45);
-    scene.add(amb);
-
-    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x1a2b36, 0.4);
-    hemiLight.position.set(0, 20, 0);
-    scene.add(hemiLight);
-
-    const keyLight = new THREE.DirectionalLight(0xfffbf2, 1.25);
-    keyLight.position.set(5, 8, 5);
+    // Image-based lighting does the heavy lifting (like Blender's Material Preview);
+    // a single key light adds shape and shadows. No ambient/hemisphere, which flatten PBR.
+    const keyLight = new THREE.DirectionalLight(0xfffbf2, 1.4);
+    keyLight.position.set(3, 4, 3);
     keyLight.castShadow = true;
-    keyLight.shadow.mapSize.width = 1024;
-    keyLight.shadow.mapSize.height = 1024;
+    keyLight.shadow.mapSize.set(2048, 2048);
+    keyLight.shadow.camera.left = -1.6;
+    keyLight.shadow.camera.right = 1.6;
+    keyLight.shadow.camera.top = 1.6;
+    keyLight.shadow.camera.bottom = -1.6;
+    keyLight.shadow.camera.near = 0.5;
+    keyLight.shadow.camera.far = 12;
+    keyLight.shadow.bias = -0.0004;
+    keyLight.shadow.normalBias = 0.02;
     scene.add(keyLight);
 
-    const fillLight = new THREE.DirectionalLight(0xe4edf5, 0.6);
+    const fillLight = new THREE.DirectionalLight(0xe4edf5, 0.35);
     fillLight.position.set(-5, 3, -4);
     scene.add(fillLight);
-
-    const rimLight = new THREE.DirectionalLight(0xffffff, 0.45);
-    rimLight.position.set(0, -3, -5);
-    scene.add(rimLight);
-
-    // Subtle warm aerospace rim accent
-    const accentLight = new THREE.DirectionalLight(0xd67658, 0.35);
-    accentLight.position.set(-4, -1, 3);
-    scene.add(accentLight);
 
     // Aerospace ground grid turntable
     const grid = new THREE.GridHelper(6, 24, 0x223340, 0x142028);
@@ -442,33 +428,23 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
     // Animation Render Loop
     let animationFrameId: number;
     let lastTime = performance.now();
-    let currentOrbitAngle = -1.2;
+
+    controls.autoRotateSpeed = 1.0;
+    controls.enablePan = true;
 
     const animate = (currentTime: number) => {
       animationFrameId = requestAnimationFrame(animate);
-      const delta = (currentTime - lastTime) / 1000;
+      const delta = Math.min((currentTime - lastTime) / 1000, 0.1);
       lastTime = currentTime;
 
-      if (controls && camera) {
+      // Only steer the camera during a model-switch / reset transition;
+      // otherwise the user's zoom, pan and orbit are left alone.
+      if (currentTime < transitionUntil.current) {
         controls.target.lerp(targetLookAt.current, Math.min(delta * 4.0, 1));
-
-        if (isAutoOrbitRef.current) {
-          currentOrbitAngle += delta * 0.16;
-          const currentIdx = activeIndexRef.current;
-          const targetItem = AERO_LINEUP[currentIdx];
-          const dist = targetItem.camDist;
-          const elev = targetItem.camElevation;
-
-          targetCamPos.current.set(
-            Math.sin(currentOrbitAngle) * dist,
-            elev * dist + 0.05,
-            Math.cos(currentOrbitAngle) * dist
-          );
-        }
-
         camera.position.lerp(targetCamPos.current, Math.min(delta * 3.0, 1));
-        controls.update();
       }
+      controls.autoRotate = isAutoOrbitRef.current;
+      controls.update();
 
       // Continuous per-frame mutual exclusivity
       const currentActiveItem = AERO_LINEUP[activeIndexRef.current];
@@ -528,6 +504,7 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
       elev * dist + 0.05,
       Math.cos(angle) * dist
     );
+    transitionUntil.current = performance.now() + 1200;
 
     if (onSelectAsset) {
       onSelectAsset(activeIndex);
@@ -576,6 +553,7 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
       item.camElevation * item.camDist + 0.05,
       Math.cos(item.camAngle) * item.camDist
     );
+    transitionUntil.current = performance.now() + 1200;
     setIsAutoOrbit(true);
   };
 

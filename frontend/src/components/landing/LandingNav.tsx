@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { ArrowUpRight, Menu, X } from 'lucide-react';
 
+const DOCS_URL = 'https://anumaan-docs.vercel.app';
+
 const links = [
   ['#hero', 'The system'],
   ['#problem', 'The operating point'],
@@ -34,6 +36,10 @@ export const LandingNav: React.FC<{ onLaunch?: (target?: 'runtime' | 'twin' | 'l
             <span className="ae-nav-tooltip" aria-hidden="true">{label}</span>
           </a>
         ))}
+        <a href={DOCS_URL} target="_blank" rel="noopener noreferrer" aria-label="Documentation" onClick={() => setOpen(false)}>
+          <span className="ae-nav-dash" aria-hidden="true">-</span>
+          <span className="ae-nav-tooltip" aria-hidden="true">Documentation</span>
+        </a>
         <button className="ae-nav-launch" aria-label="Open ground console" onClick={launch}>
           <span className="ae-nav-dash" aria-hidden="true">-</span>
           <span className="ae-nav-tooltip" aria-hidden="true">Ground console</span>

@@ -61,8 +61,9 @@ export const ModelViewerModal: React.FC<ModelViewerModalProps> = ({ isOpen, onCl
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = darkStudio ? 1.0 : 1.05;
+    // Khronos PBR Neutral keeps authored base colors (ACES desaturates them)
+    renderer.toneMapping = THREE.NeutralToneMapping;
+    renderer.toneMappingExposure = 1.0;
     mountRef.current.innerHTML = '';
     mountRef.current.appendChild(renderer.domElement);
     rendererRef.current = renderer;
@@ -82,26 +83,27 @@ export const ModelViewerModal: React.FC<ModelViewerModalProps> = ({ isOpen, onCl
     controls.autoRotateSpeed = 0.8;
     controlsRef.current = controls;
 
-    // Calibrated Studio 3-Point Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, darkStudio ? 0.35 : 0.6);
-    scene.add(ambientLight);
+    // Image-based lighting does the heavy lifting (like Blender's Material Preview);
+    // a single key light adds shape and shadows. No ambient/hemisphere, which flatten PBR.
+    scene.environmentIntensity = darkStudio ? 0.8 : 1.0;
 
-    const hemiLight = new THREE.HemisphereLight(0xffffff, darkStudio ? 0x222225 : 0xd6d3d1, 0.4);
-    hemiLight.position.set(0, 20, 0);
-    scene.add(hemiLight);
-
-    const keyLight = new THREE.DirectionalLight(0xfffbf5, darkStudio ? 1.1 : 1.0);
-    keyLight.position.set(5, 8, 5);
+    const keyLight = new THREE.DirectionalLight(0xfffbf5, darkStudio ? 1.4 : 1.2);
+    keyLight.position.set(3, 4, 3);
     keyLight.castShadow = true;
+    keyLight.shadow.mapSize.set(2048, 2048);
+    keyLight.shadow.camera.left = -1.6;
+    keyLight.shadow.camera.right = 1.6;
+    keyLight.shadow.camera.top = 1.6;
+    keyLight.shadow.camera.bottom = -1.6;
+    keyLight.shadow.camera.near = 0.5;
+    keyLight.shadow.camera.far = 12;
+    keyLight.shadow.bias = -0.0004;
+    keyLight.shadow.normalBias = 0.02;
     scene.add(keyLight);
 
-    const fillLight = new THREE.DirectionalLight(0xf0f4f8, 0.5);
+    const fillLight = new THREE.DirectionalLight(0xf0f4f8, 0.35);
     fillLight.position.set(-5, 3, -4);
     scene.add(fillLight);
-
-    const rimLight = new THREE.DirectionalLight(0xffffff, 0.5);
-    rimLight.position.set(0, -4, -6);
-    scene.add(rimLight);
 
     // Ground Grid
     const grid1 = darkStudio ? 0x3f3f46 : 0xd4d4d8;
@@ -196,19 +198,19 @@ export const ModelViewerModal: React.FC<ModelViewerModalProps> = ({ isOpen, onCl
                 const mat = m as THREE.MeshStandardMaterial;
                 mat.wireframe = wireframe;
 
-                // CRITICAL FIX: Sanitize blown-out emissive values baked into Austro and VRDE models
-                if (mat.emissive) {
+                // Keep the authored PBR values (same as Blender). Only neutralise baked
+                // white emissive with no emissive texture, which blows out Austro/VRDE.
+                if (mat.emissive && !mat.emissiveMap) {
                   if (mat.emissive.r > 0.35 && mat.emissive.g > 0.35 && mat.emissive.b > 0.35) {
                     mat.emissive.setHex(0x000000);
                   }
                 }
 
-                // If base color is blown-out pure white without texture, give it realistic cast titanium alloy finish
-                if (mat.color && mat.color.r > 0.92 && mat.color.g > 0.92 && mat.color.b > 0.92 && !mat.map) {
-                  mat.color.setHex(0x767472); // Cast alloy metallic gray
-                  mat.metalness = Math.max(mat.metalness || 0, 0.5);
-                  mat.roughness = Math.min(mat.roughness || 1, 0.45);
-                }
+                // Sharper textures at grazing angles
+                const maxAniso = rendererRef.current?.capabilities.getMaxAnisotropy() ?? 1;
+                [mat.map, mat.normalMap, mat.roughnessMap, mat.metalnessMap, mat.aoMap, mat.emissiveMap].forEach((t) => {
+                  if (t) t.anisotropy = maxAniso;
+                });
 
                 mat.needsUpdate = true;
               });

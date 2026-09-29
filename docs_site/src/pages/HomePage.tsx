@@ -510,6 +510,17 @@ export const HomePage: React.FC<HomePageProps> = ({
 
                         <div className="lg:col-span-5 relative bg-stone-100 border border-stone-200 rounded-[2px] overflow-hidden">
                             <img
+                                src="/assets/lineup/rotax_912is_sport.jpg"
+                                alt="Rotax 912 iS Sport engine, Blender render"
+                                className="w-full h-auto object-cover border-b border-stone-200"
+                            />
+                            <div className="p-3 bg-stone-50 border-b border-stone-200 text-[11px] font-mono text-stone-500 flex items-center justify-between">
+                                <span>Rotax 912 iS Sport · 100 hp Flat-4</span>
+                                <span className="uppercase text-stone-400">
+                                    Blender Render
+                                </span>
+                            </div>
+                            <img
                                 src="/assets/blender/engine_master_hero.png"
                                 alt="ANUMAAN Master Engine Twin CAD Model"
                                 className="w-full h-auto object-cover hover:scale-102 transition-transform duration-300"

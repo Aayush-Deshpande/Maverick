@@ -96,6 +96,17 @@ export const Header: React.FC<HeaderProps> = ({
               </kbd>
             </button>
 
+            {/* Link to the main ANUMAAN landing page / live console */}
+            <a
+              href="https://anumaan-console.vercel.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm border border-stone-300 bg-white text-stone-700 hover:text-stone-950 hover:border-stone-400 transition-colors font-mono text-[11px] uppercase tracking-wider"
+              title="Open the ANUMAAN live console"
+            >
+              Live Console
+            </a>
+
             {/* 3D Model Twin Inspector Trigger (desktop/tablet) */}
             <button
               onClick={onOpenModelViewer}
