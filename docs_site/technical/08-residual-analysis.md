@@ -1,64 +1,116 @@
 # Residual Analysis
 
-The residual is the single value that connects ANUMAAN's physics core to its diagnostic reasoning. [The Digital Twin Core](05-the-digital-twin.md) introduced the concept; this article treats it as the subject in its own right, the interface between physics and diagnostics, how it is generated, and how it is protected from being misled by a failing sensor rather than a failing engine.
+The residual is the single mathematical quantity that bridges ANUMAAN's physics core to its diagnostic reasoning. [The Digital Twin Core](05-the-digital-twin.md) introduced the concept; this article treats it as the core subject in its own right: the interface between physics and diagnostics, the analytical parity space that isolates sensor drift from mechanical engine failure, and the normalized 7-channel residual vector that drives downstream machine learning.
 
-## What a residual is
+---
 
-A residual is the difference between an observed telemetry value and the value the physics core predicts for the engine's current operating point:
+## What a Residual Is
 
+A residual is the difference between a validated observed telemetry value and the value the 0D/1D physics core predicts for the engine's current operating point:
+
+$$\mathbf{r}_{\text{phys}}(t) = \mathbf{y}_{\text{valid}}(t) - \mathbf{h}_{\text{mvem}}(\hat{\mathbf{x}}_{\text{twin}}(t), \mathbf{u}(t))$$
+
+Every term on the right side matters:
+- **$\mathbf{y}_{\text{valid}}(t)$:** A validated sensor reading that has already passed through range limiters, rate-of-change filters, and analytical parity space checks.
+- **$\mathbf{h}_{\text{mvem}}(\hat{\mathbf{x}}(t), \mathbf{u}(t))$:** Not a static threshold or a lookup table, but the instantaneous output of the 0D/1D Mean Value Engine Model and slider-crank kinematics, recomputed continuously from altitude, outside air temperature, throttle position, and airspeed.
+
+The residual is what remains once the physically explainable part of a reading has been subtracted out.
+
+---
+
+## Telemetry Deviation Discrimination Matrix
+
+In airborne propulsion monitoring, deviations occur for very different reasons. The system mathematically discriminates between four distinct sources of telemetry deviation before raising alarms:
+
+| Phenomenon | Physical & Mathematical Signature | Classification & Action |
+| :--- | :--- | :--- |
+| **Environmental Lapse**<br/>(e.g., Climb to 25,000 ft, Leh Cold) | All cylinders shift uniformly with ambient lapse; $\text{MAP}$ residual $r_{\text{map}} \approx 0$; EKF state whiteness preserved. | **Normal Aerothermal Shift**<br/>No alarm; baseline automatically tracks. |
+| **Normal Throttle Step**<br/>(e.g., Combat Break / Full Boost) | Transient dynamic lag in MAP and RPM matching engine inertia $J_{\text{eng}}$; thermodynamic conservation satisfied. | **Normal Dynamic Variation**<br/>Transient lag window masked; no alarm. |
+| **Sensor Hardware Fault**<br/>(e.g., Thermocouple Open / Drift) | Single sensor jumps step-wise or drifts; analytical parity residual $\mathbf{r}_p$ spikes; thermodynamic residuals remain flat. | **Sensor Degradation**<br/>Isolate faulty sensor; switch to EKF virtual sensor; warn GCS. |
+| **Real Engine Failure**<br/>(e.g., Piston Ring Blow-by) | Multiple cross-correlated residuals violate limits; $\Delta P_{\text{crankcase}} > 0, \Delta T_{\text{oil}} > 0, P_{\max}$ drops. | **Confirmed Mechanical Fault**<br/>Escalate to Bayesian diagnosis & FMECA classification. |
+
+---
+
+## Analytical Redundancy & Parity Space Formulation
+
+A residual computed from a failed sensor is not evidence of engine degradation: it is a sensor fault. Blindly feeding corrupted sensor data into machine learning models triggers dangerous false alarms that could needlessly abort critical missions.
+
+To solve this, ANUMAAN implements **Parity Space Residual Analysis**:
+
+```mermaid
+flowchart TB
+    Raw["Raw Sensor Vector y_raw(t)"] --> Lim["Range & Slew-Rate Limiting (|dy/dt| > max)"]
+    Lim --> Parity["Parity Space Transformation: r_p(t) = V_p * y_meas(t)"]
+    Parity --> Check{"Parity Vector ||r_p|| > Threshold?"}
+    Check -->|Yes| SensFault["Sensor Fault Isolated<br/>(Column Signature v_p,j identifies faulty probe)"]
+    SensFault --> Freeze["Quarantine Sensor; Freeze Channel;<br/>Synthesize EKF Virtual Sensor"]
+    Check -->|No| Valid["Validated Sensor Vector y_valid(t)"]
+    Valid --> Diff["Subtract 0D/1D MVEM Prediction: r(t) = y_valid - y_mvem"]
+    Diff --> Norm["Normalized 7-Channel Residual Vector r*(t)"]
 ```
-residual = observed - expected(operating_point)
-```
 
-Every term on the right side matters. "Observed" is a validated sensor reading, already checked for physical plausibility as described in [Telemetry and Sensor Intelligence](07-telemetry-and-sensors.md). "Expected" is not a static limit or a lookup table; it is the output of the crank-angle physics chain described in [Engine Physics and Combustion Modeling](06-engine-physics.md), recomputed at every tick from the engine's actual altitude, outside air temperature, throttle position, and airspeed. The residual is what remains once the physically explainable part of a reading has been subtracted out.
+For a sensor measurement model $\mathbf{y}_s(t) = \mathbf{C}_s \mathbf{x}(t) + \mathbf{f}_s(t) + \mathbf{v}(t)$, the parity transformation matrix $\mathbf{V}_p$ is constructed such that:
 
-## Why raw sensor values are insufficient
+$$\mathbf{V}_p \mathbf{C}_s = \mathbf{0}$$
 
-A raw value carries no information about whether it is correct, because correctness is entirely dependent on context. A CHT reading of 130 degrees Celsius is unremarkable at the top of a hot-day climb and genuinely concerning during a cold cruise at the same throttle setting, because the physically correct value at those two operating points is different. A fixed threshold, discussed at length in [Understanding the Engineering Problem](02-the-engineering-problem.md), can only compare against one number regardless of context, so it either misses the early stage of a real fault or fires constantly on ordinary flight regimes. A residual solves this by making the comparison context-aware at every tick: the same 130-degree reading produces a residual near zero in the climb and a meaningfully positive residual in the cruise, because the two operating points have different physics-expected values.
+Applying this transformation eliminates the unmeasured state dynamics:
 
-This is also why a residual, not a raw value, is the correct object to feed forward into diagnosis. A diagnostic method built on raw thresholds inherits every one of the threshold's blind spots. A diagnostic method built on residuals inherits none of them, because the operating-point dependence has already been removed before diagnosis ever sees the number.
+$$\mathbf{r}_p(t) = \mathbf{V}_p \cdot \mathbf{y}_s(t) = \mathbf{V}_p \cdot \mathbf{f}_s(t) + \mathbf{V}_p \cdot \mathbf{v}(t)$$
 
-## How residuals are generated
-
-Residual generation runs continuously, once per tick, for every monitored channel on every active engine. The physics core computes an expected value for each channel from the current operating point; the validated sensor stream supplies the observed value; the difference is passed forward. This happens at tier 0 of the detection pipeline described in [System Architecture](04-system-architecture.md), running at the same 20 ticks per second as the rest of the runtime, so that residual evidence is always as current as the telemetry it is computed from.
-
-Because the physics core is built from published reference constants and first-principles combustion dynamics rather than curve-fit approximations, a residual reflects a genuine physical mismatch when one exists, a misfiring cylinder failing to produce expected torque, a cooling path failing to carry away expected heat, rather than an artifact of an approximate or overfit expectation model. Where the deployment enables the independent plant model described in [The Digital Twin Core](05-the-digital-twin.md), the observed side is generated by a physically separate implementation with its own bias, lag, and noise characteristics, which is what keeps the residual from measuring the physics core against itself.
-
-## Shielding residuals from sensor faults
-
-A residual computed from a faulty sensor reading is not evidence of an engine fault, it is evidence of a sensor fault, and treating the two as interchangeable would make the entire diagnostic layer unreliable. This is why sensor integrity validation runs ahead of residual generation rather than after it: a reading that fails a physical plausibility check, an implausible rate of change, a value outside what the underlying physics permits, is flagged before it can produce a residual that gets mistaken for engine evidence.
-
-Cross-channel corroboration reinforces this at the residual level itself. When the crank-angle torque-deficit method flags a deficit on one cylinder, the system checks whether that cylinder's exhaust gas temperature residual also moves negative, on the physically expected thermal lag. Agreement between two independently derived residuals is what turns a single anomalous reading into a defensible diagnosis; disagreement, a torque deficit with no corresponding EGT movement, points back at the sensor or the detection chain rather than at the engine. This corroboration logic is detailed alongside the physics that makes it possible in [Engine Physics and Combustion Modeling](06-engine-physics.md).
+Under healthy sensor conditions, $\mathbb{E}[\mathbf{r}_p(t)] = \mathbf{0}$. If sensor $j$ experiences a bias or open-circuit fault $f_{s,j}(t)$, the parity vector points along the dedicated column signature $\mathbf{v}_{p,j}$, isolating the faulty sensor within $40\text{ ms}$ before any engine diagnostic model is evaluated.
 
 ![Sensor Suspect State Isolating Tachometer Probe](/assets/blender/08_sensor_suspect_rpm.png)
 *Figure 1: Sensor validation shielding: uncorroborated RPM sensor jitter isolated as a suspect gauge without triggering false propulsion alarms.*
 
-```mermaid
-flowchart TB
-    Sensor[Validated sensor reading] --> Res((residual))
-    Physics[Physics-expected value] --> Res
-    Res --> Check{Corroborated by\na second channel?}
-    Check -->|Yes| Evidence[Genuine engine evidence]
-    Check -->|No| Suspect[Sensor or detection fault suspected]
-```
-*Figure 2: Residual validation logic: a residual only becomes diagnostic evidence once it survives sensor plausibility checks and cross-channel corroboration.*
+---
 
-## From residual to diagnosis
+## The 7-Channel Normalized Residual Vector
 
-Once generated, a residual stream feeds two things at once: Bio-Inspired Sparse Novelty Coding, which asks whether the current pattern of residuals across channels is unusual relative to previously seen nominal behavior, and, once a novelty is flagged, a Bayesian network that reasons over a defined fault taxonomy to determine which specific fault hypothesis best explains the observed residual pattern. That reasoning chain, the novelty layer, the Bayesian diagnosis, RUL estimation, and the mission-level consequence of a diagnosed fault, is the subject of the articles that follow this one in the corpus rather than being duplicated here. What matters at this stage is only that the residual is the object diagnosis operates on, computed continuously, context-aware by construction, and shielded from sensor artifacts before it ever reaches that reasoning layer.
+Once sensor validity is confirmed, the system calculates the **Normalized Physics Residual Vector** $\mathbf{r}^*(t) \in \mathbb{R}^7$:
 
-## Integration
+$$\mathbf{r}^*(t) = \begin{bmatrix}
+r_1^*(t) \\[4pt]
+r_2^*(t) \\[4pt]
+r_3^*(t) \\[4pt]
+r_4^*(t) \\[4pt]
+r_5^*(t) \\[4pt]
+r_6^*(t) \\[4pt]
+r_7^*(t)
+\end{bmatrix} = \begin{bmatrix}
+\frac{EGT_{\text{meas}} - \widehat{EGT}_{\text{mvem}}}{\sigma_{\text{egt}}} & \text{Exhaust Gas Temperature Residual} \\[6pt]
+\frac{CHT_{\text{meas}}^{\max} - \widehat{CHT}_{\text{mvem}}^{\max}}{\sigma_{\text{cht}}} & \text{Cylinder Head Temperature Residual} \\[6pt]
+\frac{P_{\text{oil,meas}} - \widehat{P}_{\text{oil,mvem}}}{\sigma_{\text{poil}}} & \text{Oil Pressure Residual} \\[6pt]
+\frac{T_{\text{oil,meas}} - \widehat{T}_{\text{oil,mvem}}}{\sigma_{\text{toil}}} & \text{Oil Sump Temperature Residual} \\[6pt]
+\frac{MAP_{\text{meas}} - \widehat{MAP}_{\text{mvem}}}{\sigma_{\text{map}}} & \text{Manifold Absolute Pressure Residual} \\[6pt]
+\frac{\dot{m}_{f,\text{meas}} - \widehat{\dot{m}}_{f,\text{mvem}}}{\sigma_{\text{fuel}}} & \text{Fuel Flow Consumption Residual} \\[6pt]
+\frac{\Delta CHT_{\text{cyl1-4}}}{\sigma_{\text{spread}}} & \text{Inter-Cylinder Thermal Imbalance Residual}
+\end{bmatrix}$$
 
-Residual generation sits at the exact center of ANUMAAN's reasoning chain described in [Introducing ANUMAAN](03-introducing-anumaan.md): it is fed by the physics core and validated telemetry, and it feeds everything diagnostic that follows. Nothing downstream of this point, novelty detection, fault diagnosis, degradation tracking, mission reliability, ever looks at a raw sensor value directly; all of it operates on residuals.
+Because the 0D/1D MVEM model explicitly accounts for altitude derating, ram-air dynamic pressure, ambient temperature lapse, and throttle dynamics, **these normalized residuals remain zero-mean Gaussian noise under all healthy flight regimes**. Any sustained deviation ($\|\mathbf{r}^*(t)\| > \tau$) represents true thermodynamic degradation.
 
-## Validation
+---
 
-Residual generation is exercised by the project's characterization test suite, which pins expected physics outputs and recovered fault signatures, including misfire rates recovered from the crank-angle chain, as regression tests. This ensures that a change to the physics core or the detection pipeline that breaks the underlying residual computation is caught automatically rather than only noticed downstream in diagnosis output.
+## Cross-Channel Corroboration
 
-## Related systems
+A single anomalous channel is required to show physical cross-coupling before an alarm is confirmed:
+- When the crank-angle torque-deficit observer flags a combustion drop on Cylinder #2, the system checks whether Cylinder #2's EGT residual also decreases over its characteristic thermal lag ($\tau \approx 5 - 15\text{ s}$).
+- Agreement between these independent channels confirms genuine combustion failure.
+- Disagreement (e.g. torque drop with zero EGT change) quarantines the crank pickup sensor rather than declaring an engine emergency.
+
+---
+
+## Downstream Pipeline Feeding
+
+The normalized residual vector $\mathbf{r}^*(t)$ is the sole input forwarded to downstream intelligence:
+1. **Bio-Inspired Sparse Novelty Coding:** Projects $\mathbf{r}^*(t)$ through a random expansion matrix into a sparse Kenyon cell representation to detect novel anomalies without requiring labeled failure datasets.
+2. **Bayesian Diagnosis & FMECA Network:** Evaluates residual directional signatures ($\text{sign}(\mathbf{r}^*)$) to isolate the failure mode (e.g., injector clog vs. wastegate stuck open).
+3. **Extreme Value Theory (EVT) Anomaly Gate:** Dynamically evaluates reconstruction errors against a Generalized Pareto Distribution to guarantee false-alarm rates $\le 10^{-4}$.
+
+---
+
+## Related Systems
 
 - [The Digital Twin Core](05-the-digital-twin.md)
-- [Engine Physics and Combustion Modeling](06-engine-physics.md)
-- [Telemetry and Sensor Intelligence](07-telemetry-and-sensors.md)
-- [Introducing ANUMAAN](03-introducing-anumaan.md)
-- [System Architecture](04-system-architecture.md)
+- [Engine Physics and Thermodynamics](06-engine-physics.md)
+- [Bio-Inspired Sparse Novelty Coding](10-bio-inspired-sparse-novelty-coding.md)
+- [Fault Diagnosis and Isolation](11-fault-diagnosis.md)

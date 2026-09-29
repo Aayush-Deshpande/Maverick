@@ -50,47 +50,84 @@ flowchart TB
 
 *Order tracking exposes combustion and gear-mesh signatures at fixed orders; envelope demodulation exposes weak impulsive bearing and gear defects hidden under them.*
 
-## Mathematics / algorithms
+## Mathematics & Spectral Algorithms
 
-Shaft frequency in hertz follows directly from RPM:
+### 1. Shaft Kinematics & Angular Resampling
+The fundamental shaft rotational frequency $f_{\text{shaft}}$ in hertz is derived continuously from the crankshaft trigger wheel:
 
+$$f_{\text{shaft}} = \frac{\text{RPM}}{60}$$
+
+An engine order $O_n$ represents a synchronous multiple of shaft rotational frequency:
+
+$$f_n = n \cdot f_{\text{shaft}}$$
+
+Because the UAV's throttle and shaft speed vary continuously through climb, cruise, loiter, and descent, fixed-frequency Fourier bins suffer from severe spectral smearing. ANUMAAN resolves this via **tach-synchronous angular resampling**:
+
+$$\theta(t) = \int_0^t \omega(\tau) d\tau, \quad x(\theta) = \mathcal{I}\left( x(t), \; \theta(t) \right)$$
+
+Where $\mathcal{I}$ is a cubic spline interpolator mapping non-uniform time samples to an equidistant angular grid $\Delta\theta = \frac{2\pi}{N_{\text{pts}}}$. Computing the Discrete Fourier Transform (DFT) over the angular domain yields an **order spectrum** in which spectral peaks remain strictly fixed at invariant engine orders regardless of speed fluctuations:
+
+| Engine Order | Physical Source & Harmonic Significance | Fault Signature Indicator |
+| :--- | :--- | :--- |
+| **$0.5X$ (Half-Order)** | 4-Stroke Camshaft & Sub-Harmonic Combustion Asymmetry | Single-cylinder ignition misfire or injector fouling. |
+| **$1.0X$ (First-Order)** | Fundamental Crankshaft Rotational Speed | Propeller / flywheel static or dynamic mass unbalance. |
+| **$2.0X$ (Second-Order)** | 4-Cylinder Firing Frequency ($2\times \text{rev}$) & Reciprocating Inertia | Cylinder power imbalance or connecting rod journal wear. |
+| **$2.43X$ (Gear Ratio)** | Propeller Reduction Gearbox Input-to-Output Ratio ($i = 2.43$) | Gearbox quill shaft misalignment or damper spring degradation. |
+| **$GMF$ ($N_t \cdot X$)** | Gear Mesh Frequency ($GMF = N_{\text{teeth}} \cdot f_{\text{shaft}}$) | Gear tooth pitting, root cracking, or excessive backlash. |
+
+---
+
+### 2. Kinematic Bearing Defect Frequencies
+
+Localized spalling on rolling-element bearing surfaces generates high-frequency impact pulse trains. Based on bearing pitch diameter $D$, roller diameter $d$, number of rolling elements $n_b$, and contact angle $\phi$:
+
+* **Ball Pass Frequency Outer Race ($BPFO$):**
+  $$BPFO = \frac{n_b}{2} \cdot f_{\text{shaft}} \cdot \left( 1 - \frac{d}{D} \cos\phi \right)$$
+
+* **Ball Pass Frequency Inner Race ($BPFI$):**
+  $$BPFI = \frac{n_b}{2} \cdot f_{\text{shaft}} \cdot \left( 1 + \frac{d}{D} \cos\phi \right)$$
+
+* **Ball Spin Frequency ($BSF$):**
+  $$BSF = \frac{D}{2d} \cdot f_{\text{shaft}} \cdot \left[ 1 - \left( \frac{d}{D} \cos\phi \right)^2 \right]$$
+
+* **Fundamental Train Frequency ($FTF$ / Cage Speed):**
+  $$FTF = \frac{1}{2} \cdot f_{\text{shaft}} \cdot \left( 1 - \frac{d}{D} \cos\phi \right)$$
+
+Because $BPFO$, $BPFI$, and $BSF$ are irrational, non-integer multiples of shaft speed, energy appearing at these exact orders in the demodulated envelope spectrum provides unassailable diagnostic proof of rolling-element fatigue, entirely decoupled from combustion harmonics.
+
+---
+
+### 3. Fast Kurtogram & Hilbert Envelope Demodulation
+
+Early bearing impacts excite high-frequency structural resonances ($2\text{ to } 10\text{ kHz}$) with low energy. To isolate the optimal carrier band without manual tuning, ANUMAAN evaluates the **Spectral Kurtosis ($SK$)**:
+
+$$SK(f) = \frac{\langle |X(t, f)|^4 \rangle}{\langle |X(t, f)|^2 \rangle^2} - 2$$
+
+Where $X(t, f)$ is the Short-Time Fourier Transform (STFT) computed via a 1/3-binary tree filterbank. The center frequency $f_c$ and bandwidth $\Delta f$ maximizing $SK(f)$ isolate the resonant ringing. The analytical signal $z(t)$ is formed via the Hilbert transform:
+
+$$z(t) = x_{\text{filtered}}(t) + j \cdot \mathcal{H}\{x_{\text{filtered}}(t)\}$$
+$$e(t) = |z(t)| = \sqrt{x_{\text{filtered}}^2(t) + \hat{x}_{\text{filtered}}^2(t)}$$
+
+The Fourier spectrum of envelope $e(t)$ cleanly exposes $BPFO$ and $BPFI$ impact frequencies even when buried under $20\text{ dB}$ of combustion noise.
+
+---
+
+## On-Board In-Situ Edge Processing
+
+Rather than transmitting high-bandwidth raw vibration ($20\text{ kHz} \times 16\text{ bits} = 320\text{ kbps}$) across tactical radio links, the on-board edge processor (ARM Cortex-M7 / Jetson Orin) executes order tracking and peak extraction locally:
+
+```mermaid
+flowchart LR
+    A["Raw Piezo Accelerometer<br/>(20 kHz @ 16-bit)"] --> B["On-Board Edge DSP<br/>(2048-Point Hanning FFT)"]
+    B --> C["Order Tracking & Peak Extractor<br/>(1X, 2X, Half-Order, BPFI, BPFO)"]
+    C --> D["Compact Telemetry Packet<br/>(12 Bytes @ 50 Hz = 4.8 kbps)"]
+    D --> E["GCS Digital Twin HUD"]
 ```
-f_shaft = RPM / 60
-```
 
-An order is a multiple of that shaft frequency, so order two, the four-stroke firing frequency for a four-cylinder engine, sits at twice shaft frequency regardless of what RPM currently is:
-
-```
-order_n_frequency = n * f_shaft
-```
-
-Order tracking resamples the vibration signal from uniform time spacing to uniform angle spacing by interpolating the angle-versus-time curve built from tachometer edges, then resampling the waveform onto a uniform angle grid before taking its Fourier transform. This is what fixes each fault's energy to a constant order line across a flight in which RPM never stops changing, rather than letting it smear across a moving band of frequencies.
-
-Bearing defect frequencies follow from bearing geometry, the number of rolling elements `n`, ball diameter `d`, pitch diameter `D`, and contact angle `phi`, all as multiples of shaft frequency:
-
-```
-BPFO = (n/2) * f_shaft * (1 - (d/D) cos(phi))     outer race
-BPFI = (n/2) * f_shaft * (1 + (d/D) cos(phi))     inner race
-```
-
-Because these are non-integer multiples of shaft speed, energy appearing at BPFO or BPFI in the envelope spectrum, rather than at an integer shaft order, is specific evidence of a bearing defect rather than imbalance or combustion, since imbalance and combustion always sit at integer or half-integer orders.
-
-## Example
-
-At a steady cruise RPM with a healthy engine, the order spectrum shows the firing frequency at order two as the dominant line, a small residual imbalance at order one, and negligible energy at the half-order band, since a healthy engine's combustion cycles are symmetric between cylinders. Once cylinder 2 begins misfiring, the half-order band rises sharply, reflecting broken cycle-to-cycle symmetry, while the order-two firing frequency line drops somewhat, since one cylinder is contributing less. Overall RMS barely moves, because the total vibration energy has simply redistributed rather than grown. A bearing outer-race defect produces almost no change in the order spectrum at all, since the defect frequency does not align with any shaft harmonic, but the envelope spectrum develops a clear line at the outer-race defect frequency, and kurtosis rises noticeably while RMS again stays close to its baseline. These are two different fault mechanisms, each invisible to a scalar RMS channel, each clearly visible in the feature designed to expose it.
-
-## Integration
-
-Vibration features feed directly into the sparse random projection described in [Bio-Inspired Sparse Novelty Coding](10-bio-inspired-sparse-novelty-coding.md), where order-domain energies and envelope features form part of the vector encoded into a sparse novelty code every tick. They also feed the evidence set used by [Fault Diagnosis](11-fault-diagnosis.md), since several entries in the FMECA taxonomy, including misfire, gearbox tooth wear, and bearing defects, are specifically identified through vibration signatures rather than through slower scalar channels. The underlying crank-angle combustion dynamics that produce the firing-order signature in the first place are computed by the physics core described in [Engine Physics and Combustion Modeling](06-engine-physics.md); a misfire in that model is a cylinder genuinely producing no heat release for one cycle, and the half-order vibration growth described above emerges from that physics rather than being authored directly into the signal.
-
-## Validation
-
-The order-domain feature pipeline is exercised against the project's own physics-based synthetic telemetry generator, in which a misfire is modeled as a genuine absence of heat release for one cylinder's cycle rather than an authored signal, so the resulting half-order vibration signature emerges from the same crank-angle dynamics that would produce it on real hardware rather than being written directly into the output. A pytest-based characterization suite pins specific recovered misfire rates from this crank-angle chain as a regression test. Validation of order tracking and envelope analysis against real accelerometer data from an instrumented engine remains the natural next phase.
-
-## Related systems
+## Related Systems
 
 - [The AI and ML Architecture](09-ai-ml-architecture.md)
-- [Engine Physics and Combustion Modeling](06-engine-physics.md)
+- [Engine Physics and Thermodynamics](06-engine-physics.md)
 - [The Digital Twin Core](05-the-digital-twin.md)
 - [Bio-Inspired Sparse Novelty Coding](10-bio-inspired-sparse-novelty-coding.md)
 - [Fault Diagnosis](11-fault-diagnosis.md)

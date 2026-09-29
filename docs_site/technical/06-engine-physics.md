@@ -1,119 +1,171 @@
-# Engine Physics and Combustion Modeling
+# Engine Physics and Thermodynamics
 
-The expected-value side of every residual in ANUMAAN, described in [The Digital Twin Core](05-the-digital-twin.md), ultimately traces back to a physics core that simulates combustion at the level of crank angle rather than treating engine behavior as a set of prescribed signal patterns. This article covers that physics core: the reference engine constants it is built from, the slider-crank and Wiebe combustion chain that produces crank angular velocity, and why a misfire in this model is a genuine physical event rather than an authored signature.
+The expected-value baseline of every residual in ANUMAAN traces back to a first-principles aerothermodynamic and combustion physics core. Rather than treating engine behavior as empirical lookup tables or hand-painted signals, ANUMAAN simulates the complete **0D/1D Mean Value Engine Model (MVEM)** and in-cylinder thermodynamics down to the crank-angle domain. 
 
-## The problem
+This article establishes the foundational physics: reference engine constants, the 0D/1D aerothermodynamics chain (turbocharger matching, manifold filling/emptying, modified Seiliger combustion, slider-crank kinematics, and lubrication film mechanics), and why multi-sensor fault signatures emerge naturally from physics rather than being synthetically authored.
 
-Vibration, torque, and misfire signatures could be approximated by hand: a sum of sine waves at expected engine orders, an impulse deleted from a train to represent a dead cylinder. That approach is enough to exercise a signal-processing pipeline, but it has a structural limitation. A detector trained against a hand-authored impulse train learns to recognize "an impulse is missing from a synthetic train," which is a circular target. It never has to face the actual physical coupling between a missed combustion event and every other observable channel, because that coupling was never modeled in the first place. ANUMAAN's physics core exists to remove that circularity: cylinder pressure, torque, and crank angular velocity are computed from first principles, so that a misfire's full signature, in vibration, in exhaust gas temperature, in angular velocity, emerges from one underlying change rather than being separately painted onto each channel.
+---
 
-## Reference engine constants
+## Reference Engine Constants & Indian Fleet Context
 
-The physics core is built from published, verifiable Rotax specifications. The Rotax 912 iS and 914 are both four-cylinder, horizontally opposed, four-stroke engines. The 912 iS has an 84.0 mm bore and 61.0 mm stroke, giving 1,352 cm3 displacement, with a 10.8:1 compression ratio. The 914 has a 79.5 mm bore with the same 61.0 mm stroke, giving 1,211.2 cm3 displacement, with an 8.75:1 compression ratio. Both engines share a 1-4-2-3 firing order, sourced from the manufacturer's maintenance manual. These constants, plus the published gear reduction ratio, anchor every downstream calculation to a real, citable engine rather than an arbitrary parameter set.
+The physics core is built from published, verifiable manufacturer specifications and military UAV configurations:
+- **Rotax 912 iS Sport:** Naturally aspirated, 4-cylinder horizontally opposed boxer, dual FADEC fuel injection. Bore: $84.0\text{ mm}$, stroke: $61.0\text{ mm}$, displacement: $1,352\text{ cm}^3$, compression ratio: $10.8:1$. Firing order: 1-4-2-3.
+- **Rotax 914 F Turbo:** Turbocharged with automatic wastegate TCU. Bore: $79.5\text{ mm}$, stroke: $61.0\text{ mm}$, displacement: $1,211.2\text{ cm}^3$, compression ratio: $8.75:1$, maximum continuous boost: $1.35\text{ bar}$.
+- **Rotax 915 iS Turbo Intercooled:** Turbocharged with intercooler, dual injector channels per cylinder. Displacement: $1,352\text{ cm}^3$, compression ratio: $8.2:1$, full take-off power: $141\text{ hp}$ up to $15,000\text{ ft}$.
+- **Austro Engine AE300:** 2.0L turbocharged common-rail diesel ($168\text{ hp}$) utilizing heavy aviation fuel (Jet-A1 / JP-8).
+- **VRDE Jayem 2.2L:** DRDO indigenized compression-ignition heavy-fuel aero-engine ($180\text{ hp}$) developed for tactical MALE UAV platforms (Tapas-BH-201).
 
-## Slider-crank kinematics
+---
 
-Piston position, velocity, and acceleration are derived from the classical slider-crank relationship, with crank radius $r$ equal to half the stroke ($r = S/2$), connecting rod length $l$, and rod-to-crank ratio $\lambda = r / l$:
+## The 0D/1D Mean Value Engine Model (MVEM)
 
-$$
-x(\theta) = r(1 - \cos\theta) + l\left(1 - \sqrt{1 - \lambda^2 \sin^2\theta}\right)
-$$
+The propulsion plant consists of five synchronized thermodynamic stages executing at 50 Hz synchronously with incoming telemetry:
 
-$$
-\frac{dx}{d\theta} = r \sin\theta \left[1 + \frac{\lambda \cos\theta}{\sqrt{1 - \lambda^2 \sin^2\theta}}\right]
-$$
+```mermaid
+flowchart TB
+    Amb["Ambient Air: P0(z), T0(z) (ISA Lapse)"] --> TC["Turbocharger Stage: Compressor & Turbine Balance"]
+    WGC["Wastegate Control Duty (u_wg)"] --> TC
+    TC --> IC["Intercooler Heat Exchanger Stage (eta_ic)"]
+    IC --> IM["Intake Manifold Filling/Emptying: P_im, T_im"]
+    Alpha["Throttle Angle (alpha_th)"] --> IM
+    IM --> Cyl["4-Stroke Cylinder Combustion: Modified Seiliger Cycle"]
+    Fuel["Fuel Mass Flow (m_dot_f)"] --> Cyl
+    Cyl --> Crank["Crankshaft Kinematics: Slider-Crank J domega/dt"]
+    Cyl --> Lub["Lubrication & Friction: Chen-Flynn & Sommerfeld h_min"]
+    Cyl --> Exh["Exhaust Energy Balance: Pre-Turbine TIT"]
+    Exh --> TC
+```
 
-Cylinder volume follows directly from piston position: swept volume $V_d = \frac{\pi}{4} B^2 S$, clearance volume $V_c = \frac{V_d}{r_c - 1}$ from compression ratio $r_c$, and total instantaneous cylinder volume:
+---
 
-$$
-V(\theta) = V_c + A_p \cdot x(\theta)
-$$
+## 1. Atmospheric Lapse Dynamics (ISA Model)
 
-This kinematic chain is computed once per crank angle and reused throughout the cycle, since it depends only on crank angle, not on engine state.
+The flight core computes ambient pressure $P_0$, temperature $T_0$, and density $\rho_0$ at geometric altitude $z$ (AMSL) according to the International Standard Atmosphere with non-standard temperature offsets $\Delta T_{\text{ISA}}$:
 
-## Wiebe heat release
+$$T_0(z) = (T_{\text{SL}} - L \cdot z) + \Delta T_{\text{ISA}}, \quad L = 0.0065\text{ K/m}, \quad T_{\text{SL}} = 288.15\text{ K}$$
 
-Combustion is modeled with the Wiebe function, the standard empirical burn-rate correlation used in zero-dimensional combustion simulation. Mass fraction burned $x_b$ as a function of crank angle $\theta$ is:
+$$P_0(z) = P_{\text{SL}} \cdot \left( 1 - \frac{L \cdot z}{T_{\text{SL}}} \right)^{\frac{g \cdot M}{R_0 \cdot L}}, \quad P_{\text{SL}} = 101.325\text{ kPa}$$
 
-$$
-x_b(\theta) = 1 - \exp\left(-a \left(\frac{\theta - \theta_0}{\Delta\theta}\right)^{m+1}\right), \quad \theta_0 \le \theta \le \theta_0 + \Delta\theta
-$$
+$$\rho_0(z) = \frac{P_0(z)}{R_{\text{air}} \cdot T_0(z)}, \quad R_{\text{air}} = 287.058\text{ J/(kg}\cdot\text{K)}$$
 
-with shape parameter $a = 5.0$ and Wiebe exponent $m = 2.0$. The burn rate $\frac{dx_b}{d\theta}$, obtained by differentiating this expression, multiplied by total heat release $Q_{\text{total}} = m_f \cdot \text{LHV} \cdot \eta_{\text{comb}}$ (fuel mass per cycle times lower heating value times combustion efficiency), gives the heat release rate driving pressure:
+---
 
-$$
-\frac{dQ}{d\theta} = Q_{\text{total}} \cdot \frac{dx_b}{d\theta}
-$$
+## 2. Turbocharger Aerothermodynamics
 
-This is the single point in the model where combustion faults are introduced, and it is what keeps the approach physically honest: a misfire sets $Q_{\text{total}}$ to zero for one cylinder on one cycle. A partial burn or injector fault scales $Q_{\text{total}}$ down rather than zeroing it. A slow burn from degraded ignition stretches the burn duration $\Delta\theta$. Combustion instability applies cycle-to-cycle random jitter to $\theta_0$, $\Delta\theta$, and $Q_{\text{total}}$ together. Every fault is a modification to a physical parameter feeding the heat release equation, never a direct edit to an output waveform.
+For turbocharged variants (Rotax 914, 915 iS), compressor pressure ratio $\Pi_c = P_{c,\text{out}} / P_0$ and mass flow $\dot{m}_c$ govern compressor exit temperature:
 
-## Cylinder pressure to torque to crank dynamics
+$$T_{c,\text{out}} = T_0 \cdot \left[ 1 + \frac{1}{\eta_c} \left( \Pi_c^{\frac{\gamma - 1}{\gamma}} - 1 \right) \right], \quad \gamma = 1.4$$
 
-Cylinder pressure is obtained by integrating the single-zone first law of thermodynamics over the 720-degree four-stroke cycle:
+Compressor required power $\dot{W}_c$:
+$$\dot{W}_c = \dot{m}_c \cdot c_{p,\text{air}} \cdot (T_{c,\text{out}} - T_0)$$
 
-$$
-\frac{dp}{d\theta} = \frac{\gamma - 1}{V(\theta)} \frac{dQ}{d\theta} - \frac{\gamma p}{V(\theta)} \frac{dV}{d\theta}
-$$
+Turbine power $\dot{W}_t$ developed from exhaust enthalpy (where $u_{\text{wg}} \in [0, 1]$ is wastegate opening fraction):
+$$\dot{m}_t = \dot{m}_{\text{exh}} \cdot (1 - u_{\text{wg}})$$
+$$\dot{W}_t = \dot{m}_t \cdot c_{p,\text{exh}} \cdot T_{\text{tit}} \cdot \eta_t \cdot \left[ 1 - \left( \frac{P_0}{P_{\text{exh}}} \right)^{\frac{\gamma_e - 1}{\gamma_e}} \right]$$
 
-with the ratio of specific heats $\gamma \approx 1.35$ for the burned mixture, integrated across intake, polytropic compression, combustion and expansion, and exhaust phases.
+Turbocharger rotor shaft dynamic state:
+$$\frac{d N_{\text{tc}}}{dt} = \frac{1}{J_{\text{tc}} \cdot N_{\text{tc}} \cdot \left(\frac{2\pi}{60}\right)^2} \cdot (\dot{W}_t \cdot \eta_{\text{mech,tc}} - \dot{W}_c)$$
 
-Pressure converts to torque through two physical components. Gas torque arises from cylinder differential pressure acting through the slider-crank geometry:
+---
 
-$$
-F_{\text{gas}}(\theta) = (p(\theta) - p_{\text{crankcase}}) A_p, \quad T_{\text{gas}}(\theta) = F_{\text{gas}}(\theta) \cdot \frac{dx}{d\theta}
-$$
+## 3. Intake Manifold Filling & Emptying Dynamics
 
-Inertial torque comes from reciprocating mass $m_{\text{recip}}$ accelerated by the crank mechanism:
+Intake manifold pressure $P_{\text{im}}$ and temperature $T_{\text{im}}$ follow control-volume conservation laws:
 
-$$
-T_{\text{inert}}(\theta) \approx -m_{\text{recip}} \cdot r^2 \omega^2 \left(\sin\theta + \frac{\lambda}{2} \sin(2\theta)\right) \cdot \frac{dx}{d\theta}
-$$
+$$\frac{d P_{\text{im}}}{dt} = \frac{\gamma \cdot R_{\text{air}} \cdot T_{\text{im}}}{V_{\text{im}}} \cdot \left( \dot{m}_{\text{th}} - \dot{m}_{\text{cyl}} \right)$$
 
-Total instantaneous engine torque sums contributions across all four cylinders phased by $180^\circ$ according to the Rotax 1-4-2-3 firing order:
+Throttle mass flow $\dot{m}_{\text{th}}$ is computed via the isentropic compressible orifice equation with throttle discharge area $A_{\text{th}}(\alpha_{\text{th}})$:
 
-$$
-T_{\text{total}}(\theta) = \sum_{k=1}^4 \left(T_{\text{gas}, k}(\theta - \phi_k) + T_{\text{inert}, k}(\theta - \phi_k)\right)
-$$
+$$\dot{m}_{\text{th}} = C_d \cdot A_{\text{th}}(\alpha_{\text{th}}) \cdot \frac{P_{c,\text{out}}}{\sqrt{R_{\text{air}} T_{c,\text{out}}}} \cdot \Psi\left(\frac{P_{\text{im}}}{P_{c,\text{out}}}\right)$$
 
-Total torque drives crankshaft angular acceleration directly:
+$$\Psi(P_r) = \begin{cases} 
+\sqrt{\gamma \left(\frac{2}{\gamma + 1}\right)^{\frac{\gamma + 1}{\gamma - 1}}} & \text{if } P_r \le \left(\frac{2}{\gamma+1}\right)^{\frac{\gamma}{\gamma-1}} \text{ (Choked Flow)} \\[8pt]
+\sqrt{\frac{2\gamma}{\gamma - 1} \left( P_r^{\frac{2}{\gamma}} - P_r^{\frac{\gamma + 1}{\gamma}} \right)} & \text{if } P_r > \left(\frac{2}{\gamma+1}\right)^{\frac{\gamma}{\gamma-1}} \text{ (Subsonic Flow)}
+\end{cases}$$
 
-$$
-J \frac{d\omega}{dt} = T_{\text{total}}(\theta) - T_{\text{load}}(\omega), \quad \frac{d\theta}{dt} = \omega
-$$
+Cylinder induction aspiration mass flow:
+$$\dot{m}_{\text{cyl}} = \eta_v(P_{\text{im}}, \omega_e) \cdot \frac{V_d \cdot \omega_e}{4\pi} \cdot \frac{P_{\text{im}}}{R_{\text{air}} \cdot T_{\text{im}}}$$
 
-where `J` is crank and flywheel inertia and `T_load` is the propeller load through the reduction gearbox plus accessory drag. Integrating this equation over crank angle produces the model's key output signal: `omega(theta)`, instantaneous crankshaft angular velocity.
+---
+
+## 4. In-Cylinder Modified Seiliger & Wiebe Combustion
+
+The combustion cycle is formulated as a dual-combustion Seiliger cycle to capture peak combustion pressure $P_{\max}$ without the computational penalty of 3D CFD:
+
+$$P_{\text{comp}} = P_{\text{im}} \cdot r_c^{\kappa_c}, \quad T_{\text{comp}} = T_{\text{im}} \cdot r_c^{\kappa_c - 1}$$
+
+Constant-volume pressure rise ratio $\alpha_p = P_3 / P_{\text{comp}}$ and constant-pressure cut-off ratio $\beta_v = V_4 / V_3$:
+
+$$P_{\max} = \alpha_p \cdot P_{\text{comp}} = P_{\text{comp}} + \frac{\xi_v \cdot \eta_{\text{comb}} \cdot m_{\text{fuel}} \cdot Q_{\text{lhv}}}{c_v \cdot m_{\text{total}}}$$
+$$T_{\max} = T_{\text{comp}} \cdot \alpha_p \cdot \beta_v$$
+
+Where $\xi_v \approx 0.55$ is the fraction of fuel burned at constant volume, $Q_{\text{lhv}} = 43.5\text{ MJ/kg}$, and $\eta_{\text{comb}} = 0.98$.
+
+At the crank-angle resolution, burn rate follows the Wiebe mass-fraction burned function:
+$$x_b(\theta) = 1 - \exp\left(-a \left(\frac{\theta - \theta_0}{\Delta\theta}\right)^{m+1}\right), \quad \frac{dQ}{d\theta} = Q_{\text{total}} \cdot \frac{dx_b}{d\theta}$$
+
+Turbine Inlet Temperature ($TIT$) dynamic lag equation:
+$$\tau_{\text{egt}} \frac{d T_{\text{tit}}}{dt} + T_{\text{tit}} = T_{\max} \cdot \left(\frac{1}{r_c}\right)^{\kappa_e - 1} - \Delta T_{\text{blowdown}}$$
+
+---
+
+## 5. Lubrication Dynamics & Crankcase Friction
+
+Friction Mean Effective Pressure ($FMEP$) and minimum hydrodynamic journal oil film thickness $h_{\min}$ follow the Chen-Flynn aero-piston friction formulation:
+
+$$FMEP = c_0 + c_1 \cdot P_{\max} + c_2 \cdot \bar{S}_p + c_3 \cdot \bar{S}_p^2$$
+
+Where $\bar{S}_p = \frac{2 \cdot S \cdot \omega_e}{60}$ is the mean piston speed ($S = 61\text{ mm}$ stroke).
+
+Hydrodynamic journal bearing minimum oil film thickness via Sommerfeld number $S_0$:
+$$S_0 = \frac{\mu_{\text{oil}}(T_{\text{oil}}) \cdot N_{\text{eng}}}{P_{\text{bearing}}} \cdot \left( \frac{R_{\text{journal}}}{C_{\text{radial}}} \right)^2$$
+
+$$h_{\min} = C_{\text{radial}} \cdot \left( 1 - \epsilon(S_0) \right)$$
+
+Oil dynamic viscosity follows the Vogel-Cameron thermal equation:
+$$\mu_{\text{oil}}(T_{\text{oil}}) = A_\mu \cdot \exp\left( \frac{B_\mu}{T_{\text{oil}} + C_\mu} \right)$$
+
+Crankcase oil sump thermal conservation:
+$$m_{\text{oil}} \cdot c_{\text{oil}} \frac{d T_{\text{oil}}}{dt} = \dot{W}_{\text{friction}}(FMEP, \omega_e) + \dot{Q}_{\text{piston-underside}} - \dot{Q}_{\text{oil-cooler}}(v_{\text{ias}}, T_0)$$
+
+---
+
+## 6. Slider-Crank Kinematics & Crank Dynamics
+
+Piston position $x(\theta)$ and swept volume $V(\theta)$ are derived from the slider-crank geometry:
+
+$$x(\theta) = r(1 - \cos\theta) + l\left(1 - \sqrt{1 - \lambda^2 \sin^2\theta}\right), \quad \lambda = \frac{r}{l}$$
+
+Gas torque $T_{\text{gas}}(\theta) = (p(\theta) - p_{\text{crankcase}}) A_p \cdot \frac{dx}{d\theta}$ and reciprocating inertial torque $T_{\text{inert}}(\theta)$ sum across all four cylinders phased by $180^\circ$ (1-4-2-3):
+
+$$J \frac{d\omega}{dt} = \sum_{k=1}^4 \Big( T_{\text{gas}, k}(\theta - \phi_k) + T_{\text{inert}, k}(\theta - \phi_k) \Big) - T_{\text{load}}(\omega)$$
 
 ```mermaid
 flowchart LR
-    Wiebe["Wiebe heat release"] --> Press["Cylinder pressure, first law"]
-    Press --> GasT["Gas torque"]
-    Kin["Slider-crank kinematics"] --> GasT
-    Kin --> InertT["Inertial torque"]
-    GasT --> Sum["Total torque, 4 cylinders phased 1-4-2-3"]
+    Comb["Seiliger & Wiebe Combustion"] --> GasT["Gas Torque T_gas(theta)"]
+    Kin["Slider-Crank Kinematics"] --> GasT
+    Kin --> InertT["Reciprocating Inertia T_inert(theta)"]
+    GasT --> Sum["Instantaneous Total Engine Torque"]
     InertT --> Sum
-    Sum --> Crank["Crank dynamics: J domega/dt = T minus load"]
-    Crank --> Omega["omega(theta)"]
+    Sum --> Crank["Flywheel & Propeller Dynamics: J domega/dt = T_total - T_load"]
+    Crank --> Omega["Crank Angular Velocity omega(theta)"]
 ```
-*Caption: the physics chain from combustion heat release to instantaneous crank angular velocity.*
 
-## Why misfire emerges from physics rather than being authored
+---
 
-A healthy cylinder contributes a torque pulse during its power stroke that accelerates the crank. A misfiring cylinder, with `Q_total` set to zero for that cycle, contributes no gas torque during its stroke, so angular velocity decelerates through that 180-degree window instead of accelerating. Because the deficit appears specifically within the misfiring cylinder's own angular window, cylinder identity comes directly from crank phase rather than from a separate classification step, which is the same principle underlying established crank-angle-based misfire detection in the automotive literature.
+## Emergence of Multi-Channel Fault Signatures
 
-Every other downstream signature follows from the same underlying change. With no heat release in that cylinder, its exhaust gas temperature reading drops because there is no combustion gas to heat it, on a thermal lag of roughly five to twenty seconds. The engine's vibration signature shows a rise in half-order energy, because a dead cylinder makes the firing pattern repeat once per full 720-degree cycle instead of once per 180-degree stroke, injecting energy at half-integer orders that a healthy four-cylinder four-stroke engine (dominant at order 2) does not produce. None of these three signatures, the angular velocity dip, the EGT drop, the half-order vibration rise, is separately scripted. They are three independent observations of one physical event, which is what makes their agreement diagnostically meaningful rather than coincidental, a property used directly in cross-domain fault corroboration.
+Because all thermodynamic stages are coupled by physical conservation equations, an injected fault produces cross-correlated signatures across multiple physical channels naturally:
 
-Per-cylinder torque deficit at each cylinder's own firing angle is also the basis for combustion instability detection: cycle-to-cycle variation in that same quantity serves as a coefficient-of-variation proxy for combustion stability, since the engine has no cylinder-pressure sensor of its own to measure true indicated mean effective pressure directly.
+1. **Ignition Misfire:** Setting $Q_{\text{total}} = 0$ on Cylinder #2 eliminates gas torque for that $180^\circ$ interval, causing an immediate dip in $\omega(\theta)$. Simultaneously, EGT on Cylinder #2 decays exponentially, while order-tracking vibration reveals a surge in half-order ($0.5X$) energy.
+2. **Wastegate Stuck Open:** Turbocharger boost pressure collapses ($\Delta MAP < 0$), manifold density drops, EGT rises due to late combustion timing, and indicated power derates by up to $35\%$.
+3. **Oil Cooler Airflow Blockage:** Sump temperature $T_{\text{oil}}$ climbs past $125^\circ\text{C}$, viscosity $\mu_{\text{oil}}$ drops, reducing the Sommerfeld number $S_0$ and collapsing hydrodynamic oil film thickness $h_{\min}$ toward boundary friction scuffing ($h_{\min} < 0.8\ \mu\text{m}$).
 
-## Order tracking as a companion method
+---
 
-Because a UAV engine's shaft speed changes continuously with throttle, analyzing vibration with fixed frequency bins loses resolution as speed changes. The system instead uses tach-synchronous order tracking: angular resampling that converts a time-domain vibration signal into the angle domain, so that a given mechanical event, a gear mesh, a bearing defect, a cylinder firing, lands at the same order regardless of engine speed. Hilbert envelope demodulation is applied on top of this to reveal amplitude-modulated bearing and gear defect signatures that a raw spectrum would otherwise hide. This order-domain view serves as a confirmatory check alongside the segmented torque-deficit method above: a healthy engine shows dominant energy at order 2, while a misfiring cylinder shows order 0.5 and order 1 energy rising and order 2 falling, a speed-invariant ratio that corroborates what the torque-deficit method already attributes to a specific cylinder.
-
-## Honest limits
-
-The physics core is single-zone with no explicit heat transfer submodel; wall heat loss is folded into the combustion efficiency term rather than computed from a correlation, which is adequate for relative fault signatures but not for absolute efficiency prediction. Gas dynamics, intake and exhaust wave action, and valve-overlap scavenging are not modeled; manifold pressure is imposed rather than computed from first principles. The crankshaft is treated as rigid with lumped inertia, so torsional compliance and drivetrain resonance are not represented. These are stated as scope boundaries of the current simulation-grounded implementation, not defects, and they define exactly what a future flight-hardware validation phase would need to characterize.
-
-## Related systems
+## Related Systems
 
 - [The Digital Twin Core](05-the-digital-twin.md)
+- [Telemetry and Sensors](07-telemetry-and-sensors.md)
 - [Residual Analysis](08-residual-analysis.md)
-- [Telemetry and Sensor Intelligence](07-telemetry-and-sensors.md)
-- [Introducing ANUMAAN](03-introducing-anumaan.md)
+- [Vibration Analysis and Order Tracking](12-vibration-analysis.md)

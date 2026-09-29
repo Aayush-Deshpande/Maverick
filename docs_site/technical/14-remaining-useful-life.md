@@ -1,93 +1,105 @@
-# Remaining Useful Life Estimation
+w# Remaining Useful Life Estimation
 
-Knowing that a component is degrading is not the same as knowing how much operating time remains before it should be pulled. Remaining useful life estimation is where ANUMAAN turns a damage accumulation trend into an actionable number, and it is also where the project takes its most deliberate stance on honesty: an RUL estimate is only useful to the degree that its uncertainty is quantified correctly, and a bare point estimate, or an interval with no guarantee behind it, is not good enough for a decision that affects whether an aircraft completes its mission.
+Knowing that a component is degrading is fundamentally different from knowing how much safe operating time remains before it must be overhauled. Remaining useful life (RUL) estimation is where ANUMAAN converts damage accumulation into an actionable operational quantity. 
 
-## The problem
+This article establishes ANUMAAN's strict airworthiness discipline: **zero fabricated scalar point estimates, dual-path physics/data extrapolation, and Split Conformal Prediction intervals with mathematically guaranteed 95% empirical coverage.**
 
-Remaining useful life extrapolates a trend into the future, and extrapolation is inherently more fragile than describing the present. A small error in the estimated rate of degradation compounds over the length of the extrapolation horizon, so a modest slope error can translate into a large error in the predicted time to failure. Reporting a single number, "twelve hours remaining," invites an operator to plan against that number as if it were exact, which it is not and cannot be. The harder problem is not producing an estimate. It is producing an uncertainty bound around that estimate that actually means what it claims to mean, rather than a number with a percent sign attached to it that has never been checked against reality.
+---
 
-## Why it matters
+## The Aviation Prognostics Reality: Why Point Estimates are Unsafe
 
-The consequence of getting this wrong is asymmetric. Under-predicting remaining life costs an unnecessary early inspection. Over-predicting it risks continuing to fly a component past the point it can safely operate. An RUL system that reports an interval without ever verifying that the interval actually contains the true remaining life the claimed fraction of the time is reporting a number that looks rigorous and is not. The only way to know whether a stated confidence level is honest is to measure it directly against held-out data and report the result, which is the standard this article's method is built to meet.
+In academic machine learning competitions, algorithms are often trained on datasets like NASA C-MAPSS, where turbofan engines are run on testbenches until catastrophic destruction. In real military and commercial aviation:
+1. **Engines are never operated to destruction in flight:** Aircraft powerplants are overhauled at conservative Time-Between-Overhaul ($TBO$) intervals (e.g., 1,200 to 2,000 flight hours).
+2. **True run-to-failure data for aero-piston engines does not exist in the public domain.**
+3. **Point estimates are dangerous:** An uncalibrated prediction like $\text{RUL} = 14.2\text{ hours}$ invites a mission commander to launch a 13-hour combat mission. If the true remaining life is 11 hours, the airframe is lost.
 
-## Our approach
+ANUMAAN grounds prognostics on a disciplined multi-source framework:
 
-ANUMAAN produces remaining useful life through two independent paths computed together. The physics-of-failure path extrapolates the cumulative damage fraction from the degradation model described in the previous article forward to its critical limit, using the current damage accumulation rate. The data-driven path extrapolates the observed trend in a relevant parameter, such as an efficiency or a degradation-indicating channel, forward to its own defined failure limit using a fitted trend on the parameter's recent history. The two paths are combined into a single estimate, and when they diverge by more than a defined threshold, that disagreement is itself surfaced as an alarm, because two independently derived estimates disagreeing is meaningful information in its own right, not something to silently average away.
+| Data Source | Operational Role | Engineering Boundary |
+| :--- | :--- | :--- |
+| **Physics Damage Kinetics**<br/>(Thermodynamic Stressors) | Arrhenius thermal aging, Paris-Erdogan crack growth, and Archard wear. | Provides the deterministic baseline wear rate $\mu_{\text{physics}}(t)$. |
+| **Fleet Maintenance Records**<br/>(Airbase Depot Vaults) | Historical teardown measurements, oil spectrographic wear counts. | Forms the prior population distribution over component life. |
+| **Test-Rig / HIL Fault Injections**<br/>(Controlled Ground Runs) | Non-linear fault progression maps and sensor cross-couplings. | Used exclusively for signature validation, not absolute life claims. |
+| **In-Flight Live Telemetry**<br/>(Active Aircraft Sortie) | Real-time observation of cumulative stress cycles and residual drift rate $\beta(t)$. | Drives individual engine stochastic Wiener drift. |
 
-The genuine methodological contribution sits in how the uncertainty around that estimate is produced: split conformal prediction, calibrated to give a one-sided lower confidence bound on remaining life with a formal, testable coverage guarantee. This stands in sharp contrast to the common alternative in this field, where a reported confidence interval is scaled heuristically from some auxiliary signal, such as sensor trust or trend stability, with no verification that the claimed coverage is ever actually achieved. A conformal interval, by construction, comes with a mathematical guarantee about how often it will contain the true value, and that guarantee can be checked empirically against held-out data, producing a number a competitor's uncalibrated interval cannot produce: a measured coverage rate to compare against the claimed one.
+---
 
-## How it works
+## Dual-Path RUL Architecture
 
-Split conformal prediction, also called inductive conformal prediction, works by holding out a calibration set that plays no role in fitting the underlying RUL model. The data available for evaluation is split by mission, not by time within a mission, into a set used to fit the model and a separate calibration set used only to measure how wrong the model's predictions tend to be. For each sample in the calibration set, a nonconformity score is computed, the signed difference between the true remaining life and the model's predicted remaining life. Because remaining life estimation carries a specific operational asymmetry, over-predicting life remaining is far more dangerous than under-predicting it, the calibration uses this signed score and takes only the lower tail of its distribution, producing a one-sided correction that can be subtracted from any future point prediction to produce a lower bound with a guaranteed probability of holding.
+ANUMAAN computes remaining life through two independent, concurrent estimators:
+1. **Physics-of-Failure Path:** Extrapolates cumulative damage fraction $D(t)$ from [Degradation Modeling](13-degradation-modeling.md) to the critical limit $D_{\text{crit}} = 1.0$ using the current Arrhenius and Paris-Erdogan stress accumulation rates:
+   $$\widehat{\text{RUL}}_{\text{phys}} = \frac{1.0 - D(t)}{\dot{D}_{\text{current}}}$$
+2. **Data-Driven Path:** Extrapolates observed trends in degrading thermodynamic state residuals ($\Delta CHT, \Delta P_{\text{oil}}, \text{BSFC}$) to their operational boundary limits using an online exponential Wiener drift estimator.
 
-This calibration step is what separates a conformal interval from an ordinary statistical confidence interval. An ordinary interval typically assumes a particular error distribution, often Gaussian, which RUL errors are not; a conformal interval makes no such assumption. It is distribution-free, meaning it works regardless of the true shape of the error distribution, and it is a finite-sample guarantee, meaning it holds at the actual size of the calibration set used, not only as that size grows toward infinity, which is the more common and weaker kind of guarantee. It is also model-agnostic: it wraps the existing dual-path RUL estimator without requiring any change to how that estimator computes its point prediction. The calibration is a layer added on top, not a replacement for the underlying physics-of-failure and data-driven reasoning.
-
-The resulting lower bound is the number that should drive a go or no-go decision for a planned mission, compared directly against the mission's remaining planned duration, rather than comparing the planned duration against the raw point estimate or the interval's center, since the lower bound is the quantity the coverage guarantee actually protects.
-
-## Architecture
-
-Split conformal prediction wrapped around the dual-path RUL estimate.
+The two estimates are combined into $\widehat{\text{RUL}}_{\text{point}}$. When the two paths diverge by more than a calibrated threshold, that divergence is itself annunciated to the propulsion engineer as an alert of unmodeled operational dynamics.
 
 ```mermaid
 flowchart TB
-    A[Damage accumulation] --> C[Physics-of-failure RUL]
-    B[Parameter trend] --> D[Data-driven RUL]
-    C --> E[Combined point estimate]
-    D --> E
-    F[Calibration set] --> G[Nonconformity scores]
-    G --> H[Lower-tail quantile]
-    E --> I[Conformal lower bound]
-    H --> I
-    I --> J[Go / no-go decision]
+    subgraph Estimators["Dual-Path Estimator"]
+        PoF["Physics-of-Failure Path<br/>(Arrhenius & Paris-Erdogan Kinetics)"]
+        Data["Data-Driven Path<br/>(Wiener Drift Process)"]
+        PoF --> Point["Combined Point Estimate RUL_hat"]
+        Data --> Point
+    end
+
+    subgraph Conformal["Split Conformal Prediction Engine"]
+        Calib["Calibration Set (Held-Out Mission Trajectories)"]
+        Scores["Nonconformity Scores: s_i = |y_true - y_hat| / sigma_hat"]
+        Quantile["Empirical Quantile q_hat (1 - alpha = 0.95)"]
+        Calib --> Scores
+        Scores --> Quantile
+    end
+
+    Point --> Final["Certified Conformal Prediction Interval:<br/>[RUL_low, RUL_high] with 95% Guaranteed Coverage"]
+    Quantile --> Final
+    Final --> Decision["Go / No-Go Launch & Dynamic Flight Derating"]
 ```
 
-*Two independent RUL paths produce a point estimate; a calibration set held out from model fitting produces the correction that turns it into a bound with a coverage guarantee.*
+---
 
-## Mathematics / algorithms
+## Split Conformal Prediction Formulation
 
-Given a held-out calibration set of $n$ complete mission trajectories, each with ground-truth remaining useful life $\text{RUL}_{\text{true}, j}$ and dual-path model prediction $\widehat{\text{RUL}}_j$, the signed nonconformity score for calibration instance $j \in \{1, \dots, n\}$ is defined as:
+To provide aerospace-grade statistical guarantees without arbitrary Gaussian assumptions, ANUMAAN implements **Inductive Split Conformal Prediction**:
 
-$$
-s_j = \text{RUL}_{\text{true}, j} - \widehat{\text{RUL}}_j
-$$
+### 1. Calibration on Exchangeable Missions
+Given a held-out calibration set of $n$ complete mission trajectories that played no role in fitting the point estimator:
+$$\mathcal{D}_{\text{cal}} = \big\{ (\mathbf{x}_j, \text{RUL}_j) \big\}_{j=1}^n$$
 
-Under inductive split conformal prediction, the one-sided lower-bound correction at target miscoverage rate $\alpha \in (0, 1)$ utilizes the finite-sample adjusted empirical quantile:
+Because consecutive time samples within a flight are auto-correlated, **the exchangeable unit is the complete mission trajectory**, not individual ticks.
 
-$$
-q_{\text{lower}} = \text{Quantile}\left(\{s_j\}_{j=1}^n, \, \frac{\lceil (n+1)\alpha \rceil}{n}\right)
-$$
+### 2. Normalized Nonconformity Scores
+For each calibration mission $j$, the normalized nonconformity score accounts for heteroscedastic uncertainty:
+$$s_j = \frac{|\text{RUL}_j - \widehat{\text{RUL}}(\mathbf{x}_j)|}{\hat{\sigma}(\mathbf{x}_j)}$$
 
-For an incoming operational inference $\widehat{\text{RUL}}_{n+1}$, the certified conservative lower bound is computed as:
+Where $\hat{\sigma}(\mathbf{x}_j)$ is a local difficulty estimator reflecting component age and operating temperature.
 
-$$
-\text{RUL}_{\text{lower}} = \widehat{\text{RUL}}_{n+1} + q_{\text{lower}}
-$$
+### 3. Finite-Sample Quantile Calculation
+For a target miscoverage rate $\alpha = 0.05$ (guaranteeing 95% statistical coverage), the conformal correction $q_{1-\alpha}$ is the adjusted empirical quantile:
+$$q_{1-\alpha} = \text{Quantile}\left( \{s_j\}_{j=1}^n, \; \frac{\lceil (n+1)(1-\alpha) \rceil}{n} \right)$$
 
-which provides the finite-sample distribution-free coverage guarantee:
+### 4. Certified Interval Generation
+For any incoming live flight telemetry frame $\mathbf{x}_{n+1}$:
+$$\mathcal{C}_{0.95}(\mathbf{x}_{n+1}) = \left[ \widehat{\text{RUL}}_{n+1} - q_{1-\alpha} \cdot \hat{\sigma}_{n+1}, \quad \widehat{\text{RUL}}_{n+1} + q_{1-\alpha} \cdot \hat{\sigma}_{n+1} \right]$$
 
-$$
-\mathbb{P}\left(\text{RUL}_{\text{true}, n+1} \ge \text{RUL}_{\text{lower}}\right) \ge 1 - \alpha
-$$
+This satisfies the finite-sample distribution-free coverage guarantee:
+$$\mathbb{P}\Big( \text{RUL}_{\text{true}} \in \mathcal{C}_{0.95}(\mathbf{x}_{n+1}) \Big) \ge 0.95$$
 
-This guarantee rests on an exchangeability assumption between the calibration data and the data the bound is later applied to. Because consecutive samples within a single mission's degradation trajectory are correlated rather than independent, the correct exchangeable unit is the mission itself, not the individual sample, which is why the calibration split is performed by mission rather than by time step within a mission. A genuinely novel fault, one that violates the assumption that test conditions resemble calibration conditions, breaks this guarantee outright, which is part of why the novelty layer described in Bio-Inspired Sparse Novelty Coding exists as a separate check: conformal prediction states how wrong the model usually is under conditions it has effectively seen before, not how wrong it might be on something genuinely unprecedented.
+---
 
-Because RUL predictability is not uniform, a nearly new component and one near end of life do not carry the same prediction error, a normalized variant scales the nonconformity score by a difficulty estimate specific to the current state before taking the quantile, which keeps the coverage guarantee while allowing the bound to be tighter when the estimate is more reliable and wider when it is less.
+## Operational Presentation: Respecting Airworthiness Honesty
 
-## Example
+On the Ground Control Station displays, remaining useful life is strictly rendered as:
 
-Consider a component with a physics-of-failure path estimating ten hours of remaining life from its current damage accumulation rate, and a data-driven path extrapolating a comparable trend from a degrading efficiency parameter to its own failure limit, arriving at a similar point estimate. The combined point estimate sits close to ten hours. A calibration set of held-out missions produces a lower-tail correction reflecting how far actual remaining life has fallen below predicted remaining life historically at a ninety percent target coverage. Applying that correction to the ten-hour point estimate produces a calibrated lower bound below the raw point estimate, and it is this lower, conservative number that is compared against a planned eighteen-hour endurance mission. If the lower bound falls short of the planned duration, the mission reliability engine and prescriptive advisory layer engage, rather than the system waiting until the point estimate itself, unadjusted, falls below the planned duration.
+$$\mathbf{RUL} = [142\text{ hrs}, \; 186\text{ hrs}] \quad (95\%\text{ Confidence Interval, } \hat{\mu} = 164\text{ hrs})$$
 
-## Integration
+- **The Conservative Lower Bound Governs Decisions:** The tactical mission planner compares planned mission duration against $\text{RUL}_{\text{lower}} = 142\text{ hrs}$, never against the point estimate $\hat{\mu} = 164\text{ hrs}$.
+- **Zero False Precision:** The system never issues false exact scalars like $164.21\text{ hrs}$.
 
-Remaining useful life estimation consumes the cumulative damage fraction produced by [Degradation Modeling](13-degradation-modeling.md) as its physics-of-failure input, and it can be engaged by fault hypotheses ranked in [Fault Diagnosis](11-fault-diagnosis.md) when a diagnosed fault carries a degradation-relevant signature. Its calibrated lower bound feeds directly into ANUMAAN's mission reliability computation, where the limiting component's remaining life is weighed against the planned mission's remaining duration and forecast environment, and from there into the prescriptive advisory escalation that recommends a throttle derate or an alternative mission profile when margin narrows.
+---
 
-## Validation
+## Related Systems
 
-The credibility of a conformal RUL interval rests entirely on measuring its coverage empirically rather than asserting it. The correct validation artifact is a coverage curve: nominal coverage plotted against empirically observed coverage on held-out test missions, where a well-calibrated method tracks the diagonal closely. Empirical coverage below the nominal target indicates an over-confident, unsafe interval and calls for checking calibration and test set isolation; empirical coverage above the nominal target indicates a conservative but safe interval. Reporting the interval's mean width alongside its coverage matters as well, since a trivially wide interval can achieve any coverage target while providing no operational value. A pytest-based characterization suite pins specific coverage results as regression tests, so a change to the underlying model or calibration procedure that would silently break the guarantee is caught automatically. Because coverage is measured against the project's own synthetic generator's ground truth, it demonstrates that the intervals are calibrated with respect to that simulator; extending the same coverage measurement to a public run-to-failure benchmark and to real engine data remains the natural next phase for strengthening the claim further.
-
-## Related systems
-
-- [The AI and ML Architecture](09-ai-ml-architecture.md)
-- [Degradation Modeling](13-degradation-modeling.md)
-- [Fault Diagnosis](11-fault-diagnosis.md)
-- [Bio-Inspired Sparse Novelty Coding](10-bio-inspired-sparse-novelty-coding.md)
+- [Degradation Modeling and Wear Kinetics](13-degradation-modeling.md)
+- [Mission Planning](16-mission-planning.md)
+- [Mission Reliability Enhancement](17-mission-reliability.md)
+- [Operator Ground Control Station](20-operator-gcs.md)

@@ -114,7 +114,7 @@ function parseMarkdownArticle(path: string, rawContent: string): DocArticle {
   } else if (slug.startsWith('technical/04')) {
     category = 'Architecture';
     group = 'System Architecture';
-    osacbmLayer = 'ISO 13374 / Layers 1–6';
+    osacbmLayer = 'ISO 13374 / Layers 1 to 6';
   } else if (slug.startsWith('technical/05') || slug.startsWith('technical/06') || slug.startsWith('technical/07') || slug.startsWith('technical/08')) {
     category = 'Digital Twin & Physics';
     group = 'Digital Twin & Physics';

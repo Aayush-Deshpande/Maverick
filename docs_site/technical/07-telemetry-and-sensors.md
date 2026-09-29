@@ -1,63 +1,148 @@
-# Telemetry and Sensor Intelligence
+# Telemetry, Avionics Interfaces & Sensor Intelligence
 
-Every judgment ANUMAAN makes rests on telemetry acquired from the engine and the flight context around it. This article covers the parameters the system monitors, how it tells a genuinely faulty engine from a merely faulty sensor, and how telemetry moves from the engine to the operator without the vibration channel overwhelming the link.
+Every judgment ANUMAAN makes rests on telemetry acquired deterministically from the engine, avionics data buses, and ambient flight context. In military MALE UAVs (such as ADE Tapas-BH-201 and Archer), the telemetry subsystem bridges the physical engine controller (FADEC / ECU) to the on-board edge computer and downlinks actionable health vectors across bandwidth-constrained tactical radio links.
 
-## The monitored parameters
+This article details the avionics communication hierarchy, the **Minimum Viable Sensor Suite**, sensor integrity and analytical parity checking, **SWaP-C edge compute constraints**, in-situ edge vibration reduction, and **anti-spoofing cybersecurity protocols**.
 
-The problem statement's Health Monitoring System component specifies eight parameter groups, and ANUMAAN instruments all of them, each with distinct physical origins and sampling behavior.
+---
 
-**RPM.** A magnetic or Hall-effect pickup reads a toothed wheel or flywheel ring gear; on the Rotax 912 iS this is handled inside the ECU, which publishes RPM on the CAN bus. As a 20 Hz averaged scalar it is sufficient for trend monitoring but not for misfire detection: at 5,000 RPM a four-cylinder four-stroke engine fires roughly 167 times per second, and a 20 Hz sampler cannot resolve a single missing firing event. That is precisely why the physics core described in [Engine Physics and Combustion Modeling](06-engine-physics.md) works with crank-angle-resolved angular velocity rather than the averaged scalar for misfire and instability detection.
+## Avionics Data Communication Buses
 
-**CHT.** Cylinder head temperature, one channel per cylinder, measured by thermocouple or RTD. A cylinder head has large thermal mass, so genuine thermal events are gradual; an instantaneous jump is physically implausible for a metal mass of that size and is a strong indicator of a sensor or wiring fault rather than an engine fault. Per-cylinder instrumentation matters more than a single averaged CHT reading, because one cylinder running hot while its neighbors stay normal points to a localized fault, while all four rising together points to a system-level cooling problem.
+Military UAVs utilize a tiered hierarchy of avionics data buses balancing deterministic timing, fault tolerance, noise immunity, and payload throughput:
 
-**EGT.** Exhaust gas temperature, one K-type thermocouple per cylinder, is the richest single diagnostic channel on the engine. A sharp drop on one cylinder points to a combustion problem on that cylinder specifically, misfire, injector, or ignition. A rise on one cylinder suggests a lean mixture or advanced timing. EGT rising while CHT falls on the same cylinder is a recognizable late-combustion signature, heat leaving through the exhaust rather than the head. Read together, EGT and CHT on the same cylinder distinguish far more fault conditions than either channel alone.
+```mermaid
+flowchart TD
+    subgraph AvionicsBusHierarchy["UAV Avionics Bus Architecture"]
+        EngineECU["Rotax Engine FADEC / TCU"] <-->|"CAN 2.0B / CAN-FD (500 kbps - 1 Mbps)"| OnboardEdge["Onboard Edge AI Computer<br/>(SocketCAN Linux / RTOS)"]
+        FlightSensors["Airframe Sensors & IMU"] <-->|"RS-422 / ARINC 429"| Autopilot["Flight Control Computer (FCC)"]
+        
+        OnboardEdge <-->|"Ethernet 100BASE-T1 / UDP"| Autopilot
+        Autopilot <-->|"High-Level Telemetry"| DatalinkModem["Tactical Datalink Modem<br/>(C-Band LOS / SATCOM)"]
+        
+        DatalinkModem -.->|"RF Link (STANAG 4586 / MAVLink v2)"| GroundAntenna["GCS Tactical Terminal"]
+        GroundAntenna -->|"Ethernet TCP/IP"| GCS_DT["GCS Digital Twin Workstation"]
+    end
+```
 
-**Oil pressure and oil temperature.** Oil pressure depends strongly on both engine speed and oil temperature through viscosity, which means the raw pressure reading is a poor fault indicator on its own; pressure relative to what physics expects at the current RPM and oil temperature is what carries diagnostic information, which is exactly the residual approach described in [The Digital Twin Core](05-the-digital-twin.md). A slow pressure decline over hours at constant RPM and temperature suggests pump or bearing wear, a genuine degradation trend suited to RUL estimation. A sharp transient drop suggests oil starvation or foaming during a maneuver.
+### 1. The CAN Bus Protocol (ISO 11898-1/2 & SocketCAN)
+The Controller Area Network (CAN) bus is the standard physical interface for aero-piston engine ECUs:
+* **Physical Layer (ISO 11898-2):** Differential two-wire twisted pair (`CAN_H` and `CAN_L`) terminated with $120\ \Omega$ resistors at each end. High common-mode noise rejection, critical in aircraft where ignition spark coils generate massive electromagnetic interference (EMI).
+* **Signaling:**
+  * Dominant State (Bit 0): `CAN_H` driven to $3.5\text{ V}$, `CAN_L` pulled to $1.5\text{ V}$ ($\Delta V = 2.0\text{ V}$).
+  * Recessive State (Bit 1): Both lines float at $2.5\text{ V}$ ($\Delta V = 0.0\text{ V}$).
+* **Arbitration:** Non-destructive bitwise arbitration based on message identifiers. Lower numerical IDs have higher priority (e.g., `0x100` emergency engine shutdown preempts `0x350` oil temperature gauge).
+* **CAN 2.0B vs. CAN-FD:**
+  * *CAN 2.0B:* 11-bit standard or 29-bit extended ID; maximum payload of **8 bytes per frame**; fixed bit rate up to $1\text{ Mbps}$.
+  * *CAN-FD (Flexible Data-rate):* Payload expanded up to **64 bytes per frame**; data phase can switch up to $5\text{ Mbps}$, drastically reducing bus load and latency.
+* **The Linux SocketCAN Subsystem:**
+  In modern Linux-based edge computers (Jetson Orin Nano / NXP i.MX8), CAN controllers are integrated into the Linux network protocol stack as network devices (`can0`, `can1`). Telemetry acquisition uses standard BSD socket APIs (`AF_CAN`, `SOCK_RAW`), providing zero-copy ring buffering, multi-threaded access, and DBC schema parsing via libraries such as `cantools`.
 
-**Fuel flow.** Measured by a turbine flowmeter as a pulse frequency. Beyond revealing injector faults directly, fuel flow relative to power output gives specific fuel consumption, and a slow rise in that ratio at matched operating conditions over many flight hours is one of the cleanest whole-engine degradation indicators available, and a strong RUL input.
+---
 
-**Vibration.** Acceleration of the engine structure, measured by a piezoelectric accelerometer, is fundamentally different from every other channel here. A single instantaneous vibration value carries no information; the diagnostic content lives entirely in the pattern across frequency, and two very different fault conditions, a healthy bearing and one with a spalled outer race, can share identical RMS amplitude while differing completely in where their energy sits in the spectrum. This is why the physics core's order-tracking and envelope analysis methods, described in [Engine Physics and Combustion Modeling](06-engine-physics.md), operate on the full spectral content rather than a reduced RMS scalar.
+## Minimum Viable Sensor Suite
 
-**Battery and alternator health.** Bus voltage from a voltage divider, alternator current from a Hall-effect sensor. On an aircraft with electronic engine control, electrical failure is engine failure, so this channel group is treated as a propulsion-critical input rather than an auxiliary one. An alternator failure starts a countdown set by remaining battery capacity, a distinct and directly actionable form of Remaining Useful Life.
+An engine fault cannot be diagnosed unless it produces a measurable disturbance in the sensor observability subspace. The following matrix details the definitive sensor suite for MALE UAV aero-piston engines:
 
-**Injection timing.** Commanded injector pulse width and ignition timing are ECU-internal values, reported rather than independently measured. Their diagnostic power comes from comparing what was commanded against what the physics model expects the resulting fuel flow, EGT, and RPM to be: if the ECU commands a certain pulse width and the resulting engine behavior does not match the physics expectation for that command, the injector itself becomes the suspect. This closed-loop consistency check is a direct application of the residual concept to a commanded rather than a directly sensed quantity.
+| Sensor Type | Physical Parameter | Meas. Range | Sampling Rate | Precision | Physical Placement | Primary Fault Observability | Redundancy Architecture |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **Hall-Effect / Variable Reluctance** | Engine Speed (RPM) & Crank Angle | 0 to 7,000 RPM | 60 pulses/rev (Trigger Wheel) | $\pm 1\text{ RPM}$ | Crankshaft flywheel nose | Misfire, torsional vibration, governor hunting, power loss. | **Dual Lane** (Independent Lane A / Lane B pick-up coils). |
+| **Piezoresistive Transducer** | Manifold Absolute Pressure (MAP) | 0.2 to 2.5 bar abs | 10 to 50 Hz | $\pm 0.01\text{ bar}$ | Intake manifold plenum | Turbo wastegate failure, air filter clogging, induction leak. | Dual redundant sensors with cross-plausibility checking. |
+| **Type-J / RTD Thermocouple** | Cylinder Head Temperature (CHT 1 to 4) | $-40^\circ\text{C}$ to $+200^\circ\text{C}$ | 1 to 5 Hz | $\pm 1.5^\circ\text{C}$ | Cylinder head spark plug well / coolant jacket | Thermal runaway, cooling pump cavitation, localized boiling. | 4 independent channels (1 per head); analytical observer fallback. |
+| **Type-K Inconel Thermocouple** | Exhaust Gas Temperature (EGT 1 to 4) | $+200^\circ\text{C}$ to $+1,000^\circ\text{C}$| 5 to 10 Hz | $\pm 3.0^\circ\text{C}$ | Exhaust runner (75 mm from exhaust port) | Injector clogging, lean/rich misfire, valve burning, ignition slip. | 4 independent channels (1 per runner); cross-cylinder parity. |
+| **Piezoresistive Isolated Transducer**| Oil Pressure | 0 to 10 bar | 10 to 50 Hz | $\pm 0.05\text{ bar}$ | Main crankcase oil gallery | Journal bearing failure, relief valve sticking, pump aeration. | Critical safety redline; dual sensor channels recommended. |
+| **NTC Thermistor / PT100** | Oil Temperature | $-20^\circ\text{C}$ to $+150^\circ\text{C}$ | 1 to 5 Hz | $\pm 0.5^\circ\text{C}$ | Oil tank exit / main gallery inlet | Thermal oxidation, oil cooler thermostat failure, bearing heat. | Single primary channel + cross-correlation with CHT trend. |
+| **Pelton Turbine / Coriolis** | Fuel Flow Rate | 2 to 50 L/hr | 5 to 10 Hz | $\pm 0.5\%$ | In-line fuel feed before fuel rail | Fuel pump degradation, vapor lock, systemic leak, BSFC drift. | In-line flowmeter backed by ECU injector pulse-width integrator. |
+| **Tri-Axial High-Temp Piezoelectric**| Structural Vibration (Accelerometry)| $\pm 50\text{ g}$ | 5 kHz to 20 kHz | $\pm 2.0\%$ | Crankcase top spine & reduction gearbox casing | Propeller unbalance ($1\times$), bearing spalling, piston slap, gear pitting.| Onboard edge processing (FFT/Kurtosis extraction); raw bursts. |
+| **Hall Current Sensor / Voltage Divider**| Battery Voltage & Alternator Current | 0 to 32 V / $\pm 50\text{ A}$ | 10 to 20 Hz | $\pm 0.1\text{ V} / \pm 0.5\text{ A}$| Main avionics DC bus & alternator stator feed | Alternator rectifier failure, battery cell degradation, brownout. | Dual battery bus monitoring. |
 
-**Flight context.** Pressure altitude, outside air temperature, airspeed, throttle position, manifold pressure, and flight phase are acquired from the flight computer rather than the engine, and they are non-negotiable inputs to every other judgment the system makes. The same CHT reading of 130 degrees Celsius is unremarkable during a hot-day climb and genuinely concerning during a cold cruise at the same throttle setting; without altitude and outside air temperature as inputs, a monitoring system either raises constant false alarms or gets desensitized into uselessness. This mirrors standard practice in the field: the NASA C-MAPSS benchmark, referenced in the project's dataset strategy, explicitly includes operational settings such as altitude and throttle resolver angle alongside its sensor channels for exactly this reason.
+---
 
-## Sensor integrity: telling a broken sensor from a broken engine
+## Sensor Integrity: Telling a Broken Sensor from a Broken Engine
 
-A separate validation layer sits ahead of the residual pipeline, checking each incoming reading for physical plausibility, a rate-of-change or physical-consistency violation, before that reading is allowed to influence a diagnosis. The CHT thermal-mass argument above is the clearest example of the principle: an instantaneous jump in a metal head's temperature is not physically possible, so a jump that large is evidence of an open circuit or ADC fault, not a genuine thermal event. Current-loop sensors such as the oil pressure transducer build a related distinction directly into their electrical design: a 4 to 20 milliamp loop uses 4 milliamps, not zero, as its minimum valid reading, so a reading of exactly zero milliamps is unambiguously a broken wire rather than a legitimate minimum pressure. This kind of built-in distinguishability, making "no data" different from "zero," is a design pattern the software validation layer mirrors deliberately.
+A separate validation layer sits ahead of the residual pipeline, checking each incoming reading for physical plausibility and analytical parity before allowing that reading to influence a diagnosis.
 
-The same discrimination applies across channels, not just within one. When the crank-angle torque deficit method described in [Engine Physics and Combustion Modeling](06-engine-physics.md) flags a deficit on one cylinder, the system checks whether that cylinder's EGT also falls, on the expected five-to-twenty-second thermal lag. If it does, the two independent channels corroborate a genuine misfire. If the torque deficit appears but every EGT channel stays unchanged, the evidence points toward the crank sensor or the detection logic itself, not the engine. This shielding is what keeps a failing instrument from being reported to the operator as a failing engine, and it is a direct instance of the residual pipeline's protection against sensor faults, covered further in [Residual Analysis](08-residual-analysis.md).
+### 1. Electrical & Rate-of-Change Checks
+* **Open-Circuit Detection:** Thermocouple leads that fatigue and snap read open-circuit rail voltages ($> 1,200^\circ\text{C}$) or instantaneous negative saturations. These are rejected immediately by rate-of-change checks ($\frac{dT}{dt} > 100^\circ\text{C/s}$ violates head thermal inertia).
+* **Current-Loop Integrity:** 4 to 20 mA industrial transmitters output $0\text{ mA}$ only during line breakage, cleanly separating "zero pressure" (which reads $4\text{ mA}$) from "sensor disconnection" ($0\text{ mA}$).
 
-## How telemetry moves from engine to operator
+### 2. Analytical Parity Space Redundancy
+When redundant physical sensors are unavailable due to weight constraints, ANUMAAN evaluates algebraic parity relations:
+$$\mathbf{r}_p(t) = \mathbf{V}_p \mathbf{y}_{\text{sensor}}(t) = \mathbf{V}_p (\mathbf{C}_s \mathbf{x}(t) + \mathbf{f}_s(t) + \mathbf{v}(t))$$
+Where $\mathbf{V}_p \mathbf{C}_s = \mathbf{0}$. If a sensor develops bias $\mathbf{f}_s(t) \ne \mathbf{0}$, the residual vector $\mathbf{r}_p$ deviates along a known signature axis, isolating the faulty transducer within 2 sample cycles ($40\text{ ms}$).
 
-Signal families differ in how they must be acquired. Analog-level sensors (thermocouples, RTDs, pressure transducers) and pulse or frequency sensors (RPM pickups, fuel flow turbines) reduce cleanly to scalar values at modest rates, commonly 1 to 50 Hz depending on the channel's physical response time. Vibration, an AC dynamic signal, does not reduce to a scalar without losing the information that makes it useful, and it must be sampled far faster, in the low kilohertz range, to resolve firing-frequency and bearing-defect content.
+---
 
-That difference in nature produces a difference in transport. Roughly thirty scalar channels at 20 Hz total under 20 kilobits per second, comfortably inside a representative UAV control-link budget. A single raw vibration channel at 10 kHz, by contrast, approaches 160 kilobits per second on its own, exceeding a representative link budget before any other telemetry is considered. The architectural consequence, covered at the system level in [System Architecture](04-system-architecture.md), is that vibration is acquired and analyzed onboard, with only extracted features, health scores, and event messages crossing the downlink, while scalar channels cross directly.
+## Edge Computing vs. GCS Allocation (SWaP-C Optimization)
+
+Propulsion health monitoring requires processing both low-rate thermodynamic parameters ($10\text{ to } 50\text{ Hz}$) and high-rate mechanical vibration ($5\text{ to } 20\text{ kHz}$). Transmitting raw $10\text{ kHz}$ accelerometer streams over tactical radio links ($< 64\text{ kbps}$ bandwidth) is physically impossible. ANUMAAN optimizes the system across Size, Weight, Power, and Cost (SWaP-C):
 
 ```mermaid
 flowchart LR
-    subgraph Onboard
-        Sensors["Sensors: RPM, CHT, EGT, oil, fuel, vibration, electrical, timing"]
-        Sensors --> Validity["Sensor integrity validation"]
-        Validity --> Cond["Signal conditioning and scaling"]
+    subgraph OnboardEdge["Onboard UAV Edge Computing (SWaP-C Constrained)"]
+        RawCAN["High-Speed CAN & Vibration (10 kHz)"] --> FastProc["Edge DSP & Feature Extraction"]
+        FastProc --> MisfireEdge["Deterministic Misfire & Knock Detector (Real-Time Safety)"]
+        FastProc --> Compress["Data Compression & Health Vector Encoding"]
     end
-    Cond --> Scalars["Scalar channels, direct"]
-    Cond --> VibProc["Vibration: onboard order tracking and feature extraction"]
-    Scalars --> Link["Downlink"]
-    VibProc --> Link
-    Link --> GCS["Ground control station"]
+
+    subgraph Downlink["Tactical Datalink"]
+        Compress -->|"Downlink Stream (9.6 - 64 kbps)"| RF["RF / SATCOM"]
+    end
+
+    subgraph GCSCompute["Ground Control Station (High Compute Server)"]
+        RF --> Jitter["Jitter Buffer & Decoder"]
+        Jitter --> FullTwin["Full-Fidelity 0D/1D Thermodynamic Digital Twin"]
+        FullTwin --> DeepAI["Deep Transformers, RUL Survival Models & XAI"]
+        DeepAI --> HMI["Operator Dashboard & 3D Mission Replay"]
+    end
 ```
-*Caption: sensor signals validated and conditioned onboard, with scalar channels crossing the link directly and vibration reduced to features first.*
 
-## Integration
+### The SWaP-C Allocation Matrix
+* **Onboard Edge Constraints:**
+  * Weight: $\le 1.5\text{ kg}$ (avionics bay allocation).
+  * Power: $\le 25\text{ W}$ continuous DC draw (drawn from $28\text{ V}$ aircraft bus).
+  * Cooling: Conduction cooling via aluminum casing mounted to aircraft bulkhead; zero cooling fans (cooling fans fail at high altitudes due to low air density).
+  * Hardware: NVIDIA Jetson Orin Nano, NXP i.MX8M Plus, or Xilinx Zynq UltraScale+ MPSoC.
+* **Onboard Edge Tasks:**
+  1. High-frequency vibration spectral analysis (2048-point Hanning FFT and spectral kurtosis calculated in-situ).
+  2. Immediate, deterministic misfire and knock protection (sub-50 ms intervention).
+  3. Feature extraction and lossy compression of telemetry vectors for downlink.
+* **GCS Server Tasks:**
+  1. Full-fidelity 0D/1D thermodynamic digital twin execution.
+  2. Multi-hour RUL degradation modeling using deep temporal networks and survival models.
+  3. Interactive 3D mission replay and human-machine interface rendering.
+  4. Fleet-level multi-engine aggregation and historical trend databases.
 
-Every channel described here feeds the residual pipeline in [The Digital Twin Core](05-the-digital-twin.md) and the physics expectation model in [Engine Physics and Combustion Modeling](06-engine-physics.md). Flight context specifically is what makes the physics model's expected-value computation meaningful at all, without it the operating point the physics model needs cannot be established.
+---
 
-## Related systems
+## Edge AI Model Optimization: INT8 Affine Quantization
+
+To execute deep anomaly autoencoders and 1D-CNN feature extractors on the embedded edge computer without violating real-time deadlines, models undergo INT8 post-training quantization:
+
+$$q = \text{clamp}\left( \text{round}\left( \frac{x}{S} \right) + Z, \; -128, 127 \right)$$
+
+* **Impact:** Reduces model memory footprint by **$75\%$** (e.g., from 120 MB down to 30 MB) and enables execution on hardware Tensor Cores in $< 10\text{ ms}$.
+* **Accuracy Preservation:** By using Kullback-Leibler (KL) divergence minimization during calibration on representative flight profiles, diagnostic classification accuracy drops by less than $0.4\%$.
+
+---
+
+## Tactical Datalinks & Cybersecurity Protection
+
+### 1. Datalink Bandwidth Management (STANAG 4586)
+In military MALE UAVs, the primary datalink bandwidth is monopolized by high-definition video feeds (FLIR/EO/IR turrets) and SAR radar streams. The bandwidth allocated for flight control and propulsion telemetry is strictly throttled to **$9.6\text{ kbps to } 64\text{ kbps}$**.
+
+Telemetry frames are serialized using Google Protocol Buffers (Protobuf), compressing multi-channel sensor vectors down to **64 bytes per packet at 10 Hz**, consuming only **$5.12\text{ kbps}$** of channel capacity.
+
+### 2. Cybersecurity & Anti-Spoofing Protocols
+In contested electronic warfare environments, propulsion telemetry is a prime target for hostile electronic interception, jamming, and false message injection:
+* **Sensor Spoofing Defense via Physical Plausibility:** If an adversary injects false CAN messages claiming normal oil pressure while the physical engine is seizing, the digital twin detects this immediately: injected false sensor states violate thermodynamic conservation laws ($P_{\text{oil}}$ cannot remain at 5.0 bar if $T_{\text{oil}} = 150^\circ\text{C}$ and RPM is decaying).
+* **Cryptographic Integrity:** Telemetry packets transmitted over RF datalinks are authenticated using **HMAC-SHA256** and encrypted with **AES-256-GCM**, preventing packet injection or man-in-the-middle manipulation.
+
+---
+
+## Related Systems
 
 - [The Digital Twin Core](05-the-digital-twin.md)
-- [Engine Physics and Combustion Modeling](06-engine-physics.md)
+- [Engine Physics and Thermodynamics](06-engine-physics.md)
 - [Residual Analysis](08-residual-analysis.md)
 - [System Architecture](04-system-architecture.md)
+- [Vibration Analysis and Order Tracking](12-vibration-analysis.md)

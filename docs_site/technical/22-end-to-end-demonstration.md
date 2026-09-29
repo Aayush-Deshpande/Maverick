@@ -1,44 +1,59 @@
 # End to End Demonstration
 
-Every article in this documentation describes one piece of ANUMAAN in isolation: the physics core, the novelty layer, Bayesian diagnosis, mission reliability, the 3D twin. None of those pieces demonstrates its value alone. The value is in the chain, one fault, observed as a physics deviation, becoming a ranked diagnosis, becoming a highlighted component, becoming a mission-level consequence, becoming a recorded record an operator can revisit. This article walks that chain from end to end, as a single operational scenario, to show how the subsystems actually connect during a mission.
+Every article in this documentation describes one piece of ANUMAAN in isolation: the physics core, the novelty layer, Bayesian diagnosis, mission reliability, the 3D twin. None of those pieces demonstrates its value alone. The value is in the unbroken chain: one fault, observed as a physics deviation, becoming a ranked diagnosis, becoming a highlighted component, becoming a mission-level consequence, becoming a recorded record an operator can revisit. This article walks that chain from end to end, as a single operational scenario, to show how the subsystems connect during a mission.
 
-The scenario below uses one fault from the DRDO fault matrix, a cylinder CHT overheat on the Rotax 912 iS, as a concrete thread through the entire pipeline. The mechanism generalizes to any of the eight fault modes; this one is chosen because it has a clean, physically direct signature that makes the chain easy to follow.
+The scenario below uses a cylinder CHT overheat on the Rotax 912 iS as a concrete thread through the entire pipeline. The mechanism generalizes to all ten failure modes in the FMECA matrix; this one is chosen because it has a clean, physically direct signature that makes the chain easy to follow.
 
-## The scenario
+---
 
-An operator opens the ground control station and selects the Rotax 912 iS from the fleet console described in [Operator Ground Control Station](20-operator-gcs.md). They set a mission profile, an endurance mission spanning taxi, climb, a cruise transit, an extended loiter for reconnaissance, and a return, using the phase model described in [Mission Reliability](17-mission-reliability.md). The mission executive begins advancing the mission tick by tick: UAV kinematics, ISA atmospheric conditions for the current altitude, and the throttle, altitude, and ambient targets appropriate to whichever phase the mission is currently in, all driving into the selected engine's physics runtime.
+## The 6-Stage Operational Flight Demonstration
 
-Telemetry begins streaming over the engine's WebSocket channel. On the fleet console, the operator watches RPM, cylinder head temperatures, EGT, oil pressure, and the rest of the scalar channels settle into the pattern expected for a climb, then a cruise, then a loiter. The tier-0 residual detector is running every tick underneath this display, comparing each observed channel against what the physics model expects at the current operating point, and reporting nothing unusual because there is, so far, nothing unusual to report.
+```mermaid
+flowchart TB
+    T1["Stage 1: Pre-Flight Initialization (T+00:00)<br/>Cold soak at AFS Leh (-20°C, 10,682 ft AMSL); SocketCAN 20 Hz sync"] --> T2["Stage 2: High-Power Climb (T+00:15)<br/>5,500 RPM, MAP 29.8 inHg; EKF tracks manifold filling & thermal lag"]
+    T2 --> T3["Stage 3: High-Altitude Loiter (T+00:45)<br/>22,000 ft AMSL, 4,800 RPM; Normalized physics residuals r*(t) ≈ 0"]
+    T3 --> T4["Stage 4: Seeded Degradation (T+01:10)<br/>Cylinder #2 cooling blockage injected; CHT_2 climbs toward 138°C"]
+    T4 --> T5["Stage 5: Detection & Bayesian Diagnosis (T+01:12)<br/>Parity space confirms valid sensor; EVT POT triggers; ATA 72-00 directive"]
+    T5 --> T6["Stage 6: Tactical Derate & Glide Cone (T+01:15)<br/>Mission R(t) drops 0.94 -> 0.61; Pilot executes throttle derate; RTB cone updated"]
+```
 
-Partway through the loiter phase, the operator injects a fault: cylinder #2 CHT overheat, fault mode 01 in the DRDO fault matrix, triggered when CHT on that cylinder exceeds 135 degrees Celsius. This can be injected manually through the fault injection lever on the console, or scheduled as a phase event in the mission definition, as the endurance phase preset does when it introduces a cooling-degradation fault partway through cruise. Either path drives the same physics.
+### Stage 1: Pre-Flight Initialization & Calibration (T+00:00)
+1. **Airbase Environment Selection:** The operator initializes the flight test mission at **AFS Leh (Northern Sector)**, with ambient static pressure $P_{\text{amb}} = 68.5\text{ kPa}$ (elevation 10,682 ft AMSL) and temperature $T_{\text{amb}} = -20^\circ\text{C}$.
+2. **Avionics Synchronization:** The ground control station connects to the simulated or physical CAN bus (`can0`, 500 kbps) via Linux SocketCAN. Telemetry frames are decoded at $20\text{ Hz}$ using standard DBC schemas.
+3. **EKF Observer Convergence:** The 12-state Continuous-Discrete Extended Kalman Filter converges its state covariance $\mathbf{P}(0)$ within $800\text{ ms}$, establishing healthy baseline temperatures for intake air, coolant, and oil galleries.
 
-### Residual divergence
+### Stage 2: High-Power Takeoff & Climb Phase (T+00:15)
+1. **Dynamic Engine Loading:** Commanded throttle advances to 100%, propeller governor requests 5,500 RPM, and intake manifold pressure rises to 29.8 inHg.
+2. **Thermal Lag Modeling:** The 0D/1D thermodynamic core computes transient thermal lag across the aluminum cylinder heads ($C_{\text{head}} \approx 1,850\text{ J/K}$). Cylinder head temperatures climb from $-20^\circ\text{C}$ to $112^\circ\text{C}$.
+3. **Residual Whiteness Check:** The normalized residual vector $\mathbf{r}^*(t)$ remains zero-mean Gaussian ($p > 0.05$). No false alarms are triggered despite extreme rate-of-climb thermal transients.
 
-The physics runtime does not receive an instruction to report a high temperature. It receives a change to the plant model, specifically to the thermal or cooling parameters at cylinder #2, and it propagates that change through the same equations governing every other cylinder. Cylinder #2's head temperature begins to climb above what the physics model expects for the current altitude, outside air temperature, and throttle setting. Because the twin's central concept is residual, observed telemetry minus physics-expected telemetry at the current operating point, this climb is visible immediately as a growing residual on the CHT_2 channel, not as a raw number the operator has to compare against a fixed limit themselves.
+### Stage 3: High-Altitude Tactical Loiter (T+00:45)
+1. **Loiter Envelope:** The UAV levels off at $22,000\text{ ft}$ AMSL on an intelligence, surveillance, and reconnaissance (ISR) orbit. Engine speed settles to an economical cruise setting of 4,800 RPM.
+2. **Virtual Sensing Synthesis:** Unmeasured internal states are synthesized on the flight test console: peak in-cylinder combustion pressure $P_{\max} = 88.4\text{ bar}$, Turbine Inlet Temperature $TIT = 875^\circ\text{C}$, and minimum journal oil film thickness $h_{\min} = 2.4\ \mu\text{m}$.
 
-### Detection
+### Stage 4: Inception of Seeded Thermal Degradation (T+01:10)
+1. **Fault Injection:** Partway through the loiter phase, a localized cooling degradation is injected into Cylinder #2 (simulating radiator fin fouling or coolant passage restriction).
+2. **Physics Divergence:** The plant model modifies localized convective heat transfer coefficient $U_2$. Cylinder #2 head temperature begins climbing monotonically, reaching $136^\circ\text{C}$ while peer cylinders (1, 3, 4) remain stable at $114^\circ\text{C}$.
+3. **Physics Residual Growth:** The normalized residual $r_{\text{cht2}}^*(t) = \frac{T_{\text{meas}} - T_{\text{exp}}}{\sigma_{\text{mvem}}}$ rises above $+3.5\sigma$. Because residuals remove flight-envelope dependencies, this departure is immediately distinct from ambient temperature effects.
 
-The tier-0 residual detector, running every tick, picks up the growing CHT_2 residual and requires it to persist before treating it as evidence rather than noise, the same persistence-confirmed alarm behavior described in [Residual Analysis](08-residual-analysis.md). In parallel, [Bio-Inspired Sparse Novelty Coding](10-bio-inspired-sparse-novelty-coding.md) projects the current residual and order-domain vibration features into its sparse code space and finds that the resulting code no longer matches the memory of previously seen nominal codes well. Both signals point the same direction: something about cylinder #2's thermal behavior has left the envelope of normal operation.
+### Stage 5: Detection, Parity Validation & Bayesian Diagnosis (T+01:12)
+1. **Sensor Validation Shield:** The analytical parity space validator checks the consistency matrix $\mathbf{V}_p \mathbf{C}_s = \mathbf{0}$. The parity residual remains within healthy bounds ($\|\mathbf{r}_p\| < \tau_p$), mathematically proving that the thermocouple is intact and that the temperature rise reflects true engine degradation.
+2. **Novelty Coding & EVT Trigger:** Bio-Inspired Sparse Novelty Coding projects the order-band and residual features into sparse Kenyon-cell space ($m = 2000$), detecting an overlap drop against nominal memory. In parallel, the VAE reconstruction error exceeds the dynamic Generalized Pareto Distribution threshold $z_q$ for $\ge 3.0\text{ seconds}$ (150 consecutive cycles at 50 Hz).
+3. **Bayesian Hypothesis Isolation:** The Bayesian belief network evaluates conditional probabilities across all ten FMECA modes. It isolates **Mode 01: Cylinder CHT Overheat** with 96.4% posterior probability.
+4. **3D Visualizer Synchronization:** The Three.js interactive 3D digital twin pulses Cylinder #2 in amber, directing the operator visual attention directly to the affected hardware.
 
-### Diagnosis
+### Stage 6: Mission Reliability Impact & Prescriptive Advisory (T+01:15)
+1. **Mission Reliability Recalculation:** The Monte Carlo reliability engine recalculates survival probability over the remaining 5 hours of planned loiter. Because hazard rate $\lambda(t)$ increases exponentially with thermal stress, predicted mission reliability drops from $R_{\text{mission}} = 0.94$ to $R_{\text{mission}} = 0.61$.
+2. **Prescriptive Action Directive:** The deterministic ATA 72-00 advisor presents the pilot with an immediate, one-click mitigation:
+   > **Advisory Action:** Derate continuous throttle to 78% (4,400 RPM), enrich mixture trim $+10\%$, and descend $2,500\text{ ft}$ to denser air.
+3. **Dynamic Glide Polar & Divert Cone:** Concurrently, the flight safety computer projects the aerodynamic glide reachability footprint ($(L/D)_{\text{eff}} = 14.2$). It ranks alternate landing strips by arrival altitude margin:
+   - *Primary Airstrip:* Leh Runway 07 (Distance 38 km, Arrival Margin $+1,450\text{ m}$, REACHABLE).
+   - *Emergency Highway Strip:* Sector B (Distance 72 km, Arrival Margin $-280\text{ m}$, UNREACHABLE).
+4. **Pilot Execution & Recovery:** The operator accepts the derate advisory. Cylinder #2 temperature stabilizes at $121^\circ\text{C}$, mission reliability recovers to $R_{\text{mission}} = 0.89$, and the aircraft safely executes a controlled return to base.
 
-Once tier-0 evidence and the novelty score cross their thresholds, the tier-1 reservoir classifier and the Bayesian fault diagnosis network, described in [Fault Diagnosis](11-fault-diagnosis.md), take the accumulated evidence, the leading channel (CHT_2), the pattern of the residual's growth, and the FMECA isolability signature it matches, and rank fault hypotheses against it. Cylinder CHT overheat, consistent with a cooling-path degradation, ranks as the leading hypothesis. The deterministic ATA-chapter diagnostic agent turns that ranked hypothesis into a concrete directive: root cause, prescriptive action, and an emergency checklist, generated without invoking a language model for the diagnosis itself.
+---
 
-### Visualization
-
-The 3D twin, running in the same browser session and synchronized over the same telemetry channel the operator console uses, highlights the fault's target part per the fault matrix: cylinder #2's head. The operator does not have to translate a channel name into a physical location themselves. The component that the diagnosis points to is the component that lights up on the model.
-
-### Mission consequence
-
-The mission reliability engine, computing R, the probability the planned mission completes without a propulsion-induced abort, recalculates against the degraded component health. Because hazard rates carry units of failures per hour and compose with exposure time, an extended loiter at degraded cylinder health carries more accumulated risk than the same degradation would during a short transit, and the reliability figure reflects that directly rather than through a static health-index badge. The engine identifies cylinder #2's cooling path as the limiting component, the specific part actually driving the drop in mission risk.
-
-### Prescriptive escalation
-
-As reliability drops, the prescriptive advisor escalates through its defined sequence. First, a reliability report naming the limiting component. If the degradation is severe enough, a throttle derate recommendation, reducing damage accumulation rate at the cost of an endurance penalty, computed and stated together rather than as a bare instruction. If the planned mission is no longer achievable at the required reliability even with a derate, an alternative achievable mission profile: a shorter loiter, a lower altitude, or both, found by searching the profile space for the nearest plan that restores the required reliability.
-
-### Record and review
-
-Throughout, the mission executive is logging telemetry. When the mission ends, whether completed as planned, completed under a derated profile, or aborted, it is written as a persistent report bundle: a CSV telemetry log and a JSON manifest, retrievable afterward through the replay engine described in [Operator Ground Control Station](20-operator-gcs.md), which supports scrubbing to any point in the mission and seeking directly to the fault-injection event marker. The mission is also indexed into the mission knowledge graph, alongside the fleet's other recorded missions, anomalies, and maintenance history, so this cylinder #2 event becomes part of that tail's traceable history rather than a one-off observation.
+## Screen Sequence Walkthrough
 
 ![Telemetry and Nominal Operations](/assets/playwright/01_runtime_workspace.png)
 *Figure 1: Step 1: Ground control station operating at nominal 20 Hz telemetry across five selectable engine platforms.*
@@ -52,37 +67,22 @@ Throughout, the mission executive is logging telemetry. When the mission ends, w
 ![Post-Mission Debrief Report](/assets/playwright/06_sortie_debrief.png)
 *Figure 4: Step 4: Completed mission debrief logging stress cycles, timeline events, and persistent mission graph record.*
 
-## Architecture
+---
 
-```mermaid
-flowchart TB
-    A[Initialize mission] --> B[Set mission condition]
-    B --> C[Start telemetry]
-    C --> D[Inject fault]
-    D --> E[Residual divergence]
-    E --> F[Detection and diagnosis]
-    F --> G[Mission consequence]
-    G --> H[Operator review]
-```
+## Traceable Record & Post-Mission Replay
 
-*The demonstration chain from mission initialization through operator review, with each stage feeding the next.*
+When the aircraft touches down, the mission executive seals the flight record:
+1. **Cryptographic Log Manifest:** A Parquet telemetry log and JSON manifest are hashed (SHA-256) and archived.
+2. **Deterministic Time-Scrubbing Replay:** The operator can load the flight archive into the GCS Replay Engine, scrubbing to any timestamp with millisecond accuracy to re-evaluate the digital twin observer states and sensor residuals.
+3. **Depot Fleet Intelligence:** In post-flight maintenance, the sortie degradation delta is queued for local airbase fleet aggregation, updating population wear curves without transmitting raw tactical flight logs outside the secured depot perimeter.
 
-## Why this chain matters
+---
 
-No individual subsystem in this chain is interesting in isolation. A residual detector that never reaches a diagnosis is a statistics exercise. A Bayesian diagnosis that never reaches mission reliability is a classification exercise with no operational meaning. A mission reliability number that never reaches an operator, in a form they can inspect and act on, is a figure with no consumer. What makes ANUMAAN a system rather than a collection of components is that the chain above runs unbroken: one injected fault, one physics deviation, one detection, one diagnosis, one visualized location, one recalculated mission risk, one prescriptive action, one persistent record. Each subsystem documented elsewhere in this corpus is one link the scenario above actually exercises.
-
-## Integration
-
-This scenario touches nearly every subsystem in the corpus: the physics core and plant model from [The Digital Twin Core](05-the-digital-twin.md), residual computation from [Residual Analysis](08-residual-analysis.md), novelty scoring from [Bio-Inspired Sparse Novelty Coding](10-bio-inspired-sparse-novelty-coding.md), hypothesis ranking from [Fault Diagnosis](11-fault-diagnosis.md), reliability and prescriptive logic from [Mission Reliability](17-mission-reliability.md), rendering from [The 3D Digital Twin](18-3d-digital-twin.md), and the operator-facing surface from [Operator Ground Control Station](20-operator-gcs.md).
-
-## Validation
-
-The mission simulation flow described in this scenario, from engine and profile selection through fault injection to mission-impact review, is among the workflows captured by the project's automated browser-based verification, described in [Validation and Experiments](21-validation-and-experiments.md), as a dated screenshot sequence. The individual pipeline stages the scenario exercises, residual computation, misfire and thermal fault recovery in the crank-angle chain, and the mission reliability computation itself, are each covered by characterization tests that pin their headline behavior as a regression check.
-
-## Related systems
+## Related Systems
 
 - [Operator Ground Control Station](20-operator-gcs.md)
 - [Mission Reliability](17-mission-reliability.md)
 - [Fault Diagnosis](11-fault-diagnosis.md)
 - [Bio-Inspired Sparse Novelty Coding](10-bio-inspired-sparse-novelty-coding.md)
 - [Validation and Experiments](21-validation-and-experiments.md)
+- [Technology Stack](23-technology-stack.md)

@@ -1,72 +1,126 @@
 # The Digital Twin Core
 
-A digital twin, in the sense the problem statement asks for, is not a 3D model that reacts to telemetry. It is a computational system that independently predicts what a physical engine should be doing, continuously, and measures the gap between that prediction and reality. This article covers the mechanism that makes ANUMAAN a digital twin in that sense: the residual concept, state estimation from physics rather than direct measurement, and the independent plant model that keeps the comparison honest.
+A digital twin, in the sense the DRDO problem statement demands, is not a 3D CAD model that rotates on a screen, nor an offline simulator. It is an **active cyber-physical state observer** that runs continuously in real time, maintains an explicit dynamic state vector $\mathbf{x}_{\text{twin}}(t)$, tracks unmeasured internal physical quantities via virtual sensing, continuously computes physics residuals against physical telemetry, and adapts its internal health parameters $\boldsymbol{\theta}_{\text{deg}}(t)$ across the operational life of the engine.
 
-## The problem
+---
 
-Any monitoring system that only displays sensor values, however well visualized, is fundamentally a passthrough. It shows what is happening but has no independent basis for judging whether what is happening is correct. To judge correctness, a system needs a second, independently derived answer to compare against, an expectation. Building and maintaining that expectation, continuously and at the same rate as incoming telemetry, is the core engineering problem a digital twin solves.
+## Definitive Taxonomy: Genuine Digital Twin vs. Surrogates
 
-## The residual concept
+The aerospace industry frequently encounters systems marketed as "digital twins" that are merely visualizers or passive telemetry viewers. The table below delineates the strict boundary:
+
+| Dimension | 3D Visualization / CAD | Offline Simulator | Telemetry Dashboard | Genuine AP-CPDT Digital Twin |
+| :--- | :--- | :--- | :--- | :--- |
+| **State Synchronization** | None (Static / kinematic transforms) | None (Runs *in silico* detached from flight) | Unidirectional push (Displays raw sensors) | **Bidirectional State Observer (50 Hz EKF)** |
+| **Internal State Vector** | Mesh coordinates $(x, y, z)$ | Pre-computed state trajectories | Sensor scalar values only | **Physical + Wear States $(\mathbf{x}(t), \boldsymbol{\theta}(t))$** |
+| **Virtual Sensing** | None | Synthetic offline traces | None | **Real-Time In-Flight ($P_{\max}, TIT, h_{\min}$)** |
+| **Physics Residuals** | None | None | None | **Continuous $\mathbf{r}(t) = \mathbf{y}_{\text{meas}} - \mathbf{y}_{\text{mvem}}$** |
+| **Model Adaptation** | None | Fixed parameters | None | **Parameter Estimation (Kalman Drift)** |
+| **Compute Target** | GPU rasterizer | Workstation / cluster | Web browser | **Real-Time Edge / GCS Engine** |
+| **Operational Authority**| Display only | Pre-flight conceptual design | Passive threshold alerts | **Active Flight-Margin Advisories** |
+
+---
+
+## The Residual Concept
 
 A residual is the difference between an observed telemetry value and the value physics predicts for the engine's current operating point:
 
-```
-residual = observed - expected(operating_point)
-```
+$$\mathbf{r}(t) = \mathbf{y}_{\text{meas}}(t) - \mathbf{y}_{\text{mvem}}(\hat{\mathbf{x}}(t), \mathbf{u}(t), t)$$
 
-This single idea is why raw sensor values are insufficient on their own. A cylinder head temperature reading of 130 degrees Celsius means nothing by itself. It is unremarkable during a hot-day climb at high power and genuinely concerning during a cold cruise at low power, because the physically correct CHT at those two operating points is different. A fixed threshold has no way to represent that difference; it only ever compares against one number. A residual does represent it, because "expected" is recomputed at every tick from the engine's actual altitude, outside air temperature, throttle setting, and airspeed. The raw value becomes meaningful only once it is placed against the physics-derived expectation for that exact moment.
+This single principle separates predictive diagnostics from thresholding. A cylinder head temperature reading of $130^\circ\text{C}$ means nothing in isolation. It is nominal during a full-power desert takeoff at AFS Jodhpur ($+48^\circ\text{C}$ ambient) and alarming during a loiter at $25,000\text{ ft}$ over Ladakh ($-35^\circ\text{C}$ ambient). A fixed threshold cannot distinguish between these operating conditions. The digital twin computes the exact physics-expected temperature for the instantaneous altitude, ambient temperature, airspeed, and throttle setting every tick. The residual isolates the true physical anomaly from normal operational shifts.
 
 ```mermaid
 flowchart LR
-    OP["Operating point: altitude, OAT, throttle, airspeed"] --> Model["Physics model"]
-    Model --> Expected["Expected value"]
-    Sensor["Observed telemetry"] --> Diff((minus))
+    OP["Operating Point: Altitude, OAT, Throttle, Airspeed"] --> Model["0D/1D Physics Model"]
+    Model --> Expected["Expected Thermodynamic Baseline"]
+    Sensor["Observed Telemetry Vector"] --> Diff((minus))
     Expected --> Diff
-    Diff --> Residual["Residual"]
-    Residual --> Detect["Novelty coding and diagnosis"]
+    Diff --> Residual["Physics Residual r(t)"]
+    Residual --> Detect["Novelty Coding & Bayesian Diagnosis"]
 ```
-*Caption: a residual is computed at every tick as observed telemetry minus the physics-expected value at the current operating point.*
 
-## State estimation, not lookup
+---
 
-The expected-value side of that subtraction is not a lookup table. ANUMAAN maintains a running estimate of engine state, cylinder pressure, crank angular velocity, and per-cylinder torque contribution, computed from the physics core described in [Engine Physics and Combustion Modeling](06-engine-physics.md), rather than read directly off a sensor. This matters because several of these quantities are not measured on a real aero piston engine at all; there is no cylinder pressure sensor on an in-service Rotax installation. The twin's state estimate is the only place these quantities exist, and it is what allows the system to reason about combustion-level behavior, per-cylinder torque deficit, cycle-to-cycle instability, that raw telemetry alone cannot expose.
+## Continuous-Discrete State Observer Formulation
 
-## The independent plant model
+The digital twin maintains a continuous state vector $\mathbf{x}(t) \in \mathbb{R}^{12}$ tracking high-frequency aerothermodynamic states and slowly drifting wear parameters:
 
-The honesty of a residual depends entirely on where the "expected" side comes from. If the model computing expected behavior and the model generating or representing observed telemetry share the same code, the same assumptions, and the same random seed, a residual will only ever measure the twin agreeing with itself. That is not a diagnostic signal, it is a tautology.
+$$\mathbf{x}(t) = \begin{bmatrix}
+P_{\text{im}} & \text{Intake Manifold Absolute Pressure [Pa]} \\
+T_{\text{im}} & \text{Intake Manifold Temperature [K]} \\
+\omega_e & \text{Crankshaft Angular Velocity [rad/s]} \\
+N_{\text{tc}} & \text{Turbocharger Rotor Velocity [rad/s]} \\
+T_{\text{tit}} & \text{Turbine Inlet Temperature [K]} \\
+T_{\text{oil}} & \text{Oil Sump Temperature [K]} \\
+T_{\text{cht}, 1..4} & \text{Cylinder Head Temperatures 1 to 4 [K]} \\
+\theta_{\text{blowby}} & \text{Piston Ring Pack Blow-by Degradation Parameter [nom = 1.0]} \\
+\theta_{\text{fouling}} & \text{Compressor / Intercooler Fouling Parameter [nom = 1.0]}
+\end{bmatrix}^T$$
 
-ANUMAAN addresses this directly with an independent plant model, `backend/plant/VirtualEngine`, referred to internally as G01. Setting the `ANUMAAN_USE_INDEPENDENT_PLANT` environment variable routes nominal flight and four of the eight fault modes through this model instead of the default synthetic generator. G01 is built and calibrated separately, with its own build-to-build variation and its own sensor bias, lag, and noise characteristics, and with hidden fault injection the detection layer has no advance knowledge of. Because the model producing telemetry and the model predicting telemetry are genuinely different implementations, a residual computed against G01 reflects real model mismatch, the same kind of mismatch that would exist between a physics model and a real physical engine, rather than a generator checking its own output.
+**Input Vector $\mathbf{u}(t) \in \mathbb{R}^6$:**
+$$\mathbf{u}(t) = \begin{bmatrix} \alpha_{\text{th}} & \dot{m}_{\text{fuel}} & u_{\text{wg}} & z_{\text{alt}} & T_0 & v_{\text{ias}} \end{bmatrix}^T$$
+
+**Measurement Vector $\mathbf{y}(t) \in \mathbb{R}^8$:**
+$$\mathbf{y}(t) = \begin{bmatrix} P_{\text{im,meas}} & \text{RPM}_{\text{meas}} & T_{\text{egt,meas}} & T_{\text{oil,meas}} & P_{\text{oil,meas}} & T_{\text{cht,meas}}^{\max} & \dot{m}_{f,\text{meas}} & \text{MAP}_{\text{meas}} \end{bmatrix}^T$$
+
+---
+
+## Virtual Sensors: In-Flight Unmeasured Quantities
+
+A cornerstone capability of the genuine Digital Twin is synthesizing critical engineering quantities that are physically impossible or economically unviable to measure with production in-flight instrumentation:
+
+| Virtual Sensor | Physics Synthesis Formulation | Operational Target |
+| :--- | :--- | :--- |
+| **Peak Cylinder Pressure ($P_{\max}$)** | Dual-combustion Seiliger constant-volume peak formula | Detonation margin & structural fatigue tracking |
+| **Turbine Inlet Temperature ($TIT$)** | Exhaust manifold enthalpy balance ($1050^\circ\text{C}$ pre-turbine) | Turbocharger thermal limit & blade creep |
+| **Hydrodynamic Oil Film ($h_{\min}$)** | Sommerfeld bearing lubrication equation ($S_0$) | Bearing scuffing & boundary friction warning |
+| **Indicated Engine Power ($P_{\text{ind}}$)** | $\text{IMEP} \cdot V_d \cdot \omega_e / (4\pi)$ | True shaft power & aerodynamic thrust margin |
+| **Compressor Surge Margin ($SM$)** | $(\Pi_c / \dot{m}_c)_{\text{surge}} / (\Pi_c / \dot{m}_c)$ | High-altitude compressor stall & flameout |
+
+1. **Peak Cylinder Pressure ($P_{\max}$):** Production UAV engines cannot carry piezoelectric quartz pressure transducers in every cylinder head due to thermal cycling and short lifespans ($< 100\text{ hours}$). The twin provides continuous real-time $\hat{P}_{\max}(t)$, enabling knock detection and structural fatigue tracking without specialized hardware.
+2. **Turbine Inlet Temperature ($TIT$):** Pre-turbine gas temperatures can exceed $1050^\circ\text{C}$ on full-power climb, destroying standard Type K thermocouples. The twin estimates TIT using the turbine expansion enthalpy balance.
+3. **Hydrodynamic Oil Film Thickness ($h_{\min}$):** Minimum oil film thickness on crankshaft main journals (typically $1.8 - 3.2\ \mu\text{m}$). If $h_{\min} < 0.8\ \mu\text{m}$, an alert of imminent boundary friction is issued before bearing wipe occurs.
+
+---
+
+## The Independent Plant Model (G01)
+
+The honesty of a residual depends entirely on where the "expected" baseline originates. If the model predicting expected behavior and the model generating observed telemetry share the same code, assumptions, and random seeds, the residual only measures the twin agreeing with itself: a tautology.
+
+ANUMAAN resolves this with an independent plant model, `backend/plant/VirtualEngine` (internally designated G01). Setting `ANUMAAN_USE_INDEPENDENT_PLANT=1` routes telemetry and fault modes through this model instead of the default generator. G01 is built with:
+- Independent build-to-build manufacturing tolerances ($\pm 2\%$ volumetric efficiency, $\pm 6\%$ mechanical friction).
+- Sensor transfer functions exhibiting first-order thermal lag ($\tau_{\text{sensor}}$) and stochastic calibration drift.
+- Hidden multi-fault injections that the detection layer has no advance knowledge of.
 
 ```mermaid
 flowchart TB
-    subgraph Default["Default mode"]
-        Gen["Synthetic generator"] --> Exp1["Expected"]
+    subgraph Default["Default Mode (Baseline Validation)"]
+        Gen["Synthetic Generator"] --> Exp1["Expected"]
         Gen --> Obs1["Observed"]
     end
-    subgraph Independent["Independent plant mode, G01"]
-        VE["VirtualEngine: separate build, own bias, lag, noise"] --> Obs2["Observed telemetry"]
-        Physics["Physics core expectation model"] --> Exp2["Expected"]
-        Obs2 --> R2((residual))
+    subgraph Independent["Independent Plant Mode (G01 Real-World Mismatch)"]
+        VE["VirtualEngine (Independent Physics, Own Bias, Lag, Noise)"] --> Obs2["Observed Telemetry"]
+        Physics["0D/1D MVEM State Observer"] --> Exp2["Expected Baseline"]
+        Obs2 --> R2((Minus))
         Exp2 --> R2
+        R2 --> Res["Genuine Physics Residual r*(t)"]
     end
 ```
-*Caption: why routing telemetry through a physically independent plant model (G01) produces a residual that reflects genuine model mismatch rather than a generator comparing itself to itself.*
 
-## Why physical independence matters for honest residuals
+Running against G01 ensures that residuals reflect true physical model mismatch, identical to what an operational twin encounters when deployed on physical aircraft engines.
 
-A digital twin's diagnostic credibility rests on the assumption that a residual near zero means the engine is behaving as expected, and a growing residual means something in the physical system is genuinely diverging from that expectation. That assumption only holds if the expectation was computed independently of the observation. Sharing a generator between the two sides would make every residual artificially small in the nominal case and would make fault injection artificially clean, because the detector would effectively know in advance what the generator was going to do. Running against G01 removes that shortcut. It is the same discipline a real deployment would require, where the physics model has no access whatsoever to what the physical engine is actually doing except through its sensors, and it is why the independent plant model is treated as a first-class part of the architecture rather than an optional test mode.
+---
 
-## Integration
+## Integration & Operational Execution
 
-The residual stream produced here feeds directly into Bio-Inspired Sparse Novelty Coding and the Bayesian diagnosis layer described in [Residual Analysis](08-residual-analysis.md), and the operating-point inputs that make the expected-value computation meaningful are acquired and validated as described in [Telemetry and Sensor Intelligence](07-telemetry-and-sensors.md). The physics computations behind the expected-value side, cylinder pressure, torque, and crank angular velocity, are covered in full in [Engine Physics and Combustion Modeling](06-engine-physics.md).
+- **Update Rates:** The inner dynamic state observer executes at **50 Hz** ($20\text{ ms}$ step) matched to high-priority CAN frames, while slow wear parameters ($\theta_{\text{blowby}}, \theta_{\text{fouling}}$) update at **1 Hz**.
+- **Downstream Feed:** The validated residual vector feeds directly into [Bio-Inspired Sparse Novelty Coding](10-bio-inspired-sparse-novelty-coding.md) and [Fault Diagnosis](11-fault-diagnosis.md).
+- **Physics Equations:** Detailed mathematical formulations for manifold dynamics, Seiliger combustion, and bearing lubrication are covered in [Engine Physics and Thermodynamics](06-engine-physics.md).
 
-## Validation
+---
 
-The residual pipeline and the independent plant model are exercised through the project's pytest-based characterization suite, which pins specific detection and physics results as regression tests so that a change breaking the underlying method is caught automatically. The independent plant model's behavior under the four supported fault modes and nominal flight is part of that coverage. Real-aircraft validation of the residual approach against flight hardware is the natural next phase; the current validation basis is simulation against a physically independent model plus reference engine specification, not flight test data.
+## Related Systems
 
-## Related systems
-
-- [Introducing ANUMAAN](03-introducing-anumaan.md)
-- [Engine Physics and Combustion Modeling](06-engine-physics.md)
-- [Residual Analysis](08-residual-analysis.md)
 - [System Architecture](04-system-architecture.md)
+- [Engine Physics and Thermodynamics](06-engine-physics.md)
+- [Telemetry and Sensors](07-telemetry-and-sensors.md)
+- [Residual Analysis](08-residual-analysis.md)

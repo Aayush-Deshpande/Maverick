@@ -1,135 +1,125 @@
-# Mission Reliability
+# Mission Reliability Enhancement
 
-PS-26054's title names three outcomes: health monitoring, fault prediction, and mission reliability enhancement. The first two are answered by the detection and prognostics layers. The third is easy to answer badly: reduce engine condition to a single dimensionless health index, threshold it, and show a coloured badge. That approach is common across implementations of this problem, and it does not actually answer the question a mission commander is asking, which is whether this specific mission, flown by this specific aircraft in its current condition, will complete without a propulsion-induced abort.
+PS-26054's title names three specific outcomes: health monitoring, fault prediction, and **mission reliability enhancement**. The first two are answered by the detection and prognostics layers. The third is where ANUMAAN closes the operational loop: translating internal thermodynamic degradation into **tactical flight envelope derating**, **Remaining Mission Endurance ($RME$)**, and an **aerodynamic glide polar reachability cone ($L/D_{\max}$)** with emergency divert airfield ranking.
 
-ANUMAAN treats mission reliability as a defined, computable quantity rather than a badge:
+ANUMAAN treats mission reliability as a mathematically defined, computable probability rather than an arbitrary green/yellow badge:
 
-```
-R = P(the planned mission completes without a propulsion-induced abort |
-      current component health, planned profile, forecast environment)
-```
+$$R = \mathbb{P}\Big(\text{Planned Mission Completes Without a Propulsion-Induced Abort} \mid \text{Health, Profile, Environment}\Big)$$
 
-This is computed by Monte Carlo simulation over per-component hazard models, phase by phase through the mission profile, and reported with a confidence interval and a limiting component: the specific part actually driving mission risk, which is the quantity a mission commander can act on.
+---
 
-## The problem
+## Tactical Flight Envelope Derating Mechanics
 
-A health index is dimensionless, and any threshold placed on it is arbitrary. A hazard rate, by contrast, has units of failures per hour, and units matter here because they let risk compose correctly with exposure time. An eighteen-hour ISR mission is genuinely riskier than a two-hour transit at identical engine health, because the engine is exposed to failure risk for nine times as long. A sustained high-power climb carries more risk per minute than a loiter segment, because hazard rate depends on the stress the component is under, not only on its condition. A threshold on a health index cannot express either fact: it treats a healthy engine on an eighteen-hour mission the same as a healthy engine on a two-hour transit, and it treats a climb the same as a loiter, because a health index carries no notion of accumulating exposure or phase-varying stress.
+When mechanical wear or an amber fault is confirmed, ANUMAAN dynamically recalculates the safe operational boundaries of the aircraft:
 
-## Why it matters
+| Engine Health State | Aerodynamic & Tactical Derating Impact | Operational Action / Limit |
+| :--- | :--- | :--- |
+| **Pristine Condition**<br/>($HI_{\text{eng}} > 0.85$) | Full flight envelope available: $30,000\text{ ft}$ ceiling, $115\%$ boost climb rating. | Unrestricted ISR Mission |
+| **Turbo Wastegate Stuck Open**<br/>($\Delta MAP \approx -18\text{ kPa}, HI_{\text{turbo}} = 0.54$) | Altitude ceiling derated to $17,200\text{ ft}$ AMSL; max continuous power capped at $82\%$. | High-Altitude Dash Prohibited;<br/>Loiter at Medium Altitude |
+| **Elevated Oil Sump Temperature**<br/>($T_{\text{oil}} = 128^\circ\text{C}, HI_{\text{lub}} = 0.42$) | Cruise throttle capped at $75\%$ MCP; high-speed dash ($> 110\text{ kts}$) inhibited to prevent bearing wipe. | Abort to Orbit;<br/>Return to Base (RTB) Advisory |
+| **Cylinder Compression Loss**<br/>($HI_{\text{comb}} = 0.28$, Severe Blowby) | Rate of climb limited to $V_y \le 350\text{ ft/min}$; thermal runaway predicted in 18 minutes. | **Critical:** Immediate Divert to Nearest Airfield |
 
-The distinction is not cosmetic. A go/no-go badge tells an operator whether the engine looks fine right now. A computed reliability number, conditioned on the actual planned profile and environment, tells the operator whether the specific mission ahead is likely to be completed, and which component is the reason it might not be. That is the difference between a system that reports engine status and one that supports an actual launch decision, and it is what allows the prescriptive layer to reason about trade-offs (derate power, shorten the loiter, fly a lower altitude) rather than only issue a warning.
+---
 
-## Our approach
+## Remaining Mission Endurance ($RME$)
 
-Every component on the powerplant (cylinder heads, turbocharger, injectors, fuel pump, oil pump, main bearings, reduction gearbox, alternator, ECU lanes, air filter) carries its own hazard model: a base hazard rate for a healthy component, a damage fraction between zero (new) and one (life consumed), and a damage exponent controlling how sharply hazard rises as that damage fraction approaches one. This is a wear-out model, not a constant-failure-rate model for every part: a component with a high damage exponent stays close to its base hazard rate until damage is substantial, then rises very sharply, which matches how real wear-out failure mechanisms behave, an electrical connector's largely random failure mode sits at a low exponent, a bearing's progressive wear-out sits at a high one.
+Rather than estimating raw flight hours detached from fuel burn, the system evaluates Remaining Mission Endurance as a constrained optimization problem balancing fuel consumption against thermal damage accumulation:
 
-A mission profile is a sequence of phases, each with its own duration, altitude, power fraction, outside air temperature, and dust density. Each phase carries a stress factor computed from those conditions: power dominates, entering the formula to a power greater than one because hazard is strongly superlinear in load, with altitude and heat contributing through reduced cooling margin and sustained turbocharger pressure ratio. The hazard for a given component in a given phase is its base hazard rate, scaled by a wear multiplier from its current damage fraction, scaled again by that phase's stress factor.
+$$RME(t) = \min \left( \frac{M_{\text{fuel,rem}}(t)}{\dot{m}_{f,\text{cruise}}(t)}, \; \inf\{ \tau > 0 : HI_{\text{critical}}(t + \tau) \le HI_{\text{abort}} \} \right)$$
 
-## How it works
+If an engine suffers an oil leak or rapid ring wear, $RME$ transitions from being fuel-limited to being component-health-limited, alerting the tactical pilot with the exact time remaining before structural failure occurs.
 
-The reliability engine offers two computation paths built on the same hazard model. The analytic path computes reliability in closed form, the product across components of the exponential of negative integrated hazard over the mission's phases, exact under the model's own assumption that component failures are independent. The Monte Carlo path exists because it is where dependence between components and phase-conditional abort behavior can be added later without changing the interface, and it is the path used for reporting: for each of many trials, each component's time to failure is drawn from its phase-varying hazard by inverse transform, the earliest failure across all components aborts that trial, and the phase in which it happened is recorded. That is what turns "this is a risky mission" into "this is risky specifically during the twelve-hour loiter segment."
+---
 
-Reliability is the fraction of trials that complete without a critical-component failure. Because reporting a bare point estimate risks being read as more certain than the sample size supports, the engine also reports a confidence interval using the Wilson score method rather than a normal approximation, which matters specifically because reliability values close to one are common for a healthy engine, and a normal approximation collapses to a zero-width interval when every trial in the sample succeeds, falsely reporting certainty the sample does not actually contain. The limiting component is the one responsible for the largest share of first failures across all failed trials, ranked directly from the simulation rather than guessed at.
+## Aerodynamic Coupling: Glide Polar Reachability Cone Engine
 
-Live mission execution feeds this engine directly. As faults are injected during a mission, whether scheduled or operator-commanded, their severity and elapsed-since-onset ramp are translated into real damage fractions on the matching component category through a keyword-to-component mapping that is matched against the actual component roster of the engine currently flying, so the same logic works across all five engine platforms without hardcoding component names for one engine family. The mission executive samples reliability periodically during flight, building a mission profile from the actual remaining phases (the current phase truncated to what remains of it, plus every phase still ahead) rather than falling back to a generic canned profile, so the reported number reflects what this specific mission will actually fly from this point forward.
-
-## Prescriptive advisory escalation
-
-Predictive maintenance tells an operator what will fail. Prescriptive maintenance tells them what to do about it now, on this mission, and ANUMAAN's advisory layer escalates through three outputs in ascending order of actionability:
-
-1. **Reliability report.** The current mission's computed reliability with its confidence interval and its limiting component, for example a reliability of 0.87 with the cylinder 2 injector identified as the limiting part.
-2. **Derate recommendation.** A candidate reduced power setting, reporting the resulting change in damage rate, the new reliability figure, and the endurance penalty in minutes, so the operator sees the actual trade-off rather than just an instruction. A derate to full power reports as reassurance, not as a contradictory instruction, when the mission already meets its target without reducing power.
-3. **Alternative achievable profile.** When no derate at the planned altitude and duration meets the required reliability, the system searches the profile space, reducing power, reducing altitude, shortening the loiter, for the closest achievable plan that meets the reliability requirement, reporting the specific achievable duration, altitude, and resulting reliability.
-
-![Prescriptive Throttle Derate Advisory Execution](/assets/playwright/05_operator_derated.png)
-*Figure 1: Prescriptive advisory panel issuing throttle derate recommendation with mission reliability impact projection.*
-
-The overall verdict (GO, MARGINAL, or NO-GO) is driven by the lower confidence bound, not the point estimate, deliberately: committing an airframe on a number whose uncertainty interval straddles the reliability requirement is exactly the decision this system exists to prevent. Every output of this layer is advisory. Nothing in the prescriptive system commands the aircraft directly, which keeps it at a materially lower design assurance level than a system that closes a control loop, and that distinction is what separates a system that could plausibly be fielded from one that could not.
-
-## Architecture
+If propulsion health degrades to critical levels ($HI_{\text{eng}} < 0.20$ or impending loss of power), the system instantly transitions from passive monitoring to active **Aircraft Reachability Decision Support**:
 
 ```mermaid
 flowchart TB
-    PROFILE["Mission profile: phases, stress factors"]
-    DAMAGE["Component damage fractions"]
-    HAZARD["Per-component hazard model"]
-
-    PROFILE --> MC["Monte Carlo: N trials"]
-    DAMAGE --> HAZARD
-    HAZARD --> MC
-    MC --> DRAW["Draw time-to-failure per component per trial"]
-    DRAW --> EARLIEST["Earliest failure aborts trial"]
-    EARLIEST --> AGG["Aggregate across trials"]
-    AGG --> R["Reliability R + Wilson CI"]
-    AGG --> LIMIT["Limiting component"]
-    R --> ADVISORY["Prescriptive advisory"]
-    LIMIT --> ADVISORY
-    ADVISORY --> DERATE["Derate option"]
-    ADVISORY --> REPLAN["Alternative profile"]
+    UAV["Aircraft at Altitude z_alt, Position (x0, y0)"]
+    Polar["Power-Off Glide Polar: (L/D)_max<br/>V_glide = sqrt(2*W / (rho * S * C_L_opt))"]
+    Wind["Local Ambient Wind Vector W(z)<br/>Speed & Heading"]
+    
+    UAV --> Polar
+    UAV --> Wind
+    Polar --> Cone["Dynamic 3D Reachability Glide Cone<br/>R_reach(psi) = z_alt * (L/D)_eff(psi)"]
+    Wind --> Cone
+    
+    Cone --> Ranking["Airfield Reachability Ranking & HUD<br/>1. AFS Leh Runway 07: Reachable (+4,200 ft margin)<br/>2. FOB Nyoma Strip: Reachable (+1,100 ft margin)<br/>3. Highway Strip: Out of Range (-800 ft deficit)"]
+    Ranking --> HUD["1-Click Tactical Divert on Pilot HUD"]
 ```
 
-*Per-component hazard models, combined with the live mission profile, feed a Monte Carlo simulation that produces reliability, its confidence interval, and the limiting component driving mission risk.*
+### 1. Unpowered Aerodynamic Glide Equations
+For a fixed-wing MALE UAV (e.g., Tapas-BH-201 with wing area $S$, aspect ratio $AR$, and zero-lift drag coefficient $C_{D0}$):
 
-## Mathematics
+$$C_L = \frac{2 \cdot W_{\text{uav}}}{\rho_0(z) \cdot v_{\text{tas}}^2 \cdot S}, \quad C_D = C_{D0} + \frac{C_L^2}{\pi \cdot AR \cdot e}$$
 
-The instantaneous failure hazard $\lambda_c$ for component $c$ at damage fraction $d_c \in [0, 1)$ under environmental stress factor $s_p$ is modeled as a non-linear power-law wear-out:
+The maximum lift-to-drag glide ratio is:
+$$\left(\frac{L}{D}\right)_{\max} = \frac{1}{2 \cdot \sqrt{C_{D0} \cdot \frac{1}{\pi \cdot AR \cdot e}}}$$
 
-$$
-\lambda_c(d_c, s_p) = \lambda_{0, c} \cdot \left(\frac{1}{1 - d_c}\right)^{\gamma_c} \cdot s_p
-$$
+Under an ambient wind vector $\mathbf{W} = [W_x, W_y]^T$, the maximum glide ground range along bearing $\psi$ is:
+$$R_{\text{glide}}(\psi) = z_{\text{alt}} \cdot \left(\frac{L}{D}\right)_{\max} \cdot \left( 1 + \frac{W_x \cos\psi + W_y \sin\psi}{V_{\text{best-glide}}} \right)$$
 
-where $\lambda_{0, c}$ is the baseline failure rate (failures per flight hour), $\gamma_c \ge 1$ is the component-specific damage exponent (e.g., higher for rotating bearings, lower for solid-state sensors), and $s_p$ is the operational stress factor for phase $p$.
+### 2. Emergency Airfield Reachability Ranking
+The engine evaluates all designated airbases, forward operating strips, and emergency landing zones within $150\text{ km}$:
 
-The survival probability $S_{c, p}$ for component $c$ over a flight phase $p$ of duration $\Delta t_p$ hours is given by:
+$$\Delta z_{\text{margin}, i} = z_{\text{alt}} - \frac{d_i}{\left(\frac{L}{D}\right)_{\text{eff}}(\psi_i)} - z_{\text{runway}, i}$$
 
-$$
-S_{c, p} = \exp\left( -\lambda_c(d_c, s_p) \cdot \Delta t_p \right)
-$$
+Airfields with positive arrival altitude margin ($\Delta z_{\text{margin}, i} > 500\text{ m}$ / $1,640\text{ ft}$) are highlighted in green on the pilot's tactical HUD, offering an instantaneous 1-click divert routing vector.
 
-Under the baseline assumption of component-wise failure independence, the closed-form mission-wide survival probability $R_{\text{analytic}}$ across all critical propulsion components $\mathcal{C}$ and mission phases $\mathcal{P}$ is:
+---
 
-$$
-R_{\text{analytic}} = \prod_{c \in \mathcal{C}} \exp\left( -\sum_{p \in \mathcal{P}} \lambda_c(d_c, s_p) \cdot \Delta t_p \right)
-$$
+## Monte Carlo Mission Reliability Solver
 
-The expected Remaining Useful Life $\mathbb{E}[\text{RUL}_c]$ for a component under current steady-state stress is the mean time to failure:
+To evaluate whether the planned flight profile can be completed safely, ANUMAAN executes a 10-phase Monte Carlo hazard integration over $N = 1,000$ iterations:
 
-$$
-\mathbb{E}[\text{RUL}_c] = \frac{1}{\lambda_c(d_c, s_p)}
-$$
+$$\lambda_c(d_c, s_p) = \lambda_{0, c} \cdot \left(\frac{1}{1 - d_c}\right)^{\gamma_c} \cdot s_p$$
 
-The operational stress factor $s_p$ synthesizes engine throttle demand, density altitude, ambient temperature, and particulate ingestion:
+The operational stress factor $s_p$ synthesizes throttle demand, density altitude, ambient temperature, and particulate ingestion:
 
-$$
-s_p = \left(P_{\text{frac}}\right)^{2.2} \times \left(1 + 0.35 \max\left(0, \frac{h_{\text{ft}} - 16000}{10000}\right)\right) \times \left(1 + 0.30 \max\left(0, \frac{T_{\text{OAT}} + 10}{45}\right)\right) \times \left(1 + 0.25 \min\left(2.0, \frac{\rho_{\text{dust}}}{6.0}\right)\right)
-$$
+$$s_p = \left(P_{\text{frac}}\right)^{2.2} \times \left(1 + 0.35 \max\left(0, \frac{h_{\text{ft}} - 16000}{10000}\right)\right) \times \left(1 + 0.30 \max\left(0, \frac{T_{\text{OAT}} + 10}{45}\right)\right) \times \left(1 + 0.25 \min\left(2.0, \frac{\rho_{\text{dust}}}{6.0}\right)\right)$$
 
-In the Monte Carlo engine ($N = 1000$ iterations), each component's time-to-failure is sampled via inverse CDF transform:
+Confidence bounds are calculated using the Wilson score interval:
+$$w = \frac{\hat{p} + \frac{z^2}{2N} \pm z \sqrt{\frac{\hat{p}(1-\hat{p})}{N} + \frac{z^2}{4N^2}}}{1 + \frac{z^2}{N}}, \quad \hat{p} = \frac{K}{N}$$
 
-$$
-t_{\text{fail}, c} = -\frac{\ln(1 - U)}{\lambda_c(d_c, s_p)}, \quad U \sim \text{Uniform}(0, 1)
-$$
+```mermaid
+flowchart TB
+    PROFILE["Mission Profile: 10 Phases, Stress Factors s_p"]
+    DAMAGE["Component Damage Fractions d_c"]
+    HAZARD["Per-Component Hazard Model lambda_c(d_c, s_p)"]
 
-For empirical success count $K \le N$, the mission reliability confidence interval is bounded using the Wilson score interval:
+    PROFILE --> MC["Monte Carlo Solver: N = 1000 Trials"]
+    DAMAGE --> HAZARD
+    HAZARD --> MC
+    MC --> DRAW["Draw Time-to-Failure per Component per Trial"]
+    DRAW --> EARLIEST["Earliest Failure Aborts Trial"]
+    EARLIEST --> AGG["Aggregate Survival Across Trials"]
+    AGG --> R["Reliability R + Wilson Score CI"]
+    AGG --> LIMIT["Identified Limiting Component"]
+    R --> ADVISORY["Prescriptive Advisory Engine"]
+    LIMIT --> ADVISORY
+    ADVISORY --> DERATE["Candidate Throttle Derate Recommendation"]
+    ADVISORY --> REPLAN["Alternative Achievable Profile Search"]
+```
 
-$$
-w = \frac{\hat{p} + \frac{z^2}{2N} \pm z \sqrt{\frac{\hat{p}(1-\hat{p})}{N} + \frac{z^2}{4N^2}}}{1 + \frac{z^2}{N}}, \quad \hat{p} = \frac{K}{N}
-$$
+---
 
-## Example
+## Prescriptive Advisory Escalation
 
-A cooling-degradation fault injected during the cruise phase of a Ladakh endurance mission ramps up over forty seconds. As the ramp progresses, the fault's severity is translated into a rising damage fraction on the matching cylinder-head components. Because the wear multiplier is centred so that a fault severity in the realistic 0.7 to 0.9 range for injected faults lands on the steep part of the wear-out curve, this damage change is visible in the reported reliability and limiting-component output within the executive's next periodic reliability sample, even over a comparatively short remaining-mission window, rather than only becoming apparent once the fault has caused an outright failure.
+When reliability degrades mid-mission, ANUMAAN escalates through three actionable levels:
+1. **Reliability Report:** Identifies the limiting component and states mission survival probability (e.g., $R = 0.82 \pm 0.04$, limiting part: Cylinder #2 cooling jacket).
+2. **Throttle Derate Recommendation:** Calculates a candidate reduced power setting, reporting the resulting change in hazard accumulation rate, the restored reliability figure ($R = 0.94$), and the endurance penalty in minutes.
+3. **Alternative Achievable Mission Profile:** If no throttle derate at the current altitude can meet the safety threshold, the system searches profile space (reducing altitude, shortening loiter duration) to return the closest achievable flight plan that satisfies $R \ge 0.90$.
 
-## Integration
+![Prescriptive Throttle Derate Advisory Execution](/assets/playwright/05_operator_derated.png)
+*Figure 1: Prescriptive advisory panel issuing throttle derate recommendation with calculated mission reliability recovery.*
 
-The reliability engine consumes the mission executive's live phase and fault state to build its mission profile, and consumes the same component damage bookkeeping that live fault injection writes into during a mission. Its output, the reliability figure, confidence interval, and limiting component, is written back into the canonical mission state every sampling interval and drives the prescriptive advisory text shown to the operator, including the recommendation returned when the operator commands a manual derate.
+---
 
-## Validation
-
-The base hazard rates in the default component set are explicitly documented in the module's own source as order-of-magnitude starting values, chosen so that a healthy engine completes a representative eighteen-hour mission with high probability, and are labelled as the weakest part of the model until replaced by fleet MTBUR data or FMECA criticality analysis. What the model does establish reliably under its own stated assumptions is the ranking of limiting components and the relative effect of a derate, which is the actionable output the prescriptive layer depends on; the absolute probability figure is honestly scoped as dependent on future fleet reliability data. The reliability and prescriptive modules are exercised by the project's pytest suite alongside the mission executive.
-
-## Related systems
+## Related Systems
 
 - [Mission Planning](16-mission-planning.md)
-- [Dataset Strategy](15-dataset-strategy.md)
-- [The 3D Digital Twin](18-3d-digital-twin.md)
+- [Degradation Modeling and Wear Kinetics](13-degradation-modeling.md)
+- [Operator Ground Control Station](20-operator-gcs.md)
+- [Validation and Experiments](21-validation-and-experiments.md)

@@ -1,79 +1,104 @@
-# Degradation Modeling
+# Degradation Modeling and Wear Kinetics
 
-A fault diagnosis tells the operator what is wrong right now. Degradation modeling answers a different question: how has this component been wearing, cycle by cycle, hour by hour, well before anything crossed a threshold at all. This is the layer that turns a stream of thermal and mechanical stress cycles into a running measure of accumulated damage, and it is the foundation that remaining useful life estimation, the next article, builds on. Without a credible damage accumulation model, an RUL number has nothing underneath it.
+A fault diagnosis tells the operator what component is abnormal right now. Degradation modeling answers a different, more fundamental question: **how is the powerplant accumulating irreversible physical damage across operational hours, well before an overt threshold is crossed?**
 
-## The problem
+Without a first-principles damage accumulation model, any Remaining Useful Life (RUL) figure is an ungrounded guess. ANUMAAN combines **thermodynamic damage physics kinetics** (Arrhenius aging, Paris-Erdogan mechanical fatigue, Archard wear, and ISO 281 bearing fatigue) with **Rainflow cycle counting** and a **continuous-time stochastic Wiener drift process**.
 
-Mechanical and thermal fatigue do not happen in a single event. They accumulate. A cylinder head does not crack the first time it gets hot; it accumulates microscopic damage over thousands of thermal cycles of varying severity, and eventually that accumulated damage reaches a critical fraction and a crack initiates. The engineering challenge is that operating history is not a clean sequence of uniform cycles. Real telemetry produces an irregular sequence of peaks and valleys, small thermal fluctuations superimposed on large ones, partial cycles that never fully reverse, and the question of how to count all of that irregular variation into a meaningful measure of cumulative damage is genuinely non-trivial. Counting cycles naively, by simply counting how many times a signal crosses its mean, throws away exactly the information that determines how damaging each cycle actually was.
+---
 
-## Why it matters
+## Thermodynamic Stressors to Damage Kinetics
 
-Several entries in ANUMAAN's FMECA taxonomy are fundamentally cumulative rather than instantaneous: cylinder head thermal fatigue cracking, cylinder bore and ring wear from abrasive ingestion, gearbox tooth wear and micro-pitting. None of these announce themselves as a sudden departure from normal. Each is a slow accumulation that only becomes visible in aggregate, over hours of operating history, which is precisely the kind of trend a threshold-based system, watching only the current instantaneous value, is structurally unable to see. Tracking accumulated damage directly, rather than waiting for a symptom to appear, is what turns a degradation model into an early warning rather than a post-hoc explanation.
+Damage does not accumulate as a linear function of flight hours. An hour of low-power loiter in cool air causes negligible fatigue, whereas twenty minutes of full-boost climb at high ambient temperature ($+48^\circ\text{C}$ in Rajasthan) exponentially accelerates oil breakdown and cylinder head micro-cracking.
 
-## Our approach
+ANUMAAN feeds internal thermodynamic stressors from the digital twin into four coupled damage kinetics models:
 
-ANUMAAN counts stress cycles using rainflow cycle counting, the standard method in fatigue analysis for extracting a meaningful set of stress reversal cycles from an irregular load or temperature history, and combines them using Miner's linear damage rule, which sums the fractional damage contributed by each counted cycle against the number of cycles a component could withstand at that stress amplitude before failing. This pairing, rainflow counting followed by Miner's rule, is the established approach in fatigue and prognostics and health management practice for turning an irregular real-world stress history into a single cumulative damage fraction, and ANUMAAN applies it to the thermal and mechanical stress cycles a piston engine's components actually experience: cylinder head temperature excursions, combustion pressure cycling, and comparable stress-relevant channels.
+```mermaid
+flowchart TB
+    Twin["Digital Twin Thermodynamic Stressors<br/>(T_oil, P_max, CHT, RPM, TIT)"]
+    
+    Twin --> Arrhenius["Arrhenius Chemical Aging<br/>Lubricant thermal oxidation & valve seat erosion<br/>k_ox(T) = A_ox * exp(-E_a / (R_gas * T_oil))"]
+    Twin --> Paris["Paris-Erdogan Cyclic Fatigue<br/>Crankshaft & connecting rod micro-crack growth<br/>da/dN = C * (Delta-K(P_max))^m"]
+    Twin --> Archard["Archard Sliding Wear<br/>Piston ring pack & cylinder liner scuffing<br/>V_wear = K_arch * (F_radial * s) / H_liner"]
+    Twin --> ISO["ISO 281 Rolling Contact Fatigue<br/>Main journal & reduction gearbox bearings<br/>L_10 = (C / P_dyn)^p"]
+```
 
-Degradation tracking runs continuously, independent of whether a fault is currently flagged, because damage accrues whether or not anything is currently unusual. A component operating entirely within normal limits is still accumulating fatigue damage with every thermal cycle it experiences, and the whole point of tracking it directly is to know how much margin remains before that accumulation becomes a problem, rather than discovering the problem only once a threshold is finally crossed.
+---
 
-## How it works
+## Mathematical Formulations of Damage Kinetics
 
-The pipeline takes a stress-relevant channel's history, most directly cylinder head temperature or an equivalent mechanical stress proxy, and processes it in three stages.
+### 1. Lubricant Thermal Oxidation & Valve Aging (Arrhenius Kinetics)
+Thermal breakdown of lubricating oil and exhaust valve seat thermal erosion follow Arrhenius reaction kinetics:
 
-Rainflow cycle counting first identifies the full and partial stress reversal cycles hidden inside the irregular history. The method works by treating the stress-time history as a sequence of peaks and valleys and extracting closed hysteresis loops from it, the way rain would flow down a sequence of pagoda roofs formed by the signal, giving the method its name. Each extracted cycle carries a range, the difference between its peak and valley, and a mean level. A large thermal swing from a rapid throttle transition counts as a more damaging cycle than a small fluctuation during steady cruise, and rainflow counting is what correctly separates the two rather than treating every mean crossing as equally significant.
+$$k_{\text{ox}}(T) = A_{\text{ox}} \cdot \exp\left( -\frac{E_a}{R_{\text{gas}} \cdot T_{\text{oil}}} \right)$$
 
-Each counted cycle is then converted into a fractional damage contribution using Miner's rule. A material's fatigue life curve specifies how many cycles at a given stress range it can withstand before failure; a single cycle at that range therefore consumes one over that number as its fractional share of the component's total fatigue life. Summing that fraction across every counted cycle, across the component's entire operating history, gives a cumulative damage fraction between zero, undamaged, and one, the point at which the linear damage model predicts failure.
+Cumulative thermal dosage $D_{\text{therm}}(t)$ over flight duration $t$:
+$$D_{\text{therm}}(t) = \int_0^t \exp\left( \frac{E_a}{R_{\text{gas}}} \cdot \left[ \frac{1}{T_{\text{ref}}} - \frac{1}{T_{\text{oil}}(\tau)} \right] \right) d\tau$$
 
-Slow parameter drift, changes in efficiency, oil condition, or baseline operating parameters that develop gradually over many operating hours rather than in discrete stress cycles, is tracked separately as a trend against operating hours, complementing the cycle-counted damage fraction with a second, slower-moving indicator of the same underlying wear process. Together, the cumulative damage fraction and the tracked parameter drift form the degradation state that the remaining useful life layer extrapolates forward.
+When oil sump temperature exceeds nominal ($T_{\text{oil}} > 115^\circ\text{C}$), lubricant thermal degradation accelerates exponentially, thinning the oil and degrading minimum hydrodynamic film thickness $h_{\min}$.
 
-## Architecture
+---
 
-From irregular stress history to a cumulative damage fraction.
+### 2. Crankshaft & Connecting Rod High-Cycle Fatigue (Paris-Erdogan Law)
+For mechanical components subjected to cyclic peak combustion pressures $P_{\max}$, micro-crack growth rate per engine revolution $N_{\text{rev}}$ follows the Paris-Erdogan law:
+
+$$\frac{da}{dN_{\text{rev}}} = C \cdot \left( \Delta K(P_{\max}, a) \right)^m, \quad \Delta K = Y \cdot \Delta \sigma(P_{\max}) \cdot \sqrt{\pi a}$$
+
+Where $m \approx 3.2$ for high-strength forged alloy steel connecting rods, and stress range $\Delta \sigma$ is proportional to peak indicated combustion pressure $P_{\max}$ synthesized by the digital twin virtual sensor.
+
+---
+
+### 3. Piston Ring Pack & Cylinder Liner Wear (Archard Adhesive Law)
+Piston ring sliding wear volume $V_{\text{wear}}$ over swept distance $s$:
+
+$$V_{\text{wear}} = K_{\text{archard}} \cdot \frac{F_{\text{radial}}(P_{\text{im}}, P_{\max}) \cdot s}{H_{\text{liner}}}$$
+
+As ring face wear accumulates, blow-by clearance widens, increasing crankcase pressure and updating the digital twin state observer wear parameter $\theta_{\text{blowby}}(t)$.
+
+---
+
+## Cycle Extraction: Rainflow Counting & Miner's Rule
+
+Real flight operations produce complex, irregular thermal and torque profiles. ANUMAAN processes stress histories using **ASTM E1049-85 Rainflow Cycle Counting**:
 
 ```mermaid
 flowchart LR
-    A[Stress-time history] --> B[Rainflow cycle counting]
-    B --> C[Cycle ranges and means]
-    C --> D[Fatigue life lookup]
-    D --> E[Miner's rule summation]
-    E --> F[Cumulative damage fraction]
-    G[Slow parameter drift] --> H[Degradation state]
-    F --> H
+    Hist["Stress-Time History: CHT(t), Torque(t)"] --> Rainflow["Rainflow Cycle Counting (ASTM E1049-85)<br/>Extracts Closed Hysteresis Loops (Delta-sigma_i, sigma_mean,i)"]
+    Rainflow --> Woehler["S-N Wöhler Curve / Thermal Limit Lookup<br/>Computes Allowable Cycles to Failure N_i"]
+    Woehler --> Miner["Palmgren-Miner Linear Summation:<br/>D_fatigue = Sum (n_i / N_i)"]
+    Miner --> Total["Cumulative Damage Index D(t) in [0.0, 1.0]"]
 ```
 
-*Rainflow counting extracts meaningful cycles from an irregular history; Miner's rule turns each into a fractional damage contribution that sums toward the critical limit.*
+Miner's linear damage rule sums fractional damage:
+$$D_{\text{fatigue}} = \sum_{i=1}^k \frac{n_i}{N_i}$$
 
-## Mathematics / algorithms
+Failure occurs when cumulative damage fraction reaches the critical threshold:
+$$D(t) \ge D_{\text{crit}} \approx 1.0$$
 
-For a stress history broken into `k` counted cycles by rainflow counting, each cycle `i` having a stress range that permits `N_i` cycles to failure at that range according to the component's fatigue life curve, Miner's linear damage rule sums the fractional damage:
+---
 
-```
-D = sum over i of (n_i / N_i)
-```
+## Continuous-Time Stochastic Wiener Degradation Process
 
-where `n_i` is the number of cycles actually counted at that stress range, typically one for each rainflow-extracted cycle unless repeated ranges are grouped. Failure is predicted when the cumulative damage fraction reaches the critical limit:
+Because flight turbulence, pilot throttle adjustments, and environmental gust loading are stochastic, cumulative degradation $X(t) = 1.0 - HI(t)$ is modeled as a continuous-time **Wiener process with state-dependent drift**:
 
-```
-D >= 1.0   predicted failure
-```
+$$X(t) = X(0) + \int_0^t \mu\big(\mathbf{u}(\tau), \mathbf{x}_{\text{twin}}(\tau)\big) d\tau + \sigma_B \cdot B(t)$$
 
-The rainflow algorithm itself proceeds by identifying successive peak-valley-peak triplets in the stress history and extracting a closed cycle whenever an interior range is fully enclosed by a larger surrounding range, discarding the extracted portion and continuing until only the largest, unclosed residual swings remain. This is what allows the method to correctly handle a small fluctuation superimposed on a larger one, counting the small one as its own cycle rather than letting it distort the range of the larger cycle it rides on.
+Where:
+- $\mu(\cdot)$ is the physical drift rate driven by instantaneous engine load, temperature, and wear kinetics.
+- $\sigma_B$ is the diffusion coefficient capturing ambient turbulence and vibration noise.
+- $B(t)$ is standard Brownian motion.
 
-## Example
+### First Hitting Time & Remaining Useful Life Distribution
+The Remaining Useful Life $T_{\text{RUL}} = \inf\{ t > 0 : X(t_0 + t) \ge D_{\text{crit}} \}$ follows the **Inverse Gaussian Distribution**:
 
-Consider a cylinder head temperature history across a mission profile that includes taxi, a high-power climb, a long cruise segment with minor throttle adjustments, a loiter phase, and a descent. Rainflow counting extracts a small number of large-range cycles corresponding to the major phase transitions, taxi to climb, climb to cruise, cruise to descent, and a larger number of small-range cycles from the minor throttle adjustments during cruise and loiter. Each large-range cycle, occurring at a higher stress amplitude, consumes a proportionally larger share of the fatigue life curve's cycles-to-failure at that range than each small cycle does. Miner's rule sums both populations into a single cumulative damage fraction for that mission, added to the damage fraction already accumulated from prior operating hours, giving a running total that the remaining useful life layer uses directly as its physics-of-failure input.
+$$f_{\text{RUL}}(t \mid X(t_0)) = \frac{D_{\text{crit}} - X(t_0)}{\sqrt{2\pi \sigma_B^2 t^3}} \cdot \exp\left( -\frac{\left( D_{\text{crit}} - X(t_0) - \bar{\mu} \cdot t \right)^2}{2 \sigma_B^2 t} \right)$$
 
-## Integration
+This distribution provides the formal stochastic foundation for the Conformal Prediction intervals described in [Remaining Useful Life Estimation](14-remaining-useful-life.md).
 
-Degradation modeling sits between fault diagnosis and prognosis in ANUMAAN's AI stack. It consumes stress-relevant channels derived from the digital twin's physics core and, where relevant, from the vibration features described in [Vibration Analysis](12-vibration-analysis.md), and its cumulative damage fraction feeds directly into the physics-of-failure path of the dual-path remaining useful life estimator described in [Remaining Useful Life Estimation](14-remaining-useful-life.md). It also informs the fault diagnosis layer described in [Fault Diagnosis](11-fault-diagnosis.md), since cylinder head thermal fatigue and comparable cumulative failure modes in the FMECA taxonomy are specifically identified through this damage accumulation signature rather than through an instantaneous residual.
+---
 
-## Validation
+## Related Systems
 
-Rainflow counting and Miner's rule are established, standard methods in fatigue analysis and prognostics and health management practice, applied here against the thermal and mechanical stress cycles produced by ANUMAAN's physics-based synthetic telemetry generator, which provides full operating histories across the complete mission phase model with known ground truth by construction. Validation of the specific fatigue life curves used against real material test data for the reference engine platforms, and against real operating histories rather than simulated ones, remains the natural next phase.
-
-## Related systems
-
-- [The AI and ML Architecture](09-ai-ml-architecture.md)
-- [Fault Diagnosis](11-fault-diagnosis.md)
-- [Vibration Analysis](12-vibration-analysis.md)
+- [The Digital Twin Core](05-the-digital-twin.md)
+- [Engine Physics and Thermodynamics](06-engine-physics.md)
 - [Remaining Useful Life Estimation](14-remaining-useful-life.md)
+- [Mission Reliability Enhancement](17-mission-reliability.md)
