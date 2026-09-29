@@ -91,3 +91,5 @@ mission-planning/
 .codex/
 *.stl
 final_touch.rar
+.vite/
+unity_bridge/

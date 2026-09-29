@@ -13,6 +13,7 @@ import {
 import { LandingNav } from './LandingNav';
 import { LandingFooter } from './LandingFooter';
 import './landing.css';
+import './landing-investigation.css';
 
 interface LandingPageProps {
   onLaunchConsole?: (target?: 'runtime' | 'twin' | 'legacy') => void;
