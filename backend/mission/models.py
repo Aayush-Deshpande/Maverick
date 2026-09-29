@@ -309,6 +309,10 @@ class MissionState:
     diagnostic_confidence: float = 0.0
     limiting_component: str = "nominal"
     mission_reliability: float = 1.0
+    # Remaining Useful Life of the limiting component, in real flight hours, derived from
+    # the same hazard model driving mission_reliability (ComponentHazard.expected_rul_hours()
+    # -- see backend/mission/reliability.py). None of this is a second/competing estimator.
+    rul_hours: Optional[float] = None
     prescriptive_advisory: str = "Nominal operation meets reliability target."
 
     def to_dict(self) -> Dict[str, Any]:

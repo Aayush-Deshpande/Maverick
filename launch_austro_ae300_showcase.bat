@@ -22,7 +22,7 @@ set "ANUMAAN_ENGINE_ID=austro_ae300"
 set "TARGET_BLEND=%~dp0assets\blender\anumaan_master_twin.blend"
 
 set "BLENDER_EXE="
-if exist "E:\Blender\blender.exe" set "BLENDER_EXE=E:\Blender\blender.exe"
+if exist "D:\Blender\blender.exe" set "BLENDER_EXE=D:\Blender\blender.exe"
 if not defined BLENDER_EXE if exist "C:\Program Files\Blender Foundation\Blender 5.2\blender.exe" set "BLENDER_EXE=C:\Program Files\Blender Foundation\Blender 5.2\blender.exe"
 if not defined BLENDER_EXE if exist "C:\Program Files\Blender Foundation\Blender 5.1\blender.exe" set "BLENDER_EXE=C:\Program Files\Blender Foundation\Blender 5.1\blender.exe"
 if not defined BLENDER_EXE if exist "C:\Program Files\Blender Foundation\Blender 5.0\blender.exe" set "BLENDER_EXE=C:\Program Files\Blender Foundation\Blender 5.0\blender.exe"

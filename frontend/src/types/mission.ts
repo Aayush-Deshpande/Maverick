@@ -142,5 +142,6 @@ export interface MissionState {
   diagnostic_confidence: number;
   limiting_component: string;
   mission_reliability: number;
+  rul_hours?: number | null;
   prescriptive_advisory: string;
 }

@@ -18,7 +18,6 @@ import {
   Edit3,
   Monitor,
   Zap,
-  Activity,
 } from 'lucide-react';
 import { useMissionSocket } from '../hooks/useMissionSocket';
 import { useEngineSelection } from '../contexts/EngineSelectionContext';
@@ -73,6 +72,16 @@ export const MissionOperationsPanel: React.FC<MissionOperationsPanelProps> = ({
     injectLiveFault,
     clearFaults,
   } = useMissionSocket(serverUrl);
+
+  // Computed ONCE per mount, not on every render: missionState updates ~20x/sec from the
+  // websocket, and this component re-renders on every update. Date.now() inlined directly
+  // in the iframe's src (as it previously was) recomputes every render, which changes the
+  // src on every render, which makes React tear down and reload the entire iframe
+  // continuously -- the canyon_flight page never got enough time between reloads to finish
+  // loading its GLB/Draco assets, so the 3D view stayed permanently blank. This cache-bust
+  // value only needs to change once per page load (to dodge a stale browser cache after a
+  // deploy), not on every mission tick.
+  const canyonFlightCacheBust = useMemo(() => Date.now(), []);
 
   const { engineId, selectEngine } = useEngineSelection();
   const [activeTab, setActiveTab] = useState<SubTab>(fullscreenSimOnly ? 'SIMULATION' : 'PLANNER');
@@ -176,10 +185,50 @@ export const MissionOperationsPanel: React.FC<MissionOperationsPanelProps> = ({
 
       await loadMission(readyPlan);
       await startMission();
-      setActionFeedback(null);
+      setActionFeedback('🚀 Mission sortie running in real-time twin executive.');
       setActiveTab('SIMULATION');
+      setTimeout(() => setActionFeedback(null), 3000);
     } catch (err: any) {
       setActionFeedback(`Launch failed: ${err.message}`);
+    }
+  };
+
+  const handleStartMission = async () => {
+    try {
+      setActionFeedback('Arming and launching mission flight sortie...');
+      if (draftPlan) {
+        const totalPhasesDuration = (draftPlan.phases || []).reduce((acc, p) => acc + p.duration_sec, 0);
+        const readyPlan = {
+          ...draftPlan,
+          planned_duration_sec: totalPhasesDuration > 0 ? totalPhasesDuration : draftPlan.planned_duration_sec,
+        };
+        await loadMission(readyPlan);
+      }
+      await startMission();
+      setActionFeedback('🚀 Mission sortie running in real-time twin executive.');
+      setActiveTab('SIMULATION');
+      setTimeout(() => setActionFeedback(null), 3500);
+    } catch (err: any) {
+      setActionFeedback(`Start mission failed: ${err.message}`);
+    }
+  };
+
+  const handleRestartMission = async () => {
+    try {
+      setActionFeedback('Resetting mission flight sortie to T+00:00...');
+      if (draftPlan) {
+        const totalPhasesDuration = (draftPlan.phases || []).reduce((acc, p) => acc + p.duration_sec, 0);
+        const readyPlan = {
+          ...draftPlan,
+          planned_duration_sec: totalPhasesDuration > 0 ? totalPhasesDuration : draftPlan.planned_duration_sec,
+        };
+        await loadMission(readyPlan);
+      }
+      await startMission();
+      setActionFeedback('🚀 Mission sortie re-armed and running.');
+      setTimeout(() => setActionFeedback(null), 3500);
+    } catch (err: any) {
+      setActionFeedback(`Reset mission failed: ${err.message}`);
     }
   };
 
@@ -399,19 +448,26 @@ export const MissionOperationsPanel: React.FC<MissionOperationsPanelProps> = ({
               ))}
             </div>
 
-            {missionState?.status === 'PAUSED' ? (
+            {missionState?.status === 'RUNNING' || missionState?.status === 'DERATED' ? (
+              <button
+                onClick={pauseMission}
+                className="px-2.5 py-1 rounded bg-amber-600 hover:bg-amber-500 text-white font-mono text-[10px] font-bold flex items-center gap-1 transition-colors cursor-pointer"
+              >
+                <Pause className="w-3 h-3 fill-current" /> PAUSE
+              </button>
+            ) : missionState?.status === 'PAUSED' ? (
               <button
                 onClick={resumeMission}
-                className="px-2.5 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-mono text-[10px] font-bold flex items-center gap-1 transition-colors"
+                className="px-2.5 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-mono text-[10px] font-bold flex items-center gap-1 transition-colors cursor-pointer"
               >
                 <Play className="w-3 h-3 fill-current" /> RESUME
               </button>
             ) : (
               <button
-                onClick={pauseMission}
-                className="px-2.5 py-1 rounded bg-amber-600 hover:bg-amber-500 text-white font-mono text-[10px] font-bold flex items-center gap-1 transition-colors"
+                onClick={handleStartMission}
+                className="px-3 py-1 rounded bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-mono text-[10px] font-black flex items-center gap-1 shadow-md shadow-emerald-500/30 transition-all hover:scale-105 animate-pulse cursor-pointer border border-emerald-300"
               >
-                <Pause className="w-3 h-3 fill-current" /> PAUSE
+                <Play className="w-3 h-3 fill-current" /> START MISSION
               </button>
             )}
 
@@ -546,38 +602,86 @@ export const MissionOperationsPanel: React.FC<MissionOperationsPanelProps> = ({
           </div>
         </div>
 
-        {/* Sub-Tab Navigation Buttons */}
-        <div className="flex items-center gap-1.5 bg-surface-darker/80 p-1 rounded-lg border border-surface-border">
-          <button
-            onClick={() => setActiveTab('PLANNER')}
-            className={`px-3 py-1.5 rounded text-xs font-mono font-semibold transition-all ${
-              activeTab === 'PLANNER'
-                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            1. PLANNER
-          </button>
-          <button
-            onClick={() => setActiveTab('SIMULATION')}
-            className={`px-3 py-1.5 rounded text-xs font-mono font-semibold transition-all ${
-              activeTab === 'SIMULATION'
-                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            2. COCKPIT & CANYON 3D
-          </button>
-          <button
-            onClick={() => setActiveTab('DEBRIEF')}
-            className={`px-3 py-1.5 rounded text-xs font-mono font-semibold transition-all ${
-              activeTab === 'DEBRIEF'
-                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            3. SORTIE DEBRIEF
-          </button>
+        {/* Top Header Controls: Sub-Tabs & Global Start Mission Action */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Sub-Tab Navigation Buttons */}
+          <div className="flex items-center gap-1.5 bg-surface-darker/80 p-1 rounded-lg border border-surface-border">
+            <button
+              onClick={() => setActiveTab('PLANNER')}
+              className={`px-3 py-1.5 rounded text-xs font-mono font-semibold transition-all ${
+                activeTab === 'PLANNER'
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              1. PLANNER
+            </button>
+            <button
+              onClick={() => setActiveTab('SIMULATION')}
+              className={`px-3 py-1.5 rounded text-xs font-mono font-semibold transition-all ${
+                activeTab === 'SIMULATION'
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              2. COCKPIT & CANYON 3D
+            </button>
+            <button
+              onClick={() => setActiveTab('DEBRIEF')}
+              className={`px-3 py-1.5 rounded text-xs font-mono font-semibold transition-all ${
+                activeTab === 'DEBRIEF'
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              3. SORTIE DEBRIEF
+            </button>
+          </div>
+
+          {/* Persistent Global Mission Control Trigger */}
+          {missionState?.status === 'RUNNING' || missionState?.status === 'DERATED' ? (
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={pauseMission}
+                className="px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-mono text-xs font-bold flex items-center gap-1.5 transition-all shadow cursor-pointer"
+                title="Pause active mission flight"
+              >
+                <Pause className="w-3.5 h-3.5 fill-current" /> PAUSE
+              </button>
+              <button
+                onClick={handleAbort}
+                className="px-2.5 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40 font-mono text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+                title="Emergency Abort / Return to Base"
+              >
+                <Square className="w-3 h-3 fill-current" /> ABORT
+              </button>
+            </div>
+          ) : missionState?.status === 'PAUSED' ? (
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={resumeMission}
+                className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-mono text-xs font-black flex items-center gap-1.5 transition-all shadow-md shadow-emerald-500/25 cursor-pointer"
+                title="Resume mission simulation"
+              >
+                <Play className="w-3.5 h-3.5 fill-current" /> RESUME
+              </button>
+              <button
+                onClick={handleAbort}
+                className="px-2.5 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40 font-mono text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+              >
+                <Square className="w-3 h-3 fill-current" /> ABORT
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={handleStartMission}
+              className="px-4 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-mono text-xs font-black flex items-center gap-2 shadow-lg shadow-emerald-500/35 transition-all hover:scale-105 animate-pulse cursor-pointer border border-emerald-300"
+              title="Start real-time mission sortie in C2 Digital Twin"
+            >
+              <Play className="w-4 h-4 fill-current" />
+              <span>START MISSION</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -595,16 +699,44 @@ export const MissionOperationsPanel: React.FC<MissionOperationsPanelProps> = ({
       {/* ========================================================================= */}
       {activeTab === 'PLANNER' && draftPlan && (
         <div className="space-y-5">
+          {/* Top Planner Action Bar */}
+          <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-lg bg-surface-darker/80 border border-surface-border">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-mono font-bold text-white uppercase tracking-wider">
+                  Operational Theater & Profile Presets
+                </span>
+                <span className="text-[10px] font-mono text-cyan-400">
+                  ARCH-2026-MP-002 Phase-Driven Twin
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                Select an operational mission profile, inspect timeline phases, then start the sortie.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleStartMission}
+                className="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-mono font-black text-xs flex items-center gap-2 shadow-lg shadow-emerald-500/30 transition-all hover:scale-105 animate-pulse cursor-pointer border border-emerald-300"
+                title="Validate plan and start sortie immediately in C2 Simulation"
+              >
+                <Play className="w-4 h-4 fill-current" />
+                <span>START MISSION (C2)</span>
+              </button>
+              <button
+                onClick={handleLaunchAndOpenBlender}
+                className="px-4 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-mono font-bold text-xs flex items-center gap-1.5 transition-all shadow-md shadow-amber-500/25 cursor-pointer"
+                title="Launch in Native Blender Cockpit (120 FPS EEVEE)"
+              >
+                <Monitor className="w-3.5 h-3.5" />
+                <span>LAUNCH BLENDER</span>
+              </button>
+            </div>
+          </div>
+
           {/* Preset Selector Cards */}
           <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-xs font-mono font-bold text-slate-300 uppercase tracking-wider">
-                Operational Theater & Profile Presets
-              </label>
-              <span className="text-[10px] font-mono text-cyan-400">
-                ARCH-2026-MP-002 Phase-Driven Digital Twin Architecture
-              </span>
-            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
               {templates.map((tpl) => {
                 const hasPhases = tpl.phases && tpl.phases.length > 0;
@@ -1087,12 +1219,12 @@ export const MissionOperationsPanel: React.FC<MissionOperationsPanelProps> = ({
                             onChange={(e) => setNewFaultMode(e.target.value)}
                             className="w-full bg-surface-dark border border-surface-border rounded p-1.5 text-white"
                           >
-                            <option value="COOLING_DEGRADATION">Cooling Degradation</option>
-                            <option value="OIL_PUMP_RELIEF_VALVE">Oil Pump Relief Valve</option>
-                            <option value="INJECTOR_CLOGGED">Injector Clogging</option>
-                            <option value="SPARK_PLUG_FOULING">Spark Plug Fouling</option>
-                            <option value="WASTEGATE_STUCK">Wastegate Actuator Stuck</option>
-                            <option value="INTERCOOLER_BLOCKAGE">Intercooler Blockage</option>
+                            <option value="COOLING_DEGRADATION">Cooling Degradation (Radiator)</option>
+                            <option value="OIL_PRESSURE_LOSS">Oil Pressure Loss (Pump Valve)</option>
+                            <option value="MISFIRE">Cylinder Misfire</option>
+                            <option value="AIR_FILTER_BLOCKAGE">Air Filter Blockage</option>
+                            <option value="BOOST_LEAK">Turbo Boost Leak</option>
+                            <option value="WASTEGATE_STUCK_OPEN">Wastegate Stuck Open</option>
                           </select>
                         </div>
 
@@ -1100,7 +1232,7 @@ export const MissionOperationsPanel: React.FC<MissionOperationsPanelProps> = ({
                           <label className="text-[9px] text-slate-400 block mb-0.5">Cylinder</label>
                           <select
                             value={newFaultCylinder}
-                            disabled={newFaultMode !== 'INJECTOR_CLOGGED' && newFaultMode !== 'SPARK_PLUG_FOULING'}
+                            disabled={newFaultMode !== 'MISFIRE' && newFaultMode !== 'INJECTOR_CLOGGED' && newFaultMode !== 'SPARK_PLUG_FOULING'}
                             onChange={(e) => setNewFaultCylinder(Number(e.target.value))}
                             className="w-full bg-surface-dark border border-surface-border rounded p-1.5 text-white disabled:opacity-30"
                           >
@@ -1204,14 +1336,14 @@ export const MissionOperationsPanel: React.FC<MissionOperationsPanelProps> = ({
           <div className="pt-2 flex flex-wrap justify-end gap-3">
             <button
               onClick={handleLaunchPlan}
-              className="px-5 py-2.5 rounded bg-surface-dark hover:bg-slate-700 text-cyan-400 border border-cyan-500/40 font-mono font-bold text-xs flex items-center gap-2 transition-all"
+              className="px-5 py-2.5 rounded bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-mono font-black text-xs flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/25 cursor-pointer"
             >
-              <Play className="w-4 h-4" />
-              VALIDATE & LAUNCH (IN C2 CONSOLE)
+              <Play className="w-4 h-4 fill-current" />
+              START MISSION (IN C2 CONSOLE)
             </button>
             <button
               onClick={handleLaunchAndOpenBlender}
-              className="px-6 py-2.5 rounded bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-mono font-bold text-xs flex items-center gap-2 transition-all shadow-lg shadow-amber-500/25"
+              className="px-6 py-2.5 rounded bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-mono font-bold text-xs flex items-center gap-2 transition-all shadow-lg shadow-amber-500/25 cursor-pointer"
               title="Validate and start the mission, and automatically launch the Native Blender Flight Cockpit (launch_mission_flight_client.bat)"
             >
               <Play className="w-4 h-4 fill-current" />
@@ -1288,94 +1420,130 @@ export const MissionOperationsPanel: React.FC<MissionOperationsPanelProps> = ({
 
             {/* Right: Operational Controls & High-Visibility Blender Launch */}
             <div className="flex flex-wrap items-center gap-2">
-              {missionState?.status === 'PAUSED' ? (
-                <button
-                  onClick={resumeMission}
-                  className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-mono text-xs font-bold flex items-center gap-1.5 shadow transition-all hover:scale-105"
-                >
-                  <Play className="w-3.5 h-3.5 fill-current" /> RESUME
-                </button>
+              {missionState?.status === 'RUNNING' || missionState?.status === 'DERATED' ? (
+                <>
+                  <button
+                    onClick={pauseMission}
+                    className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-mono text-xs font-bold flex items-center gap-1.5 shadow transition-all hover:scale-105 cursor-pointer"
+                  >
+                    <Pause className="w-3.5 h-3.5 fill-current" /> PAUSE
+                  </button>
+                  <button
+                    onClick={handleRestartMission}
+                    className="px-2.5 py-1.5 rounded-lg bg-surface-dark hover:bg-slate-700 text-slate-300 border border-surface-border font-mono text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                    title="Reset sortie to T+00:00"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" /> RESET
+                  </button>
+                </>
+              ) : missionState?.status === 'PAUSED' ? (
+                <>
+                  <button
+                    onClick={resumeMission}
+                    className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-mono text-xs font-bold flex items-center gap-1.5 shadow transition-all hover:scale-105 cursor-pointer"
+                  >
+                    <Play className="w-3.5 h-3.5 fill-current" /> RESUME
+                  </button>
+                  <button
+                    onClick={handleRestartMission}
+                    className="px-2.5 py-1.5 rounded-lg bg-surface-dark hover:bg-slate-700 text-slate-300 border border-surface-border font-mono text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                    title="Reset sortie to T+00:00"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" /> RESET
+                  </button>
+                </>
               ) : (
                 <button
-                  onClick={pauseMission}
-                  className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-mono text-xs font-bold flex items-center gap-1.5 shadow transition-all hover:scale-105"
+                  onClick={handleStartMission}
+                  className="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-mono text-xs font-black flex items-center gap-2 shadow-lg shadow-emerald-500/35 transition-all hover:scale-105 animate-pulse cursor-pointer border border-emerald-300"
+                  title="Arm & start mission flight execution"
                 >
-                  <Pause className="w-3.5 h-3.5 fill-current" /> PAUSE
+                  <Play className="w-4 h-4 fill-current" />
+                  <span>START MISSION</span>
                 </button>
               )}
 
-              <button
-                onClick={() => handleDerate(0.85)}
-                className="px-2.5 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-mono text-xs font-bold flex items-center gap-1.5 transition-colors"
-                title="Prescriptive Derate: Preserves RUL by capping maximum throttle demand to 85%"
-              >
-                <Sliders className="w-3.5 h-3.5" /> DERATE 85%
-              </button>
+              {/* Operator actions: affect the live mission itself */}
+              <div className="flex items-center gap-2 pl-2 ml-1 border-l border-surface-border">
+                <button
+                  onClick={() => handleDerate(0.85)}
+                  className="px-2.5 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-mono text-xs font-bold flex items-center gap-1.5 transition-colors"
+                  title="Prescriptive Derate: caps maximum throttle demand to 85% to preserve remaining useful life"
+                >
+                  <Sliders className="w-3.5 h-3.5" /> DERATE 85%
+                </button>
 
-              <button
-                onClick={handleAbort}
-                className="px-2.5 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40 font-mono text-xs font-bold flex items-center gap-1.5 transition-colors"
-                title="Emergency Abort / Return to Base"
-              >
-                <Square className="w-3.5 h-3.5 fill-current" /> ABORT RTB
-              </button>
+                <button
+                  onClick={handleAbort}
+                  className="px-2.5 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40 font-mono text-xs font-bold flex items-center gap-1.5 transition-colors"
+                  title="Emergency Abort / Return to Base"
+                >
+                  <Square className="w-3.5 h-3.5 fill-current" /> ABORT RTB
+                </button>
+              </div>
 
-              {/* High-Impact Native Blender Launcher Hero Button */}
-              <button
-                onClick={() => launchNativeBlender('client')}
-                className="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-500 text-slate-950 font-mono font-extrabold text-xs flex items-center gap-1.5 shadow-md shadow-amber-500/25 transition-all hover:scale-105 border border-amber-300/40 cursor-pointer"
-                title="Launch Authoritative Native Blender Cockpit (EEVEE 120 FPS + Copernicus DEM + Auto-GCAS)"
-              >
-                <Monitor className="w-3.5 h-3.5" />
-                <span>BLENDER COCKPIT</span>
-                <span className="text-[9px] px-1 py-0.5 rounded bg-black/25 text-slate-950 font-bold">120 FPS</span>
-              </button>
+              {/* View controls: change how you're WATCHING the mission, don't affect it */}
+              <div className="flex items-center gap-2 pl-2 ml-1 border-l border-surface-border">
+                <button
+                  onClick={() => setIsCinemaMode(!isCinemaMode)}
+                  className={`px-2.5 py-1.5 rounded-lg font-mono text-xs font-bold flex items-center gap-1.5 transition-colors ${
+                    isCinemaMode
+                      ? 'bg-cyan-500/25 text-cyan-300 border border-cyan-500/50 shadow-sm'
+                      : 'bg-surface-dark hover:bg-slate-700 text-slate-300 border border-surface-border'
+                  }`}
+                  title={isCinemaMode ? 'Restore split layout' : 'Expand full-width cinema view'}
+                >
+                  {isCinemaMode ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+                  {isCinemaMode ? 'SPLIT VIEW' : 'FULL WIDTH VIEW'}
+                </button>
+              </div>
 
-              <button
-                onClick={() => launchNativeBlender('canyon')}
-                className="px-2.5 py-1.5 rounded-lg bg-surface-dark hover:bg-slate-700 text-amber-300 border border-amber-500/30 font-mono text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
-                title="Launch Standalone High-Speed Physics Simulation in Blender"
-              >
-                <Zap className="w-3 h-3 fill-amber-400" />
-                <span>STANDALONE</span>
-              </button>
+              {/* Opens a separate desktop app window, outside the browser -- kept visually
+                  distinct so it's never confused with a control over the web view above. */}
+              <div className="flex items-center gap-2 pl-2 ml-1 border-l border-dashed border-amber-700/50">
+                <span className="text-[9px] font-mono text-amber-500/70 uppercase tracking-wider hidden xl:inline">Opens Blender ↗</span>
+                <button
+                  onClick={() => launchNativeBlender('client')}
+                  className="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-500 text-slate-950 font-mono font-extrabold text-xs flex items-center gap-1.5 shadow-md shadow-amber-500/25 transition-all hover:scale-105 border border-amber-300/40 cursor-pointer"
+                  title="Opens a separate Blender desktop window mirroring this same live mission at full render quality (EEVEE 120 FPS + real Copernicus DEM terrain). Not required to fly the mission -- the view on this page already shows the same data."
+                >
+                  <Monitor className="w-3.5 h-3.5" />
+                  <span>OPEN IN BLENDER</span>
+                  <span className="text-[9px] px-1 py-0.5 rounded bg-black/25 text-slate-950 font-bold">120 FPS</span>
+                </button>
 
-              <button
-                onClick={() => setIsCinemaMode(!isCinemaMode)}
-                className={`px-2.5 py-1.5 rounded-lg font-mono text-xs font-bold flex items-center gap-1.5 transition-colors ${
-                  isCinemaMode
-                    ? 'bg-cyan-500/25 text-cyan-300 border border-cyan-500/50 shadow-sm'
-                    : 'bg-surface-dark hover:bg-slate-700 text-slate-300 border border-surface-border'
-                }`}
-                title={isCinemaMode ? 'Restore split layout' : 'Expand full-width cinema view'}
-              >
-                {isCinemaMode ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
-                {isCinemaMode ? 'SPLIT' : 'CINEMA'}
-              </button>
+                <button
+                  onClick={() => launchNativeBlender('canyon')}
+                  className="px-2.5 py-1.5 rounded-lg bg-surface-dark hover:bg-slate-700 text-amber-300 border border-amber-500/30 font-mono text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                  title="Opens a separate, disconnected Blender demo flight (not tied to this mission's live state) -- for showing raw flight-physics fidelity on its own."
+                >
+                  <Zap className="w-3 h-3 fill-amber-400" />
+                  <span>BLENDER DEMO (unlinked)</span>
+                </button>
+              </div>
             </div>
           </div>
 
           {/* Main Layout: 3D Flight Viewport + Telemetry Diagnostics */}
-          <div className={isCinemaMode ? 'space-y-4' : 'grid grid-cols-1 lg:grid-cols-12 gap-4 items-start'}>
+          <div className={isCinemaMode ? 'space-y-3' : 'grid grid-cols-1 lg:grid-cols-12 gap-3.5 items-start'}>
             {/* Canyon 3D Simulation Frame */}
             <div
               className={`${
                 isCinemaMode
-                  ? 'w-full min-h-[660px] h-[740px]'
-                  : 'lg:col-span-7 xl:col-span-8 min-h-[580px] h-[670px]'
+                  ? 'w-full h-[500px] max-h-[52vh]'
+                  : 'lg:col-span-7 xl:col-span-8 h-[640px]'
               } bg-[#030a12] border border-surface-border rounded-xl overflow-hidden flex flex-col relative shadow-xl`}
             >
-              {/* Floating Web C2 Mirror Indicator */}
+              {/* This browser view IS the live mission (same data as the sidebar and, if
+                  opened, the Blender window) -- said in plain language, not architecture jargon. */}
               <div className="absolute top-2.5 right-2.5 z-10 pointer-events-none px-2.5 py-1 rounded-md bg-slate-950/80 border border-slate-700/60 backdrop-blur-md flex items-center gap-2 text-[10px] font-mono text-slate-300 shadow">
                 <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                <span>WEB C2 TELEMETRY ECHO</span>
-                <span className="text-slate-500">•</span>
-                <span className="text-amber-400 font-bold">BLENDER ENGINE AUTHORITATIVE</span>
+                <span>LIVE — same mission as the panel on the right</span>
               </div>
 
               <iframe
                 id="canyon-sim-iframe"
-                src={`${serverUrl.replace(/\/$/, '')}/apps/canyon_flight/index.html?v=${Date.now()}`}
+                src={`${serverUrl.replace(/\/$/, '')}/apps/canyon_flight/index.html?v=${canyonFlightCacheBust}`}
                 className="w-full flex-1 border-0"
                 title="Tactical Canyon Flight Simulation"
               />
@@ -1385,15 +1553,15 @@ export const MissionOperationsPanel: React.FC<MissionOperationsPanelProps> = ({
             <div
               className={
                 isCinemaMode
-                  ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4'
-                  : 'lg:col-span-5 xl:col-span-4 h-[670px] overflow-y-auto space-y-2.5 pr-1'
+                  ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3'
+                  : 'lg:col-span-5 xl:col-span-4 h-[640px] overflow-y-auto space-y-2.5 pr-1'
               }
             >
               {/* Card 1: Flight Kinematics & Coordinates */}
               <div className="p-3 rounded-xl bg-surface-darker/90 border border-surface-border space-y-2 shadow-md">
                 <div className="flex items-center justify-between pb-1 border-b border-surface-border/60">
                   <span className="text-[11px] font-mono font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                    <Compass className="w-3.5 h-3.5 text-cyan-400" /> Flight Kinematics & Position
+                    <Compass className="w-3.5 h-3.5 text-cyan-400" /> Flight Kinematics & Vitals
                   </span>
                   <span className="text-[10px] font-mono text-cyan-400/80 font-semibold">
                     Ladakh Sector (34.5°N)
@@ -1401,7 +1569,7 @@ export const MissionOperationsPanel: React.FC<MissionOperationsPanelProps> = ({
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 text-xs font-mono">
-                  <div className="p-2.5 rounded-lg bg-surface-dark border border-surface-border/80">
+                  <div className="p-2 rounded-lg bg-surface-dark border border-surface-border/80">
                     <span className="text-[10px] text-slate-400 block font-semibold">ALTITUDE MSL / AGL</span>
                     <div className="text-sm font-bold text-cyan-400 mt-0.5">
                       {Math.round(missionState?.pos_z_m || 0)} m
@@ -1409,7 +1577,7 @@ export const MissionOperationsPanel: React.FC<MissionOperationsPanelProps> = ({
                     </div>
                   </div>
 
-                  <div className="p-2.5 rounded-lg bg-surface-dark border border-surface-border/80">
+                  <div className="p-2 rounded-lg bg-surface-dark border border-surface-border/80">
                     <span className="text-[10px] text-slate-400 block font-semibold">AIRSPEED TAS / IAS</span>
                     <div className="text-sm font-bold text-white mt-0.5">
                       {Math.round(missionState?.true_airspeed_ktas || 0)} kt
@@ -1417,14 +1585,14 @@ export const MissionOperationsPanel: React.FC<MissionOperationsPanelProps> = ({
                     </div>
                   </div>
 
-                  <div className="p-2.5 rounded-lg bg-surface-dark border border-surface-border/80">
+                  <div className="p-2 rounded-lg bg-surface-dark border border-surface-border/80">
                     <span className="text-[10px] text-slate-400 block font-semibold">HDG / PITCH / BANK</span>
                     <div className="text-xs font-bold text-slate-200 mt-1">
                       {(missionState?.heading_deg || 0).toFixed(0)}° / {(missionState?.pitch_deg || 0).toFixed(1)}° / {(missionState?.roll_bank_deg || 0).toFixed(1)}°
                     </div>
                   </div>
 
-                  <div className="p-2.5 rounded-lg bg-surface-dark border border-surface-border/80">
+                  <div className="p-2 rounded-lg bg-surface-dark border border-surface-border/80">
                     <span className="text-[10px] text-slate-400 block font-semibold">COMMANDED THROTTLE</span>
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-sm font-bold text-amber-400">
@@ -1438,59 +1606,73 @@ export const MissionOperationsPanel: React.FC<MissionOperationsPanelProps> = ({
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
 
-              {/* Card 2: Bayesian PHM & Mission Reliability */}
-              <div className="p-3 rounded-xl bg-surface-darker/90 border border-surface-border space-y-2 shadow-md">
-                <div className="flex items-center justify-between pb-1 border-b border-surface-border/60">
-                  <span className="text-[11px] font-mono font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                    <Activity className="w-3.5 h-3.5 text-emerald-400" /> Bayesian PHM & Reliability
-                  </span>
-                  <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-extrabold ${
-                    (missionState?.mission_reliability ?? 1.0) < 0.75
-                      ? 'bg-red-500/20 text-red-400 border border-red-500/40'
-                      : (missionState?.mission_reliability ?? 1.0) < 0.90
-                      ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
-                      : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
-                  }`}>
-                    R(t) = {Math.round((missionState?.mission_reliability ?? 1.0) * 100)}%
-                  </span>
-                </div>
-
-                <div className="text-xs font-mono space-y-1.5">
-                  <div className="flex justify-between items-center py-0.5">
-                    <span className="text-slate-400">Top Hypothesis:</span>
-                    <span className={`font-bold px-2 py-0.5 rounded text-[11px] ${
-                      missionState?.top_diagnostic_hypothesis && missionState.top_diagnostic_hypothesis !== 'NOMINAL'
-                        ? 'bg-red-500/20 text-red-400 border border-red-500/40'
-                        : 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30'
-                    }`}>
-                      {missionState?.top_diagnostic_hypothesis || 'NOMINAL'}
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between items-center py-0.5">
-                    <span className="text-slate-400">Limiting Component:</span>
-                    <span className="text-white font-bold">{missionState?.limiting_component || 'nominal'}</span>
-                  </div>
-
-                  {missionState?.prescriptive_advisory && (
-                    <div className="mt-1.5 p-2 rounded-lg bg-surface-dark border border-surface-border/80 text-[11px] text-slate-200">
-                      <span className="text-cyan-400 block text-[9px] uppercase font-bold tracking-wider mb-0.5">
-                        Prescriptive Advisory
-                      </span>
-                      {missionState.prescriptive_advisory}
+                  {/* Real-Time Engine Core Vitals (Immediately reflects injected faults) */}
+                  <div className="col-span-2 grid grid-cols-3 gap-1.5 pt-1 border-t border-surface-border/60">
+                    <div className="p-1.5 rounded bg-surface-dark border border-surface-border text-center">
+                      <span className="text-[9px] text-slate-400 block font-semibold">RPM</span>
+                      <span className="text-xs font-bold text-cyan-300">{Math.round(missionState?.rpm || 0)}</span>
                     </div>
-                  )}
+                    <div className={`p-1.5 rounded border text-center transition-colors ${
+                      (missionState?.max_cht_c || 82) > 130
+                        ? 'bg-red-950/70 border-red-500 text-red-300 animate-pulse font-extrabold'
+                        : 'bg-surface-dark border-surface-border text-slate-200'
+                    }`}>
+                      <span className="text-[9px] text-slate-400 block font-semibold">CHT MAX</span>
+                      <span className="text-xs font-bold">{(missionState?.max_cht_c || 82).toFixed(1)}°C</span>
+                    </div>
+                    <div className={`p-1.5 rounded border text-center transition-colors ${
+                      (missionState?.oil_press_bar || 4.5) < 2.0
+                        ? 'bg-red-950/70 border-red-500 text-red-300 animate-pulse font-extrabold'
+                        : 'bg-surface-dark border-surface-border text-slate-200'
+                    }`}>
+                      <span className="text-[9px] text-slate-400 block font-semibold">OIL PRESS</span>
+                      <span className="text-xs font-bold">{(missionState?.oil_press_bar || 4.5).toFixed(2)} bar</span>
+                    </div>
+                  </div>
                 </div>
               </div>
+
+              {/* Card 2: Remaining Useful Life -- the one number an operator actually acts
+                  on: how many more flight hours until the weakest part needs attention. */}
+              {missionState?.rul_hours != null && (() => {
+                const rulHours = missionState.rul_hours as number;
+                const urgent = rulHours < 5;
+                const caution = !urgent && rulHours < 50;
+                return (
+                  <div className="p-3 rounded-xl bg-surface-darker/90 border border-surface-border space-y-2 shadow-md">
+                    <div className="flex items-center justify-between pb-1 border-b border-surface-border/60">
+                      <span className="text-[11px] font-mono font-bold text-slate-300 uppercase tracking-wider">
+                        Remaining Useful Life
+                      </span>
+                      <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-extrabold ${
+                        urgent
+                          ? 'bg-red-500/20 text-red-400 border border-red-500/40'
+                          : caution
+                          ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
+                          : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                      }`}>
+                        {urgent ? 'SCHEDULE MAINTENANCE' : caution ? 'MONITOR' : 'HEALTHY'}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-slate-500 leading-snug -mt-1">
+                      Estimated flight hours before {missionState.limiting_component !== 'nominal' ? missionState.limiting_component.replace(/_/g, ' ') : 'the weakest part'} needs maintenance, at the current operating condition.
+                    </p>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className={`text-2xl font-mono font-bold ${urgent ? 'text-red-400' : caution ? 'text-amber-400' : 'text-emerald-400'}`}>
+                        {rulHours < 1000 ? rulHours.toFixed(1) : Math.round(rulHours).toLocaleString()}
+                      </span>
+                      <span className="text-xs text-slate-400">flight hours remaining</span>
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Card 3: FlyHash Locality-Sensitive Novelty */}
               <div className="p-3 rounded-xl bg-surface-darker/90 border border-surface-border space-y-2 shadow-md">
                 <div className="flex items-center justify-between pb-1 border-b border-surface-border/60">
                   <span className="text-[11px] font-mono font-bold text-slate-300 uppercase tracking-wider">
-                    FlyHash Novelty Detection
+                    Unusual Behavior Detector
                   </span>
                   <span
                     className={`text-[10px] font-mono px-2 py-0.5 rounded font-extrabold ${
@@ -1499,13 +1681,16 @@ export const MissionOperationsPanel: React.FC<MissionOperationsPanelProps> = ({
                         : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
                     }`}
                   >
-                    {(missionState?.flyhash_novelty_score || 0) >= 0.6 ? 'ANOMALOUS' : 'NOMINAL'}
+                    {(missionState?.flyhash_novelty_score || 0) >= 0.6 ? 'SOMETHING UNUSUAL' : 'LOOKS NORMAL'}
                   </span>
                 </div>
+                <p className="text-[10px] text-slate-500 leading-snug -mt-1">
+                  Flags telemetry patterns that don't resemble anything seen before, even if no specific fault has been diagnosed yet.
+                </p>
 
                 <div className="space-y-1.5">
                   <div className="flex justify-between text-xs font-mono">
-                    <span className="text-slate-400">Novelty Distance:</span>
+                    <span className="text-slate-400">How unusual (0 = normal):</span>
                     <span className="text-white font-bold font-mono">
                       {(missionState?.flyhash_novelty_score || 0).toFixed(4)}
                     </span>
@@ -1528,34 +1713,105 @@ export const MissionOperationsPanel: React.FC<MissionOperationsPanelProps> = ({
               </div>
 
               {/* Card 4: Live Fault Injector & Stress Testing */}
-              <div className="p-3 rounded-xl bg-surface-darker/95 border border-red-500/30 space-y-2 shadow-md">
+              <div className="p-3 rounded-xl bg-surface-darker/95 border border-red-500/40 space-y-2.5 shadow-md">
                 <div className="flex items-center justify-between pb-1 border-b border-surface-border/60">
                   <span className="text-[11px] font-mono font-bold text-red-400 uppercase tracking-wider flex items-center gap-1.5">
-                    <Flame className="w-3.5 h-3.5" /> Inject Live Fault
+                    <Flame className="w-3.5 h-3.5 text-red-500 animate-pulse" /> Inject Live Fault
                   </span>
                   <button
                     onClick={clearFaults}
-                    className="text-[10px] font-mono text-slate-400 hover:text-white flex items-center gap-1 transition-colors px-1.5 py-0.5 rounded bg-surface-dark border border-surface-border"
+                    className="text-[10px] font-mono text-slate-300 hover:text-white flex items-center gap-1 transition-colors px-2 py-0.5 rounded bg-surface-dark hover:bg-slate-700 border border-surface-border cursor-pointer"
+                    title="Clear all active faults and restore nominal engine operation"
                   >
-                    <RotateCcw className="w-3 h-3" /> Clear
+                    <RotateCcw className="w-3 h-3" /> Clear Faults
                   </button>
                 </div>
 
-                <div className="space-y-2 text-xs font-mono">
+                {/* Active Injected Fault Alert Pill */}
+                {missionState?.active_faults && missionState.active_faults.length > 0 ? (
+                  <div className="p-2 rounded-lg bg-red-950/80 border border-red-500 text-red-200 text-xs font-mono flex items-center justify-between shadow-lg shadow-red-500/20 animate-pulse">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-red-400 animate-ping" />
+                      <span className="font-bold uppercase tracking-wider">
+                        {missionState.active_faults[0].mode || 'ACTIVE FAULT'}
+                      </span>
+                      <span className="text-[10px] text-red-300">
+                        ({Math.round((missionState.active_faults[0].severity || 0.85) * 100)}%)
+                      </span>
+                    </div>
+                    <button
+                      onClick={clearFaults}
+                      className="px-2 py-0.5 rounded bg-red-600 hover:bg-red-500 text-white text-[10px] font-black uppercase transition-colors shadow cursor-pointer"
+                    >
+                      RESET
+                    </button>
+                  </div>
+                ) : (
+                  <div className="px-2 py-1 rounded bg-surface-dark/80 border border-surface-border text-[10px] font-mono text-emerald-400 flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                    <span>ENGINE NOMINAL — Ready for live fault injection</span>
+                  </div>
+                )}
+
+                {/* 1-Click Quick Demo Trigger Buttons */}
+                <div className="space-y-1">
+                  <span className="text-[9px] font-mono font-bold text-slate-400 uppercase tracking-wider block">
+                    Quick Scenario Presets (1-Click Demo)
+                  </span>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <button
+                      onClick={() => { setLiveFaultMode('COOLING_DEGRADATION'); void injectLiveFault('COOLING_DEGRADATION', undefined, 0.85, 10.0); }}
+                      className="px-2 py-1.5 rounded-lg bg-red-950/50 hover:bg-red-900/80 border border-red-700/60 text-red-300 text-[10px] font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
+                      title="Inject Coolant Leak: CHT rises rapidly towards 180°C"
+                    >
+                      <Flame className="w-3 h-3 text-red-400 shrink-0" />
+                      <span className="truncate">🔥 Coolant Leak</span>
+                    </button>
+                    <button
+                      onClick={() => { setLiveFaultMode('OIL_PRESSURE_LOSS'); void injectLiveFault('OIL_PRESSURE_LOSS', undefined, 0.90, 10.0); }}
+                      className="px-2 py-1.5 rounded-lg bg-amber-950/50 hover:bg-amber-900/80 border border-amber-700/60 text-amber-300 text-[10px] font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
+                      title="Inject Oil Pump Relief Valve Fault: Oil pressure drops to 1.2 bar"
+                    >
+                      <Sliders className="w-3 h-3 text-amber-400 shrink-0" />
+                      <span className="truncate">⚠️ Oil Press Drop</span>
+                    </button>
+                    <button
+                      onClick={() => { setLiveFaultMode('MISFIRE'); void injectLiveFault('MISFIRE', 1, 0.90, 10.0); }}
+                      className="px-2 py-1.5 rounded-lg bg-orange-950/50 hover:bg-orange-900/80 border border-orange-700/60 text-orange-300 text-[10px] font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
+                      title="Inject Cylinder 1 Misfire: RPM fluctuation and individual cylinder variance"
+                    >
+                      <Zap className="w-3 h-3 text-orange-400 shrink-0" />
+                      <span className="truncate">⚡ Cyl 1 Misfire</span>
+                    </button>
+                    <button
+                      onClick={() => { setLiveFaultMode('AIR_FILTER_BLOCKAGE'); void injectLiveFault('AIR_FILTER_BLOCKAGE', undefined, 0.85, 10.0); }}
+                      className="px-2 py-1.5 rounded-lg bg-rose-950/50 hover:bg-rose-900/80 border border-rose-700/60 text-rose-300 text-[10px] font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
+                      title="Inject Air Filter Choke: MAP drops and engine derates"
+                    >
+                      <ShieldAlert className="w-3 h-3 text-rose-400 shrink-0" />
+                      <span className="truncate">🌪️ Air Choke</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Custom Fault Configuration */}
+                <div className="space-y-2 text-xs font-mono pt-1 border-t border-surface-border/60">
                   <select
                     value={liveFaultMode}
                     onChange={(e) => setLiveFaultMode(e.target.value)}
                     className="w-full bg-surface-dark border border-surface-border rounded-lg p-2 text-xs font-mono text-white focus:outline-none focus:border-red-400"
                   >
-                    <option value="COOLING_DEGRADATION">Cooling Degradation (Radiator/Coolant)</option>
-                    <option value="OIL_PUMP_RELIEF_VALVE">Oil Pump Relief Valve Stuck</option>
-                    <option value="INJECTOR_CLOGGED">Injector Clogging (Single Cylinder)</option>
-                    <option value="SPARK_PLUG_FOULING">Spark Plug Thermal Fouling</option>
-                    <option value="WASTEGATE_STUCK">Turbo Wastegate Actuator Stuck</option>
-                    <option value="INTERCOOLER_BLOCKAGE">Intercooler Charge Air Blockage</option>
+                    <option value="COOLING_DEGRADATION">Cooling Degradation (Radiator / CHT Rise)</option>
+                    <option value="OIL_PRESSURE_LOSS">Oil Pressure Loss (Pump Relief Valve Stuck)</option>
+                    <option value="MISFIRE">Cylinder Misfire (Per-Cylinder Spark/Fuel Loss)</option>
+                    <option value="AIR_FILTER_BLOCKAGE">Air Filter Blockage (Induction Choke)</option>
+                    <option value="BOOST_LEAK">Turbo Boost Leak / Intercooler</option>
+                    <option value="WASTEGATE_STUCK_OPEN">Turbo Wastegate Stuck Open</option>
+                    <option value="SENSOR_BIAS_DRIFT">Sensor Bias Drift</option>
+                    <option value="SENSOR_STUCK">Sensor Frozen / Stuck</option>
                   </select>
 
-                  {(liveFaultMode === 'INJECTOR_CLOGGED' || liveFaultMode === 'SPARK_PLUG_FOULING') && (
+                  {(liveFaultMode === 'MISFIRE' || liveFaultMode === 'INJECTOR_CLOGGED' || liveFaultMode === 'SPARK_PLUG_FOULING') && (
                     <div className="flex items-center justify-between p-1.5 rounded bg-surface-dark border border-surface-border text-xs">
                       <span className="text-slate-400 text-[10px]">TARGET CYLINDER:</span>
                       <select
@@ -1576,7 +1832,7 @@ export const MissionOperationsPanel: React.FC<MissionOperationsPanelProps> = ({
                     <div className="p-2 rounded bg-surface-dark border border-surface-border">
                       <div className="flex justify-between text-[10px] text-slate-400 mb-1">
                         <span>Severity:</span>
-                        <span className="text-white font-bold">{liveFaultSeverity}</span>
+                        <span className="text-white font-bold">{Math.round(liveFaultSeverity * 100)}%</span>
                       </div>
                       <input
                         type="range"

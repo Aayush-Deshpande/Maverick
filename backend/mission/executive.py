@@ -16,6 +16,7 @@ from typing import Any, Dict, List, Optional
 from .kinematics import AtmosphericModel, AutopilotFlightModel
 from .phase_engine import PhaseFlightModel
 from .reliability import MissionProfile
+from .terrain import get_terrain_heightfield
 from .models import (
     EnvironmentalConditions,
     FlightPhase,
@@ -232,15 +233,7 @@ class MissionExecutive:
         self.start_epoch: float = time.time()
         self.end_epoch: float = time.time()
 
-        self.state = MissionState(
-            mission_id=self.definition.mission_id,
-            status=MissionStatus.READY.value,
-            phase=FlightPhase.PREFLIGHT.value,
-            time_elapsed_sec=0.0,
-            time_remaining_sec=self.definition.planned_duration_sec,
-            time_scale=self.time_scale,
-            engine_id=self.definition.engine_id,
-        )
+        self.state = self._create_initial_state()
 
         self.recorded_frames: List[Dict[str, Any]] = []
         self.fault_timeline: List[Dict[str, Any]] = []
@@ -249,6 +242,52 @@ class MissionExecutive:
         self._stop_event = threading.Event()
         self._rate_hz = 20.0
         self._step_count: int = 0
+
+    def _create_initial_state(self) -> MissionState:
+        """Constructs canonical initial MissionState anchored to authentic canyon terrain.
+        Matches Nubra canyon river confluence ingress: (4000m E, 7500m N, 3245m MSL, 38.0° heading),
+        where terrain ground elevation is ~3095m, placing aircraft 150m AGL above the riverbed.
+        """
+        init_x = 4000.0
+        init_y = 7500.0
+        init_z = 3245.0
+        init_hdg = 38.0
+        init_spd = 45.0
+
+        if self.is_phase_mode and self.definition.phases:
+            first_ph = self.definition.phases[0]
+            init_z = first_ph.start_alt_ft * 0.3048
+            init_spd = 20.0 + (first_ph.throttle_pct / 100.0) * 50.0
+        elif not self.is_phase_mode and hasattr(self.flight_model, "pos_x_m"):
+            init_x = float(getattr(self.flight_model, "pos_x_m", 4000.0))
+            init_y = float(getattr(self.flight_model, "pos_y_m", 7500.0))
+            init_z = float(getattr(self.flight_model, "pos_z_m", 3245.0))
+
+        terrain = get_terrain_heightfield()
+        gnd = terrain.elevation_at(init_x, init_y)
+        agl = max(5.0, init_z - gnd)
+
+        return MissionState(
+            mission_id=self.definition.mission_id,
+            status=MissionStatus.READY.value,
+            phase=FlightPhase.PREFLIGHT.value,
+            time_elapsed_sec=0.0,
+            time_remaining_sec=self.definition.planned_duration_sec,
+            time_scale=self.time_scale,
+            engine_id=self.definition.engine_id,
+            pos_x_m=round(init_x, 1),
+            pos_y_m=round(init_y, 1),
+            pos_z_m=round(init_z, 1),
+            ground_elevation_m=round(gnd, 1),
+            agl_m=round(agl, 1),
+            heading_deg=init_hdg,
+            pitch_deg=0.0,
+            roll_bank_deg=0.0,
+            ground_speed_mps=round(init_spd, 1),
+            true_airspeed_ktas=round(init_spd * 1.943844, 1),
+            indicated_airspeed_kias=round(init_spd * 1.943844, 1),
+            ambient_oat_c=self.definition.phases[0].oat_c if (self.is_phase_mode and self.definition.phases) else 8.0,
+        )
 
     @staticmethod
     def _build_flight_model(definition: MissionDefinition):
@@ -287,15 +326,7 @@ class MissionExecutive:
                 self.hub.select(definition.engine_id)
                 self.hub.runtimes[definition.engine_id].clear_faults()
 
-            self.state = MissionState(
-                mission_id=definition.mission_id,
-                status=MissionStatus.READY.value,
-                phase=FlightPhase.PREFLIGHT.value,
-                time_elapsed_sec=0.0,
-                time_remaining_sec=definition.planned_duration_sec,
-                time_scale=self.time_scale,
-                engine_id=definition.engine_id,
-            )
+            self.state = self._create_initial_state()
             logger.info("Loaded mission %s with engine %s", definition.mission_id, definition.engine_id)
 
     def start(self) -> None:
@@ -728,6 +759,21 @@ class MissionExecutive:
                         self.state.mission_reliability = float(rel_data.get("reliability", 1.0))
                         self.state.limiting_component = str(rel_data.get("limiting_component", "nominal"))
                         self.state.prescriptive_advisory = str(rel_data.get("recommendation", "Nominal operation."))
+
+                        # RUL of the limiting component, in real flight hours, from the same
+                        # hazard model (not a second estimator) -- see
+                        # ComponentHazard.expected_rul_hours(). Uses the live phase's actual
+                        # stress factor when available so RUL reflects current operating
+                        # conditions, not a generic 1.0 baseline stress.
+                        limiting_name = self.state.limiting_component
+                        stress = self.flight_model.current_phase.to_reliability_phase().stress_factor \
+                            if (self.is_phase_mode and self.flight_model.current_phase) else 1.0
+                        comp = next((c for c in runtime.reliability_engine.components if c.name == limiting_name), None)
+                        if comp is not None:
+                            rul = comp.expected_rul_hours(stress_factor=stress)
+                            self.state.rul_hours = None if rul == float("inf") else round(rul, 2)
+                        else:
+                            self.state.rul_hours = None
                     except Exception:
                         logger.exception("Mission reliability sampling failed")
 
@@ -762,13 +808,33 @@ class MissionExecutive:
     # `ComponentHazard.set_damage()`, which investigation found was previously dead code --
     # defined but never called anywhere, so damage_fraction stayed at 0.0 (new/undamaged)
     # regardless of what faults were actually active.
+    # Keyword -> component-NAME-PREFIX (matched against whatever the live engine's actual
+    # component roster is, from backend/mission/engine_components.py:components_for() --
+    # which varies by engine architecture, e.g. spark-ignition engines get
+    # fuel_pump/injector_*/ignition_coil_*, compression-ignition engines get
+    # common_rail/hp_fuel_pump/injector_*/glow_plugs instead). Matching by PREFIX against
+    # the runtime's real component list (rather than hardcoding exact names for one engine)
+    # is what makes this correct across all 5 supported engines, not just rotax_912is.
+    #
+    # Verified against the real fault-mode vocabulary (EngineConfig.applicable_fault_modes())
+    # for rotax_912is: COOLING_DEGRADATION, OIL_PRESSURE_LOSS, OIL_DEGRADATION, SENSOR_DRIFT,
+    # SENSOR_FAILURE, BEARING_WEAR, GEARBOX_WEAR, AIR_FILTER_RESTRICTION,
+    # ALTERNATOR_DEGRADATION, COMBUSTION_INSTABILITY, MISFIRE, INJECTOR_CLOG,
+    # IGNITION_TIMING_DRIFT, LEAN_MIXTURE, RICH_MIXTURE, DETONATION -- every one of these has
+    # a matching entry below; SENSOR_DRIFT/SENSOR_FAILURE intentionally map to ecu_lane_a/b
+    # (the sensor signal chain), not to a mechanical component.
     _FAULT_COMPONENT_KEYWORDS = (
-        (("COOLING", "CHT", "THERMAL", "OVERHEAT"), ("cylinder_head_1", "cylinder_head_2", "cylinder_head_3", "cylinder_head_4")),
+        (("COOLING", "CHT", "THERMAL", "OVERHEAT", "DETONATION"), ("cylinder_head",)),
         (("OIL",), ("oil_pump",)),
-        (("INJECTOR", "FUEL"), ("injector_1", "injector_2", "injector_3", "injector_4", "fuel_pump")),
-        (("WASTEGATE", "TURBO", "INTERCOOLER"), ("turbocharger",)),
-        (("GEARBOX", "VIBRATION", "BEARING"), ("reduction_gearbox", "main_bearings")),
-        (("ALTERNATOR", "VOLTAGE", "ECU", "FADEC"), ("alternator", "ecu_lane_a")),
+        (("MISFIRE", "IGNITION", "SPARK", "COMBUSTION_INSTABILITY", "LEAN_MIXTURE", "RICH_MIXTURE"), ("ignition_coil", "cylinder_head")),
+        (("INJECTOR", "INJECTOR_CLOG", "FUEL", "RAIL", "GLOW_PLUG"), ("injector", "fuel_pump", "common_rail", "hp_fuel_pump", "glow_plugs")),
+        (("WASTEGATE", "TURBO", "INTERCOOLER", "BOOST"), ("turbocharger", "wastegate_actuator", "intercooler")),
+        (("GEARBOX", "GEARBOX_WEAR"), ("reduction_gearbox",)),
+        (("BEARING", "BEARING_WEAR", "VIBRATION"), ("main_bearings",)),
+        (("WATER_PUMP", "COOLANT"), ("water_pump",)),
+        (("AIR_FILTER", "RESTRICTION"), ("air_filter",)),
+        (("ALTERNATOR", "VOLTAGE"), ("alternator",)),
+        (("SENSOR", "ECU", "FADEC", "TIMING_DRIFT"), ("ecu_lane_a", "ecu_lane_b")),
     )
 
     def _apply_live_fault_damage(self, runtime: EngineRuntime) -> None:
@@ -777,6 +843,7 @@ class MissionExecutive:
         active = self.state.active_faults or []
         if not active:
             return
+        real_component_names = [c.name for c in runtime.reliability_engine.components]
         damage: Dict[str, float] = {}
         for f in active:
             mode = str(f.get("mode", "") if isinstance(f, dict) else getattr(f, "mode", ""))
@@ -791,10 +858,20 @@ class MissionExecutive:
             # so an active fault visibly moves mission reliability/derate options even over a
             # short remaining-mission window, while a minor fault (severity ~0.3) stays mild.
             damage_fraction = min(0.985, 1.0 / (1.0 + math.exp(-8.0 * (severity - 0.55))))
-            for keywords, components in self._FAULT_COMPONENT_KEYWORDS:
-                if any(kw in mode_upper for kw in keywords):
-                    for comp in components:
-                        damage[comp] = max(damage.get(comp, 0.0), damage_fraction)
+            # Cylinder-specific faults (location = 1-based cylinder index) should only
+            # damage that cylinder's own components, not all four -- falls back to "all
+            # matching components" for engine-wide faults (location is None).
+            location = f.get("location") if isinstance(f, dict) else getattr(f, "location", None)
+            for keywords, prefixes in self._FAULT_COMPONENT_KEYWORDS:
+                if not any(kw in mode_upper for kw in keywords):
+                    continue
+                for prefix in prefixes:
+                    for real_name in real_component_names:
+                        if not real_name.startswith(prefix):
+                            continue
+                        if location is not None and real_name[-1].isdigit() and not real_name.endswith(str(location)):
+                            continue
+                        damage[real_name] = max(damage.get(real_name, 0.0), damage_fraction)
         if damage:
             runtime.reliability_engine.set_damage(damage)
 

@@ -159,6 +159,18 @@ class ComponentHazard:
     def survival(self, hours: float, stress_factor: float = 1.0) -> float:
         return math.exp(-self.hazard(stress_factor) * max(0.0, hours))
 
+    def expected_rul_hours(self, stress_factor: float = 1.0) -> float:
+        """Remaining Useful Life: expected hours until failure under the current damage
+        state and stress, i.e. mean-time-to-failure = 1 / hazard_rate for an exponential
+        (constant-hazard) failure process -- the standard reliability-engineering
+        definition, derived directly from this same hazard model rather than a second,
+        separately-fitted estimator. Not a prediction of a specific failure time; it is
+        the expected value of an exponential distribution with this rate."""
+        h = self.hazard(stress_factor)
+        if h <= 1e-12:
+            return float("inf")
+        return 1.0 / h
+
 
 def DEFAULT_COMPONENTS() -> List[ComponentHazard]:
     """A starting component set for a turbocharged piston UAV powerplant.

@@ -33,6 +33,15 @@ for _stream in (sys.stdout, sys.stderr):
     if _stream is not None and hasattr(_stream, "reconfigure"):
         _stream.reconfigure(encoding="utf-8", errors="backslashreplace")
 
+# Loads local-only overrides from a gitignored .env at the repo root (e.g. an explicit,
+# informed opt-in to ANUMAAN_LLM_PROVIDER for this machine's dev runs). Must run before any
+# `backend.*` import below, since backend/agent/llm_engine.py reads ANUMAAN_LLM_PROVIDER
+# from os.environ at MODULE IMPORT time, not lazily. The shipped code default stays
+# ANUMAAN_LLM_PROVIDER=none (see docs/build/DECISIONS.md D14) regardless of whether a
+# .env exists -- this only ever affects this machine, never what ships.
+from dotenv import load_dotenv
+load_dotenv(Path(__file__).resolve().parents[2] / ".env")
+
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, UploadFile, File, Form
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles

@@ -87,3 +87,10 @@ data/telemetry/live_sorties/
 archive/
 .playwright-mcp/
 graphify-out/
+
+# Local environment overrides (e.g. ANUMAAN_LLM_PROVIDER opt-in) -- never committed.
+# The shipped default lives in code (backend/agent/llm_engine.py) and stays
+# ANUMAAN_LLM_PROVIDER=none per docs/build/DECISIONS.md D14; this file only affects
+# this machine's local dev runs.
+.env
+.env.local

@@ -239,19 +239,38 @@ def set_time_scale(req: TimeScaleRequest) -> Dict[str, Any]:
     return {"time_scale": scale}
 
 
+FAULT_MODE_ALIASES: Dict[str, str] = {
+    "OIL_PUMP_RELIEF_VALVE": "OIL_PRESSURE_LOSS",
+    "OIL_PUMP_FAILURE": "OIL_PRESSURE_LOSS",
+    "OIL_PRESSURE_DROP": "OIL_PRESSURE_LOSS",
+    "INJECTOR_CLOGGED": "MISFIRE",
+    "SPARK_PLUG_FOULING": "MISFIRE",
+    "CYLINDER_MISFIRE": "MISFIRE",
+    "WASTEGATE_STUCK": "WASTEGATE_STUCK_OPEN",
+    "INTERCOOLER_BLOCKAGE": "AIR_FILTER_BLOCKAGE",
+    "AIR_RESTRICTION": "AIR_FILTER_BLOCKAGE",
+    "COOLING_FAILURE": "COOLING_DEGRADATION",
+}
+
+
 @router.post("/faults")
 def inject_live_fault(req: LiveFaultRequest) -> Dict[str, Any]:
     """Injects a real live fault into the selected engine runtime during simulation."""
     exec_sim = get_mission_executive()
+    mode = FAULT_MODE_ALIASES.get(req.mode, req.mode)
+    cyl = req.cylinder
+    if mode == "MISFIRE" and (cyl is None or cyl < 1):
+        cyl = 1
     try:
         rec = exec_sim.inject_live_fault(
-            mode=req.mode,
-            cylinder=req.cylinder,
+            mode=mode,
+            cylinder=cyl,
             severity=req.severity,
             ramp_sec=req.ramp_sec,
         )
         return rec
     except Exception as err:
+        logger.exception("Error injecting fault: %s", err)
         raise HTTPException(400, str(err))
 
 

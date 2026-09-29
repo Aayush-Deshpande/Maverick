@@ -135,7 +135,7 @@
     <div class="ticker-group">
       <span class="status-badge" id="hud-status">READY</span>
       <span class="status-badge amber" style="font-size:9px" title="The authoritative simulation engine is native Blender (launch_canyon_simulation.bat)">PROTOTYPE ECHO</span>
-      <span style="color: var(--dim)">AIRFRAME: <strong id="hud-airframe" style="color: var(--white)">Bayraktar TB3</strong></span>
+      <span style="color: var(--dim)">AIRFRAME: <strong id="hud-airframe" style="color: var(--white)">TAPAS / MQ-1 UAV</strong></span>
       <span style="color: var(--dim)">ENGINE: <strong id="hud-engine-id" style="color: var(--cyan)">rotax_912is</strong></span>
       <span style="color: var(--dim)">PHASE: <strong id="hud-phase" style="color: var(--amber)">PREFLIGHT</strong></span>
     </div>
@@ -245,38 +245,136 @@
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     const scene = new THREE.Scene();
-    // High-altitude Ladakh atmospheric background & haze
-    scene.background = new THREE.Color(0x0e2438);
-    scene.fog = new THREE.FogExp2(0x1a334a, 0.00004);
+    // High-altitude Ladakh Himalayan daylight atmospheric background & haze (matches Blender sky)
+    scene.background = new THREE.Color(0x4a7c9f);
+    scene.fog = new THREE.FogExp2(0x6e9bbd, 0.000022);
 
     // Primary Camera
     const camera = new THREE.PerspectiveCamera(52, window.innerWidth / window.innerHeight, 0.5, 60000);
-    camera.position.set(0, 3215, -7465);
+    camera.position.set(3979.1, 3253.5, -7473.2);
 
     // Controls for free orbit inspection mode
     const controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.08;
-    controls.maxDistance = 1500;
+    controls.maxDistance = 3500;
     controls.minDistance = 3;
     controls.enabled = false;
 
-    // Lighting
-    const hemiLight = new THREE.HemisphereLight(0x8ec7f5, 0x3d3025, 0.45);
+    // Lighting (Calibrated to Blender Sun_TopGun: 24° elevation, 45° azimuth, warm Himalayan daylight)
+    const hemiLight = new THREE.HemisphereLight(0x9fd2ff, 0x3d2c1e, 0.65);
     scene.add(hemiLight);
 
-    const dirLight = new THREE.DirectionalLight(0xfff1dc, 0.95);
-    dirLight.position.set(8000, 14000, -6000);
+    const dirLight = new THREE.DirectionalLight(0xfff6e6, 1.25);
+    dirLight.position.set(11750, 8150, -15250);
     dirLight.castShadow = true;
     dirLight.shadow.mapSize.width = 2048;
     dirLight.shadow.mapSize.height = 2048;
     dirLight.shadow.camera.near = 10;
     dirLight.shadow.camera.far = 40000;
-    dirLight.shadow.camera.left = -1500;
-    dirLight.shadow.camera.right = 1500;
-    dirLight.shadow.camera.top = 1500;
-    dirLight.shadow.camera.bottom = -1500;
+    dirLight.shadow.camera.left = -2500;
+    dirLight.shadow.camera.right = 2500;
+    dirLight.shadow.camera.top = 2500;
+    dirLight.shadow.camera.bottom = -2500;
     scene.add(dirLight);
+
+    // ------------------------------------------------------------------------
+    // Procedural Himalayan Rock Textures (matches Blender M_Nubra_Terrain_Matte procedural noise)
+    // ------------------------------------------------------------------------
+    function createProceduralRockTexture() {
+      const size = 512;
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#443c33';
+      ctx.fillRect(0, 0, size, size);
+
+      const imgData = ctx.getImageData(0, 0, size, size);
+      const data = imgData.data;
+
+      const hash = (x, y) => {
+        const n = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
+        return n - Math.floor(n);
+      };
+
+      const smoothNoise = (x, y) => {
+        const i = Math.floor(x);
+        const j = Math.floor(y);
+        const fx = x - i;
+        const fy = y - j;
+        const sx = fx * fx * (3 - 2 * fx);
+        const sy = fy * fy * (3 - 2 * fy);
+
+        const n00 = hash(i % 128, j % 128);
+        const n10 = hash((i + 1) % 128, j % 128);
+        const n01 = hash(i % 128, (j + 1) % 128);
+        const n11 = hash((i + 1) % 128, (j + 1) % 128);
+
+        const nx0 = n00 * (1 - sx) + n10 * sx;
+        const nx1 = n01 * (1 - sx) + n11 * sx;
+        return nx0 * (1 - sy) + nx1 * sy;
+      };
+
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+          const idx = (y * size + x) * 4;
+          const n1 = smoothNoise(x * 0.05, y * 0.05);
+          const n2 = smoothNoise(x * 0.12, y * 0.12) * 0.5;
+          const n3 = smoothNoise(x * 0.35, y * 0.35) * 0.25;
+          const grain = (hash(x, y) - 0.5) * 0.15;
+          const val = Math.min(1.0, Math.max(0.0, (n1 + n2 + n3) / 1.75 + grain));
+
+          data[idx] = Math.floor(180 * val + 35);
+          data[idx + 1] = Math.floor(155 * val + 28);
+          data[idx + 2] = Math.floor(130 * val + 22);
+          data[idx + 3] = 255;
+        }
+      }
+      ctx.putImageData(imgData, 0, 0);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(120, 120);
+      return texture;
+    }
+
+    function createProceduralRockBump() {
+      const size = 256;
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      const imgData = ctx.createImageData(size, size);
+      const data = imgData.data;
+
+      const hash = (x, y) => {
+        const n = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
+        return n - Math.floor(n);
+      };
+
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+          const idx = (y * size + x) * 4;
+          const h = hash(x * 0.2, y * 0.2) * 128 + hash(x, y) * 32;
+          data[idx] = Math.floor(h);
+          data[idx + 1] = Math.floor(h);
+          data[idx + 2] = Math.floor(h);
+          data[idx + 3] = 255;
+        }
+      }
+      ctx.putImageData(imgData, 0, 0);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(120, 120);
+      return texture;
+    }
+
+    const rockTexture = createProceduralRockTexture();
+    const rockBump = createProceduralRockBump();
 
     // ------------------------------------------------------------------------
     // Autopilot Simulated State & Kinematics
@@ -287,33 +385,39 @@
     let uavAirframe = null;
     let uavPropeller = null;
     let terrainMesh = null;
+    let terrainActualMesh = null;
     let currentCamMode = 'CHASE';
 
-    // Simulation Autopilot State Vectors
+    // Simulation Autopilot State Vectors (Anchored at authentic Nubra canyon confluence: 4000m E, 7500m N)
     const uavSim = {
-      pos: new THREE.Vector3(0, 3200, 0),
-      vel: new THREE.Vector3(0, 0, -40),
-      quat: new THREE.Quaternion(),
-      heading: 0,          // radians (0 = North, + = East)
-      pitch: 0,            // radians
-      roll: 0,             // radians (banking)
-      speed: 40,           // m/s
-      targetSpeed: 40,
-      targetHeading: 0,
+      pos: new THREE.Vector3(4000.0, 3245.0, -7500.0),
+      // The one authoritative position target the render loop continuously lerps toward
+      // (see applyAuthoritativeState() and the render loop) -- starts equal to pos so
+      // there's no spurious jump on the very first frame before any websocket state has
+      // arrived.
+      targetPos: new THREE.Vector3(4000.0, 3245.0, -7500.0),
+      vel: new THREE.Vector3(0, 0, -45),
+      quat: new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), -THREE.MathUtils.degToRad(38.0)),
+      heading: THREE.MathUtils.degToRad(38.0),          // radians (azimuth along canyon gorge axis)
+      pitch: 0,                                        // radians
+      roll: 0,                                         // radians (banking)
+      speed: 45,                                       // m/s
+      targetSpeed: 45,
+      targetHeading: THREE.MathUtils.degToRad(38.0),
       targetPitch: 0,
       targetRoll: 0,
-      targetAltitude: 3200,
-      groundElevation: 3097.64,
-      agl: 102.36,
+      targetAltitude: 3245.0,
+      groundElevation: 3095.0,
+      agl: 150.0,
       rpm: 2400,
       engineThrottle: 65.0,
       activeFault: null
     };
 
-    // Camera follow smoothed vectors
+    // Camera follow smoothed vectors (Behind pusher prop looking up canyon gorge)
     const camSmoothed = {
-      pos: new THREE.Vector3(0, 3210, -7460),
-      lookAt: new THREE.Vector3(0, 3200, -7500)
+      pos: new THREE.Vector3(3979.1, 3253.5, -7473.2),
+      lookAt: new THREE.Vector3(4024.6, 3245.0, -7531.5)
     };
 
     // ------------------------------------------------------------------------
@@ -325,23 +429,27 @@
     const gltfLoader = new THREE.GLTFLoader();
     gltfLoader.setDRACOLoader(dracoLoader);
 
-    // 1. Load Actual Bayraktar TB3 UAV Master Digital Twin
-    gltfLoader.load('assets/models/bayraktar_tb3.glb', (gltf) => {
+    // 1. Load Authentic UAV Predator Master (exported directly from Blender terrain.blend)
+    const uavModelPath = 'assets/models/uav_predator.glb';
+    gltfLoader.load(uavModelPath, (gltf) => {
       uavAirframe = gltf.scene;
-      // Bayraktar TB3 naturally has 14m wingspan (or ~9.4m unscaled); scale 1.489 to match 14.0m exactly
-      uavAirframe.scale.set(1.489, 1.489, 1.489);
+      
+      // Orient nose toward forward flight vector (-Z in Three.js)
+      uavAirframe.rotation.y = Math.PI;
+      // Authentic MALE UAV scale (29.68m wingspan matching Blender UAV_PHYSICAL_SCALE)
+      uavAirframe.scale.set(1.0, 1.0, 1.0);
       
       uavAirframe.traverse((child) => {
         if (child.isMesh) {
           child.castShadow = true;
           child.receiveShadow = true;
           if (child.material) {
-            child.material.metalness = Math.max(0.2, child.material.metalness || 0.2);
-            child.material.roughness = Math.min(0.65, child.material.roughness || 0.4);
+            child.material.metalness = Math.max(0.20, child.material.metalness || 0.20);
+            child.material.roughness = Math.min(0.60, child.material.roughness || 0.45);
           }
         }
-        // Identify Propeller node
-        if (child.name === 'Pivot_Propeller' || child.name.toLowerCase().includes('propeller')) {
+        // Identify rear pusher propeller
+        if (child.name === 'Object_14' || child.name === 'Object_16' || child.name.toLowerCase().includes('propeller')) {
           if (!uavPropeller) uavPropeller = child;
         }
       });
@@ -350,11 +458,21 @@
       const bbox = new THREE.Box3().setFromObject(uavAirframe);
       const sz = new THREE.Vector3();
       bbox.getSize(sz);
-      document.getElementById('diag-uav-status').textContent = `bayraktar_tb3.glb (${sz.x.toFixed(1)}m x ${sz.z.toFixed(1)}m, Pusher Prop Rigged)`;
-      console.log('Bayraktar TB3 Digital Twin Loaded successfully:', sz);
+      const diagUav = document.getElementById('diag-uav-status');
+      if (diagUav) diagUav.textContent = `uav_predator.glb (${sz.x.toFixed(1)}m x ${sz.z.toFixed(1)}m Master UAV Twin)`;
+      console.log('Authentic Blender UAV_Predator_Master Loaded successfully:', sz);
     }, undefined, (err) => {
-      console.error('Failed to load bayraktar_tb3.glb:', err);
-      document.getElementById('diag-uav-status').textContent = 'ERROR loading bayraktar_tb3.glb';
+      console.warn('Failed to load uav_predator.glb, falling back to bayraktar_tb3.glb:', err);
+      // Fallback to bayraktar_tb3.glb
+      gltfLoader.load('assets/models/bayraktar_tb3.glb', (gltf) => {
+        uavAirframe = gltf.scene;
+        uavAirframe.scale.set(1.489, 1.489, 1.489);
+        uavAirframe.traverse((child) => {
+          if (child.isMesh) { child.castShadow = true; child.receiveShadow = true; }
+          if (child.name.toLowerCase().includes('propeller')) uavPropeller = child;
+        });
+        uavGroup.add(uavAirframe);
+      });
     });
 
     // 2. Load Authentic Copernicus DEM Ladakh Canyon Terrain
@@ -363,39 +481,86 @@
       
       terrainMesh.traverse((child) => {
         if (child.isMesh) {
+          terrainActualMesh = child;
           child.receiveShadow = true;
           child.castShadow = true;
           
-          // Apply Himalayan altitude & slope gradient vertex shading
+          // Apply authentic Himalayan geology vertex colors (calibrated exactly to Blender M_Nubra_Terrain_Matte)
           const geom = child.geometry;
           if (geom && geom.attributes.position) {
             geom.computeVertexNormals();
             const count = geom.attributes.position.count;
             const colors = [];
+            const normals = geom.attributes.normal;
+
             for (let i = 0; i < count; i++) {
               const y = geom.attributes.position.getY(i);
+              const ny = normals ? normals.getY(i) : 0.8;
               let r, g, b;
-              if (y < 3500) {
-                // Alluvial canyon riverbed / gorge floor (rich sandstone/clay tones)
-                const t = Math.max(0, (y - 3050) / 450);
-                r = 0.28 + 0.08 * t; g = 0.24 + 0.07 * t; b = 0.19 + 0.06 * t;
-              } else if (y < 5000) {
-                // High mountain crags / Ladakh granite ridges (darker slate rock)
-                const t = (y - 3500) / 1500;
-                r = 0.32 + 0.10 * t; g = 0.29 + 0.09 * t; b = 0.26 + 0.08 * t;
+
+              // Blender M_Nubra_Terrain_Matte Elevation Color Ramp:
+              if (y < 3300) {
+                // Riverbed gravel & silt (dark warm alluvial canyon floor, 3050-3300m)
+                const t = Math.max(0, Math.min(1.0, (y - 3050) / 250));
+                r = 0.32 + 0.12 * t;
+                g = 0.28 + 0.10 * t;
+                b = 0.24 + 0.08 * t;
+              } else if (y < 3900) {
+                // Warm golden ochre sandstone strata (3300-3900m)
+                const t = (y - 3300) / 600;
+                r = 0.44 + 0.10 * t;
+                g = 0.36 + 0.06 * t;
+                b = 0.27 + 0.04 * t;
+              } else if (y < 4600) {
+                // Terracotta / sienna sediment rock (3900-4600m)
+                const t = (y - 3900) / 700;
+                r = 0.40 - 0.08 * t;
+                g = 0.32 - 0.06 * t;
+                b = 0.25 - 0.04 * t;
+              } else if (y < 5200) {
+                // Cold weathered slate grey scree (4600-5200m)
+                const t = (y - 4600) / 600;
+                r = 0.32 - 0.08 * t;
+                g = 0.31 - 0.07 * t;
+                b = 0.32 - 0.06 * t;
               } else {
-                // Alpine snow-capped peaks (>5000m Chang La & Khardung passes)
-                const t = Math.min(1.0, (y - 5000) / 800);
-                r = 0.44 + 0.18 * t; g = 0.46 + 0.18 * t; b = 0.50 + 0.20 * t;
+                // High summit dark stone & alpine snow caps (>5200m)
+                const t = Math.min(1.0, (y - 5200) / 800);
+                if (ny > 0.60) {
+                  // Snow accumulation on gentler high ridges
+                  r = 0.30 + 0.55 * t;
+                  g = 0.30 + 0.58 * t;
+                  b = 0.32 + 0.62 * t;
+                } else {
+                  // Exposed dark granite summit crags
+                  r = 0.24 - 0.06 * t;
+                  g = 0.24 - 0.06 * t;
+                  b = 0.26 - 0.06 * t;
+                }
               }
+
+              // Slope shading: darken vertical canyon walls / cliff faces (ny < 0.65)
+              if (ny < 0.65) {
+                const cliffDarken = 0.65 + 0.35 * Math.max(0, ny / 0.65);
+                r *= cliffDarken;
+                g *= cliffDarken;
+                b *= cliffDarken;
+              }
+
               colors.push(r, g, b);
             }
             geom.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+
+            // Smooth-shaded PBR material with procedural rock noise and bump (matching Blender)
             child.material = new THREE.MeshStandardMaterial({
               vertexColors: true,
-              roughness: 0.88,
+              map: rockTexture,
+              bumpMap: rockBump,
+              bumpScale: 1.6,
+              roughness: 0.90,
               metalness: 0.04,
-              flatShading: true
+              flatShading: false,
+              side: THREE.DoubleSide
             });
           }
         }
@@ -406,7 +571,7 @@
       const tSz = new THREE.Vector3();
       tBBox.getSize(tSz);
       document.getElementById('diag-terrain-status').textContent = `ladakh_canyon_terrain.glb (${(tSz.x/1000).toFixed(1)}km x ${(tSz.z/1000).toFixed(1)}km DEM)`;
-      console.log('Ladakh Canyon Terrain Loaded:', tBBox);
+      console.log('Ladakh Canyon Terrain Loaded with Blender Master Material:', tBBox);
     }, undefined, (err) => {
       console.error('Failed to load ladakh_canyon_terrain.glb:', err);
       document.getElementById('diag-terrain-status').textContent = 'ERROR loading terrain.glb';
@@ -486,13 +651,14 @@
     const forwardRaycaster = new THREE.Raycaster();
 
     function sampleGroundElevation(x, z) {
-      if (!terrainMesh) return 3097.64;
+      const target = terrainActualMesh || terrainMesh;
+      if (!target) return 3095.0;
       downRaycaster.set(new THREE.Vector3(x, 7500, z), new THREE.Vector3(0, -1, 0));
-      const hits = downRaycaster.intersectObject(terrainMesh, true);
+      const hits = downRaycaster.intersectObject(target, true);
       if (hits.length > 0) {
         return hits[0].point.y;
       }
-      return 3097.64;
+      return 3095.0;
     }
 
     function evaluateAutoGcas(pos, quat, speed) {
@@ -552,25 +718,32 @@
     function applyAuthoritativeState(s) {
       lastAuthoritativeState = s;
 
-      // Extract target coordinates from canonical MissionState
-      const posX = s.pos_x_m || 0;
-      const posY = s.pos_y_m || 0;
-      const altMsl = s.pos_z_m || (s.uav ? s.uav.altitude_msl_m : 3200);
+      // Extract target coordinates from canonical MissionState (defaulting to authentic Nubra canyon ingress)
+      const posX = (s.pos_x_m !== undefined && s.pos_x_m !== 0) ? s.pos_x_m : 4000.0;
+      const posY = (s.pos_y_m !== undefined && s.pos_y_m !== 0) ? s.pos_y_m : 7500.0;
+      const altMsl = (s.pos_z_m && s.pos_z_m > 500) ? s.pos_z_m : 3245.0;
 
       // In Three.js: X=East, Y=Alt, Z=-North
       uavSim.targetAltitude = altMsl;
-      const targetPos = new THREE.Vector3(posX, altMsl, -posY);
+      // uavSim.targetPos is the ONLY thing the render loop chases for position -- it must
+      // not also run its own independent velocity-integrated dead-reckoning (that was the
+      // jitter bug: two unrelated position estimates -- the render loop's own
+      // speed/heading extrapolation, and this lerp-toward-backend correction -- fighting
+      // each other every ~50ms, producing a visible snap on every websocket tick). See the
+      // render loop below: it now does pos.lerp(targetPos, ...) every frame instead of
+      // pos.addScaledVector(vel, dt).
+      uavSim.targetPos.set(posX, altMsl, -posY);
 
-      // Desired kinematics
-      uavSim.targetHeading = THREE.MathUtils.degToRad(s.heading_deg || 0);
+      // Desired attitude -- still smoothly chased every frame in the render loop (rate-
+      // limited heading turn, slerp'd quaternion), just no longer used to ALSO drive
+      // position via a second, separate integrator.
+      const degHdg = (s.heading_deg !== undefined && s.heading_deg !== 0) ? s.heading_deg : 38.0;
+      uavSim.targetHeading = THREE.MathUtils.degToRad(degHdg);
       uavSim.targetPitch = THREE.MathUtils.degToRad(s.pitch_deg || 0);
       uavSim.targetRoll = THREE.MathUtils.degToRad(s.roll_bank_deg || 0);
       uavSim.targetSpeed = s.ground_speed_mps || (s.true_airspeed_ktas ? s.true_airspeed_ktas * 0.5144 : 45.0);
       uavSim.rpm = s.rpm || (s.engine ? s.engine.rpm : 2400);
       uavSim.engineThrottle = s.commanded_throttle_pct || 65.0;
-
-      // Soft alignment of simulation state with backend
-      uavSim.pos.lerp(targetPos, 0.12);
 
       // Safe helper for text
       const setTextSafe = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
@@ -819,12 +992,20 @@
       const targetQuat = new THREE.Quaternion().copy(qYaw).multiply(qPitch).multiply(qRoll);
       uavSim.quat.slerp(targetQuat, Math.min(1.0, 8.0 * dt));
 
-      // Velocity vector in world coordinates
+      // Velocity vector in world coordinates (kept for the propeller-wash/HUD readouts
+      // that reference uavSim.vel -- NOT used to advance position, see below).
       const forwardDir = new THREE.Vector3(0, 0, -1).applyQuaternion(uavSim.quat);
       uavSim.vel.copy(forwardDir).multiplyScalar(uavSim.speed);
 
-      // Advance position smoothly
-      uavSim.pos.addScaledVector(uavSim.vel, dt);
+      // Position is a pure follower of the authoritative backend position
+      // (uavSim.targetPos, set in applyAuthoritativeState() from the mission websocket) --
+      // continuously smoothed every render frame rather than dead-reckoned from
+      // speed/heading. A single position estimate, always converging toward the one
+      // source of truth, is what actually eliminates jitter: two independent position
+      // estimates correcting each other (the previous design) cannot both be smooth.
+      // Framerate-independent smoothing factor so this behaves the same at 30fps or 120fps.
+      const posLerpAlpha = 1.0 - Math.pow(0.001, dt);
+      uavSim.pos.lerp(uavSim.targetPos, posLerpAlpha);
 
       // Apply to 3D UAV Object Group
       uavGroup.position.copy(uavSim.pos);
@@ -836,8 +1017,14 @@
         uavPropeller.rotation.z += dTheta;
       }
 
-      // 3. Ground Elevation Probing & Auto-GCAS
+      // 3. Ground Elevation Probing & Hard Terrain Envelope Constraint
       uavSim.groundElevation = sampleGroundElevation(uavSim.pos.x, uavSim.pos.z);
+
+      // HARD TERRAIN ENVELOPE: Aircraft can NEVER penetrate the terrain surface
+      const minSafeAltitude = uavSim.groundElevation + 8.0;
+      if (uavSim.pos.y < minSafeAltitude) {
+        uavSim.pos.y = minSafeAltitude;
+      }
       uavSim.agl = Math.max(0, uavSim.pos.y - uavSim.groundElevation);
       const hudAgl = document.getElementById('hud-agl');
       if (hudAgl) hudAgl.textContent = Math.round(uavSim.agl);
@@ -847,7 +1034,21 @@
       if (alertBanner) {
         if (gcasTriggered || uavSim.agl < 45.0) {
           alertBanner.style.display = 'block';
+          alertBanner.style.borderColor = 'var(--red)';
+          alertBanner.style.color = 'var(--red)';
+          alertBanner.textContent = 'TERRAIN PULL UP // AUTO-GCAS ENVELOPE';
           gcasBeamMat.color.setHex(0xff3366);
+        } else if (lastAuthoritativeState && lastAuthoritativeState.active_faults && lastAuthoritativeState.active_faults.length > 0) {
+          alertBanner.style.display = 'block';
+          alertBanner.style.borderColor = 'var(--amber)';
+          alertBanner.style.color = 'var(--amber)';
+          const flt = lastAuthoritativeState.active_faults[0].mode || lastAuthoritativeState.active_faults[0].fault_mode || 'PROPULSION DEGRADATION';
+          alertBanner.textContent = `ALERT // ENGINE PROPULSION FAULT: ${flt}`;
+        } else if (lastAuthoritativeState && lastAuthoritativeState.confirmed_anomaly) {
+          alertBanner.style.display = 'block';
+          alertBanner.style.borderColor = 'var(--amber)';
+          alertBanner.style.color = 'var(--amber)';
+          alertBanner.textContent = `ALERT // ANOMALY DETECTED: ${lastAuthoritativeState.top_diagnostic_hypothesis || 'PROPULSION VARIANCE'}`;
         } else {
           alertBanner.style.display = 'none';
           gcasBeamMat.color.setHex(0x00e676);
@@ -877,7 +1078,18 @@
         const desiredCamPos = new THREE.Vector3().copy(uavSim.pos).add(offset);
         const desiredLookAt = new THREE.Vector3().copy(uavSim.pos).add(forwardDir.clone().multiplyScalar(40.0));
 
+        // CAMERA TERRAIN CLEARANCE: prevent camera dipping into terrain (mirrors Blender CAM_MIN_TERRAIN_CLR)
+        const camGnd = sampleGroundElevation(desiredCamPos.x, desiredCamPos.z);
+        if (desiredCamPos.y < camGnd + 10.0) {
+          desiredCamPos.y = camGnd + 10.0;
+        }
+
         camSmoothed.pos.lerp(desiredCamPos, 0.08);
+        const curCamGnd = sampleGroundElevation(camSmoothed.pos.x, camSmoothed.pos.z);
+        if (camSmoothed.pos.y < curCamGnd + 10.0) {
+          camSmoothed.pos.y = curCamGnd + 10.0;
+        }
+
         camSmoothed.lookAt.lerp(desiredLookAt, 0.12);
 
         camera.position.copy(camSmoothed.pos);
@@ -889,7 +1101,17 @@
         const desiredCamPos = new THREE.Vector3().copy(uavSim.pos).add(offset);
         const desiredLookAt = new THREE.Vector3().copy(uavSim.pos);
 
+        const camGnd = sampleGroundElevation(desiredCamPos.x, desiredCamPos.z);
+        if (desiredCamPos.y < camGnd + 12.0) {
+          desiredCamPos.y = camGnd + 12.0;
+        }
+
         camSmoothed.pos.lerp(desiredCamPos, 0.05);
+        const curCamGnd = sampleGroundElevation(camSmoothed.pos.x, camSmoothed.pos.z);
+        if (camSmoothed.pos.y < curCamGnd + 12.0) {
+          camSmoothed.pos.y = curCamGnd + 12.0;
+        }
+
         camSmoothed.lookAt.lerp(desiredLookAt, 0.08);
 
         camera.position.copy(camSmoothed.pos);

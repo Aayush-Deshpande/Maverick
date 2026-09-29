@@ -67,6 +67,15 @@ class DerateOption:
         }
 
     def sentence(self) -> str:
+        # power_scale == 1.0 means "no derate" -- phrasing that case as an instruction to
+        # "derate to 100% power" reads as nonsensical/self-contradictory to an operator
+        # (100% power is full power, not a derate). Report it as reassurance instead: the
+        # mission already meets its reliability requirement without reducing power.
+        if self.power_scale >= 0.999:
+            return (
+                f"No derate needed: mission meets its reliability target at full power "
+                f"(reliability {self.reliability:.3f})."
+            )
         direction = "reduces" if self.damage_rate_ratio < 1 else "increases"
         pct = abs(1.0 - self.damage_rate_ratio) * 100
         return (
