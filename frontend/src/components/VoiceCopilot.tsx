@@ -672,31 +672,31 @@ export const VoiceCopilot: React.FC<VoiceCopilotProps> = ({
   return (
     <div className="space-y-4">
       {/* Header + engine status */}
-      <div className="surface-panel rounded-2xl p-4 sm:p-5 space-y-4">
+      <div className="surface-panel rounded-sm p-4 sm:p-5 space-y-4 border border-surface-border">
         <div className="flex items-center justify-between flex-wrap gap-2 border-b border-surface-border pb-3">
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-ai-accent-dim text-ai-accent">
+            <div className="w-7 h-7 rounded-sm flex items-center justify-center bg-ai-accent-dim text-ai-accent">
               <Sparkles className="w-3.5 h-3.5" />
             </div>
             <div>
-              <h2 className="text-xs font-semibold text-white">
+              <h2 className="text-xs font-semibold text-white font-mono uppercase tracking-wide">
                 Voice Mission Copilot
               </h2>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[11px] text-slate-400 font-mono">
                 Whisper.cpp STT + local LLM RAG + Kokoro TTS — fully local, conversational
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
-            <span className={`text-[10px] font-mono px-2 py-1 rounded-lg border ${statusBadgeClasses(sttStatus?.status)}`}>
+            <span className={`text-[10px] font-mono px-2 py-1 rounded-sm border ${statusBadgeClasses(sttStatus?.status)}`}>
               STT: {sttStatus?.status || 'UNKNOWN'}
             </span>
-            <span className={`text-[10px] font-mono px-2 py-1 rounded-lg border ${statusBadgeClasses(ttsStatus?.status)}`}>
+            <span className={`text-[10px] font-mono px-2 py-1 rounded-sm border ${statusBadgeClasses(ttsStatus?.status)}`}>
               TTS: {ttsStatus?.status || 'UNKNOWN'}
             </span>
             <span
-              className={`text-[10px] font-mono px-2 py-1 rounded-lg border ${statusBadgeClasses(llmStatus?.status)}`}
+              className={`text-[10px] font-mono px-2 py-1 rounded-sm border ${statusBadgeClasses(llmStatus?.status)}`}
               title={llmStatus?.status === 'ERROR' ? llmStatus?.error || '' : (llmStatus?.provider && llmStatus.provider !== 'none' ? `${llmStatus.provider} reasoning engine` : 'No LLM provider configured (disabled by default)')}
             >
               LLM: {llmStatus?.status || 'UNKNOWN'}
@@ -705,7 +705,7 @@ export const VoiceCopilot: React.FC<VoiceCopilotProps> = ({
               <button
                 onClick={handleWarmup}
                 disabled={isWarmingUp || engineLoading}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-ai-accent-dim border border-ai-accent-muted text-ai-accent text-[11px] font-medium hover:bg-ai-accent-dim/70 disabled:opacity-40 transition-colors"
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-ai-accent-dim border border-ai-accent-muted text-ai-accent text-[11px] font-medium hover:bg-ai-accent-dim/70 disabled:opacity-40 transition-colors font-mono"
               >
                 {isWarmingUp || engineLoading ? (
                   <Loader2 className="w-3 h-3 animate-spin" />
@@ -718,7 +718,7 @@ export const VoiceCopilot: React.FC<VoiceCopilotProps> = ({
             <button
               onClick={handleClearConversation}
               disabled={messages.length === 0}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-card border border-surface-border text-slate-400 text-[11px] font-medium hover:text-white hover:bg-surface-card-hover disabled:opacity-30 transition-colors"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-surface-card border border-surface-border text-slate-400 text-[11px] font-medium hover:text-white hover:bg-surface-card-hover disabled:opacity-30 transition-colors font-mono"
               title="Clear conversation history"
             >
               <Trash2 className="w-3 h-3" />
@@ -728,7 +728,7 @@ export const VoiceCopilot: React.FC<VoiceCopilotProps> = ({
         </div>
 
         {/* Continuous listen/respond toggle */}
-        <div className="flex items-center justify-between gap-3 bg-white/[0.02] border border-surface-border rounded-xl px-4 py-2.5">
+        <div className="flex items-center justify-between gap-3 bg-white/[0.02] border border-surface-border rounded-sm px-4 py-2.5">
           <div className="flex items-center gap-2.5">
             {continuousMode ? (
               <Ear className="w-4 h-4 text-success" />
@@ -736,8 +736,8 @@ export const VoiceCopilot: React.FC<VoiceCopilotProps> = ({
               <EarOff className="w-4 h-4 text-slate-500" />
             )}
             <div>
-              <span className="text-xs font-medium text-slate-200">Continuous mode</span>
-              <p className="text-[11px] text-slate-500">
+              <span className="text-xs font-medium text-slate-200 font-mono">Continuous mode</span>
+              <p className="text-[11px] text-slate-400 font-mono">
                 {continuousMode
                   ? 'Always listening and responding — no need to tap the mic between turns.'
                   : 'Off — press the mic to talk, one turn at a time.'}
@@ -803,20 +803,20 @@ export const VoiceCopilot: React.FC<VoiceCopilotProps> = ({
               <Mic className="w-8 h-8 text-accent" />
             )}
           </button>
-          <span className="text-[11px] font-medium text-slate-400 flex items-center gap-1.5">
+          <span className="text-[11px] font-medium text-slate-400 flex items-center gap-1.5 font-mono">
             {micState === 'capturing' && !continuousMode && <Radio className="w-3 h-3 text-critical animate-pulse" />}
             {micLabel}
           </span>
           {micState === 'processing' && thinkingText && (
-            <div className="w-full max-w-md bg-white/[0.02] border border-surface-border rounded-lg px-3 py-2 max-h-28 overflow-y-auto">
-              <p className="text-[10px] font-mono text-slate-500 leading-relaxed whitespace-pre-wrap">
+            <div className="w-full max-w-md bg-white/[0.02] border border-surface-border rounded-sm px-3 py-2 max-h-28 overflow-y-auto">
+              <p className="text-[10px] font-mono text-slate-400 leading-relaxed whitespace-pre-wrap">
                 {thinkingText}
                 <span className="animate-pulse">▋</span>
               </p>
             </div>
           )}
           {errorMsg && (
-            <p className="text-[11px] text-critical bg-critical-dim border border-critical-muted rounded-lg px-3 py-1.5 max-w-md text-center">
+            <p className="text-[11px] text-critical bg-critical-dim border border-critical-muted rounded-sm px-3 py-1.5 max-w-md text-center font-mono">
               {errorMsg}
             </p>
           )}
@@ -824,19 +824,19 @@ export const VoiceCopilot: React.FC<VoiceCopilotProps> = ({
       </div>
 
       {/* Conversation transcript */}
-      <div className="surface-panel surface-panel-ai rounded-2xl p-4 sm:p-5">
+      <div className="surface-panel surface-panel-ai rounded-sm p-4 sm:p-5 border border-surface-border">
         <div className="flex items-center gap-2 border-b border-surface-border pb-2 mb-3">
-          <span className="text-[11px] font-medium text-ai-accent">
+          <span className="text-[11px] font-medium text-ai-accent font-mono uppercase tracking-wider">
             Conversation
           </span>
-          <span className="text-[10px] text-slate-500">
+          <span className="text-[10px] text-slate-500 font-mono">
             (context preserved across follow-ups — active fault: {state.analytics.diagnosed_fault_name})
           </span>
         </div>
 
         <div ref={scrollRef} className="space-y-3 max-h-[420px] overflow-y-auto pr-1">
           {messages.length === 0 && (
-            <p className="text-xs text-slate-500 py-6 text-center">
+            <p className="text-xs text-slate-500 py-6 text-center font-mono">
               {continuousMode
                 ? 'Just start talking — no wake word needed. It\'ll answer, then listen again automatically.'
                 : 'Tap the mic and ask something, or flip on continuous mode above for hands-free.'}
@@ -845,19 +845,19 @@ export const VoiceCopilot: React.FC<VoiceCopilotProps> = ({
           {messages.map((m, idx) =>
             m.role === 'user' ? (
               <div key={idx} className="flex items-start gap-2.5 justify-end">
-                <div className="max-w-[80%] bg-accent-dim border border-accent-muted/40 rounded-xl rounded-tr-sm px-3.5 py-2.5">
+                <div className="max-w-[80%] bg-accent-dim border border-accent-muted/40 rounded-sm px-3.5 py-2.5">
                   <p className="text-xs text-slate-100 leading-relaxed">{m.text}</p>
                 </div>
-                <div className="w-7 h-7 rounded-lg bg-accent-dim flex items-center justify-center text-accent shrink-0">
+                <div className="w-7 h-7 rounded-sm bg-accent-dim flex items-center justify-center text-accent shrink-0">
                   <User className="w-3.5 h-3.5" />
                 </div>
               </div>
             ) : (
               <div key={idx} className="flex items-start gap-2.5">
-                <div className="w-7 h-7 rounded-lg bg-ai-accent-dim flex items-center justify-center text-ai-accent shrink-0">
+                <div className="w-7 h-7 rounded-sm bg-ai-accent-dim flex items-center justify-center text-ai-accent shrink-0">
                   <Bot className="w-3.5 h-3.5" />
                 </div>
-                <div className="max-w-[80%] bg-white/[0.02] border border-surface-border rounded-xl rounded-tl-sm px-3.5 py-2.5">
+                <div className="max-w-[80%] bg-white/[0.02] border border-surface-border rounded-sm px-3.5 py-2.5">
                   <AerospaceMarkdown content={m.text} citations={m.citations} title="Spoken Reply" />
                 </div>
               </div>

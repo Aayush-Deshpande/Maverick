@@ -7,33 +7,32 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Layered neutral surfaces — dark theme, Fluent "Mica"/Apple dark-mode style.
-        background: '#0e0e10',
-        surface: '#161618',
-        'surface-card': '#1e1e21',
-        'surface-card-hover': '#26262a',
-        'surface-border': 'rgba(255,255,255,0.08)',
-        'surface-border-strong': 'rgba(255,255,255,0.14)',
+        // Layered neutral surfaces — deep aerospace dark palette matching the landing page
+        background: '#0e151b',
+        surface: '#131e26',
+        'surface-card': '#17242c',
+        'surface-card-hover': '#1e2f38',
+        'surface-border': 'rgba(208, 210, 203, 0.14)',
+        'surface-border-strong': 'rgba(208, 210, 203, 0.28)',
 
-        // One confident accent, used sparingly — not a decorative palette.
-        accent: '#3B9EFF',
-        'accent-dim': 'rgba(59,158,255,0.12)',
-        'accent-muted': 'rgba(59,158,255,0.35)',
+        // Signature aerospace orange accent (matching landing page --ani-accent #b84327 / #d67658)
+        accent: '#d67658',
+        'accent-dim': 'rgba(214, 118, 88, 0.16)',
+        'accent-muted': 'rgba(214, 118, 88, 0.4)',
 
-        // Flat semantic status colors (no neon variants) — still needed for CRITICAL/
-        // WARNING/NOMINAL telemetry severity, just rendered calmly instead of glowing.
-        critical: '#FF6259',
-        'critical-dim': 'rgba(255,98,89,0.12)',
-        'critical-muted': 'rgba(255,98,89,0.4)',
-        warning: '#FFB340',
-        'warning-dim': 'rgba(255,179,64,0.12)',
-        'warning-muted': 'rgba(255,179,64,0.4)',
-        success: '#4CD273',
-        'success-dim': 'rgba(76,210,115,0.12)',
-        'success-muted': 'rgba(76,210,115,0.4)',
-        'ai-accent': '#C084FC',
-        'ai-accent-dim': 'rgba(192,132,252,0.12)',
-        'ai-accent-muted': 'rgba(192,132,252,0.4)',
+        // Semantic status colors calibrated for aerospace telemetry
+        critical: '#e05244',
+        'critical-dim': 'rgba(224, 82, 68, 0.15)',
+        'critical-muted': 'rgba(224, 82, 68, 0.45)',
+        warning: '#e5983b',
+        'warning-dim': 'rgba(229, 152, 59, 0.15)',
+        'warning-muted': 'rgba(229, 152, 59, 0.45)',
+        success: '#2fb36d',
+        'success-dim': 'rgba(47, 179, 109, 0.15)',
+        'success-muted': 'rgba(47, 179, 109, 0.45)',
+        'ai-accent': '#c084fc',
+        'ai-accent-dim': 'rgba(192, 132, 252, 0.14)',
+        'ai-accent-muted': 'rgba(192, 132, 252, 0.42)',
       },
       fontFamily: {
         sans: ['"Inter"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],

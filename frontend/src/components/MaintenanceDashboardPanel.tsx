@@ -121,37 +121,37 @@ export const MaintenanceDashboardPanel: React.FC<MaintenanceDashboardPanelProps>
   return (
     <div className="space-y-4">
       {/* Top Banner */}
-      <div className="surface-panel p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 border-l-4 border-l-emerald-500">
+      <div className="surface-panel p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 border border-surface-border">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+            <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono font-semibold bg-accent-dim text-accent border border-accent-muted">
               VIS-04 / CBM-01
             </span>
-            <h2 className="text-sm font-semibold text-white tracking-wide">
+            <h2 className="text-sm font-semibold text-white tracking-wide font-mono uppercase">
               Ground Crew Maintenance &amp; Condition-Based Health Terminal
             </h2>
           </div>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-slate-400 mt-1 font-mono">
             Certified CBM work-order dispatch, Split-Conformal RUL component life meters, and sensor residual shielding matrix.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-surface-card border border-surface-border text-xs">
-            <UserCheck className="w-3.5 h-3.5 text-emerald-400" />
+        <div className="flex items-center gap-3 font-mono">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm bg-surface-card border border-surface-border text-xs">
+            <UserCheck className="w-3.5 h-3.5 text-accent" />
             <input
               type="text"
               value={signoffInspector}
               onChange={(e) => setSignoffInspector(e.target.value)}
               placeholder="Inspector ID"
-              className="bg-transparent text-slate-200 text-xs w-28 focus:outline-none border-b border-surface-border focus:border-accent"
+              className="bg-transparent text-slate-200 text-xs w-28 focus:outline-none border-b border-surface-border focus:border-accent font-mono"
             />
           </div>
 
           <button
             onClick={fetchWorkOrders}
             disabled={isLoadingOrders}
-            className="p-1.5 rounded bg-surface-card border border-surface-border text-slate-400 hover:text-white hover:bg-surface-card-hover transition-colors"
+            className="p-1.5 rounded-sm bg-surface-card border border-surface-border text-slate-400 hover:text-white hover:bg-surface-card-hover transition-colors"
             title="Refresh work orders"
           >
             <RefreshCw className={`w-4 h-4 ${isLoadingOrders ? 'animate-spin text-accent' : ''}`} />
@@ -161,7 +161,7 @@ export const MaintenanceDashboardPanel: React.FC<MaintenanceDashboardPanelProps>
 
       {feedbackMsg && (
         <div
-          className={`p-3 rounded text-xs flex items-center justify-between border ${
+          className={`p-3 rounded-sm text-xs flex items-center justify-between border font-mono ${
             feedbackMsg.type === 'success'
               ? 'bg-emerald-950/40 text-emerald-300 border-emerald-800/50'
               : 'bg-critical-dim text-critical border-critical-muted'
@@ -175,24 +175,24 @@ export const MaintenanceDashboardPanel: React.FC<MaintenanceDashboardPanelProps>
       )}
 
       {/* Grid 1: Split-Conformal RUL & Component Life Meters (AIM-05, F12) */}
-      <div className="surface-panel p-4 space-y-4">
+      <div className="surface-panel p-4 space-y-4 border border-surface-border">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-surface-border pb-3">
           <div>
             <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+              <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono font-semibold bg-accent-dim text-accent border border-accent-muted">
                 F12 / AIM-05
               </span>
-              <h3 className="text-xs font-semibold text-white uppercase tracking-wider">
+              <h3 className="text-xs font-semibold text-white uppercase tracking-wider font-mono">
                 Split-Conformal Remaining Useful Life (RUL) with 90% Coverage
               </h3>
             </div>
-            <p className="text-[11px] text-slate-400 mt-0.5">
+            <p className="text-[11px] text-slate-400 mt-0.5 font-mono">
               Finite-sample distribution-free uncertainty intervals: P10 conservative lower bound, P50 median, P90 optimistic upper bound.
             </p>
           </div>
 
-          <div className="px-2.5 py-1 rounded bg-indigo-950/50 border border-indigo-800/40 text-[10px] font-mono text-indigo-300 flex items-center gap-1.5">
-            <ShieldCheck className="w-3.5 h-3.5 text-indigo-400" />
+          <div className="px-2.5 py-1 rounded-sm bg-surface-card border border-surface-border text-[10px] font-mono text-slate-300 flex items-center gap-1.5">
+            <ShieldCheck className="w-3.5 h-3.5 text-accent" />
             <span>Guaranteed Coverage: 90% (α = 0.10)</span>
           </div>
         </div>

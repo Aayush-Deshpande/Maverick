@@ -34,23 +34,23 @@ export class PanelErrorBoundary extends React.Component<PanelErrorBoundaryProps,
   render() {
     if (this.state.error) {
       return (
-        <div className="surface-panel surface-panel-critical rounded-2xl p-4 flex items-center justify-between gap-3">
+        <div className="surface-panel surface-panel-critical rounded-sm p-4 flex items-center justify-between gap-3 border border-critical-muted">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-critical-dim flex items-center justify-center text-critical shrink-0">
+            <div className="w-9 h-9 rounded-sm bg-critical-dim flex items-center justify-center text-critical shrink-0">
               <AlertTriangle className="w-5 h-5" />
             </div>
             <div>
-              <h4 className="text-xs font-semibold text-critical">
-                {this.props.label} panel crashed
+              <h4 className="text-xs font-semibold text-critical font-mono uppercase tracking-wide">
+                {this.props.label} panel offline
               </h4>
-              <p className="text-[11px] text-slate-400 mt-0.5">
-                {this.state.error.message || 'Unexpected rendering error.'} — other panels are unaffected.
+              <p className="text-[11px] text-slate-400 mt-0.5 font-mono">
+                {this.state.error.message || 'Unexpected rendering error.'} — other panels remain operational.
               </p>
             </div>
           </div>
           <button
             onClick={() => this.setState({ error: null })}
-            className="px-3.5 py-1.5 rounded-lg bg-critical-dim text-critical text-xs font-medium hover:bg-critical-dim/70 border border-critical-muted transition-colors shrink-0"
+            className="px-3.5 py-1.5 rounded-sm bg-critical-dim text-critical text-xs font-medium hover:bg-critical-dim/70 border border-critical-muted transition-colors shrink-0 font-mono"
           >
             Retry
           </button>

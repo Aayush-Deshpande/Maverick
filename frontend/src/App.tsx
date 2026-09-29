@@ -87,90 +87,141 @@ export function App() {
       />
 
       <main className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-4 md:p-6 space-y-4">
-        <div className="flex items-center justify-between gap-3">
-          <div className="text-[11px] uppercase tracking-[0.14em] text-slate-500">ANUMAAN · Ground console</div>
-          <div className="flex rounded border border-surface-border bg-surface-card p-0.5 text-[11px]">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="text-[10px] uppercase tracking-[0.18em] text-[#889899] font-mono flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+            <span>ANUMAAN · GCS WORKSPACE</span>
+          </div>
+          <div className="flex rounded-sm border border-surface-border bg-surface-card p-0.5 text-xs font-mono">
             <button
               onClick={() => setWorkspace('landing')}
-              className="rounded px-2.5 py-1.5 text-slate-400 hover:text-white flex items-center gap-1 transition-colors"
+              className="rounded-sm px-2.5 py-1 text-slate-400 hover:text-white flex items-center gap-1 transition-colors"
               title="Return to Platform Overview"
             >
               <span className="text-xs">&larr;</span> Overview
             </button>
-            <button onClick={() => setWorkspace('runtime')} className={`rounded px-3 py-1.5 ${workspace === 'runtime' ? 'bg-accent-dim text-accent' : 'text-slate-400 hover:text-white'}`}>Engine runtime</button>
-            <button onClick={() => setWorkspace('twin')} className={`rounded px-3 py-1.5 ${workspace === 'twin' ? 'bg-accent-dim text-accent' : 'text-slate-400 hover:text-white'}`}>3D twin</button>
-            <button onClick={() => setWorkspace('legacy')} className={`rounded px-3 py-1.5 ${workspace === 'legacy' ? 'bg-accent-dim text-accent' : 'text-slate-400 hover:text-white'}`}>Legacy GCS</button>
+            <button
+              onClick={() => setWorkspace('runtime')}
+              className={`rounded-sm px-3 py-1 transition-colors ${
+                workspace === 'runtime'
+                  ? 'bg-accent text-white font-medium shadow-sm'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              Engine runtime
+            </button>
+            <button
+              onClick={() => setWorkspace('twin')}
+              className={`rounded-sm px-3 py-1 transition-colors ${
+                workspace === 'twin'
+                  ? 'bg-accent text-white font-medium shadow-sm'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              3D twin
+            </button>
+            <button
+              onClick={() => setWorkspace('legacy')}
+              className={`rounded-sm px-3 py-1 transition-colors ${
+                workspace === 'legacy'
+                  ? 'bg-accent text-white font-medium shadow-sm'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              Tactical GCS
+            </button>
           </div>
         </div>
-        {workspace === 'runtime' ? <EngineRuntimeConsole serverUrl={serverUrl} /> : workspace === 'twin' ? <section className="surface-panel overflow-hidden">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-surface-border px-4 py-3">
-            <div><h2 className="text-sm font-semibold text-white">Interactive engine twin</h2><p className="mt-1 text-[11px] text-slate-500">Fault location, component highlighting and eased camera transitions · shares the connected backend</p></div>
-            <span className="text-[10px] uppercase tracking-wider text-slate-500">Web 3D · live backend</span>
-          </div>
-          <iframe title="ANUMAAN interactive engine twin" src={`${serverUrl}/apps/threejs_twin/`} className="block h-[calc(100vh-12rem)] min-h-[680px] w-full bg-[#061019]" allow="fullscreen" />
-        </section> : <>
-        {workspace === 'legacy' && !isConnected && (
-          <div className="surface-panel surface-panel-critical p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-sm bg-critical-dim flex items-center justify-center text-critical shrink-0">
-                <WifiOff className="w-5 h-5" />
-              </div>
+
+        {workspace === 'runtime' ? (
+          <EngineRuntimeConsole serverUrl={serverUrl} />
+        ) : workspace === 'twin' ? (
+          <section className="surface-panel overflow-hidden border border-surface-border">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-surface-border px-4 py-3 bg-[#131e26]">
               <div>
-                <h4 className="text-xs font-semibold text-critical">
-                  Telemetry datalink disconnected
-                </h4>
-                <p className="text-[11px] text-slate-400 mt-0.5">
-                  Awaiting 20 Hz state feed from laptop server at{' '}
-                  <span className="font-medium text-slate-200">{serverUrl}</span>
+                <h2 className="text-xs font-bold tracking-wider uppercase text-white font-mono flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+                  Interactive Engine Twin CAD
+                </h2>
+                <p className="mt-0.5 text-[11px] text-slate-400 font-mono">
+                  Fault location, component highlighting and camera transitions · coupled to authoritative 20 Hz backend
                 </p>
               </div>
+              <span className="text-[10px] font-mono uppercase tracking-wider text-accent border border-accent/30 bg-accent/10 px-2 py-0.5 rounded-sm">
+                WebGL 3D · Live State
+              </span>
             </div>
+            <iframe
+              title="ANUMAAN interactive engine twin"
+              src={`${serverUrl}/apps/threejs_twin/`}
+              className="block h-[calc(100vh-12rem)] min-h-[680px] w-full bg-[#0a1015]"
+              allow="fullscreen"
+            />
+          </section>
+        ) : (
+          <>
+            {workspace === 'legacy' && !isConnected && (
+              <div className="surface-panel surface-panel-critical p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-sm bg-critical-dim flex items-center justify-center text-critical shrink-0">
+                    <WifiOff className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-semibold text-critical font-mono">
+                      Telemetry Datalink Disconnected
+                    </h4>
+                    <p className="text-[11px] text-slate-400 mt-0.5 font-mono">
+                      Awaiting 20 Hz telemetry feed from backend server at{' '}
+                      <span className="font-medium text-slate-200">{serverUrl}</span>
+                    </p>
+                  </div>
+                </div>
 
-            <div className="flex items-center gap-2 self-end sm:self-auto">
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="px-3.5 py-1.5 rounded-sm bg-critical-dim text-critical text-xs font-medium hover:bg-critical-dim/70 border border-critical-muted transition-colors"
-              >
-                Configure host link
-              </button>
+                <div className="flex items-center gap-2 self-end sm:self-auto">
+                  <button
+                    onClick={() => setIsModalOpen(true)}
+                    className="px-3.5 py-1.5 rounded-sm bg-critical-dim text-critical text-xs font-medium hover:bg-critical-dim/70 border border-critical-muted transition-colors font-mono"
+                  >
+                    Configure host link
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Tab / Role navigation (VIS-01..04) */}
+            <div className="flex items-center justify-between border-b border-surface-border pb-2 flex-wrap gap-2">
+              <div className="flex items-center gap-1 p-1 rounded-sm bg-surface-card border border-surface-border overflow-x-auto max-w-full font-mono text-xs">
+                {[
+                  { id: 'OPERATOR' as const, label: 'Operator Flight Deck', icon: <User className="w-3.5 h-3.5" /> },
+                  { id: 'PROPULSION' as const, label: 'Propulsion Engineer', icon: <Cpu className="w-3.5 h-3.5" /> },
+                  { id: 'MAINTENANCE' as const, label: 'Maintenance & CBM', icon: <Wrench className="w-3.5 h-3.5" /> },
+                  { id: 'AI_DIAGNOSTICS' as const, label: 'AI Reasoning & RAG', icon: <Brain className="w-3.5 h-3.5" /> },
+                  { id: 'VOICE_COPILOT' as const, label: 'Voice Copilot', icon: <Mic className="w-3.5 h-3.5" /> },
+                  { id: 'MISSION_REPLAY' as const, label: 'Mission Replay', icon: <History className="w-3.5 h-3.5" /> },
+                ].map((tab) => {
+                  const isActive = activeTab === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => handleTabClick(tab.id)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-xs font-medium transition-colors whitespace-nowrap ${
+                        isActive
+                          ? 'bg-accent text-white shadow-sm'
+                          : 'text-slate-400 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      {tab.icon}
+                      <span>{tab.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="flex items-center gap-2 text-[10px] font-mono text-slate-400">
+                <Radio className="w-3.5 h-3.5 text-accent" />
+                <span>DRDO PS-26054 CYBER-PHYSICAL STACK</span>
+              </div>
             </div>
-          </div>
-        )}
-
-        {/* Tab / Role navigation (VIS-01..04) */}
-        <div className="flex items-center justify-between border-b border-surface-border pb-2 flex-wrap gap-2">
-          <div className="flex items-center gap-1 p-1 rounded-sm bg-surface-card border border-surface-border overflow-x-auto max-w-full">
-            {[
-              { id: 'OPERATOR' as const, label: 'Operator Flight Deck (VIS-02)', icon: <User className="w-3.5 h-3.5" /> },
-              { id: 'PROPULSION' as const, label: 'Propulsion Engineer (VIS-03)', icon: <Cpu className="w-3.5 h-3.5" /> },
-              { id: 'MAINTENANCE' as const, label: 'Maintenance & CBM (VIS-04)', icon: <Wrench className="w-3.5 h-3.5" /> },
-              { id: 'AI_DIAGNOSTICS' as const, label: 'AI Reasoning & RAG', icon: <Brain className="w-3.5 h-3.5" /> },
-              { id: 'VOICE_COPILOT' as const, label: 'Voice Copilot', icon: <Mic className="w-3.5 h-3.5" /> },
-              { id: 'MISSION_REPLAY' as const, label: 'Mission Replay', icon: <History className="w-3.5 h-3.5" /> },
-            ].map((tab) => {
-              const isActive = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => handleTabClick(tab.id)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-xs font-medium transition-colors whitespace-nowrap ${
-                    isActive
-                      ? 'bg-accent-dim text-accent border border-accent-muted'
-                      : 'text-slate-400 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  {tab.icon}
-                  <span>{tab.label}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="flex items-center gap-2 text-[11px] text-slate-500">
-            <Radio className="w-3.5 h-3.5 text-accent" />
-            <span>DRDO 2-Plane Cyber-Physical Architecture</span>
-          </div>
-        </div>
 
         {/* View 1: UAV Operator Tactical Flight Deck (VIS-02) */}
         {activeTab === 'OPERATOR' && (
@@ -239,7 +290,7 @@ export function App() {
             <MissionReplayScrubber serverUrl={serverUrl} />
           </PanelErrorBoundary>
         )}
-        </>}
+        </>)}
       </main>
 
       {workspace === 'legacy' ? <footer className="bg-surface/80 border-t border-surface-border py-3 px-4 text-center mt-auto">

@@ -81,8 +81,12 @@ export const MissionReplayScrubber: React.FC<MissionReplayScrubberProps> = ({ se
       </div>
 
       {replay.manifestsError && (
-        <div className="text-[11px] text-critical border border-critical-muted bg-critical-dim px-3 py-2">
-          {replay.manifestsError}
+        <div className="surface-panel surface-panel-critical px-3.5 py-2.5 flex items-center justify-between text-xs font-mono">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-critical animate-pulse" />
+            <span className="text-critical">{replay.manifestsError}</span>
+            <span className="text-slate-500">— Awaiting telemetry replay engine at {serverUrl}</span>
+          </div>
         </div>
       )}
 

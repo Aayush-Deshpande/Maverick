@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   WifiOff,
   Settings,
-  Shield,
   Activity,
   Clock,
   Compass,
@@ -58,92 +57,97 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             onClick={onGoLanding}
             disabled={!onGoLanding}
-            className="w-9 h-9 rounded-sm bg-accent-dim border border-surface-border flex items-center justify-center text-accent hover:border-accent transition-colors disabled:cursor-default"
+            className="flex items-center gap-2.5 text-left group transition-opacity hover:opacity-90 disabled:cursor-default"
             title={onGoLanding ? 'Return to Platform Overview' : undefined}
           >
-            <Shield className="w-4 h-4" />
-          </button>
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-sm font-semibold tracking-tight text-white flex items-center gap-1.5">
-                {runtimeMode ? 'ANUMAAN' : 'Rotax 912 iS'}
-                {!runtimeMode && <span className="text-xs font-normal text-slate-400">Sport</span>}
-              </h1>
-              <span className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded-sm bg-white/5 text-slate-400 border border-surface-border">
-                DRDO PS-26054
-              </span>
+            <span className="w-8 h-8 grid place-items-center bg-[#101b23] text-[#f3f1ea] font-serif text-base border border-[rgba(208,210,203,0.24)] shadow-sm group-hover:border-accent transition-colors">
+              अ
+            </span>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-bold tracking-wider text-white">ANUMAAN</span>
+                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-sm bg-white/5 text-slate-300 border border-surface-border">
+                  DRDO PS-26054
+                </span>
+              </div>
+              <p className="text-[10px] text-slate-400 font-mono hidden sm:flex items-center gap-1.5">
+                <span>{runtimeMode ? 'Multi-engine propulsion health console' : 'MALE UAV Digital Twin GCS'}</span>
+                {!runtimeMode && <><span className="text-slate-700">·</span>
+                <span className="text-slate-400 flex items-center gap-1">
+                  <Compass className="w-3 h-3 text-accent" />
+                  {theater === 'LADAKH' ? 'Ladakh FL200 (-22°C)' : 'Thar desert (+44°C)'}
+                </span></>}
+              </p>
             </div>
-            <p className="text-[11px] text-slate-500 hidden sm:flex items-center gap-1.5">
-              <span>{runtimeMode ? 'Multi-engine propulsion health console' : 'MALE UAV Digital Twin GCS'}</span>
-              {!runtimeMode && <><span className="text-slate-700">·</span>
-              <span className="text-slate-400 flex items-center gap-1">
-                <Compass className="w-3 h-3" />
-                {theater === 'LADAKH' ? 'Ladakh theater (20k ft)' : 'Thar desert (+44°C)'}
-              </span></>}
-            </p>
-          </div>
+          </button>
         </div>
 
         {/* Center: Live status badges */}
         <div className="flex items-center gap-2">
-          <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-surface-card border border-surface-border text-xs font-mono text-slate-400">
-            <Clock className="w-3.5 h-3.5 text-slate-500" />
+          <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-surface-card border border-surface-border text-xs font-mono text-slate-300">
+            <Clock className="w-3.5 h-3.5 text-accent" />
             <span>{utcTime}</span>
           </div>
 
-          {runtimeMode ? <div className="flex items-center gap-2 px-2.5 py-1 rounded-full text-xs border bg-surface-card text-slate-300 border-surface-border"><Activity className="w-3.5 h-3.5 text-sky-400" /><span className="font-medium">Engine runtime</span></div> : <button
-            onClick={onOpenSettings}
-            className={`flex items-center gap-2 px-2.5 py-1 rounded-full text-xs border transition-colors ${
-              isConnected
-                ? 'bg-success-dim text-success border-success-muted hover:bg-success-dim/80'
-                : 'bg-critical-dim text-critical border-critical-muted hover:bg-critical-dim/80'
-            }`}
-            title="Click to configure backend URL"
-          >
-            {isConnected ? (
-              <>
-                <span className="relative flex h-1.5 w-1.5">
-                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-success"></span>
-                </span>
-                <span className="font-medium hidden sm:inline">20 Hz Active</span>
-                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-black/20 text-success">
-                  {latencyMs}ms
-                </span>
-              </>
-            ) : (
-              <>
-                <WifiOff className="w-3.5 h-3.5" />
-                <span className="font-medium">Offline</span>
-              </>
-            )}
-          </button>}
+          {runtimeMode ? (
+            <div className="flex items-center gap-2 px-2.5 py-1 rounded-sm text-xs border bg-surface-card text-accent border-accent/40 font-mono">
+              <Activity className="w-3.5 h-3.5 text-accent" />
+              <span className="font-semibold tracking-wide">ENGINE RUNTIME</span>
+            </div>
+          ) : (
+            <button
+              onClick={onOpenSettings}
+              className={`flex items-center gap-2 px-2.5 py-1 rounded-sm text-xs font-mono border transition-colors ${
+                isConnected
+                  ? 'bg-success-dim text-success border-success-muted hover:bg-success-dim/80'
+                  : 'bg-critical-dim text-critical border-critical-muted hover:bg-critical-dim/80'
+              }`}
+              title="Click to configure backend URL"
+            >
+              {isConnected ? (
+                <>
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-success"></span>
+                  </span>
+                  <span className="font-medium hidden sm:inline">20 Hz Active</span>
+                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-black/20 text-success">
+                    {latencyMs}ms
+                  </span>
+                </>
+              ) : (
+                <>
+                  <WifiOff className="w-3.5 h-3.5" />
+                  <span className="font-medium">Offline</span>
+                </>
+              )}
+            </button>
+          )}
 
           {!runtimeMode && <div
-            className={`hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs border ${
+            className={`hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-xs font-mono border ${
               isEngineOn
                 ? 'bg-accent-dim text-accent border-accent-muted'
                 : 'bg-white/5 text-slate-500 border-surface-border'
             }`}
           >
             <Activity className={`w-3.5 h-3.5 ${isEngineOn ? 'text-accent' : 'text-slate-500'}`} />
-            <span className="font-medium">{isEngineOn ? 'Propulsion engaged' : 'Standby'}</span>
+            <span className="font-medium">{isEngineOn ? 'Propulsion Engaged' : 'Standby'}</span>
           </div>}
 
           {!runtimeMode && <div
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-xs font-mono font-medium border ${
               isFaulted
                 ? 'bg-critical-dim text-critical border-critical-muted'
                 : 'bg-success-dim text-success border-success-muted'
             }`}
           >
             <Zap className={`w-3.5 h-3.5 ${isFaulted ? 'text-critical' : 'text-success'}`} />
-            <span>HI</span>
-            <span>{(state.analytics.health_index * 100).toFixed(0)}%</span>
+            <span>HI: {(state.analytics.health_index * 100).toFixed(0)}%</span>
           </div>}
         </div>
 
         {/* Role Selector (VIS-02..04) */}
-        {!runtimeMode && <div className="hidden sm:flex items-center gap-1 p-0.5 rounded bg-surface-card border border-surface-border text-xs">
+        {!runtimeMode && <div className="hidden sm:flex items-center gap-1 p-0.5 rounded-sm bg-surface-card border border-surface-border text-xs font-mono">
           {[
             { id: 'OPERATOR' as GCSRole, label: 'Operator', icon: <User className="w-3 h-3" /> },
             { id: 'PROPULSION_ENGINEER' as GCSRole, label: 'Propulsion', icon: <Cpu className="w-3 h-3" /> },
@@ -154,10 +158,10 @@ export const Header: React.FC<HeaderProps> = ({
               <button
                 key={r.id}
                 onClick={() => onSelectRole(r.id)}
-                className={`flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium transition-colors ${
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-sm text-[11px] font-medium transition-colors ${
                   isActive
-                    ? 'bg-accent-dim text-accent border border-accent-muted'
-                    : 'text-slate-400 hover:text-white'
+                    ? 'bg-accent text-white shadow-sm'
+                    : 'text-slate-400 hover:text-white hover:bg-white/5'
                 }`}
                 title={`Switch GCS Role: ${r.label}`}
               >

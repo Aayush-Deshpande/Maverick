@@ -1,4 +1,3 @@
-@import '/fonts/pixelcode/pixelcode.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -13,8 +12,8 @@
 }
 
 body {
-  background-color: #080a0f;
-  color: #f1f5f9;
+  background-color: #0e151b;
+  color: #f3f1ea;
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -51,41 +50,34 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.14);
+  background: rgba(208, 210, 203, 0.18);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.24);
+  background: rgba(208, 210, 203, 0.32);
 }
 
 input[type="range"] {
-  accent-color: #3b9eff;
+  accent-color: #d67658;
 }
 
-/* Elevated surface — the one card pattern used everywhere, layered via a solid color +
-   border + shadow rather than a colored glow. Status variants only tint the border.
-   Deliberately NOT backdrop-filter: blur() — with 5-8+ of these visible at once (the "Full
-   Mission Cockpit" tab) sitting over content that repaints 20-50x/sec from live telemetry,
-   blur forces the browser to recomposite every one of them on every frame and every scroll
-   tick, which is what caused the scroll/telemetry jank. A solid opaque background costs
-   effectively nothing to composite. Blur is reserved for the header and modal overlay,
-   where it's one element, not a grid of them, sitting still rather than constantly repainting. */
+/* Elevated surface — landing page aerospace dark palette */
 .surface-panel {
-  background: #1c1c1f;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #17242c;
+  border: 1px solid rgba(208, 210, 203, 0.14);
 }
 
 .surface-panel-critical {
-  border-color: rgba(255, 98, 89, 0.35);
+  border-color: rgba(224, 82, 68, 0.45);
 }
 
 .surface-panel-warning {
-  border-color: rgba(255, 179, 64, 0.35);
+  border-color: rgba(229, 152, 59, 0.45);
 }
 
 .surface-panel-ai {
-  border-color: rgba(192, 132, 252, 0.3);
+  border-color: rgba(192, 132, 252, 0.38);
 }
 
 /* Assistant / manual-excerpt markdown rendering */

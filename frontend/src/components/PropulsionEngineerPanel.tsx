@@ -63,31 +63,31 @@ export const PropulsionEngineerPanel: React.FC<PropulsionEngineerPanelProps> = (
   return (
     <div className="space-y-4">
       {/* Top Banner: Section Overview */}
-      <div className="surface-panel p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 border-l-4 border-l-accent">
+      <div className="surface-panel p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 border border-surface-border">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-accent-dim text-accent border border-accent-muted">
+            <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono font-semibold bg-accent-dim text-accent border border-accent-muted">
               VIS-03 / INT-03
             </span>
-            <h2 className="text-sm font-semibold text-white tracking-wide">
+            <h2 className="text-sm font-semibold text-white tracking-wide font-mono uppercase">
               Propulsion Engineering &amp; Combustion Telemetry Console
             </h2>
           </div>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-slate-400 mt-1 font-mono">
             Thermodynamic performance maps, Dual-Lane FADEC injection timing, and early-warning baseline comparator for Rotax 912 iS Sport.
           </p>
         </div>
 
         <div className="flex items-center gap-4 text-xs font-mono">
-          <div className="px-3 py-1.5 rounded bg-surface-card border border-surface-border">
+          <div className="px-3 py-1.5 rounded-sm bg-surface-card border border-surface-border">
             <span className="text-slate-500 block text-[10px]">FADEC LANE</span>
             <span className="font-semibold text-accent">{t.FADEC_ACTIVE_LANE || 'LANE A'}</span>
           </div>
-          <div className="px-3 py-1.5 rounded bg-surface-card border border-surface-border">
+          <div className="px-3 py-1.5 rounded-sm bg-surface-card border border-surface-border">
             <span className="text-slate-500 block text-[10px]">DISPLACEMENT</span>
             <span className="font-semibold text-slate-200">{DISPLACEMENT_CC} cc</span>
           </div>
-          <div className="px-3 py-1.5 rounded bg-surface-card border border-surface-border">
+          <div className="px-3 py-1.5 rounded-sm bg-surface-card border border-surface-border">
             <span className="text-slate-500 block text-[10px]">GEARBOX RATIO</span>
             <span className="font-semibold text-slate-200">{GEARBOX_RATIO}:1</span>
           </div>
@@ -247,26 +247,26 @@ export const PropulsionEngineerPanel: React.FC<PropulsionEngineerPanelProps> = (
       </div>
 
       {/* Grid 2: Core Requirement F13 / G03 - Conventional Threshold Baseline Comparator */}
-      <div className="surface-panel p-4 sm:p-5 space-y-4 border border-accent/30 bg-gradient-to-br from-surface to-surface-card">
+      <div className="surface-panel p-4 sm:p-5 space-y-4 border border-surface-border bg-surface-card">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-surface-border pb-3">
           <div>
             <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+              <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono font-semibold bg-accent-dim text-accent border border-accent-muted">
                 F13 / G03 / FDP-01
               </span>
-              <h3 className="text-sm font-semibold text-white tracking-wide">
+              <h3 className="text-sm font-semibold text-white tracking-wide font-mono uppercase">
                 Conventional Threshold vs. Digital Twin Early Warning Comparator
               </h3>
             </div>
-            <p className="text-xs text-slate-400 mt-1">
+            <p className="text-xs text-slate-400 mt-1 font-mono">
               Proving PS-26054 mandate: "transition from conventional threshold-based monitoring to intelligent predictive diagnostics".
             </p>
           </div>
 
           {/* Lead-Time Banner Badge */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 font-mono">
             {leadTimeSec !== null && leadTimeSec !== undefined ? (
-              <div className="px-3 py-1.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 flex items-center gap-2">
+              <div className="px-3 py-1.5 rounded-sm bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 flex items-center gap-2">
                 <Clock className="w-4 h-4 text-emerald-400" />
                 <div>
                   <span className="text-[9px] uppercase font-bold tracking-wider block">Lead-Time Advantage</span>
@@ -274,7 +274,7 @@ export const PropulsionEngineerPanel: React.FC<PropulsionEngineerPanelProps> = (
                 </div>
               </div>
             ) : twinDetected && !conventionalBreached ? (
-              <div className="px-3 py-1.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-300 flex items-center gap-2">
+              <div className="px-3 py-1.5 rounded-sm bg-amber-500/10 border border-amber-500/30 text-amber-300 flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 text-amber-400" />
                 <div>
                   <span className="text-[9px] uppercase font-bold tracking-wider block">Early Warning Active</span>
@@ -282,7 +282,7 @@ export const PropulsionEngineerPanel: React.FC<PropulsionEngineerPanelProps> = (
                 </div>
               </div>
             ) : (
-              <div className="px-3 py-1.5 rounded bg-surface-card border border-surface-border text-slate-400 flex items-center gap-2">
+              <div className="px-3 py-1.5 rounded-sm bg-surface border border-surface-border text-slate-400 flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-slate-500" />
                 <span className="text-xs font-medium">Both Paradigms Nominal</span>
               </div>
@@ -378,8 +378,8 @@ export const PropulsionEngineerPanel: React.FC<PropulsionEngineerPanelProps> = (
               </div>
             </div>
 
-            <div className="text-[11px] text-indigo-300 bg-indigo-950/40 p-2.5 rounded border border-indigo-800/40 leading-relaxed">
-              <span className="font-semibold block text-indigo-200 mb-0.5">DRDO PS-26054 Capability Validated:</span>
+            <div className="text-[11px] text-slate-300 bg-[#101b23] p-2.5 rounded-sm border border-surface-border leading-relaxed font-mono">
+              <span className="font-semibold block text-accent mb-0.5">DRDO PS-26054 Capability Validated:</span>
               The twin detects incipient anomalies via multi-dimensional residual divergence while sensor values remain well inside legacy redlines.
             </div>
           </div>
@@ -498,16 +498,16 @@ export const PropulsionEngineerPanel: React.FC<PropulsionEngineerPanelProps> = (
 
       {/* Grid 5: Twin Validity & 3-Way Attribution Monitor */}
       {a.twin_validity && (
-        <div className="surface-panel p-4 space-y-3 border border-indigo-500/30 bg-indigo-950/20">
+        <div className="surface-panel p-4 space-y-3 border border-surface-border">
           <div className="flex items-center justify-between border-b border-surface-border pb-2">
             <div className="flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-indigo-400" />
-              <h3 className="text-xs font-semibold text-white uppercase tracking-wider">
+              <ShieldCheck className="w-4 h-4 text-accent" />
+              <h3 className="text-xs font-semibold text-white uppercase tracking-wider font-mono">
                 Digital Twin Validity &amp; 3-Way Fault Attribution
               </h3>
             </div>
-            <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-semibold ${
-              a.twin_validity.verdict === 'VALID' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'
+            <span className={`px-2 py-0.5 rounded-sm text-[10px] font-mono font-semibold ${
+              a.twin_validity.verdict === 'VALID' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
             }`}>
               TWIN STATUS: {a.twin_validity.verdict}
             </span>

@@ -79,7 +79,7 @@ export const AerospaceMarkdown: React.FC<AerospaceMarkdownProps> = ({
 
         <button
           onClick={handleCopy}
-          className="flex items-center gap-1 px-2 py-1 rounded-md hover:bg-white/5 text-[11px] text-slate-500 hover:text-slate-300 transition-colors"
+          className="flex items-center gap-1 px-2 py-1 rounded-sm hover:bg-white/5 text-[11px] text-slate-400 hover:text-slate-200 transition-colors font-mono"
           title="Copy to clipboard"
         >
           {copied ? (
@@ -140,7 +140,7 @@ export const AerospaceMarkdown: React.FC<AerospaceMarkdownProps> = ({
               }
               if (str.startsWith('[DIAGNOSTIC ADVISORY') || str.startsWith('[MANUAL RETRIEVAL') || str.startsWith('[TECHNICAL MANUAL DIRECTIVE')) {
                 return (
-                  <span className="block my-1 px-2.5 py-1.5 rounded-lg bg-white/[0.04] border border-surface-border-strong text-slate-200 font-medium text-[11px] tracking-wide uppercase">
+                  <span className="block my-1 px-2.5 py-1.5 rounded-sm bg-white/[0.04] border border-surface-border-strong text-slate-200 font-medium text-[11px] tracking-wide uppercase font-mono">
                     {children}
                   </span>
                 );
@@ -148,17 +148,17 @@ export const AerospaceMarkdown: React.FC<AerospaceMarkdownProps> = ({
               return <strong className="text-white font-semibold">{children}</strong>;
             },
             table: ({ children }) => (
-              <div className="overflow-x-auto my-2 rounded-lg border border-surface-border">
+              <div className="overflow-x-auto my-2 rounded-sm border border-surface-border">
                 <table className="min-w-full divide-y divide-surface-border text-xs font-mono">{children}</table>
               </div>
             ),
             th: ({ children }) => (
-              <th className="px-2.5 py-1.5 bg-white/[0.03] text-slate-300 font-semibold text-left text-[11px]">
+              <th className="px-2.5 py-1.5 bg-white/[0.03] text-slate-300 font-semibold text-left text-[11px] font-mono">
                 {children}
               </th>
             ),
             td: ({ children }) => (
-              <td className="px-2.5 py-1.5 border-t border-surface-border text-slate-400 bg-white/[0.01]">
+              <td className="px-2.5 py-1.5 border-t border-surface-border text-slate-400 bg-white/[0.01] font-mono">
                 {children}
               </td>
             ),
@@ -166,13 +166,13 @@ export const AerospaceMarkdown: React.FC<AerospaceMarkdownProps> = ({
               const isInline = !className;
               if (isInline) {
                 return (
-                  <code className="bg-white/5 text-slate-200 border border-surface-border px-1.5 py-0.5 rounded font-mono text-[11px]" {...props}>
+                  <code className="bg-white/5 text-slate-200 border border-surface-border px-1.5 py-0.5 rounded-sm font-mono text-[11px]" {...props}>
                     {children}
                   </code>
                 );
               }
               return (
-                <div className="relative my-2 rounded-lg bg-black/20 border border-surface-border p-2.5 overflow-x-auto font-mono text-[11px] text-slate-300">
+                <div className="relative my-2 rounded-sm bg-black/20 border border-surface-border p-2.5 overflow-x-auto font-mono text-[11px] text-slate-300">
                   <code {...props}>{children}</code>
                 </div>
               );
