@@ -15,6 +15,15 @@ env/
 .venv/
 ENV/
 
+# Environment & Local Overrides
+.env
+.env.*
+!.env.example
+
+# Tooling, test captures & caches
+.playwright-mcp/
+graphify-out/
+
 # Node / Frontend
 node_modules/
 dist/

@@ -18,6 +18,7 @@ fastapi>=0.100.0
 uvicorn>=0.22.0
 websockets>=11.0
 pydantic>=2.0.0
+python-dotenv>=1.0.0
 httpx>=0.24.0
 
 # Manual/document ingestion for the RAG copilot's knowledge store (data/documents/) — OPTIONAL.

@@ -49,6 +49,7 @@ Design constraints (do not relax without re-reading the caller):
 
 import json
 import os
+from pathlib import Path
 import threading
 import time
 import logging
@@ -68,6 +69,13 @@ OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
 #   ollama pull qwen2.5:1.5b          # dev/offline only -- never the default (qwen)
 # ANUMAAN_LLM_MODEL_ID overrides the tag for any provider, including "local-other"
 # for a self-hosted/self-pulled model not in this registry.
+try:
+    from dotenv import load_dotenv
+    _env_path = Path(__file__).resolve().parent.parent.parent / ".env"
+    load_dotenv(dotenv_path=_env_path)
+except ImportError:
+    pass
+
 LLM_PROVIDER_MODELS = {
     "none": None,
     "sarvam": "sarvam-30b",

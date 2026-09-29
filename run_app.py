@@ -33,6 +33,12 @@ if sys.stderr is not None and hasattr(sys.stderr, "reconfigure"):
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv(dotenv_path=PROJECT_ROOT / ".env")
+except ImportError:
+    pass
+
 CANDIDATE_BLENDER_PATHS = [
     r"E:\Blender\blender.exe",
     r"C:\Program Files\Blender Foundation\Blender 5.2\blender.exe",
