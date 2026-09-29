@@ -113,7 +113,7 @@ export const MissionReadinessCard: React.FC<MissionReadinessCardProps> = ({ stat
                       <td className={`text-right py-1.5 px-2 font-mono font-semibold ${isLimiting ? 'text-critical' : 'text-slate-200'}`}>{fmt(rul.rul_p10_hours)}h</td>
                       <td className="text-right py-1.5 px-2 font-mono text-slate-400">{fmt(rul.rul_p50_hours)}h</td>
                       <td className="text-right py-1.5 px-2 font-mono text-slate-500">{fmt(rul.rul_p90_hours)}h</td>
-                      <td className="text-right py-1.5 pl-2 font-mono text-slate-500">{rul.confidence.toFixed(2)}</td>
+                      <td className="text-right py-1.5 pl-2 font-mono text-slate-500">{fmt(rul.confidence, 2)}</td>
                     </tr>
                   );
                 })}
@@ -163,30 +163,30 @@ export const MissionReadinessCard: React.FC<MissionReadinessCardProps> = ({ stat
               <h3 className="text-[11px] font-semibold uppercase tracking-wide text-slate-300">Emergency Glide Reachability &amp; Diversion Bases</h3>
             </div>
             <span className="text-[10px] font-mono text-accent">
-              L/D {a.glide_assessment.glide_ratio.toFixed(1)}:1 | Range {a.glide_assessment.still_air_range_km.toFixed(1)} km | V_glide {a.glide_assessment.speed_best_glide_kt.toFixed(0)} kt
+              L/D {fmt(a.glide_assessment.ld_ratio)}:1 | Range {fmt(a.glide_assessment.glide_range_nm * 1.852)} km | V_glide {fmt(a.glide_assessment.best_glide_tas_kt, 0)} kt
             </span>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-            {a.glide_assessment.reachable_airfields.map((af) => (
+            {(a.glide_assessment.airfields ?? []).map((af) => (
               <div
-                key={af.id}
+                key={af.airfield_id}
                 className={`p-2 rounded border text-xs flex flex-col justify-between ${
-                  af.reachable
+                  af.is_reachable
                     ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
                     : 'bg-critical-dim border-critical-muted text-slate-400'
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <span className="font-semibold truncate">{af.name}</span>
-                  <span className={`text-[9px] font-mono font-bold px-1 rounded ${af.reachable ? 'bg-emerald-500/20 text-emerald-300' : 'bg-red-500/20 text-red-300'}`}>
-                    {af.reachable ? 'REACHABLE' : 'UNREACHABLE'}
+                  <span className={`text-[9px] font-mono font-bold px-1 rounded ${af.is_reachable ? 'bg-emerald-500/20 text-emerald-300' : 'bg-red-500/20 text-red-300'}`}>
+                    {af.is_reachable ? 'REACHABLE' : 'UNREACHABLE'}
                   </span>
                 </div>
                 <div className="mt-1 flex items-baseline justify-between text-[10px] font-mono">
-                  <span>{af.distance_km.toFixed(1)} km</span>
-                  <span className={af.margin_km >= 0 ? 'text-emerald-400' : 'text-critical'}>
-                    {af.margin_km >= 0 ? `+${af.margin_km.toFixed(1)}` : af.margin_km.toFixed(1)} km
+                  <span>{fmt(af.distance_km)} km</span>
+                  <span className={af.alt_margin_ft >= 0 ? 'text-emerald-400' : 'text-critical'}>
+                    {af.alt_margin_ft >= 0 ? '+' : ''}{fmt(af.alt_margin_ft, 0)} ft
                   </span>
                 </div>
               </div>
