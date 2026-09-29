@@ -7,32 +7,32 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Layered neutral surfaces — deep aerospace dark palette matching the landing page
-        background: '#0e151b',
-        surface: '#131e26',
-        'surface-card': '#17242c',
-        'surface-card-hover': '#1e2f38',
-        'surface-border': 'rgba(208, 210, 203, 0.14)',
-        'surface-border-strong': 'rgba(208, 210, 203, 0.28)',
+        // Warm paper and ink surfaces shared with the editorial overview.
+        background: '#f2f1eb',
+        surface: '#e8e7df',
+        'surface-card': '#f7f6f0',
+        'surface-card-hover': '#e9e8e1',
+        'surface-border': 'rgba(16, 27, 32, 0.16)',
+        'surface-border-strong': 'rgba(16, 27, 32, 0.3)',
 
-        // Signature aerospace orange accent (matching landing page --ani-accent #b84327 / #d67658)
-        accent: '#d67658',
-        'accent-dim': 'rgba(214, 118, 88, 0.16)',
-        'accent-muted': 'rgba(214, 118, 88, 0.4)',
+        // Editorial rust accent used throughout the overview.
+        accent: '#bd4b2b',
+        'accent-dim': 'rgba(189, 75, 43, 0.12)',
+        'accent-muted': 'rgba(189, 75, 43, 0.38)',
 
         // Semantic status colors calibrated for aerospace telemetry
-        critical: '#e05244',
-        'critical-dim': 'rgba(224, 82, 68, 0.15)',
-        'critical-muted': 'rgba(224, 82, 68, 0.45)',
-        warning: '#e5983b',
-        'warning-dim': 'rgba(229, 152, 59, 0.15)',
-        'warning-muted': 'rgba(229, 152, 59, 0.45)',
-        success: '#2fb36d',
-        'success-dim': 'rgba(47, 179, 109, 0.15)',
-        'success-muted': 'rgba(47, 179, 109, 0.45)',
-        'ai-accent': '#c084fc',
-        'ai-accent-dim': 'rgba(192, 132, 252, 0.14)',
-        'ai-accent-muted': 'rgba(192, 132, 252, 0.42)',
+        critical: '#a63c32',
+        'critical-dim': 'rgba(166, 60, 50, 0.1)',
+        'critical-muted': 'rgba(166, 60, 50, 0.36)',
+        warning: '#94601d',
+        'warning-dim': 'rgba(148, 96, 29, 0.1)',
+        'warning-muted': 'rgba(148, 96, 29, 0.36)',
+        success: '#36724d',
+        'success-dim': 'rgba(54, 114, 77, 0.1)',
+        'success-muted': 'rgba(54, 114, 77, 0.34)',
+        'ai-accent': '#74518d',
+        'ai-accent-dim': 'rgba(116, 81, 141, 0.1)',
+        'ai-accent-muted': 'rgba(116, 81, 141, 0.34)',
       },
       fontFamily: {
         sans: ['"Inter"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
@@ -45,10 +45,10 @@ export default {
         editorial: ['"Times New Roman"', 'Times', 'serif'],
       },
       boxShadow: {
-        // Elevation, not illumination — flat drop shadows instead of colored glows.
-        card: '0 1px 2px rgba(0,0,0,0.3), 0 6px 20px rgba(0,0,0,0.25)',
-        'card-lg': '0 2px 4px rgba(0,0,0,0.32), 0 12px 32px rgba(0,0,0,0.3)',
-        'focus-ring': '0 0 0 3px rgba(59,158,255,0.35)',
+        // Low-contrast paper elevation; no colored glow.
+        card: '0 1px 2px rgba(16,27,32,0.06), 0 6px 20px rgba(16,27,32,0.04)',
+        'card-lg': '0 2px 4px rgba(16,27,32,0.07), 0 12px 32px rgba(16,27,32,0.05)',
+        'focus-ring': '0 0 0 3px rgba(189,75,43,0.2)',
       },
       animation: {
         'fade-in': 'fadeIn 0.2s ease-out',

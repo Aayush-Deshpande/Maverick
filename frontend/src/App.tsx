@@ -74,7 +74,7 @@ export function App() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-[#f2f2f3] flex flex-col selection:bg-accent selection:text-white">
+    <div className="workspace-shell min-h-screen bg-background text-[#101b20] flex flex-col selection:bg-accent selection:text-white">
       <Header
         state={state}
         isConnected={isConnected}
@@ -88,7 +88,7 @@ export function App() {
 
       <main className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-4 md:p-6 space-y-4">
         <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div className="text-[10px] uppercase tracking-[0.18em] text-[#889899] font-mono flex items-center gap-2">
+          <div className="text-[10px] uppercase tracking-[0.18em] text-[#68757a] font-mono flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-accent" />
             <span>ANUMAAN · GCS WORKSPACE</span>
           </div>
@@ -137,7 +137,7 @@ export function App() {
           <EngineRuntimeConsole serverUrl={serverUrl} />
         ) : workspace === 'twin' ? (
           <section className="surface-panel overflow-hidden border border-surface-border">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-surface-border px-4 py-3 bg-[#131e26]">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-surface-border px-4 py-3 bg-surface">
               <div>
                 <h2 className="text-xs font-bold tracking-wider uppercase text-white font-mono flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
@@ -154,7 +154,7 @@ export function App() {
             <iframe
               title="ANUMAAN interactive engine twin"
               src={`${serverUrl}/apps/threejs_twin/`}
-              className="block h-[calc(100vh-12rem)] min-h-[680px] w-full bg-[#0a1015]"
+              className="block h-[calc(100vh-12rem)] min-h-[680px] w-full bg-[#e8e7df]"
               allow="fullscreen"
             />
           </section>

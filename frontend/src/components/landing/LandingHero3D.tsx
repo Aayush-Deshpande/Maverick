@@ -182,7 +182,7 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
     setModelLoading(true);
 
     const techWireMat = new THREE.MeshBasicMaterial({
-      color: 0x00f0ff,
+      color: 0xbd4b2b,
       wireframe: true,
       transparent: true,
       opacity: 0.5,
@@ -295,10 +295,10 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
     const width = container.clientWidth || 800;
     const height = container.clientHeight || 520;
 
-    // Authentic dark aerospace studio background (inspired by web/site/css/viewport-director.css)
+    // Flat warm studio background matching the editorial Overview.
     const scene = new THREE.Scene();
     sceneRef.current = scene;
-    scene.background = new THREE.Color(0x0d151c);
+    scene.background = new THREE.Color(0xe8e7df);
 
     // Camera
     const camera = new THREE.PerspectiveCamera(38, width / height, 0.1, 100);
@@ -347,8 +347,8 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
     fillLight.position.set(-4, 2, 4);
     scene.add(fillLight);
 
-    // Cool cyan accent from rear-left (tech aesthetic)
-    const accentLight = new THREE.DirectionalLight(0x00c8e8, 0.35);
+    // Subtle warm accent from rear-left, kept close to the Overview's rust.
+    const accentLight = new THREE.DirectionalLight(0xbd4b2b, 0.18);
     accentLight.position.set(-6, 3, -3);
     scene.add(accentLight);
 

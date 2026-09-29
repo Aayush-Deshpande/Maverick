@@ -378,7 +378,7 @@ export const PropulsionEngineerPanel: React.FC<PropulsionEngineerPanelProps> = (
               </div>
             </div>
 
-            <div className="text-[11px] text-slate-300 bg-[#101b23] p-2.5 rounded-sm border border-surface-border leading-relaxed font-mono">
+            <div className="text-[11px] text-slate-300 bg-surface p-2.5 rounded-sm border border-surface-border leading-relaxed font-mono">
               <span className="font-semibold block text-accent mb-0.5">DRDO PS-26054 Capability Validated:</span>
               The twin detects incipient anomalies via multi-dimensional residual divergence while sensor values remain well inside legacy redlines.
             </div>

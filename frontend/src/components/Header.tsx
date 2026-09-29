@@ -60,8 +60,8 @@ export const Header: React.FC<HeaderProps> = ({
             className="flex items-center gap-2.5 text-left group transition-opacity hover:opacity-90 disabled:cursor-default"
             title={onGoLanding ? 'Return to Platform Overview' : undefined}
           >
-            <span className="w-8 h-8 grid place-items-center bg-[#101b23] text-[#f3f1ea] font-serif text-base border border-[rgba(208,210,203,0.24)] shadow-sm group-hover:border-accent transition-colors">
-              अ
+            <span className="w-9 h-9 grid place-items-center overflow-hidden rounded-sm bg-surface-card border border-surface-border shadow-sm group-hover:border-accent transition-colors">
+              <img src="/images/anumaan-mark-editorial.png" alt="" className="w-full h-full object-contain" />
             </span>
             <div>
               <div className="flex items-center gap-2 flex-wrap">

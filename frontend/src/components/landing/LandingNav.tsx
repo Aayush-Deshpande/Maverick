@@ -2,46 +2,46 @@ import React, { useState } from 'react';
 import { ArrowUpRight, Menu, X } from 'lucide-react';
 
 const links = [
-  ['#hero', '3D Twin'],
-  ['#problem', 'Pitch'],
-  ['#pillars', '6 Pillars'],
-  ['#twin', 'Observer'],
-  ['#detection', 'Anomaly'],
-  ['#prognosis', 'RUL Bounds'],
-  ['#theatres', 'Theatres'],
-  ['#fleet', 'Fleet'],
-  ['#architecture', 'Stack'],
-  ['#matrix', 'DRDO Specs'],
-  ['#gcs', 'Cockpit'],
+  ['#hero', 'The system'],
+  ['#problem', 'The operating point'],
+  ['#observer', 'Physics observer'],
+  ['#flybrain', 'Temporal inference'],
+  ['#diagnosis', 'Diagnosis'],
+  ['#evidence', 'Experiments'],
+  ['#runtime', 'Live prototype'],
+  ['#engineering', 'Engineering depth'],
+  ['#limits', 'Boundaries'],
 ];
 
 export const LandingNav: React.FC<{ onLaunch?: (target?: 'runtime' | 'twin' | 'legacy') => void }> = ({ onLaunch }) => {
   const [open, setOpen] = useState(false);
-  const launch = (target: 'runtime' | 'twin' | 'legacy' = 'runtime') => {
+  const launch = () => {
     setOpen(false);
-    onLaunch?.(target);
+    onLaunch?.('legacy');
   };
+
   return (
-    <header className="an-nav bg-[#080d12]/95 backdrop-blur-md border-b border-white/10 sticky top-0 z-50">
-      <a href="#hero" className="an-wordmark" aria-label="ANUMAAN home">
-        <span className="an-mark">अ</span>
-        <span>
-          PROJECT ANUMAAN <span className="text-[#d67658] font-normal text-xs ml-1">अनुमान</span>
-          <small className="text-slate-400">DRDO SIH 26054 // AERO-PISTON DIGITAL TWIN</small>
-        </span>
+    <header className="ae-nav">
+      <a href="#hero" className="ae-wordmark" aria-label="ANUMAAN home">
+        <img className="ae-logo" src="/images/anumaan-mark-editorial.png" alt="" />
+        <span className="ae-brand-name">ANUMAAN</span>
+        <span className="ae-brand-tooltip" aria-hidden="true">ANUMAAN</span>
       </a>
-      <nav className={open ? 'an-nav-links is-open' : 'an-nav-links'}>
+      <nav aria-label="Landing page sections" className={open ? 'ae-nav-links is-open' : 'ae-nav-links'}>
         {links.map(([href, label]) => (
-          <a href={href} key={href} onClick={() => setOpen(false)}>
-            {label}
+          <a href={href} key={href} aria-label={label} onClick={() => setOpen(false)}>
+            <span className="ae-nav-dash" aria-hidden="true">-</span>
+            <span className="ae-nav-tooltip" aria-hidden="true">{label}</span>
           </a>
         ))}
-        <button className="an-nav-launch" onClick={() => launch('legacy')}>
-          GCS Cockpit <ArrowUpRight size={13} />
+        <button className="ae-nav-launch" aria-label="Open ground console" onClick={launch}>
+          <span className="ae-nav-dash" aria-hidden="true">-</span>
+          <span className="ae-nav-tooltip" aria-hidden="true">Ground console</span>
+          <ArrowUpRight size={13} aria-hidden="true" />
         </button>
       </nav>
-      <button className="an-menu-toggle" aria-label={open ? 'Close menu' : 'Open menu'} onClick={() => setOpen(!open)}>
-        {open ? <X size={20} /> : <Menu size={20} />}
+      <button className="ae-menu-toggle" aria-label={open ? 'Close menu' : 'Open menu'} onClick={() => setOpen(!open)}>
+        {open ? <X size={19} /> : <Menu size={19} />}
       </button>
     </header>
   );

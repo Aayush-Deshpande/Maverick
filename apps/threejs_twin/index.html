@@ -6,14 +6,14 @@
   <title>ANUMAAN // Aero-Piston Digital Twin — 3D Technical Showcase</title>
   <style>
     :root {
-      --cyan: #00e5ff;
-      --cyan-dim: rgba(0,229,255,0.15);
-      --cyan-border: rgba(0,229,255,0.3);
-      --bg: #040d14;
-      --bg2: rgba(4,13,20,0.85);
-      --white: #e8f4f8;
-      --dim: rgba(232,244,248,0.45);
-      --ghost-cyan: rgba(0,200,230,0.18);
+      --cyan: #bd4b2b;
+      --cyan-dim: rgba(189,75,43,0.11);
+      --cyan-border: rgba(16,27,32,0.2);
+      --bg: #f2f1eb;
+      --bg2: rgba(247,246,240,0.96);
+      --white: #101b20;
+      --dim: rgba(79,92,98,0.86);
+      --ghost-cyan: rgba(79,92,98,0.12);
       --font-mono: 'JetBrains Mono', 'Fira Mono', 'Courier New', monospace;
       --font-ui: 'Inter', 'Segoe UI', system-ui, sans-serif;
     }
@@ -419,6 +419,37 @@
       color: rgba(0,229,255,0.35); line-height: 2;
       pointer-events: none;
     }
+
+    /* Match the Overview's paper, ink and rust palette across the twin HUD. */
+    html, body { color-scheme: light; background: var(--bg); color: var(--white); }
+    .ticker, .engine-bar, .engine-menu, .tool-btn, .regime-bar, .fault-modal,
+    .diagnostic-card, .thermal-legend, .hud-card, .station-pill, .station-pill-reset {
+      background-color: rgba(247,246,240,.96);
+      color: var(--dim);
+      border-color: var(--cyan-border);
+      box-shadow: 0 3px 14px rgba(16,27,32,.07);
+    }
+    .engine-menu { backdrop-filter: blur(12px); }
+    .engine-select-trigger { background: var(--cyan-dim); }
+    .engine-select-trigger:hover, .engine-select-trigger[aria-expanded="true"] { background: rgba(189,75,43,.15); }
+    .tool-btn.active { color: #fff; background: var(--cyan); border-color: var(--cyan); box-shadow: none; }
+    .tool-btn.active .tkey { color: #fff; background: rgba(16,27,32,.18); }
+    .engine-option:hover, .engine-option.selected { background: var(--cyan-dim); border-color: var(--cyan-border); }
+    .regime-btn { border-color: rgba(189,75,43,.28); }
+    .flight-divider { background: rgba(189,75,43,.22); }
+    .regime-btn.active, .station-pill.active { background: var(--cyan-dim); color: var(--cyan); box-shadow: none; }
+    .station-pill .key { background: rgba(189,75,43,.12); }
+    .fault-select { color: var(--white); background: #f7f6f0; border-color: var(--cyan-border); }
+    .fault-select option { color: var(--white); background: #f7f6f0; }
+    .fault-btn { color: #87342b; background: rgba(166,60,50,.08); }
+    .fault-btn.clear { color: #36724d; background: rgba(54,114,77,.08); }
+    .fault-alert-desc { color: #73302a; }
+    .evidence-chip { color: #805118; background: rgba(148,96,29,.09); border-color: rgba(148,96,29,.24); }
+    .diagnostic-footer { border-color: var(--cyan-border); }
+    .hud-desc, .hud-spec-val { color: var(--dim); }
+    .loading-bar, .load-bar-wrap { background: rgba(16,27,32,.1); }
+    .vignette { background: none; }
+    .key-hint { color: rgba(189,75,43,.72); }
   </style>
 </head>
 <body>
@@ -932,7 +963,7 @@ renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 0.88;
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x060a0f);
+    scene.background = new THREE.Color(0xe8e7df);
 
 const camera = new THREE.PerspectiveCamera(48, window.innerWidth / window.innerHeight, 0.1, 20000);
 camera.position.set(0, 0, 500);
@@ -990,7 +1021,7 @@ const ambLight = new THREE.AmbientLight(0x556677, 0.16);
 scene.add(ambLight);
 
 // Aerospace Cyan Rim Light (Sharp edge highlights matching reference showcase)
-const rimLight = new THREE.DirectionalLight(0x00e5ff, 0.60);
+const rimLight = new THREE.DirectionalLight(0xbd4b2b, 0.28);
 rimLight.position.set(0, 22, -28);
 scene.add(rimLight);
 scene.add(rimLight.target);
@@ -1073,20 +1104,20 @@ scene.add(beaconGroup);
 
 // Outer rotating reticle ring
 const beaconRingGeo = new THREE.RingGeometry(0.85, 0.95, 32);
-const beaconRingMat = new THREE.MeshBasicMaterial({ color: 0x00e5ff, side: THREE.DoubleSide, transparent: true, opacity: 0.85 });
+const beaconRingMat = new THREE.MeshBasicMaterial({ color: 0xbd4b2b, side: THREE.DoubleSide, transparent: true, opacity: 0.85 });
 const beaconRing = new THREE.Mesh(beaconRingGeo, beaconRingMat);
 beaconRing.rotation.x = Math.PI / 2;
 beaconGroup.add(beaconRing);
 
 // Inner pulsing core
 const beaconCoreGeo = new THREE.SphereGeometry(0.22, 16, 16);
-const beaconCoreMat = new THREE.MeshBasicMaterial({ color: 0x00e5ff, transparent: true, opacity: 0.9 });
+const beaconCoreMat = new THREE.MeshBasicMaterial({ color: 0xbd4b2b, transparent: true, opacity: 0.9 });
 const beaconCore = new THREE.Mesh(beaconCoreGeo, beaconCoreMat);
 beaconGroup.add(beaconCore);
 
 // Vertical laser tether line
 const tetherGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, -2, 0)]);
-const tetherMat = new THREE.LineBasicMaterial({ color: 0x00e5ff, transparent: true, opacity: 0.65 });
+const tetherMat = new THREE.LineBasicMaterial({ color: 0xbd4b2b, transparent: true, opacity: 0.65 });
 const beaconTether = new THREE.Line(tetherGeo, tetherMat);
 beaconGroup.add(beaconTether);
 
