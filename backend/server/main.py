@@ -100,7 +100,21 @@ async def lifespan(app: FastAPI):
     """Initializes the engine service and starts the async broadcast loop."""
     service = EngineStateService.get_instance()
     logger.info("[Server] Engine State Service initialized and running at 20 Hz.")
-    
+
+    # Warm the multi-engine RuntimeHub (backs /api/engines/*) here instead of letting it be
+    # created lazily on the first request to that router. Each engine profile needs ~900
+    # ticks of synchronous physics calibration before its buffer has data, and on a
+    # throttled host (e.g. Render free tier) that can take long enough that a client polling
+    # /api/engines/{id}/state right after boot sees a sustained run of 503s. Starting it here
+    # means the clock starts at process boot, not at the mercy of whichever request happens
+    # to hit engine_api.get_hub() first. Skipped under pytest (same guard as the AI/voice
+    # warm-up threads in EngineStateService.__init__) -- the 5-engine calibration thread would
+    # otherwise burn CPU throughout every test module that spins up a TestClient, contending
+    # with the very 20 Hz tick loop several timing-sensitive tests poll against.
+    if "PYTEST_CURRENT_TEST" not in os.environ:
+        from backend.server.engine_api import get_hub
+        get_hub()
+
     # Start background broadcaster task
     broadcast_task = asyncio.create_task(broadcast_telemetry_loop(service))
     yield
