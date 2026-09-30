@@ -99,10 +99,13 @@ export function useTelemetrySocket() {
       return `http://${window.location.hostname || '127.0.0.1'}:8000`;
     }
     if (typeof window !== 'undefined' && window.location.hostname) {
-      const proto = window.location.protocol === 'https:' ? 'https:' : 'http:';
-      return `${proto}//${window.location.hostname}`;
+      if (window.location.hostname.includes('onrender.com')) {
+        const proto = window.location.protocol === 'https:' ? 'https:' : 'http:';
+        return `${proto}//${window.location.hostname}`;
+      }
+      return 'https://anumaan-backend-4sun.onrender.com';
     }
-    return 'http://127.0.0.1:8000';
+    return 'https://anumaan-backend-4sun.onrender.com';
   });
 
   const [state, setState] = useState<UnifiedTelemetryState>(DEFAULT_STATE);
