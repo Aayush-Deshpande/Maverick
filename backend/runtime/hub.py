@@ -38,11 +38,19 @@ class RuntimeHub:
         if warm_heavy:
             threading.Thread(target=self.runtimes[engine_id].ensure_heavy, daemon=True).start()
 
-    def tick_all(self) -> Dict[str, Tick]:
+    def tick_all(self, force_all: bool = True) -> Dict[str, Tick]:
+        """Tick every ready engine. When force_all is False (the steady-state background
+        loop), only the selected engine ticks every call; idle engines tick at roughly
+        IDLE_TICK_DIVISOR-th the rate, since nothing is reading their live stream and
+        running all five full physics+DSP stacks at 20 Hz forever is the main standing
+        memory/CPU cost on a constrained host (Render free tier OOMs on it)."""
         out = {}
         for e, r in self.runtimes.items():
-            if r.ready:
-                t = r.tick(heavy=(e == self.selected))
+            if not r.ready:
+                continue
+            is_selected = e == self.selected
+            if force_all or is_selected or (self.tick_count % self.IDLE_TICK_DIVISOR == 0):
+                t = r.tick(heavy=is_selected)
                 out[e] = t
                 if e == "rotax_912is":
                     try:
@@ -51,9 +59,13 @@ class RuntimeHub:
                             EngineStateService._instance.sync_from_tick(t)
                     except Exception:
                         pass
+            elif e in self.latest:
+                out[e] = self.latest[e]
         self.latest = out
         self.tick_count += 1
         return out
+
+    IDLE_TICK_DIVISOR = 5  # idle engines advance at rate_hz / this, selected engine stays at rate_hz
 
     def start(self, rate_hz: float = 20.0) -> None:
         if self._thread and self._thread.is_alive():
@@ -64,7 +76,7 @@ class RuntimeHub:
             period = 1.0 / rate_hz
             while not self._stop.is_set():
                 t0 = time.perf_counter()
-                self.tick_all()
+                self.tick_all(force_all=False)
                 time.sleep(max(0.0, period - (time.perf_counter() - t0)))
 
         self._thread = threading.Thread(target=loop, daemon=True, name="runtime-hub")
