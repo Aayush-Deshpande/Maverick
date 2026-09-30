@@ -83,6 +83,11 @@ LLM_PROVIDER_MODELS = {
     "bharatgen": "param2",
     "qwen": "qwen2.5:1.5b",
     "local-other": None,  # resolved entirely from ANUMAAN_LLM_MODEL_ID below
+    # Cloud fallback, opt-in only (ANUMAAN_LLM_PROVIDER=gemini) -- same D14 policy as above:
+    # never the default, since it sends operator queries + retrieved manual excerpts to a
+    # third-party API rather than keeping inference fully on-device. Useful for a demo laptop
+    # without a local Ollama/GPU setup available.
+    "gemini": "gemini-2.0-flash",
 }
 ANUMAAN_LLM_PROVIDER = os.environ.get("ANUMAAN_LLM_PROVIDER", "none").lower()
 if ANUMAAN_LLM_PROVIDER not in LLM_PROVIDER_MODELS:
@@ -108,6 +113,10 @@ QWEN_ENABLE_THINKING = os.environ.get("QWEN_ENABLE_THINKING", "0") == "1"
 # Keeps the model resident in VRAM between turns instead of reloading on every request —
 # reloading is fast on Ollama (~1-3s) but still needless overhead for an active session.
 QWEN_KEEP_ALIVE = os.environ.get("QWEN_KEEP_ALIVE", "30m")
+
+# Gemini (cloud, opt-in only): read from the environment / .env, never hardcoded or logged.
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+GEMINI_MODEL_ID = os.environ.get("ANUMAAN_LLM_MODEL_ID") or os.environ.get("GEMINI_MODEL_ID") or LLM_PROVIDER_MODELS["gemini"]
 
 
 class LocalLLMEngine:
@@ -138,15 +147,16 @@ class LocalLLMEngine:
                  "the copilot uses its deterministic templated answers instead."
         )
         self.device_info: str = ""
-        self.model_id = QWEN_MODEL_ID
+        self.model_id = GEMINI_MODEL_ID if self.provider == "gemini" else QWEN_MODEL_ID
         self._client = httpx.Client(base_url=OLLAMA_HOST, timeout=180.0)
+        self._gemini_client = None  # constructed lazily in ensure_loaded() -- see below
 
     @property
     def is_ready(self) -> bool:
         return self.status == "READY"
 
     def ensure_loaded(self) -> bool:
-        """Warms the model into Ollama's VRAM on first call. Thread-safe and idempotent."""
+        """Warms/validates the selected provider on first call. Thread-safe and idempotent."""
         if self.provider == "none":
             return False  # disabled by configuration -- never touch the network
         if self.status == "READY":
@@ -154,8 +164,9 @@ class LocalLLMEngine:
         # ask()/ask_voice()/diagnose_with_ai() always attempt real generation now (no
         # pre-checked is_ready gate — see backend/agent/copilot.py), so keep this engine
         # fast-failing under pytest (PYTEST_CURRENT_TEST is set by pytest itself for the
-        # run's duration) rather than depending on a real Ollama server being reachable in
-        # every test environment — callers exercise their fail-soft fallback path instead.
+        # run's duration) rather than depending on a real Ollama/Gemini connection being
+        # reachable in every test environment — callers exercise their fail-soft fallback
+        # path instead.
         if "PYTEST_CURRENT_TEST" in os.environ:
             self.status = "ERROR"
             self.load_error = "LLM engine disabled under pytest (PYTEST_CURRENT_TEST set)"
@@ -167,61 +178,97 @@ class LocalLLMEngine:
                 return False
             self.status = "LOADING"
             try:
-                t0 = time.time()
-                logger.info(f"[LocalLLMEngine] Warming {self.model_id} via Ollama at {OLLAMA_HOST} ...")
-                # An empty prompt loads the model into VRAM and returns immediately
-                # (done_reason: "load") without generating any tokens.
-                resp = self._client.post("/api/generate", json={
-                    "model": self.model_id,
-                    "prompt": "",
-                    "stream": False,
-                    "keep_alive": QWEN_KEEP_ALIVE,
-                    "options": {"num_ctx": QWEN_NUM_CTX},
-                })
-                resp.raise_for_status()
-                data = resp.json()
-                if data.get("error"):
-                    raise RuntimeError(data["error"])
-
-                # The empty-prompt load above gets the model into VRAM and is enough on its
-                # own for steady-state speed (confirmed: with this and the RAG index below both
-                # warmed, the first real voice turn measured ~4s, same as every turn after it —
-                # a suspected extra "first real decode" penalty turned out to actually be the
-                # RAG embedding index's own one-time cold-start bleeding into that measurement,
-                # not this engine; see engine_service.py's warm-up thread for the real fix).
-                # This second call is just a cheap, realistically-shaped decode as extra
-                # insurance against any residual one-time cost specific to this engine.
-                # Best-effort: failure here doesn't fail the warm-up as a whole, since the
-                # empty-prompt load above already proves the model is usable.
-                try:
-                    filler_system = (
-                        "You are a helpful assistant. " * 40
-                    )  # ~280 tokens, roughly the size of a real system prompt + context block
-                    self._client.post("/api/chat", json={
-                        "model": self.model_id,
-                        "messages": [
-                            {"role": "system", "content": filler_system},
-                            {"role": "user", "content": "Say a short sentence about the weather."},
-                        ],
-                        "stream": False,
-                        "think": False,
-                        "keep_alive": QWEN_KEEP_ALIVE,
-                        "options": {"num_ctx": QWEN_NUM_CTX, "num_predict": 64},
-                    })
-                except Exception as warm_e:
-                    logger.warning(f"[LocalLLMEngine] Decode warm-up call failed (non-fatal): {warm_e}")
-
-                self.device_info = "Ollama (GPU-offloaded)"
+                if self.provider == "gemini":
+                    self._ensure_loaded_gemini()
+                else:
+                    self._ensure_loaded_ollama()
                 self.status = "READY"
-                logger.info(f"[LocalLLMEngine] {self.model_id} ready in {time.time() - t0:.1f}s")
                 return True
             except Exception as e:
                 self.status = "ERROR"
                 self.load_error = str(e)
-                logger.error(f"[LocalLLMEngine] Failed to reach/load {self.model_id} via Ollama: {e}", exc_info=True)
+                logger.error(f"[LocalLLMEngine] Failed to reach/load {self.model_id} ({self.provider}): {e}", exc_info=True)
                 return False
 
+    def _ensure_loaded_ollama(self) -> None:
+        t0 = time.time()
+        logger.info(f"[LocalLLMEngine] Warming {self.model_id} via Ollama at {OLLAMA_HOST} ...")
+        # An empty prompt loads the model into VRAM and returns immediately
+        # (done_reason: "load") without generating any tokens.
+        resp = self._client.post("/api/generate", json={
+            "model": self.model_id,
+            "prompt": "",
+            "stream": False,
+            "keep_alive": QWEN_KEEP_ALIVE,
+            "options": {"num_ctx": QWEN_NUM_CTX},
+        })
+        resp.raise_for_status()
+        data = resp.json()
+        if data.get("error"):
+            raise RuntimeError(data["error"])
+
+        # The empty-prompt load above gets the model into VRAM and is enough on its
+        # own for steady-state speed (confirmed: with this and the RAG index below both
+        # warmed, the first real voice turn measured ~4s, same as every turn after it —
+        # a suspected extra "first real decode" penalty turned out to actually be the
+        # RAG embedding index's own one-time cold-start bleeding into that measurement,
+        # not this engine; see engine_service.py's warm-up thread for the real fix).
+        # This second call is just a cheap, realistically-shaped decode as extra
+        # insurance against any residual one-time cost specific to this engine.
+        # Best-effort: failure here doesn't fail the warm-up as a whole, since the
+        # empty-prompt load above already proves the model is usable.
+        try:
+            filler_system = (
+                "You are a helpful assistant. " * 40
+            )  # ~280 tokens, roughly the size of a real system prompt + context block
+            self._client.post("/api/chat", json={
+                "model": self.model_id,
+                "messages": [
+                    {"role": "system", "content": filler_system},
+                    {"role": "user", "content": "Say a short sentence about the weather."},
+                ],
+                "stream": False,
+                "think": False,
+                "keep_alive": QWEN_KEEP_ALIVE,
+                "options": {"num_ctx": QWEN_NUM_CTX, "num_predict": 64},
+            })
+        except Exception as warm_e:
+            logger.warning(f"[LocalLLMEngine] Decode warm-up call failed (non-fatal): {warm_e}")
+
+        self.device_info = "Ollama (GPU-offloaded)"
+        logger.info(f"[LocalLLMEngine] {self.model_id} ready in {time.time() - t0:.1f}s")
+
+    def _ensure_loaded_gemini(self) -> None:
+        if not GEMINI_API_KEY:
+            raise RuntimeError(
+                "GEMINI_API_KEY not set. Add it to .env (never hardcode or log the value) "
+                "and set ANUMAAN_LLM_PROVIDER=gemini."
+            )
+        try:
+            from google import genai
+        except ImportError as e:
+            raise RuntimeError(
+                "google-genai package not installed. Run: pip install google-genai"
+            ) from e
+
+        t0 = time.time()
+        logger.info(f"[LocalLLMEngine] Connecting to Gemini ({self.model_id}) ...")
+        self._gemini_client = genai.Client(api_key=GEMINI_API_KEY)
+        # Cheap real call (not a no-op ping) so a bad/expired key fails here, during warm-up,
+        # rather than surfacing as a confusing mid-conversation error on the first real turn.
+        self._gemini_client.models.generate_content(
+            model=self.model_id,
+            contents="Say OK.",
+        )
+        self.device_info = "Gemini API (cloud)"
+        logger.info(f"[LocalLLMEngine] Gemini ({self.model_id}) ready in {time.time() - t0:.1f}s")
+
     def _chat(self, messages: list, max_new_tokens: Optional[int], temperature: float, top_p: float) -> str:
+        if self.provider == "gemini":
+            return self._chat_gemini(messages, max_new_tokens, temperature, top_p)
+        return self._chat_ollama(messages, max_new_tokens, temperature, top_p)
+
+    def _chat_ollama(self, messages: list, max_new_tokens: Optional[int], temperature: float, top_p: float) -> str:
         with self._gen_lock:
             resp = self._client.post("/api/chat", json={
                 "model": self.model_id,
@@ -243,6 +290,40 @@ class LocalLLMEngine:
                 raise RuntimeError(data["error"])
             return data["message"]["content"].strip()
 
+    def _split_system_prompt(self, messages: list) -> tuple:
+        """Gemini takes the system prompt as a separate `system_instruction`, not as a
+        message with role='system' in the turn list the way Ollama's /api/chat does.
+        Splits `messages` (as built by generate()/generate_chat()/generate_chat_stream())
+        into (system_instruction, remaining_turns), converting each remaining turn's role
+        from Ollama's 'assistant' to Gemini's 'model' (Gemini has no 'assistant' role)."""
+        system_instruction = ""
+        turns = []
+        for m in messages:
+            if m["role"] == "system":
+                system_instruction = m["content"]
+            else:
+                role = "model" if m["role"] == "assistant" else m["role"]
+                turns.append({"role": role, "parts": [{"text": m["content"]}]})
+        return system_instruction, turns
+
+    def _chat_gemini(self, messages: list, max_new_tokens: Optional[int], temperature: float, top_p: float) -> str:
+        from google.genai import types
+        with self._gen_lock:
+            system_instruction, turns = self._split_system_prompt(messages)
+            resp = self._gemini_client.models.generate_content(
+                model=self.model_id,
+                contents=turns,
+                config=types.GenerateContentConfig(
+                    system_instruction=system_instruction or None,
+                    max_output_tokens=max_new_tokens or QWEN_MAX_NEW_TOKENS,
+                    temperature=temperature,
+                    top_p=top_p,
+                ),
+            )
+            if not resp.text:
+                raise RuntimeError(f"Gemini returned no text (finish_reason={getattr(resp.candidates[0], 'finish_reason', None) if resp.candidates else None})")
+            return resp.text.strip()
+
     def _chat_stream(
         self,
         messages: list,
@@ -251,12 +332,24 @@ class LocalLLMEngine:
         top_p: float,
         on_delta: Optional[Callable[[str], None]],
     ) -> str:
-        """Same request as _chat() but with stream: True, invoking on_delta(text_chunk) as
-        each piece of the reply arrives so a caller can surface live "thinking" output (e.g.
-        a voice UI showing the reply being composed instead of a silent multi-second wait).
-        Still fully blocking/synchronous — the streaming is HTTP-level, not async — so this
-        has the same worker-thread requirement as _chat(). Returns the full accumulated text,
-        identical in content to what non-streaming _chat() would have returned."""
+        """Same request as _chat() but streamed, invoking on_delta(text_chunk) as each piece
+        of the reply arrives so a caller can surface live "thinking" output (e.g. a voice UI
+        showing the reply being composed instead of a silent multi-second wait). Still fully
+        blocking/synchronous — the streaming is HTTP-level, not async — so this has the same
+        worker-thread requirement as _chat(). Returns the full accumulated text, identical in
+        content to what non-streaming _chat() would have returned."""
+        if self.provider == "gemini":
+            return self._chat_stream_gemini(messages, max_new_tokens, temperature, top_p, on_delta)
+        return self._chat_stream_ollama(messages, max_new_tokens, temperature, top_p, on_delta)
+
+    def _chat_stream_ollama(
+        self,
+        messages: list,
+        max_new_tokens: Optional[int],
+        temperature: float,
+        top_p: float,
+        on_delta: Optional[Callable[[str], None]],
+    ) -> str:
         with self._gen_lock:
             chunks: list = []
             with self._client.stream("POST", "/api/chat", json={
@@ -287,6 +380,35 @@ class LocalLLMEngine:
                             on_delta(delta)
                     if data.get("done"):
                         break
+            return "".join(chunks).strip()
+
+    def _chat_stream_gemini(
+        self,
+        messages: list,
+        max_new_tokens: Optional[int],
+        temperature: float,
+        top_p: float,
+        on_delta: Optional[Callable[[str], None]],
+    ) -> str:
+        from google.genai import types
+        with self._gen_lock:
+            system_instruction, turns = self._split_system_prompt(messages)
+            chunks: list = []
+            for chunk in self._gemini_client.models.generate_content_stream(
+                model=self.model_id,
+                contents=turns,
+                config=types.GenerateContentConfig(
+                    system_instruction=system_instruction or None,
+                    max_output_tokens=max_new_tokens or QWEN_MAX_NEW_TOKENS,
+                    temperature=temperature,
+                    top_p=top_p,
+                ),
+            ):
+                delta = chunk.text or ""
+                if delta:
+                    chunks.append(delta)
+                    if on_delta:
+                        on_delta(delta)
             return "".join(chunks).strip()
 
     def generate(self, system_prompt: str, user_prompt: str, max_new_tokens: Optional[int] = None) -> str:

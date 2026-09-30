@@ -15,7 +15,9 @@ set PYTHONUTF8=1
 
 set BLENDER_EXE=""
 
-if exist "E:\Blender\blender.exe" (
+if exist "D:\Blender\blender.exe" (
+    set BLENDER_EXE="D:\Blender\blender.exe"
+) else if exist "E:\Blender\blender.exe" (
     set BLENDER_EXE="E:\Blender\blender.exe"
 ) else if exist "C:\Program Files\Blender Foundation\Blender 5.2\blender.exe" (
     set BLENDER_EXE="C:\Program Files\Blender Foundation\Blender 5.2\blender.exe"

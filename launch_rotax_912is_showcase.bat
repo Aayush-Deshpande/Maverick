@@ -3,15 +3,15 @@ chcp 65001 >nul
 title Launch Rotax 912 iS Sport Technical Showcase Digital Twin
 color 0B
 echo ===============================================================================
-echo   ROTAX 912 iS SPORT // 3D TECHNICAL SHOWCASE & SUBSYSTEM INSPECTOR
+echo   ROTAX 912 iS SPORT // 3D TECHNICAL SHOWCASE ^& SUBSYSTEM INSPECTOR
 echo   DRDO / iDEX Problem Statement ID: 26054
 echo ===============================================================================
 echo.
 echo Controls:
-echo   [1] Integrated Reduction Gearbox & Slipper Clutch
-echo   [2] Dual Electronic Fuel Injection & Throttle Actuators
-echo   [3] Stainless 4-into-1 Exhaust & Ram Cooling Baffles
-echo   [4] Dual Internal Generators & Wiring Loom
+echo   [1] Integrated Reduction Gearbox ^& Slipper Clutch
+echo   [2] Dual Electronic Fuel Injection ^& Throttle Actuators
+echo   [3] Stainless 4-into-1 Exhaust ^& Ram Cooling Baffles
+echo   [4] Dual Internal Generators ^& Wiring Loom
 echo   [5] EMS914 Dual-Lane FADEC Engine Management
 echo   [0] Reset to Full Assembly (or ESC)
 echo   [F1]-[F5] Switch Engines anytime in-session
@@ -22,7 +22,8 @@ set "ANUMAAN_ENGINE_ID=rotax_912is"
 set "TARGET_BLEND=%~dp0assets\blender\anumaan_master_twin.blend"
 
 set "BLENDER_EXE="
-if exist "E:\Blender\blender.exe" set "BLENDER_EXE=E:\Blender\blender.exe"
+if exist "D:\Blender\blender.exe" set "BLENDER_EXE=D:\Blender\blender.exe"
+if not defined BLENDER_EXE if exist "E:\Blender\blender.exe" set "BLENDER_EXE=E:\Blender\blender.exe"
 if not defined BLENDER_EXE if exist "C:\Program Files\Blender Foundation\Blender 5.2\blender.exe" set "BLENDER_EXE=C:\Program Files\Blender Foundation\Blender 5.2\blender.exe"
 if not defined BLENDER_EXE if exist "C:\Program Files\Blender Foundation\Blender 5.1\blender.exe" set "BLENDER_EXE=C:\Program Files\Blender Foundation\Blender 5.1\blender.exe"
 if not defined BLENDER_EXE if exist "C:\Program Files\Blender Foundation\Blender 5.0\blender.exe" set "BLENDER_EXE=C:\Program Files\Blender Foundation\Blender 5.0\blender.exe"

@@ -753,12 +753,6 @@ class EngineStateService:
                 virtual_sensors=f.virtual_sensors or {},
             )
 
-            diag_fid = diag.get("fault_id", 0)
-            diag_fname = diag.get("fault_name", "NOMINAL_FLIGHT")
-            diag_conf = diag.get("confidence", 0.99)
-            target_parts = FAULT_TARGET_PARTS.get(diag_fid, [])
-            target_mesh = diag.get("target_3d_mesh") or (target_parts[0] if target_parts else "All")
-
             rul_info = prog.get("rul", {}) if prog else {}
             dmg_info = prog.get("damage", {}) if prog else {}
             rul_pt = rul_info.get("rul_point", 18.0)
@@ -767,24 +761,45 @@ class EngineStateService:
             res_map = d.scores if d else {}
             ae_score = float(max(res_map.values())) if res_map else 0.0
 
+            # Diagnosis + sensor sanity are NOT taken from `diag`/`san` here. RuntimeHub runs
+            # its own independent 20 Hz detector on rotax_912is (named-mode taxonomy, e.g.
+            # "GEARBOX_VIBRATION") racing against EngineStateService's own _tick() loop
+            # (numeric DRDO fault_id, ATA-directive names) -- both write this same
+            # self.latest_state every tick with no coordination between them. Overwriting
+            # diagnosed_fault_id/name/sensor_sanity from `diag`/`san` here made every
+            # /api/state read a coin flip between two unrelated classifiers' opinions (visible
+            # as the AI Diagnostic Directive panel flickering between different fault names
+            # every ~50ms), and made sensor_sanity's quarantined-channel list immune to
+            # CLEAR_FAULT's pipeline.reset(), since that reset only touches _tick()'s own
+            # pipeline, not RuntimeHub's. _tick() (via handle_command's SET_FAULT/CLEAR_FAULT)
+            # stays the sole authority for diagnosis and sensor sanity on this engine; RuntimeHub
+            # keeps contributing everything else (telemetry, RUL, reliability, glide).
+            prev_analytics = self.latest_state.analytics if self.latest_state else None
+            diag_fid = prev_analytics.diagnosed_fault_id if prev_analytics else 0
+            diag_fname = prev_analytics.diagnosed_fault_name if prev_analytics else "NOMINAL_FLIGHT"
+            diag_conf = prev_analytics.diagnosed_confidence if prev_analytics else 0.99
+            target_parts = prev_analytics.target_parts if prev_analytics else []
+            target_mesh = prev_analytics.target_3d_mesh if prev_analytics else "All"
+            san = prev_analytics.sensor_sanity if prev_analytics else san
+
             analytics_payload = AnalyticsState(
                 residuals={k: round(float(v), 2) for k, v in res_map.items()},
                 anomaly_score=round(ae_score, 4),
                 health_index=round(max(0.1, 1.0 - (dmg_info.get("damage_total", 0.0) * 2.0)), 3),
                 diagnosed_fault_id=diag_fid,
                 diagnosed_fault_name=diag_fname,
-                diagnosed_confidence=round(diag_conf, 3),
+                diagnosed_confidence=round(diag_conf, 3) if isinstance(diag_conf, float) else diag_conf,
                 target_3d_mesh=target_mesh,
                 target_parts=target_parts,
-                ata_chapter=diag.get("ata_chapter", "ATA 00-00"),
-                subsystem=diag.get("subsystem", "PROPULSION_CORE"),
-                severity=diag.get("severity", "NORMAL"),
-                root_cause=diag.get("root_cause_explanation", "Propulsion system nominal."),
-                prescriptive_action=diag.get("prescriptive_action", "Maintain standard flight profile."),
-                emergency_checklist=diag.get("emergency_checklist", []),
-                maintenance_order=diag.get("maintenance_order", "No maintenance required."),
-                go_no_go="NO-GO" if diag_fid > 0 and diag.get("severity") == "CRITICAL" else ("CAUTION" if diag_fid > 0 else "GO"),
-                go_no_go_reason=diag.get("root_cause_explanation", "All propulsion subsystems flight-ready."),
+                ata_chapter=prev_analytics.ata_chapter if prev_analytics else "ATA 00-00",
+                subsystem=prev_analytics.subsystem if prev_analytics else "PROPULSION_CORE",
+                severity=prev_analytics.severity if prev_analytics else "NORMAL",
+                root_cause=prev_analytics.root_cause if prev_analytics else "Propulsion system nominal.",
+                prescriptive_action=prev_analytics.prescriptive_action if prev_analytics else "Maintain standard flight profile.",
+                emergency_checklist=prev_analytics.emergency_checklist if prev_analytics else [],
+                maintenance_order=prev_analytics.maintenance_order if prev_analytics else "No maintenance required.",
+                go_no_go=prev_analytics.go_no_go if prev_analytics else "GO",
+                go_no_go_reason=prev_analytics.go_no_go_reason if prev_analytics else "All propulsion subsystems flight-ready.",
                 rul_p10_hours=round(rul_lo, 1),
                 rul_p50_hours=round(rul_pt, 1),
                 limiting_component=rel.get("limiting_component"),
@@ -801,7 +816,7 @@ class EngineStateService:
                     "thermal": round(max(0.1, 1.0 - dmg_info.get("damage_total", 0.0) * 5.0), 2),
                     "mechanical": 1.0,
                 },
-                causal_chain=diag.get("causal_chain", []),
+                causal_chain=prev_analytics.causal_chain if prev_analytics else [],
                 twin_validity=val,
                 glide_assessment=gld,
                 mission_reliability=rel,
@@ -814,12 +829,9 @@ class EngineStateService:
             # NOTE: self.active_fault_id is intentionally left untouched here. It is the
             # operator-COMMANDED fault (set only by handle_command's SET_FAULT/CLEAR_FAULT,
             # via /api/control or /ws/telemetry) and must survive being overwritten every time
-            # this engine's RuntimeHub tick lands here at 20 Hz. diag_fid above is that hub's
-            # own independently-diagnosed fault (a different, named-mode taxonomy from the
-            # numeric DRDO fault_id used here) and already flows into
-            # analytics.diagnosed_fault_id -- setting active_fault_id from it previously
-            # clobbered SET_FAULT within one tick (~50 ms), so /api/control's SET_FAULT
-            # appeared to silently do nothing.
+            # this engine's RuntimeHub tick lands here at 20 Hz -- setting it from RuntimeHub's
+            # own independently-diagnosed fault previously clobbered SET_FAULT within one tick
+            # (~50 ms), so /api/control's SET_FAULT appeared to silently do nothing.
 
             self.latest_state = UnifiedTelemetryState(
                 timestamp=time.time(),

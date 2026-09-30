@@ -4,7 +4,7 @@ title DRDO ANUMAAN // 3D Aerospace Engine Technical Showcase Launcher
 color 0B
 cls
 echo ==============================================================================
-echo        DRDO ANUMAAN DIGITAL TWIN // 3D TECHNICAL SHOWCASE & INSPECTOR
+echo        DRDO ANUMAAN DIGITAL TWIN // 3D TECHNICAL SHOWCASE ^& INSPECTOR
 echo        DRDO / iDEX Problem Statement ID: 26054
 echo ==============================================================================
 echo.

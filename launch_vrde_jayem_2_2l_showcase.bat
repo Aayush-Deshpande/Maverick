@@ -3,16 +3,16 @@ chcp 65001 >nul
 title Launch DRDO VRDE / Jayem 2.2L Turbodiesel Showcase Digital Twin
 color 0B
 echo ===============================================================================
-echo   DRDO VRDE / JAYEM 2.2L // 3D TECHNICAL SHOWCASE & SUBSYSTEM INSPECTOR
+echo   DRDO VRDE / JAYEM 2.2L // 3D TECHNICAL SHOWCASE ^& SUBSYSTEM INSPECTOR
 echo   DRDO / iDEX Problem Statement ID: 26054
 echo ===============================================================================
 echo.
 echo Controls:
-echo   [1] Prop Reduction Gearbox & Heavy Duty Front Cover
-echo   [2] 1,800 bar CRDi Common Rail & Fast-Acting Solenoid Injectors
-echo   [3] Two-Stage Regulated Twin Turbocharger & Anodized Wastegates
-echo   [4] Indigenous Cast Aluminum Monoblock & Multi-Stage Sump Scavenge
-echo   [5] DRDO Dual-Redundant FADEC & MIL-DTL-38999 Rugged Loom Spine
+echo   [1] Prop Reduction Gearbox ^& Heavy Duty Front Cover
+echo   [2] 1,800 bar CRDi Common Rail ^& Fast-Acting Solenoid Injectors
+echo   [3] Two-Stage Regulated Twin Turbocharger ^& Anodized Wastegates
+echo   [4] Indigenous Cast Aluminum Monoblock ^& Multi-Stage Sump Scavenge
+echo   [5] DRDO Dual-Redundant FADEC ^& MIL-DTL-38999 Rugged Loom Spine
 echo   [0] Reset to Full Assembly (or ESC)
 echo   [F1]-[F5] Switch Engines anytime in-session
 echo.
@@ -22,7 +22,8 @@ set "ANUMAAN_ENGINE_ID=vrde_jayem_2_2l"
 set "TARGET_BLEND=%~dp0assets\blender\anumaan_master_twin.blend"
 
 set "BLENDER_EXE="
-if exist "E:\Blender\blender.exe" set "BLENDER_EXE=E:\Blender\blender.exe"
+if exist "D:\Blender\blender.exe" set "BLENDER_EXE=D:\Blender\blender.exe"
+if not defined BLENDER_EXE if exist "E:\Blender\blender.exe" set "BLENDER_EXE=E:\Blender\blender.exe"
 if not defined BLENDER_EXE if exist "C:\Program Files\Blender Foundation\Blender 5.2\blender.exe" set "BLENDER_EXE=C:\Program Files\Blender Foundation\Blender 5.2\blender.exe"
 if not defined BLENDER_EXE if exist "C:\Program Files\Blender Foundation\Blender 5.1\blender.exe" set "BLENDER_EXE=C:\Program Files\Blender Foundation\Blender 5.1\blender.exe"
 if not defined BLENDER_EXE if exist "C:\Program Files\Blender Foundation\Blender 5.0\blender.exe" set "BLENDER_EXE=C:\Program Files\Blender Foundation\Blender 5.0\blender.exe"

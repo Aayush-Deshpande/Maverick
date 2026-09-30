@@ -45,7 +45,8 @@ echo [3D ASSET]    Master Model:   %TARGET_BLEND%
 echo.
 
 set "BLENDER_EXE="
-if exist "E:\Blender\blender.exe" set "BLENDER_EXE=E:\Blender\blender.exe"
+if exist "D:\Blender\blender.exe" set "BLENDER_EXE=D:\Blender\blender.exe"
+if not defined BLENDER_EXE if exist "E:\Blender\blender.exe" set "BLENDER_EXE=E:\Blender\blender.exe"
 if not defined BLENDER_EXE if exist "C:\Program Files\Blender Foundation\Blender 5.2\blender.exe" set "BLENDER_EXE=C:\Program Files\Blender Foundation\Blender 5.2\blender.exe"
 if not defined BLENDER_EXE if exist "C:\Program Files\Blender Foundation\Blender 5.1\blender.exe" set "BLENDER_EXE=C:\Program Files\Blender Foundation\Blender 5.1\blender.exe"
 if not defined BLENDER_EXE if exist "C:\Program Files\Blender Foundation\Blender 5.0\blender.exe" set "BLENDER_EXE=C:\Program Files\Blender Foundation\Blender 5.0\blender.exe"
@@ -62,7 +63,7 @@ if not defined BLENDER_EXE (
 )
 
 echo [1/2] Checking Backend Server link on port 8000...
-powershell -NoProfile -Command "try { Invoke-WebRequest -Uri 'http://127.0.0.1:8000/api/health' -TimeoutSec 1 -UseBasicParsing | Out-Null; exit 0 } catch { exit 1 }" >nul 2>&1
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\check_backend_health.ps1" >nul 2>&1
 if errorlevel 1 (
     echo [INFO] Backend server offline - starting in Autonomous Digital Twin Mode.
 ) else (
