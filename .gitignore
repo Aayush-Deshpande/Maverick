@@ -19,6 +19,7 @@ ENV/
 .env
 .env.*
 !.env.example
+!frontend/.env.production
 
 # Tooling, test captures & caches
 .playwright-mcp/
