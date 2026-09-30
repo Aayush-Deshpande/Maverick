@@ -153,7 +153,7 @@ export function App() {
             </div>
             <iframe
               title="ANUMAAN interactive engine twin"
-              src={`${serverUrl}/apps/threejs_twin/`}
+              src={`${serverUrl}/apps/threejs_twin/?backend=${encodeURIComponent(serverUrl)}`}
               className="block h-[calc(100vh-12rem)] min-h-[680px] w-full bg-[#e8e7df]"
               allow="fullscreen"
             />

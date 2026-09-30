@@ -27,6 +27,10 @@ export const ConnectionModal: React.FC<ConnectionModalProps> = ({
     if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
       cleanUrl = 'http://' + cleanUrl;
     }
+    if (cleanUrl.startsWith('https://') && cleanUrl.endsWith(':8000')) {
+      cleanUrl = cleanUrl.slice(0, -5);
+      setUrl(cleanUrl);
+    }
     setTestStatus('TESTING');
     setTestResult('');
     const t0 = performance.now();
@@ -51,7 +55,11 @@ export const ConnectionModal: React.FC<ConnectionModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(url);
+    let cleanUrl = url.trim().replace(/\/+$/, '');
+    if (cleanUrl.startsWith('https://') && cleanUrl.endsWith(':8000')) {
+      cleanUrl = cleanUrl.slice(0, -5);
+    }
+    onSave(cleanUrl);
     onClose();
   };
 

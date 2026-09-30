@@ -75,17 +75,34 @@ const DEFAULT_STATE: UnifiedTelemetryState = {
   },
 };
 
+function normalizeBackendUrl(url: string): string {
+  let clean = url.trim().replace(/\/+$/, '');
+  if (!clean.startsWith('http://') && !clean.startsWith('https://')) {
+    clean = 'http://' + clean;
+  }
+  // Automatically strip :8000 if using HTTPS on a cloud host (Render, Railway, Vercel) where port 8000 is not exposed
+  if (clean.startsWith('https://') && clean.endsWith(':8000')) {
+    clean = clean.slice(0, -5);
+  }
+  return clean;
+}
+
 export function useTelemetrySocket() {
   const [serverUrl, setServerUrlState] = useState<string>(() => {
     const saved = localStorage.getItem('rotax_backend_url');
-    if (saved) return saved;
+    if (saved) return normalizeBackendUrl(saved);
     // Deployed builds (e.g. Vercel) set VITE_API_URL to the hosted backend's public HTTPS URL.
     const envUrl = import.meta.env.VITE_API_URL as string | undefined;
-    if (envUrl) return envUrl.trim().replace(/\/+$/, '');
-    const host = (typeof window !== 'undefined' && window.location.hostname && window.location.hostname !== 'localhost')
-      ? window.location.hostname
-      : '127.0.0.1';
-    return `http://${host}:8000`;
+    if (envUrl) return normalizeBackendUrl(envUrl);
+    const isLocal = typeof window !== 'undefined' && ['localhost', '127.0.0.1', '0.0.0.0'].includes(window.location.hostname || '');
+    if (isLocal) {
+      return `http://${window.location.hostname || '127.0.0.1'}:8000`;
+    }
+    if (typeof window !== 'undefined' && window.location.hostname) {
+      const proto = window.location.protocol === 'https:' ? 'https:' : 'http:';
+      return `${proto}//${window.location.hostname}`;
+    }
+    return 'http://127.0.0.1:8000';
   });
 
   const [state, setState] = useState<UnifiedTelemetryState>(DEFAULT_STATE);
@@ -98,10 +115,7 @@ export function useTelemetrySocket() {
   const lastWsMessageAtRef = useRef<number | null>(null);
 
   const setServerUrl = (url: string) => {
-    let cleanUrl = url.trim().replace(/\/+$/, '');
-    if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
-      cleanUrl = 'http://' + cleanUrl;
-    }
+    const cleanUrl = normalizeBackendUrl(url);
     localStorage.setItem('rotax_backend_url', cleanUrl);
     setServerUrlState(cleanUrl);
   };

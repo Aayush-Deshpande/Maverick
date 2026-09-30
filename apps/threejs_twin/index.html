@@ -818,8 +818,13 @@ const ENGINE_PROFILES = {
 };
 
 const ENGINE_ORDER = ['rotax_912is','rotax_914','rotax_915is'];
-const API_BASE = `${window.location.protocol === 'https:' ? 'https:' : 'http:'}//${window.location.hostname || '127.0.0.1'}:8000`;
-const WS_BASE = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.hostname || '127.0.0.1'}:8000`;
+const urlParams = new URLSearchParams(window.location.search);
+const backendOverride = urlParams.get('backend') || urlParams.get('api') || urlParams.get('server');
+const isLocal = ['localhost', '127.0.0.1', '0.0.0.0'].includes(window.location.hostname || '');
+const defaultPort = isLocal ? ':8000' : (window.location.port ? `:${window.location.port}` : '');
+const fallbackBase = `${window.location.protocol === 'https:' ? 'https:' : 'http:'}//${window.location.hostname || '127.0.0.1'}${defaultPort}`;
+const API_BASE = (backendOverride || fallbackBase).replace(/\/+$/, '');
+const WS_BASE = API_BASE.replace(/^http/, 'ws');
 const BACKEND_ENGINE_PROFILES = {};
 const commandedFaultByEngine = {};
 let backendConnected = false;
