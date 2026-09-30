@@ -811,14 +811,22 @@ class EngineStateService:
             self.throttle_pct = float(f.throttle or 0.0)
             self.altitude_ft = float(f.alt or 20000.0)
             self.oat_c = float(f.oat or -20.0)
-            self.active_fault_id = diag_fid
+            # NOTE: self.active_fault_id is intentionally left untouched here. It is the
+            # operator-COMMANDED fault (set only by handle_command's SET_FAULT/CLEAR_FAULT,
+            # via /api/control or /ws/telemetry) and must survive being overwritten every time
+            # this engine's RuntimeHub tick lands here at 20 Hz. diag_fid above is that hub's
+            # own independently-diagnosed fault (a different, named-mode taxonomy from the
+            # numeric DRDO fault_id used here) and already flows into
+            # analytics.diagnosed_fault_id -- setting active_fault_id from it previously
+            # clobbered SET_FAULT within one tick (~50 ms), so /api/control's SET_FAULT
+            # appeared to silently do nothing.
 
             self.latest_state = UnifiedTelemetryState(
                 timestamp=time.time(),
                 sortie_id=self.sortie_id,
                 is_engine_running=self.is_engine_running,
                 active_commanded_fault_id=self.active_fault_id,
-                active_commanded_fault_name=diag_fname,
+                active_commanded_fault_name=DRDO_FAULT_DEFINITIONS.get(self.active_fault_id, {}).get("name", "NOMINAL"),
                 telemetry=telemetry_payload,
                 analytics=analytics_payload
             )

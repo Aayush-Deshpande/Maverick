@@ -2596,20 +2596,11 @@ function animate() {
     }
   }
 
-  // Keep the propeller visibly turning while the backend is offline without inventing HUD telemetry.
-  if (currentModel) {
-    const visualEngineRpm = telemetryData.rpm ?? 1600;
-    const propRpm = visualEngineRpm / 2.43;
-    const radiansThisFrame = (propRpm * 2 * Math.PI / 60) * deltaSeconds;
-    currentModel.traverse((child) => {
-      if (child.isMesh) {
-        const ln = child.name.toLowerCase();
-        if (ln.includes('prop') || ln.includes('flange')) {
-          child.rotation.z += radiansThisFrame;
-        }
-      }
-    });
-  }
+  // Prop/flange spin disabled: the naive rotation.z increment spun every mesh matched by
+  // name (prop flange, and on some GLBs unrelated static brackets sharing that substring)
+  // around its own local Z axis, which is not consistently oriented to the flange's real
+  // rotation axis across different engine models' exports -- on rotax_914 it visibly spun
+  // the wrong way. Left static rather than guessing a per-engine axis/direction fix.
 
   // 3D holographic beacon animation
   if (beaconGroup.visible) {
