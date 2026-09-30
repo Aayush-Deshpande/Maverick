@@ -450,6 +450,43 @@
     .loading-bar, .load-bar-wrap { background: rgba(16,27,32,.1); }
     .vignette { background: none; }
     .key-hint { color: rgba(189,75,43,.72); }
+
+    /* ── READABILITY & DECLUTTER PASS ──────────────────────────────
+       The base styles above were tuned for a dense dark HUD (7-9px mono
+       text, heavy letter-spacing, tight padding). Against the light
+       paper theme that reads as cramped and cheap, so bump sizes,
+       relax tracking, and give panels room to breathe. */
+    .ticker, .engine-select-kicker, .engine-select-meta, .engine-option-code,
+    .engine-option-copy small, .tool-btn, .tool-btn .tkey, .regime-tag,
+    .regime-btn, .flight-slider, .fault-title, .fault-field label,
+    .fault-select, .fault-range-value, .fault-note, .diagnostic-kicker,
+    .diagnostic-state, .diagnostic-caption, .evidence-chip, .diagnostic-footer,
+    .fault-alert-title, .fault-alert-desc, .thermal-title, .thermal-labels,
+    .hud-station-tag, .load-status, .key-hint {
+      letter-spacing: 0.02em;
+    }
+    .ticker { font-size: 11px; }
+    .engine-select-name { font-size: 11px; }
+    .engine-option-copy strong { font-size: 11px; }
+    .tool-btn { font-size: 10px; padding: 6px 11px; }
+    .regime-tag, .regime-btn, .flight-slider { font-size: 10px; }
+    .regime-btn { padding: 5px 11px; }
+    .fault-title { font-size: 11px; }
+    .fault-btn { font-size: 10px; padding: 9px 12px; }
+    .fault-field label { font-size: 9.5px; }
+    .fault-select { font-size: 10.5px; padding: 10px 11px; }
+    .diagnostic-kicker, .hud-station-tag { font-size: 9.5px; }
+    .diagnostic-name { font-size: 13px; }
+    .diagnostic-caption { font-size: 9.5px; line-height: 1.6; }
+    .evidence-chip { font-size: 9px; padding: 4px 7px; }
+    .key-hint { font-size: 9.5px; line-height: 2.1; }
+
+    /* Fewer competing borders/shadows so panels read as one system */
+    .diagnostic-card, .hud-card, .thermal-legend, .fault-modal {
+      box-shadow: 0 4px 20px rgba(16,27,32,.05);
+      padding: 16px 18px;
+    }
+    .corner-bracket { display: none; }
   </style>
 </head>
 <body>
@@ -1043,11 +1080,10 @@ function createContactShadowTexture() {
   const c = document.createElement('canvas');
   c.width = 512; c.height = 512;
   const ctx = c.getContext('2d');
-  const g = ctx.createRadialGradient(256, 256, 15, 256, 256, 240);
-  g.addColorStop(0, 'rgba(1, 4, 8, 0.92)');
-  g.addColorStop(0.3, 'rgba(2, 6, 12, 0.65)');
-  g.addColorStop(0.7, 'rgba(4, 10, 20, 0.20)');
-  g.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  const g = ctx.createRadialGradient(256, 256, 20, 256, 256, 160);
+  g.addColorStop(0, 'rgba(10, 14, 18, 0.55)');
+  g.addColorStop(0.5, 'rgba(10, 14, 18, 0.22)');
+  g.addColorStop(1, 'rgba(10, 14, 18, 0)');
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, 512, 512);
   const tex = new THREE.CanvasTexture(c);
@@ -1056,7 +1092,7 @@ function createContactShadowTexture() {
 const shadowMat = new THREE.MeshBasicMaterial({
   map: createContactShadowTexture(),
   transparent: true,
-  opacity: 0.75,
+  opacity: 0.55,
   depthWrite: false
 });
 const shadowPlane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), shadowMat);
@@ -1097,7 +1133,7 @@ function fitLightingToEngine(overview) {
   // Contact Shadow Plane (Placed precisely at bottom of engine bounding sphere)
   const groundY = c.y - r;
   shadowPlane.position.set(c.x + r * 0.10, groundY + Math.max(0.002, r * 0.002), c.z + r * 0.05);
-  shadowPlane.scale.set(r * 3.8, r * 3.8, 1);
+  shadowPlane.scale.set(r * 2.2, r * 2.2, 1);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
