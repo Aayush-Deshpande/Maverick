@@ -19,10 +19,10 @@ echo.
 
 if exist "tools\ngrok.exe" (
     echo [OK] Launching ngrok global tunnel...
-    tools\ngrok.exe http 8000
+    tools\ngrok.exe http 8000 --url https://font-unmindful-manhood.ngrok-free.dev
 ) else (
     echo [OK] Launching npx ngrok...
-    npx -y ngrok http 8000
+    npx -y ngrok http 8000 --url https://font-unmindful-manhood.ngrok-free.dev
 )
 
 pause

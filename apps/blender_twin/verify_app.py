@@ -38,10 +38,11 @@ def run_verification():
     from standalone_digital_twin_app import FAULT_DATABASE
     all_missing = {}
     for fid, fdata in FAULT_DATABASE.items():
-        missing = [tp for tp in fdata['target_parts'] if tp not in bpy.data.objects]
-        found = len(fdata['target_parts']) - len(missing)
+        parts = fdata.get('target_parts', fdata.get('parts', []))
+        missing = [tp for tp in parts if tp not in bpy.data.objects]
+        found = len(parts) - len(missing)
         print(f"  {'[OK]' if not missing else '[STALE]'} {fid} ({fdata['short']}): "
-              f"{found}/{len(fdata['target_parts'])} target meshes exist"
+              f"{found}/{len(parts)} target meshes exist"
               + (f" -- MISSING: {missing}" if missing else ""))
         if missing:
             all_missing[fid] = missing

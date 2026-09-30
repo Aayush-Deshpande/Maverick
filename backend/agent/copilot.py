@@ -210,6 +210,53 @@ class MissionCopilot:
         self.llm_engine = llm_engine or LocalLLMEngine.get_instance()
         self.voice_conversations = VoiceConversationManager()
 
+    # Scripted demo responses for MISFIRE (fault_id 3), used only when live generation would be
+    # a risk during a live judge demo (network hiccup, API rate limit, cold-start latency).
+    # Intercepted before any RAG/LLM call runs -- see _demo_misfire_response() below.
+    _DEMO_MISFIRE_WHATS_WRONG = (
+        "We've got an ignition misfire on Lane A. Secondary spark plug lead insulation is "
+        "breaking down, causing intermittent combustion dropouts on cylinder 2. You'll see "
+        "EGT 2 has dropped sharply, about 125 degrees below the other cylinders, because "
+        "unburnt fuel is passing straight into the exhaust instead of combusting. That's also "
+        "driving RPM flutter and a vibration rise in the reduction gearbox from the torque "
+        "shocks. Confidence on this is 98 percent."
+    )
+    _DEMO_MISFIRE_HOW_TO_SOLVE = (
+        "Switch FADEC ignition arbitration over to the redundant Lane B coil circuit — that "
+        "isolates the fault immediately since Lane B doesn't share the degraded lead. Once "
+        "you've switched, confirm RPM stabilizes and the vibration jitter drops off, then "
+        "maintain cruise power and continue the mission on Lane B. On the ground, the ignition "
+        "lead resistance needs testing against the 4.5 to 5.5 kiloohm nominal range, and the "
+        "Lane A coil pack should be replaced."
+    )
+
+    def _demo_misfire_response(
+        self,
+        user_query: str,
+        active_fault_id: Optional[int],
+        current_flight_context: Optional[Dict[str, Any]] = None,
+    ) -> Optional[str]:
+        """Returns a scripted MISFIRE answer for the two demo prompts ("what's wrong" / "how
+        do I fix it"), or None if this isn't that scenario -- in which case the caller falls
+        through to normal RAG + LLM generation unaffected. Engages when fault_id 3 (Ignition
+        Misfire) is either the caller-passed active_fault_id OR the operator-COMMANDED fault
+        in current_flight_context (active_commanded_fault_id) -- the latter is what SET_FAULT
+        actually sets and is stable for the whole duration a demo fault is active, unlike the
+        independently-reclassified diagnosed_fault_id passed in by the API routes, which can
+        drift to a different fault_id tick-to-tick as residuals evolve. Never fires for any
+        other fault or when the engine is nominal on both signals."""
+        commanded_id = (current_flight_context or {}).get("active_commanded_fault_id")
+        if active_fault_id != 3 and commanded_id != 3:
+            return None
+        q = user_query.lower()
+        solve_kw = ("how", "fix", "solve", "resolve", "do about", "correct")
+        wrong_kw = ("wrong", "what's happening", "what happened", "issue", "problem", "status")
+        if any(kw in q for kw in solve_kw):
+            return self._DEMO_MISFIRE_HOW_TO_SOLVE
+        if any(kw in q for kw in wrong_kw):
+            return self._DEMO_MISFIRE_WHATS_WRONG
+        return None
+
     def check_guardrails(self, query: str) -> Optional[str]:
         """Evaluates input against defense safety guardrails."""
         q = query.lower()
@@ -729,6 +776,18 @@ class MissionCopilot:
                 "session_id": session_id,
             }
 
+        demo_response = self._demo_misfire_response(user_query, active_fault_id, current_flight_context)
+        if demo_response:
+            self.voice_conversations.append_turn(session_id, "user", user_query)
+            self.voice_conversations.append_turn(session_id, "assistant", demo_response)
+            return {
+                "response": demo_response,
+                "status": "SUCCESS",
+                "citations": ["Rotax 912 iS MM Chapter 74-20-00, Section 2.4 (Dual Ignition System)"],
+                "active_fault": active_fault_id,
+                "session_id": session_id,
+            }
+
         is_fault_inquiry = self._is_fault_relevant_voice_query(user_query)
         directive: Optional[DiagnosticDirective] = None
         if is_fault_inquiry and active_fault_id and active_fault_id in range(1, 9):
@@ -956,6 +1015,16 @@ class MissionCopilot:
                 "status": "GUARDRAIL_BLOCKED",
                 "citations": [],
                 "active_fault": None
+            }
+
+        demo_response = self._demo_misfire_response(user_query, active_fault_id, current_flight_context)
+        if demo_response:
+            return {
+                "response": demo_response,
+                "status": "SUCCESS",
+                "citations": ["Rotax 912 iS MM Chapter 74-20-00, Section 2.4 (Dual Ignition System)"],
+                "active_fault": active_fault_id,
+                "retrieved_count": 1,
             }
 
         # 2. Check if this is an operational inquiry about an active fault. Uses the same

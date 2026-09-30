@@ -87,7 +87,7 @@ LLM_PROVIDER_MODELS = {
     # never the default, since it sends operator queries + retrieved manual excerpts to a
     # third-party API rather than keeping inference fully on-device. Useful for a demo laptop
     # without a local Ollama/GPU setup available.
-    "gemini": "gemini-2.0-flash",
+    "gemini": "gemini-flash-lite-latest",
 }
 ANUMAAN_LLM_PROVIDER = os.environ.get("ANUMAAN_LLM_PROVIDER", "none").lower()
 if ANUMAAN_LLM_PROVIDER not in LLM_PROVIDER_MODELS:

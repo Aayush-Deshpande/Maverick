@@ -103,3 +103,7 @@ mission-planning/
 final_touch.rar
 .vite/
 unity_bridge/
+
+# Downloaded third-party binaries for local dev tooling (e.g. ngrok.exe, ~33MB) —
+# fetched on demand by launch_public_tunnel.bat, never committed
+tools/
