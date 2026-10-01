@@ -98,7 +98,7 @@ export const Header: React.FC<HeaderProps> = ({
 
             {/* Link to the main ANUMAAN landing page / live console */}
             <a
-              href="https://anumaan-7421.vercel.app"
+              href="https://www.midnight-ciphers.in"
               target="_blank"
               rel="noopener noreferrer"
               className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm border border-stone-300 bg-white text-stone-700 hover:text-stone-950 hover:border-stone-400 transition-colors font-mono text-[11px] uppercase tracking-wider"

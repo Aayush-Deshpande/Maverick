@@ -33,7 +33,7 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({
   return (
     <footer className="an-footer">
       <a href="#hero" className="an-footer-brand"><img className="an-footer-logo" src="/images/anumaan-mark-editorial.png" alt="" /><span>ANUMAAN<small>Aero-propulsion health</small></span></a>
-      <p>DRDO SIH 26054<br />Simulated propulsion-health prototype.</p>
+      <p>Team Midnight Ciphers · DRDO SIH 26054<br />Simulated propulsion-health prototype.</p>
       <div className="an-footer-links">
         <button onClick={handleLaunchConsole}>Engine runtime <ArrowUp className="an-footer-arrow" size={14} /></button>
         <button onClick={handleOpenTwin}>3D engine twin <ArrowUp className="an-footer-arrow" size={14} /></button>
