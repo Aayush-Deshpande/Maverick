@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowUpRight, Menu, X } from 'lucide-react';
 
-const DOCS_URL = 'https://anumaan-docs.vercel.app';
+const DOCS_URL = 'https://anumaan-doc-1797.vercel.app';
 
 const links = [
   ['#hero', 'The system'],

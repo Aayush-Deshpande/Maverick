@@ -26,7 +26,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               <span className="border border-stone-300 px-2 py-0.5 rounded bg-white">MIL-STD-1629A</span>
             </div>
             <a
-              href="https://anumaan-console.vercel.app"
+              href="https://anumaan-7421.vercel.app"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-block pt-2 font-mono text-[11px] uppercase tracking-wider text-stone-900 font-semibold hover:underline"

@@ -38,7 +38,7 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({
         <button onClick={handleLaunchConsole}>Engine runtime <ArrowUp className="an-footer-arrow" size={14} /></button>
         <button onClick={handleOpenTwin}>3D engine twin <ArrowUp className="an-footer-arrow" size={14} /></button>
         <button onClick={handleOpenLegacy}>Ground console <ArrowUp className="an-footer-arrow" size={14} /></button>
-        <button onClick={() => window.open('https://anumaan-docs.vercel.app', '_blank', 'noopener,noreferrer')}>Documentation <ArrowUp className="an-footer-arrow" size={14} /></button>
+        <button onClick={() => window.open('https://anumaan-doc-1797.vercel.app', '_blank', 'noopener,noreferrer')}>Documentation <ArrowUp className="an-footer-arrow" size={14} /></button>
       </div>
       <small className="an-footer-copy">© 2026 Project ANUMAAN</small>
       <button className="an-back-top" onClick={scrollToTop}>Back to top <ArrowUp size={14} /></button>

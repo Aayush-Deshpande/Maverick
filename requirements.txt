@@ -7,7 +7,10 @@ pygame>=2.5.0
 # Scientific & ML Analysis
 numpy>=1.24.0
 scipy>=1.10.0
-scikit-learn>=1.3.0
+# Exact-pinned: backend/ml/models/rotax_random_forest.joblib was pickled under 1.9.0 and
+# sklearn gives no pickle-compatibility guarantee across versions (InconsistentVersionWarning
+# otherwise). No training script in-repo to re-pickle if this drifts.
+scikit-learn==1.9.0
 joblib>=1.3.0
 pandas>=2.0.0
 networkx>=3.0.0
