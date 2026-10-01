@@ -623,6 +623,19 @@ export const VoiceCopilot: React.FC<VoiceCopilotProps> = ({
     }
   };
 
+  // Voice (Whisper.cpp STT + Kokoro TTS) needs ~400MB of model weights that are deliberately
+  // excluded from the deployed Docker image (see Dockerfile/render.yaml) — too large for the
+  // free-tier git-based build. It only ever runs against a local dev server. Detect that case
+  // (hosted origin + the specific "model not found" error the backend reports) so the UI can
+  // explain it instead of showing a bare, confusing ERROR badge.
+  const isLocalOrigin =
+    typeof window !== 'undefined' &&
+    ['localhost', '127.0.0.1', '0.0.0.0'].includes(window.location.hostname || '');
+  const isModelMissingError = (s: EngineStatusPayload | null) =>
+    s?.status === 'ERROR' && /model (not found|files not found)/i.test(s?.error || '');
+  const voiceUnavailableOnHost =
+    !isLocalOrigin && (isModelMissingError(sttStatus) || isModelMissingError(ttsStatus));
+
   const engineReady = sttStatus?.status === 'READY' && ttsStatus?.status === 'READY' && llmStatus?.status === 'READY';
   const engineLoading = sttStatus?.status === 'LOADING' || ttsStatus?.status === 'LOADING' || llmStatus?.status === 'LOADING';
   // STT and TTS are hard requirements for a voice turn - unlike the LLM (which fails soft into
@@ -652,6 +665,8 @@ export const VoiceCopilot: React.FC<VoiceCopilotProps> = ({
       ? 'MICROPHONE BLOCKED'
       : micState === 'unsupported'
       ? 'VOICE NOT SUPPORTED IN THIS BROWSER'
+      : voiceUnavailableOnHost
+      ? 'VOICE RUNS ON LOCAL LLM — UNAVAILABLE IN HOSTED DEMO'
       : sttStatus?.status === 'ERROR' || ttsStatus?.status === 'ERROR'
       ? 'VOICE ENGINE ERROR — SEE STATUS ABOVE'
       : !voiceReady
@@ -726,6 +741,15 @@ export const VoiceCopilot: React.FC<VoiceCopilotProps> = ({
             </button>
           </div>
         </div>
+
+        {voiceUnavailableOnHost && (
+          <div className="flex items-center gap-2 bg-warning-dim border border-warning-muted rounded-sm px-3 py-2">
+            <AlertTriangle className="w-3.5 h-3.5 text-warning shrink-0" />
+            <p className="text-[11px] text-slate-200 font-mono">
+              Voice needs a local LLM — unavailable in this hosted demo.
+            </p>
+          </div>
+        )}
 
         {/* Continuous listen/respond toggle */}
         <div className="flex items-center justify-between gap-3 bg-white/[0.02] border border-surface-border rounded-sm px-4 py-2.5">
