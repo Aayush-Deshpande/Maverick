@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { ArrowDown, ArrowRight, ArrowUpRight, Check, LockKeyhole } from 'lucide-react';
 import { LandingNav } from './LandingNav';
 import { LandingHero3D } from './LandingHero3D';
 import { LandingFooter } from './LandingFooter';
+import { AnumaanSplash } from './AnumaanSplash';
 import './landing.css';
 import './landing-editorial.css';
 
@@ -32,12 +33,43 @@ const SectionHeading = ({
   </div>
 );
 
-export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchConsole }) => (
-  <div className="ae-page">
-    <LandingNav onLaunch={onLaunchConsole} />
+export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchConsole }) => {
+  const [forceSplash, setForceSplash] = useState(false);
+  const [splashKey, setSplashKey] = useState(0);
 
-    <main>
-      <section id="hero" className="ae-hero">
+  const handleReplayIntro = () => {
+    setForceSplash(true);
+    setSplashKey((k) => k + 1);
+  };
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('ae-visible');
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
+    );
+
+    const elements = document.querySelectorAll('.ae-section, .ae-limit-section');
+    elements.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div className="ae-page">
+      <AnumaanSplash
+        key={splashKey}
+        forceShow={forceSplash}
+        onComplete={() => setForceSplash(false)}
+      />
+      <LandingNav onLaunch={onLaunchConsole} onReplayIntro={handleReplayIntro} />
+
+      <main>
+        <section id="hero" className="ae-hero">
         <div className="ae-hero-copy">
           <Eyebrow>ANUMAAN / DRDO SIH 26054</Eyebrow>
           <p className="ae-kicker"><span /> SIMULATED PROPULSION-HEALTH SYSTEM</p>
@@ -211,6 +243,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchConsole }) => 
 
     <LandingFooter onLaunch={onLaunchConsole} />
   </div>
-);
+  );
+};
 
 export default LandingPage;

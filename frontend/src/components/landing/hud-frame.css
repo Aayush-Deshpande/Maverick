@@ -1,0 +1,550 @@
+/* ==========================================================================
+   UNIFIED TACTICAL HUD CONSOLE (DRDO PS-26054)
+   - Integrated #EDEAE3 console interior with subtle dot-matrix telemetry grid
+   - Zero secondary enclosing rectangular boxes or nested borders
+   - Three.js WebGL canvas floats seamlessly directly inside the chamfered frame
+   - 28px+ safe-zone inset geometry for tabs, buttons, and telemetry
+   ========================================================================== */
+
+.hud-frame-container {
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+  background-color: #EDEAE3;
+  background-image: 
+    radial-gradient(rgba(10, 15, 20, 0.14) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.4) 0%, rgba(226, 222, 212, 0.45) 100%);
+  background-size: 14px 14px, 100% 100%;
+  border-radius: 0;
+  box-shadow: 
+    0 24px 60px -15px rgba(10, 15, 20, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  overflow: hidden;
+  padding: 0;
+  margin: 0;
+}
+
+/* Scalable SVG HUD Frame Overlay: strictly pointer-events: none */
+.hud-frame-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 20;
+  overflow: visible;
+}
+
+/* Top Tech Metadata Row (sitting cleanly in the top safe zone) */
+.hud-tech-meta-top {
+  position: relative;
+  z-index: 8;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 36px 3px 36px;
+  font-family: 'PixelCode', 'JetBrains Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  color: #475569;
+  text-transform: uppercase;
+  user-select: none;
+}
+
+.hud-meta-left, .hud-meta-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hud-meta-wave {
+  color: #0a0f14;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.hud-meta-plus {
+  color: #d67658;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+}
+
+.hud-meta-tag {
+  color: #4c5a66;
+  font-weight: 600;
+}
+
+.hud-meta-mode {
+  padding: 1px 6px;
+  background: #0a0f14;
+  color: #f2f5f8;
+  font-weight: 700;
+  font-size: 7.5px;
+  letter-spacing: 0.08em;
+  border-radius: 1px;
+}
+
+/* Inner Content Area: zero padding, lets canvas fill seamlessly */
+.hud-inner-content {
+  position: relative;
+  z-index: 5;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+/* ==========================================================================
+   TACTICAL CONSOLE VIEWPORT & COMPONENTS
+   ========================================================================== */
+
+.tactical-console-viewport {
+  position: relative;
+  width: 100%;
+  height: min(48vw, 540px);
+  min-height: 440px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* Full-bleed 3D WebGL Canvas */
+.tactical-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+  cursor: grab;
+  touch-action: pan-y;
+  z-index: 1;
+}
+
+.tactical-canvas:active {
+  cursor: grabbing;
+}
+
+.tactical-canvas.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Studio 2D Render Overlay */
+.tactical-render-view {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  padding: 40px;
+  pointer-events: none;
+}
+
+.tactical-render-view img {
+  max-width: 90%;
+  max-height: 80%;
+  object-fit: contain;
+  filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.15));
+}
+
+/* ==========================================================================
+   TOP ENGINE SELECTION TABS (Flush HUD Selector Chips)
+   ========================================================================== */
+
+.tactical-tabs-bar {
+  position: absolute;
+  top: 4px;
+  left: 36px;
+  right: 36px;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 5px;
+}
+
+.tactical-tab-chip {
+  min-width: 0;
+  text-align: left;
+  border: 1px solid rgba(10, 15, 20, 0.18);
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  padding: 5px 8px;
+  cursor: pointer;
+  border-radius: 2px;
+  font-family: 'PixelCode', 'JetBrains Mono', monospace;
+  transition: all 160ms cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+.tactical-tab-chip:hover {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(10, 15, 20, 0.4);
+}
+
+.tactical-tab-chip.is-active {
+  background: #0a0f14;
+  color: #ffffff;
+  border-color: #0a0f14;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
+}
+
+.tactical-tab-top {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.tactical-tab-indicator {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(10, 15, 20, 0.3);
+  transition: background-color 150ms ease;
+  flex-shrink: 0;
+}
+
+.tactical-tab-chip.is-active .tactical-tab-indicator {
+  background: #d67658;
+  box-shadow: 0 0 6px #d67658;
+}
+
+.tactical-tab-code {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #0a0f14;
+}
+
+.tactical-tab-chip.is-active .tactical-tab-code {
+  color: #ffffff;
+}
+
+.tactical-tab-sub {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 2px;
+  font-size: 8px;
+  color: #64748b;
+  letter-spacing: 0.02em;
+}
+
+.tactical-tab-chip.is-active .tactical-tab-sub {
+  color: #a0aec0;
+}
+
+.tactical-tab-key {
+  font-size: 7.5px;
+  opacity: 0.7;
+}
+
+/* ==========================================================================
+   UNIFIED TACTICAL CONTROL BAR (Dark Matte Micro-Chamfered HUD Buttons)
+   ========================================================================== */
+
+.tactical-control-bar {
+  position: absolute;
+  top: 56px;
+  right: 36px;
+  z-index: 12;
+  display: flex;
+  gap: 3px;
+  background: rgba(10, 15, 20, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 3px;
+  border-radius: 2px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+}
+
+.tactical-hud-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #cbd5e1 !important;
+  padding: 5px 9px;
+  font-family: 'PixelCode', 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 1px;
+  transition: all 140ms ease;
+  user-select: none;
+}
+
+.tactical-hud-btn span,
+.tactical-hud-btn svg {
+  color: #cbd5e1 !important;
+}
+
+.tactical-hud-btn:hover span,
+.tactical-hud-btn:hover svg {
+  color: #ffffff !important;
+}
+
+.tactical-hud-btn.is-active span,
+.tactical-hud-btn.is-active svg {
+  color: #ffffff !important;
+}
+
+.tactical-hud-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.tactical-hud-btn.is-active {
+  background: #000000;
+  color: #ffffff;
+  border-color: #d67658;
+  box-shadow: 0 0 8px rgba(214, 118, 88, 0.4);
+}
+
+/* ==========================================================================
+   EMBEDDED TELEMETRY & SPECS FOOTER (Translucent HUD Readout)
+   ========================================================================== */
+
+.tactical-telemetry-footer {
+  position: absolute;
+  bottom: 22px;
+  left: 36px;
+  right: 36px;
+  z-index: 10;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  background: rgba(237, 234, 227, 0.82);
+  border: 1px solid rgba(10, 15, 20, 0.15);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 5px 12px;
+  border-radius: 2px;
+  font-family: 'PixelCode', 'JetBrains Mono', monospace;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.tactical-telemetry-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.tactical-telemetry-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 6px;
+  background: rgba(10, 15, 20, 0.06);
+  border: 1px solid rgba(10, 15, 20, 0.12);
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.tactical-pulse-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #d67658;
+  animation: tacticalPulse 1.6s ease-in-out infinite;
+}
+
+.tactical-cat-tag {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #334155;
+  text-transform: uppercase;
+}
+
+.tactical-telemetry-specs {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 9.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tactical-spec-primary {
+  font-weight: 700;
+  color: #0a0f14;
+  letter-spacing: 0.03em;
+}
+
+.tactical-spec-sep {
+  color: rgba(10, 15, 20, 0.28);
+  font-weight: 400;
+}
+
+.tactical-spec-sub {
+  color: #475569;
+  letter-spacing: 0.02em;
+}
+
+.tactical-telemetry-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 8.5px;
+  color: #475569;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.tactical-stat-chunk {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.tactical-orbit-hint {
+  color: #64748b;
+  opacity: 0.9;
+}
+
+@keyframes tacticalPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+/* ==========================================================================
+   TACTICAL LOADING RADAR (Overlaid directly on Canvas)
+   ========================================================================== */
+
+.tactical-loading-radar {
+  position: absolute;
+  inset: 0;
+  z-index: 15;
+  display: grid;
+  place-items: center;
+  background: rgba(237, 234, 227, 0.86);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.tactical-radar-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 32px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(10, 15, 20, 0.16);
+  border-radius: 2px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  font-family: 'PixelCode', 'JetBrains Mono', monospace;
+  text-align: center;
+  max-width: 380px;
+}
+
+.tactical-radar-ring {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 2px dashed rgba(214, 118, 88, 0.5);
+  display: grid;
+  place-items: center;
+  animation: tacticalRadarSpin 4s linear infinite;
+}
+
+.tactical-radar-logo {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.tactical-radar-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.tactical-radar-kicker {
+  font-size: 8.5px;
+  letter-spacing: 0.12em;
+  color: #d67658;
+  font-weight: 700;
+}
+
+.tactical-radar-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0a0f14;
+}
+
+.tactical-radar-bar {
+  width: 220px;
+  height: 3px;
+  background: rgba(10, 15, 20, 0.08);
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.tactical-radar-fill {
+  height: 100%;
+  background: #d67658;
+  transition: width 200ms ease;
+}
+
+.tactical-radar-digits {
+  width: 220px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 8.5px;
+  color: #64748b;
+  letter-spacing: 0.04em;
+}
+
+@keyframes tacticalRadarSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ==========================================================================
+   RESPONSIVENESS (Safe-Zone Preservation for Mobile)
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .hud-tech-meta-top {
+    padding: 8px 24px 2px 24px;
+    font-size: 7.5px;
+  }
+  .tactical-tabs-bar {
+    grid-template-columns: repeat(3, 1fr);
+    left: 24px;
+    right: 24px;
+    gap: 3px;
+  }
+  .tactical-control-bar {
+    top: auto;
+    bottom: 58px;
+    right: 24px;
+  }
+  .tactical-telemetry-footer {
+    left: 24px;
+    right: 24px;
+    bottom: 16px;
+    padding: 4px 8px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  .tactical-console-viewport {
+    height: 72vw;
+    min-height: 380px;
+  }
+}

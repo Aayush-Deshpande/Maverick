@@ -1,3 +1,4 @@
+import { HudFrame } from './HudFrame';
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -6,139 +7,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { Eye, RotateCcw, Image as ImageIcon, Box, Compass } from 'lucide-react';
 
-export interface LineupItem {
-  id: string;
-  keyBadge: string;
-  name: string;
-  code: string;
-  subtitle: string;
-  category: string;
-  specs: { label: string; value: string }[];
-  modelPath: string;
-  imagePath: string;
-  camDist: number;
-  camElevation: number;
-  camAngle: number;
-  isDrone?: boolean;
-}
-
-export const AERO_LINEUP: LineupItem[] = [
-  {
-    id: 'rotax_912is',
-    keyBadge: 'F1',
-    name: 'Rotax 912 iS Sport',
-    code: 'ROTAX 912 iS',
-    subtitle: '100 HP Naturally Aspirated Aero-EFI · Dual FADEC (Primary Ref)',
-    category: 'MALE UAV PRIMARY PROPULSION',
-    specs: [
-      { label: 'RATED POWER', value: '100 HP @ 5800 RPM' },
-      { label: 'DISPLACEMENT', value: '1,352 cc (4-Cyl Flat)' },
-      { label: 'MANAGEMENT', value: 'Redundant Dual FADEC' },
-      { label: 'FUEL INJECTION', value: 'Multi-Point Port EFI' },
-    ],
-    modelPath: '/models/rotax_912is.glb',
-    imagePath: '/images/lineup/render_912is_beauty.png',
-    camDist: 2.4,
-    camElevation: 0.36,
-    camAngle: -1.2,
-  },
-  {
-    id: 'rotax_914',
-    keyBadge: 'F2',
-    name: 'Rotax 914 F Turbo',
-    code: 'ROTAX 914 F',
-    subtitle: '115 HP Turbocharged Powerplant · Automatic Wastegate TCU',
-    category: 'HIGH-ALTITUDE CRUISE EXTENSION',
-    specs: [
-      { label: 'TAKE-OFF POWER', value: '115 HP (5 min limit)' },
-      { label: 'TURBOCHARGING', value: 'Exhaust Wastegate TCU' },
-      { label: 'CRITICAL ALTITUDE', value: '16,000 ft ceiling' },
-      { label: 'DRY WEIGHT', value: '78.5 kg with turbo' },
-    ],
-    modelPath: '/models/rotax_914.glb',
-    imagePath: '/images/lineup/render_914_solid.png',
-    camDist: 2.4,
-    camElevation: 0.36,
-    camAngle: -1.2,
-  },
-  {
-    id: 'rotax_915is',
-    keyBadge: 'F3',
-    name: 'Rotax 915 iS Turbo',
-    code: 'ROTAX 915 iS',
-    subtitle: '141 HP Turbocharged & Intercooled · Full Altitude FADEC',
-    category: 'ADVANCED PAYLOAD MALE ENVELOPE',
-    specs: [
-      { label: 'CONTINUOUS POWER', value: '135 HP to FL150' },
-      { label: 'ASPIRATION', value: 'Turbo + Charge-Air Cooler' },
-      { label: 'TIME BETWEEN OVERHAUL', value: '1,200 hrs TBO' },
-      { label: 'TATTVA RESIDUALS', value: '27-channel telemetry' },
-    ],
-    modelPath: '/models/rotax_915is.glb',
-    imagePath: '/images/lineup/render_915is_framing.png',
-    camDist: 2.4,
-    camElevation: 0.36,
-    camAngle: -1.2,
-  },
-  {
-    id: 'austro_ae300',
-    keyBadge: 'F4',
-    name: 'Austro Engine AE300',
-    code: 'AUSTRO AE300',
-    subtitle: '2.0L Turbo Diesel · 168 HP · Common-Rail Heavy Fuel Injection',
-    category: 'COMMON-RAIL DIESEL UAV PROPULSION',
-    specs: [
-      { label: 'MAX POWER', value: '168 HP @ 3880 RPM' },
-      { label: 'FUEL COMPATIBILITY', value: 'Jet-A1 / Diesel Fuel' },
-      { label: 'INJECTION SYSTEM', value: '1800-bar Common Rail' },
-      { label: 'EFFICIENCY', value: '214 g/kWh Low BSFC' },
-    ],
-    modelPath: '/models/austro_ae300.glb',
-    imagePath: '/images/lineup/render_austro_ae300.png',
-    camDist: 2.4,
-    camElevation: 0.36,
-    camAngle: -1.2,
-  },
-  {
-    id: 'vrde_jayem',
-    keyBadge: 'F5',
-    name: 'VRDE Jayem 2.2L',
-    code: 'VRDE 2.2L',
-    subtitle: '2.2L CI Turbocharged · 180 HP · DRDO Indigenized Heavy Fuel',
-    category: 'DRDO INDIGENOUS AERO-ENGINE (VRDE)',
-    specs: [
-      { label: 'MAX POWER', value: '180 HP @ 4000 RPM' },
-      { label: 'ASPIRATION', value: 'VGT Turbo + Intercooler' },
-      { label: 'INDIGENOUS CONTENT', value: '100% Indian Manufacture' },
-      { label: 'DEFENCE APPLICATION', value: 'Tactical Long-Range UAV' },
-    ],
-    modelPath: '/models/vrde_jayem_2_2l.glb',
-    imagePath: '/images/lineup/render_vrde_jayem.png',
-    camDist: 2.4,
-    camElevation: 0.36,
-    camAngle: -1.2,
-  },
-  {
-    id: 'uav_predator',
-    keyBadge: 'F6',
-    name: 'Predator-Class MALE UAV',
-    code: 'MALE AIRFRAME',
-    subtitle: 'Medium-Altitude Long-Endurance · Pusher Propulsion Configuration',
-    category: 'TACTICAL MALE STRATEGIC DRONE (32H+ LOITER)',
-    specs: [
-      { label: 'PROPULSION', value: 'Rotax 914 / 915 iS Pusher' },
-      { label: 'ENDURANCE', value: '32+ Hours SATCOM Loiter' },
-      { label: 'SERVICE CEILING', value: '30,000 ft MSL' },
-      { label: 'PAYLOAD / MTOW', value: '350 kg / 1,450 kg MTOW' },
-    ],
-    modelPath: '/models/uav_predator.glb',
-    imagePath: '/images/lineup/sc_bayraktar_tb3.png',
-    camDist: 3.2,
-    camElevation: 0.38,
-    camAngle: -1.2,
-    isDrone: true,
-  },
-];
+import { AERO_LINEUP, LineupItem } from './aeroLineup';
 
 interface LandingHero3DProps {
   onSelectAsset?: (index: number) => void;
@@ -158,6 +27,8 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
 
   const [viewMode, setViewMode] = useState<'3d' | 'image'>('3d');
   const [modelLoading, setModelLoading] = useState(false);
+  const [loadProgress, setLoadProgress] = useState(0);
+  const [loadBytes, setLoadBytes] = useState<{ loaded: number; total: number } | null>(null);
   const [isWireframe, setIsWireframe] = useState(false);
   const [isAutoOrbit, setIsAutoOrbit] = useState(true);
   const isAutoOrbitRef = useRef(true);
@@ -234,11 +105,15 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
       });
       setModelStats({ meshes: mCount, triangles: Math.round(tCount) });
       setModelLoading(false);
+      setLoadProgress(0);
+      setLoadBytes(null);
       return;
     }
 
     // Load on-demand from /models/...
     setModelLoading(true);
+    setLoadProgress(6);
+    setLoadBytes(null);
 
     const techWireMat = new THREE.MeshBasicMaterial({
       color: 0xd67658,
@@ -328,12 +203,28 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
           activeModelGroup.current = group;
         }
 
-        setModelLoading(false);
+        setLoadProgress(100);
+        setTimeout(() => {
+          setModelLoading(false);
+          setLoadProgress(0);
+          setLoadBytes(null);
+        }, 150);
       },
-      undefined,
+      (event: ProgressEvent) => {
+        const total = event.total > 0 ? event.total : (item.fileSizeBytes || 0);
+        if (total > 0 && event.loaded > 0) {
+          const pct = Math.min(99, Math.round((event.loaded / total) * 100));
+          setLoadProgress((prev) => Math.max(prev, pct));
+          setLoadBytes({ loaded: event.loaded, total });
+        } else if (event.loaded > 0) {
+          setLoadBytes({ loaded: event.loaded, total: 0 });
+        }
+      },
       (err) => {
         console.warn(`[HERO 3D] Failed to load ${item.modelPath}:`, err);
         setModelLoading(false);
+        setLoadProgress(0);
+        setLoadBytes(null);
       }
     );
   }, [enforceModelVisibility]);
@@ -409,7 +300,15 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
     scene.add(fillLight);
 
     // Aerospace ground grid turntable
-    const grid = new THREE.GridHelper(6, 24, 0x223340, 0x142028);
+    const grid = new THREE.GridHelper(6, 24, 0x1e2d38, 0x8a9ba8);
+    const shadowPlane = new THREE.Mesh(
+      new THREE.PlaneGeometry(8, 8),
+      new THREE.ShadowMaterial({ opacity: 0.12 })
+    );
+    shadowPlane.rotation.x = -Math.PI / 2;
+    shadowPlane.position.y = -0.551;
+    shadowPlane.receiveShadow = true;
+    scene.add(shadowPlane);
     grid.position.y = -0.55;
     scene.add(grid);
 
@@ -558,92 +457,169 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
   };
 
   return (
-    <div className="an-engine-showcase">
-      <div className="an-engine-select" aria-label="Select an engine or airframe">
-        {AERO_LINEUP.map((item, idx) => (
-          <button
-            key={item.id}
-            aria-pressed={activeIndex === idx}
-            onClick={() => {
-              setActiveIndex(idx);
-              setIsAutoOrbit(true);
-            }}
-          >
-            <span>{item.code}</span>
-            <small>{item.specs[0].value.split(' ')[0]} {item.specs[0].value.split(' ')[1] || ''}</small>
-          </button>
-        ))}
-      </div>
-      <figure className="an-engine-stage">
-        <div ref={containerRef} className="an-engine-canvas">
-          <canvas ref={canvasRef} className={viewMode === '3d' ? 'an-canvas' : 'an-canvas an-canvas-hidden'} />
-          {viewMode === 'image' && (
-            <div className="an-render-view">
-              <img src={activeAsset.imagePath} alt={activeAsset.name} />
-            </div>
-          )}
-          <div className="an-engine-toolbar">
-            <button
-              aria-pressed={viewMode === '3d'}
-              onClick={() => setViewMode('3d')}
-              title="Interactive 3D view"
-            >
-              <Box size={14} /> 3D
-            </button>
-            <button
-              aria-pressed={viewMode === 'image'}
-              onClick={() => setViewMode('image')}
-              title="Studio render"
-            >
-              <ImageIcon size={14} /> Image
-            </button>
-            {viewMode === '3d' && (
-              <>
-                <button
-                  aria-pressed={isAutoOrbit}
-                  onClick={() => setIsAutoOrbit(!isAutoOrbit)}
-                  title="Toggle slow rotation"
-                >
-                  <RotateCcw size={14} /> {isAutoOrbit ? 'Rotate' : 'Still'}
-                </button>
-                <button
-                  aria-pressed={isWireframe}
-                  onClick={toggleWireframe}
-                  title="Toggle wireframe inspection"
-                >
-                  <Eye size={14} /> {isWireframe ? 'Solid' : 'Wire'}
-                </button>
-                <button
-                  onClick={resetCamera}
-                  title="Reset perspective orientation"
-                >
-                  <Compass size={14} /> Reset
-                </button>
-              </>
-            )}
+    <HudFrame
+      topLabel="PROJECT ANUMAAN // DRDO PS-26054"
+      bottomLabel="K.1321 // Y.0704 // 20Hz TELEMETRY"
+    >
+      <div ref={containerRef} className="tactical-console-viewport">
+        {/* Full-bleed 3D Three.js WebGL Canvas */}
+        <canvas
+          ref={canvasRef}
+          className={`tactical-canvas ${viewMode === '3d' ? 'is-visible' : 'is-hidden'}`}
+        />
+
+        {/* Studio Render View (When Image mode is selected) */}
+        {viewMode === 'image' && (
+          <div className="tactical-render-view">
+            <img src={activeAsset.imagePath} alt={activeAsset.name} />
           </div>
+        )}
 
-          {modelLoading && <div className="an-model-loading">Loading aerospace digital twin…</div>}
+        {/* Top Safe-Zone: Flush HUD Engine Selector Chips (anchored cleanly beneath top notch) */}
+        <div className="tactical-tabs-bar" role="tablist" aria-label="Select aero engine">
+          {AERO_LINEUP.map((item, idx) => {
+            const isActive = activeIndex === idx;
+            const powerVal = item.specs[0]?.value?.split(' ')[0] || '';
+            const powerUnit = item.specs[0]?.value?.split(' ')[1] || '';
+            return (
+              <button
+                key={item.id}
+                role="tab"
+                aria-selected={isActive}
+                className={`tactical-tab-chip ${isActive ? 'is-active' : ''}`}
+                onClick={() => {
+                  setActiveIndex(idx);
+                  setIsAutoOrbit(true);
+                }}
+              >
+                <div className="tactical-tab-top">
+                  <span className="tactical-tab-indicator" />
+                  <span className="tactical-tab-code">{item.code}</span>
+                </div>
+                <div className="tactical-tab-sub">
+                  <span>{powerVal} {powerUnit}</span>
+                  <span className="tactical-tab-key">{item.keyBadge}</span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
 
-          <figcaption className="an-model-caption">
-            <strong>{activeAsset.name}</strong>
-            <span>{activeAsset.subtitle}</span>
-          </figcaption>
+        {/* Unified Tactical Control Bar (Dark Matte Micro-Chamfered HUD Buttons) */}
+        <div className="tactical-control-bar" role="toolbar" aria-label="Viewer controls">
+          <button
+            type="button"
+            className={`tactical-hud-btn ${viewMode === '3d' ? 'is-active' : ''}`}
+            onClick={() => setViewMode('3d')}
+            title="Interactive 3D View"
+          >
+            <Box size={13} />
+            <span>3D</span>
+          </button>
+          <button
+            type="button"
+            className={`tactical-hud-btn ${viewMode === 'image' ? 'is-active' : ''}`}
+            onClick={() => setViewMode('image')}
+            title="Photorealistic Studio Render"
+          >
+            <ImageIcon size={13} />
+            <span>IMAGE</span>
+          </button>
 
-          {modelStats.triangles > 0 && (
-            <div className="an-orbit-hint" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-              <span>{modelStats.meshes} MESHES · {modelStats.triangles.toLocaleString()} TRIS</span>
-              <span>· DRAG TO INSPECT</span>
-            </div>
+          {viewMode === '3d' && (
+            <>
+              <button
+                type="button"
+                className={`tactical-hud-btn ${isAutoOrbit ? 'is-active' : ''}`}
+                onClick={() => setIsAutoOrbit(!isAutoOrbit)}
+                title="Toggle Auto Rotation"
+              >
+                <RotateCcw size={13} />
+                <span>{isAutoOrbit ? 'ROTATE' : 'STILL'}</span>
+              </button>
+              <button
+                type="button"
+                className={`tactical-hud-btn ${isWireframe ? 'is-active' : ''}`}
+                onClick={toggleWireframe}
+                title="Toggle Wireframe Inspection"
+              >
+                <Eye size={13} />
+                <span>{isWireframe ? 'SOLID' : 'WIRE'}</span>
+              </button>
+              <button
+                type="button"
+                className="tactical-hud-btn"
+                onClick={resetCamera}
+                title="Reset Perspective Orientation"
+              >
+                <Compass size={13} />
+                <span>RESET</span>
+              </button>
+            </>
           )}
         </div>
-      </figure>
-      <div className="an-selected-specs">
-        <span>{activeAsset.category}</span>
-        <strong>{activeAsset.specs[0].value}</strong>
-        <small>{activeAsset.specs[1]?.value} · {activeAsset.specs[2]?.value}</small>
+
+        {/* Embedded Telemetry & Specs Footer (Translucent HUD Readout above bottom coordinate notch) */}
+        <div className="tactical-telemetry-footer">
+          <div className="tactical-telemetry-left">
+            <div className="tactical-telemetry-badge">
+              <span className="tactical-pulse-dot" />
+              <span className="tactical-cat-tag">{activeAsset.name}</span>
+            </div>
+            <div className="tactical-telemetry-specs">
+              <strong className="tactical-spec-primary">{activeAsset.specs[0]?.value}</strong>
+              <span className="tactical-spec-sep">//</span>
+              <span className="tactical-spec-sub">{activeAsset.specs[2]?.value || activeAsset.specs[1]?.value}</span>
+            </div>
+          </div>
+
+          <div className="tactical-telemetry-right">
+            {modelStats.triangles > 0 ? (
+              <div className="tactical-mesh-stats">
+                <span className="tactical-stat-chunk">{modelStats.meshes} MESHES</span>
+                <span className="tactical-spec-sep">·</span>
+                <span className="tactical-stat-chunk">{modelStats.triangles.toLocaleString()} TRIS</span>
+                <span className="tactical-orbit-hint">· DRAG TO INSPECT</span>
+              </div>
+            ) : (
+              <span className="tactical-orbit-hint">DRAG TO INSPECT</span>
+            )}
+          </div>
+        </div>
+
+        {/* Tactical Loading Radar (Translucent over Canvas) */}
+        {modelLoading && (
+          <div className="tactical-loading-radar" role="status" aria-live="polite">
+            <div className="tactical-radar-box">
+              <div className="tactical-radar-ring">
+                <img
+                  src="/images/anumaan-mark-editorial.png"
+                  alt="ANUMAAN Logo"
+                  className="tactical-radar-logo"
+                />
+              </div>
+              <div className="tactical-radar-meta">
+                <span className="tactical-radar-kicker">ANUMAAN // DIGITAL TWIN CALIBRATION</span>
+                <strong className="tactical-radar-title">{activeAsset.name}</strong>
+              </div>
+              <div className="tactical-radar-bar">
+                <div className="tactical-radar-fill" style={{ width: `${Math.max(6, loadProgress)}%` }} />
+              </div>
+              <div className="tactical-radar-digits">
+                <span>{loadProgress}%</span>
+                <span>
+                  {loadBytes && loadBytes.total > 0
+                    ? `${(loadBytes.loaded / (1024 * 1024)).toFixed(1)} / ${(loadBytes.total / (1024 * 1024)).toFixed(1)} MB`
+                    : loadProgress >= 99
+                    ? 'COMPILING PBR SHADERS'
+                    : 'DRACO DECOMPRESSION'}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-    </div>
+    </HudFrame>
   );
 };
 

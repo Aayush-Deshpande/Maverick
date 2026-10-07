@@ -15,7 +15,10 @@ const links = [
   ['#limits', 'Boundaries'],
 ];
 
-export const LandingNav: React.FC<{ onLaunch?: (target?: 'runtime' | 'twin' | 'legacy') => void }> = ({ onLaunch }) => {
+export const LandingNav: React.FC<{
+  onLaunch?: (target?: 'runtime' | 'twin' | 'legacy') => void;
+  onReplayIntro?: () => void;
+}> = ({ onLaunch, onReplayIntro }) => {
   const [open, setOpen] = useState(false);
   const launch = () => {
     setOpen(false);
@@ -24,7 +27,17 @@ export const LandingNav: React.FC<{ onLaunch?: (target?: 'runtime' | 'twin' | 'l
 
   return (
     <header className="ae-nav">
-      <a href="#hero" className="ae-wordmark" aria-label="ANUMAAN home">
+      <a
+        href="#hero"
+        className="ae-wordmark"
+        aria-label="ANUMAAN home"
+        onClick={(e) => {
+          if (onReplayIntro) {
+            e.preventDefault();
+            onReplayIntro();
+          }
+        }}
+      >
         <img className="ae-logo" src="/images/anumaan-mark-editorial.png" alt="" />
         <span className="ae-brand-name">ANUMAAN</span>
         <span className="ae-brand-tooltip" aria-hidden="true">ANUMAAN</span>

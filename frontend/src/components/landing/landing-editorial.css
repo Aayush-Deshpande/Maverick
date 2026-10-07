@@ -244,7 +244,12 @@
 
 .ae-model-column { min-width: 0; }
 .ae-model-heading { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 8px; color: var(--quiet); font: 10px 'JetBrains Mono', monospace; letter-spacing: .08em; }
-.ae-model-frame { min-width: 0; padding: 6px; border: 1px solid #c4c6c0; background: #e8e7df; }
+.ae-model-frame { 
+  min-width: 0; 
+  padding: 0; 
+  border: none; 
+  background: transparent; 
+}
 .ae-model-frame .an-engine-showcase { width: 100%; max-width: none; margin: 0; }
 .ae-model-frame .an-engine-canvas { height: min(43vw, 500px); min-height: 340px; background: #e8e7df; }
 .ae-model-note { margin: 9px 2px 0; color: var(--quiet); font: 10px/1.5 'JetBrains Mono', monospace; }
@@ -548,7 +553,8 @@
 }
 
 /* Light renderer controls and model frame extend the Overview's palette. */
-.ae-model-frame { border-color: var(--rule); background: var(--paper-deep); }
+/* ae-model-frame border removed for unified tactical console */
+.ae-model-frame { border: none !important; background: transparent !important; padding: 0 !important; }
 .ae-model-frame .an-engine-select { border-color: var(--rule); background: #f7f6f0; }
 .ae-model-frame .an-engine-select button { color: var(--muted); border-color: var(--rule); }
 .ae-model-frame .an-engine-select button span { color: var(--accent); }
@@ -557,7 +563,131 @@
 .ae-model-frame .an-engine-canvas { background: #e8e7df; }
 .ae-model-frame .an-engine-toolbar button { border-color: #bfc3bd; background: rgba(247,246,240,.94); color: var(--ink); }
 .ae-model-frame .an-engine-toolbar button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent); color: #fff; }
-.ae-model-frame .an-model-loading { background: rgba(242,241,235,.92); color: var(--accent); }
+.ae-model-frame .an-model-loading {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(232, 231, 223, 0.88);
+  backdrop-filter: blur(8px);
+  color: var(--ink);
+  z-index: 15;
+  padding: 16px;
+}
+
+.an-loading-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 90%;
+  max-width: 320px;
+  padding: 22px 24px;
+  background: rgba(247, 246, 240, 0.96);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  box-shadow: 0 16px 36px rgba(16, 27, 32, 0.10);
+  text-align: center;
+}
+
+.an-loading-radar-ring {
+  position: relative;
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(189, 75, 43, 0.12) 0%, transparent 70%);
+}
+
+.an-loading-radar-ring::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 1.5px dashed var(--accent);
+  opacity: 0.55;
+  animation: an-radar-spin 8s linear infinite;
+}
+
+.an-loading-logo {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 2px 6px rgba(189, 75, 43, 0.22));
+}
+
+.an-loading-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.an-loading-kicker {
+  font: 600 9px/1 'JetBrains Mono', monospace;
+  letter-spacing: 0.14em;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+
+.an-loading-title {
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+
+.an-loading-bar-wrap {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.an-loading-track {
+  height: 6px;
+  width: 100%;
+  background: rgba(16, 27, 32, 0.09);
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid rgba(16, 27, 32, 0.12);
+  position: relative;
+}
+
+.an-loading-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #bd4b2b 0%, #d67658 100%);
+  border-radius: 999px;
+  transition: width 120ms ease-out;
+  box-shadow: 0 0 10px rgba(189, 75, 43, 0.4);
+}
+
+.an-loading-stats {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  line-height: 1;
+}
+
+.an-loading-pct {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.an-loading-bytes {
+  color: var(--muted);
+  font-size: 9px;
+  letter-spacing: 0.04em;
+}
+
+@keyframes an-radar-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
 .ae-model-frame .an-model-caption { color: var(--ink); }
 .ae-model-frame .an-model-caption { max-width: calc(100% - 190px); }
 .ae-model-frame .an-model-caption span { display: block; line-height: 1.4; }
@@ -569,3 +699,331 @@
 @media (max-width: 760px) {
   .ae-model-frame .an-model-caption { max-width: calc(100% - 18px); }
 }
+
+/* ==========================================================================
+   SMOOTH TRANSITIONS & MICRO-ANIMATIONS (ref.mp4 inspired)
+   Non-intrusive: preserves all layout and typography while adding smooth
+   staggered entrances, scroll reveals, interactive hover lifts, and glows.
+   ========================================================================== */
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Hero Staggered Entrance Animations */
+.ae-hero-copy > .ae-eyebrow {
+  animation: ae-fade-slide-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation-delay: 0.05s;
+}
+
+.ae-hero-copy > .ae-kicker {
+  animation: ae-fade-slide-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation-delay: 0.12s;
+}
+
+.ae-hero h1 {
+  animation: ae-fade-slide-up 0.75s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation-delay: 0.20s;
+}
+
+.ae-hero-lede {
+  animation: ae-fade-slide-up 0.75s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation-delay: 0.28s;
+}
+
+.ae-hero-actions {
+  animation: ae-fade-slide-up 0.75s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation-delay: 0.36s;
+}
+
+.ae-honesty-note {
+  animation: ae-fade-slide-up 0.75s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation-delay: 0.44s;
+}
+
+.ae-model-column {
+  animation: ae-scale-in 0.85s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation-delay: 0.22s;
+}
+
+/* Scroll-triggered reveal animations for sections */
+.ae-section,
+.ae-limit-section {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.ae-section.ae-visible,
+.ae-limit-section.ae-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Staggered children transitions inside visible sections */
+.ae-section.ae-visible .ae-section-heading,
+.ae-section.ae-visible .ae-two-column-heading,
+.ae-section.ae-visible .ae-diagnosis-top {
+  animation: ae-fade-slide-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.ae-section.ae-visible .ae-comparison,
+.ae-section.ae-visible .ae-observer-strip,
+.ae-section.ae-visible .ae-temporal-diagram,
+.ae-section.ae-visible .ae-diagnosis-chain,
+.ae-section.ae-visible .ae-evidence-list,
+.ae-section.ae-visible .ae-engineering-grid,
+.ae-section.ae-visible .ae-runtime-steps {
+  animation: ae-fade-slide-up 0.75s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 0.15s;
+}
+
+/* Interactive Hover Transitions & Effects */
+
+/* Buttons */
+.ae-button {
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+              background 0.2s ease,
+              color 0.2s ease,
+              border-color 0.2s ease;
+}
+
+.ae-button:hover {
+  transform: translateY(-2px);
+}
+
+.ae-button-dark:hover {
+  background: #25333a;
+  box-shadow: 0 6px 18px rgba(16, 27, 32, 0.18);
+}
+
+.ae-button-outline:hover {
+  border-color: var(--ink);
+  background: rgba(16, 27, 32, 0.05);
+  box-shadow: 0 4px 12px rgba(16, 27, 32, 0.06);
+}
+
+.ae-button-quiet:hover {
+  transform: translateX(3px);
+}
+
+.ae-button svg {
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ae-button:hover svg {
+  transform: translate(2px, 2px);
+}
+
+/* Engine Selector Tabs */
+.ae-model-frame .an-engine-select button {
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ae-model-frame .an-engine-select button:hover {
+  transform: translateY(-1px);
+}
+
+.ae-model-frame .an-engine-select button[aria-pressed="true"] {
+  box-shadow: 0 3px 10px rgba(189, 75, 43, 0.28);
+}
+
+/* Toolbar Buttons */
+.ae-model-frame .an-engine-toolbar button {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ae-model-frame .an-engine-toolbar button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(16, 27, 32, 0.08);
+}
+
+/* Comparison Rows Hover */
+.ae-comparison-row {
+  transition: background-color 0.25s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 4px;
+}
+
+.ae-comparison-row:hover {
+  background-color: rgba(232, 231, 223, 0.45);
+  transform: translateX(6px);
+}
+
+/* Observer & Runtime Cards */
+.ae-observer-strip > div,
+.ae-runtime-steps > article {
+  padding: 12px 14px;
+  border-radius: 4px;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.25s ease;
+}
+
+.ae-observer-strip > div:hover,
+.ae-runtime-steps > article:hover {
+  background-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(16, 27, 32, 0.04);
+}
+
+/* Diagnosis Chain Articles */
+.ae-diagnosis-chain article {
+  padding: 12px 14px;
+  border-radius: 4px;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.25s ease;
+}
+
+.ae-diagnosis-chain article:hover {
+  background-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(16, 27, 32, 0.05);
+}
+
+/* Evidence List Articles */
+.ae-evidence-list article {
+  transition: background-color 0.25s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 4px;
+}
+
+.ae-evidence-list article:hover {
+  background-color: rgba(232, 231, 223, 0.5);
+  transform: translateX(6px);
+}
+
+/* Engineering Grid Articles */
+.ae-engineering-grid article {
+  padding-left: 12px;
+  padding-right: 12px;
+  border-radius: 4px;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.28s ease,
+              background-color 0.28s ease;
+}
+
+.ae-engineering-grid article:hover {
+  transform: translateY(-4px);
+  border-top-color: var(--accent);
+  background-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 20px rgba(16, 27, 32, 0.05);
+}
+
+/* Diagram Micro-Animations & Glows */
+
+/* Divergence line pulse */
+@keyframes ae-diverge-pulse {
+  0%, 100% {
+    opacity: 0.85;
+    box-shadow: 0 0 0px transparent;
+  }
+  50% {
+    opacity: 1;
+    box-shadow: 0 0 8px rgba(189, 75, 43, 0.6);
+  }
+}
+
+.ae-reference-diagram > em {
+  animation: ae-diverge-pulse 3s ease-in-out infinite;
+}
+
+/* Threshold dot pulse */
+@keyframes ae-dot-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(189, 75, 43, 0.5);
+  }
+  50% {
+    transform: scale(1.15);
+    box-shadow: 0 0 0 5px rgba(189, 75, 43, 0);
+  }
+}
+
+.ae-threshold-diagram > b {
+  animation: ae-dot-pulse 2.5s ease-in-out infinite;
+}
+
+/* FlyBrain Reservoir Node Twinkle */
+@keyframes ae-node-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.65;
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 1;
+    box-shadow: 0 0 6px var(--accent);
+  }
+}
+
+.ae-reservoir-mark i:nth-child(1) { animation: ae-node-pulse 2.2s ease-in-out infinite 0.1s; }
+.ae-reservoir-mark i:nth-child(2) { animation: ae-node-pulse 2.2s ease-in-out infinite 0.4s; }
+.ae-reservoir-mark i:nth-child(3) { animation: ae-node-pulse 2.2s ease-in-out infinite 0.7s; }
+.ae-reservoir-mark i:nth-child(4) { animation: ae-node-pulse 2.2s ease-in-out infinite 1.0s; }
+.ae-reservoir-mark i:nth-child(5) { animation: ae-node-pulse 2.2s ease-in-out infinite 1.3s; }
+.ae-reservoir-mark i:nth-child(6) { animation: ae-node-pulse 2.2s ease-in-out infinite 1.6s; }
+
+/* Arrows Nudge */
+@keyframes ae-arrow-nudge {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(3px); }
+}
+
+.ae-temporal-flow > b,
+.ae-observer-strip > b,
+.ae-runtime-steps > b,
+.ae-diagnosis-chain > b {
+  display: inline-block;
+  animation: ae-arrow-nudge 2.5s ease-in-out infinite;
+}
+
+/* Scroll Cue Bob */
+@keyframes ae-cue-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(4px); }
+}
+
+.ae-scroll-cue {
+  transition: color 0.2s ease;
+}
+
+.ae-scroll-cue svg {
+  animation: ae-cue-bob 2s ease-in-out infinite;
+}
+
+.ae-scroll-cue:hover {
+  color: var(--accent);
+}
+
+/* Navigation Rail Smooth Dash & Tooltip */
+.ae-nav-links > a .ae-nav-dash {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s ease;
+}
+
+.ae-nav-tooltip {
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              visibility 0.2s;
+}
+
+/* Keyframes */
+@keyframes ae-fade-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ae-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
