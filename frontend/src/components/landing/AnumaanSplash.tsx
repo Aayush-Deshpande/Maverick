@@ -12,38 +12,32 @@ export const AnumaanSplash: React.FC<AnumaanSplashProps> = ({
   videoSrc = '/vids/Anumaan_start.mp4',
   forceShow = false,
 }) => {
-  const [isMounted, setIsMounted] = useState(() => {
-    if (forceShow) return true;
-    try {
-      return !sessionStorage.getItem('anumaan_splash_shown');
-    } catch {
-      return true;
-    }
-  });
+  // STRICT "ALWAYS-PLAY" RULE:
+  // Must be the absolute first thing displayed on EVERY single page load.
+  // Never consult or persist to localStorage, sessionStorage, or cookies.
+  const [isMounted, setIsMounted] = useState<boolean>(true);
+  const [isExiting, setIsExiting] = useState<boolean>(false);
+  const [isVideoReady, setIsVideoReady] = useState<boolean>(false);
 
-  const [isExiting, setIsExiting] = useState(false);
-  const [isVideoReady, setIsVideoReady] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const dismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const dismiss = useCallback((reason: string = 'ended') => {
-    if (isExiting) return;
-    console.log(`[AnumaanSplash] Dismissing intro (${reason})`);
-    setIsExiting(true);
-    try {
-      sessionStorage.setItem('anumaan_splash_shown', 'true');
-    } catch {
-      // storage unavailable
-    }
+  const dismiss = useCallback(
+    (reason: string = 'video-ended') => {
+      if (isExiting) return;
+      console.log(`[AnumaanSplash] Intro animation finished (${reason}). Transitioning to landing...`);
+      setIsExiting(true);
 
-    // Complete transition and unmount after CSS fade finishes
-    setTimeout(() => {
-      setIsMounted(false);
-      onComplete?.();
-    }, 750);
-  }, [isExiting, onComplete]);
+      // Allow CSS fade/blur transition (720ms) to complete before unmounting
+      setTimeout(() => {
+        setIsMounted(false);
+        onComplete?.();
+      }, 750);
+    },
+    [isExiting, onComplete]
+  );
 
-  // If forceShow prop toggles to true, remount splash
+  // Re-trigger if forceShow prop changes to true (e.g. replaying from nav logo)
   useEffect(() => {
     if (forceShow) {
       setIsMounted(true);
@@ -52,11 +46,11 @@ export const AnumaanSplash: React.FC<AnumaanSplashProps> = ({
     }
   }, [forceShow]);
 
-  // Initial setup: ensure video is 100% muted so Chrome/Safari never block autoplay
+  // Handle native video playback and lifecycle
   useEffect(() => {
     if (!isMounted || isExiting) return;
 
-    // Lock body scrolling while intro splash is active
+    // Prevent body scroll during full-screen splash presentation
     document.body.classList.add('ae-splash-active');
 
     const video = videoRef.current;
@@ -65,13 +59,19 @@ export const AnumaanSplash: React.FC<AnumaanSplashProps> = ({
       video.playsInline = true;
 
       const attemptPlay = () => {
-        video.play().then(() => {
-          setIsVideoReady(true);
-          console.log('[AnumaanSplash] Playback started successfully');
-        }).catch((err) => {
-          console.warn('[AnumaanSplash] Autoplay blocked, dismissing:', err);
-          dismiss('autoplay-blocked');
-        });
+        const playPromise = video.play();
+        if (playPromise !== undefined) {
+          playPromise
+            .then(() => {
+              setIsVideoReady(true);
+              console.log('[AnumaanSplash] Logo animation playback active');
+            })
+            .catch((err) => {
+              console.warn('[AnumaanSplash] Playback autoplay constrained:', err);
+              // Fallback transition if browser blocks inline media autoplay
+              dismiss('playback-constrained');
+            });
+        }
       };
 
       if (video.readyState >= 2) {
@@ -82,6 +82,7 @@ export const AnumaanSplash: React.FC<AnumaanSplashProps> = ({
       }
     }
 
+    // Optional user bypass via keyboard (Esc/Space/Enter)
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' || e.key === ' ' || e.key === 'Enter') {
         dismiss('keyboard-skip');
@@ -89,15 +90,17 @@ export const AnumaanSplash: React.FC<AnumaanSplashProps> = ({
     };
     window.addEventListener('keydown', handleKeyDown);
 
-    // Fallback safety timeout (6.8s) to guarantee landing page displays even if video fails
+    // Fallback safety timeout (8.0s) so user is never trapped if browser media pipeline stalls
     dismissTimerRef.current = setTimeout(() => {
       dismiss('safety-timeout');
-    }, 6800);
+    }, 8000);
 
     return () => {
       document.body.classList.remove('ae-splash-active');
       window.removeEventListener('keydown', handleKeyDown);
-      if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
+      if (dismissTimerRef.current) {
+        clearTimeout(dismissTimerRef.current);
+      }
     };
   }, [isMounted, isExiting, dismiss]);
 
@@ -109,16 +112,16 @@ export const AnumaanSplash: React.FC<AnumaanSplashProps> = ({
       aria-hidden="true"
       role="presentation"
     >
-      {/* Background ambient texture & color matching landing theme */}
+      {/* Background ambient wash seamlessly matched with landing paper tone */}
       <div className="ae-splash-backdrop" />
 
-      {/* Futuristic Telemetry Header Badge */}
+      {/* Military HUD Metadata Banner */}
       <div className="ae-splash-hud-meta">
         <span className="ae-splash-pill">ANUMAAN // INIT_SEQUENCE</span>
         <span className="ae-splash-serial">DRDO PS-26054</span>
       </div>
 
-      {/* Main Native Video Layer */}
+      {/* Native Video Layer without player visual controls */}
       <div className="ae-splash-stage">
         <video
           ref={videoRef}
@@ -131,22 +134,11 @@ export const AnumaanSplash: React.FC<AnumaanSplashProps> = ({
           disableRemotePlayback
           controls={false}
           tabIndex={-1}
-          preload="metadata"
+          preload="auto"
           onEnded={() => dismiss('video-ended')}
           onContextMenu={(e) => e.preventDefault()}
         />
       </div>
-
-      {/* Minimal subtle skip trigger */}
-      <button
-        type="button"
-        className="ae-splash-skip"
-        onClick={() => dismiss('skip-clicked')}
-        title="Skip intro (Esc)"
-      >
-        <span>Skip intro</span>
-        <kbd>ESC</kbd>
-      </button>
 
       {/* Minimal technical progress line at bottom */}
       <div className="ae-splash-progress">
@@ -155,3 +147,5 @@ export const AnumaanSplash: React.FC<AnumaanSplashProps> = ({
     </div>
   );
 };
+
+export default AnumaanSplash;
