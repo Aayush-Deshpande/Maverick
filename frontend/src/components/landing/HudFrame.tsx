@@ -185,12 +185,12 @@ export const HudFrame: React.FC<HudFrameProps> = ({
           {/* Precision Corner Crosshair Reticles */}
           <path
             d={`
-              M ${chamfer + 10} ${chamfer + 6} h 8 m -4 -4 v 8 
-              M ${w - chamfer - 10} ${chamfer + 6} h -8 m 4 -4 v 8
-              M ${chamfer + 10} ${h - chamfer - 6} h 8 m -4 -4 v 8
-              M ${w - chamfer - 10} ${h - chamfer - 6} h -8 m 4 -4 v 8
+              M ${chamfer - 6} ${chamfer + 2} h 6 m -3 -3 v 6 
+              M ${w - chamfer + 6} ${chamfer + 2} h -6 m 3 -3 v 6
+              M ${chamfer - 6} ${h - chamfer - 2} h 6 m -3 -3 v 6
+              M ${w - chamfer + 6} ${h - chamfer - 2} h -6 m 3 -3 v 6
             `}
-            stroke="rgba(10, 15, 20, 0.45)"
+            stroke="rgba(10, 15, 20, 0.35)"
             strokeWidth="1.2"
             fill="none"
           />

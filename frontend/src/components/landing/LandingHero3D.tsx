@@ -496,10 +496,7 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
                   <span className="tactical-tab-indicator" />
                   <span className="tactical-tab-code">{item.code}</span>
                 </div>
-                <div className="tactical-tab-sub">
-                  <span>{powerVal} {powerUnit}</span>
-                  <span className="tactical-tab-key">{item.keyBadge}</span>
-                </div>
+                <span className="tactical-tab-power">{powerVal} {powerUnit}</span>
               </button>
             );
           })}
@@ -513,7 +510,7 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
             onClick={() => setViewMode('3d')}
             title="Interactive 3D View"
           >
-            <Box size={13} />
+            <Box size={11} />
             <span>3D</span>
           </button>
           <button
@@ -522,7 +519,7 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
             onClick={() => setViewMode('image')}
             title="Photorealistic Studio Render"
           >
-            <ImageIcon size={13} />
+            <ImageIcon size={11} />
             <span>IMAGE</span>
           </button>
 
@@ -534,7 +531,7 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
                 onClick={() => setIsAutoOrbit(!isAutoOrbit)}
                 title="Toggle Auto Rotation"
               >
-                <RotateCcw size={13} />
+                <RotateCcw size={11} />
                 <span>{isAutoOrbit ? 'ROTATE' : 'STILL'}</span>
               </button>
               <button
@@ -543,7 +540,7 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
                 onClick={toggleWireframe}
                 title="Toggle Wireframe Inspection"
               >
-                <Eye size={13} />
+                <Eye size={11} />
                 <span>{isWireframe ? 'SOLID' : 'WIRE'}</span>
               </button>
               <button
@@ -552,7 +549,7 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
                 onClick={resetCamera}
                 title="Reset Perspective Orientation"
               >
-                <Compass size={13} />
+                <Compass size={11} />
                 <span>RESET</span>
               </button>
             </>
@@ -561,16 +558,14 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
 
         {/* Embedded Telemetry & Specs Footer (Translucent HUD Readout above bottom coordinate notch) */}
         <div className="tactical-telemetry-footer">
+          <span className="tactical-corner-cross" aria-hidden="true">+</span>
           <div className="tactical-telemetry-left">
-            <div className="tactical-telemetry-badge">
-              <span className="tactical-pulse-dot" />
-              <span className="tactical-cat-tag">{activeAsset.name}</span>
-            </div>
-            <div className="tactical-telemetry-specs">
-              <strong className="tactical-spec-primary">{activeAsset.specs[0]?.value}</strong>
-              <span className="tactical-spec-sep">//</span>
-              <span className="tactical-spec-sub">{activeAsset.specs[2]?.value || activeAsset.specs[1]?.value}</span>
-            </div>
+            <span className="tactical-pulse-dot" />
+            <span className="tactical-cat-tag">{activeAsset.name.toUpperCase()}</span>
+            <span className="tactical-spec-sep">//</span>
+            <strong className="tactical-spec-primary">{activeAsset.specs[0]?.value.toUpperCase()}</strong>
+            <span className="tactical-spec-sep">//</span>
+            <span className="tactical-spec-sub">{(activeAsset.specs[2]?.value || activeAsset.specs[1]?.value).toUpperCase()}</span>
           </div>
 
           <div className="tactical-telemetry-right">
@@ -579,12 +574,14 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
                 <span className="tactical-stat-chunk">{modelStats.meshes} MESHES</span>
                 <span className="tactical-spec-sep">·</span>
                 <span className="tactical-stat-chunk">{modelStats.triangles.toLocaleString()} TRIS</span>
-                <span className="tactical-orbit-hint">· DRAG TO INSPECT</span>
+                <span className="tactical-spec-sep">·</span>
+                <span className="tactical-orbit-hint">DRAG TO INSPECT</span>
               </div>
             ) : (
               <span className="tactical-orbit-hint">DRAG TO INSPECT</span>
             )}
           </div>
+          <span className="tactical-corner-cross" aria-hidden="true">+</span>
         </div>
 
         {/* Tactical Loading Radar (Translucent over Canvas) */}
