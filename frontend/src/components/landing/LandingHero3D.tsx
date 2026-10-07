@@ -5,9 +5,9 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
-import { Eye, RotateCcw, Image as ImageIcon, Box, Compass } from 'lucide-react';
+import { RotateCcw, Image as ImageIcon, Box } from 'lucide-react';
 
-import { AERO_LINEUP, LineupItem } from './aeroLineup';
+import { AERO_LINEUP } from './aeroLineup';
 
 interface LandingHero3DProps {
   onSelectAsset?: (index: number) => void;
@@ -29,7 +29,7 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
   const [modelLoading, setModelLoading] = useState(false);
   const [loadProgress, setLoadProgress] = useState(0);
   const [loadBytes, setLoadBytes] = useState<{ loaded: number; total: number } | null>(null);
-  const [isWireframe, setIsWireframe] = useState(false);
+
   const [isAutoOrbit, setIsAutoOrbit] = useState(true);
   const isAutoOrbitRef = useRef(true);
   isAutoOrbitRef.current = isAutoOrbit;
@@ -47,8 +47,7 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
   const modelCache = useRef<Map<string, THREE.Group>>(new Map());
   const activeModelGroup = useRef<THREE.Group | null>(null);
 
-  const originalMats = useRef<Map<string, THREE.Material | THREE.Material[]>>(new Map());
-  const wireframeMats = useRef<Map<string, THREE.Material>>(new Map());
+
 
   const targetLookAt = useRef(new THREE.Vector3(0, 0, 0));
   const targetCamPos = useRef(new THREE.Vector3(0, 0.36, 2.4));
@@ -115,12 +114,7 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
     setLoadProgress(6);
     setLoadBytes(null);
 
-    const techWireMat = new THREE.MeshBasicMaterial({
-      color: 0xd67658,
-      wireframe: true,
-      transparent: true,
-      opacity: 0.6,
-    });
+
 
     gltfLoader.load(
       item.modelPath,
@@ -163,9 +157,6 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
 
             if (mesh.material) {
               const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-              originalMats.current.set(mesh.uuid, mesh.material);
-              wireframeMats.current.set(mesh.uuid, techWireMat);
-
               materials.forEach((m) => {
                 const mat = m as THREE.MeshStandardMaterial;
 
@@ -423,38 +414,7 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
     }
   }, [viewMode, enforceModelVisibility]);
 
-  // Wireframe toggle
-  const toggleWireframe = () => {
-    const next = !isWireframe;
-    setIsWireframe(next);
 
-    modelCache.current.forEach((grp) => {
-      grp.traverse((child: THREE.Object3D) => {
-        if ((child as THREE.Mesh).isMesh) {
-          const mesh = child as THREE.Mesh;
-          if (next) {
-            const wire = wireframeMats.current.get(mesh.uuid);
-            if (wire) mesh.material = wire;
-          } else {
-            const orig = originalMats.current.get(mesh.uuid);
-            if (orig) mesh.material = orig;
-          }
-        }
-      });
-    });
-  };
-
-  const resetCamera = () => {
-    const item = AERO_LINEUP[activeIndex];
-    targetLookAt.current.set(0, 0, 0);
-    targetCamPos.current.set(
-      Math.sin(item.camAngle) * item.camDist,
-      item.camElevation * item.camDist + 0.05,
-      Math.cos(item.camAngle) * item.camDist
-    );
-    transitionUntil.current = performance.now() + 1200;
-    setIsAutoOrbit(true);
-  };
 
   return (
     <HudFrame
@@ -502,7 +462,7 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
           })}
         </div>
 
-        {/* Unified Tactical Control Bar (Dark Matte Micro-Chamfered HUD Buttons) */}
+        {/* Compact Floating Pill Control Bar (3D / IMAGE / ROTATE) */}
         <div className="tactical-control-bar" role="toolbar" aria-label="Viewer controls">
           <button
             type="button"
@@ -510,7 +470,7 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
             onClick={() => setViewMode('3d')}
             title="Interactive 3D View"
           >
-            <Box size={11} />
+            <Box size={10} />
             <span>3D</span>
           </button>
           <button
@@ -519,40 +479,20 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
             onClick={() => setViewMode('image')}
             title="Photorealistic Studio Render"
           >
-            <ImageIcon size={11} />
+            <ImageIcon size={10} />
             <span>IMAGE</span>
           </button>
 
           {viewMode === '3d' && (
-            <>
-              <button
-                type="button"
-                className={`tactical-hud-btn ${isAutoOrbit ? 'is-active' : ''}`}
-                onClick={() => setIsAutoOrbit(!isAutoOrbit)}
-                title="Toggle Auto Rotation"
-              >
-                <RotateCcw size={11} />
-                <span>{isAutoOrbit ? 'ROTATE' : 'STILL'}</span>
-              </button>
-              <button
-                type="button"
-                className={`tactical-hud-btn ${isWireframe ? 'is-active' : ''}`}
-                onClick={toggleWireframe}
-                title="Toggle Wireframe Inspection"
-              >
-                <Eye size={11} />
-                <span>{isWireframe ? 'SOLID' : 'WIRE'}</span>
-              </button>
-              <button
-                type="button"
-                className="tactical-hud-btn"
-                onClick={resetCamera}
-                title="Reset Perspective Orientation"
-              >
-                <Compass size={11} />
-                <span>RESET</span>
-              </button>
-            </>
+            <button
+              type="button"
+              className={`tactical-hud-btn ${isAutoOrbit ? 'is-active' : ''}`}
+              onClick={() => setIsAutoOrbit(!isAutoOrbit)}
+              title="Toggle Auto Rotation"
+            >
+              <RotateCcw size={10} />
+              <span>{isAutoOrbit ? 'ROTATE' : 'STILL'}</span>
+            </button>
           )}
         </div>
 
