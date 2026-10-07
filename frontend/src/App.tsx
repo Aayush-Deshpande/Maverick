@@ -1,21 +1,30 @@
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { useTelemetrySocket } from './hooks/useTelemetrySocket';
 import { Header } from './components/Header';
-import { EngineControls } from './components/EngineControls';
-import { FaultMatrix } from './components/FaultMatrix';
-import { ReadingsPanel } from './components/ReadingsPanel';
-import { CalculationsPanel } from './components/CalculationsPanel';
-import { MissionReadinessCard } from './components/MissionReadinessCard';
-import { SubsystemHealthCard } from './components/SubsystemHealthCard';
-import { DiagnosticCard } from './components/DiagnosticCard';
-import { VoiceCopilot } from './components/VoiceCopilot';
-import { MissionReplayScrubber } from './components/MissionReplayScrubber';
-import { PropulsionEngineerPanel } from './components/PropulsionEngineerPanel';
-import { MaintenanceDashboardPanel } from './components/MaintenanceDashboardPanel';
-import { ConnectionModal } from './components/ConnectionModal';
 import { PanelErrorBoundary } from './components/PanelErrorBoundary';
-import { EngineRuntimeConsole } from './components/EngineRuntimeConsole';
 import { LandingPage } from './components/landing/LandingPage';
+
+// Lazy-load non-landing dashboards and consoles to ensure initial landing page bundle is ultralight
+const EngineControls = lazy(() => import('./components/EngineControls').then((m) => ({ default: m.EngineControls })));
+const FaultMatrix = lazy(() => import('./components/FaultMatrix').then((m) => ({ default: m.FaultMatrix })));
+const ReadingsPanel = lazy(() => import('./components/ReadingsPanel').then((m) => ({ default: m.ReadingsPanel })));
+const CalculationsPanel = lazy(() => import('./components/CalculationsPanel').then((m) => ({ default: m.CalculationsPanel })));
+const MissionReadinessCard = lazy(() => import('./components/MissionReadinessCard').then((m) => ({ default: m.MissionReadinessCard })));
+const SubsystemHealthCard = lazy(() => import('./components/SubsystemHealthCard').then((m) => ({ default: m.SubsystemHealthCard })));
+const DiagnosticCard = lazy(() => import('./components/DiagnosticCard').then((m) => ({ default: m.DiagnosticCard })));
+const VoiceCopilot = lazy(() => import('./components/VoiceCopilot').then((m) => ({ default: m.VoiceCopilot })));
+const MissionReplayScrubber = lazy(() => import('./components/MissionReplayScrubber').then((m) => ({ default: m.MissionReplayScrubber })));
+const PropulsionEngineerPanel = lazy(() => import('./components/PropulsionEngineerPanel').then((m) => ({ default: m.PropulsionEngineerPanel })));
+const MaintenanceDashboardPanel = lazy(() => import('./components/MaintenanceDashboardPanel').then((m) => ({ default: m.MaintenanceDashboardPanel })));
+const EngineRuntimeConsole = lazy(() => import('./components/EngineRuntimeConsole').then((m) => ({ default: m.EngineRuntimeConsole })));
+const ConnectionModal = lazy(() => import('./components/ConnectionModal').then((m) => ({ default: m.ConnectionModal })));
+
+const TacticalLoaderFallback = () => (
+  <div className="surface-panel p-8 flex items-center justify-center gap-3 font-mono text-xs text-slate-400">
+    <div className="w-2.5 h-2.5 rounded-full bg-accent animate-ping" />
+    <span>SUBSYSTEM INITIALIZATION IN PROGRESS // DRDO PS-26054</span>
+  </div>
+);
 import { GCSRole } from './types/telemetry';
 import {
   WifiOff,
@@ -30,6 +39,9 @@ import {
 } from 'lucide-react';
 
 export function App() {
+  const [workspace, setWorkspace] = useState<'landing' | 'runtime' | 'twin' | 'legacy'>('landing');
+
+  // Gate 20Hz telemetry WebSocket to active console workspaces only (avoids polling overhead on landing)
   const {
     state,
     isConnected,
@@ -39,10 +51,9 @@ export function App() {
     sendCommand,
     isModalOpen,
     setIsModalOpen,
-  } = useTelemetrySocket();
+  } = useTelemetrySocket({ enabled: workspace !== 'landing' });
 
   const [activeRole, setActiveRole] = useState<GCSRole>('OPERATOR');
-  const [workspace, setWorkspace] = useState<'landing' | 'runtime' | 'twin' | 'legacy'>('landing');
   const [activeTab, setActiveTab] = useState<
     'OPERATOR' | 'PROPULSION' | 'MAINTENANCE' | 'AI_DIAGNOSTICS' | 'VOICE_COPILOT' | 'MISSION_REPLAY'
   >('OPERATOR');
@@ -133,6 +144,7 @@ export function App() {
           </div>
         </div>
 
+        <Suspense fallback={<TacticalLoaderFallback />}>
         {workspace === 'runtime' ? (
           <EngineRuntimeConsole serverUrl={serverUrl} />
         ) : workspace === 'twin' ? (
@@ -291,6 +303,7 @@ export function App() {
           </PanelErrorBoundary>
         )}
         </>)}
+        </Suspense>
       </main>
 
       {workspace === 'legacy' ? <footer className="bg-surface/80 border-t border-surface-border py-3 px-4 text-center mt-auto">
@@ -315,13 +328,15 @@ export function App() {
         </div>
       </footer> : <footer className="bg-surface/80 border-t border-surface-border py-3 px-4 text-center mt-auto text-[11px] text-slate-500">DRDO / iDEX PS-26054 · Simulation-backed multi-engine condition monitoring demonstrator</footer>}
 
-      <ConnectionModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        serverUrl={serverUrl}
-        onSave={setServerUrl}
-        isConnected={isConnected}
-      />
+      <Suspense fallback={null}>
+        <ConnectionModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          serverUrl={serverUrl}
+          onSave={setServerUrl}
+          isConnected={isConnected}
+        />
+      </Suspense>
     </div>
   );
 }

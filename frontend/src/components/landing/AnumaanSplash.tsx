@@ -131,7 +131,7 @@ export const AnumaanSplash: React.FC<AnumaanSplashProps> = ({
           disableRemotePlayback
           controls={false}
           tabIndex={-1}
-          preload="auto"
+          preload="metadata"
           onEnded={() => dismiss('video-ended')}
           onContextMenu={(e) => e.preventDefault()}
         />

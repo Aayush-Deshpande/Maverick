@@ -571,3 +571,42 @@
     min-height: 380px;
   }
 }
+
+@media (max-width: 480px) {
+  .hud-tech-meta-top {
+    padding: 6px 16px 2px 16px;
+    font-size: 6.5px;
+  }
+  .tactical-tabs-bar {
+    grid-template-columns: repeat(3, 1fr);
+    left: 14px;
+    right: 14px;
+    gap: 3px;
+  }
+  .tactical-hud-tab {
+    padding: 4px 6px;
+  }
+  .tactical-tab-code {
+    font-size: 7px;
+  }
+  .tactical-tab-power {
+    font-size: 6.5px;
+  }
+  .tactical-control-bar {
+    bottom: 50px;
+    right: 14px;
+  }
+  .tactical-telemetry-footer {
+    left: 14px;
+    right: 14px;
+    bottom: 12px;
+    font-size: 7px;
+  }
+  .tactical-stat-chunk {
+    font-size: 6.5px;
+  }
+  .tactical-console-viewport {
+    height: 80vw;
+    min-height: 320px;
+  }
+}

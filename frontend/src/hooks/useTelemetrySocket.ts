@@ -87,7 +87,12 @@ function normalizeBackendUrl(url: string): string {
   return clean;
 }
 
-export function useTelemetrySocket() {
+export interface UseTelemetrySocketOptions {
+  enabled?: boolean;
+}
+
+export function useTelemetrySocket(options?: UseTelemetrySocketOptions) {
+  const enabled = options?.enabled ?? true;
   const [serverUrl, setServerUrlState] = useState<string>(() => {
     const saved = localStorage.getItem('rotax_backend_url');
     if (saved) return normalizeBackendUrl(saved);
@@ -152,6 +157,11 @@ export function useTelemetrySocket() {
   );
 
   useEffect(() => {
+    if (!enabled) {
+      setIsConnected(false);
+      return;
+    }
+
     let isMounted = true;
     let ws: WebSocket | null = null;
 
@@ -262,7 +272,7 @@ export function useTelemetrySocket() {
       if (ws) ws.close();
       if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
     };
-  }, [serverUrl]);
+  }, [serverUrl, enabled]);
 
   return {
     state,

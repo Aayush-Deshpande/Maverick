@@ -322,8 +322,24 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
     controls.autoRotateSpeed = 1.0;
     controls.enablePan = true;
 
+    // Viewport throttling: pause WebGL render cycles when viewer is scrolled offscreen
+    let isVisibleInViewport = true;
+    const intersectionObserver = new IntersectionObserver(
+      ([entry]) => {
+        isVisibleInViewport = entry.isIntersecting;
+      },
+      { threshold: 0.05 }
+    );
+    if (container) {
+      intersectionObserver.observe(container);
+    }
+
     const animate = (currentTime: number) => {
       animationFrameId = requestAnimationFrame(animate);
+      if (!isVisibleInViewport) {
+        lastTime = currentTime;
+        return;
+      }
       const delta = Math.min((currentTime - lastTime) / 1000, 0.1);
       lastTime = currentTime;
 
@@ -371,6 +387,7 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
 
     return () => {
       cancelAnimationFrame(animationFrameId);
+      intersectionObserver.disconnect();
       resizeObserver.disconnect();
       dracoLoader.dispose();
       pmremGenerator.dispose();
@@ -431,7 +448,7 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
         {/* Studio Render View (When Image mode is selected) */}
         {viewMode === 'image' && (
           <div className="tactical-render-view">
-            <img src={activeAsset.imagePath} alt={activeAsset.name} />
+            <img src={activeAsset.imagePath} alt={activeAsset.name} loading="lazy" decoding="async" />
           </div>
         )}
 
@@ -533,6 +550,8 @@ export const LandingHero3D: React.FC<LandingHero3DProps> = ({
                   src="/images/anumaan-mark-editorial.png"
                   alt="ANUMAAN Logo"
                   className="tactical-radar-logo"
+                  loading="lazy"
+                  decoding="async"
                 />
               </div>
               <div className="tactical-radar-meta">
