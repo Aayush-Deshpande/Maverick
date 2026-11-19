@@ -29,15 +29,16 @@
     "max_boost_kpa": 190.0,
     "critical_altitude_ft": 18000.0,
     "wastegate_controlled": true,
-    "max_shaft_rpm": 200000.0,
+    "max_shaft_rpm": 172000.0,
     "intercooled": true,
     "lag_time_constant_sec": 1.1,
-    "surge_margin_min": 0.1
+    "surge_margin_min": 0.1,
+    "boost_control": "VGT"
   },
   "rated_power_kw": 123.5,
   "rated_rpm": 3880.0,
-  "max_continuous_power_kw": 114.0,
-  "max_continuous_rpm": 3600.0,
+  "max_continuous_power_kw": 123.5,
+  "max_continuous_rpm": 3880.0,
   "idle_rpm": 760.0,
   "gearbox_ratio": 1.69,
   "dry_mass_kg": 185.0,
@@ -69,19 +70,19 @@
     },
     "rated_power_kw": {
       "status": "PUBLIC",
-      "ref": "Austro Engine AE300 / E4 public spec sheet (Wikipedia; Austro Engine)"
+      "ref": "EASA TCDS E.200 issue 12 (2020-06-30) p.5: take-off 123.5 kW at 3880 rpm (2300 prop rpm)"
     },
     "rated_rpm": {
       "status": "PUBLIC",
-      "ref": "Austro Engine AE300 / E4 public spec sheet (Wikipedia; Austro Engine)"
+      "ref": "EASA TCDS E.200 issue 12 (2020-06-30) p.5"
     },
     "max_continuous_power_kw": {
-      "status": "ASSUMED",
-      "ref": "derated from rated power; not independently confirmed"
+      "status": "PUBLIC",
+      "ref": "EASA TCDS E.200 issue 12 (2020-06-30) p.5 lists one rating for the E4 (AE300): 123.5 kW at 3880 rpm. The 126 kW at 3720 rpm max-continuous rating belongs to the E4P (AE330). Was 114 kW at 3600 rpm (unsourced)."
     },
     "max_continuous_rpm": {
-      "status": "ASSUMED",
-      "ref": "derated from rated rpm; not independently confirmed"
+      "status": "PUBLIC",
+      "ref": "EASA TCDS E.200 issue 12 (2020-06-30) p.5/7 (E4 continuous speed equals the take-off rating)"
     },
     "gearbox_ratio": {
       "status": "PUBLIC",
@@ -89,7 +90,7 @@
     },
     "dry_mass_kg": {
       "status": "PUBLIC",
-      "ref": "Austro Engine AE300 / E4 public spec sheet (Wikipedia; Austro Engine)"
+      "ref": "EASA TCDS E.200 issue 12 (2020-06-30) p.5: dry weight 185 kg"
     },
     "idle_rpm": {
       "status": "ASSUMED",
@@ -105,11 +106,11 @@
     },
     "turbo.critical_altitude_ft": {
       "status": "ASSUMED",
-      "ref": "not in the cited spec sheet"
+      "ref": "No critical altitude is published; EASA TCDS E.200 issue 12 (2020-06-30) gives only the max operating altitude 18,000 ft. Held equal to it until a source is found."
     },
     "turbo.max_shaft_rpm": {
-      "status": "ASSUMED",
-      "ref": "not in the cited spec sheet"
+      "status": "PUBLIC",
+      "ref": "EASA TCDS E.200 issue 12 (2020-06-30) note 10: containment demonstrated for max turbocharger speed 172,000 rpm (E4); was 200,000"
     },
     "turbo.lag_time_constant_sec": {
       "status": "ASSUMED",
@@ -152,18 +153,106 @@
       "ref": "no public datum for this diesel profile; alerting placeholder only"
     },
     "operating_limits.oil_p_min_bar": {
-      "status": "PLACEHOLDER",
-      "ref": "no public datum for this diesel profile; alerting placeholder only"
+      "status": "PUBLIC",
+      "ref": "EASA TCDS E.200 issue 12 (2020-06-30) p.7: min oil pressure at idle 0.9 bar; min 2.5 bar at max continuous"
     },
     "operating_limits.oil_t_max_c": {
-      "status": "PLACEHOLDER",
-      "ref": "no public datum for this diesel profile; alerting placeholder only"
+      "status": "PUBLIC",
+      "ref": "EASA TCDS E.200 issue 12 (2020-06-30) p.6: max oil temperature 140 C (normal 50-135 C)"
+    },
+    "overspeed_rpm": {
+      "status": "PUBLIC",
+      "ref": "EASA TCDS E.200 issue 12 (2020-06-30) p.7: maximum engine over-speed 4220 rpm (2500 prop rpm)"
+    },
+    "max_operating_altitude_ft": {
+      "status": "PUBLIC",
+      "ref": "EASA TCDS E.200 issue 12 (2020-06-30) p.7: maximum altitude E4 5490 m (18,000 ft)"
+    },
+    "operating_limits.coolant_t_max_c": {
+      "status": "PUBLIC",
+      "ref": "EASA TCDS E.200 issue 12 (2020-06-30) p.6: max cooling fluid temperature 105 C"
+    },
+    "operating_limits.gearbox_t_max_c": {
+      "status": "PUBLIC",
+      "ref": "EASA TCDS E.200 issue 12 (2020-06-30) p.6: max gearbox temperature 120 C"
+    },
+    "operating_limits.oil_p_max_bar": {
+      "status": "PUBLIC",
+      "ref": "EASA TCDS E.200 issue 12 (2020-06-30) p.7"
     }
   },
   "operating_limits": {
     "cht_max_c": 120.0,
     "egt_max_c": 750.0,
-    "oil_p_min_bar": 0.8,
-    "oil_t_max_c": 130.0
+    "oil_p_min_bar": 0.9,
+    "oil_t_max_c": 140.0,
+    "coolant_t_max_c": 105.0,
+    "gearbox_t_max_c": 120.0,
+    "oil_p_max_bar": 6.5
+  },
+  "overspeed_rpm": 4220.0,
+  "max_operating_altitude_ft": 18000.0,
+  "fuel_system": "COMMON_RAIL",
+  "ignition_circuits": 0,
+  "ecu_lanes": 2,
+  "glow_plugs": true,
+  "thermostat": true,
+  "propeller_governor": true,
+  "limits": {
+    "oil_t": {
+      "unit": "C",
+      "warning_low": 50.0,
+      "normal": [
+        50.0,
+        135.0
+      ],
+      "warning_high": 140.0,
+      "ref": "EASA TCDS E.200 issue 12 (2020-06-30) p.6"
+    },
+    "oil_p": {
+      "unit": "bar",
+      "warning_low": 0.9,
+      "warning_high": 6.5,
+      "rpm_rule": {
+        "at_idle_min": 0.9,
+        "at_max_continuous_min": 2.5
+      },
+      "ref": "EASA TCDS E.200 issue 12 (2020-06-30) p.7"
+    },
+    "coolant_t": {
+      "unit": "C",
+      "min_before_full_power": 60.0,
+      "warning_high": 105.0,
+      "ref": "EASA TCDS E.200 issue 12 (2020-06-30) p.6"
+    },
+    "gearbox_t": {
+      "unit": "C",
+      "warning_high": 120.0,
+      "ref": "EASA TCDS E.200 issue 12 (2020-06-30) p.6"
+    },
+    "fuel_p": {
+      "unit": "bar (HP pump inlet)",
+      "normal": [
+        4.0,
+        7.0
+      ],
+      "warning_low": 4.0,
+      "warning_high": 7.0,
+      "ref": "EASA TCDS E.200 issue 12 (2020-06-30) p.7"
+    },
+    "fuel_t": {
+      "unit": "C",
+      "warning_low": -30.0,
+      "ref": "EASA TCDS E.200 issue 12 (2020-06-30) p.6 (jet fuel)"
+    },
+    "rpm": {
+      "unit": "rpm",
+      "warning_high": 4220.0,
+      "ref": "EASA TCDS E.200 issue 12 (2020-06-30) p.7"
+    }
+  },
+  "notes": {
+    "egt_cht": "The certified limits are coolant, oil, gearbox, oil pressure and fuel pressure. The flat cht_max_c/egt_max_c values stay PLACEHOLDER for the legacy checker only and must not be shown as certified limits.",
+    "geometry": "3D model is AE330-shaped (representative)."
   }
 }

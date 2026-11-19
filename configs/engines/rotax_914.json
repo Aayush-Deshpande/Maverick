@@ -35,7 +35,11 @@
     "max_shaft_rpm": 180000.0,
     "intercooled": false,
     "lag_time_constant_sec": 0.8,
-    "surge_margin_min": 0.12
+    "surge_margin_min": 0.12,
+    "critical_altitude_takeoff_ft": 8000.0,
+    "map_takeoff_max_kpa": 135.0,
+    "map_continuous_max_kpa": 120.0,
+    "boost_control": "WASTEGATE"
   },
   "rated_power_kw": 84.5,
   "rated_rpm": 5800.0,
@@ -47,12 +51,12 @@
   "tbo_hours": 2000.0,
   "nominal_bsfc_g_kwh": 295.0,
   "nominal_lambda": 0.95,
-  "nominal_inj_timing_btdc": 0.0,
+  "nominal_inj_timing_btdc": null,
   "nominal_ign_timing_btdc": 26.0,
-  "rail_pressure_bar": 0.25,
+  "rail_pressure_bar": null,
   "fuel_cloud_point_c": null,
   "fuel_cfpp_c": null,
-  "source": "Rotax 914 Operator's + Installation Manual (docs/reference/); PRIMARY TARGET \u2014 global MALE standard, matches NASA ACES real telemetry",
+  "source": "Rotax 914 Operator's + Installation Manual (docs/reference/); PRIMARY TARGET — global MALE standard, matches NASA ACES real telemetry",
   "provenance": {
     "layout.bore_mm": {
       "status": "MANUAL",
@@ -110,15 +114,7 @@
       "status": "MANUAL",
       "ref": "Rotax 914 Operator's + Installation Manual (docs/reference/)"
     },
-    "nominal_inj_timing_btdc": {
-      "status": "MANUAL",
-      "ref": "Rotax 914 Operator's + Installation Manual (docs/reference/)"
-    },
     "nominal_ign_timing_btdc": {
-      "status": "MANUAL",
-      "ref": "Rotax 914 Operator's + Installation Manual (docs/reference/)"
-    },
-    "rail_pressure_bar": {
       "status": "MANUAL",
       "ref": "Rotax 914 Operator's + Installation Manual (docs/reference/)"
     },
@@ -128,7 +124,7 @@
     },
     "turbo.critical_altitude_ft": {
       "status": "MANUAL",
-      "ref": "Rotax 914 Operator's + Installation Manual (docs/reference/)"
+      "ref": "BRP-Rotax Operators Manual 914 (docs/reference/Rotax914_Operators_Manual.pdf) p.2-3: continuous performance up to 4875 m (16,000 ft)"
     },
     "turbo.max_shaft_rpm": {
       "status": "MANUAL",
@@ -143,26 +139,102 @@
       "ref": "Rotax 914 Operator's + Installation Manual (docs/reference/)"
     },
     "operating_limits.cht_max_c": {
-      "status": "ASSUMED",
-      "ref": "legacy literal from backend/ml/detection_pipeline.py (135/850) and the plant hard-failure threshold (0.8 bar); typical of the Rotax operator manuals but NOT re-verified against docs/reference (verification row V-limits)"
+      "status": "MANUAL",
+      "ref": "BRP-Rotax Operators Manual 914 (docs/reference/Rotax914_Operators_Manual.pdf) p.2-4"
     },
     "operating_limits.egt_max_c": {
-      "status": "ASSUMED",
-      "ref": "legacy literal from backend/ml/detection_pipeline.py (135/850) and the plant hard-failure threshold (0.8 bar); typical of the Rotax operator manuals but NOT re-verified against docs/reference (verification row V-limits)"
+      "status": "MANUAL",
+      "ref": "BRP-Rotax Operators Manual 914 (docs/reference/Rotax914_Operators_Manual.pdf) p.2-3: EGT max 950 C (was 850, unsourced)"
     },
     "operating_limits.oil_p_min_bar": {
-      "status": "ASSUMED",
-      "ref": "legacy literal from backend/ml/detection_pipeline.py (135/850) and the plant hard-failure threshold (0.8 bar); typical of the Rotax operator manuals but NOT re-verified against docs/reference (verification row V-limits)"
+      "status": "MANUAL",
+      "ref": "BRP-Rotax Operators Manual 914 (docs/reference/Rotax914_Operators_Manual.pdf) p.2-3 (below 3500 rpm)"
     },
     "operating_limits.oil_t_max_c": {
-      "status": "ASSUMED",
-      "ref": "legacy literal from backend/ml/detection_pipeline.py (135/850) and the plant hard-failure threshold (0.8 bar); typical of the Rotax operator manuals but NOT re-verified against docs/reference (verification row V-limits)"
+      "status": "MANUAL",
+      "ref": "BRP-Rotax Operators Manual 914 (docs/reference/Rotax914_Operators_Manual.pdf) p.2-3"
+    },
+    "turbo.critical_altitude_takeoff_ft": {
+      "status": "MANUAL",
+      "ref": "BRP-Rotax Operators Manual 914 (docs/reference/Rotax914_Operators_Manual.pdf) p.2-3: take-off performance up to 2450 m (8,000 ft)"
+    },
+    "turbo.map_takeoff_max_kpa": {
+      "status": "MANUAL",
+      "ref": "BRP-Rotax Operators Manual 914 (docs/reference/Rotax914_Operators_Manual.pdf) p.2-2: take-off max 1350 hPa"
+    },
+    "turbo.map_continuous_max_kpa": {
+      "status": "MANUAL",
+      "ref": "BRP-Rotax Operators Manual 914 (docs/reference/Rotax914_Operators_Manual.pdf) p.2-2: max continuous max 1200 hPa"
+    },
+    "operating_limits.coolant_t_max_c": {
+      "status": "MANUAL",
+      "ref": "BRP-Rotax Operators Manual 914 (docs/reference/Rotax914_Operators_Manual.pdf) p.2-4 (coolant exit temperature)"
     }
   },
   "operating_limits": {
     "cht_max_c": 135.0,
-    "egt_max_c": 850.0,
+    "egt_max_c": 950.0,
     "oil_p_min_bar": 0.8,
-    "oil_t_max_c": 130.0
+    "oil_t_max_c": 130.0,
+    "coolant_t_max_c": 120.0
+  },
+  "fuel_system": "CARBURETTOR",
+  "ignition_circuits": 2,
+  "ecu_lanes": 0,
+  "glow_plugs": false,
+  "thermostat": false,
+  "propeller_governor": false,
+  "limits": {
+    "map_kpa": {
+      "unit": "kPa",
+      "time_limited": {
+        "max": 135.0,
+        "max_s": 300
+      },
+      "warning_high": 135.0,
+      "normal_max": 120.0,
+      "note": "overshoot allowed if it settles within 2 s",
+      "ref": "BRP-Rotax Operators Manual 914 (docs/reference/Rotax914_Operators_Manual.pdf) p.2-2"
+    },
+    "egt": {
+      "unit": "C",
+      "warning_high": 950.0,
+      "per_cylinder": true,
+      "ref": "BRP-Rotax Operators Manual 914 (docs/reference/Rotax914_Operators_Manual.pdf) p.2-3"
+    },
+    "cht": {
+      "unit": "C",
+      "warning_high": 135.0,
+      "per_cylinder": true,
+      "ref": "BRP-Rotax Operators Manual 914 (docs/reference/Rotax914_Operators_Manual.pdf) p.2-4"
+    },
+    "coolant_t": {
+      "unit": "C",
+      "warning_high": 120.0,
+      "ref": "BRP-Rotax Operators Manual 914 (docs/reference/Rotax914_Operators_Manual.pdf) p.2-4"
+    },
+    "oil_t": {
+      "unit": "C",
+      "warning_low": 50.0,
+      "normal": [
+        90.0,
+        110.0
+      ],
+      "warning_high": 130.0,
+      "ref": "BRP-Rotax Operators Manual 914 (docs/reference/Rotax914_Operators_Manual.pdf) p.2-3"
+    },
+    "fuel_p": {
+      "unit": "bar above airbox",
+      "normal": [
+        0.15,
+        0.35
+      ],
+      "nominal": 0.25,
+      "ref": "BRP-Rotax Operators Manual 914 (docs/reference/Rotax914_Operators_Manual.pdf) p.2-4"
+    }
+  },
+  "notes": {
+    "fuel": "Carburetted (2 constant-depression carburettors): no injection timing, no rail; injector faults F05-F09 do not apply, F12 carburettor icing does.",
+    "boost_failure": "With boost failure about 66 kW (88 hp) remains (OM914 p.4-2)."
   }
 }

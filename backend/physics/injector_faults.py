@@ -216,7 +216,11 @@ class InjectorBank:
 
         # Rail pressure affects delivered mass through the orifice relation
         # (mass flow ~ sqrt(dP)), and cold fuel reduces delivery independently.
-        pressure_factor = math.sqrt(max(rail, 1.0) / max(self.nominal_rail_bar, 1.0))
+        # A carburetted engine has no rail (nominal_rail_bar None): delivery is not pressure-scaled.
+        if rail is None or self.nominal_rail_bar is None:
+            pressure_factor = 1.0
+        else:
+            pressure_factor = math.sqrt(max(rail, 1.0) / max(self.nominal_rail_bar, 1.0))
         for inj in self.injectors.values():
             inj.delivery_fraction = max(0.0, inj.delivery_fraction * pressure_factor
                                         * max(0.0, fuel_temp_factor))
@@ -262,13 +266,15 @@ class InjectorBank:
             "spread": round(spread, 4),
             "weakest_cylinder": worst,
             "weakest_contribution": round(contrib[worst], 4),
-            "rail_pressure_bar": round(self.rail_pressure_bar, 1),
+            "rail_pressure_bar": None if self.rail_pressure_bar is None else round(self.rail_pressure_bar, 1),
             "interpretation": interpretation,
             "per_cylinder": {k: round(v, 4) for k, v in contrib.items()},
         }
 
     def as_dict(self) -> dict:
-        out: dict = {"RAIL_PRESSURE_BAR": round(self.rail_pressure_bar, 1)}
+        out: dict = {}
+        if self.rail_pressure_bar is not None:  # carburetted engines have no rail
+            out["RAIL_PRESSURE_BAR"] = round(self.rail_pressure_bar, 1)
         for inj in self.injectors.values():
             out.update(inj.as_dict())
         return out
