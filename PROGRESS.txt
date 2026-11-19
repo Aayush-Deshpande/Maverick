@@ -7,9 +7,9 @@ RESUME HERE  (last updated 19 Nov 2026)
 =====================================================================================================================
 Phase:        PHASE 1 (M0) cards done (M0-01..M0-12; M0-10 reduced, see its entry). NEXT: CHECKPOINT PHASE 1 (manual
               look by Prasad), then Phase 2 in demo-first order: M1-01 sim package + clock, M1-02 atmosphere, ...
-Card:         M1-04 (M1-01..03 done).
+Card:         M1-05 (M1-01..04 done).
 Branch:       Beta (pushed by Prasad up to ae82c70; later commits local). main untouched (9b5942e).
-Last commit:  M1-03 on Beta (see git log -1).
+Last commit:  M1-04 on Beta (see git log -1).
 State:        ONE simulator: RuntimeHub. EngineStateService runs no loop; /api/state, /api/control, /ws/telemetry,
               /ws/blender, /api/health, copilot and voice read the v1 runtime (legacy_adapter.py). D52 command security
               on every command path. Test baseline now: 430 passed, 1 failed (ratchet: engine_service/copilot brand
@@ -416,4 +416,14 @@ configs/installations/propellers.json (new): ASSUMED installation data (diameter
 Tests tests/sim/test_rotor.py 6 passed: fixed-pitch calibration point within 1 %, same power in thinner air spins
   faster, losing 25 % torque slows a fixed-pitch engine > 5 %, governor (AE300, VRDE) settles within +-20 rpm in < 2 s
   after a +20 % power step with < 3 % overshoot and coarser pitch.
+
+=== 19 Nov 2026  M1-04 Induction (AI: Claude Code, Opus 5.5)
+backend/sim/induction.py: compressible throttle orifice (cosine area law + idle leak), speed-density cylinder flow with
+  the REAL rpm, air-filter dp = k mdot^2 (F13 scales k), manifold filling solved quasi-steady + exact exponential lag
+  (stable at the 0.05 s step). Throttle area and filter k CALIBRATED from the WOT rated point.
+backend/sim/params.py + configs/physics/defaults.json (new): generic physics constants (ASSUMED, with refs) that any
+  engine may override with a "physics" block (schema: one property added). ASSUMED added: manifold/displacement 1.5,
+  eta_v 0.88, throttle Cd 0.8, WOT MAP ratio 0.97, idle area 3 %, clean filter dp 1 kPa.
+Tests tests/sim/test_induction.py 9 passed (WOT point all 5 engines, throttle/altitude/rpm trends, blocked filter
+  -3 kPa+, MAP time constant 0.05-0.3 s, monotone at dt 0.05). Full suite 463 passed, 1 failed (ratchet, known).
 

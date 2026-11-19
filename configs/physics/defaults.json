@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "description": "Generic mean-value-engine constants (cards M1-04 onward, R 21.4, P Part 4 Step 1.3). An engine overrides any value with a 'physics' block in configs/engines/<id>.json (same shape). Every value carries provenance; ASSUMED values are generic textbook/installation estimates, never engine ratings or limits (those live in configs/engines). CALIBRATED values are produced at start-up by backend/sim calibration.",
+  "induction": {
+    "manifold_volume_per_displacement": {"value": 1.5, "status": "ASSUMED", "ref": "plenum + runners ~1.5x swept volume (MVEM literature, Hendricks & Sorenson SAE 900616)"},
+    "volumetric_efficiency": {"value": 0.88, "status": "ASSUMED", "ref": "typical 2-valve aero piston engine at rated speed; refined by M1-06 calibration"},
+    "throttle_cd": {"value": 0.8, "status": "ASSUMED", "ref": "butterfly discharge coefficient (Heywood, Internal Combustion Engine Fundamentals, ch. 7)"},
+    "wot_map_ratio": {"value": 0.97, "status": "ASSUMED", "ref": "MAP / upstream pressure at wide-open throttle and rated rpm; sets the throttle area (CALIBRATED from it)"},
+    "idle_area_fraction": {"value": 0.03, "status": "ASSUMED", "ref": "closed-throttle leakage + idle bypass as a fraction of full area"},
+    "filter_dp_kpa_at_rated_flow": {"value": 1.0, "status": "ASSUMED", "ref": "clean air filter pressure drop at rated airflow; dp = k * mdot^2"}
+  }
+}

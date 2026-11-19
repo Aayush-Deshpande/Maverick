@@ -10,6 +10,7 @@
                "operating_limits", "limits", "provenance"],
   "properties": {
     "engine_id": {"type": "string", "pattern": "^[a-z0-9_]+$"},
+    "physics": {"type": "object", "description": "per-engine overrides of configs/physics/defaults.json (section -> name -> {value, status, ref})"},
     "display_name": {"type": "string", "minLength": 3},
     "manufacturer": {"type": "string"},
     "platforms": {"type": "array", "items": {"type": "string"}},
