@@ -9,6 +9,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { UnifiedTelemetryState } from '../types/telemetry';
+import { pct } from '../utils/format';
 
 interface PropulsionEngineerPanelProps {
   state: UnifiedTelemetryState;
@@ -362,7 +363,7 @@ export const PropulsionEngineerPanel: React.FC<PropulsionEngineerPanelProps> = (
             <div className="space-y-2 text-xs">
               <div className="flex justify-between items-center bg-white/[0.02] p-2 rounded border border-surface-border/60">
                 <span className="text-slate-400">Overall Anomaly Score:</span>
-                <span className="font-mono font-semibold text-accent">{(a.anomaly_score * 100).toFixed(1)}%</span>
+                <span className="font-mono font-semibold text-accent">{pct(a.anomaly_score, 1)}</span>
               </div>
               <div className="flex justify-between items-center bg-white/[0.02] p-2 rounded border border-surface-border/60">
                 <span className="text-slate-400">Diagnosed Condition:</span>
@@ -373,7 +374,7 @@ export const PropulsionEngineerPanel: React.FC<PropulsionEngineerPanelProps> = (
               <div className="flex justify-between items-center bg-white/[0.02] p-2 rounded border border-surface-border/60">
                 <span className="text-slate-400">Diagnostic Confidence:</span>
                 <span className="font-mono font-semibold text-emerald-400">
-                  {((a.diagnosed_confidence || 0) * 100).toFixed(0)}%
+                  {pct(a.diagnosed_confidence)}
                 </span>
               </div>
             </div>

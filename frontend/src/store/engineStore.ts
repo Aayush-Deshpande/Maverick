@@ -35,7 +35,7 @@ export const createEngineStore = () =>
     lastError: null,
     apply: (msg, now) => {
       const prev = get().engines[msg.engine_id];
-      let dropped = prev?.dropped ?? 0;
+      let dropped = prev ? prev.dropped : 0;   // a frame counter starts at zero (not a reading)
       let restarted = false;
       if (prev) {
         if (msg.seq <= prev.state.seq) {

@@ -5,13 +5,11 @@ section 19.1. Update the RESUME HERE block at every commit and at the end of eve
 =====================================================================================================================
 RESUME HERE  (last updated 19 Nov 2026)
 =====================================================================================================================
-Phase:        PHASE 1 (M0) in progress. Done: M0-01..M0-08, M0-11. Waiting on Prasad: M0-09 (vitest dependency).
-              M0-12, M0-09a done. NEXT: M0-09b (components read the store; remove useTelemetrySocket's extra
-              socket + the 1 s / 3 s polls in useEngineRuntime; real rate + data age labels; null -> NO DATA;
-              sliders read lever values back), then M0-10.
-Card:         M0-09b.
+Phase:        PHASE 1 (M0) in progress. Done: M0-01..M0-09b, M0-11, M0-12. NEXT: M0-10 (old 3D window + Blender app
+              on /api/v1), then CHECKPOINT PHASE 1, then Phase 2 in the demo-first order (course of action section 20).
+Card:         M0-10.
 Branch:       Beta (pushed by Prasad up to ae82c70; later commits local). main untouched (9b5942e).
-Last commit:  M0-09a on Beta (see git log -1).
+Last commit:  M0-09b on Beta (see git log -1).
 State:        ONE simulator: RuntimeHub. EngineStateService runs no loop; /api/state, /api/control, /ws/telemetry,
               /ws/blender, /api/health, copilot and voice read the v1 runtime (legacy_adapter.py). D52 command security
               on every command path. Test baseline now: 430 passed, 1 failed (ratchet: engine_service/copilot brand
@@ -372,4 +370,18 @@ New: src/store/engineStore.ts (zustand vanilla store: latest StateMessage per en
   socket, subscribe on open, backoff reconnect 0.5-8 s + resubscribe = snapshot resync, server errors surfaced,
   ws/wss from the page origin).
 Tests: src/store/engineStore.test.ts 8 passed (Vitest); tsc passes. Backend untouched.
+
+=== 19 Nov 2026  M0-09b Engine console on the one store (AI: Claude Code, Opus 5.5)
+- useEngineRuntime.ts rewritten on /api/v1: engine list on mount + after reconnect (3 s catalog poll gone), one
+  /ws/v1 "fleet" socket (the /ws/fleet + /ws/engines/{id} sockets and the 1 s /state poll are gone), per-client
+  engine selection (no POST /api/engines/select; ?engine= in the URL picks one), fault list from /api/v1/faults.
+- EngineRuntimeConsole.tsx: v1 readings with unit + quality, NO DATA for null, real rate + data age badge (no
+  "LIVE 20 Hz SYNCHRONOUS"), status level shown (UNKNOWN until M2-01), registry faults F/S ids, injection with
+  source=console + request_id, sliders start from the server's lever targets, red/amber kept for alerts only.
+- Backend: v1 message now carries detections.scores/ratios/candidate (tier-1 readout) and levers targets.
+- App.tsx: SET_ROLE no longer sent to the server (audit #42). utils/format.ts pct()/num(): five Tactical GCS
+  percentages that showed a fake 0% on null now show NO DATA.
+Still on the legacy socket (M6 replaces these panels): the Tactical GCS tabs use useTelemetrySocket (/ws/telemetry
+  + its fallback poll). Not checked in a browser yet (Prasad: open the console tab once).
+Tests: Vitest 8 passed; tsc OK; tests/api + tests/dynamic green (T-DYN-1 caught one "?? 0", fixed).
 

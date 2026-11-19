@@ -11,6 +11,7 @@ import {
   Wrench,
 } from 'lucide-react';
 import { UnifiedTelemetryState, GCSRole } from '../types/telemetry';
+import { pct } from '../utils/format';
 
 interface HeaderProps {
   state: UnifiedTelemetryState;
@@ -142,7 +143,7 @@ export const Header: React.FC<HeaderProps> = ({
             }`}
           >
             <Zap className={`w-3.5 h-3.5 ${isFaulted ? 'text-critical' : 'text-success'}`} />
-            <span>HI: {(state.analytics.health_index * 100).toFixed(0)}%</span>
+            <span>HI: {pct(state.analytics.health_index)}</span>
           </div>}
         </div>
 

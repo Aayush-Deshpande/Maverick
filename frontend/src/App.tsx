@@ -47,25 +47,22 @@ export function App() {
     'OPERATOR' | 'PROPULSION' | 'MAINTENANCE' | 'AI_DIAGNOSTICS' | 'VOICE_COPILOT' | 'MISSION_REPLAY'
   >('OPERATOR');
 
+  // The role is a client-side view setting; it is never sent to the server (audit #42, M0-09).
   const handleSelectRole = (role: GCSRole) => {
     setActiveRole(role);
     if (role === 'OPERATOR') setActiveTab('OPERATOR');
     else if (role === 'PROPULSION_ENGINEER') setActiveTab('PROPULSION');
     else if (role === 'MAINTENANCE_CREW') setActiveTab('MAINTENANCE');
-    sendCommand({ action: 'SET_ROLE', role });
   };
 
   const handleTabClick = (tabId: typeof activeTab) => {
     setActiveTab(tabId);
     if (tabId === 'OPERATOR') {
       setActiveRole('OPERATOR');
-      sendCommand({ action: 'SET_ROLE', role: 'OPERATOR' });
     } else if (tabId === 'PROPULSION') {
       setActiveRole('PROPULSION_ENGINEER');
-      sendCommand({ action: 'SET_ROLE', role: 'PROPULSION_ENGINEER' });
     } else if (tabId === 'MAINTENANCE') {
       setActiveRole('MAINTENANCE_CREW');
-      sendCommand({ action: 'SET_ROLE', role: 'MAINTENANCE_CREW' });
     }
   };
 

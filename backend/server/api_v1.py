@@ -83,8 +83,11 @@ class Services:
         ch.last_t, ch.last_wall = tick.frame.t, now
         ch.seq += 1
         events, ch.pending_events[:] = list(ch.pending_events), []
+        lv = getattr(self.hub.runtimes.get(engine_id), "levers", None)
+        levers = None if lv is None else {"throttle": tick.frame.throttle, "throttle_target": lv.throttle_target,
+                                          "altitude_target_ft": lv.altitude_target, "oat_target_c": lv.oat_target}
         msg = build_state(tick, ch.seq, registry=REGISTRY, active_faults=ch.manager.active(), fault_events=events,
-                          rate_hz_actual=None if ch.rate_hz is None else round(ch.rate_hz, 2))
+                          rate_hz_actual=None if ch.rate_hz is None else round(ch.rate_hz, 2), levers=levers)
         ch.last_message = msg.model_dump_json()
         return ch.last_message
 

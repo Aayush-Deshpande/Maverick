@@ -122,7 +122,10 @@ def build_state(tick: Any, seq: int, *, registry: Any = None, active_faults: Ite
         readings=readings,
         twin=tick.ukf, residuals={},
         detections=None if det is None else {"confirmed": bool(det.confirmed), "raw_alarm": bool(det.raw_alarm),
-                                             "top_channels": [list(x) if isinstance(x, tuple) else x for x in det.top_channels]},
+                                             "top_channels": [list(x) if isinstance(x, tuple) else x for x in det.top_channels],
+                                             "scores": {k: float(v) for k, v in det.scores.items()},
+                                             "ratios": {k: float(v) for k, v in det.ratios.items()},
+                                             "candidate": tick.heavy},          # tier-1 readout scores (not probabilities)
         hypotheses=[],
         status=Status(level="UNKNOWN"),
         highlights=highlights,

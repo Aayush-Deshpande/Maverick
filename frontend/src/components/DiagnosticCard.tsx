@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { UnifiedTelemetryState } from '../types/telemetry';
 import { AerospaceMarkdown } from './AerospaceMarkdown';
+import { pct } from '../utils/format';
 
 interface DiagnosticCardProps {
   state: UnifiedTelemetryState;
@@ -149,7 +150,7 @@ export const DiagnosticCard: React.FC<DiagnosticCardProps> = ({
               {a.diagnosed_fault_name}
             </span>
             <span className="text-xs text-slate-500">
-              ({(a.diagnosed_confidence * 100).toFixed(0)}% confidence)
+              ({pct(a.diagnosed_confidence)} confidence)
             </span>
           </div>
 

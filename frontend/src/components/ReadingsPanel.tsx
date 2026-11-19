@@ -1,6 +1,7 @@
 import React from 'react';
 import { Activity, Gauge } from 'lucide-react';
 import { UnifiedTelemetryState } from '../types/telemetry';
+import { pct } from '../utils/format';
 
 interface ReadingsPanelProps {
   state: UnifiedTelemetryState;
@@ -174,7 +175,7 @@ export const ReadingsPanel: React.FC<ReadingsPanelProps> = ({ state }) => {
           <span className="text-slate-500">
             Composite anomaly score:{' '}
             <span className={`font-mono font-semibold ${anomalyScore >= 0.65 ? 'text-critical' : anomalyScore >= 0.35 ? 'text-warning' : 'text-success'}`}>
-              {(anomalyScore * 100).toFixed(1)}%
+              {pct(anomalyScore, 1)}
             </span>
           </span>
           <span className="text-slate-500">
