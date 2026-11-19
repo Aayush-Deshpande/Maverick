@@ -210,6 +210,13 @@ def clear_faults(engine_id: str):
     return {"cleared": True}
 
 
+@router.post("/api/engines/{engine_id}/reset")
+def reset_sortie(engine_id: str):
+    """Clear operator scenarios and start a fresh sortie (fatigue, UKF, reliability)."""
+    _rt(engine_id).reset_sortie()
+    return {"reset": True}
+
+
 @router.post("/api/engines/{engine_id}/levers")
 def set_levers(engine_id: str, body: LeverBody):
     return _rt(engine_id).set_levers(**body.model_dump(exclude_none=True))

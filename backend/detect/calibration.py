@@ -24,7 +24,10 @@ from backend.core.frame import Frame, Q_SHIELDED
 
 CALIBRATION_SCHEMA = "tail_calibration/1"
 SCALAR_CHANNELS = ("oil_p", "oil_t", "fuel_flow", "map_kpa", "rpm")
-Z_CLIP = 10.0
+# Clip only pathological values. At 10.0 a near-constant nominal channel could saturate the
+# clip during calibration, making the max_abs_z conformal threshold equal the clip itself --
+# a scorer that can never exceed its own threshold, so strong single-channel faults never alarmed.
+Z_CLIP = 50.0
 
 
 def _design(throttle: np.ndarray, alt: np.ndarray, oat: np.ndarray) -> np.ndarray:

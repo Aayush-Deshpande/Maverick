@@ -285,6 +285,22 @@ class EngineRuntime:
             if self.detector:
                 self.detector.gate.reset()
 
+    def reset_sortie(self) -> None:
+        """Start a fresh sortie: clear faults and restart fatigue, UKF and reliability state.
+
+        The demo runtime runs unattended at 20x time scale, so damage accumulated over days of
+        uptime would otherwise leave every visitor looking at a consumed-life engine.
+        """
+        with self._lock:
+            self.clear_faults()
+            self.damage_accumulator = DamageAccumulator(name=f"{self.engine_id}_cyl1_head")
+            self.ukf = ThermofluidUKF(self.cfg, dt=DT)
+            self._dmg_finalise_counter = 0
+            self._cached_ukf = None
+            self._cached_reliability = None
+            self._cached_glide = None
+            self._sortie_start_t = None
+
     def set_sensor_fault(self, kind: str, channel: str, **kwargs) -> None:
         """Inject sensor-level fault (R7): bias, drift, stuck, noise, dropout, spoof."""
         with self._lock:
@@ -405,6 +421,17 @@ class EngineRuntime:
 
                 # 7. Fatigue Damage Accumulation & Conformal RUL Intervals
                 head_t = float(frame.cht[0]) if frame.cht else 115.0
+                # Sortie rollover: one 18 h ISR sortie of simulated time, or consumed life, with
+                # no operator scenario active -> start a new sortie's fatigue ledger.
+                if getattr(self, "_sortie_start_t", None) is None:
+                    self._sortie_start_t = frame.t
+                if not self.injected and (
+                    frame.t - self._sortie_start_t >= 18 * 3600.0
+                    or self.damage_accumulator.current_state().total >= 0.1
+                ):
+                    self.damage_accumulator = DamageAccumulator(name=f"{self.engine_id}_cyl1_head")
+                    self._dmg_finalise_counter = 0
+                    self._sortie_start_t = frame.t
                 self.damage_accumulator.update(frame.t, head_t)
                 self._dmg_finalise_counter += 1
                 if self._dmg_finalise_counter >= 100:
