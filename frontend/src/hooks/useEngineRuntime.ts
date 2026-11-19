@@ -29,6 +29,10 @@ export interface EngineFrame {
   egt: number[];
   detection: null | { scores: Record<string, number>; ratios: Record<string, number>; raw_alarm: boolean; confirmed: boolean; top_channels: Array<string | [string, number]> };
   heavy: null | { label: string; classes: string[]; scores: number[] };
+  diagnosis?: null | { fault_name: string; ata_chapter: string; manual_reference?: string; subsystem?: string; severity: string; root_cause_explanation?: string; causal_chain?: string[]; prescriptive_action?: string; maintenance_order?: string; confidence?: number; cylinder?: number | null };
+  prognostics?: null | { damage?: { damage_total: number; life_remaining_fraction: number; component?: string }; rul?: { rul_p_lower: number; rul_point: number; rul_p_upper: number; nominal_coverage: number } };
+  reliability?: null | { mission_reliability: number; limiting_component: string; mission_hours: number };
+  glide?: null | { altitude_ft: number; ld_ratio?: number; glide_range_nm: number; time_aloft_min: number; sink_rate_fpm?: number; reachable_count: number; recommended_diversion: null | string | { name?: string; airfield_id?: string }; airfields: Array<{ airfield_id: string; name: string; distance_nm: number; alt_required_ft?: number; alt_margin_ft: number; is_reachable: boolean; status: string }> };
 }
 interface EngineIndex { selected: string; tick: number; engines: EngineProfile[] }
 export interface EngineSchema { channels: Array<{ name: string; unit: string; kind: string; cylinder: number | null; required: boolean }>; operating_limits: Record<string, unknown>; components: string[]; provenance_summary: Record<string, number> }

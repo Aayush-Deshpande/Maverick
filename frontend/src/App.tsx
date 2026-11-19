@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { useTelemetrySocket } from './hooks/useTelemetrySocket';
 import { Header } from './components/Header';
 import { PanelErrorBoundary } from './components/PanelErrorBoundary';
@@ -41,6 +41,8 @@ import {
 export function App() {
   const [workspace, setWorkspace] = useState<'landing' | 'runtime' | 'twin' | 'legacy'>('landing');
 
+  useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }); }, [workspace]);
+
   // Gate 20Hz telemetry WebSocket to active console workspaces only (avoids polling overhead on landing)
   const {
     state,
@@ -81,7 +83,7 @@ export function App() {
   };
 
   if (workspace === 'landing') {
-    return <LandingPage onLaunchConsole={(target) => setWorkspace(target || 'runtime')} />;
+    return <LandingPage serverUrl={serverUrl} onLaunchConsole={(target) => setWorkspace(target || 'runtime')} />;
   }
 
   return (
@@ -165,7 +167,7 @@ export function App() {
             </div>
             <iframe
               title="ANUMAAN interactive engine twin"
-              src={`${serverUrl}/apps/threejs_twin/?backend=${encodeURIComponent(serverUrl)}`}
+              src={`/twin/index.html?backend=${encodeURIComponent(serverUrl)}`}
               className="block h-[calc(100vh-12rem)] min-h-[680px] w-full bg-[#e8e7df]"
               allow="fullscreen"
             />
@@ -342,3 +344,4 @@ export function App() {
 }
 
 export default App;
+
