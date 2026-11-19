@@ -58,13 +58,13 @@ function run(fault: string | null, seed: number) {
   }
   return U;
 }
-const rows: Float64Array[] = [], labels: number[] = [];
+const rows: Float64Array[] = [], labels: number[] = [], feats: number[][] = [];
 for (let k = 0; k < 2; k++) {
   const nominal = run(null, 300 + k);
-  reset(); nominal.forEach((u, f) => { step(u); if (f >= 30) { rows.push(Float64Array.from(x)); labels.push(0); } });
+  reset(); nominal.forEach((u, f) => { step(u); if (f >= 30) { rows.push(Float64Array.from(x)); labels.push(0); feats.push(u); } });
   CLASSES.slice(1).forEach((c, ci) => {
     const U = run(c, 400 + k * 10 + ci);
-    reset(); U.forEach((u, f) => { step(u); if (f >= 150) { rows.push(Float64Array.from(x)); labels.push(ci + 1); } });
+    reset(); U.forEach((u, f) => { step(u); if (f >= 150) { rows.push(Float64Array.from(x)); labels.push(ci + 1); feats.push(u); } });
   });
 }
 
@@ -140,7 +140,93 @@ for (let i = 0; i < SHOW; i++) { const a = rng() * Math.PI * 2, d = Math.sqrt(rn
 let correct = 0;
 rows.forEach((r, s) => { let best = 0, bs = -Infinity; for (let c = 0; c < C; c++) { let v = readout[N * C + c]; for (let i = 0; i < N; i++) v += r[i] * readout[i * C + c]; if (v > bs) { bs = v; best = c; } } if (best === labels[s]) correct++; });
 
+// ---- the comparison: a random forest on the same labelled library (what a conventional ensemble needs)
+interface Node { f: number; thr: number; l: number; r: number; leaf: Float64Array | null }
+const NTREES = 60, MTRY = 4, MAXDEPTH = 12, MINLEAF = 3;
+const forest: Node[][] = [];
+const tForest = performance.now();
+for (let tr = 0; tr < NTREES; tr++) {
+  const idx = Array.from({ length: feats.length }, () => Math.floor(rng() * feats.length));
+  const nodes: Node[] = [];
+  const build = (ids: number[], depth: number): number => {
+    const counts = new Float64Array(C); ids.forEach((i) => { counts[labels[i]]++; });
+    const pure = counts.filter((c) => c > 0).length <= 1;
+    if (pure || depth >= MAXDEPTH || ids.length < 2 * MINLEAF) {
+      nodes.push({ f: -1, thr: 0, l: -1, r: -1, leaf: counts.map((c) => c / ids.length) }); return nodes.length - 1;
+    }
+    const gini = (c: Float64Array, n: number) => { let g = 1; for (let k = 0; k < C; k++) g -= (c[k] / n) ** 2; return g; };
+    let best = { score: Infinity, f: -1, thr: 0 };
+    const pool = Array.from({ length: N_IN }, (_, i) => i);
+    for (let m = 0; m < MTRY; m++) {
+      const j = m + Math.floor(rng() * (N_IN - m)); [pool[m], pool[j]] = [pool[j], pool[m]];
+      const f = pool[m];
+      const sorted = [...ids].sort((a, b) => feats[a][f] - feats[b][f]);
+      const left = new Float64Array(C), right = Float64Array.from(counts);
+      for (let q = 0; q < sorted.length - 1; q++) {
+        const lab = labels[sorted[q]]; left[lab]++; right[lab]--;
+        const v = feats[sorted[q]][f], vn = feats[sorted[q + 1]][f];
+        if (v === vn || q + 1 < MINLEAF || sorted.length - q - 1 < MINLEAF) continue;
+        const nl = q + 1, nr = sorted.length - nl;
+        const sc = (nl * gini(left, nl) + nr * gini(right, nr)) / sorted.length;
+        if (sc < best.score) best = { score: sc, f, thr: (v + vn) / 2 };
+      }
+    }
+    if (best.f < 0) { nodes.push({ f: -1, thr: 0, l: -1, r: -1, leaf: counts.map((c) => c / ids.length) }); return nodes.length - 1; }
+    const me = nodes.length; nodes.push({ f: best.f, thr: best.thr, l: -1, r: -1, leaf: null });
+    const L = ids.filter((i) => feats[i][best.f] <= best.thr), R = ids.filter((i) => feats[i][best.f] > best.thr);
+    nodes[me].l = build(L, depth + 1); nodes[me].r = build(R, depth + 1);
+    return me;
+  };
+  build(idx, 0);
+  forest.push(nodes);
+}
+const forestMs = performance.now() - tForest;
+function forestProba(u: number[]) {
+  const p = new Float64Array(C);
+  for (const nodes of forest) { let n = nodes[0]; while (!n.leaf) n = nodes[u[n.f] <= n.thr ? n.l : n.r]; for (let k = 0; k < C; k++) p[k] += n.leaf[k] / NTREES; }
+  return p;
+}
+// held-out check on faults the models were trained for (fresh seeds), so the comparison is fair
+let fCorrect = 0, rCorrect = 0, tested = 0;
+CLASSES.forEach((c, ci) => {
+  const U = run(ci === 0 ? null : c, 900 + ci);
+  reset();
+  U.forEach((u, f) => {
+    step(u);
+    if (f < (ci === 0 ? 30 : 150)) return;
+    const p = forestProba(u); let bf = 0; for (let k = 1; k < C; k++) if (p[k] > p[bf]) bf = k;
+    let br = 0, bs = -Infinity; for (let k = 0; k < C; k++) { let v = readout[N * C + k]; for (let i = 0; i < N; i++) v += x[i] * readout[i * C + k]; if (v > bs) { bs = v; br = k; } }
+    fCorrect += bf === ci ? 1 : 0; rCorrect += br === ci ? 1 : 0; tested++;
+  });
+});
+// known signatures in feature space (class means of the library), for NoveltyGate's distance test
+const sig = CLASSES.map((_, c) => {
+  const m = new Float64Array(N_IN); let n = 0;
+  feats.forEach((u, i) => { if (labels[i] === c) { for (let j = 0; j < N_IN; j++) m[j] += u[j]; n++; } });
+  return Array.from(m, (v) => v / Math.max(1, n));
+});
+// the unseen fault: in no library, ramped over 100 frames to severity 0.9
+const UF = 100;
+const unseenFeat: number[][] = [];
+const unseenForest = new Float32Array(UF * C), unseenRes = new Int8Array(UF);
+reset();
+for (let f = 0; f < UF; f++) {
+  const z = CHANNELS.map((_, ch) => gauss(770000 + f, ch + 31));
+  SIGNATURES.DUST_COMPOUND(0.9 * Math.min(1, f / 60), z);
+  const u = featurize(z); unseenFeat.push(u);
+  const p = forestProba(u); for (let k = 0; k < C; k++) unseenForest[f * C + k] = p[k];
+  step(u);
+  let br = 0, bs = -Infinity; for (let k = 0; k < C; k++) { let v = readout[N * C + k]; for (let i = 0; i < N; i++) v += x[i] * readout[i * C + k]; if (v > bs) { bs = v; br = k; } }
+  unseenRes[f] = br;
+}
+
 (self as unknown as Worker).postMessage({
+  forest: { trees: NTREES, maxDepth: MAXDEPTH, trainMs: forestMs, knownAccuracy: fCorrect / tested, reservoirKnownAccuracy: rCorrect / tested, tested },
+  unseen: {
+    frames: UF, forest: unseenForest, reservoir: unseenRes, features: Float32Array.from(unseenFeat.flat()),
+    // distance (z-units, RMS over features) from each frame to the nearest known signature
+    distance: Float32Array.from(unseenFeat.map((u) => Math.min(...sig.map((m) => Math.sqrt(m.reduce((s2, v, j) => s2 + (u[j] - v) ** 2, 0) / N_IN))))),
+  },
   classes: CLASSES, frames: FRAMES, show: SHOW, nodes: N,
   scores, path, act, label, edges: Int32Array.from(edges), layout,
   centroids: Float32Array.from(centroids.flat()), trainAccuracy: correct / S, trainFrames: S,

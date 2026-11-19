@@ -6,6 +6,7 @@ import { INSERT, RADIO, RADIO_HOLD, T_CONFIRM, readout, type Readout } from './t
 import { NOMINAL_RAW, SCORERS, tier0 } from './detector';
 import { reservoir, startReservoir } from './brain';
 import { drawDetect, drawMemory, region } from './mind';
+import { drawPipeline, drawUnseen, pipelineReach, type UnseenState } from './scenes';
 import { subsystemName, type ComponentMap } from './bay';
 import type { Screen, SortieWorld } from './world';
 import { SortieSound } from './sound';
@@ -29,6 +30,7 @@ type Phase = 'gate' | 'insert' | 'play';
 
 const BAY_IN = 0.17, BAY_OUT = 0.93, BAY_INJECT = 0.434;
 const BAY_KEYS = ['oil', 'fuel', 'ignition', 'cooling', 'exhaust', 'gearbox', 'electrical', 'control'];
+const ENGINE_LINEUP: Array<[string, string]> = [['rotax_912is', 'Rotax 912 iS'], ['rotax_914', 'Rotax 914 F'], ['rotax_915is', 'Rotax 915 iS'], ['austro_ae300', 'Austro AE300'], ['vrde_jayem_2_2l', 'VRDE–Jayem 2.2L']];
 const SCORER_LABEL = { fly_bloom: 'Fly Bloom', mahalanobis: 'Mahalanobis', max_abs_z: 'max |z|' } as const;
 
 const fmt = (v: number, d = 0) => v.toLocaleString('en-IN', { maximumFractionDigits: d, minimumFractionDigits: d });
@@ -216,11 +218,6 @@ export function SortieFilm({ onRunDemo, onOpenConsole, onOpenTwin, evidenceHref,
         const d0 = tier0(c.t);
         const res = reservoir();
         const memF = res ? Math.min(res.frames - 1, Math.floor(c.t / 0.5)) : 0;
-        sound.current?.update({
-          t: c.t, r: rd, ci: i, playing: running, dt, listener: w.listener, bay: !!screen.bay,
-          winners: id === 'detect' ? d0.winners : null,
-          memory: id === 'memory' && res ? res.act.subarray(memF * res.show, (memF + 1) * res.show) : null,
-        });
         const ri = radioAt(c.t);
         if (ri !== lastRadio) {
           if (ri >= 0 && running && prev < RADIO[ri].at && c.t - prev < 1) sound.current?.radio();
@@ -240,6 +237,16 @@ export function SortieFilm({ onRunDemo, onOpenConsole, onOpenTwin, evidenceHref,
         const aMemory = id === 'memory' ? sstep(0, 0.08, k) * (1 - sstep(0.94, 1, k)) : 0;
         drawDetect(g, R, c.t, aDetect);
         drawMemory(g, R, c.t, startOf('memory'), res, aMemory);
+        const fade = (x: number) => sstep(0, 0.07, x) * (1 - sstep(0.95, 1, x));
+        drawPipeline(g, R, c.t, k, res, id === 'pipeline' ? fade(k) : 0);
+        const unseen: UnseenState | null = drawUnseen(g, R, k, res, id === 'unseen' ? fade(k) : 0);
+        sound.current?.update({
+          t: c.t, r: rd, ci: i, playing: running, dt, listener: w.listener, bay: !!screen.bay,
+          winners: id === 'detect' ? d0.winners : null,
+          stage: id === 'pipeline' ? pipelineReach(k) : null,
+          unseen,
+          memory: id === 'memory' && res ? res.act.subarray(memF * res.show, (memF + 1) * res.show) : null,
+        });
 
         // the dissolve into and out of the engine bay
         if (flashRef.current) {
@@ -362,12 +369,12 @@ export function SortieFilm({ onRunDemo, onOpenConsole, onOpenTwin, evidenceHref,
   const locked = id === 'decide' && r.confirmed;
   const showFields = id === 'glide' || id === 'land';
   const gated = phase === 'gate';
-  const mindOn = id === 'detect' || id === 'memory';
+  const mindOn = id === 'detect' || id === 'memory' || id === 'pipeline' || id === 'unseen';
   const line = radio >= 0 ? RADIO[radio] : null;
   const confirmAfter = (T_CONFIRM - T_INJECT).toFixed(1);
 
   return (
-    <section ref={root} className={`so-film is-${id}${status === 'nogl' ? ' is-nogl' : ''}${ci >= 7 ? ' is-imax' : ''}${gated ? ' is-gated' : ''}${ended ? ' is-ended' : ''}${mindOn ? ' is-mind' : ''}${inBay ? ' is-bay' : ''}`} aria-labelledby="so-title" aria-roledescription="film">
+    <section ref={root} className={`so-film is-${id}${status === 'nogl' ? ' is-nogl' : ''}${ci >= CHAPTERS.findIndex((x) => x.id === 'glide') ? ' is-imax' : ''}${gated ? ' is-gated' : ''}${ended ? ' is-ended' : ''}${mindOn ? ' is-mind' : ''}${inBay ? ' is-bay' : ''}`} aria-labelledby="so-title" aria-roledescription="film">
       <div className="so-stage" ref={host} aria-hidden />
       <div className="so-shade" aria-hidden />
       <canvas ref={mindRef} className="so-mind" aria-hidden />
@@ -408,6 +415,11 @@ export function SortieFilm({ onRunDemo, onOpenConsole, onOpenTwin, evidenceHref,
         <figcaption><b>Blender</b> · the diagnostic app's materials, driven by the same map</figcaption>
       </figure>
       <p className={`so-webtag${split && bayInfo.ready ? ' is-shown' : ''}`} aria-hidden><b>Web</b> · live three.js render of /models/rotax_912is.glb · tests/test_component_map.py</p>
+
+      <figure className={`so-engines${id === 'pipeline' ? ' is-shown' : ''}`} aria-hidden={id !== 'pipeline'}>
+        <ul>{ENGINE_LINEUP.map(([eid, name]) => <li key={eid}><img src={`/survey/posters/${eid}.webp`} alt="" width={1200} height={900} loading="lazy" decoding="async" /><small>{name}</small></li>)}</ul>
+        <figcaption>One pipeline, five engine profiles, calibrated per aircraft. E17 (simulation): Mahalanobis AUROC 0.973 on an engine it had never seen.</figcaption>
+      </figure>
 
       <div className="so-copy" key={`${ch.id}-${opening}`}>
         {id === 'open' && <p className="so-word"><span>ANUMAAN</span><span lang="hi">अनुमान</span></p>}
@@ -512,7 +524,7 @@ export function SortieFilm({ onRunDemo, onOpenConsole, onOpenTwin, evidenceHref,
           {armed && (canBegin ? (
             <div className="so-gate-inner" key="ready">
               <p id="so-gate-title" className="so-gate-title">What we built, running</p>
-              <p className="so-gate-lede">Ninety seconds. A fault injected into the real CAD, caught by our detector computed live in your browser, named from memory, and the airframe brought home.</p>
+              <p className="so-gate-lede">Two minutes through the real system: the CAD, one frame through every stage of the pipeline, our detector and reservoir computed live in your browser, a fault no model was trained for, and the airframe brought home.</p>
               {load.failed && <p className="so-gate-warn">Some assets did not load; the film will use stills where it has to.</p>}
               <div className="so-gate-actions">
                 <button ref={gateBtn} type="button" className="so-btn so-btn-light" onClick={() => begin(true)}><Volume2 size={17} aria-hidden /> Begin with sound</button>

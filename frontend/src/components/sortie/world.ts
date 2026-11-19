@@ -549,11 +549,13 @@ export class SortieWorld {
         cam = at(-34 + 8 * e, -36 + 4 * e, 6 + 2 * e);
         look = at(-4, 0, 1);
         break;
+      case 'pipeline':
       case 'detect':
         // the world steps back while the detector reads it: a slow, high chase
         cam = at(-120 + 20 * e, 46 - 12 * e, 40 - 8 * e);
         look = at(90, 0, 0);
         break;
+      case 'unseen':
       case 'memory':
         cam = at(-96 + 30 * e, -60 + 20 * e, 30);
         look = at(60, 0, 2);

@@ -16,6 +16,21 @@ export interface Reservoir {
   centroids: Float32Array;
   trainAccuracy: number;
   trainFrames: number;
+  forest: { trees: number; maxDepth: number; trainMs: number; knownAccuracy: number; reservoirKnownAccuracy: number; tested: number };
+  unseen: { frames: number; forest: Float32Array; reservoir: Int8Array; features: Float32Array; distance: Float32Array };
+}
+
+/** backend/evaluation/validation.py NoveltyGate (F17), same thresholds: withhold a label it cannot stand behind. */
+export const NOVELTY_GATE = { minConfidence: 0.55, minMargin: 0.15, maxDistance: 3.0 };
+export function noveltyGate(posterior: ArrayLike<number>, distance: number) {
+  const p = Array.from(posterior);
+  const order = p.map((v, i) => [v, i]).sort((a, b) => b[0] - a[0]);
+  const [top, second] = [order[0][0], order[1]?.[0] ?? 0];
+  const reasons: string[] = [];
+  if (top < NOVELTY_GATE.minConfidence) reasons.push(`posterior ${top.toFixed(2)} below ${NOVELTY_GATE.minConfidence}`);
+  if (top - second < NOVELTY_GATE.minMargin) reasons.push(`margin ${(top - second).toFixed(2)} below ${NOVELTY_GATE.minMargin}`);
+  if (distance > NOVELTY_GATE.maxDistance) reasons.push(`distance ${distance.toFixed(2)} beyond any known signature`);
+  return { unknown: reasons.length > 0, candidate: order[0][1], top, margin: top - second, reasons };
 }
 
 let started: Promise<Reservoir | null> | null = null;

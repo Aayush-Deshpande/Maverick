@@ -10,9 +10,9 @@
 // Everything is driven from story time by update(); one-shots fire only when time moves forward through them.
 import { CHAPTERS, STARTS, TOTAL, T_TOUCH, startOf } from './story';
 import { T_CONFIRM, type Readout } from './timeline';
+import { Score } from './score';
 
 const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
-const PENTA = [0, 3, 5, 7, 10];
 
 export interface Listener {
   /** -1 (left) .. 1 (right): where the aircraft is in the frame */
@@ -33,6 +33,10 @@ export interface SoundState {
   bay: boolean;
   winners: number[] | null;
   memory: Float32Array | null;
+  /** pipeline packet position 0..12 (One frame) */
+  stage: number | null;
+  /** Never seen: the open tier's verdict and the forest's confidence */
+  unseen: { abnormal: boolean; forestTop: number } | null;
 }
 
 export class SortieSound {
@@ -62,7 +66,7 @@ export class SortieSound {
   private muted = false;
   private riserPhase = 0;
   private prevWinners = new Set<number>();
-  private pings = 0;
+  private score: Score;
 
   constructor() {
     const AC = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
@@ -75,7 +79,7 @@ export class SortieSound {
 
     // a large space: generated stereo impulse response, used as a send
     const conv = ctx.createConvolver();
-    conv.buffer = this.impulse(3.4, 2.6);
+    conv.buffer = this.impulse(5.2, 2.9); // a large stone space for the organ
     this.reverbSend = ctx.createGain(); this.reverbSend.gain.value = 0.25;
     const wet = ctx.createGain(); wet.gain.value = 0.55;
     this.reverbSend.connect(conv).connect(wet).connect(this.bus);
@@ -197,6 +201,7 @@ export class SortieSound {
       this.rumble = ctx.createGain(); this.rumble.gain.value = 0;
       n.connect(lp).connect(this.rumble).connect(this.bus);
     }
+    this.score = new Score(ctx, this.bus, this.reverbSend, this.noise);
   }
 
   private impulse(seconds: number, decay: number) {
@@ -257,20 +262,6 @@ export class SortieSound {
     const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 900;
     this.env(o.connect(hp), now, 0.14 * level, 0.002, 0.035, this.bus);
     o.start(now); o.stop(now + 0.06);
-  }
-  /** A FlyHash unit firing: a short pitched ping, placed by its column. */
-  private ping(unit: number, novel: boolean) {
-    if (this.pings > 6) return; // never a wall of sound
-    const ctx = this.ctx, now = ctx.currentTime + Math.random() * 0.12;
-    const row = Math.floor(unit / 20), col = unit % 20;
-    const semis = PENTA[row % 5] + 12 * Math.floor(row / 5) + (novel ? 0 : -12);
-    const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = 440 * Math.pow(2, semis / 12);
-    const p = ctx.createStereoPanner(); p.pan.value = -0.9 + (1.8 * col) / 19;
-    const g = this.env(o, now, novel ? 0.09 : 0.05, 0.004, 0.9, p);
-    p.connect(this.bus); p.connect(this.reverbSend);
-    o.start(now); o.stop(now + 1.0);
-    this.pings++; window.setTimeout(() => { this.pings--; }, 140);
-    void g;
   }
   radio() {
     const ctx = this.ctx, now = ctx.currentTime;
@@ -374,8 +365,8 @@ export class SortieSound {
     const ticking = running && t >= startOf('twin') && t < T_CONFIRM;
     if (ticking && now >= this.nextTick && now >= this.silenceUntil) {
       const z = clamp01(worst / 1.6);
-      this.tick(0.5 + 0.7 * z);
-      this.nextTick = now + Math.max(0.2, 1 - 0.78 * z);
+      this.tick(0.35 + 0.45 * z);
+      this.nextTick = now + Math.max(0.3125, 1.25 - 0.94 * z); // a 1.25 s pulse, tightening with the strongest scorer
     }
     if (!ticking) this.nextTick = Math.max(this.nextTick, now);
     set(this.sub.gain, running && (id === 'drift' || id === 'detect') && t < T_CONFIRM ? 0.05 + 0.1 * clamp01(worst) : 0, 1.2);
@@ -389,20 +380,21 @@ export class SortieSound {
       set(v.g.gain, Math.pow(Math.sin(Math.PI * pos), 2) * 0.25, 0.05);
     });
 
-    // FlyHash pings: the units that newly fire this frame
+    // FlyHash: the units that newly fire this frame become bells in the score
+    const newWinners: number[] = [];
     if (id === 'detect' && running && s.winners) {
-      const next = new Set(s.winners);
-      for (const u of s.winners) if (!this.prevWinners.has(u)) this.ping(u, true);
-      this.prevWinners = next;
+      for (const u of s.winners) if (!this.prevWinners.has(u)) newWinners.push(u);
+      this.prevWinners = new Set(s.winners);
     } else this.prevWinners.clear();
 
     // memory: eight voices follow eight real reservoir nodes
-    set(this.voiceBus.gain, running && id === 'memory' && s.memory ? 0.05 : 0, 0.8);
+    set(this.voiceBus.gain, 0, 0.8); // the score's organ pipes carry the reservoir now
     if (s.memory) this.voices.forEach((v, i) => set(v.g.gain, Math.min(1, Math.abs(s.memory![i * 17 % s.memory!.length])) * 0.5, 0.15));
 
     // the glide swell
     const sw = running && (id === 'glide' || id === 'land') ? (id === 'glide' ? 0.1 + 0.16 * k : 0.26 * (1 - clamp01((t - T_TOUCH - 1) / 5))) : 0;
-    set(this.swell.gain, sw, id === 'glide' ? 1.4 : 0.8);
+    set(this.swell.gain, sw * 0.25, id === 'glide' ? 1.4 : 0.8); // a pad under the score's organ
+    this.score.update({ t, ci, playing: running, stage: s.stage, newWinners, unseen: s.unseen, memory: s.memory, duck: bay ? 1 : 0 });
 
     // roll-out rumble, dying with speed
     const roll = t >= T_TOUCH && t < T_TOUCH + 4.6 ? 1 - (t - T_TOUCH) / 4.6 : 0;

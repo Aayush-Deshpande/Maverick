@@ -121,3 +121,44 @@ export const T_CONFIRM = (firstConfirm < 0 ? TL.length : firstConfirm) * FRAME;
 export const NOMINAL_RAW = TL.filter((x) => x.frame < injectFrame && x.raw).length;
 export const NOMINAL_CONFIRMED = TL.filter((x) => x.frame < injectFrame && x.confirmed).length;
 export const SPEC = { D, M, K, F0 };
+
+/* ---- any stream, not just the film's sortie: score one feature vector */
+export function evaluate(x: number[]) {
+  const s = scores(x);
+  const ratios = Object.fromEntries(SCORERS.map((n) => [n, s[n] / Math.max(THRESHOLDS[n], 1e-12)])) as Record<ScorerName, number>;
+  const w = winners(x);
+  /** fraction of the firing units that never fired in nominal flight (FlyNoveltyDetector's question) */
+  const unseen = w.filter((u) => FREQ[u] === 0).length / w.length;
+  return { ratios, raw: SCORERS.some((n) => ratios[n] > 1), winners: w, unseen };
+}
+
+/* ---- the fleet: three tails, each with its own nominal memory, merged by weighted average of the
+   frequency memories (FlyBloomScorer.merge, backlog W12): no raw telemetry leaves any aircraft */
+export const FLEET = (() => {
+  const tails = [
+    { id: 'Tail 01', frames: 700, seed: 210000 },
+    { id: 'Tail 02', frames: 420, seed: 320000 },
+    { id: 'Tail 03', frames: 560, seed: 430000 },
+  ].map((tl) => {
+    const f = new Float64Array(M);
+    for (let i = 0; i < tl.frames; i++) {
+      const x = featurize(Array.from({ length: D }, (_, ch) => gauss(tl.seed + i, ch + 17)));
+      for (const w of winners(x)) f[w] += 1 / tl.frames;
+    }
+    return { ...tl, freq: f };
+  });
+  const total = tails.reduce((s, t) => s + t.frames, 0);
+  const merged = new Float64Array(M);
+  tails.forEach((t) => { for (let u = 0; u < M; u++) merged[u] += (t.freq[u] * t.frames) / total; });
+  // the same memory computed the other way: every tail's nominal frames pooled in one place
+  const pooled = new Float64Array(M);
+  tails.forEach((tl) => {
+    for (let i = 0; i < tl.frames; i++) {
+      const x = featurize(Array.from({ length: D }, (_, ch) => gauss(tl.seed + i, ch + 17)));
+      for (const w of winners(x)) pooled[w] += 1 / total;
+    }
+  });
+  let maxDiff = 0;
+  for (let u = 0; u < M; u++) maxDiff = Math.max(maxDiff, Math.abs(pooled[u] - merged[u]));
+  return { tails, merged, pooledMaxDiff: maxDiff, bytes: M * 8, frames: total };
+})();

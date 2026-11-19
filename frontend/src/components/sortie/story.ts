@@ -3,7 +3,7 @@
 // The fault is the guided demo's oil-pressure loss on the Rotax 912 iS. The detector and the reservoir that
 // read this stream are computed live in the browser (detector.ts, reservoir.worker.ts).
 
-export type ChapterId = 'open' | 'twin' | 'inside' | 'drift' | 'detect' | 'memory' | 'decide' | 'glide' | 'land';
+export type ChapterId = 'open' | 'twin' | 'inside' | 'pipeline' | 'drift' | 'detect' | 'memory' | 'unseen' | 'decide' | 'glide' | 'land';
 
 export interface Chapter {
   id: ChapterId;
@@ -16,12 +16,12 @@ export interface Chapter {
 
 export const CHAPTERS: Chapter[] = [
   {
-    id: 'open', rail: 'Sortie', dur: 9,
+    id: 'open', rail: 'Sortie', dur: 8,
     title: 'Eighteen hours over Ladakh. One engine.',
     body: 'A MALE UAV on an ISR sortie flies a single aero piston engine through valleys where the nearest runway can be a ridge away.',
   },
   {
-    id: 'twin', rail: 'Twin', dur: 8,
+    id: 'twin', rail: 'Twin', dur: 7,
     title: 'A physics twin of this exact engine flies with it.',
     body: 'A thermofluid model predicts every channel at this altitude, throttle and outside air. An unscented Kalman filter keeps its parameters honest. Measured and expected agree.',
   },
@@ -31,7 +31,12 @@ export const CHAPTERS: Chapter[] = [
     body: 'The twin is built from the full Blender assembly, every component named. A fault is injected into the plant through the same API the console uses, and the component it lives in lights up.',
   },
   {
-    id: 'drift', rail: 'Drift', dur: 8,
+    id: 'pipeline', rail: 'One frame', dur: 15,
+    title: 'One frame. Twelve stages. Fifty milliseconds.',
+    body: 'Follow a single telemetry frame through the real pipeline: ingest, sensor sanity, the physics twin, calibration, three scorers, the gate, the reservoir, diagnosis, prognosis, the mission, and a hash that seals it into the sortie record.',
+  },
+  {
+    id: 'drift', rail: 'Drift', dur: 7,
     title: 'Oil pressure slips. Nothing is red yet.',
     body: 'The reading is still far inside its limit, so a redline stays silent. The gap from what the twin expects is already growing.',
   },
@@ -46,7 +51,12 @@ export const CHAPTERS: Chapter[] = [
     body: 'A 500-node recurrent reservoir carries a fading memory of every frame before this one. A readout trained on this engine’s simulated fault library names the fault from how the drift developed.',
   },
   {
-    id: 'decide', rail: 'Decide', dur: 9,
+    id: 'unseen', rail: 'Never seen', dur: 15,
+    title: 'A forest can only name what it was taught.',
+    body: 'A random forest and the reservoir, trained here on the fault library, meet a fault that is not in it, and must answer with a name they know. The one-class tier, trained on nominal flight alone, says what is true: abnormal, and like nothing it was told about. Fly Bloom’s part is its memory: built without a single fault label, merged across a fleet without moving any telemetry.',
+  },
+  {
+    id: 'decide', rail: 'Decide', dur: 8,
     title: 'Detection is half the job.',
     body: 'The finding becomes an ATA-chapter maintenance directive, a remaining-life estimate with a conformal interval, and the odds of finishing this sortie.',
   },
@@ -75,7 +85,7 @@ export const smooth = (x: number) => { const k = clamp01(x); return k * k * (3 -
 /** The moment the fault is injected into the plant (inside the Inside chapter, on screen). */
 export const T_INJECT = startOf('inside') + 6.5;
 /** Seconds the fault takes to develop (the console's ramp_sec, compressed to story time). */
-const RAMP = 62;
+const RAMP = 108;
 export const T_GLIDE = startOf('glide');
 export const T_TOUCH = startOf('land') + 7.0;
 /** One detector frame per this many story seconds (the runtime ticks once per simulated second). */
@@ -103,6 +113,11 @@ export const FEATURES = ['cht_mean', 'cht_max', 'cht_min', 'cht_std', 'egt_mean'
 
 /** How each fault moves the per-channel z-scores at severity s (shapes follow the E20 evidence channels). */
 export const SIGNATURES: Record<string, (s: number, z: number[]) => void> = {
+  // not in any training library: a blocked filter and fouled cooling together (a dust-storm sortie)
+  DUST_COMPOUND: (s, z) => {
+    for (let i = 0; i < 4; i++) z[i] += 3.5 * s + (i === 2 ? 2 * s : 0);
+    z[11] -= 6 * s; for (let i = 4; i < 8; i++) z[i] += 2.5 * s; z[9] += 2.5 * s; z[10] += 3 * s; z[12] -= 2 * s;
+  },
   OIL_PRESSURE_LOSS: (s, z) => { z[8] -= 18 * s; z[9] += 4.5 * s; z[12] += 3 * s; },
   COOLING_DEGRADATION: (s, z) => { for (let i = 0; i < 4; i++) z[i] += 6 * s; z[9] += 3 * s; for (let i = 4; i < 8; i++) z[i] += 1 * s; },
   MISFIRE: (s, z) => { z[5] -= 12 * s; z[1] -= 6 * s; z[12] -= 3 * s; z[4] += s; z[6] += s; z[7] += s; },
