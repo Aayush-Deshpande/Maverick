@@ -7,9 +7,9 @@ RESUME HERE  (last updated 19 Nov 2026)
 =====================================================================================================================
 Phase:        PHASE 1 (M0) cards done (M0-01..M0-12; M0-10 reduced, see its entry). NEXT: CHECKPOINT PHASE 1 (manual
               look by Prasad), then Phase 2 in demo-first order: M1-01 sim package + clock, M1-02 atmosphere, ...
-Card:         M1-05 (M1-01..04 done).
+Card:         M1-06 (M1-01..05 done).
 Branch:       Beta (pushed by Prasad up to ae82c70; later commits local). main untouched (9b5942e).
-Last commit:  M1-04 on Beta (see git log -1).
+Last commit:  M1-05 on Beta (see git log -1).
 State:        ONE simulator: RuntimeHub. EngineStateService runs no loop; /api/state, /api/control, /ws/telemetry,
               /ws/blender, /api/health, copilot and voice read the v1 runtime (legacy_adapter.py). D52 command security
               on every command path. Test baseline now: 430 passed, 1 failed (ratchet: engine_service/copilot brand
@@ -426,4 +426,13 @@ backend/sim/params.py + configs/physics/defaults.json (new): generic physics con
   eta_v 0.88, throttle Cd 0.8, WOT MAP ratio 0.97, idle area 3 %, clean filter dp 1 kPa.
 Tests tests/sim/test_induction.py 9 passed (WOT point all 5 engines, throttle/altitude/rpm trends, blocked filter
   -3 kPa+, MAP time constant 0.05-0.3 s, monotone at dt 0.05). Full suite 463 passed, 1 failed (ratchet, known).
+
+=== 19 Nov 2026  M1-05 Fuels + combustion (AI: Claude Code, Opus 5.5)
+configs/fuels.json (new): AVGAS_100LL, MOGAS, JET_A1, DIESEL - LHV, stoichiometric AFR, density (PUBLIC, refs).
+backend/sim/combustion.py: W_i = m_f LHV eta_i f(lambda) f(timing) quality; SI rich = oxygen-limited, lean optimum +
+  lean misfire limit; MBT timing loss; CI smoke limit caps fuel; COV_IMEP (lean, low load, weak ignition) and SI knock
+  index as derived outputs. eta_i is CALIBRATED in M1-06. ASSUMED added (configs/physics/defaults.json "combustion"):
+  lean-loss shape, best lambda 1.1, lean misfire 1.45, MBT loss 0.0004/deg^2, smoke lambda_min 1.3, COV base 1.5 %,
+  COV limit 5 %, knock reference + advance sensitivity.
+Tests tests/sim/test_combustion.py 15 passed; tests/sim 41 passed.
 

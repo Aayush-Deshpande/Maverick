@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "description": "Fuel properties (card M1-05, R 21.4). Physical properties of the fuel, not engine data. Values are typical mid-range figures from the cited references.",
+  "fuels": {
+    "AVGAS_100LL": {
+      "lhv_mj_kg": {"value": 43.5, "status": "PUBLIC", "ref": "R 21.4; Heywood, Internal Combustion Engine Fundamentals (1988) App. D (gasoline ~43-44 MJ/kg)"},
+      "stoich_afr": {"value": 14.9, "status": "PUBLIC", "ref": "avgas H/C ~2.0-2.1; Heywood App. D (isooctane 15.1, gasoline 14.6)"},
+      "density_kg_l": {"value": 0.72, "status": "PUBLIC", "ref": "ASTM D910 typical 100LL density at 15 C"}
+    },
+    "MOGAS": {
+      "lhv_mj_kg": {"value": 43.4, "status": "PUBLIC", "ref": "Heywood App. D"},
+      "stoich_afr": {"value": 14.6, "status": "PUBLIC", "ref": "Heywood App. D"},
+      "density_kg_l": {"value": 0.745, "status": "PUBLIC", "ref": "EN 228 typical density at 15 C"}
+    },
+    "JET_A1": {
+      "lhv_mj_kg": {"value": 43.2, "status": "PUBLIC", "ref": "DEF STAN 91-091 / ASTM D1655 minimum 42.8 MJ/kg, typical 43.2"},
+      "stoich_afr": {"value": 14.7, "status": "PUBLIC", "ref": "kerosene C12H23 approx.; Heywood App. D"},
+      "density_kg_l": {"value": 0.804, "status": "PUBLIC", "ref": "DEF STAN 91-091 typical density at 15 C (0.775-0.840)"}
+    },
+    "DIESEL": {
+      "lhv_mj_kg": {"value": 42.8, "status": "PUBLIC", "ref": "R 21.4; Heywood App. D"},
+      "stoich_afr": {"value": 14.5, "status": "PUBLIC", "ref": "Heywood App. D"},
+      "density_kg_l": {"value": 0.832, "status": "PUBLIC", "ref": "EN 590 typical density at 15 C"}
+    }
+  }
+}
