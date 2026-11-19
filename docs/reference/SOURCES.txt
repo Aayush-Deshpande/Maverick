@@ -1,0 +1,20 @@
+REFERENCE DOCUMENT SOURCES (DECISIONS D44)
+Official documents are kept locally in docs/reference/oem/ (gitignored: copyrighted). This list lets anyone fetch
+them again. Columns: file | document | edition/date | source URL | sha256
+
+OM_912iSeries_ED2_R1.pdf | BRP-Rotax Operators Manual, engine type 912 i Series (ref OM-912 i, part no. 898741)
+  | Edition 2 Rev. 1, 01 June 2019, 92 pages | https://rotax-owner.com/manuals/OM_912iSeries_ED2_R1.pdf
+  | sha256: see `sha256sum docs/reference/oem/OM_912iSeries_ED2_R1.pdf` (recorded in PROGRESS.txt at download)
+
+Tracked in the repo (already present before 19 Nov 2026):
+Rotax914_Operators_Manual.pdf, Rotax914_Installation_Manual.pdf | BRP-Rotax 914 manuals (tracked earlier; check the
+  licence before any public release)
+MIL-STD-1629A.pdf | US DoD standard, procedures for performing a FMECA (public)
+
+EASA_TCDS_E121_Rotax_912_915.pdf | EASA Type-Certificate Data Sheet E.121, BRP-Rotax 912 series (incl. 912 iSc, 915 iSc)
+  | Issue 17, 18 December 2023, 31 pages | https://www.easa.europa.eu/de/downloads/7633/en | local (marked proprietary)
+EASA_TCDS_E200_Austro_E4_AE300.pdf | EASA Type-Certificate Data Sheet E.200, Austro Engine E4 series (AE300)
+  | Issue 12, 30 June 2020, 10 pages | https://www.easa.europa.eu/nl/downloads/7617/en | local (marked proprietary)
+sha256 (19 Nov 2026): run `sha256sum docs/reference/oem/*.pdf`; values recorded in PROGRESS.txt.
+
+To obtain next (card AI-03a): Rotax 915 iS / iSc Operators Manual.

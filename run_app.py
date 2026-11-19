@@ -40,7 +40,9 @@ try:
 except ImportError:
     pass
 
-CANDIDATE_BLENDER_PATHS = [
+# BLENDER_EXE (env or .env) wins; then the known install locations (audit #63: D:\Blender was missing).
+CANDIDATE_BLENDER_PATHS = [p for p in [os.environ.get("BLENDER_EXE")] if p] + [
+    r"D:\Blender\blender.exe",
     r"E:\Blender\blender.exe",
     r"C:\Program Files\Blender Foundation\Blender 5.2\blender.exe",
     r"C:\Program Files\Blender Foundation\Blender 5.1\blender.exe",

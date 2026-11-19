@@ -1,0 +1,22 @@
+# Optional dependencies, grouped by feature (DECISIONS D36). NOT installed by default.
+# Install a group only when its phase starts, after checking the package's current docs (D39).
+# All caches go to D: (D40: PIP_CACHE_DIR, HF_HOME, TORCH_HOME set at user level).
+# Without a group, the feature reports UNAVAILABLE in /api/v1/health; it never fakes output.
+
+# --- Voice copilot (Phase 8b, AI-06). Models already present: Voice/Kokoro-82M, Voice/ggml-tiny.en.bin (D43)
+# pywhispercpp      # whisper.cpp STT bindings; check for a Python 3.14 wheel first
+# kokoro            # Kokoro TTS; may need espeak-ng on Windows (check docs)
+
+# --- RAG quality (Phase 8b, AI-04) - only if it measurably improves recall@5
+# flashrank
+
+# --- Explanations (Phase 3, M3-06)
+# shap
+
+# --- CAN / FADEC (Phase 9, M7-01..02)
+# cantools
+# python-can
+
+# --- Research only (backend/foundation, not used by the product)
+# chronos-forecasting
+# tabpfn
