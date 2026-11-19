@@ -31,7 +31,7 @@ from backend.sim.source import registry as sim_registry
 
 from backend.physics.sensor_validator import SensorSanityValidator, SanityReport
 from backend.dsp.order_tracker import OrderTracker
-from backend.twin.ukf import ThermofluidUKF
+from backend.twin.sim_ukf import SimThermalUKF
 from backend.twin.virtual_sensors import VirtualSensorSynthesizer
 from backend.twin.validity import TwinValidityMonitor
 from backend.evaluation.damage_accumulation import DamageAccumulator
@@ -45,6 +45,7 @@ from backend.status.alerts import AlertManager
 from backend.status.evaluator import StatusEvaluator
 
 DT = 1.0                      # simulated seconds per tick (calibrated at this cadence)
+UKF_EVERY = 5                  # observer update every 5 ticks (its own dt is the real elapsed time)
 WARMUP_TICKS = 900            # ground run-up used to calibrate this tail
 EVENT_LOG_LEN = 200           # retained transitions per engine, served by /events
 _WARM_SCHEDULE = [
@@ -138,7 +139,9 @@ class EngineRuntime:
         # Scientific, DSP, and State Estimation Modules
         self.sanity_validator = SensorSanityValidator()
         self.order_tracker = OrderTracker(self.cfg, seed=seed)
-        self.ukf = ThermofluidUKF(self.cfg, dt=DT)
+        self.ukf = SimThermalUKF(self.cfg)
+        # observer cadence: every UKF_EVERY ticks, phase-shifted per engine so five engines never update together
+        self._ukf_phase = sum(map(ord, engine_config_id)) % UKF_EVERY
         self.virtual_synthesizer = VirtualSensorSynthesizer(self.cfg)
         sigma_map = {f"cht_{i+1}": 4.5 for i in range(self.cfg.cylinder_count)}
         sigma_map["oil_t"] = 3.5
@@ -314,6 +317,8 @@ class EngineRuntime:
             self._cached_prognostics = None
             if self.detector:
                 self.detector.gate.reset()
+                if self.detector.cusum is not None:
+                    self.detector.cusum.reset()
 
     def set_sensor_fault(self, kind: str, channel: str, **kwargs) -> None:
         """Inject sensor-level fault (R7): bias, drift, stuck, noise, dropout, spoof."""
@@ -366,20 +371,12 @@ class EngineRuntime:
             rpm_val = float(frame.rpm or 5000.0)
             thr_val = float(frame.throttle or 70.0)
 
-            # 3. State Observer (Thermofluid UKF) - 4 Hz cadence
-            ukf_inputs = (frame.rpm, frame.throttle, frame.fuel_flow, frame.oat, frame.oil_t)
-            ukf_ready = all(v is not None for v in ukf_inputs) and all(v is not None for v in frame.cht)
-            if ukf_ready and ((self._tick_count % 5 == 1) or (self._cached_ukf is None)):
-                self.ukf.predict(float(frame.rpm), float(frame.throttle), float(frame.fuel_flow), float(frame.oat))
-                meas_z = np.array(frame.cht + [float(frame.oil_t)], dtype=np.float64)
-                # Shield quarantined sensors from UKF to prevent state corruption
-                for i in range(min(len(frame.cht), self.cfg.cylinder_count)):
-                    ch_name = f"cht_{i+1}"
-                    if ch_name in _quarantined_lower or (frame.quality.get(ch_name, 0) & Q_SHIELDED != 0):
-                        meas_z[i] = float(self.ukf.x[i])
-                if "oil_t" in _quarantined_lower or (frame.quality.get("oil_t", 0) & Q_SHIELDED != 0):
-                    meas_z[self.cfg.cylinder_count] = float(self.ukf.x[self.cfg.cylinder_count + 1])
-                ukf_nis = self.ukf.update(meas_z)
+            # 3. State observer (M3-01: UKF on the M1 thermal model, measured inputs only)
+            if self.ukf.ready(frame) and ((self._tick_count % UKF_EVERY == self._ukf_phase)
+                                          or (self._cached_ukf is None)):
+                shielded = {c for c in _quarantined_lower} | {
+                    k.lower() for k, v in (frame.quality or {}).items() if v & Q_SHIELDED}
+                ukf_nis = self.ukf.step(frame, skip={c.replace("oil_temp", "oil_t") for c in shielded})
                 ukf_params = self.ukf.get_parameter_estimates(frame.t)
                 self._cached_ukf = (ukf_nis, ukf_params)
             elif self._cached_ukf is not None:
@@ -416,8 +413,9 @@ class EngineRuntime:
                 hv = {"label": str(label), "classes": [str(c) for c in self.reservoir.classes_],
                       "scores": [round(float(s), 3) for s in scores]}
 
-            # 6-9. Analytical Layers (Validity, Damage/RUL, Reliability, Glide Polar, Diagnosis) - Continuous 20 Hz
-            step_analytical = True
+            # 6-9. Analytical layers (validity, damage/RUL, reliability, glide, diagnosis): on the observer's staggered
+            # cadence - validity is judged from the observer's residuals, and the rest changes over minutes
+            step_analytical = (self._tick_count % UKF_EVERY == self._ukf_phase) or self._cached_validity is None
 
             if step_analytical:
                 # 6. Twin Validity & 3-Way Attribution

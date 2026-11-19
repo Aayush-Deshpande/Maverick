@@ -18,12 +18,13 @@ from __future__ import annotations
 import math
 from collections import deque
 from dataclasses import dataclass, field
-from typing import Deque, Dict, List, Sequence
+from typing import Deque, Dict, List, Optional, Sequence
 
 import numpy as np
 
 from backend.core.frame import Frame
 from backend.detect.calibration import TailCalibration
+from backend.detect.cusum import TwoSidedCusum, load_detect_config
 from backend.detect.scorers import FlyBloomScorer, MaxAbsZ, Mahalanobis
 
 
@@ -36,6 +37,8 @@ class DetectionResult:
     confirmed: bool
     top_channels: List[tuple]          # [(channel, z)] largest |z| first
     evidence_class: str = "SIMULATION"  # set by the caller's source; PLANT frames -> SIMULATION
+    # M3-02 slow-drift channel (two-sided CUSUM), kept apart from the per-frame alarm: {stat, ratio, alarm, top}
+    drift: Optional[Dict[str, object]] = None
 
     @property
     def score(self) -> float:
@@ -73,8 +76,9 @@ class PersistenceGate:
 
 class ResidualDetector:
     def __init__(self, calibration: TailCalibration, scorers: Sequence, thresholds: Dict[str, float],
-                 alpha: float, gate: PersistenceGate | None = None) -> None:
+                 alpha: float, gate: PersistenceGate | None = None, cusum: TwoSidedCusum | None = None) -> None:
         self.cal = calibration
+        self.cusum = cusum                       # M3-02: slow-drift accumulator (None on old saved detectors)
         self.scorers = {s.name: s for s in scorers}
         self.thresholds = dict(thresholds)
         self.alpha = alpha
@@ -97,7 +101,13 @@ class ResidualDetector:
         Zho = np.vstack([cal.features(cal.z(f)) for f in frames[cut:]])
         scorers = [FlyBloomScorer(Ztr.shape[1]).fit(Ztr), Mahalanobis().fit(Ztr), MaxAbsZ().fit(Ztr)]
         thr = {s.name: conformal_threshold(s.score(Zho), alpha) for s in scorers}
-        return cls(cal, scorers, thr, alpha, gate)
+        dc = load_detect_config()
+        cusum = TwoSidedCusum(len(cal.channel_names()), dc["cusum_k_sigma"]["value"])
+        raw_ho = np.vstack([cal.z(f) for f in frames[cut:]])
+        thr[cusum.name] = max(conformal_threshold(cusum.run(raw_ho), alpha), 1e-6)
+        if gate is None:
+            gate = PersistenceGate(int(dc["persistence_k"]["value"]), int(dc["persistence_n"]["value"]))
+        return cls(cal, scorers, thr, alpha, gate, cusum)
 
     # ---- inference -----------------------------------------------------------------------
     def score(self, frame: Frame, top_k: int = 3, shielded_channels: Sequence[str] | None = None) -> DetectionResult:
@@ -108,8 +118,13 @@ class ResidualDetector:
         raw = any(r > 1.0 for r in ratios.values())
         names = self.cal.channel_names()
         order = np.argsort(-np.abs(z))[:top_k]
+        drift = None
+        if self.cusum is not None:
+            stat = self.cusum.update(z)
+            ratio = stat / max(self.thresholds[self.cusum.name], 1e-12)
+            drift = {"stat": stat, "ratio": ratio, "alarm": ratio > 1.0, "top": self.cusum.top(names)}
         return DetectionResult(frame.t, scores, ratios, raw, self.gate.update(raw),
-                               [(names[i], float(z[i])) for i in order])
+                               [(names[i], float(z[i])) for i in order], drift=drift)
 
 
 def conformal_threshold(nominal_scores: np.ndarray, alpha: float) -> float:

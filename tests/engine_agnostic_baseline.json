@@ -14,6 +14,11 @@
     "cyl": 0,
     "model": 0
   },
+  "backend/detect/cusum.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
   "backend/faults/manager.py": {
     "brand": 0,
     "cyl": 0,
@@ -208,6 +213,11 @@
     "brand": 4,
     "cyl": 64,
     "model": 1
+  },
+  "backend/twin/sim_ukf.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
   },
   "frontend/src/components/CalculationsPanel.tsx": {
     "brand": 0,

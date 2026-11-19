@@ -7,9 +7,9 @@ RESUME HERE  (last updated 19 Nov 2026)
 =====================================================================================================================
 Phase:        PHASE 1 (M0) cards done (M0-01..M0-12; M0-10 reduced, see its entry). NEXT: CHECKPOINT PHASE 1 (manual
               look by Prasad), then Phase 2 in demo-first order: M1-01 sim package + clock, M1-02 atmosphere, ...
-Card:         M3-01 next (M1-01..14, M2-01..03 done; M1-14b/M1-16/M1-17 held - Questions 9, 10).
+Card:         M3-03 sensor FDI next (M1-01..14, M2-01..03, M3-01, M3-02 done; M1-14b/M1-16/M1-17 held - Questions 9, 10).
 Branch:       Beta (pushed by Prasad up to ae82c70; later commits local). main untouched (9b5942e).
-Last commit:  M2-03 on Beta (alerts) (see git log -1).
+Last commit:  M3-01/M3-02 on Beta (observer on M1 model, CUSUM drift channel) (see git log -1).
 State:        ONE simulator: RuntimeHub. EngineStateService runs no loop; /api/state, /api/control, /ws/telemetry,
               /ws/blender, /api/health, copilot and voice read the v1 runtime (legacy_adapter.py). D52 command security
               on every command path. Test baseline now: 430 passed, 1 failed (ratchet: engine_service/copilot brand
@@ -666,3 +666,26 @@ backend/status/alerts.py: one alert per status reason (code + channel/fault) wit
 Tests: tests/status/test_alerts.py, tests/api/test_status_api.py. Full suite 599 passed, 1 failed (ratchet, known).
 PS check (20 Nov): the official SIH PS-26054 text is not on the public SIH2025 dataset; the line-by-line coverage in
   P Part 3 (from the PS we were given) stays the checklist.
+
+=== 20 Nov 2026  M3-01 state observer on the M1 model + M3-02 CUSUM drift channel
+backend/twin/sim_ukf.py SimThermalUKF: UKF whose process model is backend/sim/thermal.py driven by MEASURED inputs
+  (rpm, throttle, alt, OAT, airspeed; heat input scaled to the measured fuel flow). State: CHT_1..n, coolant, oil +
+  health parameters (head conductance per cylinder, radiator, oil cooler) as random walks; dt = real elapsed time
+  (the old filter assumed 1 s while called every 5 s). Quarantined/missing temperatures are skipped. Constants in
+  configs/physics twin (ASSUMED). Replaces the legacy ThermofluidUKF in the runtime (old file kept for
+  ParameterEstimate; archive in M8). Results (tests/twin/test_sim_ukf.py): healthy tails stay within 0.85-1.15
+  (build spread absorbed); AE300 F21 radiator blockage -> radiator 0.55 (others ~1); 914 F19 cyl 2 -> cyl2 lowest.
+  The approved strict xfail test_sensor_bias_does_not_attribute_engine_fault now PASSES (marker removed).
+backend/detect/cusum.py: two-sided CUSUM on residual z (k = 0.5 sigma, configs/detect.json), threshold = conformal
+  quantile on the nominal holdout (approximate: CUSUM values are autocorrelated). Kept as a separate drift channel
+  (DetectionResult.drift {stat, ratio, alarm, top}; state detections.drift), NOT OR-ed into the per-frame alarm:
+  nominal residuals are not exactly zero-mean across operating points, so the sum creeps on long nominal runs.
+  Persistence gate from config (3 of 5 frames ~ 3 s at 1 frame/s).
+Speed (5-engine hub tick back under 20 ms): observer/validity/reliability on a staggered 5-tick cadence; vibration
+  phasors cached; vibration computed only for the published substep; air-path solution reused for the knock re-run
+  inside one plant step. 0.1 s internal steps were rejected: the 915 overspeed limit cycle changes.
+Found: backend/sim/vibration.py prop term uses a literal 2300 rpm (dynamic-rule break the T-DYN-1 scan missed) - fix
+  with a T-FLT-1 re-run in the held physics batch. Legacy reliability/diagnosis still read injected faults (M3-07).
+Full suite: 612 passed, 1 failed (ratchet, known), 11 xfailed.
+NOTE for the held batch (Questions 9): backend/sim/engine.py steady_point gained the air-path cache, so the held
+  engine.py must be merged by hand, not copied over.

@@ -17,6 +17,9 @@ from typing import Any, Dict, Sequence
 from backend.sim.params import physics_values
 
 
+_PHASORS: dict = {}
+
+
 @dataclass
 class Vibration:
     n_cyl: int
@@ -30,8 +33,10 @@ class Vibration:
 
     def _order(self, torques_by_firing: Sequence[float], m: float) -> float:
         n = self.n_cyl
-        z = sum(t * cmath.exp(-1j * m * math.radians(k * 720.0 / n)) for k, t in enumerate(torques_by_firing))
-        return abs(z) / n
+        phasors = _PHASORS.get((n, m))
+        if phasors is None:                       # firing-angle phasors depend only on (n, m): computed once
+            phasors = _PHASORS[(n, m)] = [cmath.exp(-1j * m * math.radians(k * 720.0 / n)) for k in range(n)]
+        return abs(sum(t * p for t, p in zip(torques_by_firing, phasors))) / n
 
     def orders(self, cylinder_torque: Sequence[float], torque_fraction: float, prop_rpm: float,
                prop_imbalance: float = 0.0, gear_damage: float = 0.0, mount_degradation: float = 0.0) -> Dict[str, float]:

@@ -120,8 +120,10 @@ class SimEngine:
         self.rotor.omega = self.cfg.max_continuous_rpm * 2 * math.pi / 60
 
     # -- one step ------------------------------------------------------------------------------------------
-    def step(self, dt: float, health: Optional[Dict[str, Any]] = None) -> PlantOutputs:
+    def step(self, dt: float, health: Optional[Dict[str, Any]] = None, publish: bool = True) -> PlantOutputs:
+        """One fixed step. publish=False skips the stateless vibration orders (a substep nobody reads)."""
         hl = health or {}
+        self.core._air_key = None          # the air-path cache only serves repeat calls inside this one step
         lv = self.levers
         atm = Atmosphere.at(lv.altitude_ft, isa_dev_c=lv.isa_dev_c, humidity_pct=lv.humidity_pct)
         tas = self.core.design_tas_kt if lv.tas_kt is None else lv.tas_kt
@@ -185,10 +187,13 @@ class SimEngine:
         mean_w = (sum(op.cyl_indicated_w) / n) if fuel_on and any(op.cyl_indicated_w) else 1.0
         cyl_t = [w / mean_w for w in op.cyl_indicated_w] if fuel_on else [0.0] * n
         torque_frac = max(0.0, self.torque) / max(self.cfg.rated_power_kw * 1000 / (self.cfg.rated_rpm * 2 * math.pi / 60), 1e-6)
-        vib = self.vibration.orders(cyl_t, torque_frac, self.rotor.prop_rpm, **(hl.get("vibration") or {}))
-        vib[f"{n // 2}X" if n % 2 == 0 else "firing_order"] = vib["firing"]
-        vib["0.5X"] += self.fx["cycle_variation_vibration_mm_s"] * (hl.get("cov_factor", 1.0) - 1.0)
-        vib["knock"] = max(0.0, knock - 1.0) * self.fx["knock_vibration_mm_s_per_index"] if comb.spark_ignition else 0.0
+        vib: Dict[str, float] = {}
+        if publish:
+            vib = self.vibration.orders(cyl_t, torque_frac, self.rotor.prop_rpm, **(hl.get("vibration") or {}))
+            vib[f"{n // 2}X" if n % 2 == 0 else "firing_order"] = vib["firing"]
+            vib["0.5X"] += self.fx["cycle_variation_vibration_mm_s"] * (hl.get("cov_factor", 1.0) - 1.0)
+            vib["knock"] = (max(0.0, knock - 1.0) * self.fx["knock_vibration_mm_s_per_index"]
+                            if comb.spark_ignition else 0.0)
         turbo_rpm = None
         if self.core.turbo is not None:
             pr = max(self.core.turbo.compressor_pa / atm.pressure_pa, 1.0)
@@ -196,8 +201,12 @@ class SimEngine:
             pr_cap = max(self.core.turbo.pr_max(0.0), 1.0001)
             turbo_rpm = self.cfg.turbo.max_shaft_rpm * min(1.0, ((pr ** 0.2857 - 1) / (pr_cap ** 0.2857 - 1)) ** 0.5)
             wear = (hl.get("turbo") or {}).get("bearing_wear", 0.0)
-            vib["turbo"] = self.fx["turbo_sync_mm_s"] * (1 + (self.fx["turbo_sync_bearing_gain"] - 1) * wear) * (turbo_rpm / self.cfg.turbo.max_shaft_rpm)
-        vib["rms"] = (sum(v * v for k, v in vib.items() if k in ("0.5X", "1X", "firing", "prop_1X", "gear_mesh", "knock", "turbo"))) ** 0.5
+            if publish:
+                vib["turbo"] = (self.fx["turbo_sync_mm_s"] * (1 + (self.fx["turbo_sync_bearing_gain"] - 1) * wear)
+                                * (turbo_rpm / self.cfg.turbo.max_shaft_rpm))
+        if publish:
+            vib["rms"] = (sum(v * v for k, v in vib.items()
+                              if k in ("0.5X", "1X", "firing", "prop_1X", "gear_mesh", "knock", "turbo"))) ** 0.5
 
         self._update_state(dt, op, fuel_on)
         self.t += dt

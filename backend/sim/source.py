@@ -131,14 +131,14 @@ class SimSource:
         if oat_c is not None:
             lv.isa_dev_c = oat_c - (Atmosphere.at(altitude_ft).temperature_k - 273.15)
 
-    def advance(self, dt_sec: float) -> PlantOutputs:
-        """One plant step with the active faults' parameters (no measurement)."""
+    def advance(self, dt_sec: float, publish: bool = True) -> PlantOutputs:
+        """One plant step with the active faults' parameters (no measurement). publish=False: an inner substep."""
         health, self._sensor_faults = self.params.health(self.faults, self.plant.t, self.plant.core.combustion)
         v = self.variation
         health["injector"] = [a * b for a, b in zip(health["injector"], v["injector"])]
         th = health["thermal"]
         th["head_conductance"] = v["head_cooling"]
-        self.last = self.plant.step(dt_sec, health)
+        self.last = self.plant.step(dt_sec, health, publish=publish)
         return self.last
 
     def emit(self) -> Tuple[Frame, TruthRecord]:

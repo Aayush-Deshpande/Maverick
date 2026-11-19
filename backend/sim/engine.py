@@ -50,6 +50,7 @@ class MeanValueEngine:
         self.ci_full_fuel_cyl = 0.0          # CI injection quantity per cycle at full lever (CALIBRATED)
         fr = physics_values(cfg.engine_id, "friction")
         self.fmep = (fr["fmep_a_kpa"] * 1e3, fr["fmep_b_kpa_per_krpm"] * 1e3, fr["fmep_c_kpa_per_krpm2"] * 1e3)
+        self._air_key, self._air_val = None, None
         lam = cfg.nominal_lambda
         self.nominal_lambda = float(lam.value if hasattr(lam, "value") else lam)
         self.turbo = Turbo.for_engine(cfg, physics_values(cfg.engine_id, "induction")["wot_map_ratio"])
@@ -78,19 +79,30 @@ class MeanValueEngine:
         inj = list(injector) if injector is not None else [1.0] * n
         qual = list(quality) if quality is not None else [1.0] * n
         ind = self.induction
-        mdot = 0.0
-        p_src, t_src = atm.pressure_pa, atm.temperature_k
-        frac = throttle_area_fraction(100.0 if self.ci else throttle_pct, ind.idle_fraction)
-        for _ in range(8):           # filter drop solved in closed form; boost depends on flow: short fixed point
+        key = (throttle_pct, rpm, atm, filter_factor, map_target_pa,
+               tuple(sorted(turbo_health.items())) if turbo_health else None)
+        if key == self._air_key:     # same air path within one plant step (the knock re-run changes only timing)
+            mdot, map_pa, t_charge, compressor_pa = self._air_val
             if self.turbo is not None:
-                target = None if map_target_pa is None else map_target_pa / self.wot_map_ratio
-                p_src = self.turbo.steady_charge(atm, mdot, target_pa=target, health=turbo_health)
-                t_src = self.turbo.charge_temperature_k(atm, p_src, (turbo_health or {}).get("intercooler_fouling", 0.0))
-                self.turbo.t_charge_k = t_src
-            prev = mdot
-            mdot, map_pa = ind.steady_flow(frac, p_src, t_src, rpm, filter_factor)
-            if self.turbo is None or abs(mdot - prev) <= 1e-10 * max(mdot, 1e-12):
-                break
+                self.turbo.t_charge_k, self.turbo.compressor_pa = t_charge, compressor_pa
+        else:
+            mdot = 0.0
+            p_src, t_src = atm.pressure_pa, atm.temperature_k
+            frac = throttle_area_fraction(100.0 if self.ci else throttle_pct, ind.idle_fraction)
+            for _ in range(8):       # filter drop solved in closed form; boost depends on flow: short fixed point
+                if self.turbo is not None:
+                    target = None if map_target_pa is None else map_target_pa / self.wot_map_ratio
+                    p_src = self.turbo.steady_charge(atm, mdot, target_pa=target, health=turbo_health)
+                    t_src = self.turbo.charge_temperature_k(atm, p_src,
+                                                            (turbo_health or {}).get("intercooler_fouling", 0.0))
+                    self.turbo.t_charge_k = t_src
+                prev = mdot
+                mdot, map_pa = ind.steady_flow(frac, p_src, t_src, rpm, filter_factor)
+                if self.turbo is None or abs(mdot - prev) <= 1e-10 * max(mdot, 1e-12):
+                    break
+            self._air_key = key
+            self._air_val = (mdot, map_pa, self.turbo.t_charge_k if self.turbo else None,
+                             self.turbo.compressor_pa if self.turbo else None)
         cycles_per_s = rpm / 120.0
         m_air_cyl = mdot * atm.dry_air_mass_fraction / max(cycles_per_s * n, 1e-9)   # dry air burns the fuel
         p_fuel = self.fuel.steady_pressure(fuel_health)

@@ -31,8 +31,8 @@ class PlantSource(SimSource):
         """Advance dt_sec of simulated time in fixed internal steps; return the last Frame."""
         n = max(1, math.ceil(dt_sec / self.internal_step_s - 1e-9))
         self.set_conditions(throttle_pct, altitude_ft, oat_c, tas_kt)
-        for _ in range(n):
-            self.advance(dt_sec / n)
+        for i in range(n):
+            self.advance(dt_sec / n, publish=(i == n - 1))
         return self.emit()                       # sensors measure the published frame only
 
     def run(self, n_steps: int, dt_sec: float = 1.0, **step_kwargs) -> Iterator[Tuple[Frame, TruthRecord]]:

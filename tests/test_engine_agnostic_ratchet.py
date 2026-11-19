@@ -71,6 +71,8 @@ GUARDED = [
     "backend/sim/maps.py",
     "backend/status/evaluator.py",
     "backend/status/alerts.py",
+    "backend/twin/sim_ukf.py",
+    "backend/detect/cusum.py",
     "backend/sim/params.py",
     "backend/sim/plant.py",
     "backend/sim/rotor.py",

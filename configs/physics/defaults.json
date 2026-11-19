@@ -640,5 +640,37 @@
       "status": "ASSUMED",
       "ref": "share of (port EGT - ambient) lost in the exhaust manifold before the turbine (short uninsulated manifold)"
     }
+  },
+  "twin": {
+    "init_temp_var": {
+      "value": 25.0,
+      "status": "ASSUMED",
+      "ref": "initial temperature variance (C^2) of the observer"
+    },
+    "init_param_var": {
+      "value": 0.01,
+      "status": "ASSUMED",
+      "ref": "initial variance of each health parameter (1 = as calibrated)"
+    },
+    "q_temp_per_s": {
+      "value": 0.05,
+      "status": "ASSUMED",
+      "ref": "process noise on temperatures per second (C^2/s): model mismatch incl. unknown build spread"
+    },
+    "q_param_per_s": {
+      "value": 2e-06,
+      "status": "ASSUMED",
+      "ref": "random-walk rate of a health parameter per second (slow degradation)"
+    },
+    "r_model_temp": {
+      "value": 1.0,
+      "status": "ASSUMED",
+      "ref": "extra measurement variance (C^2) for the model's representation error"
+    },
+    "max_step_s": {
+      "value": 5.0,
+      "status": "ASSUMED",
+      "ref": "largest internal thermal step inside one observer prediction (s); stable because the fastest observed balance (heads) has a 60 s time constant"
+    }
   }
 }

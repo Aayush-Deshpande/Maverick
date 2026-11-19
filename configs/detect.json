@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "description": "Residual detector settings (cards M3-02..M3-04). Thresholds themselves are fitted per tail on nominal frames; these are the design constants.",
+  "cusum_k_sigma": {"value": 0.5, "status": "ASSUMED", "ref": "CUSUM allowance in residual sigmas: tuned for the fastest detection of a sustained 1-sigma shift (Montgomery, Introduction to Statistical Quality Control, ch. 9: k = delta/2)"},
+  "persistence_k": {"value": 3, "status": "ASSUMED", "ref": "confirm when k of the last n raw alarms fired; at 1 frame/s this is the idea text's ~3 s persistence"},
+  "persistence_n": {"value": 5, "status": "ASSUMED", "ref": "persistence window (frames)"}
+}

@@ -70,9 +70,6 @@ def run_ticks(rt: EngineRuntime, n: int, heavy: bool = False):
 
 class TestSensorFaultDiscrimination:
 
-    @pytest.mark.xfail(strict=True, reason="M1-14 (Prasad approved 20 Nov): the legacy ThermofluidUKF models the "
-                       "retired plant, so every CHT residual is biased on backend/sim and the cht_1 alarm becomes "
-                       "ENGINE_FAULT. M3-01 rebuilds the UKF on backend/sim.")
     def test_sensor_bias_does_not_attribute_engine_fault(self):
         """Inject large sensor bias (no engine fault) → must NOT produce ENGINE_FAULT."""
         rt = calibrated_runtime(seed=7)
