@@ -1,0 +1,142 @@
+module,loc,server_reachable,tested,in_plan,doc
+backend,1,True,True,False,
+backend.agent,3,True,True,True,
+backend.agent.copilot,1261,True,True,True,Agentic Mission Copilot & Tactical Flight Assistant.
+backend.agent.diagnostic_agent,343,True,True,True,Cognitive Diagnostic Agent & ATA Citation Reasoner — Plane 2
+backend.agent.flight_intent,149,True,True,False,Natural-Language Flight-Vector Intent Engine (PRD F10).
+backend.agent.llm_engine,491,True,True,True,"Local LLM Reasoning Engine — served via Ollama (GGUF, GPU-offloaded)"
+backend.alarms.rationalisation,148,False,True,False,"ISA-18.2 Compliant Alarm Management and Flood Suppression (B6.3, VIS-06)."
+backend.core,9,True,True,False,
+backend.core.channels,39,True,True,False,"Channel registry (U2): the canonical channel list is DERIVED from the engine profile, never typed as CHT_1..4."
+backend.core.cycle_block,48,False,True,True,CycleBlock (INTERFACES Sec 3): high-rate telemetry representation for one 720-degree engine cycle.
+backend.core.frame,232,True,True,False,Canonical low-rate telemetry contract -- B1.1.
+backend.core.limits,43,False,True,False,Operating-limit (redline) evaluation from the engine profile (U3).  Cylinder-count agnostic.
+backend.core.pipeline,83,False,True,False,"OSA-CBM stage executor (B1.3, D05): one pipeline for live, replay and evaluation."
+backend.core.profile,169,True,True,False,"EngineProfile (U1, D27): Unified profile joining physics config, asset manifest,"
+backend.datasets.aces,86,False,True,False,Synthetic ACES-shaped scenario generator (not a NASA ACES file loader).
+backend.datasets.alfa,87,False,True,False,Synthetic ALFA-shaped scenario generator (not an ALFA dataset file loader).
+backend.datasets.base,70,False,True,False,"Universal Dataset Abstraction and Metadata Contracts (B7.1, CAP-07, D19, D35)."
+backend.datasets.battery,88,False,True,False,Synthetic NASA PCoE-shaped scenario generator (not a NASA battery-file loader).
+backend.datasets.cmapss,103,False,True,False,Synthetic C-MAPSS-shaped scenario generator (not a NASA C-MAPSS file loader).
+backend.datasets.cwru,91,False,True,False,Synthetic CWRU-shaped scenario generator (not a CWRU signal-file loader).
+backend.datasets.default_3500,116,False,True,False,"Synthetic Multi-Engine 3500-Run Benchmark Dataset Loader (B7.7, BENCH-06, D19)."
+backend.detect,10,True,True,False,"Calibrated-residual detection stack (W1/W11): per-tail calibration, cheap scorers, conformal thresholds,"
+backend.detect.calibration,146,True,True,True,"Per-tail calibration (""twin-lite"") -- backlog W1, decision D31."
+backend.detect.detector,120,True,True,True,ResidualDetector -- calibrated-residual detector with split-conformal thresholds and a persistence gate
+backend.detect.reservoir,111,True,True,False,"Sparse reservoir tier (backlog W11, decision D36) -- temporal detector on calibrated features."
+backend.detect.scorers,68,True,True,False,Cheap anomaly scorers over calibrated feature vectors (backlog W1).
+backend.diagnose.active,76,False,True,False,"Active Diagnosis and Expected Information Gain Test Selection (B5.4, FDP-03, D11)."
+backend.diagnose.bn,128,False,True,True,"Diagnostic Bayesian Network and Hypothesis Ranking (B5.3, FDP-02..09, AIM-02, D11)."
+backend.diagnose.explain,78,False,True,True,"Audience-Tailored Explanation Generator and XAI Metrics (B5.5, INN-06, VIS-02..04)."
+backend.dsp,5,True,True,False,DSP Package -- Order Tracking and Vibration Signal Processing for Propulsion Digital Twin.
+backend.dsp.order_tracker,179,True,True,False,"Order-Tracking Vibration Digital Signal Processing (DSP) Module (B2.4, HMS-09, PS-26054)."
+backend.economics.impact,98,False,True,False,"Fleet Economics, Mission Reliability, and Financial Impact Model (V7, INN-06)."
+backend.edge,3,False,True,False,
+backend.edge.compressor,272,False,True,False,"Edge feature compression, bandwidth and power accounting — F08 / F67 / F68."
+backend.edge.node,88,False,True,False,"EdgeNode -- persistence-gated scalar downlink with bandwidth, latency and power accounting (W4, D34)."
+backend.evaluation,55,True,True,False,ANUMAAN evaluation package.
+backend.evaluation.conformal,237,True,True,True,Conformal prediction for RUL intervals — F12 / F53.
+backend.evaluation.damage_accumulation,313,True,True,False,Physics-of-failure damage accumulation — F36 / F37.
+backend.evaluation.harness,422,False,True,False,"Evaluation harness — closes G03, implements F18."
+backend.evaluation.prognostic_metrics,206,True,True,False,Standard PHM prognostic performance metrics — F60.
+backend.evaluation.threshold_baseline,217,True,True,True,"Conventional threshold monitor, as a measured baseline — F13."
+backend.evaluation.validation,357,False,True,False,"External validation, protocol correctness and novelty handling — F14/F16/F17/F62/F63."
+backend.fadec_emulator.emulator,122,False,True,False,"FADEC Emulator with Cylinder Balancing, UDS Diagnostics, and XCP (B2.6, OPT-01/02, TEX-05, D09)."
+backend.federation.aggregator,110,False,True,False,"Federated Aggregator with Differential Privacy and Canary Validation Gate (W7, INN-04, D28)."
+backend.federation.colony,67,False,True,False,"Federated Edge Colony Node and Local Update Extraction (W7, INN-04, D28)."
+backend.foundation.forecast_chronos,93,False,True,False,"Probabilistic Time-Series Forecasting Interface (W8, INN-06, D35)."
+backend.foundation.tabpfn_wrapper,79,False,True,False,"TabPFN In-Context Tabular Classifier Wrapper (W8, INN-06, D35)."
+backend.foundation.text_classifier,94,False,True,False,"Zero-Shot Maintenance Log & PIREP Text Classifier (W10, INN-06, D35)."
+backend.graph,11,True,True,False,
+backend.graph.mission_graph,447,True,True,False,Mission Knowledge Graph & Fleet Intelligence Engine — Phase J
+backend.graph.mission_reporter,246,True,True,True,Post-Flight Mission Reporter — Phase J
+backend.knowledge.loaders,34,True,True,False,Document Loaders and Ingestion Engine for Rotax 912 iS & UAV Manuals.
+backend.knowledge.loaders.chunker,78,True,True,False,Paragraph & Section Text Chunker for Aerospace Technical Documents.
+backend.knowledge.loaders.office_loader,74,True,True,False,Local Office (DOCX / PPTX) Document Loader for Engine Directives.
+backend.knowledge.loaders.pdf_loader,57,True,True,False,Local PDF Document Loader for Aerospace & Engine Manuals.
+backend.knowledge.loaders.text_loader,26,True,True,False,"Local Text / Markdown Loader for SOPs, Flight Manuals, and Directives."
+backend.knowledge.retrieval,7,True,True,False,Retrieval and Reranking Service for Rotax 912 iS & DRDO UAV Manuals.
+backend.knowledge.retrieval.embedding_index,99,True,True,True,Local Semantic Embedding Index for Aerospace Manuals.
+backend.knowledge.retrieval.local_store,122,True,True,False,Local Technical Manual Knowledge Store.
+backend.knowledge.retrieval.reranker,85,True,True,True,Local Cross-Encoder Semantic Reranking Service for Aerospace Manuals.
+backend.link.link_emulator,113,False,True,False,"Constrained Datalink Emulator and Priority Store-and-Forward (B2.7, INN-07, OPT-03)."
+backend.maintenance.work_package,278,False,True,True,"Automated Maintenance Work Package Generation and Opportunistic Scheduler (B10.1, B10.2, INN-06)."
+backend.mission,10,True,True,False,
+backend.mission.glide,226,True,True,True,MALE UAV Aerodynamic Glide Polar and Emergency Runway Reachability Module (PS-26054).
+backend.mission.prescriptive,264,True,True,False,Prescriptive advisory and mission re-planning — F57 / F58.
+backend.mission.profiles,107,False,True,True,"MALE UAV Multi-Phase Mission Profiles (R10, B1.4, D16)."
+backend.mission.reliability,391,True,True,True,Mission reliability — F56.
+backend.ml,6,True,True,False,
+backend.ml.anomaly_detector,410,True,True,True,Residual Autoencoder — Unsupervised Anomaly Detector
+backend.ml.crank_diagnostics,439,False,True,False,Per-cylinder combustion diagnostics from crank angular velocity — F02/F03/F04/F05/F06.
+backend.ml.detection_pipeline,759,True,True,True,Integrated Real-Time Detection Pipeline — Plane 1
+backend.ml.flyhash_novelty,237,True,True,True,FlyHash sparse coding for vibration/residual novelty detection.
+backend.ml.rul_estimator,217,True,True,True,Rotax 912 iS Prognostics & Remaining Useful Life (RUL) Estimator
+backend.ml.spectral_analyser,279,True,True,False,Gearbox FFT Spectral Analyser
+backend.ml.trend_analyser,755,True,True,True,Degradation Trend Analyser + Probabilistic RUL Engine
+backend.ml_runtime_lock,45,True,True,False,Process-Wide First-Import Lock for `transformers`-Dependent Engines.
+backend.osacbm,287,False,True,True,OSA-CBM / ISO 13374 architecture mapping — F34.
+backend.performance.maps,144,False,True,True,"Engine Performance Maps and Atmospheric Scaling (R9, B1.4, D16)."
+backend.physics,14,True,True,False,
+backend.physics.combustion_ci,178,False,True,True,CI (Compression Ignition / CRDi) Combustion Physics Model (B2.1).
+backend.physics.crank_dynamics,364,True,True,True,Crank-angle-resolved engine dynamics — F01.
+backend.physics.engine_config,312,True,True,False,"Engine class as configuration, not hardcoding — F31."
+backend.physics.exposure,229,False,True,True,Environmental exposure accumulator — F40.
+backend.physics.fuel_thermal,219,True,True,False,Fuel thermal management and cold-fuel risk — F42.
+backend.physics.induction,182,True,True,True,Induction path: air filter restriction and the dust-ingestion wear chain — F43.
+backend.physics.injector_faults,274,True,True,False,Compression-ignition injector fault library — F41.
+backend.physics.oil_system,265,True,True,True,"Oil system health: wear-metal spectrum, debris, blow-by — F39."
+backend.physics.rail,110,False,True,True,"Common-Rail Hydraulics and Injector Physics Model (B2.2, FDP-03)."
+backend.physics.sensor_validator,460,True,True,True,Sensor Sanity & Plausibility Validator
+backend.physics.structure,143,True,True,False,"Structural Dynamics and High-Rate Acoustic Waveform Physics (B2.3, B2.4, HMS-09, FDP-09)."
+backend.physics.thermo_model,418,True,True,True,Rotax 912 iS Sport 1D Thermodynamic Physics Model & Residual Calculator
+backend.physics.turbo_model,254,True,True,False,Turbocharger / boosted induction model — F32.
+backend.plant,3,True,True,False,
+backend.plant.adapter,187,True,True,True,Independent-plant adapter — bridges VirtualEngine into the twin's data path.
+backend.plant.sensors_hr,89,False,True,True,"High-Rate Sensor Chain Emulation (B2.5, FDP-06)."
+backend.plant.virtual_engine,435,True,True,True,"Independent virtual engine — the plant, not the twin. Closes G01."
+backend.prognose.rul,87,False,True,True,"Dual-Path Remaining Useful Life (RUL) Prognostics (B6.1, CAP-06, AIM-05, D18)."
+backend.reliability,4,False,True,True,
+backend.reliability.fmeca,450,False,True,True,"FMECA — failure mode, effects and criticality analysis — F33."
+backend.reliability.isolability,292,False,True,True,Fault detectability and isolability analysis — F35.
+backend.reports,5,True,True,False,
+backend.reports.mission_bundle,365,True,True,True,Mission Knowledge Graph -> Report Dump adapter — DRDO / iDEX PS-26054
+backend.reports.report_dump_writer,285,True,True,True,Post-Mission Report Dump Writer — DRDO / iDEX Problem Statement ID: 26054
+backend.runtime,6,True,True,True,
+backend.runtime.engine_runtime,754,True,True,True,"EngineRuntime -- one engine profile's simulator + injectors + detector bank (R1/R2/R3/R7, D29, D05)."
+backend.runtime.hub,90,True,True,True,RuntimeHub -- every engine profile runs concurrently; the dropdown selects which one gets the heavy tier
+backend.runtime.levers,46,True,True,False,"Operating levers with first-order dynamics (R3, closes G02)."
+backend.runtime.registry,51,True,True,True,"Fault registry (R2, D30): which plant faults an engine profile accepts, and which of them the scalar"
+backend.runtime.sensor_levers,135,True,True,False,"Sensor-layer fault levers (R7, D30): bias, drift, stuck, noise, dropout, and spoofing."
+backend.security.can_ids,101,False,True,True,"CAN Bus Intrusion Detection System (CAN IDS) (B9.1, INN-07, D17)."
+backend.security.merkle_log,85,False,True,True,"Tamper-Evident Merkle-Sealed Flight Log (B9.1, INN-07, D17)."
+backend.server,4,True,True,False,Rotax 912 iS MALE UAV Digital Twin — Laptop Backend Server Package
+backend.server.engine_api,256,True,True,True,Engine API (R4): per-engine REST + WebSocket routes over the concurrent RuntimeHub (D29).
+backend.server.engine_service,1043,True,True,True,Authoritative Real-Time Engine & Analytics Service
+backend.server.main,623,True,True,True,FastAPI Real-Time Telemetry & Control Server
+backend.server.schemas,180,True,True,False,Pydantic Data Schemas & API Contracts
+backend.sources,1,True,True,False,
+backend.sources.plant_source,56,True,True,True,"PlantSource -- the current independent plant behind the canonical Frame contract (B1.2, part 1)."
+backend.sources.recorder,60,False,True,True,"Recorder + ReplaySource (W3, B1.2): record any Frame stream to .npz + manifest and replay it bit-exactly."
+backend.sources.waveform,209,False,True,True,"WaveformSource and WaveformRecorder (W3, SIM-03): High-rate CycleBlock acquisition and .npz recording/replay."
+backend.telemetry,3,True,True,False,
+backend.telemetry.aces_loader,289,False,True,False,NASA ACES real-telemetry loader — F48.
+backend.telemetry.can_streamer,512,True,True,True,Rotax 912 iS Telemetry Streamer & DRDO Fault Injector
+backend.telemetry.mavlink_efi,209,False,True,True,MAVLink EFI_STATUS ingestion — F46.
+backend.telemetry.replay_engine,203,True,True,True,Historical Mission Replay Engine (PRD F12 / final_tasks/02_HISTORICAL_MISSION_REPLAY_AND_SCRUBBER.md).
+backend.telemetry.socketcan_bridge,182,False,True,True,SocketCAN & SAE J1939 Telemetry Ingestion Bridge
+backend.twin,4,True,True,True,
+backend.twin.degradation,136,False,True,True,"Degradation Particle Filter and SINDy Law Identification (B4.4, CAP-05/13, INN-01)."
+backend.twin.history,107,False,True,False,"Operational History and Severity Accumulator per Tail (R11, B4.6)."
+backend.twin.integrity,301,True,True,True,Physics-constrained telemetry integrity — F54 / F55.
+backend.twin.model,158,True,True,False,"Dynamic Lumped-Parameter Thermofluid Twin Model (B4.1, B4.6, D03)."
+backend.twin.priors,64,False,True,False,"Hierarchical Fleet Priors and Empirical Bayes Personalization (B4.5, SYS-09)."
+backend.twin.residual_detector,243,False,True,True,"Physics-residual detector with per-tail calibration — F50, and the detector the"
+backend.twin.ukf,195,True,True,True,"UKF Joint State and Parameter Estimation Twin (B4.2, CAP-11, DTC-02/04)."
+backend.twin.validity,323,True,True,False,Twin validity monitoring — F51 / F52.
+backend.twin.virtual_sensors,89,True,True,True,"Virtual Sensor Synthesis Module (B4.2, CAP-11, DRDO PS-26054)."
+backend.voice,5,True,True,False,"Voice Interaction Layer (Plane 2 extension) — Speech-to-Text, Text-to-Speech, and"
+backend.voice.conversation,50,True,True,False,Voice Conversation State Manager.
+backend.voice.stt_engine,192,True,True,True,"Local Whisper.cpp Speech-to-Text Engine — ggml-tiny.en (CPU, offline)."
+backend.voice.thinking_stream,48,True,True,False,"Live ""Thinking"" Preview Buffer for the Voice Copilot."
+backend.voice.tts_engine,177,True,True,True,"Local Kokoro-82M Text-to-Speech Engine (offline, GPU-accelerated when available)."

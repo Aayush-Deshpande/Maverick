@@ -107,3 +107,6 @@ unity_bridge/
 # Downloaded third-party binaries for local dev tooling (e.g. ngrok.exe, ~33MB) —
 # fetched on demand by launch_public_tunnel.bat, never committed
 tools/
+
+# runtime output (DECISIONS D6, card M0-11)
+var/

@@ -1,0 +1,81 @@
+ANUMAAN - PROGRESS LOG
+Rules: AGENTS.md ("If the context resets"), DECISIONS.md D22/D23. Entry format: ANUMAAN_AI_COURSE_OF_ACTION.txt
+section 19.1. Update the RESUME HERE block at every commit and at the end of every session.
+
+=====================================================================================================================
+RESUME HERE  (last updated 19 Nov 2026)
+=====================================================================================================================
+Phase:        PHASE 0 - sort out the workspace (course of action section 4)
+Card:         P0-02 - guard hook (P0-01 done)
+Branch:       Beta (local only, not pushed), created from main 9b5942e. main untouched.
+Last commit:  P0-01 on Beta (see git log -1). main still 9b5942e.
+State:        Planning finished. Instruction files written: AGENTS.md, CLAUDE.md, DECISIONS.md (D1-D43), and
+              AGENTS.md + CLAUDE.md in 12 folders. Course of action v2 (solo) written. No code changed.
+Next step:    P0-02 guard hook (.claude/settings.json), then P0-03 inventory with md5, then P0-04 (moves, including
+              web/Crazy_Landing -> archive_tracked/crazy_landing, D42). Unstaged on purpose: data/graph_db/
+              fleet_graph.json (runtime), the 914 .blend files (question 3), and web/usavionix deletions +
+              web/Crazy_Landing (P0-04).
+Answered 19 Nov (recorded as D25-D33):
+  - 914 master: headless inspection decides (D25); the 912 iS Sport stays the reference engine.
+  - Voice/: stays as local model storage; the stale .gitmodules is removed in P0-04 (D26).
+  - web/Crazy_Landing (renamed from web/usavionix/mirror) and docs/study.zip -> archive_tracked/ in the repo (D42,
+    supersedes D27).
+  - LFS: .blend only, no GLB in LFS (D28).
+  - origin/Prasad: not merged; reference only (D29). main is deployed (Render); Beta never deployed (D30).
+  - LLM: Ollama (models in D:\AI\ollama\models) or Gemini; RAG rebuilt in Phase 8b (D31, D32).
+  - External dependencies listed in STRUCTURE.txt (D33).
+Full subsystem scan done 19 Nov (course of action section 4.4, D34-D37). Key findings:
+  - RAG corpus = 7 generated fake "manuals" (archived in P0-04; real corpus in AI-03a).
+  - Voice deps (pywhispercpp, kokoro) are not installed, so voice cannot run today.
+  - Ollama works with the D: models after a restart with OLLAMA_MODELS (nothing deleted or downloaded).
+Full-file scan done (2,884 files): audit Part C issues 51-73; decisions D38-D41; download-later list in course of
+  action section 4.5. Scans are re-runnable: scripts/assets/subsystem_scan.py and full_file_scan.py.
+File coverage manifest: every file (3,153 tracked + 305 untracked) maps to a plan item; 0 uncovered
+  (scripts/assets/file_coverage.py -> docs/cleanup/file_coverage_latest.csv). Model inventory: most models ARE on
+  this PC (D43); what is missing is the Python packages.
+Noticed 19 Nov 06:03: assets/blender/rotax_914.blend and rotax_914_f.blend were saved in Blender (modified on disk,
+  about 19 KB larger). Blender kept the previous versions as .blend1, byte-size identical to the committed files.
+  Not staged, not touched. Question 3 below.
+Open questions for Prasad:
+  1. When to push Beta to origin (and confirm Render/Vercel do not auto-build Beta first, D30).
+  2. Phase 8b: pull an Ollama embedding model (nomic-embed-text), or keep sentence-transformers MiniLM? (MiniLM and
+     bge-large-en-v1.5 are already cached in D:\AI\huggingface, so no download is needed.)
+  3. rotax_914.blend / rotax_914_f.blend: keep your 19 Nov saved versions, or restore the committed ones (the .blend1
+     backups equal the committed files)? Needed before P0-06.
+Note: the Ollama server started by the session reported no models. Restart Ollama from the tray so it picks up
+  OLLAMA_MODELS=D:\AI\ollama\models.
+Known test baseline: 333 passed, 3 failed (known), 7 skipped, 1 xfailed - see the first entry below.
+
+=====================================================================================================================
+LOG (newest at the bottom)
+=====================================================================================================================
+
+=== 19 Nov 2026  S-00 Branch, plan documents, AI instruction files (AI: Claude Code, Opus 5.5)
+Branch: Beta, created from main 9b5942e (= origin/main). main untouched. Not pushed.
+Added (untracked, not committed yet):
+  - Plan: ANUMAAN_AUDIT_REPORT.txt, ANUMAAN_COMPONENTS_ADDENDUM.txt, ANUMAAN_ROADMAP_AND_PS_COVERAGE.txt (v2),
+    ANUMAAN_AI_COURSE_OF_ACTION.txt (v2, solo).
+  - Instructions: AGENTS.md, CLAUDE.md, DECISIONS.md, and AGENTS.md + CLAUDE.md in backend, frontend, configs, tests,
+    apps, assets, scripts, docs, data, web, docs_site, archive_tracked.
+  No code changed.
+Pre-existing: data/graph_db/fleet_graph.json modified by the server at runtime (carried over from main; not
+  committed; handled in M0-11).
+Tests before: python -m pytest -q -p no:cacheprovider -> 3 failed, 333 passed, 7 skipped, 1 xfailed (5 min 12 s).
+  This is the same result as on main during the audit. The 3 known failures:
+    tests/test_engine_agnostic_ratchet.py::test_engine_specific_literals_never_increase (real; M0-07 / M8-04)
+    tests/test_runtime_hub.py::test_cpu_cost_is_small (timing-sensitive; M8-04)
+    tests/test_runtime_hub.py::test_all_five_engines_concurrent_load_and_isolation (timing-sensitive; M8-04)
+  Warning: scikit-learn models saved with 1.9.0, loaded with 1.9.1 (M8-03).
+  Rule: any failure other than these 3 is a regression caused by our work.
+Findings recorded during this session (already in the documents):
+  - The submitted idea text promises items the roadmap did not list explicitly -> course of action section 15
+    (I-01..I-19) and new cards M1-17, M3-04, M3-06, M4-03/04, M5-09, UX-05, M7-05.
+  - tools/ is gitignored -> pipeline scripts go to scripts/blender and scripts/assets (D20).
+  - The old docs/build/ AI guidance is history; its useful rules are kept in AGENTS.md (D17).
+  - Provenance labels keep the existing schema words, plus CALIBRATED and OWNER (D16).
+  - RUL coverage target 95 % (D18); the estimator stays the UKF, and the docs wording is fixed (D19).
+  - Folder sizes on disk (19 Nov 2026, including untracked/ignored content): assets 3.6 GB, docs_site 427 MB and
+    frontend 422 MB (mostly node_modules/dist), web 107 MB, data 70 MB, docs 25 MB, backend 7.6 MB.
+    assets/ is where Phase 0 (P0-06, P0-07) gains the most.
+ASSUMED values added: none.
+Next: P0-01 (see RESUME HERE).

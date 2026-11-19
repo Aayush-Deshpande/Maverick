@@ -1,0 +1,27 @@
+# configs/: the data that makes the system dynamic (D5 in P Part 0)
+Global rules: ../AGENTS.md and ../DECISIONS.md.
+
+Everything engine-, fault- or part-specific lives here, never in code.
+
+## Files
+| Path | Status | Content |
+|---|---|---|
+| `engines/<engine_id>.json` | exists (5) | rated data, layout, turbo, limits, `provenance` per field; gets a `physics` block in M1 and banded limits in M0-01 |
+| `can/anumaan_fadec.dbc` | exists (4 messages) | extended to the full channel set in M7-01 |
+| `mavlink/` | exists | MAVLink EFI mapping |
+| `faults.json` | NEW (M0-02) | F01-F37, S01-S07 (R section 22) with applicability, parameter effects, expected signature, status, ATA, components per engine |
+| `components/<engine_id>.json` | NEW (M0-03) | component_id -> exact GLB node names, cylinder, focus, marker (A section 6) |
+| `sensors/<engine_id>.json` | NEW (M1) | channels, noise, lag, range, sensitivity signs |
+| `missions/*.json` | NEW (M5-02) | mission profiles and the four PS presets |
+| `fuels.json` | NEW (M1-05) | LHV and stoichiometric AFR per fuel, with sources |
+| `installations/<platform>.json` | NEW (M1-08) | bus voltage, battery, payload load, propeller, drag polar |
+| `runtime.json` | NEW (M0-07) | tick rate, idle divisor, data source (DIRECT/CAN/REPLAY) |
+| `schema/*.schema.json` | NEW | JSON Schemas. The server refuses to start on an invalid config (T-CFG-1). |
+
+## Rules
+- Every number has provenance: `{"status": PUBLIC|MANUAL|ASSUMED|PLACEHOLDER|CALIBRATED|OWNER, "ref": "<document, issue, page or URL>"}` (D16).
+- Engine values come only from P Part 2 / R section 20. A new value needs a quoted source, or it is ASSUMED and listed in PROGRESS.txt. Never guess.
+- Not applicable means `null`, never 0. Example: the 914 is carburetted, so its injection timing is null.
+- Ownership: one card at a time edits `faults.json` or an engine file. Say so in the PROGRESS entry.
+- After any change, run the config tests (`tests/config/` from M0-01) and, for components, the manifest tests.
+- Ids are stable once used: F01..F37, S01..S07, component_ids. Renaming needs a DECISIONS.md entry.
