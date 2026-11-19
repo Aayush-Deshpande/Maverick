@@ -84,6 +84,11 @@
     "cyl": 48,
     "model": 5
   },
+  "backend/prognose/trends.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
   "backend/runtime/hub.py": {
     "brand": 0,
     "cyl": 0,

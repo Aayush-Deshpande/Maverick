@@ -7,7 +7,7 @@ RESUME HERE  (last updated 20 Nov 2026, overnight autonomous session)
 =====================================================================================================================
 Phase:        PHASE 1 (M0) cards done (M0-01..M0-12; M0-10 reduced, see its entry). NEXT: CHECKPOINT PHASE 1 (manual
               look by Prasad), then Phase 2 in demo-first order: M1-01 sim package + clock, M1-02 atmosphere, ...
-Card:         M3-05/06/07 landing (model-informed residual, Bayesian isolator, registry directive); NEXT M3-08 harness. Prasad away until ~08:45 20 Nov with full
+Card:         M4-02 done (trends/time-to-limit); M3-08 matrix run pending (reports/evaluation); NEXT M4-05/M4-06, M4-01/03. Prasad away until ~08:45 20 Nov with full
               permission (installs to D:, any package/model/dataset): KEEP BUILDING card after card, never wait.
 Branch:       Beta (pushed by Prasad up to ae82c70; later commits local). main untouched (9b5942e).
 Last commit:  M3-04 on Beta (see git log -1).
@@ -807,3 +807,18 @@ Also in this unit:
 Known, not yet fixed: engine_runtime conformal RUL calibrated on synthetic 'truths' (preds + 0.25 sin) and the
   damage->RUL formula with literals (M4); glide uav_lat/lon/alt literals (M5); vibration.py 2300 rpm literal;
   'frame.throttle or 70.0' in the order tracker call.
+
+=== 20 Nov 2026  M4-02 trends and time-to-limit (T-PRG-1)
+backend/prognose/trends.py: Theil-Sen (scipy.stats.theilslopes, scipy 1.18.1, alpha = confidence) on the MODEL-
+  INFORMED RESIDUAL (operating-point changes are explained by the model, so they do not trend), 10 min / 1 h windows
+  (configs/prognose.json, ASSUMED); reported only when the whole slope interval points toward a limit (engine-manual
+  warning limits). Projection: linear, or quadratic when accelerating (a growing fault accelerates and a line is
+  late); interval spans both + slope interval + current-value uncertainty; current = median of the last 3 samples
+  (a single reading near the limit is noise: the first 914 F21 'crossing' was a 1.5 C noise spike).
+Measured: 914 F21, 914 F25, AE300 F21 ramped 30 min at high power/hot day, seeds 1001/1002: every crossing warned
+  in advance; true (noise-free) crossing inside the interval 85/103 = 83 % (target >= 80 %).
+Runtime publishes prognostics.time_to_limit; status gets it (CAUTION only when a mission end is known: M5).
+  The placeholder sine-calibrated RUL stays until M4-03 (D38: test_canonical_runtime_pipeline asserts the RUL
+  fields; ported when the real RUL lands) and is now labelled status 'PLACEHOLDER (M4-03)' in the state.
+  status/evaluator._readings -> frame_readings (public, reused by trends). Docs: docs_site page 14 time-to-limit.
+Tests: tests/prognose/test_trends.py (T-PRG-1 3 runs, flat residual -> no trend, theilslopes API).

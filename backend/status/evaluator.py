@@ -74,7 +74,7 @@ def canonical_channel(name: str) -> str:
     return low
 
 
-def _readings(frame: Any) -> Dict[str, Optional[float]]:
+def frame_readings(frame: Any) -> Dict[str, Optional[float]]:
     out: Dict[str, Optional[float]] = {}
     for name in ("rpm", "prop_rpm", "map_kpa", "coolant_t", "oil_p", "oil_t", "fuel_flow", "fuel_p", "fuel_t",
                  "rail_p", "gearbox_t", "bus_v"):
@@ -116,7 +116,7 @@ class StatusEvaluator:
         if engine_state == "FAILED":
             found.append((Reason("ENGINE_FAILED", "NO-GO", "Engine has stopped running (ECU state FAILED)"), None, None))
         q = {canonical_channel(c) for c in quarantined}
-        found += self._limit_reasons(t, _readings(frame), q)
+        found += self._limit_reasons(t, frame_readings(frame), q)
         found += self._sensor_reasons(q)
         for h in hypotheses:
             if h.get("posterior", 0.0) >= self.posterior_min and h.get("status_at_full_severity"):
@@ -129,7 +129,7 @@ class StatusEvaluator:
                 found.append((Reason("TIME_TO_LIMIT", "CAUTION",
                                      f"will exceed {p['channel']} limit {p['limit']} in {p['time_to_limit_s'] / 60:.0f} min",
                                      channel=p["channel"], limit=p["limit"]), None, None))
-        return self._apply_hysteresis(t, found, _readings(frame))
+        return self._apply_hysteresis(t, found, frame_readings(frame))
 
     def _limit_reasons(self, t: float, r: Dict[str, Optional[float]], quarantined: set):
         out = []

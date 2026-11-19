@@ -6,6 +6,18 @@ This article establishes ANUMAAN's strict airworthiness discipline: **zero fabri
 
 ---
 
+## Time to limit (in service now)
+
+Before a full remaining-useful-life model, the twin answers a narrower question: *if this keeps going, when will a reading cross its engine-manual limit?*
+
+- **What is trended.** The model-informed residual of each limited channel (coolant, oil and head temperatures, exhaust gas temperature, oil and fuel pressure), not the raw reading. A climb or a power change is explained by the engine model, so it does not look like a trend. Only drift the model cannot explain is extrapolated.
+- **Slope.** Theil–Sen (the median of all pairwise slopes, robust to sensor spikes) over 10-minute and 1-hour windows, with its 95 % confidence interval. A trend is reported only when the whole interval points toward a limit.
+- **Projection.** The gap is the limit minus the current value (a median of the last samples). A developing fault usually accelerates, for example a growing blockage. So when a quadratic fit of the window is accelerating it gives the point estimate; otherwise the straight line does. The interval spans both projections, the slope interval and the uncertainty of the current value. Nothing beyond 10 hours is reported.
+
+**Measured (SIMULATION).** Slow faults (radiator blockage on the 914 and AE300, oil-cooler blockage on the 914) were ramped over 30 minutes at high power on a hot day, on test tails 1001 and 1002. A time-to-limit appeared before the limit was reached in every run. The true crossing time (the noise-free value) fell inside the predicted interval for **85 of 103 predictions (83 %)**; the acceptance target is 80 %.
+
+> **Status of the RUL model below.** The two-path RUL with conformal intervals is being built on a simulated run-to-failure fleet. Until it is measured, the live display labels its RUL field as a placeholder and quotes no RUL numbers.
+
 ## The Aviation Prognostics Reality: Why Point Estimates are Unsafe
 
 In academic machine learning competitions, algorithms are often trained on datasets like NASA C-MAPSS, where turbofan engines are run on testbenches until catastrophic destruction. In real military and commercial aviation:

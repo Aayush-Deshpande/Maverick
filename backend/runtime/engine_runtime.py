@@ -36,6 +36,8 @@ from backend.twin.virtual_sensors import VirtualSensorSynthesizer
 from backend.twin.validity import TwinValidityMonitor
 from backend.evaluation.damage_accumulation import DamageAccumulator
 from backend.evaluation.conformal import SplitConformalRUL
+from backend.prognose.trends import TrendTracker
+from backend.status.evaluator import frame_readings
 from backend.mission.reliability import (
     MissionReliabilityEngine, ISR_18H_PROFILE, DEFAULT_COMPONENTS, components_for_fault,
 )
@@ -153,15 +155,14 @@ class EngineRuntime:
             expected_sigma=sigma_map,
         )
         self.damage_accumulator = DamageAccumulator(name=f"{self.engine_id}_cyl1_head")
+        # placeholder RUL calibration kept only until M4-03 replaces it with the run-to-failure conformal RUL (D38:
+        # tests/test_canonical_runtime_pipeline.py is ported then); not a real calibration
         self.conformal_rul = SplitConformalRUL()
         preds = [float(x) for x in np.linspace(18.0, 1.0, 25)]
         truths = [p + float(0.25 * math.sin(i)) for i, p in enumerate(preds)]
         scales = [0.4 + 0.03 * i for i in range(25)]
-        self.conformal_rul.calibrate(
-            predictions=preds,
-            truths=truths,
-            scales=scales
-        )
+        self.conformal_rul.calibrate(predictions=preds, truths=truths, scales=scales)
+        self.trends: Optional[TrendTracker] = None        # M4-02, built on the detector's channels at calibration
 
         components = DEFAULT_COMPONENTS()
         if not self.cfg.is_turbocharged:
@@ -202,6 +203,7 @@ class EngineRuntime:
         with self._lock:
             self.detector = ResidualDetector.calibrate(frames, alpha=0.01)
             self.isolator = BayesianIsolator(self.engine_id, self.detector.cal.channel_names())
+            self.trends = TrendTracker(self.cfg.limits or {}, self.detector.cal.channel_names(), self.detector.cal.sigma)
             self.levers = Levers()
             self.ready = True
 
@@ -325,6 +327,8 @@ class EngineRuntime:
             if self.isolator is not None:
                 self.isolator.reset()
             self._cached_prognostics = None
+            if self.trends is not None:
+                self.trends.reset()
             if self.detector:
                 self.detector.gate.reset()
                 if self.detector.cusum is not None:
@@ -424,6 +428,8 @@ class EngineRuntime:
                     det.confirmed = False
             if det is not None and self.isolator is not None and det.z_raw is not None:
                 self.isolator.update(det.z_raw)
+            if det is not None and self.trends is not None:
+                self.trends.update(frame.t, det.z_raw, frame_readings(frame))
 
             hv = None
             if heavy and self.reservoir is not None and self.detector is not None:
@@ -470,12 +476,13 @@ class EngineRuntime:
                     self.damage_accumulator.finalise()
                     self._dmg_finalise_counter = 0
                 dmg_state = self.damage_accumulator.current_state()
-                # Dynamic RUL: responds directly to accumulated fatigue and thermal degradation
+                # Time-to-limit from residual trends (M4-02). The RUL below is the M4-03 placeholder (see __init__).
                 pred_rul = max(0.5, 18.0 * (1.0 - min(0.95, dmg_state.total * 3.0)))
                 conf_int = self.conformal_rul.interval(pred_rul, alpha=0.05, scale=max(0.5, 2.0 * dmg_state.total))
                 self._cached_prognostics = {
                     "damage": dmg_state.as_dict(),
-                    "rul": conf_int.as_dict(),
+                    "time_to_limit": self.trends.time_to_limit() if self.trends is not None else [],
+                    "rul": {**conf_int.as_dict(), "status": "PLACEHOLDER (M4-03)"},
                 }
 
                 # 8. Mission Reliability & Glide Polar Reachability

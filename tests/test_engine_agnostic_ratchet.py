@@ -78,6 +78,7 @@ GUARDED = [
     "backend/detect/reference.py",
     "backend/diagnose/isolator.py",
     "backend/diagnose/directive.py",
+    "backend/prognose/trends.py",
     "backend/twin/virtual_sensors.py",
     "backend/sim/params.py",
     "backend/sim/plant.py",
