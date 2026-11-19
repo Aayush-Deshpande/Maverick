@@ -6,12 +6,12 @@ section 19.1. Update the RESUME HERE block at every commit and at the end of eve
 RESUME HERE  (last updated 19 Nov 2026)
 =====================================================================================================================
 Phase:        PHASE 0 - sort out the workspace (course of action section 4)
-Card:         P0-02 - guard hook (P0-01 done)
+Card:         P0-03 - inventory with md5 (P0-01, P0-02 done)
 Branch:       Beta (local only, not pushed), created from main 9b5942e. main untouched.
 Last commit:  P0-01 on Beta (see git log -1). main still 9b5942e.
 State:        Planning finished. Instruction files written: AGENTS.md, CLAUDE.md, DECISIONS.md (D1-D47), and
               AGENTS.md + CLAUDE.md in 12 folders. Course of action v2 (solo) written. No code changed.
-Next step:    P0-02 guard hook (.claude/settings.json), then P0-03 inventory with md5, then P0-04 (moves, including
+Next step:    P0-03 inventory with md5, then P0-04 (moves, including
               web/Crazy_Landing -> archive_tracked/crazy_landing, D42). Unstaged on purpose: data/graph_db/
               fleet_graph.json (runtime), the 914 .blend files (question 3), and web/usavionix deletions +
               web/Crazy_Landing (P0-04).
@@ -84,3 +84,16 @@ Findings recorded during this session (already in the documents):
     assets/ is where Phase 0 (P0-06, P0-07) gains the most.
 ASSUMED values added: none.
 Next: P0-01 (see RESUME HERE).
+
+=== 19 Nov 2026  P0-01 + PLAN-02 committed (713c7b2, 1842d33). See git log for details.
+
+=== 19 Nov 2026  P0-02 Guard hook (AI: Claude Code, Opus 5.5)
+Changed: .claude/settings.json (PreToolUse hook on Bash|PowerShell; read-only commands allowed without prompts),
+  scripts/hooks/guard_commands.py.
+Blocks: git push, git reset --hard, git clean, switching to or merging with main, deleting main/Beta, and deleting
+  *.blend files (rm/del/Remove-Item/git rm).
+Tests: pipe-tested 11 cases (7 blocked, 4 allowed as expected). Live-tested: a real dry-run push was blocked.
+Note: the hook scans the WHOLE command text, including heredocs and quoted strings, so a shell command that merely
+  mentions a blocked phrase is stopped too. Loosening it was refused by the auto-mode safety check (a guard should
+  not be weakened by the agent it guards), so it stays strict. Workaround: write text files with the Edit/Write
+  tools, and keep blocked phrases out of shell commands and commit messages. Prasad can relax it by hand if wanted.
