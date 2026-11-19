@@ -197,3 +197,19 @@ Tests: tests/faults (20), tests/assets (12):
   - no fault maps to the missegmented 914 wastegate or to the 915 air baffles for the air filter;
   - AE300/VRDE injector faults light different parts per cylinder;
   - every engine has applicable faults in all 8 PS categories.
+
+=== 19 Nov 2026  M0-04 Fault manager
+backend/faults/manager.py: FaultManager (inject / clear / active / history, events FAULT_INJECTED / UPDATED /
+  CLEARED / REJECTED with source) plus LegacyRuntimeAdapter, which drives the current EngineRuntime plant through
+  plant_mode_legacy until backend/sim exists.
+Edge cases covered (R 19.4):
+  - invalid cylinder / severity / ramp / source / unknown id -> rejected with a reason and logged;
+  - inapplicable fault -> rejected;
+  - repeated request_id -> same fault;
+  - same fault + place -> update, not duplicate;
+  - clear one keeps the others (re-applied);
+  - a fault the plant cannot simulate yet is accepted with simulated=False and announced, never dropped.
+Known limitation (documented in code): the legacy plant cannot change one fault, so remaining faults are
+  re-applied and their ramps restart. Removed when backend/sim replaces the plant (Phase 2).
+Tests: tests/faults/test_fault_manager.py 17 passed (one drives the real 912 plant).
+Not wired into the server yet: that is M0-06/M0-07 (API v1, one simulator).
