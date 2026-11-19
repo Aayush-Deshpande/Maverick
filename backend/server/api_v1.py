@@ -208,7 +208,7 @@ def v1_levers(engine_id: str, body: LeverRequest, cmd: Dict[str, Any] = Depends(
 @router.get("/api/v1/commands")
 def v1_commands(limit: int = 100) -> Dict[str, Any]:
     """Recent command log (D52): who sent what, with request_id and result. Newest last."""
-    items = list(COMMAND_LOG)[-max(1, min(limit, len(COMMAND_LOG) or 1)):] if COMMAND_LOG else []
+    items = list(COMMAND_LOG)[-max(1, limit):]
     return {"commands": items}
 
 
