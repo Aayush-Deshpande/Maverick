@@ -250,5 +250,47 @@
       "status": "ASSUMED",
       "ref": "boundary lubrication: bearing friction x (1 + gain * deficit^2) below the minimum pressure (seizure chain, R 21.4)"
     }
+  },
+  "vibration": {
+    "firing_order_mm_s_at_rated": {
+      "value": 0.45,
+      "status": "ASSUMED",
+      "ref": "firing-order velocity at rated torque on the gearbox sensor (legacy nominal VIB_GEARBOX_RMS ~0.48 mm/s)"
+    },
+    "manufacturing_spread": {
+      "value": 0.02,
+      "status": "ASSUMED",
+      "ref": "cylinder-to-cylinder torque spread of a healthy engine (sets the 0.5/1st order floor)"
+    },
+    "prop_1x_mm_s": {
+      "value": 0.15,
+      "status": "ASSUMED",
+      "ref": "residual propeller 1x after dynamic balancing"
+    },
+    "gear_mesh_mm_s_at_rated": {
+      "value": 0.08,
+      "status": "ASSUMED",
+      "ref": "gear-mesh order of a healthy reduction gearbox at rated torque"
+    },
+    "prop_imbalance_gain": {
+      "value": 8.0,
+      "status": "ASSUMED",
+      "ref": "F28: prop 1x multiplier at full severity"
+    },
+    "gear_damage_gain": {
+      "value": 10.0,
+      "status": "ASSUMED",
+      "ref": "F27: gear-mesh multiplier at full severity"
+    },
+    "mount_gain": {
+      "value": 2.5,
+      "status": "ASSUMED",
+      "ref": "F29: transmissibility multiplier of all orders at full severity"
+    },
+    "low_order_gain": {
+      "value": 4.0,
+      "status": "ASSUMED",
+      "ref": "soft engine mounts put rigid-body modes near the 0.5/1st order at cruise rpm, so low orders reach the sensor amplified relative to the firing order"
+    }
   }
 }

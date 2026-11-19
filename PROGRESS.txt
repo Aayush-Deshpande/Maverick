@@ -7,9 +7,9 @@ RESUME HERE  (last updated 19 Nov 2026)
 =====================================================================================================================
 Phase:        PHASE 1 (M0) cards done (M0-01..M0-12; M0-10 reduced, see its entry). NEXT: CHECKPOINT PHASE 1 (manual
               look by Prasad), then Phase 2 in demo-first order: M1-01 sim package + clock, M1-02 atmosphere, ...
-Card:         M1-09 (M1-01..08 done).
+Card:         M1-10 (M1-01..09 done).
 Branch:       Beta (pushed by Prasad up to ae82c70; later commits local). main untouched (9b5942e).
-Last commit:  M1-08 on Beta (see git log -1).
+Last commit:  M1-09 on Beta (see git log -1).
 State:        ONE simulator: RuntimeHub. EngineStateService runs no loop; /api/state, /api/control, /ws/telemetry,
               /ws/blender, /api/health, copilot and voice read the v1 runtime (legacy_adapter.py). D52 command security
               on every command path. Test baseline now: 430 passed, 1 failed (ratchet: engine_service/copilot brand
@@ -476,4 +476,14 @@ configs/installations/electrical.json (new): default 14 V installation (ASSUMED)
   (A 16 A for the ECU above ~2500 rpm, B 30 A airframe: OWNER, P Part 2, needs OM confirmation).
 Tests tests/sim/test_electrical.py 10 passed (regulated + charging on all engines, F32 discharge with falling voltage,
   below cut-in on battery, F33 overvoltage, F34 deeper sag, 912 has two generators).
+
+=== 19 Nov 2026  M1-09 Vibration orders (AI: Claude Code, Opus 5.5)
+backend/sim/vibration.py: Fourier orders of the per-cylinder torque over the firing sequence (0.5X, 1X, firing order
+  n/2), prop 1x (F28), gear mesh (F27), mount transmissibility (F29), RMS; order frequencies from rpm.
+ASSUMED added ("vibration"): firing-order 0.45 mm/s at rated, 2 % manufacturing spread, prop 1x 0.15 mm/s, gear mesh
+  0.08, fault gains, low-order mount gain 4 (first run showed a misfire lowering RMS; the low-order mount
+  amplification is the physical reason it rises, ref in the file).
+Tests tests/sim/test_vibration.py 7 passed: misfire raises 0.5X and 1X >= 3x and RMS on all engines (P 1.3i),
+  firing order scales with torque, F27/F28 hit only their own order, F29 raises all, frequencies follow rpm.
+Crank-angle model at 1 Hz (crank_dynamics.py) is not wired yet; that comes with the facade (M1-14).
 
