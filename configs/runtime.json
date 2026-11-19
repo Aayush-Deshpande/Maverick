@@ -5,5 +5,24 @@
   "idle_tick_divisor": 5,
   "idle_tick_divisor_note": "Engines nobody subscribes to tick at tick_rate_hz / idle_tick_divisor to save CPU/memory on small hosts; every subscribed engine ticks at full rate.",
   "data_source": "DIRECT",
-  "data_source_note": "DIRECT (in-process simulation) now; CAN / MAVLINK / REPLAY sources arrive in M5-M7 behind the same Frame contract."
+  "data_source_note": "DIRECT (in-process simulation) now; CAN / MAVLINK / REPLAY sources arrive in M5-M7 behind the same Frame contract.",
+  "legacy_engine_id": "rotax_912is",
+  "legacy_engine_id_note": "Engine that the deprecated /api/state, /api/control and /ws/telemetry endpoints represent (card M0-08). They are adapters onto /api/v1 and go away when every client uses /api/v1.",
+  "security": {
+    "token_env": "ANUMAAN_API_TOKEN",
+    "token_header": "X-ANUMAAN-Token",
+    "command_rate_limit": {
+      "max_commands": 20,
+      "window_s": 1.0
+    },
+    "command_log_size": 1000,
+    "cors_origins_env": "ANUMAAN_CORS_ORIGINS",
+    "cors_dev_origins": [
+      "http://localhost:5173",
+      "http://127.0.0.1:5173",
+      "http://localhost:8000",
+      "http://127.0.0.1:8000"
+    ],
+    "note": "DECISIONS D52. Command endpoints need the token when the env var is set (always set it when the server is reachable beyond this machine). Read-only endpoints stay open. CORS origins come from the env var (comma-separated); without it only the local dev origins are allowed, never '*'."
+  }
 }

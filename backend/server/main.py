@@ -17,7 +17,7 @@ import sys
 import uuid
 from pathlib import Path
 from dataclasses import asdict
-from typing import Set, List, Optional
+from typing import Any, Dict, Set, List, Optional
 from contextlib import asynccontextmanager
 
 # Forces UTF-8 stdout/stderr regardless of the launching console's code page. On Windows,
@@ -42,12 +42,12 @@ try:
 except ImportError:
     pass
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, UploadFile, File, Form
+from fastapi import Depends, FastAPI, WebSocket, WebSocketDisconnect, HTTPException, UploadFile, File, Form
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from backend.server.schemas import (
     UnifiedTelemetryState,
@@ -56,6 +56,9 @@ from backend.server.schemas import (
     VoiceConverseResponse,
 )
 from backend.server.engine_service import EngineStateService
+from backend.server.legacy_adapter import legacy_command, legacy_state
+from backend.server.security import (check_command, client_key, command_guard, cors_origins, finish_command,
+                                     token_from)
 from backend.server.engine_api import router as engine_router
 from backend.server.api_v1 import router as v1_router  # card M0-06: /api/v1 + /ws/v1
 from backend.telemetry.replay_engine import ReplayEngine
@@ -161,13 +164,13 @@ _IMAGES_DIR = _REPO_ROOT / "frontend" / "public" / "images"
 if _IMAGES_DIR.exists():
     app.mount("/images", StaticFiles(directory=_IMAGES_DIR), name="static-images")
 
-# CORS: permissive by default for local development; set ANUMAAN_CORS_ORIGINS to a comma-separated
-# list of frontend origins (e.g. https://anumaan.vercel.app) in production.
-_CORS_ORIGINS = [o.strip() for o in os.environ.get("ANUMAAN_CORS_ORIGINS", "*").split(",") if o.strip()] or ["*"]
+# CORS (D52): origins from ANUMAAN_CORS_ORIGINS (comma-separated), else the local dev origins in
+# configs/runtime.json. Never "*".
+_CORS_ORIGINS = cors_origins()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_CORS_ORIGINS,
-    allow_credentials=_CORS_ORIGINS != ["*"],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -177,11 +180,13 @@ async def broadcast_telemetry_loop(service: EngineStateService):
     """Broadcasts unified 20 Hz state frames to all connected Web & Blender clients."""
     while True:
         try:
-            state = service.get_latest_state()
-            state_json = state.model_dump_json()
+            # web clients get the v1 runtime (M0-08); Blender keeps the service until M0-10
+            state = legacy_state() if active_web_sockets else None
+            state_json = json.dumps(state) if state is not None else None
+            blender_json = service.get_latest_state().model_dump_json() if active_blender_sockets else None
 
             # 1. Broadcast to Web/Mobile clients
-            if active_web_sockets:
+            if active_web_sockets and state_json is not None:
                 dead_sockets = set()
                 for ws in list(active_web_sockets):
                     try:
@@ -195,7 +200,7 @@ async def broadcast_telemetry_loop(service: EngineStateService):
                 dead_blender = set()
                 for ws in list(active_blender_sockets):
                     try:
-                        await ws.send_text(state_json)
+                        await ws.send_text(blender_json)
                     except Exception:
                         dead_blender.add(ws)
                 active_blender_sockets.difference_update(dead_blender)
@@ -253,21 +258,20 @@ def get_health():
     )
 
 
-@app.get("/api/state", response_model=UnifiedTelemetryState)
+@app.get("/api/state")
 def get_current_state():
-    """Returns the instant snapshot of the authoritative engine state."""
-    service = EngineStateService.get_instance()
-    return service.get_latest_state()
+    """DEPRECATED (use /api/v1). Legacy-shaped snapshot of the v1 runtime (card M0-08); nulls, never defaults."""
+    state = legacy_state()
+    if state is None:
+        raise HTTPException(503, {"code": "CALIBRATING", "message": "the engine has no tick yet"})
+    return state
 
 
 @app.post("/api/control")
-def post_control_command(cmd: ControlCommand):
-    """Executes an incoming engine/fault control command."""
-    service = EngineStateService.get_instance()
-    result = service.handle_command(cmd)
-    if result.get("status") == "ERROR":
-        raise HTTPException(status_code=400, detail=result.get("message"))
-    return result
+def post_control_command(cmd: ControlCommand, entry: Dict[str, Any] = Depends(command_guard)):
+    """DEPRECATED (use /api/v1). Runs a legacy command on the v1 runtime; 422 with a reason when it cannot."""
+    entry.update(source="legacy", request_id=None)
+    return legacy_command(cmd)
 
 
 @app.post("/api/debrief")
@@ -565,20 +569,29 @@ async def websocket_telemetry_endpoint(websocket: WebSocket):
     active_web_sockets.add(websocket)
     logger.info(f"[WebSocket] Mobile/Web client connected. Total web clients: {len(active_web_sockets)}")
     
-    service = EngineStateService.get_instance()
-    # Send immediate initial state
-    await websocket.send_text(service.get_latest_state().model_dump_json())
+    state = legacy_state()
+    if state is not None:
+        await websocket.send_text(json.dumps(state))
+    token = token_from(websocket.headers, websocket.query_params)
+    client = client_key(websocket.client.host if websocket.client else None, token)
 
     try:
         while True:
             data = await websocket.receive_text()
             try:
-                msg = json.loads(data)
-                cmd = ControlCommand(**msg)
-                res = service.handle_command(cmd)
+                entry = check_command("WS", "/ws/telemetry", client, token)
+                entry["source"] = "legacy"
+                try:
+                    res = legacy_command(ControlCommand(**json.loads(data)))
+                except HTTPException as exc:
+                    finish_command(entry, f"{exc.status_code} {exc.detail}")
+                    raise
+                finish_command(entry, "OK")
                 await websocket.send_text(json.dumps({"type": "COMMAND_RESULT", **res}))
-            except Exception as e:
-                await websocket.send_text(json.dumps({"type": "ERROR", "message": str(e)}))
+            except HTTPException as exc:
+                await websocket.send_text(json.dumps({"type": "ERROR", "status": exc.status_code, "detail": exc.detail}))
+            except (ValueError, ValidationError) as exc:
+                await websocket.send_text(json.dumps({"type": "ERROR", "status": 422, "message": str(exc)}))
     except WebSocketDisconnect:
         active_web_sockets.discard(websocket)
         logger.info(f"[WebSocket] Web client disconnected. Remaining: {len(active_web_sockets)}")

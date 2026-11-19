@@ -169,7 +169,7 @@ class FaultManager:
 
 
 def _sensor_channel_to_lever(channel: str) -> str:
-    """Registry channel names (frame style, cht[2]) -> legacy sensor-lever names (cht_2)."""
+    """Registry channel names (frame style, cht[n]) -> legacy sensor-lever names (cht_n)."""
     return channel.replace("[", "_").replace("]", "")
 
 

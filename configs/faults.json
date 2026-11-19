@@ -19,6 +19,7 @@
       "legacy_ids": [
         3
       ],
+      "legacy_cylinder": 2,
       "plant_mode_legacy": "MISFIRE",
       "parameter_effects": [
         {
@@ -381,6 +382,7 @@
       "legacy_ids": [
         2
       ],
+      "legacy_cylinder": 1,
       "plant_mode_legacy": null,
       "parameter_effects": [
         {
@@ -1613,6 +1615,7 @@
       "legacy_ids": [
         1
       ],
+      "legacy_cylinder": 2,
       "plant_mode_legacy": "COOLING_DEGRADATION",
       "parameter_effects": [
         {
@@ -2611,6 +2614,7 @@
       "legacy_ids": [
         6
       ],
+      "legacy_cylinder": 3,
       "plant_mode_legacy": null,
       "parameter_effects": [
         {

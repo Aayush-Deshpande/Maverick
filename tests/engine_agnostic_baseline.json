@@ -14,6 +14,16 @@
     "cyl": 0,
     "model": 0
   },
+  "backend/faults/manager.py": {
+    "cyl": 0,
+    "brand": 0,
+    "model": 0
+  },
+  "backend/faults/registry.py": {
+    "cyl": 0,
+    "brand": 0,
+    "model": 0
+  },
   "backend/ml/anomaly_detector.py": {
     "brand": 1,
     "cyl": 0,
@@ -44,15 +54,45 @@
     "cyl": 48,
     "model": 5
   },
+  "backend/runtime/hub.py": {
+    "cyl": 0,
+    "brand": 0,
+    "model": 0
+  },
+  "backend/server/api_v1.py": {
+    "cyl": 0,
+    "brand": 0,
+    "model": 0
+  },
   "backend/server/engine_service.py": {
     "brand": 8,
     "cyl": 16,
     "model": 3
   },
+  "backend/server/legacy_adapter.py": {
+    "cyl": 0,
+    "brand": 0,
+    "model": 0
+  },
   "backend/server/schemas.py": {
     "brand": 2,
     "cyl": 8,
     "model": 2
+  },
+  "backend/server/security.py": {
+    "cyl": 0,
+    "brand": 0,
+    "model": 0
+  },
+  "backend/server/state_builder.py": {
+    "cyl": 0,
+    "brand": 0,
+    "model": 0
+  },
+  "backend/server/state_schema.py": {
+    "cyl": 0,
+    "brand": 0,
+    "model": 0
   },
   "backend/sources/plant_source.py": {
     "brand": 0,

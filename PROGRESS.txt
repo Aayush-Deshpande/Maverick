@@ -5,23 +5,27 @@ section 19.1. Update the RESUME HERE block at every commit and at the end of eve
 =====================================================================================================================
 RESUME HERE  (last updated 19 Nov 2026)
 =====================================================================================================================
-Phase:        PHASE 1 (M0) in progress. Done: M0-01..M0-07. NEXT: M0-08 legacy adapter + D52 security on
-              /api/v1 (command token when ANUMAAN_API_TOKEN is set, per-client command rate limit, CORS origins from
-              env, command log). Then M0-09 frontend store, M0-10 other clients, M0-11 var/, M0-12 dynamic tests.
-Card:         M0-08.
-Branch:       Beta (pushed by Prasad; origin/Beta = ae82c70). main untouched (9b5942e).
-Last commit:  M0-07 on Beta (see git log -1).
-State:        One simulator per engine: the hub no longer writes into EngineStateService. Every subscribed engine
-              ticks at full rate; tick rate and idle divisor come from configs/runtime.json. DECISIONS D1-D52.
-Next step:    M0-08:
-              - backend/server/legacy_adapter.py: /api/state, /ws/telemetry, /api/control read and command the
-                v1 runtime (nulls, never constants); legacy fault ids via legacy_ids only, 422 otherwise;
-              - stop EngineStateService's own 20 Hz loop and can_streamer as data sources;
-              - port tests/test_server_api.py, the serialization test in test_canonical_runtime_pipeline.py and
-                the service test in test_causal_propagation.py to the new path (D38), listing old -> new;
-              - D52 security on /api/v1 commands, with tests (T-OPS-4).
-              Unstaged on purpose: data/graph_db/fleet_graph.json (runtime, M0-11), the 914 .blend re-saves (D50),
+Phase:        PHASE 1 (M0) in progress. Done: M0-01..M0-07, M0-08a. NEXT: M0-08b (retire EngineStateService's own
+              20 Hz loop + can_streamer as a data source; copilot/CBM/voice/health/debrief/Blender read the v1 runtime).
+              Then M0-09 frontend store, M0-10 other clients, M0-11 var/, M0-12 dynamic tests.
+Card:         M0-08b.
+Branch:       Beta (pushed by Prasad up to ae82c70; later commits local). main untouched (9b5942e).
+Last commit:  M0-08a on Beta (see git log -1).
+State:        /api/state, /api/control, /ws/telemetry run on the v1 runtime (legacy_adapter.py). D52 command
+              security live on /api/v1 + /api/control + /ws/telemetry commands. EngineStateService still runs its own
+              loop and feeds 32 call sites (copilot, CBM, voice, health, debrief, /ws/blender).
+Next step:    M0-08b:
+              - list the 32 EngineStateService call sites (grep get_instance/latest_state) and give each a v1 source
+                or an honest UNAVAILABLE;
+              - stop _run_loop and the can_streamer data path; /ws/blender gets the legacy_state shape (M0-10 moves
+                the Blender app to /api/v1);
+              - port test_canonical_runtime_pipeline serialization + test_causal_propagation service tests (D38).
+              Unstaged on purpose: data/graph_db/fleet_graph.json (M0-11), the 914 .blend re-saves (D50),
               docs/cleanup/file_coverage_latest.csv (regenerated scan output).
+Questions:    (1) Tactical GCS panels now receive nulls for values the v1 runtime does not produce yet (lambda, timing,
+              BSFC, power, vibration, GO/NO-GO); some panels may show blanks or crash on .toFixed(null) until M0-09
+              moves them to the v1 store. Beta only; main unaffected. (2) STOP/START now return 422 until the engine
+              state machine (M1-12).
 Answered 19 Nov (recorded as D25-D33):
   - 914 master: headless inspection decides (D25); the 912 iS Sport stays the reference engine.
   - Voice/: stays as local model storage; the stale .gitmodules is removed in P0-04 (D26).
@@ -265,5 +269,48 @@ Tests after:  417 passed, 2 failed (ratchet + concurrent_load, both known; test_
   ticks at the selected engine's rate); shown failing first (ImportError).
 Not done in M0-07 (moved to M0-08 where the legacy service is retired): stopping EngineStateService's own loop and
   can_streamer, and the D38 test ports, because those tests exercise the legacy service that M0-08 replaces.
+ASSUMED values added: none.
+
+=== 19 Nov 2026  M0-08a Legacy adapter + D52 command security (AI: Claude Code, Opus 5.5)
+Split: M0-08 became M0-08a (this) and M0-08b (retire the EngineStateService loop; 32 call sites in copilot/CBM/
+  voice/health/debrief/Blender still read it).
+Docs checked (D39): FastAPI dependencies in path operation decorators / Security tools / dependencies with yield,
+  https://fastapi.tiangolo.com/tutorial/dependencies/dependencies-in-path-operation-decorators/ and
+  https://fastapi.tiangolo.com/reference/security/ (installed FastAPI 0.115.5 / Starlette 0.41.3).
+New: backend/server/legacy_adapter.py
+  - /api/state and /ws/telemetry: legacy-shaped snapshot of the v1 state message for configs/runtime.json
+    legacy_engine_id. Values equal the v1 readings; everything v1 does not produce yet is null and listed in
+    "unavailable" with the card that adds it (no lambda 14.7 / timing 18.5 / BSFC 270 / GO default any more).
+  - /api/control: SET_FAULT via registry legacy_ids + legacy_cylinder only (unmapped ids -> 422); CLEAR_FAULT;
+    SET_THROTTLE/ALTITUDE/OAT with the v1 lever ranges; START/STOP/SET_REGIME/EXPORT_DEBRIEF/SET_ROLE -> 422 with
+    the reason and card.
+  - commanded-fault highlight = training-mode display (D5) from the registry + component manifest (target_parts,
+    target_markers), labelled INJECTED.
+New: backend/server/security.py (D52)
+  - token check when ANUMAAN_API_TOKEN is set (header X-ANUMAAN-Token, or ?token= for WebSocket), constant-time;
+  - per-client sliding-window rate limit (20 commands / 1 s, configs/runtime.json) -> 429;
+  - command log (ring of 1000 + logger anumaan.commands) with method, path, client (sha256 of the token, never the
+    token), source, request_id, result; GET /api/v1/commands;
+  - CORS from ANUMAAN_CORS_ORIGINS, else local dev origins; "*" raises.
+Changed: api_v1.py (guard on inject/clear/levers, /api/v1/commands), main.py (legacy endpoints on the adapter, CORS,
+  broadcast loop builds state only when a client is connected), configs/runtime.json (legacy_engine_id, security),
+  configs/faults.json + schema (legacy_cylinder for F01/F05/F19/F31 = old ids 3/2/1/6 -> cylinders 2/1/2/3, taken
+  from backend/telemetry/can_streamer.py DRDO_FAULT_DEFINITIONS), .env.example.
+Ratchet: the 8 M0 modules added to GUARDED at zero (two literals removed: an example id in an error message and a
+  docstring).
+Tests ported (D38), tests/test_server_api.py -> tests/api/test_legacy_adapter.py:
+  test_state_snapshot_schema        -> test_state_comes_from_v1_runtime_with_nulls_not_defaults (stronger: values
+                                       equal v1, old constants are null)
+  test_control_fault_activation_and_clearing -> test_set_fault_and_clear (+ v1 shows F19 cylinder 2)
+  test_commanded_fault_highlights_immediately -> same name (fault 2 -> injector-1 marker, as before)
+  test_control_throttle_and_environment -> test_throttle_and_environment_read_back (stronger: 95 reads back; 150 -> 422)
+  test_control_engine_stop_and_start -> test_stop_and_start_rejected_with_reason_until_m1_12 + strict xfail
+                                       test_stop_really_stops_the_engine (T-M0-4, turns on in M1-12)
+  New: legacy id 4 = OIL_PRESSURE_LOSS; unmapped ids 422; /ws/telemetry stream + command; token (T-OPS-4); rate
+  limit; command log; CORS.
+  Note: these tests were written after the adapter, not before (rule says first); they fail on the pre-M0-08 code
+  (the adapter module did not exist).
+Tests after: full suite 426 passed, 2 failed (ratchet engine_service/copilot + concurrent_load, both known),
+  7 skipped, 2 xfailed. Frontend tsc passes.
 ASSUMED values added: none.
 

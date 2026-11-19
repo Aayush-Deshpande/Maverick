@@ -34,6 +34,7 @@
             }
           },
           "legacy_ids": {"type": "array", "items": {"type": "integer", "minimum": 1, "maximum": 8}},
+          "legacy_cylinder": {"type": ["integer", "null"], "minimum": 1, "description": "cylinder the old numeric DRDO fault used (legacy adapter only)"},
           "plant_mode_legacy": {"type": ["string", "null"]},
           "parameter_effects": {
             "type": "array",

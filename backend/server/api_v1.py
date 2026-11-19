@@ -19,12 +19,13 @@ import uuid
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Set
 
-from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, ConfigDict, Field
 
 from backend.faults.manager import FaultManager, LegacyRuntimeAdapter
 from backend.faults.registry import FaultRejected, load_fault_registry
 from backend.physics.engine_config import load_engine_config
+from backend.server.security import COMMAND_LOG, command_guard
 from backend.server.state_builder import build_state
 
 router = APIRouter()
@@ -160,7 +161,8 @@ def v1_active_faults(engine_id: str) -> Dict[str, Any]:
 
 
 @router.post("/api/v1/engines/{engine_id}/faults")
-def v1_inject(engine_id: str, body: FaultRequest) -> Dict[str, Any]:
+def v1_inject(engine_id: str, body: FaultRequest, cmd: Dict[str, Any] = Depends(command_guard)) -> Dict[str, Any]:
+    cmd.update(request_id=body.request_id, source=body.source)
     ch = services().channel(engine_id)
     try:
         f = ch.manager.inject(body.fault_id, cylinder=body.cylinder, channel=body.channel, severity=body.severity,
@@ -171,7 +173,9 @@ def v1_inject(engine_id: str, body: FaultRequest) -> Dict[str, Any]:
 
 
 @router.delete("/api/v1/engines/{engine_id}/faults/{fault_uuid}")
-def v1_clear_one(engine_id: str, fault_uuid: str, source: str = "api") -> Dict[str, Any]:
+def v1_clear_one(engine_id: str, fault_uuid: str, source: str = "api",
+                 cmd: Dict[str, Any] = Depends(command_guard)) -> Dict[str, Any]:
+    cmd.update(source=source)
     ch = services().channel(engine_id)
     try:
         cleared = ch.manager.clear(fault_uuid, source=source)
@@ -181,13 +185,14 @@ def v1_clear_one(engine_id: str, fault_uuid: str, source: str = "api") -> Dict[s
 
 
 @router.delete("/api/v1/engines/{engine_id}/faults")
-def v1_clear_all(engine_id: str, source: str = "api") -> Dict[str, Any]:
+def v1_clear_all(engine_id: str, source: str = "api", cmd: Dict[str, Any] = Depends(command_guard)) -> Dict[str, Any]:
+    cmd.update(source=source)
     ch = services().channel(engine_id)
     return {"engine_id": engine_id, "cleared": [f.to_dict() for f in ch.manager.clear(source=source)]}
 
 
 @router.post("/api/v1/engines/{engine_id}/levers")
-def v1_levers(engine_id: str, body: LeverRequest) -> Dict[str, Any]:
+def v1_levers(engine_id: str, body: LeverRequest, cmd: Dict[str, Any] = Depends(command_guard)) -> Dict[str, Any]:
     services().channel(engine_id)
     rt = services().hub.runtimes[engine_id]
     kw = {}
@@ -198,6 +203,13 @@ def v1_levers(engine_id: str, body: LeverRequest) -> Dict[str, Any]:
     if body.oat_c is not None:
         kw["oat_c"] = body.oat_c
     return {"engine_id": engine_id, "targets": rt.set_levers(**kw)}
+
+
+@router.get("/api/v1/commands")
+def v1_commands(limit: int = 100) -> Dict[str, Any]:
+    """Recent command log (D52): who sent what, with request_id and result. Newest last."""
+    items = list(COMMAND_LOG)[-max(1, min(limit, len(COMMAND_LOG) or 1)):] if COMMAND_LOG else []
+    return {"commands": items}
 
 
 @router.get("/api/v1/engines/{engine_id}/state")
@@ -286,7 +298,7 @@ async def ws_v1(ws: WebSocket) -> None:
             try:
                 msg = json.loads(raw)
             except json.JSONDecodeError:
-                await ws.send_json({"type": "error", "message": "send JSON like {\"subscribe\": \"rotax_912is\"}"})
+                await ws.send_json({"type": "error", "message": "send JSON like {\"subscribe\": \"<engine_id>\"} (ids from GET /api/v1/engines)"})
                 continue
             sub = msg.get("subscribe")
             if sub is not None:

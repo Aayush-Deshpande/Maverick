@@ -49,6 +49,15 @@ GUARDED = [
     "frontend/src/components/CalculationsPanel.tsx",
     "frontend/src/components/DiagnosticCard.tsx",
     "frontend/src/components/SubsystemHealthCard.tsx",
+    # M0 modules (cards M0-02..M0-08): start and stay at zero engine literals
+    "backend/server/api_v1.py",
+    "backend/server/security.py",
+    "backend/server/legacy_adapter.py",
+    "backend/server/state_builder.py",
+    "backend/server/state_schema.py",
+    "backend/faults/manager.py",
+    "backend/faults/registry.py",
+    "backend/runtime/hub.py",
 ]
 
 PATTERNS = {
