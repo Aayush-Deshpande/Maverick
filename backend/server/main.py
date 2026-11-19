@@ -57,6 +57,7 @@ from backend.server.schemas import (
 )
 from backend.server.engine_service import EngineStateService
 from backend.server.engine_api import router as engine_router
+from backend.server.api_v1 import router as v1_router  # card M0-06: /api/v1 + /ws/v1
 from backend.telemetry.replay_engine import ReplayEngine
 from backend.agent.llm_engine import LocalLLMEngine
 from backend.voice.stt_engine import LocalWhisperSTT
@@ -134,6 +135,7 @@ app = FastAPI(
 )
 
 app.include_router(engine_router)
+app.include_router(v1_router)
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _THREEJS_TWIN = _REPO_ROOT / "apps" / "threejs_twin"

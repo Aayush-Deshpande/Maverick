@@ -5,8 +5,12 @@ section 19.1. Update the RESUME HERE block at every commit and at the end of eve
 =====================================================================================================================
 RESUME HERE  (last updated 19 Nov 2026)
 =====================================================================================================================
-Phase:        PHASE 1 (M0) in progress. Done: M0-01 (engine data), M0-02 (fault registry), M0-03 (component manifests).
-Card:         Next: M0-04 fault manager (backend/faults/manager.py), then M0-05 state schema, M0-06 API v1.
+Phase:        PHASE 1 (M0) in progress. Done: M0-01..M0-06 (engine data, fault registry, components, fault
+              manager, state schema, API v1 + /ws/v1). NEXT: M0-07 (one simulator: remove the sync_from_tick call
+              from backend/runtime/hub.py; every subscribed engine ticks at full rate; IDLE_TICK_DIVISOR into
+              configs/runtime.json; port the 9 legacy-coupled tests per D38). Then M0-08 legacy adapter,
+              M0-09 frontend store, M0-10 other clients, M0-11 var/, M0-12 dynamic tests.
+Card:         M0-07.
 Branch:       Beta (local only, not pushed), created from main 9b5942e. main untouched.
 Last commit:  M0-02/M0-03 on Beta (see git log -1). main still 9b5942e.
 State:        Workspace sorted: archive + history moves, launchers in scripts/launchers + start_anumaan.bat, assets in
@@ -231,3 +235,20 @@ Tests: tests/api/test_state_schema.py 6 passed:
   - training-mode outline uses exact Oil_Tank_* nodes;
   - per-cylinder / marker / sensor-channel resolution.
   Frontend tsc passes.
+
+=== 19 Nov 2026  M0-06 API v1 + WebSocket fan-out
+backend/server/api_v1.py (mounted in main.py):
+  - REST: GET /api/v1/engines, /engines/{id}/config, /faults?engine=, /engines/{id}/faults, /engines/{id}/state;
+    POST /engines/{id}/faults; DELETE /engines/{id}/faults[/{uuid}]; POST /engines/{id}/levers.
+  - 422 with a reason for invalid or inapplicable faults.
+  - /ws/v1: one socket per client, {"subscribe": id | [ids] | "fleet"}, snapshot on subscribe, latest-only
+    per-client queue (drops counted), 2 s send timeout -> close 1008.
+  - Reads RuntimeHub.latest; never simulates. One FaultManager per engine (LegacyRuntimeAdapter).
+Tests: tests/api/test_api_v1.py 8 passed:
+  - applicability lists;
+  - inject / idempotent retry / clear;
+  - 422 reasons;
+  - 404 for an unknown engine;
+  - a WebSocket subscriber sees a fault injected by another client, with components ["wiring_harness"];
+  - latest-only queue.
+Old endpoints (/api/engines/*, /api/control, /ws/telemetry) are untouched until M0-07/M0-08.
