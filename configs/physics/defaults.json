@@ -288,9 +288,9 @@
       "ref": "F29: transmissibility multiplier of all orders at full severity"
     },
     "low_order_gain": {
-      "value": 4.0,
+      "value": 10.0,
       "status": "ASSUMED",
-      "ref": "soft engine mounts put rigid-body modes near the 0.5/1st order at cruise rpm, so low orders reach the sensor amplified relative to the firing order"
+      "ref": "soft engine mounts put rigid-body modes near the 0.5/1st order at cruise rpm, so low orders reach the sensor strongly amplified relative to the firing order (raised from 4 after T-FLT-1: a misfire on Rotax-class engines is felt as a strong low-order shake)"
     }
   },
   "turbo": {
@@ -409,6 +409,140 @@
       "value": 0.3,
       "status": "ASSUMED",
       "ref": "fuel delivery below this share of demand = starvation"
+    }
+  },
+  "fault_effects": {
+    "burn_duration_deg_per_unit": {
+      "value": 20.0,
+      "status": "ASSUMED",
+      "ref": "a burn 100 % longer acts like ~20 deg of combustion phasing error (F06 slower burn)"
+    },
+    "cycle_variation_quality_loss": {
+      "value": 0.02,
+      "status": "ASSUMED",
+      "ref": "mean work lost per unit of extra cycle-to-cycle variation (F02: mostly variance, little mean)"
+    },
+    "injector_leak_rail_loss": {
+      "value": 0.5,
+      "status": "ASSUMED",
+      "ref": "rail pressure share lost per unit of leak-off (F07 on common rail)"
+    },
+    "exhaust_leak_egt_drop": {
+      "value": 0.3,
+      "status": "ASSUMED",
+      "ref": "EGT reading drop at full leak (air ingress upstream of the probe, F31)"
+    },
+    "exhaust_leak_boost_loss": {
+      "value": 0.05,
+      "status": "ASSUMED",
+      "ref": "boost share lost per cylinder exhaust leak on turbo engines (F31)"
+    },
+    "gear_damage_loss_gain": {
+      "value": 2.0,
+      "status": "ASSUMED",
+      "ref": "gear losses multiply by 1 + gain x damage (F27 heats the gearbox)"
+    },
+    "bearing_clearance_exponent": {
+      "value": 1.5,
+      "status": "ASSUMED",
+      "ref": "oil pressure falls ~ clearance^-1.5 (bearing leakage, F26)"
+    },
+    "oil_starvation_fraction": {
+      "value": 0.5,
+      "status": "ASSUMED",
+      "ref": "below this share of oil capacity the pump starts to starve (F24)"
+    },
+    "knock_vibration_mm_s_per_index": {
+      "value": 1.5,
+      "status": "ASSUMED",
+      "ref": "high-frequency knock vibration per unit of knock index above 1 (F03)"
+    },
+    "turbo_sync_mm_s": {
+      "value": 0.05,
+      "status": "ASSUMED",
+      "ref": "turbo-synchronous vibration of a healthy turbo"
+    },
+    "turbo_sync_bearing_gain": {
+      "value": 15.0,
+      "status": "ASSUMED",
+      "ref": "turbo-synchronous vibration multiplier at full bearing wear (F17)"
+    },
+    "glow_cold_quality": {
+      "value": 0.3,
+      "status": "ASSUMED",
+      "ref": "combustion quality of a cylinder with a failed glow plug while the coolant is below glow_warm_c (F35)"
+    },
+    "glow_warm_c": {
+      "value": 40.0,
+      "status": "ASSUMED",
+      "ref": "coolant temperature above which a failed glow plug no longer matters"
+    },
+    "cycle_variation_vibration_mm_s": {
+      "value": 0.2,
+      "status": "ASSUMED",
+      "ref": "0.5X added per unit of extra cycle-to-cycle variation (F02: irregular torque pulses)"
+    },
+    "turbo_bearing_oil_heat_w": {
+      "value": 1500.0,
+      "status": "ASSUMED",
+      "ref": "extra heat into the oil at full turbo bearing wear (F17)"
+    },
+    "knock_wall_heat_gain": {
+      "value": 0.3,
+      "status": "ASSUMED",
+      "ref": "wall heat fraction rises 30 % per unit of knock index above 1 (knock scrubs the thermal boundary layer, F03)"
+    }
+  },
+  "sensors": {
+    "noise_temperature_c": {
+      "value": 0.8,
+      "status": "ASSUMED",
+      "ref": "thermocouple / RTD noise (1 sigma) for CHT, EGT, oil, coolant, gearbox, charge temperatures"
+    },
+    "noise_pressure_rel": {
+      "value": 0.005,
+      "status": "ASSUMED",
+      "ref": "pressure transducer noise as a share of reading (oil, fuel, MAP)"
+    },
+    "noise_rpm": {
+      "value": 5.0,
+      "status": "ASSUMED",
+      "ref": "speed pickup noise (rpm, 1 sigma)"
+    },
+    "noise_flow_rel": {
+      "value": 0.01,
+      "status": "ASSUMED",
+      "ref": "fuel-flow meter noise as a share of reading"
+    },
+    "noise_electrical_rel": {
+      "value": 0.003,
+      "status": "ASSUMED",
+      "ref": "voltage / current measurement noise as a share of reading"
+    },
+    "noise_gain_s04": {
+      "value": 10.0,
+      "status": "ASSUMED",
+      "ref": "S04: noise multiplier at full severity"
+    },
+    "bias_rel_s02": {
+      "value": 0.08,
+      "status": "ASSUMED",
+      "ref": "S02: bias at full severity as a share of the channel's normal value"
+    },
+    "drift_rel_per_min_s03": {
+      "value": 0.02,
+      "status": "ASSUMED",
+      "ref": "S03: drift rate at full severity, share of normal value per minute (R 22: demo-visible, 1-3 C/min on CHT)"
+    },
+    "lane_split_rel_s07": {
+      "value": 0.06,
+      "status": "ASSUMED",
+      "ref": "S07: lane B disagreement at full severity"
+    },
+    "out_of_range_factor_s06": {
+      "value": 3.0,
+      "status": "ASSUMED",
+      "ref": "S06: short/open circuit reads this multiple of the normal value"
     }
   }
 }

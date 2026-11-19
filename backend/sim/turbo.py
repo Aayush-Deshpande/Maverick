@@ -41,6 +41,7 @@ class Turbo:
     p_charge: float = P0_PA
     t_charge_k: float = T0_K
     pressure_ratio: float = 1.0
+    compressor_pa: float = P0_PA        # compressor outlet before any leak (sets the shaft speed)
 
     @classmethod
     def for_engine(cls, cfg: Any, wot_map_ratio: float) -> Optional["Turbo"]:
@@ -80,13 +81,16 @@ class Turbo:
             target = min(target, atm.pressure_pa * self.takeoff_pr_limit)
         limit = atm.pressure_pa * self.pr_max(self.corrected_flow(mdot, atm), hl.get("bearing_wear", 0.0))
         if hl.get("wastegate_stuck") == "OPEN":
-            return atm.pressure_pa * self.no_boost_pr
+            self.compressor_pa = atm.pressure_pa * self.no_boost_pr
+            return self.compressor_pa
         if hl.get("wastegate_stuck") == "CLOSED":
+            self.compressor_pa = limit
             return limit
         leak = hl.get("boost_leak", 0.0)
         # a leak loses that share of the boost; the controller asks for more until the speed limit
         needed = atm.pressure_pa + (target - atm.pressure_pa) / max(1e-6, 1.0 - leak)
         delivered_before_leak = min(needed, limit)
+        self.compressor_pa = delivered_before_leak
         return atm.pressure_pa + (delivered_before_leak - atm.pressure_pa) * (1.0 - leak)
 
     def charge_temperature_k(self, atm: Atmosphere, p_charge: float, ic_fouling: float = 0.0) -> float:

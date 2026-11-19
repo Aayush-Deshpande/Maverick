@@ -65,6 +65,9 @@ class PlantOutputs:
     charge_t_c: float
     boost_pr: Optional[float]
     vibration: Dict[str, float]
+    lanes_failed: int
+    oil_qty_l: Optional[float]
+    turbo_rpm: Optional[float]
     altitude_ft: float
     oat_c: float
     tas_kt: float
@@ -78,6 +81,8 @@ class SimEngine:
         self.electrical = Electrical.for_engine(cfg.engine_id)
         self.vibration = Vibration.for_engine(cfg)
         self.ecu = physics_values(cfg.engine_id, "ecu")
+        self.fx = physics_values(cfg.engine_id, "fault_effects")
+        self._gov = (self.rotor.kp, self.rotor.ki)
         self.sm = physics_values(cfg.engine_id, "state_machine")
         self.levers = Levers()
         self.state = OFF
@@ -131,17 +136,21 @@ class SimEngine:
         fuel_on = self.state == RUNNING or (self.state == CRANKING and self._crank_fuel_ok(dt, hl))
         fuel_on = fuel_on and rpm < overspeed
         quality = list(hl.get("quality") or [1.0] * n)
+        if self.core.thermal.coolant_c < self.fx["glow_warm_c"]:            # F35 matters only cold
+            quality = [q * (self.fx["glow_cold_quality"] if g else 1.0)
+                       for q, g in zip(quality, hl.get("glow_failed") or [False] * n)]
+        throttle = lv.throttle_pct * hl.get("throttle_area", 1.0)             # F12 carb icing: less throat area
         if not fuel_on:
             quality = [0.0] * n
 
-        op = self.core.steady_point(lv.throttle_pct, max(rpm, 1.0), atm, filter_factor=hl.get("filter_factor", 1.0),
+        op = self.core.steady_point(throttle, max(rpm, 1.0), atm, filter_factor=hl.get("filter_factor", 1.0),
                                     turbo_health=hl.get("turbo"), fuel_health=hl.get("fuel"),
                                     injector=hl.get("injector"), quality=quality, timing_error_deg=timing_err)
         knock = comb.knock_index(op.map_pa, (self.core.turbo.t_charge_k if self.core.turbo else atm.temperature_k),
-                                 max(0.0, timing_err))
+                                 max(0.0, timing_err)) * hl.get("knock_factor", 1.0)
         retard = max(0.0, knock - 1.0) * self.ecu["knock_retard_deg_per_index"] if comb.spark_ignition else 0.0
         if retard > 0:
-            op = self.core.steady_point(lv.throttle_pct, max(rpm, 1.0), atm, filter_factor=hl.get("filter_factor", 1.0),
+            op = self.core.steady_point(throttle, max(rpm, 1.0), atm, filter_factor=hl.get("filter_factor", 1.0),
                                         turbo_health=hl.get("turbo"), fuel_health=hl.get("fuel"),
                                         injector=hl.get("injector"), quality=quality,
                                         timing_error_deg=timing_err + retard)
@@ -156,6 +165,8 @@ class SimEngine:
         tau = (self.core.turbo.lag_s if self.core.turbo else self.ecu["torque_lag_na_s"])
         self.torque = target_torque + (self.torque - target_torque) * math.exp(-dt / tau)
         acc_torque = self.electrical.bus_v * self.electrical.alternator_a / 0.6 / omega if omega > 10 else 0.0
+        g = hl.get("governor_gain", 1.0)                                       # F37 governor hunting
+        self.rotor.kp, self.rotor.ki = self._gov[0] * g, self._gov[1] * g
         self.rotor.step(dt, self.torque, atm, tas, accessory_torque_nm=acc_torque)
 
         # heat, electrics, vibration
@@ -165,6 +176,9 @@ class SimEngine:
         heat.rpm = self.rotor.engine_rpm
         th_health = dict(hl.get("thermal") or {})
         th_health.setdefault("oil_p_min_bar", self._oil_min)
+        th_health["egt_factor"] = hl.get("egt_factor")
+        th_health["wall_heat_factor"] = 1.0 + self.fx["knock_wall_heat_gain"] * max(0.0, knock - 1.0)
+        th_health["extra_oil_heat_w"] = self.fx["turbo_bearing_oil_heat_w"] * (hl.get("turbo") or {}).get("bearing_wear", 0.0)
         self.core.thermal.step(dt, heat, atm, tas, th_health)
         el = hl.get("electrical") or {}
         self.electrical.step(dt, self.rotor.engine_rpm, **el)
@@ -172,6 +186,18 @@ class SimEngine:
         cyl_t = [w / mean_w for w in op.cyl_indicated_w] if fuel_on else [0.0] * n
         torque_frac = max(0.0, self.torque) / max(self.cfg.rated_power_kw * 1000 / (self.cfg.rated_rpm * 2 * math.pi / 60), 1e-6)
         vib = self.vibration.orders(cyl_t, torque_frac, self.rotor.prop_rpm, **(hl.get("vibration") or {}))
+        vib[f"{n // 2}X" if n % 2 == 0 else "firing_order"] = vib["firing"]
+        vib["0.5X"] += self.fx["cycle_variation_vibration_mm_s"] * (hl.get("cov_factor", 1.0) - 1.0)
+        vib["knock"] = max(0.0, knock - 1.0) * self.fx["knock_vibration_mm_s_per_index"] if comb.spark_ignition else 0.0
+        turbo_rpm = None
+        if self.core.turbo is not None:
+            pr = max(self.core.turbo.compressor_pa / atm.pressure_pa, 1.0)
+            # shaft speed ~ sqrt(isentropic head): N/N_max = sqrt((PR^0.286-1)/(PR_max^0.286-1))
+            pr_cap = max(self.core.turbo.pr_max(0.0), 1.0001)
+            turbo_rpm = self.cfg.turbo.max_shaft_rpm * min(1.0, ((pr ** 0.2857 - 1) / (pr_cap ** 0.2857 - 1)) ** 0.5)
+            wear = (hl.get("turbo") or {}).get("bearing_wear", 0.0)
+            vib["turbo"] = self.fx["turbo_sync_mm_s"] * (1 + (self.fx["turbo_sync_bearing_gain"] - 1) * wear) * (turbo_rpm / self.cfg.turbo.max_shaft_rpm)
+        vib["rms"] = (sum(v * v for k, v in vib.items() if k in ("0.5X", "1X", "firing", "prop_1X", "gear_mesh", "knock", "turbo"))) ** 0.5
 
         self._update_state(dt, op, fuel_on)
         self.t += dt
@@ -191,10 +217,12 @@ class SimEngine:
             soc=self.electrical.soc, power_kw=power / 1000.0, torque_nm=self.torque,
             bsfc_g_kwh=(op.mdot_fuel_kg_s * 3.6e9 / power) if fuel_on and power > 1000 else None,
             lambda_cyl=lam, ign_timing_btdc=ign if comb.spark_ignition else None,
-            inj_timing_btdc=inj, cov_imep_pct=comb.cov_imep_pct(sum(l for l in lam if l) / max(1, len([l for l in lam if l])) if any(lam) else 1.0,
+            inj_timing_btdc=inj, cov_imep_pct=hl.get("cov_factor", 1.0) * comb.cov_imep_pct(sum(l for l in lam if l) / max(1, len([l for l in lam if l])) if any(lam) else 1.0,
                                                                load, 0.5 if lane_lost else 1.0),
             knock_index=knock, charge_t_c=(self.core.turbo.t_charge_k if self.core.turbo else atm.temperature_k) - 273.15,
             boost_pr=(op.map_pa / atm.pressure_pa) if self.core.turbo else None, vibration=vib,
+            lanes_failed=int(hl.get("lanes_failed", 0)), oil_qty_l=hl.get("oil_qty_l", self.cfg.oil_capacity_l),
+            turbo_rpm=turbo_rpm,
             altitude_ft=lv.altitude_ft, oat_c=atm.temperature_k - 273.15, tas_kt=tas)
 
     # -- state machine -------------------------------------------------------------------------------------

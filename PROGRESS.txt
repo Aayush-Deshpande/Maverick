@@ -7,13 +7,14 @@ RESUME HERE  (last updated 19 Nov 2026)
 =====================================================================================================================
 Phase:        PHASE 1 (M0) cards done (M0-01..M0-12; M0-10 reduced, see its entry). NEXT: CHECKPOINT PHASE 1 (manual
               look by Prasad), then Phase 2 in demo-first order: M1-01 sim package + clock, M1-02 atmosphere, ...
-Card:         M1-13 (M1-01..12 done).
+Card:         M1-14 (M1-01..13 done).
 Branch:       Beta (pushed by Prasad up to ae82c70; later commits local). main untouched (9b5942e).
-Last commit:  M1-12 on Beta (see git log -1).
+Last commit:  M1-13 on Beta (see git log -1).
 State:        ONE simulator: RuntimeHub. EngineStateService runs no loop; /api/state, /api/control, /ws/telemetry,
               /ws/blender, /api/health, copilot and voice read the v1 runtime (legacy_adapter.py). D52 command security
               on every command path. Test baseline now: 430 passed, 1 failed (ratchet: engine_service/copilot brand
-              literals, known), 7 skipped, 2 xfailed. Full suite ~1.5 min (was ~4).
+              literals, known), 7 skipped, 2 xfailed. After M1-13: 560 passed, same 1 failed, 12 xfailed, 63
+              deselected (slow T-FLT-1, run with -m slow, ~35 min). Full default suite ~2 min.
 Next step:    M0-09 (needs Prasad's OK for vitest@<current> as a frontend devDependency; check its docs first, D39):
               - frontend/src/store (zustand) + one socket manager on /ws/v1 (reconnect, seq resync, stale 2 s,
                 disconnected 10 s); remove the extra sockets/polls; real rate + data age; sliders read lever values;
@@ -37,6 +38,11 @@ Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produ
                      boost 190/195 kPa give too little air for rated power: eta_i 0.56-0.58 (CI ~0.42-0.50), BSFC
                      163-168 g/kWh vs config 235/218 and the VRDE brochure ~215. Sourced values, or OK to derive
                      lambda/boost from BSFC? (strict xfail test_diesel_calibration_is_physically_plausible)
+              (7) M1-13 T-FLT-1: registry signatures the physics does not (and should not) show; change the
+                  registry or the scenario? constant-speed diesels hold rpm (F04/F06/F08 rpm); a running alternator
+                  masks battery faults (F34 bus_v); the boost controller compensates a leak below its limit
+                  (F13/F14 map_kpa); F35 shows only on a cold start; F37 is hunting, not a mean prop_rpm shift;
+                  F23 oil_t; F11 fuel_flow; F05 clog at severity 1 is past the lean misfire limit (EGT/CHT fall).
               (4) ANSWERED 19 Nov: dependencies OK. Prasad: no subagents (token cost); keep sessions lean.
               (5) M0-11: data/graph_db/fleet_graph.json still has local runtime changes from older runs. The server
               no longer writes it (runtime copy = var/graph_db/fleet_graph.json, seeded from the committed version).
@@ -543,3 +549,15 @@ Tests tests/sim/test_plant.py 13 passed: stop spins down on the ground + restart
   timing changes), F11 timing drift published, determinism, <= 2 ms per step.
 Known: AE300 EGT ~260 C at 75 % (too low) - same root as Question 6c (diesel air/lambda data).
 
+
+=== 19 Nov 2026  M1-13 fault parameters, sensor faults, T-FLT-1 harness
+backend/sim/faults.py: registry parameter_effects -> plant health dict, ramp s(t) in simulated seconds (scale/add/set);
+  unknown parameter raises. Oil leak integrates volume; starvation needs oil capacity (missing for 914/AE300/VRDE).
+backend/sim/sensors.py: S01-S07 on the reading layer, seeded per channel. backend/sim/signature.py: paired lockstep
+  healthy vs faulty run, best directional delta per expected_signature channel.
+T-FLT-1 (scripts/sim/run_t_flt_1.py -> docs/physics/t_flt_1_report.csv): 63/143 engine-fault pairs pass every channel.
+  tests/sim/t_flt_1_baseline.json ratchets the passing set (marker slow). Misses split: model gaps (idle EGT ~850 C,
+  diesel EGT ~260 C, F24 without oil capacity, F26/F29 1X small, F30 lane loss at cruise) and registry-signature
+  questions (Questions 7).
+Physics added (ASSUMED, defaults.json): low_order_gain 10, cycle-variation 0.5X, turbo bearing oil heat, knock wall
+  heat; burnt share counts unburnt fuel only; turbo rpm from compressor delivery.

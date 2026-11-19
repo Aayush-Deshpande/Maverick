@@ -86,6 +86,7 @@ class MeanValueEngine:
                 target = None if map_target_pa is None else map_target_pa / self.wot_map_ratio
                 p_src = self.turbo.steady_charge(atm, mdot, target_pa=target, health=turbo_health)
                 t_src = self.turbo.charge_temperature_k(atm, p_src, (turbo_health or {}).get("intercooler_fouling", 0.0))
+                self.turbo.t_charge_k = t_src
             p_up = p_src - ind.k_filter * filter_factor * mdot ** 2
             map_pa = ind._steady_map(frac, p_up, t_src, rpm)
             mdot = ind.cylinder_flow(map_pa, t_src, rpm)
@@ -109,7 +110,9 @@ class MeanValueEngine:
             cyl_fuel.append(m_f * cycles_per_s)
             cyl_w.append(w * cycles_per_s)
             cyl_lam.append(lam_i)
-            cyl_burnt.append(0.0 if m_f <= 0 else min(1.0, w / max(m_f * self.combustion.lhv_j_kg * self.combustion.eta_i, 1e-12)))
+            released = 0.0 if m_f <= 0 else min(1.0, max(qual[i], 0.0)) * (
+                min(1.0, lam_i) if (not self.ci and lam_i < self.combustion.lean_misfire_lambda) or self.ci else 0.0)
+            cyl_burnt.append(released)      # unburnt fuel only; timing/lean/burn losses heat the exhaust instead
         indicated = sum(cyl_w)
         friction = self.friction_w(rpm)
         return OperatingPoint(rpm=rpm, map_pa=map_pa, mdot_air_kg_s=mdot, mdot_fuel_kg_s=sum(cyl_fuel),

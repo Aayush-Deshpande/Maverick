@@ -139,9 +139,9 @@ class Thermal:
             fuel_heat += q
             q_hc = self.g_hc * hl.get("coolant_flow", 1.0) * (self.cht[i] - self.coolant_c)
             q_ha = self.g_ha * s * cooling_eff[i] * (self.cht[i] - ta)
-            self.cht[i] += dt * (f_wall * q - q_hc - q_ha) / self.c_head
+            self.cht[i] += dt * (f_wall * hl.get("wall_heat_factor", 1.0) * q - q_hc - q_ha) / self.c_head
             to_coolant += q_hc
-            target = self._egt_target(h, i)
+            target = self._egt_target(h, i) * ((hl.get("egt_factor") or [1.0] * self.n_cyl)[i])
             self.egt[i] = target + (self.egt[i] - target) * math.exp(-dt / self.ph["tau_egt_s"])
         rad_open = self._opening(self.coolant_c, self.ph["coolant_thermostat_open_c"],
                                  self.ph["coolant_thermostat_full_c"], hl.get("coolant_thermostat_stuck"))
@@ -149,7 +149,7 @@ class Thermal:
                  (self.coolant_c - ta))
         self.coolant_c += dt * (to_coolant - q_rad) / self.c_cool
         q_oil_in = (self.ph["oil_friction_heat_fraction"] * h.friction_w * self.friction_multiplier +
-                    self.ph["oil_fuel_heat_fraction"] * fuel_heat)
+                    self.ph["oil_fuel_heat_fraction"] * fuel_heat + hl.get("extra_oil_heat_w", 0.0))
         oil_open = self._opening(self.oil_c, self.ph["oil_thermostat_open_c"], self.ph["oil_thermostat_full_c"],
                                  hl.get("oil_thermostat_stuck"))
         self.oil_c += dt * (q_oil_in - self.g_oil * s * oil_open * hl.get("oil_cooler", 1.0) * (self.oil_c - ta)) / self.c_oil
