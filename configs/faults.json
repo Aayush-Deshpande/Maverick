@@ -1,0 +1,4239 @@
+{
+  "schema_version": 1,
+  "source": "ANUMAAN_AUDIT_REPORT.txt section 22; DECISIONS D9, D45",
+  "channel_note": "Channels follow backend/core/frame.py. {cyl} = cylinder number, [*] = all cylinders, {channel} = the sensor channel chosen at injection. direction +1/-1 = up/down, 0 = oscillation or channel-only change.",
+  "faults": [
+    {
+      "id": "F01",
+      "name": "IGNITION_MISFIRE",
+      "kind": "PHYSICAL",
+      "scope": "CYLINDER",
+      "applies_when": [
+        {
+          "field": "ignition_mode",
+          "in": [
+            "SPARK_IGNITION"
+          ]
+        }
+      ],
+      "legacy_ids": [
+        3
+      ],
+      "plant_mode_legacy": "MISFIRE",
+      "parameter_effects": [
+        {
+          "component": "combustion",
+          "parameter": "quality[{cyl}]",
+          "op": "set",
+          "at_full_severity": 0.0
+        }
+      ],
+      "default_severity": 0.8,
+      "default_ramp_s": 5.0,
+      "expected_signature": [
+        {
+          "channel": "egt[{cyl}]",
+          "direction": -1,
+          "min_delta": 100,
+          "unit": "C"
+        },
+        {
+          "channel": "cht[{cyl}]",
+          "direction": -1,
+          "min_delta": 5,
+          "unit": "C"
+        },
+        {
+          "channel": "rpm",
+          "direction": -1,
+          "min_delta": 50,
+          "unit": "rpm"
+        },
+        {
+          "channel": "vibration_orders.0.5X",
+          "direction": 1,
+          "min_delta": 1.0,
+          "unit": "mm/s"
+        }
+      ],
+      "detect_window_s": 30,
+      "status_at_full_severity": "CAUTION",
+      "ata_chapter": "74",
+      "maintenance_action": {
+        "text": "Check spark plugs, coil and lead of cylinder {cyl}; run a lane check.",
+        "source": "ANUMAAN-authored (audit R section 22)"
+      },
+      "mitigation_inflight": {
+        "text": "Reduce power, monitor EGT of the other cylinders, avoid prolonged high power.",
+        "source": "ANUMAAN-authored; check against the engine OM abnormal-operation section"
+      },
+      "physics_explanation": "Cylinder {cyl} stops burning fuel: its torque contribution drops, so rpm falls and torque imbalance raises the half-order vibration; unburnt mixture lowers EGT {cyl}.",
+      "ps_categories": [
+        "misfire"
+      ],
+      "description": "ignition misfire",
+      "components": {
+        "rotax_912is": {
+          "now": [
+            "wiring_harness"
+          ],
+          "marker": true,
+          "marker_for": "spark plug / coil of cylinder {cyl}"
+        },
+        "rotax_914": {
+          "now": [
+            "cylinder_bank_unverified"
+          ],
+          "marker": true,
+          "marker_for": "cylinder {cyl} head and plugs"
+        },
+        "rotax_915is": {
+          "now": [
+            "main_engine_MERGED"
+          ],
+          "marker": true,
+          "marker_for": "cylinder {cyl}"
+        }
+      },
+      "channel_scope": null
+    },
+    {
+      "id": "F02",
+      "name": "COMBUSTION_INSTABILITY",
+      "kind": "PHYSICAL",
+      "scope": "CYLINDER",
+      "applies_when": [],
+      "legacy_ids": [],
+      "plant_mode_legacy": null,
+      "parameter_effects": [
+        {
+          "component": "combustion",
+          "parameter": "cycle_variation[{cyl}]",
+          "op": "scale",
+          "at_full_severity": 4.0
+        }
+      ],
+      "default_severity": 0.8,
+      "default_ramp_s": 30.0,
+      "expected_signature": [
+        {
+          "channel": "cov_imep",
+          "direction": 1,
+          "min_delta": 2.0,
+          "unit": "%"
+        },
+        {
+          "channel": "vibration_orders.0.5X",
+          "direction": 1,
+          "min_delta": 0.5,
+          "unit": "mm/s"
+        }
+      ],
+      "detect_window_s": 120,
+      "status_at_full_severity": "ADVISORY",
+      "ata_chapter": "73/74",
+      "maintenance_action": {
+        "text": "Inspect ignition (SI) or injector/injection pressure (CI) of cylinder {cyl}.",
+        "source": "ANUMAAN-authored (audit R section 22)"
+      },
+      "mitigation_inflight": {
+        "text": "Avoid lean operation and very low power; monitor roughness.",
+        "source": "ANUMAAN-authored; check against the engine OM abnormal-operation section"
+      },
+      "physics_explanation": "Cycle-to-cycle combustion varies in cylinder {cyl}; mean values change little but rpm jitter, EGT noise and COV of IMEP rise.",
+      "ps_categories": [
+        "combustion instability"
+      ],
+      "description": "combustion instability",
+      "components": {
+        "rotax_912is": {
+          "now": [
+            "wiring_harness"
+          ],
+          "marker": true,
+          "marker_for": "spark plug / coil of cylinder {cyl}"
+        },
+        "rotax_914": {
+          "now": [
+            "cylinder_bank_unverified"
+          ],
+          "marker": true,
+          "marker_for": "cylinder {cyl} head and plugs"
+        },
+        "rotax_915is": {
+          "now": [
+            "main_engine_MERGED"
+          ],
+          "marker": true,
+          "marker_for": "cylinder {cyl}"
+        },
+        "austro_ae300": {
+          "now": [
+            "injector_{cyl}",
+            "fuel_line_{cyl}"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "vrde_jayem_2_2l": {
+          "now": [
+            "injector_{cyl}",
+            "fuel_line_hp_{cyl}"
+          ],
+          "marker": false,
+          "marker_for": null
+        }
+      },
+      "channel_scope": null
+    },
+    {
+      "id": "F03",
+      "name": "DETONATION_KNOCK",
+      "kind": "PHYSICAL",
+      "scope": "ENGINE",
+      "applies_when": [
+        {
+          "field": "ignition_mode",
+          "in": [
+            "SPARK_IGNITION"
+          ]
+        }
+      ],
+      "legacy_ids": [],
+      "plant_mode_legacy": null,
+      "parameter_effects": [
+        {
+          "component": "combustion",
+          "parameter": "knock_margin",
+          "op": "scale",
+          "at_full_severity": 0.3
+        }
+      ],
+      "default_severity": 0.8,
+      "default_ramp_s": 30.0,
+      "expected_signature": [
+        {
+          "channel": "cht[*]",
+          "direction": 1,
+          "min_delta": 5,
+          "unit": "C"
+        },
+        {
+          "channel": "vibration_orders.knock",
+          "direction": 1,
+          "min_delta": 0.5,
+          "unit": "mm/s"
+        }
+      ],
+      "detect_window_s": 60,
+      "status_at_full_severity": "CAUTION",
+      "ata_chapter": "72/73",
+      "maintenance_action": {
+        "text": "Check fuel grade, cooling and ignition timing; inspect pistons if sustained.",
+        "source": "ANUMAAN-authored (audit R section 22)"
+      },
+      "mitigation_inflight": {
+        "text": "Reduce power and manifold pressure, enrich if possible, increase cooling airspeed.",
+        "source": "ANUMAAN-authored; check against the engine OM abnormal-operation section"
+      },
+      "physics_explanation": "Reduced knock margin makes end-gas auto-ignite at high load: pressure spikes heat the heads and excite high-frequency vibration.",
+      "ps_categories": [
+        "combustion instability",
+        "overheating trends"
+      ],
+      "description": "detonation knock",
+      "components": {
+        "rotax_912is": {
+          "now": [
+            "crankcase_cylinders_base"
+          ],
+          "marker": true,
+          "marker_for": "cylinder heads"
+        },
+        "rotax_914": {
+          "now": [
+            "cylinder_bank_unverified"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "rotax_915is": {
+          "now": [
+            "main_engine_MERGED"
+          ],
+          "marker": true,
+          "marker_for": "cylinder heads"
+        }
+      },
+      "channel_scope": null
+    },
+    {
+      "id": "F04",
+      "name": "IGNITION_LANE_FAILURE",
+      "kind": "PHYSICAL",
+      "scope": "ENGINE",
+      "applies_when": [
+        {
+          "field": "ignition_mode",
+          "in": [
+            "SPARK_IGNITION"
+          ]
+        },
+        {
+          "field": "ignition_circuits",
+          "in": [
+            2
+          ]
+        }
+      ],
+      "legacy_ids": [],
+      "plant_mode_legacy": null,
+      "parameter_effects": [
+        {
+          "component": "ecu",
+          "parameter": "lane_b_ok",
+          "op": "set",
+          "at_full_severity": 0.0
+        }
+      ],
+      "default_severity": 0.8,
+      "default_ramp_s": 30.0,
+      "expected_signature": [
+        {
+          "channel": "rpm",
+          "direction": -1,
+          "min_delta": 50,
+          "unit": "rpm"
+        },
+        {
+          "channel": "egt[*]",
+          "direction": 1,
+          "min_delta": 15,
+          "unit": "C"
+        },
+        {
+          "channel": "lane_status",
+          "direction": 1,
+          "min_delta": 1,
+          "unit": "state"
+        }
+      ],
+      "detect_window_s": 10,
+      "status_at_full_severity": "CAUTION",
+      "ata_chapter": "74/76",
+      "maintenance_action": {
+        "text": "Troubleshoot the failed ignition lane (wiring, coil, ECU lane).",
+        "source": "ANUMAAN-authored (audit R section 22)"
+      },
+      "mitigation_inflight": {
+        "text": "Continue on the remaining lane; land at the nearest suitable site per the flight manual.",
+        "source": "ANUMAAN-authored; check against the engine OM abnormal-operation section"
+      },
+      "physics_explanation": "With one ignition circuit the flame front starts from one plug per cylinder: slower burn, later heat release, higher EGT and lower rpm.",
+      "ps_categories": [
+        "misfire"
+      ],
+      "description": "ignition lane failure",
+      "components": {
+        "rotax_912is": {
+          "now": [
+            "ecu",
+            "wiring_harness"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "rotax_914": {
+          "now": [],
+          "marker": true,
+          "marker_for": "ignition CDI modules"
+        },
+        "rotax_915is": {
+          "now": [
+            "ecu",
+            "fusebox"
+          ],
+          "marker": false,
+          "marker_for": null
+        }
+      },
+      "channel_scope": null
+    },
+    {
+      "id": "F05",
+      "name": "INJECTOR_CLOG_SI",
+      "kind": "PHYSICAL",
+      "scope": "CYLINDER",
+      "applies_when": [
+        {
+          "field": "ignition_mode",
+          "in": [
+            "SPARK_IGNITION"
+          ]
+        },
+        {
+          "field": "fuel_system",
+          "in": [
+            "PORT_INJECTION"
+          ]
+        }
+      ],
+      "legacy_ids": [
+        2
+      ],
+      "plant_mode_legacy": null,
+      "parameter_effects": [
+        {
+          "component": "fuel",
+          "parameter": "injector_flow[{cyl}]",
+          "op": "scale",
+          "at_full_severity": 0.6
+        }
+      ],
+      "default_severity": 0.8,
+      "default_ramp_s": 30.0,
+      "expected_signature": [
+        {
+          "channel": "egt[{cyl}]",
+          "direction": 1,
+          "min_delta": 30,
+          "unit": "C"
+        },
+        {
+          "channel": "cht[{cyl}]",
+          "direction": 1,
+          "min_delta": 5,
+          "unit": "C"
+        },
+        {
+          "channel": "fuel_flow",
+          "direction": -1,
+          "min_delta": 0.2,
+          "unit": "kg/h"
+        }
+      ],
+      "detect_window_s": 60,
+      "status_at_full_severity": "CAUTION",
+      "ata_chapter": "73",
+      "maintenance_action": {
+        "text": "Clean or replace injector {cyl}.",
+        "source": "ANUMAAN-authored (audit R section 22)"
+      },
+      "mitigation_inflight": {
+        "text": "Reduce power; watch EGT {cyl} and CHT {cyl} against their limits.",
+        "source": "ANUMAAN-authored; check against the engine OM abnormal-operation section"
+      },
+      "physics_explanation": "Less fuel reaches cylinder {cyl}: the mixture goes lean, so EGT and head temperature rise while total fuel flow drops slightly.",
+      "ps_categories": [
+        "injector abnormalities"
+      ],
+      "description": "injector clog si",
+      "components": {
+        "rotax_912is": {
+          "now": [
+            "fuel_pump"
+          ],
+          "marker": true,
+          "marker_for": "injector {cyl} / fuel rail"
+        },
+        "rotax_915is": {
+          "now": [
+            "main_engine_MERGED"
+          ],
+          "marker": true,
+          "marker_for": "injector {cyl}"
+        }
+      },
+      "channel_scope": null
+    },
+    {
+      "id": "F06",
+      "name": "INJECTOR_COKING_CI",
+      "kind": "PHYSICAL",
+      "scope": "CYLINDER",
+      "applies_when": [
+        {
+          "field": "ignition_mode",
+          "in": [
+            "COMPRESSION_IGNITION"
+          ]
+        },
+        {
+          "field": "fuel_system",
+          "in": [
+            "COMMON_RAIL"
+          ]
+        }
+      ],
+      "legacy_ids": [],
+      "plant_mode_legacy": "INJECTOR_COKING",
+      "parameter_effects": [
+        {
+          "component": "fuel",
+          "parameter": "injector_flow[{cyl}]",
+          "op": "scale",
+          "at_full_severity": 0.7
+        },
+        {
+          "component": "combustion",
+          "parameter": "burn_duration[{cyl}]",
+          "op": "scale",
+          "at_full_severity": 1.5
+        }
+      ],
+      "default_severity": 0.8,
+      "default_ramp_s": 30.0,
+      "expected_signature": [
+        {
+          "channel": "egt[{cyl}]",
+          "direction": 1,
+          "min_delta": 30,
+          "unit": "C"
+        },
+        {
+          "channel": "vibration_orders.0.5X",
+          "direction": 1,
+          "min_delta": 0.5,
+          "unit": "mm/s"
+        },
+        {
+          "channel": "rpm",
+          "direction": -1,
+          "min_delta": 10,
+          "unit": "rpm"
+        }
+      ],
+      "detect_window_s": 90,
+      "status_at_full_severity": "CAUTION",
+      "ata_chapter": "73",
+      "maintenance_action": {
+        "text": "Remove and test/replace injector {cyl}.",
+        "source": "ANUMAAN-authored (audit R section 22)"
+      },
+      "mitigation_inflight": {
+        "text": "Reduce power; avoid high-load climbs; monitor EGT {cyl}.",
+        "source": "ANUMAAN-authored; check against the engine OM abnormal-operation section"
+      },
+      "physics_explanation": "Deposits reduce injector {cyl} flow and spoil atomisation: combustion is slower and later, so EGT {cyl} rises and the cylinder's torque falls.",
+      "ps_categories": [
+        "injector abnormalities"
+      ],
+      "description": "injector coking ci",
+      "components": {
+        "austro_ae300": {
+          "now": [
+            "injector_{cyl}",
+            "fuel_line_{cyl}"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "vrde_jayem_2_2l": {
+          "now": [
+            "injector_{cyl}",
+            "fuel_line_hp_{cyl}"
+          ],
+          "marker": false,
+          "marker_for": null
+        }
+      },
+      "channel_scope": null
+    },
+    {
+      "id": "F07",
+      "name": "INJECTOR_STUCK_OPEN",
+      "kind": "PHYSICAL",
+      "scope": "CYLINDER",
+      "applies_when": [
+        {
+          "field": "fuel_system",
+          "in": [
+            "COMMON_RAIL",
+            "PORT_INJECTION"
+          ]
+        }
+      ],
+      "legacy_ids": [],
+      "plant_mode_legacy": null,
+      "parameter_effects": [
+        {
+          "component": "fuel",
+          "parameter": "injector_leak[{cyl}]",
+          "op": "add",
+          "at_full_severity": 0.15
+        }
+      ],
+      "default_severity": 1.0,
+      "default_ramp_s": 5.0,
+      "expected_signature": [
+        {
+          "channel": "egt[{cyl}]",
+          "direction": 1,
+          "min_delta": 60,
+          "unit": "C"
+        },
+        {
+          "channel": "fuel_flow",
+          "direction": 1,
+          "min_delta": 0.5,
+          "unit": "kg/h"
+        },
+        {
+          "channel": "rail_p",
+          "direction": -1,
+          "min_delta": 50,
+          "unit": "bar"
+        }
+      ],
+      "detect_window_s": 20,
+      "status_at_full_severity": "NO-GO",
+      "ata_chapter": "73",
+      "maintenance_action": {
+        "text": "Replace injector {cyl}; inspect cylinder {cyl} and exhaust for damage.",
+        "source": "ANUMAAN-authored (audit R section 22)"
+      },
+      "mitigation_inflight": {
+        "text": "Reduce power immediately; land as soon as possible (fire and engine-damage risk).",
+        "source": "ANUMAAN-authored; check against the engine OM abnormal-operation section"
+      },
+      "physics_explanation": "Injector {cyl} keeps delivering fuel: cylinder {cyl} runs rich and hot, fuel flow rises and the rail loses pressure through the open needle.",
+      "ps_categories": [
+        "injector abnormalities"
+      ],
+      "description": "injector stuck open",
+      "components": {
+        "austro_ae300": {
+          "now": [
+            "injector_{cyl}",
+            "common_rail"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "vrde_jayem_2_2l": {
+          "now": [
+            "injector_{cyl}",
+            "fuel_return"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "rotax_912is": {
+          "now": [
+            "fuel_pump"
+          ],
+          "marker": true,
+          "marker_for": "injector {cyl} / fuel rail"
+        },
+        "rotax_915is": {
+          "now": [
+            "main_engine_MERGED"
+          ],
+          "marker": true,
+          "marker_for": "injector {cyl}"
+        }
+      },
+      "channel_scope": null
+    },
+    {
+      "id": "F08",
+      "name": "INJECTOR_STUCK_CLOSED",
+      "kind": "PHYSICAL",
+      "scope": "CYLINDER",
+      "applies_when": [
+        {
+          "field": "ignition_mode",
+          "in": [
+            "COMPRESSION_IGNITION"
+          ]
+        },
+        {
+          "field": "fuel_system",
+          "in": [
+            "COMMON_RAIL"
+          ]
+        }
+      ],
+      "legacy_ids": [],
+      "plant_mode_legacy": "INJECTOR_NEEDLE_STICK",
+      "parameter_effects": [
+        {
+          "component": "fuel",
+          "parameter": "injector_flow[{cyl}]",
+          "op": "set",
+          "at_full_severity": 0.0
+        }
+      ],
+      "default_severity": 0.8,
+      "default_ramp_s": 5.0,
+      "expected_signature": [
+        {
+          "channel": "egt[{cyl}]",
+          "direction": -1,
+          "min_delta": 100,
+          "unit": "C"
+        },
+        {
+          "channel": "rpm",
+          "direction": -1,
+          "min_delta": 50,
+          "unit": "rpm"
+        },
+        {
+          "channel": "vibration_orders.0.5X",
+          "direction": 1,
+          "min_delta": 1.0,
+          "unit": "mm/s"
+        }
+      ],
+      "detect_window_s": 30,
+      "status_at_full_severity": "CAUTION",
+      "ata_chapter": "73",
+      "maintenance_action": {
+        "text": "Replace injector {cyl} (needle stuck).",
+        "source": "ANUMAAN-authored (audit R section 22)"
+      },
+      "mitigation_inflight": {
+        "text": "Reduce power; expect rough running; land at the nearest suitable site.",
+        "source": "ANUMAAN-authored; check against the engine OM abnormal-operation section"
+      },
+      "physics_explanation": "No fuel reaches cylinder {cyl}, so it behaves like a misfire on a diesel: torque imbalance and a cold exhaust on that cylinder.",
+      "ps_categories": [
+        "misfire",
+        "injector abnormalities"
+      ],
+      "description": "injector stuck closed",
+      "components": {
+        "austro_ae300": {
+          "now": [
+            "injector_{cyl}"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "vrde_jayem_2_2l": {
+          "now": [
+            "injector_{cyl}"
+          ],
+          "marker": false,
+          "marker_for": null
+        }
+      },
+      "channel_scope": null
+    },
+    {
+      "id": "F09",
+      "name": "RAIL_PRESSURE_DECAY",
+      "kind": "PHYSICAL",
+      "scope": "ENGINE",
+      "applies_when": [
+        {
+          "field": "ignition_mode",
+          "in": [
+            "COMPRESSION_IGNITION"
+          ]
+        },
+        {
+          "field": "fuel_system",
+          "in": [
+            "COMMON_RAIL"
+          ]
+        }
+      ],
+      "legacy_ids": [],
+      "plant_mode_legacy": "RAIL_PRESSURE_DECAY",
+      "parameter_effects": [
+        {
+          "component": "fuel",
+          "parameter": "hp_pump_health",
+          "op": "scale",
+          "at_full_severity": 0.6
+        }
+      ],
+      "default_severity": 0.8,
+      "default_ramp_s": 30.0,
+      "expected_signature": [
+        {
+          "channel": "rail_p",
+          "direction": -1,
+          "min_delta": 100,
+          "unit": "bar"
+        },
+        {
+          "channel": "egt[*]",
+          "direction": 1,
+          "min_delta": 15,
+          "unit": "C"
+        }
+      ],
+      "detect_window_s": 60,
+      "status_at_full_severity": "CAUTION",
+      "ata_chapter": "73",
+      "maintenance_action": {
+        "text": "Check the HP pump, rail pressure-limiting valve and rail pressure sensor.",
+        "source": "ANUMAAN-authored (audit R section 22)"
+      },
+      "mitigation_inflight": {
+        "text": "Avoid high power demands; the FADEC may limit power.",
+        "source": "ANUMAAN-authored; check against the engine OM abnormal-operation section"
+      },
+      "physics_explanation": "The HP pump delivers less or the relief valve leaks: rail pressure falls, injection takes longer and atomisation worsens, so EGT rises and full power is limited.",
+      "ps_categories": [
+        "injector abnormalities"
+      ],
+      "description": "rail pressure decay",
+      "components": {
+        "austro_ae300": {
+          "now": [
+            "hp_fuel_pump",
+            "common_rail",
+            "rail_pressure_valve",
+            "sensor_fuel_rail_press"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "vrde_jayem_2_2l": {
+          "now": [
+            "hp_fuel_pump",
+            "common_rail",
+            "rail_relief_valve",
+            "rail_pressure_sensor"
+          ],
+          "marker": false,
+          "marker_for": null
+        }
+      },
+      "channel_scope": null
+    },
+    {
+      "id": "F10",
+      "name": "FUEL_SUPPLY_LOW_PRESSURE",
+      "kind": "PHYSICAL",
+      "scope": "ENGINE",
+      "applies_when": [],
+      "legacy_ids": [],
+      "plant_mode_legacy": null,
+      "parameter_effects": [
+        {
+          "component": "fuel",
+          "parameter": "lp_supply_health",
+          "op": "scale",
+          "at_full_severity": 0.5
+        }
+      ],
+      "default_severity": 0.8,
+      "default_ramp_s": 30.0,
+      "expected_signature": [
+        {
+          "channel": "fuel_p",
+          "direction": -1,
+          "min_delta": 0.3,
+          "unit": "bar"
+        },
+        {
+          "channel": "power_kw",
+          "direction": -1,
+          "min_delta": 2,
+          "unit": "kW"
+        }
+      ],
+      "detect_window_s": 60,
+      "status_at_full_severity": "CAUTION",
+      "ata_chapter": "28/73",
+      "maintenance_action": {
+        "text": "Check the fuel filter, low-pressure pumps and lines.",
+        "source": "ANUMAAN-authored (audit R section 22)"
+      },
+      "mitigation_inflight": {
+        "text": "Switch to the auxiliary pump if available; reduce power; plan to land.",
+        "source": "ANUMAAN-authored; check against the engine OM abnormal-operation section"
+      },
+      "physics_explanation": "The low-pressure supply cannot keep up: inlet fuel pressure falls, at high power the delivered fuel is limited, so power falls (SI engines also run lean).",
+      "ps_categories": [
+        "injector abnormalities"
+      ],
+      "description": "fuel supply low pressure",
+      "components": {
+        "rotax_912is": {
+          "now": [
+            "fuel_pump"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "rotax_914": {
+          "now": [],
+          "marker": true,
+          "marker_for": "fuel pump / carburettors"
+        },
+        "rotax_915is": {
+          "now": [],
+          "marker": true,
+          "marker_for": "fuel pump"
+        },
+        "austro_ae300": {
+          "now": [
+            "fuel_metering_unit",
+            "aux_fuel_pump",
+            "sensor_fuel_low_press"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "vrde_jayem_2_2l": {
+          "now": [
+            "fuel_filter"
+          ],
+          "marker": false,
+          "marker_for": null
+        }
+      },
+      "channel_scope": null
+    },
+    {
+      "id": "F11",
+      "name": "INJECTION_TIMING_DRIFT",
+      "kind": "PHYSICAL",
+      "scope": "ENGINE",
+      "applies_when": [
+        {
+          "field": "fuel_system",
+          "in": [
+            "COMMON_RAIL",
+            "PORT_INJECTION"
+          ]
+        }
+      ],
+      "legacy_ids": [
+        8
+      ],
+      "plant_mode_legacy": null,
+      "parameter_effects": [
+        {
+          "component": "ecu",
+          "parameter": "timing_offset_deg",
+          "op": "add",
+          "at_full_severity": -6.0
+        }
+      ],
+      "default_severity": 0.8,
+      "default_ramp_s": 30.0,
+      "expected_signature": [
+        {
+          "channel": "egt[*]",
+          "direction": 1,
+          "min_delta": 20,
+          "unit": "C"
+        },
+        {
+          "channel": "fuel_flow",
+          "direction": 1,
+          "min_delta": 0.2,
+          "unit": "kg/h"
+        }
+      ],
+      "detect_window_s": 120,
+      "status_at_full_severity": "ADVISORY",
+      "ata_chapter": "73/76",
+      "maintenance_action": {
+        "text": "Check crank/cam sensors and ECU timing calibration.",
+        "source": "ANUMAAN-authored (audit R section 22)"
+      },
+      "mitigation_inflight": {
+        "text": "Monitor EGT; reduce power if EGT approaches the limit.",
+        "source": "ANUMAAN-authored; check against the engine OM abnormal-operation section"
+      },
+      "physics_explanation": "Combustion is retarded: less of the fuel energy becomes work and more leaves with the exhaust, so EGT and fuel per unit power rise.",
+      "ps_categories": [
+        "injection timing"
+      ],
+      "description": "injection timing drift",
+      "components": {
+        "rotax_912is": {
+          "now": [
+            "ecu"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "rotax_914": {
+          "now": [],
+          "marker": true,
+          "marker_for": "ignition CDI modules"
+        },
+        "rotax_915is": {
+          "now": [
+            "ecu"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "austro_ae300": {
+          "now": [
+            "ecu_lane_a",
+            "ecu_lane_b",
+            "sensor_cam",
+            "sensor_crank"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "vrde_jayem_2_2l": {
+          "now": [
+            "sensor_crank_1",
+            "sensor_crank_2",
+            "wiring_harness"
+          ],
+          "marker": false,
+          "marker_for": null
+        }
+      },
+      "channel_scope": null
+    },
+    {
+      "id": "F12",
+      "name": "CARBURETTOR_ICING",
+      "kind": "PHYSICAL",
+      "scope": "ENGINE",
+      "applies_when": [
+        {
+          "field": "fuel_system",
+          "in": [
+            "CARBURETTOR"
+          ]
+        }
+      ],
+      "legacy_ids": [],
+      "plant_mode_legacy": null,
+      "parameter_effects": [
+        {
+          "component": "induction",
+          "parameter": "carb_throat_area",
+          "op": "scale",
+          "at_full_severity": 0.7
+        }
+      ],
+      "default_severity": 0.8,
+      "default_ramp_s": 30.0,
+      "expected_signature": [
+        {
+          "channel": "map_kpa",
+          "direction": -1,
+          "min_delta": 3,
+          "unit": "kPa"
+        },
+        {
+          "channel": "rpm",
+          "direction": -1,
+          "min_delta": 50,
+          "unit": "rpm"
+        }
+      ],
+      "detect_window_s": 120,
+      "status_at_full_severity": "CAUTION",
+      "ata_chapter": "73",
+      "maintenance_action": {
+        "text": "Check carburettor heating; review icing conditions.",
+        "source": "ANUMAAN-authored (audit R section 22)"
+      },
+      "mitigation_inflight": {
+        "text": "Apply carburettor heat if fitted; change altitude out of the icing conditions.",
+        "source": "ANUMAAN-authored; check against the engine OM abnormal-operation section"
+      },
+      "physics_explanation": "Ice narrows the carburettor throat: less air enters, manifold pressure and power fall gradually.",
+      "ps_categories": [
+        "abnormal operating conditions"
+      ],
+      "description": "carburettor icing",
+      "components": {
+        "rotax_914": {
+          "now": [
+            "intake_manifold"
+          ],
+          "marker": true,
+          "marker_for": "carburettors 1-2"
+        }
+      },
+      "channel_scope": null
+    },
+    {
+      "id": "F13",
+      "name": "AIR_FILTER_BLOCKAGE",
+      "kind": "PHYSICAL",
+      "scope": "ENGINE",
+      "applies_when": [],
+      "legacy_ids": [],
+      "plant_mode_legacy": "AIR_FILTER_BLOCKAGE",
+      "parameter_effects": [
+        {
+          "component": "induction",
+          "parameter": "filter_loss_coeff",
+          "op": "scale",
+          "at_full_severity": 6.0
+        }
+      ],
+      "default_severity": 0.8,
+      "default_ramp_s": 300.0,
+      "expected_signature": [
+        {
+          "channel": "map_kpa",
+          "direction": -1,
+          "min_delta": 3,
+          "unit": "kPa"
+        },
+        {
+          "channel": "power_kw",
+          "direction": -1,
+          "min_delta": 1,
+          "unit": "kW"
+        }
+      ],
+      "detect_window_s": 300,
+      "status_at_full_severity": "ADVISORY",
+      "ata_chapter": "72",
+      "maintenance_action": {
+        "text": "Replace/clean the air filter; check the intake for obstructions.",
+        "source": "ANUMAAN-authored (audit R section 22)"
+      },
+      "mitigation_inflight": {
+        "text": "Expect reduced full power; avoid dusty low-level flight.",
+        "source": "ANUMAAN-authored; check against the engine OM abnormal-operation section"
+      },
+      "physics_explanation": "The filter's pressure loss grows with clogging: manifold pressure and air mass flow drop, so full power drops (turbo engines compensate with more turbo work).",
+      "ps_categories": [
+        "abnormal operating conditions"
+      ],
+      "description": "air filter blockage",
+      "components": {
+        "rotax_912is": {
+          "now": [],
+          "marker": true,
+          "marker_for": "airbox / air filter"
+        },
+        "rotax_914": {
+          "now": [
+            "intake_manifold"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "rotax_915is": {
+          "now": [],
+          "marker": true,
+          "marker_for": "airbox / air filter"
+        },
+        "austro_ae300": {
+          "now": [
+            "air_filter"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "vrde_jayem_2_2l": {
+          "now": [
+            "intake_manifold"
+          ],
+          "marker": true,
+          "marker_for": "airbox / air filter"
+        }
+      },
+      "channel_scope": null
+    },
+    {
+      "id": "F14",
+      "name": "BOOST_LEAK",
+      "kind": "PHYSICAL",
+      "scope": "ENGINE",
+      "applies_when": [
+        {
+          "field": "induction",
+          "in": [
+            "TURBOCHARGED"
+          ]
+        }
+      ],
+      "legacy_ids": [],
+      "plant_mode_legacy": "BOOST_LEAK",
+      "parameter_effects": [
+        {
+          "component": "turbo",
+          "parameter": "charge_leak_fraction",
+          "op": "add",
+          "at_full_severity": 0.15
+        }
+      ],
+      "default_severity": 0.8,
+      "default_ramp_s": 30.0,
+      "expected_signature": [
+        {
+          "channel": "map_kpa",
+          "direction": -1,
+          "min_delta": 5,
+          "unit": "kPa"
+        },
+        {
+          "channel": "turbo_rpm",
+          "direction": 1,
+          "min_delta": 2000,
+          "unit": "rpm"
+        }
+      ],
+      "detect_window_s": 120,
+      "status_at_full_severity": "CAUTION",
+      "ata_chapter": "81",
+      "maintenance_action": {
+        "text": "Inspect charge-air hoses, clamps and intercooler for leaks.",
+        "source": "ANUMAAN-authored (audit R section 22)"
+      },
+      "mitigation_inflight": {
+        "text": "Expect lower critical altitude; avoid high-altitude high-power segments.",
+        "source": "ANUMAAN-authored; check against the engine OM abnormal-operation section"
+      },
+      "physics_explanation": "Charge air escapes between compressor and manifold: the controller spins the turbo harder, but manifold pressure stays below target and power falls earlier with altitude.",
+      "ps_categories": [
+        "abnormal operating conditions"
+      ],
+      "description": "boost leak",
+      "components": {
+        "rotax_914": {
+          "now": [
+            "turbo_compressor",
+            "intake_manifold"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "rotax_915is": {
+          "now": [
+            "intercooler"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "austro_ae300": {
+          "now": [
+            "boost_pipes",
+            "intercooler"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "vrde_jayem_2_2l": {
+          "now": [
+            "turbo_ducts",
+            "intercooler"
+          ],
+          "marker": false,
+          "marker_for": null
+        }
+      },
+      "channel_scope": null
+    },
+    {
+      "id": "F15",
+      "name": "WASTEGATE_STUCK_OPEN",
+      "kind": "PHYSICAL",
+      "scope": "ENGINE",
+      "applies_when": [
+        {
+          "field": "induction",
+          "in": [
+            "TURBOCHARGED"
+          ]
+        }
+      ],
+      "legacy_ids": [],
+      "plant_mode_legacy": "WASTEGATE_STUCK_OPEN",
+      "parameter_effects": [
+        {
+          "component": "turbo",
+          "parameter": "wastegate_position",
+          "op": "set",
+          "at_full_severity": 1.0
+        }
+      ],
+      "default_severity": 0.8,
+      "default_ramp_s": 30.0,
+      "expected_signature": [
+        {
+          "channel": "map_kpa",
+          "direction": -1,
+          "min_delta": 15,
+          "unit": "kPa"
+        },
+        {
+          "channel": "egt[*]",
+          "direction": -1,
+          "min_delta": 20,
+          "unit": "C"
+        },
+        {
+          "channel": "turbo_rpm",
+          "direction": -1,
+          "min_delta": 10000,
+          "unit": "rpm"
+        }
+      ],
+      "detect_window_s": 60,
+      "status_at_full_severity": "CAUTION",
+      "ata_chapter": "81",
+      "maintenance_action": {
+        "text": "Inspect the wastegate/VGT actuator and linkage.",
+        "source": "ANUMAAN-authored (audit R section 22)"
+      },
+      "mitigation_inflight": {
+        "text": "Power is limited to roughly naturally-aspirated levels; descend if altitude cannot be held.",
+        "source": "ANUMAAN-authored; check against the engine OM abnormal-operation section"
+      },
+      "physics_explanation": "Exhaust bypasses the turbine: turbo speed and boost collapse, manifold pressure falls towards ambient, fuel and EGT fall with power.",
+      "ps_categories": [
+        "abnormal operating conditions"
+      ],
+      "description": "wastegate stuck open",
+      "components": {
+        "rotax_914": {
+          "now": [
+            "turbo_turbine"
+          ],
+          "marker": true,
+          "marker_for": "wastegate (the 'wastegate' objects are missegmented)"
+        },
+        "rotax_915is": {
+          "now": [
+            "overboost_valve",
+            "magneto_valve_block"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "austro_ae300": {
+          "now": [
+            "turbocharger"
+          ],
+          "marker": true,
+          "marker_for": "VGT actuator"
+        },
+        "vrde_jayem_2_2l": {
+          "now": [
+            "wastegate"
+          ],
+          "marker": false,
+          "marker_for": null
+        }
+      },
+      "channel_scope": null
+    },
+    {
+      "id": "F16",
+      "name": "WASTEGATE_STUCK_CLOSED",
+      "kind": "PHYSICAL",
+      "scope": "ENGINE",
+      "applies_when": [
+        {
+          "field": "induction",
+          "in": [
+            "TURBOCHARGED"
+          ]
+        }
+      ],
+      "legacy_ids": [],
+      "plant_mode_legacy": null,
+      "parameter_effects": [
+        {
+          "component": "turbo",
+          "parameter": "wastegate_position",
+          "op": "set",
+          "at_full_severity": 0.0
+        }
+      ],
+      "default_severity": 1.0,
+      "default_ramp_s": 30.0,
+      "expected_signature": [
+        {
+          "channel": "map_kpa",
+          "direction": 1,
+          "min_delta": 10,
+          "unit": "kPa"
+        },
+        {
+          "channel": "egt[*]",
+          "direction": 1,
+          "min_delta": 20,
+          "unit": "C"
+        }
+      ],
+      "detect_window_s": 30,
+      "status_at_full_severity": "NO-GO",
+      "ata_chapter": "81",
+      "maintenance_action": {
+        "text": "Inspect the wastegate/VGT actuator; check for engine over-boost damage.",
+        "source": "ANUMAAN-authored (audit R section 22)"
+      },
+      "mitigation_inflight": {
+        "text": "Reduce throttle to keep manifold pressure inside its limit; land as soon as practical.",
+        "source": "ANUMAAN-authored; check against the engine OM abnormal-operation section"
+      },
+      "physics_explanation": "Boost is not relieved: manifold pressure rises above target, power and temperatures rise, with knock risk on spark-ignition engines.",
+      "ps_categories": [
+        "abnormal operating conditions",
+        "overheating trends"
+      ],
+      "description": "wastegate stuck closed",
+      "components": {
+        "rotax_914": {
+          "now": [
+            "turbo_turbine"
+          ],
+          "marker": true,
+          "marker_for": "wastegate (the 'wastegate' objects are missegmented)"
+        },
+        "rotax_915is": {
+          "now": [
+            "overboost_valve",
+            "magneto_valve_block"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "austro_ae300": {
+          "now": [
+            "turbocharger"
+          ],
+          "marker": true,
+          "marker_for": "VGT actuator"
+        },
+        "vrde_jayem_2_2l": {
+          "now": [
+            "wastegate"
+          ],
+          "marker": false,
+          "marker_for": null
+        }
+      },
+      "channel_scope": null
+    },
+    {
+      "id": "F17",
+      "name": "TURBO_BEARING_WEAR",
+      "kind": "PHYSICAL",
+      "scope": "ENGINE",
+      "applies_when": [
+        {
+          "field": "induction",
+          "in": [
+            "TURBOCHARGED"
+          ]
+        }
+      ],
+      "legacy_ids": [],
+      "plant_mode_legacy": "TURBO_BEARING_WEAR",
+      "parameter_effects": [
+        {
+          "component": "turbo",
+          "parameter": "bearing_friction",
+          "op": "scale",
+          "at_full_severity": 3.0
+        }
+      ],
+      "default_severity": 0.8,
+      "default_ramp_s": 600.0,
+      "expected_signature": [
+        {
+          "channel": "map_kpa",
+          "direction": -1,
+          "min_delta": 3,
+          "unit": "kPa"
+        },
+        {
+          "channel": "vibration_orders.turbo",
+          "direction": 1,
+          "min_delta": 0.3,
+          "unit": "mm/s"
+        },
+        {
+          "channel": "oil_t",
+          "direction": 1,
+          "min_delta": 2,
+          "unit": "C"
+        }
+      ],
+      "detect_window_s": 600,
+      "status_at_full_severity": "ADVISORY",
+      "ata_chapter": "81",
+      "maintenance_action": {
+        "text": "Inspect the turbocharger bearings (shaft play, oil leakage).",
+        "source": "ANUMAAN-authored (audit R section 22)"
+      },
+      "mitigation_inflight": {
+        "text": "Avoid rapid throttle changes; monitor oil temperature.",
+        "source": "ANUMAAN-authored; check against the engine OM abnormal-operation section"
+      },
+      "physics_explanation": "Higher bearing friction absorbs turbine power: slower spool-up, lower boost at high altitude, extra heat into the oil, and a turbo-speed vibration line.",
+      "ps_categories": [
+        "abnormal vibration"
+      ],
+      "description": "turbo bearing wear",
+      "components": {
+        "rotax_914": {
+          "now": [
+            "turbo_compressor",
+            "turbo_turbine"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "rotax_915is": {
+          "now": [],
+          "marker": true,
+          "marker_for": "turbocharger"
+        },
+        "austro_ae300": {
+          "now": [
+            "turbocharger",
+            "turbo_oil_lines"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "vrde_jayem_2_2l": {
+          "now": [
+            "turbo_hp",
+            "turbo_lp",
+            "turbo_oil_drain",
+            "turbo_oil_feed"
+          ],
+          "marker": false,
+          "marker_for": null
+        }
+      },
+      "channel_scope": null
+    },
+    {
+      "id": "F18",
+      "name": "INTERCOOLER_FOULING",
+      "kind": "PHYSICAL",
+      "scope": "ENGINE",
+      "applies_when": [
+        {
+          "field": "induction",
+          "in": [
+            "TURBOCHARGED"
+          ]
+        },
+        {
+          "field": "turbo.intercooled",
+          "in": [
+            true
+          ]
+        }
+      ],
+      "legacy_ids": [],
+      "plant_mode_legacy": null,
+      "parameter_effects": [
+        {
+          "component": "turbo",
+          "parameter": "intercooler_effectiveness",
+          "op": "scale",
+          "at_full_severity": 0.5
+        }
+      ],
+      "default_severity": 0.8,
+      "default_ramp_s": 600.0,
+      "expected_signature": [
+        {
+          "channel": "charge_t",
+          "direction": 1,
+          "min_delta": 10,
+          "unit": "C"
+        },
+        {
+          "channel": "power_kw",
+          "direction": -1,
+          "min_delta": 1,
+          "unit": "kW"
+        }
+      ],
+      "detect_window_s": 600,
+      "status_at_full_severity": "ADVISORY",
+      "ata_chapter": "81",
+      "maintenance_action": {
+        "text": "Clean the intercooler core and check its airflow.",
+        "source": "ANUMAAN-authored (audit R section 22)"
+      },
+      "mitigation_inflight": {
+        "text": "Avoid sustained full power in hot conditions.",
+        "source": "ANUMAAN-authored; check against the engine OM abnormal-operation section"
+      },
+      "physics_explanation": "Lower intercooler effectiveness leaves the charge hotter and less dense: power falls and temperatures rise.",
+      "ps_categories": [
+        "overheating trends"
+      ],
+      "description": "intercooler fouling",
+      "components": {
+        "rotax_915is": {
+          "now": [
+            "intercooler"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "austro_ae300": {
+          "now": [
+            "intercooler",
+            "sensor_charge_air_temp"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "vrde_jayem_2_2l": {
+          "now": [
+            "intercooler",
+            "sensor_charge_air_temp"
+          ],
+          "marker": false,
+          "marker_for": null
+        }
+      },
+      "channel_scope": null
+    },
+    {
+      "id": "F19",
+      "name": "COOLING_AIR_DEGRADATION",
+      "kind": "PHYSICAL",
+      "scope": "CYLINDER",
+      "applies_when": [
+        {
+          "field": "cooling",
+          "in": [
+            "AIR_COOLED_BARRELS_LIQUID_HEADS"
+          ]
+        }
+      ],
+      "legacy_ids": [
+        1
+      ],
+      "plant_mode_legacy": "COOLING_DEGRADATION",
+      "parameter_effects": [
+        {
+          "component": "thermal",
+          "parameter": "air_cooling_effectiveness[{cyl}]",
+          "op": "scale",
+          "at_full_severity": 0.6
+        }
+      ],
+      "default_severity": 0.8,
+      "default_ramp_s": 600.0,
+      "expected_signature": [
+        {
+          "channel": "cht[{cyl}]",
+          "direction": 1,
+          "min_delta": 10,
+          "unit": "C"
+        },
+        {
+          "channel": "oil_t",
+          "direction": 1,
+          "min_delta": 2,
+          "unit": "C"
+        }
+      ],
+      "detect_window_s": 600,
+      "status_at_full_severity": "CAUTION",
+      "ata_chapter": "72/75",
+      "maintenance_action": {
+        "text": "Inspect cylinder baffles and cowling seals around cylinder {cyl}.",
+        "source": "ANUMAAN-authored (audit R section 22)"
+      },
+      "mitigation_inflight": {
+        "text": "Increase airspeed, reduce power, watch the temperature trend.",
+        "source": "ANUMAAN-authored; check against the engine OM abnormal-operation section"
+      },
+      "physics_explanation": "Less cooling air reaches cylinder {cyl}: the heat balance shifts and its head temperature trends upward.",
+      "ps_categories": [
+        "cooling degradation",
+        "overheating trends"
+      ],
+      "description": "cooling air degradation",
+      "components": {
+        "rotax_912is": {
+          "now": [
+            "cooling_air_baffle"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "rotax_914": {
+          "now": [
+            "cylinder_bank_unverified"
+          ],
+          "marker": true,
+          "marker_for": "baffles"
+        },
+        "rotax_915is": {
+          "now": [
+            "air_baffles"
+          ],
+          "marker": false,
+          "marker_for": null
+        }
+      },
+      "channel_scope": null
+    },
+    {
+      "id": "F20",
+      "name": "COOLANT_LOSS",
+      "kind": "PHYSICAL",
+      "scope": "ENGINE",
+      "applies_when": [],
+      "legacy_ids": [],
+      "plant_mode_legacy": null,
+      "parameter_effects": [
+        {
+          "component": "coolant",
+          "parameter": "pump_flow_health",
+          "op": "scale",
+          "at_full_severity": 0.4
+        }
+      ],
+      "default_severity": 0.8,
+      "default_ramp_s": 300.0,
+      "expected_signature": [
+        {
+          "channel": "coolant_t",
+          "direction": 1,
+          "min_delta": 10,
+          "unit": "C"
+        },
+        {
+          "channel": "cht[*]",
+          "direction": 1,
+          "min_delta": 5,
+          "unit": "C"
+        }
+      ],
+      "detect_window_s": 300,
+      "status_at_full_severity": "CAUTION",
+      "ata_chapter": "75",
+      "maintenance_action": {
+        "text": "Check the coolant level, water pump and hoses for leaks.",
+        "source": "ANUMAAN-authored (audit R section 22)"
+      },
+      "mitigation_inflight": {
+        "text": "Reduce power; land before the coolant limit is reached.",
+        "source": "ANUMAAN-authored; check against the engine OM abnormal-operation section"
+      },
+      "physics_explanation": "Less coolant flow removes less head heat: coolant and head temperatures rise quickly; oil temperature follows.",
+      "ps_categories": [
+        "cooling degradation",
+        "overheating trends"
+      ],
+      "description": "coolant loss",
+      "components": {
+        "rotax_912is": {
+          "now": [
+            "coolant_hoses"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "rotax_914": {
+          "now": [
+            "coolant_lines"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "rotax_915is": {
+          "now": [],
+          "marker": true,
+          "marker_for": "coolant hoses / water pump"
+        },
+        "austro_ae300": {
+          "now": [
+            "water_pump",
+            "coolant_hoses",
+            "sensor_coolant_temp"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "vrde_jayem_2_2l": {
+          "now": [
+            "water_pump",
+            "coolant_hoses",
+            "sensor_coolant_temp"
+          ],
+          "marker": false,
+          "marker_for": null
+        }
+      },
+      "channel_scope": null
+    },
+    {
+      "id": "F21",
+      "name": "RADIATOR_BLOCKAGE",
+      "kind": "PHYSICAL",
+      "scope": "ENGINE",
+      "applies_when": [],
+      "legacy_ids": [],
+      "plant_mode_legacy": null,
+      "parameter_effects": [
+        {
+          "component": "coolant",
+          "parameter": "radiator_effectiveness",
+          "op": "scale",
+          "at_full_severity": 0.5
+        }
+      ],
+      "default_severity": 0.8,
+      "default_ramp_s": 600.0,
+      "expected_signature": [
+        {
+          "channel": "coolant_t",
+          "direction": 1,
+          "min_delta": 8,
+          "unit": "C"
+        }
+      ],
+      "detect_window_s": 600,
+      "status_at_full_severity": "ADVISORY",
+      "ata_chapter": "75",
+      "maintenance_action": {
+        "text": "Clean the radiator core; check the airflow path.",
+        "source": "ANUMAAN-authored (audit R section 22)"
+      },
+      "mitigation_inflight": {
+        "text": "Increase airspeed; avoid low-speed high-power segments in heat.",
+        "source": "ANUMAAN-authored; check against the engine OM abnormal-operation section"
+      },
+      "physics_explanation": "The radiator rejects less heat, worst at low airspeed and high OAT: coolant temperature trends upward.",
+      "ps_categories": [
+        "cooling degradation",
+        "overheating trends"
+      ],
+      "description": "radiator blockage",
+      "components": {
+        "rotax_912is": {
+          "now": [],
+          "marker": true,
+          "marker_for": "radiator"
+        },
+        "rotax_914": {
+          "now": [],
+          "marker": true,
+          "marker_for": "radiator"
+        },
+        "rotax_915is": {
+          "now": [],
+          "marker": true,
+          "marker_for": "radiator"
+        },
+        "austro_ae300": {
+          "now": [],
+          "marker": true,
+          "marker_for": "radiator"
+        },
+        "vrde_jayem_2_2l": {
+          "now": [],
+          "marker": true,
+          "marker_for": "radiator"
+        }
+      },
+      "channel_scope": null
+    },
+    {
+      "id": "F22",
+      "name": "THERMOSTAT_STUCK",
+      "kind": "PHYSICAL",
+      "scope": "ENGINE",
+      "applies_when": [
+        {
+          "field": "thermostat",
+          "in": [
+            true
+          ]
+        }
+      ],
+      "legacy_ids": [],
+      "plant_mode_legacy": null,
+      "parameter_effects": [
+        {
+          "component": "coolant",
+          "parameter": "thermostat_opening",
+          "op": "set",
+          "at_full_severity": 1.0
+        }
+      ],
+      "default_severity": 0.8,
+      "default_ramp_s": 30.0,
+      "expected_signature": [
+        {
+          "channel": "coolant_t",
+          "direction": -1,
+          "min_delta": 10,
+          "unit": "C"
+        }
+      ],
+      "detect_window_s": 600,
+      "status_at_full_severity": "ADVISORY",
+      "ata_chapter": "75",
+      "maintenance_action": {
+        "text": "Replace the thermostat.",
+        "source": "ANUMAAN-authored (audit R section 22)"
+      },
+      "mitigation_inflight": {
+        "text": "On a stuck-open thermostat, respect the minimum coolant temperature before take-off power.",
+        "source": "ANUMAAN-authored; check against the engine OM abnormal-operation section"
+      },
+      "physics_explanation": "The thermostat stays open: the coolant runs too cold (or too hot when stuck closed); oil temperature follows.",
+      "ps_categories": [
+        "cooling degradation"
+      ],
+      "description": "thermostat stuck",
+      "components": {
+        "austro_ae300": {
+          "now": [],
+          "marker": true,
+          "marker_for": "thermostat"
+        },
+        "vrde_jayem_2_2l": {
+          "now": [
+            "thermostat"
+          ],
+          "marker": false,
+          "marker_for": null
+        }
+      },
+      "channel_scope": null
+    },
+    {
+      "id": "F23",
+      "name": "OIL_PRESSURE_LOSS",
+      "kind": "PHYSICAL",
+      "scope": "ENGINE",
+      "applies_when": [],
+      "legacy_ids": [
+        4
+      ],
+      "plant_mode_legacy": "OIL_PRESSURE_LOSS",
+      "parameter_effects": [
+        {
+          "component": "oil",
+          "parameter": "pump_health",
+          "op": "scale",
+          "at_full_severity": 0.35
+        }
+      ],
+      "default_severity": 0.8,
+      "default_ramp_s": 60.0,
+      "expected_signature": [
+        {
+          "channel": "oil_p",
+          "direction": -1,
+          "min_delta": 0.8,
+          "unit": "bar"
+        },
+        {
+          "channel": "oil_t",
+          "direction": 1,
+          "min_delta": 3,
+          "unit": "C"
+        }
+      ],
+      "detect_window_s": 60,
+      "status_at_full_severity": "NO-GO",
+      "ata_chapter": "79",
+      "maintenance_action": {
+        "text": "Inspect the oil pump, pressure relief valve and oil lines; check bearings.",
+        "source": "ANUMAAN-authored (audit R section 22)"
+      },
+      "mitigation_inflight": {
+        "text": "Reduce power; land as soon as possible; prepare for engine failure if pressure keeps falling.",
+        "source": "ANUMAAN-authored; check against the engine OM abnormal-operation section"
+      },
+      "physics_explanation": "Pump capacity falls (or the relief valve bypasses): oil pressure drops, bearing friction rises, oil heats and thins, which drops pressure further until the bearings seize.",
+      "ps_categories": [
+        "lubrication issues"
+      ],
+      "description": "oil pressure loss",
+      "components": {
+        "rotax_912is": {
+          "now": [
+            "oil_tank"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "rotax_914": {
+          "now": [
+            "crankcase"
+          ],
+          "marker": true,
+          "marker_for": "oil tank / oil pump"
+        },
+        "rotax_915is": {
+          "now": [
+            "oil_tank"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "austro_ae300": {
+          "now": [
+            "oil_sump",
+            "oil_filter",
+            "sensor_oil_press"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "vrde_jayem_2_2l": {
+          "now": [
+            "oil_sump",
+            "oil_filter",
+            "sensor_oil_press"
+          ],
+          "marker": false,
+          "marker_for": null
+        }
+      },
+      "channel_scope": null
+    },
+    {
+      "id": "F24",
+      "name": "OIL_LEAK_LOW_QUANTITY",
+      "kind": "PHYSICAL",
+      "scope": "ENGINE",
+      "applies_when": [],
+      "legacy_ids": [],
+      "plant_mode_legacy": null,
+      "parameter_effects": [
+        {
+          "component": "oil",
+          "parameter": "leak_rate_l_per_h",
+          "op": "add",
+          "at_full_severity": 0.5
+        }
+      ],
+      "default_severity": 0.8,
+      "default_ramp_s": 1.0,
+      "expected_signature": [
+        {
+          "channel": "oil_qty",
+          "direction": -1,
+          "min_delta": 0.2,
+          "unit": "l"
+        },
+        {
+          "channel": "oil_p",
+          "direction": -1,
+          "min_delta": 0.3,
+          "unit": "bar"
+        }
+      ],
+      "detect_window_s": 900,
+      "status_at_full_severity": "CAUTION",
+      "ata_chapter": "79",
+      "maintenance_action": {
+        "text": "Find and fix the oil leak; replenish oil.",
+        "source": "ANUMAAN-authored (audit R section 22)"
+      },
+      "mitigation_inflight": {
+        "text": "Monitor oil pressure; land before quantity falls below the minimum.",
+        "source": "ANUMAAN-authored; check against the engine OM abnormal-operation section"
+      },
+      "physics_explanation": "Oil is lost steadily: quantity falls, then the pump starts to cavitate, so pressure fluctuates and falls while oil temperature rises.",
+      "ps_categories": [
+        "lubrication issues"
+      ],
+      "description": "oil leak low quantity",
+      "components": {
+        "rotax_912is": {
+          "now": [
+            "oil_tank"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "rotax_914": {
+          "now": [
+            "crankcase"
+          ],
+          "marker": true,
+          "marker_for": "oil tank"
+        },
+        "rotax_915is": {
+          "now": [
+            "oil_tank"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "austro_ae300": {
+          "now": [
+            "oil_sump",
+            "crankcase_breather"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "vrde_jayem_2_2l": {
+          "now": [
+            "oil_sump",
+            "crankcase_breather"
+          ],
+          "marker": false,
+          "marker_for": null
+        }
+      },
+      "channel_scope": null
+    },
+    {
+      "id": "F25",
+      "name": "OIL_COOLER_BLOCKAGE",
+      "kind": "PHYSICAL",
+      "scope": "ENGINE",
+      "applies_when": [],
+      "legacy_ids": [],
+      "plant_mode_legacy": null,
+      "parameter_effects": [
+        {
+          "component": "oil",
+          "parameter": "cooler_effectiveness",
+          "op": "scale",
+          "at_full_severity": 0.4
+        }
+      ],
+      "default_severity": 0.8,
+      "default_ramp_s": 900.0,
+      "expected_signature": [
+        {
+          "channel": "oil_t",
+          "direction": 1,
+          "min_delta": 8,
+          "unit": "C"
+        },
+        {
+          "channel": "oil_p",
+          "direction": -1,
+          "min_delta": 0.1,
+          "unit": "bar"
+        }
+      ],
+      "detect_window_s": 900,
+      "status_at_full_severity": "CAUTION",
+      "ata_chapter": "79",
+      "maintenance_action": {
+        "text": "Clean the oil cooler and check its airflow.",
+        "source": "ANUMAAN-authored (audit R section 22)"
+      },
+      "mitigation_inflight": {
+        "text": "Reduce power; increase airspeed; watch the oil temperature trend.",
+        "source": "ANUMAAN-authored; check against the engine OM abnormal-operation section"
+      },
+      "physics_explanation": "The oil cooler rejects less heat: oil temperature trends upward and the thinner oil gives slightly lower pressure.",
+      "ps_categories": [
+        "lubrication issues",
+        "overheating trends"
+      ],
+      "description": "oil cooler blockage",
+      "components": {
+        "rotax_912is": {
+          "now": [],
+          "marker": true,
+          "marker_for": "oil cooler"
+        },
+        "rotax_914": {
+          "now": [],
+          "marker": true,
+          "marker_for": "oil cooler"
+        },
+        "rotax_915is": {
+          "now": [],
+          "marker": true,
+          "marker_for": "oil cooler"
+        },
+        "austro_ae300": {
+          "now": [
+            "oil_cooler",
+            "sensor_oil_temp"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "vrde_jayem_2_2l": {
+          "now": [
+            "oil_cooler",
+            "sensor_oil_temp"
+          ],
+          "marker": false,
+          "marker_for": null
+        }
+      },
+      "channel_scope": null
+    },
+    {
+      "id": "F26",
+      "name": "BEARING_WEAR",
+      "kind": "PHYSICAL",
+      "scope": "ENGINE",
+      "applies_when": [],
+      "legacy_ids": [],
+      "plant_mode_legacy": null,
+      "parameter_effects": [
+        {
+          "component": "oil",
+          "parameter": "bearing_clearance",
+          "op": "scale",
+          "at_full_severity": 1.5
+        }
+      ],
+      "default_severity": 0.8,
+      "default_ramp_s": 3600.0,
+      "expected_signature": [
+        {
+          "channel": "oil_p",
+          "direction": -1,
+          "min_delta": 0.2,
+          "unit": "bar"
+        },
+        {
+          "channel": "vibration_orders.1X",
+          "direction": 1,
+          "min_delta": 0.3,
+          "unit": "mm/s"
+        }
+      ],
+      "detect_window_s": 3600,
+      "status_at_full_severity": "ADVISORY",
+      "ata_chapter": "72",
+      "maintenance_action": {
+        "text": "Oil analysis (wear metals); inspect the bearings.",
+        "source": "ANUMAAN-authored (audit R section 22)"
+      },
+      "mitigation_inflight": {
+        "text": "No immediate action; plan maintenance before RUL runs out.",
+        "source": "ANUMAAN-authored; check against the engine OM abnormal-operation section"
+      },
+      "physics_explanation": "Larger bearing clearances leak more oil: pressure is lower at hot idle, friction and the first-order vibration rise slowly.",
+      "ps_categories": [
+        "lubrication issues",
+        "abnormal vibration"
+      ],
+      "description": "bearing wear",
+      "components": {
+        "rotax_912is": {
+          "now": [
+            "crankcase_cylinders_base"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "rotax_914": {
+          "now": [
+            "crankcase"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "rotax_915is": {
+          "now": [
+            "main_engine_MERGED"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "austro_ae300": {
+          "now": [
+            "engine_block",
+            "oil_filter"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "vrde_jayem_2_2l": {
+          "now": [
+            "engine_block",
+            "oil_filter"
+          ],
+          "marker": false,
+          "marker_for": null
+        }
+      },
+      "channel_scope": null
+    },
+    {
+      "id": "F27",
+      "name": "GEARBOX_DAMAGE",
+      "kind": "PHYSICAL",
+      "scope": "ENGINE",
+      "applies_when": [],
+      "legacy_ids": [
+        5
+      ],
+      "plant_mode_legacy": null,
+      "parameter_effects": [
+        {
+          "component": "gearbox",
+          "parameter": "tooth_damage",
+          "op": "set",
+          "at_full_severity": 1.0
+        }
+      ],
+      "default_severity": 0.8,
+      "default_ramp_s": 30.0,
+      "expected_signature": [
+        {
+          "channel": "vibration_orders.gear_mesh",
+          "direction": 1,
+          "min_delta": 0.5,
+          "unit": "mm/s"
+        },
+        {
+          "channel": "gearbox_t",
+          "direction": 1,
+          "min_delta": 3,
+          "unit": "C"
+        }
+      ],
+      "detect_window_s": 300,
+      "status_at_full_severity": "CAUTION",
+      "ata_chapter": "72/61",
+      "maintenance_action": {
+        "text": "Inspect the reduction gearbox (gear teeth, bearings, oil).",
+        "source": "ANUMAAN-authored (audit R section 22)"
+      },
+      "mitigation_inflight": {
+        "text": "Reduce power; avoid abrupt throttle changes.",
+        "source": "ANUMAAN-authored; check against the engine OM abnormal-operation section"
+      },
+      "physics_explanation": "Damaged gear teeth excite the gear-mesh frequency and add friction, so the gearbox runs hotter.",
+      "ps_categories": [
+        "abnormal vibration"
+      ],
+      "description": "gearbox damage",
+      "components": {
+        "rotax_912is": {
+          "now": [
+            "gearbox"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "rotax_914": {
+          "now": [
+            "gearbox"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "rotax_915is": {
+          "now": [
+            "gearbox"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "austro_ae300": {
+          "now": [
+            "gearbox",
+            "sensor_gearbox_temp",
+            "sensor_gearbox_press"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "vrde_jayem_2_2l": {
+          "now": [
+            "gearbox",
+            "sensor_gearbox_vibration"
+          ],
+          "marker": false,
+          "marker_for": null
+        }
+      },
+      "channel_scope": null
+    },
+    {
+      "id": "F28",
+      "name": "PROPELLER_IMBALANCE",
+      "kind": "PHYSICAL",
+      "scope": "ENGINE",
+      "applies_when": [],
+      "legacy_ids": [],
+      "plant_mode_legacy": null,
+      "parameter_effects": [
+        {
+          "component": "rotor",
+          "parameter": "prop_imbalance",
+          "op": "set",
+          "at_full_severity": 1.0
+        }
+      ],
+      "default_severity": 0.8,
+      "default_ramp_s": 30.0,
+      "expected_signature": [
+        {
+          "channel": "vibration_orders.prop_1X",
+          "direction": 1,
+          "min_delta": 0.5,
+          "unit": "mm/s"
+        }
+      ],
+      "detect_window_s": 60,
+      "status_at_full_severity": "ADVISORY",
+      "ata_chapter": "61",
+      "maintenance_action": {
+        "text": "Inspect and balance the propeller.",
+        "source": "ANUMAAN-authored (audit R section 22)"
+      },
+      "mitigation_inflight": {
+        "text": "Reduce rpm if vibration is high.",
+        "source": "ANUMAAN-authored; check against the engine OM abnormal-operation section"
+      },
+      "physics_explanation": "A mass or aerodynamic imbalance of the propeller produces a once-per-propeller-revolution vibration; nothing thermal changes.",
+      "ps_categories": [
+        "abnormal vibration"
+      ],
+      "description": "propeller imbalance",
+      "components": {
+        "rotax_912is": {
+          "now": [],
+          "marker": true,
+          "marker_for": "propeller flange"
+        },
+        "rotax_914": {
+          "now": [
+            "prop_flange"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "rotax_915is": {
+          "now": [],
+          "marker": true,
+          "marker_for": "propeller flange"
+        },
+        "austro_ae300": {
+          "now": [
+            "prop_flange"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "vrde_jayem_2_2l": {
+          "now": [
+            "prop_flange"
+          ],
+          "marker": false,
+          "marker_for": null
+        }
+      },
+      "channel_scope": null
+    },
+    {
+      "id": "F29",
+      "name": "ENGINE_MOUNT_DEGRADATION",
+      "kind": "PHYSICAL",
+      "scope": "ENGINE",
+      "applies_when": [],
+      "legacy_ids": [],
+      "plant_mode_legacy": null,
+      "parameter_effects": [
+        {
+          "component": "vibration",
+          "parameter": "mount_transmissibility",
+          "op": "scale",
+          "at_full_severity": 2.0
+        }
+      ],
+      "default_severity": 0.8,
+      "default_ramp_s": 30.0,
+      "expected_signature": [
+        {
+          "channel": "vibration_orders.1X",
+          "direction": 1,
+          "min_delta": 0.3,
+          "unit": "mm/s"
+        },
+        {
+          "channel": "vibration_orders.2X",
+          "direction": 1,
+          "min_delta": 0.3,
+          "unit": "mm/s"
+        }
+      ],
+      "detect_window_s": 600,
+      "status_at_full_severity": "ADVISORY",
+      "ata_chapter": "71",
+      "maintenance_action": {
+        "text": "Inspect the engine mounts and isolators.",
+        "source": "ANUMAAN-authored (audit R section 22)"
+      },
+      "mitigation_inflight": {
+        "text": "No immediate action; avoid high-vibration rpm bands.",
+        "source": "ANUMAAN-authored; check against the engine OM abnormal-operation section"
+      },
+      "physics_explanation": "Worn mounts transmit more of every vibration order to the airframe sensors: all orders rise together.",
+      "ps_categories": [
+        "abnormal vibration"
+      ],
+      "description": "engine mount degradation",
+      "components": {
+        "rotax_912is": {
+          "now": [
+            "engine_mount"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "rotax_914": {
+          "now": [],
+          "marker": true,
+          "marker_for": "engine mount"
+        },
+        "rotax_915is": {
+          "now": [],
+          "marker": true,
+          "marker_for": "engine mount"
+        },
+        "austro_ae300": {
+          "now": [
+            "engine_mount"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "vrde_jayem_2_2l": {
+          "now": [
+            "engine_mount"
+          ],
+          "marker": false,
+          "marker_for": null
+        }
+      },
+      "channel_scope": null
+    },
+    {
+      "id": "F30",
+      "name": "COMPRESSION_LOSS",
+      "kind": "PHYSICAL",
+      "scope": "CYLINDER",
+      "applies_when": [],
+      "legacy_ids": [],
+      "plant_mode_legacy": null,
+      "parameter_effects": [
+        {
+          "component": "combustion",
+          "parameter": "compression_health[{cyl}]",
+          "op": "scale",
+          "at_full_severity": 0.7
+        }
+      ],
+      "default_severity": 0.8,
+      "default_ramp_s": 30.0,
+      "expected_signature": [
+        {
+          "channel": "vibration_orders.0.5X",
+          "direction": 1,
+          "min_delta": 0.5,
+          "unit": "mm/s"
+        },
+        {
+          "channel": "egt[{cyl}]",
+          "direction": 1,
+          "min_delta": 10,
+          "unit": "C"
+        }
+      ],
+      "detect_window_s": 600,
+      "status_at_full_severity": "ADVISORY",
+      "ata_chapter": "72",
+      "maintenance_action": {
+        "text": "Compression / leak-down test of cylinder {cyl} (rings, valves).",
+        "source": "ANUMAAN-authored (audit R section 22)"
+      },
+      "mitigation_inflight": {
+        "text": "No immediate action; monitor roughness.",
+        "source": "ANUMAAN-authored; check against the engine OM abnormal-operation section"
+      },
+      "physics_explanation": "Leakage past rings or valves lowers cylinder {cyl}'s compression and torque, creating torque imbalance; blow-by heats the oil.",
+      "ps_categories": [
+        "combustion instability"
+      ],
+      "description": "compression loss",
+      "components": {
+        "rotax_912is": {
+          "now": [
+            "crankcase_cylinders_base"
+          ],
+          "marker": true,
+          "marker_for": "cylinder {cyl}"
+        },
+        "rotax_914": {
+          "now": [
+            "cylinder_bank_unverified"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "rotax_915is": {
+          "now": [
+            "main_engine_MERGED"
+          ],
+          "marker": true,
+          "marker_for": "cylinder {cyl}"
+        },
+        "austro_ae300": {
+          "now": [
+            "cylinder_head"
+          ],
+          "marker": true,
+          "marker_for": "cylinder {cyl}"
+        },
+        "vrde_jayem_2_2l": {
+          "now": [
+            "cylinder_head"
+          ],
+          "marker": true,
+          "marker_for": "cylinder {cyl}"
+        }
+      },
+      "channel_scope": null
+    },
+    {
+      "id": "F31",
+      "name": "EXHAUST_LEAK_EGT_IMBALANCE",
+      "kind": "PHYSICAL",
+      "scope": "CYLINDER",
+      "applies_when": [],
+      "legacy_ids": [
+        6
+      ],
+      "plant_mode_legacy": null,
+      "parameter_effects": [
+        {
+          "component": "exhaust",
+          "parameter": "leak[{cyl}]",
+          "op": "set",
+          "at_full_severity": 1.0
+        }
+      ],
+      "default_severity": 0.8,
+      "default_ramp_s": 30.0,
+      "expected_signature": [
+        {
+          "channel": "egt[{cyl}]",
+          "direction": -1,
+          "min_delta": 30,
+          "unit": "C"
+        }
+      ],
+      "detect_window_s": 120,
+      "status_at_full_severity": "ADVISORY",
+      "ata_chapter": "78",
+      "maintenance_action": {
+        "text": "Inspect the exhaust manifold, gaskets and EGT probe of cylinder {cyl}.",
+        "source": "ANUMAAN-authored (audit R section 22)"
+      },
+      "mitigation_inflight": {
+        "text": "Monitor; check for exhaust smell / CO in crewed installations.",
+        "source": "ANUMAAN-authored; check against the engine OM abnormal-operation section"
+      },
+      "physics_explanation": "Exhaust leaks at cylinder {cyl}: its EGT reading deviates and turbo engines lose some turbine energy.",
+      "ps_categories": [
+        "combustion instability"
+      ],
+      "description": "exhaust leak egt imbalance",
+      "components": {
+        "rotax_912is": {
+          "now": [
+            "exhaust"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "rotax_914": {
+          "now": [
+            "exhaust"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "rotax_915is": {
+          "now": [],
+          "marker": true,
+          "marker_for": "exhaust"
+        },
+        "austro_ae300": {
+          "now": [
+            "exhaust",
+            "sensor_egt_{cyl}"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "vrde_jayem_2_2l": {
+          "now": [
+            "exhaust",
+            "sensor_egt_{cyl}"
+          ],
+          "marker": false,
+          "marker_for": null
+        }
+      },
+      "channel_scope": null
+    },
+    {
+      "id": "F32",
+      "name": "ALTERNATOR_DEGRADATION",
+      "kind": "PHYSICAL",
+      "scope": "ENGINE",
+      "applies_when": [],
+      "legacy_ids": [
+        7
+      ],
+      "plant_mode_legacy": null,
+      "parameter_effects": [
+        {
+          "component": "electrical",
+          "parameter": "alternator_health",
+          "op": "scale",
+          "at_full_severity": 0.3
+        }
+      ],
+      "default_severity": 0.8,
+      "default_ramp_s": 30.0,
+      "expected_signature": [
+        {
+          "channel": "bus_v",
+          "direction": -1,
+          "min_delta": 0.5,
+          "unit": "V"
+        },
+        {
+          "channel": "batt_i",
+          "direction": -1,
+          "min_delta": 2,
+          "unit": "A"
+        }
+      ],
+      "detect_window_s": 120,
+      "status_at_full_severity": "CAUTION",
+      "ata_chapter": "24",
+      "maintenance_action": {
+        "text": "Check the alternator/generator, regulator, belt and wiring.",
+        "source": "ANUMAAN-authored (audit R section 22)"
+      },
+      "mitigation_inflight": {
+        "text": "Shed non-essential electrical loads; check remaining battery endurance against the mission.",
+        "source": "ANUMAAN-authored; check against the engine OM abnormal-operation section"
+      },
+      "physics_explanation": "The alternator cannot supply the load: the battery starts discharging, so battery current turns negative and bus voltage sags as charge falls.",
+      "ps_categories": [
+        "battery/alternator health"
+      ],
+      "description": "alternator degradation",
+      "components": {
+        "rotax_912is": {
+          "now": [
+            "alternator"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "rotax_914": {
+          "now": [],
+          "marker": true,
+          "marker_for": "alternator"
+        },
+        "rotax_915is": {
+          "now": [],
+          "marker": true,
+          "marker_for": "alternator"
+        },
+        "austro_ae300": {
+          "now": [
+            "alternator",
+            "belt_drive"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "vrde_jayem_2_2l": {
+          "now": [
+            "alternator_1",
+            "belt_drive",
+            "alternator_wiring"
+          ],
+          "marker": false,
+          "marker_for": null
+        }
+      },
+      "channel_scope": null
+    },
+    {
+      "id": "F33",
+      "name": "VOLTAGE_REGULATOR_FAULT",
+      "kind": "PHYSICAL",
+      "scope": "ENGINE",
+      "applies_when": [],
+      "legacy_ids": [],
+      "plant_mode_legacy": null,
+      "parameter_effects": [
+        {
+          "component": "electrical",
+          "parameter": "regulator_setpoint_offset_v",
+          "op": "add",
+          "at_full_severity": 1.5
+        }
+      ],
+      "default_severity": 0.8,
+      "default_ramp_s": 30.0,
+      "expected_signature": [
+        {
+          "channel": "bus_v",
+          "direction": 1,
+          "min_delta": 0.8,
+          "unit": "V"
+        }
+      ],
+      "detect_window_s": 30,
+      "status_at_full_severity": "CAUTION",
+      "ata_chapter": "24",
+      "maintenance_action": {
+        "text": "Replace the voltage regulator.",
+        "source": "ANUMAAN-authored (audit R section 22)"
+      },
+      "mitigation_inflight": {
+        "text": "Over-voltage: disconnect the alternator per procedure; shed loads.",
+        "source": "ANUMAAN-authored; check against the engine OM abnormal-operation section"
+      },
+      "physics_explanation": "The regulator holds the wrong setpoint: the bus voltage sits steadily too high (or too low).",
+      "ps_categories": [
+        "battery/alternator health"
+      ],
+      "description": "voltage regulator fault",
+      "components": {
+        "rotax_912is": {
+          "now": [
+            "alternator",
+            "wiring_harness"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "rotax_914": {
+          "now": [],
+          "marker": true,
+          "marker_for": "voltage regulator"
+        },
+        "rotax_915is": {
+          "now": [
+            "fusebox"
+          ],
+          "marker": true,
+          "marker_for": "voltage regulator"
+        },
+        "austro_ae300": {
+          "now": [
+            "alternator",
+            "wiring_harness"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "vrde_jayem_2_2l": {
+          "now": [
+            "alternator_wiring",
+            "wiring_harness"
+          ],
+          "marker": false,
+          "marker_for": null
+        }
+      },
+      "channel_scope": null
+    },
+    {
+      "id": "F34",
+      "name": "BATTERY_DEGRADATION",
+      "kind": "PHYSICAL",
+      "scope": "ENGINE",
+      "applies_when": [],
+      "legacy_ids": [],
+      "plant_mode_legacy": null,
+      "parameter_effects": [
+        {
+          "component": "electrical",
+          "parameter": "battery_capacity",
+          "op": "scale",
+          "at_full_severity": 0.4
+        },
+        {
+          "component": "electrical",
+          "parameter": "battery_resistance",
+          "op": "scale",
+          "at_full_severity": 2.5
+        }
+      ],
+      "default_severity": 0.8,
+      "default_ramp_s": 30.0,
+      "expected_signature": [
+        {
+          "channel": "bus_v",
+          "direction": -1,
+          "min_delta": 0.3,
+          "unit": "V"
+        }
+      ],
+      "detect_window_s": 600,
+      "status_at_full_severity": "ADVISORY",
+      "ata_chapter": "24",
+      "maintenance_action": {
+        "text": "Capacity-test or replace the battery.",
+        "source": "ANUMAAN-authored (audit R section 22)"
+      },
+      "mitigation_inflight": {
+        "text": "Avoid relying on battery endurance; keep the alternator online.",
+        "source": "ANUMAAN-authored; check against the engine OM abnormal-operation section"
+      },
+      "physics_explanation": "Lower capacity and higher internal resistance: voltage drops more under load and charge falls faster.",
+      "ps_categories": [
+        "battery/alternator health"
+      ],
+      "description": "battery degradation",
+      "components": {
+        "rotax_912is": {
+          "now": [
+            "starter",
+            "starter_relay"
+          ],
+          "marker": true,
+          "marker_for": "battery (airframe-mounted; 2D panel)"
+        },
+        "rotax_914": {
+          "now": [
+            "starter"
+          ],
+          "marker": true,
+          "marker_for": "battery (airframe-mounted; 2D panel)"
+        },
+        "rotax_915is": {
+          "now": [],
+          "marker": true,
+          "marker_for": "battery (airframe-mounted; 2D panel)"
+        },
+        "austro_ae300": {
+          "now": [
+            "starter"
+          ],
+          "marker": true,
+          "marker_for": "battery (airframe-mounted; 2D panel)"
+        },
+        "vrde_jayem_2_2l": {
+          "now": [
+            "starter"
+          ],
+          "marker": true,
+          "marker_for": "battery (airframe-mounted; 2D panel)"
+        }
+      },
+      "channel_scope": null
+    },
+    {
+      "id": "F35",
+      "name": "GLOW_PLUG_FAILURE",
+      "kind": "PHYSICAL",
+      "scope": "CYLINDER",
+      "applies_when": [
+        {
+          "field": "ignition_mode",
+          "in": [
+            "COMPRESSION_IGNITION"
+          ]
+        },
+        {
+          "field": "glow_plugs",
+          "in": [
+            true
+          ]
+        }
+      ],
+      "legacy_ids": [],
+      "plant_mode_legacy": null,
+      "parameter_effects": [
+        {
+          "component": "combustion",
+          "parameter": "glow_plug_ok[{cyl}]",
+          "op": "set",
+          "at_full_severity": 0.0
+        }
+      ],
+      "default_severity": 0.8,
+      "default_ramp_s": 30.0,
+      "expected_signature": [
+        {
+          "channel": "egt[{cyl}]",
+          "direction": -1,
+          "min_delta": 20,
+          "unit": "C"
+        }
+      ],
+      "detect_window_s": 120,
+      "status_at_full_severity": "ADVISORY",
+      "ata_chapter": "74",
+      "maintenance_action": {
+        "text": "Replace glow plug {cyl}.",
+        "source": "ANUMAAN-authored (audit R section 22)"
+      },
+      "mitigation_inflight": {
+        "text": "Allow a longer warm-up before take-off.",
+        "source": "ANUMAAN-authored; check against the engine OM abnormal-operation section"
+      },
+      "physics_explanation": "Only matters at cold start: cylinder {cyl} misfires and smokes until it is warm.",
+      "ps_categories": [
+        "misfire"
+      ],
+      "description": "glow plug failure",
+      "components": {
+        "austro_ae300": {
+          "now": [
+            "glow_plugs",
+            "glow_control_unit"
+          ],
+          "marker": true,
+          "marker_for": "glow plug {cyl} (all four are one object)"
+        },
+        "vrde_jayem_2_2l": {
+          "now": [
+            "glow_plug_{cyl}"
+          ],
+          "marker": false,
+          "marker_for": null
+        }
+      },
+      "channel_scope": null
+    },
+    {
+      "id": "F36",
+      "name": "ECU_LANE_FAILURE",
+      "kind": "PHYSICAL",
+      "scope": "ENGINE",
+      "applies_when": [
+        {
+          "field": "ecu_lanes",
+          "in": [
+            2
+          ]
+        }
+      ],
+      "legacy_ids": [],
+      "plant_mode_legacy": null,
+      "parameter_effects": [
+        {
+          "component": "ecu",
+          "parameter": "lane_a_ok",
+          "op": "set",
+          "at_full_severity": 0.0
+        }
+      ],
+      "default_severity": 0.8,
+      "default_ramp_s": 30.0,
+      "expected_signature": [
+        {
+          "channel": "lane_status",
+          "direction": 1,
+          "min_delta": 1,
+          "unit": "state"
+        }
+      ],
+      "detect_window_s": 10,
+      "status_at_full_severity": "CAUTION",
+      "ata_chapter": "73/76",
+      "maintenance_action": {
+        "text": "Troubleshoot the failed ECU lane (power supply, wiring, ECU).",
+        "source": "ANUMAAN-authored (audit R section 22)"
+      },
+      "mitigation_inflight": {
+        "text": "Continue on the remaining lane; no dispatch until repaired.",
+        "source": "ANUMAAN-authored; check against the engine OM abnormal-operation section"
+      },
+      "physics_explanation": "One control lane is offline; the engine runs on the other with less redundancy and small rpm/EGT changes.",
+      "ps_categories": [
+        "sensor/control"
+      ],
+      "description": "ecu lane failure",
+      "components": {
+        "rotax_912is": {
+          "now": [
+            "ecu"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "rotax_915is": {
+          "now": [
+            "ecu",
+            "fusebox"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "austro_ae300": {
+          "now": [
+            "ecu_lane_a"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "vrde_jayem_2_2l": {
+          "now": [
+            "ecu_lane_a"
+          ],
+          "marker": false,
+          "marker_for": null
+        }
+      },
+      "channel_scope": null
+    },
+    {
+      "id": "F37",
+      "name": "PROP_GOVERNOR_FAULT",
+      "kind": "PHYSICAL",
+      "scope": "ENGINE",
+      "applies_when": [
+        {
+          "field": "propeller_governor",
+          "in": [
+            true
+          ]
+        }
+      ],
+      "legacy_ids": [],
+      "plant_mode_legacy": null,
+      "parameter_effects": [
+        {
+          "component": "rotor",
+          "parameter": "governor_gain",
+          "op": "scale",
+          "at_full_severity": 4.0
+        }
+      ],
+      "default_severity": 0.8,
+      "default_ramp_s": 30.0,
+      "expected_signature": [
+        {
+          "channel": "prop_rpm",
+          "direction": 0,
+          "min_delta": 30,
+          "unit": "rpm"
+        }
+      ],
+      "detect_window_s": 60,
+      "status_at_full_severity": "CAUTION",
+      "ata_chapter": "61",
+      "maintenance_action": {
+        "text": "Inspect the propeller governor (PCU) and its oil supply.",
+        "source": "ANUMAAN-authored (audit R section 22)"
+      },
+      "mitigation_inflight": {
+        "text": "Avoid rapid power changes; watch for over-speed; set a fixed power if the rpm hunts.",
+        "source": "ANUMAAN-authored; check against the engine OM abnormal-operation section"
+      },
+      "physics_explanation": "The governor loses control of blade pitch: propeller rpm hunts around the setpoint (direction 0 = oscillation) with over-speed risk.",
+      "ps_categories": [
+        "abnormal operating conditions"
+      ],
+      "description": "prop governor fault",
+      "components": {
+        "austro_ae300": {
+          "now": [
+            "prop_governor"
+          ],
+          "marker": false,
+          "marker_for": null
+        },
+        "vrde_jayem_2_2l": {
+          "now": [
+            "prop_governor"
+          ],
+          "marker": false,
+          "marker_for": null
+        }
+      },
+      "channel_scope": null
+    },
+    {
+      "id": "S01",
+      "name": "SENSOR_STUCK",
+      "kind": "SENSOR",
+      "scope": "CHANNEL",
+      "applies_when": [],
+      "legacy_ids": [],
+      "plant_mode_legacy": "SENSOR_STUCK",
+      "parameter_effects": [
+        {
+          "component": "sensors",
+          "parameter": "{channel}.freeze",
+          "op": "set",
+          "at_full_severity": 1.0
+        }
+      ],
+      "default_severity": 0.8,
+      "default_ramp_s": 30.0,
+      "expected_signature": [
+        {
+          "channel": "{channel}",
+          "direction": 0,
+          "min_delta": 0,
+          "unit": "channel unit",
+          "note": "only this channel changes; related channels stay consistent"
+        }
+      ],
+      "detect_window_s": 120,
+      "status_at_full_severity": "ADVISORY",
+      "ata_chapter": "77/79",
+      "maintenance_action": {
+        "text": "Replace or recalibrate the {channel} sensor and check its wiring.",
+        "source": "ANUMAAN-authored (audit R section 22)"
+      },
+      "mitigation_inflight": {
+        "text": "Treat {channel} as unavailable; use the twin's virtual value; if the channel is safety-critical (oil pressure, CHT/coolant) land as soon as practical.",
+        "source": "ANUMAAN-authored; check against the engine OM abnormal-operation section"
+      },
+      "physics_explanation": "Only the {channel} measurement is wrong; the engine itself is healthy, so physically related channels do not move with it.",
+      "ps_categories": [
+        "sensor drift/failure"
+      ],
+      "description": "reading frozen at its last value",
+      "components": {
+        "austro_ae300": {
+          "by_channel": {
+            "egt[{cyl}]": [
+              "sensor_egt_{cyl}"
+            ],
+            "oil_p": [
+              "sensor_oil_press"
+            ],
+            "oil_t": [
+              "sensor_oil_temp"
+            ],
+            "coolant_t": [
+              "sensor_coolant_temp"
+            ],
+            "map_kpa": [
+              "sensor_boost"
+            ],
+            "fuel_flow": [
+              "sensor_fuel_flow"
+            ],
+            "fuel_p": [
+              "sensor_fuel_low_press"
+            ],
+            "rail_p": [
+              "sensor_fuel_rail_press"
+            ],
+            "rpm": [
+              "sensor_rpm",
+              "sensor_crank"
+            ],
+            "charge_t": [
+              "sensor_charge_air_temp"
+            ],
+            "gearbox_t": [
+              "sensor_gearbox_temp"
+            ],
+            "fuel_t": [
+              "sensor_fuel_temp"
+            ]
+          },
+          "marker": false,
+          "marker_for": null
+        },
+        "vrde_jayem_2_2l": {
+          "by_channel": {
+            "egt[{cyl}]": [
+              "sensor_egt_{cyl}"
+            ],
+            "oil_p": [
+              "sensor_oil_press"
+            ],
+            "oil_t": [
+              "sensor_oil_temp"
+            ],
+            "coolant_t": [
+              "sensor_coolant_temp"
+            ],
+            "map_kpa": [
+              "sensor_map",
+              "sensor_boost"
+            ],
+            "fuel_flow": [
+              "sensor_fuel_flow"
+            ],
+            "rail_p": [
+              "rail_pressure_sensor"
+            ],
+            "rpm": [
+              "sensor_rpm",
+              "sensor_crank_1"
+            ],
+            "charge_t": [
+              "sensor_charge_air_temp"
+            ],
+            "vibration_orders.*": [
+              "sensor_gearbox_vibration"
+            ]
+          },
+          "marker": false,
+          "marker_for": null
+        },
+        "rotax_912is": {
+          "by_channel": {
+            "*": [
+              "ecu"
+            ]
+          },
+          "marker": true,
+          "marker_for": "sensor part (not modelled yet; label shows the channel)"
+        },
+        "rotax_915is": {
+          "by_channel": {
+            "*": [
+              "ecu"
+            ]
+          },
+          "marker": true,
+          "marker_for": "sensor part (not modelled yet; label shows the channel)"
+        },
+        "rotax_914": {
+          "by_channel": {
+            "*": []
+          },
+          "marker": true,
+          "marker_for": "sensor part (not modelled yet; label shows the channel)"
+        }
+      },
+      "channel_scope": null
+    },
+    {
+      "id": "S02",
+      "name": "SENSOR_BIAS",
+      "kind": "SENSOR",
+      "scope": "CHANNEL",
+      "applies_when": [],
+      "legacy_ids": [],
+      "plant_mode_legacy": null,
+      "parameter_effects": [
+        {
+          "component": "sensors",
+          "parameter": "{channel}.bias",
+          "op": "set",
+          "at_full_severity": 1.0
+        }
+      ],
+      "default_severity": 0.8,
+      "default_ramp_s": 30.0,
+      "expected_signature": [
+        {
+          "channel": "{channel}",
+          "direction": 0,
+          "min_delta": 0,
+          "unit": "channel unit",
+          "note": "only this channel changes; related channels stay consistent"
+        }
+      ],
+      "detect_window_s": 120,
+      "status_at_full_severity": "ADVISORY",
+      "ata_chapter": "77/79",
+      "maintenance_action": {
+        "text": "Replace or recalibrate the {channel} sensor and check its wiring.",
+        "source": "ANUMAAN-authored (audit R section 22)"
+      },
+      "mitigation_inflight": {
+        "text": "Treat {channel} as unavailable; use the twin's virtual value; if the channel is safety-critical (oil pressure, CHT/coolant) land as soon as practical.",
+        "source": "ANUMAAN-authored; check against the engine OM abnormal-operation section"
+      },
+      "physics_explanation": "Only the {channel} measurement is wrong; the engine itself is healthy, so physically related channels do not move with it.",
+      "ps_categories": [
+        "sensor drift/failure"
+      ],
+      "description": "constant offset",
+      "components": {
+        "austro_ae300": {
+          "by_channel": {
+            "egt[{cyl}]": [
+              "sensor_egt_{cyl}"
+            ],
+            "oil_p": [
+              "sensor_oil_press"
+            ],
+            "oil_t": [
+              "sensor_oil_temp"
+            ],
+            "coolant_t": [
+              "sensor_coolant_temp"
+            ],
+            "map_kpa": [
+              "sensor_boost"
+            ],
+            "fuel_flow": [
+              "sensor_fuel_flow"
+            ],
+            "fuel_p": [
+              "sensor_fuel_low_press"
+            ],
+            "rail_p": [
+              "sensor_fuel_rail_press"
+            ],
+            "rpm": [
+              "sensor_rpm",
+              "sensor_crank"
+            ],
+            "charge_t": [
+              "sensor_charge_air_temp"
+            ],
+            "gearbox_t": [
+              "sensor_gearbox_temp"
+            ],
+            "fuel_t": [
+              "sensor_fuel_temp"
+            ]
+          },
+          "marker": false,
+          "marker_for": null
+        },
+        "vrde_jayem_2_2l": {
+          "by_channel": {
+            "egt[{cyl}]": [
+              "sensor_egt_{cyl}"
+            ],
+            "oil_p": [
+              "sensor_oil_press"
+            ],
+            "oil_t": [
+              "sensor_oil_temp"
+            ],
+            "coolant_t": [
+              "sensor_coolant_temp"
+            ],
+            "map_kpa": [
+              "sensor_map",
+              "sensor_boost"
+            ],
+            "fuel_flow": [
+              "sensor_fuel_flow"
+            ],
+            "rail_p": [
+              "rail_pressure_sensor"
+            ],
+            "rpm": [
+              "sensor_rpm",
+              "sensor_crank_1"
+            ],
+            "charge_t": [
+              "sensor_charge_air_temp"
+            ],
+            "vibration_orders.*": [
+              "sensor_gearbox_vibration"
+            ]
+          },
+          "marker": false,
+          "marker_for": null
+        },
+        "rotax_912is": {
+          "by_channel": {
+            "*": [
+              "ecu"
+            ]
+          },
+          "marker": true,
+          "marker_for": "sensor part (not modelled yet; label shows the channel)"
+        },
+        "rotax_915is": {
+          "by_channel": {
+            "*": [
+              "ecu"
+            ]
+          },
+          "marker": true,
+          "marker_for": "sensor part (not modelled yet; label shows the channel)"
+        },
+        "rotax_914": {
+          "by_channel": {
+            "*": []
+          },
+          "marker": true,
+          "marker_for": "sensor part (not modelled yet; label shows the channel)"
+        }
+      },
+      "channel_scope": null
+    },
+    {
+      "id": "S03",
+      "name": "SENSOR_DRIFT",
+      "kind": "SENSOR",
+      "scope": "CHANNEL",
+      "applies_when": [],
+      "legacy_ids": [],
+      "plant_mode_legacy": "SENSOR_BIAS_DRIFT",
+      "parameter_effects": [
+        {
+          "component": "sensors",
+          "parameter": "{channel}.drift",
+          "op": "set",
+          "at_full_severity": 1.0
+        }
+      ],
+      "default_severity": 0.8,
+      "default_ramp_s": 30.0,
+      "expected_signature": [
+        {
+          "channel": "{channel}",
+          "direction": 0,
+          "min_delta": 0,
+          "unit": "channel unit",
+          "note": "only this channel changes; related channels stay consistent"
+        }
+      ],
+      "detect_window_s": 120,
+      "status_at_full_severity": "ADVISORY",
+      "ata_chapter": "77/79",
+      "maintenance_action": {
+        "text": "Replace or recalibrate the {channel} sensor and check its wiring.",
+        "source": "ANUMAAN-authored (audit R section 22)"
+      },
+      "mitigation_inflight": {
+        "text": "Treat {channel} as unavailable; use the twin's virtual value; if the channel is safety-critical (oil pressure, CHT/coolant) land as soon as practical.",
+        "source": "ANUMAAN-authored; check against the engine OM abnormal-operation section"
+      },
+      "physics_explanation": "Only the {channel} measurement is wrong; the engine itself is healthy, so physically related channels do not move with it.",
+      "ps_categories": [
+        "sensor drift/failure"
+      ],
+      "description": "offset growing over time (demo-visible rate)",
+      "components": {
+        "austro_ae300": {
+          "by_channel": {
+            "egt[{cyl}]": [
+              "sensor_egt_{cyl}"
+            ],
+            "oil_p": [
+              "sensor_oil_press"
+            ],
+            "oil_t": [
+              "sensor_oil_temp"
+            ],
+            "coolant_t": [
+              "sensor_coolant_temp"
+            ],
+            "map_kpa": [
+              "sensor_boost"
+            ],
+            "fuel_flow": [
+              "sensor_fuel_flow"
+            ],
+            "fuel_p": [
+              "sensor_fuel_low_press"
+            ],
+            "rail_p": [
+              "sensor_fuel_rail_press"
+            ],
+            "rpm": [
+              "sensor_rpm",
+              "sensor_crank"
+            ],
+            "charge_t": [
+              "sensor_charge_air_temp"
+            ],
+            "gearbox_t": [
+              "sensor_gearbox_temp"
+            ],
+            "fuel_t": [
+              "sensor_fuel_temp"
+            ]
+          },
+          "marker": false,
+          "marker_for": null
+        },
+        "vrde_jayem_2_2l": {
+          "by_channel": {
+            "egt[{cyl}]": [
+              "sensor_egt_{cyl}"
+            ],
+            "oil_p": [
+              "sensor_oil_press"
+            ],
+            "oil_t": [
+              "sensor_oil_temp"
+            ],
+            "coolant_t": [
+              "sensor_coolant_temp"
+            ],
+            "map_kpa": [
+              "sensor_map",
+              "sensor_boost"
+            ],
+            "fuel_flow": [
+              "sensor_fuel_flow"
+            ],
+            "rail_p": [
+              "rail_pressure_sensor"
+            ],
+            "rpm": [
+              "sensor_rpm",
+              "sensor_crank_1"
+            ],
+            "charge_t": [
+              "sensor_charge_air_temp"
+            ],
+            "vibration_orders.*": [
+              "sensor_gearbox_vibration"
+            ]
+          },
+          "marker": false,
+          "marker_for": null
+        },
+        "rotax_912is": {
+          "by_channel": {
+            "*": [
+              "ecu"
+            ]
+          },
+          "marker": true,
+          "marker_for": "sensor part (not modelled yet; label shows the channel)"
+        },
+        "rotax_915is": {
+          "by_channel": {
+            "*": [
+              "ecu"
+            ]
+          },
+          "marker": true,
+          "marker_for": "sensor part (not modelled yet; label shows the channel)"
+        },
+        "rotax_914": {
+          "by_channel": {
+            "*": []
+          },
+          "marker": true,
+          "marker_for": "sensor part (not modelled yet; label shows the channel)"
+        }
+      },
+      "channel_scope": null
+    },
+    {
+      "id": "S04",
+      "name": "SENSOR_NOISE",
+      "kind": "SENSOR",
+      "scope": "CHANNEL",
+      "applies_when": [],
+      "legacy_ids": [],
+      "plant_mode_legacy": null,
+      "parameter_effects": [
+        {
+          "component": "sensors",
+          "parameter": "{channel}.noise",
+          "op": "set",
+          "at_full_severity": 1.0
+        }
+      ],
+      "default_severity": 0.8,
+      "default_ramp_s": 30.0,
+      "expected_signature": [
+        {
+          "channel": "{channel}",
+          "direction": 0,
+          "min_delta": 0,
+          "unit": "channel unit",
+          "note": "only this channel changes; related channels stay consistent"
+        }
+      ],
+      "detect_window_s": 120,
+      "status_at_full_severity": "ADVISORY",
+      "ata_chapter": "77/79",
+      "maintenance_action": {
+        "text": "Replace or recalibrate the {channel} sensor and check its wiring.",
+        "source": "ANUMAAN-authored (audit R section 22)"
+      },
+      "mitigation_inflight": {
+        "text": "Treat {channel} as unavailable; use the twin's virtual value; if the channel is safety-critical (oil pressure, CHT/coolant) land as soon as practical.",
+        "source": "ANUMAAN-authored; check against the engine OM abnormal-operation section"
+      },
+      "physics_explanation": "Only the {channel} measurement is wrong; the engine itself is healthy, so physically related channels do not move with it.",
+      "ps_categories": [
+        "sensor drift/failure"
+      ],
+      "description": "noise level increased",
+      "components": {
+        "austro_ae300": {
+          "by_channel": {
+            "egt[{cyl}]": [
+              "sensor_egt_{cyl}"
+            ],
+            "oil_p": [
+              "sensor_oil_press"
+            ],
+            "oil_t": [
+              "sensor_oil_temp"
+            ],
+            "coolant_t": [
+              "sensor_coolant_temp"
+            ],
+            "map_kpa": [
+              "sensor_boost"
+            ],
+            "fuel_flow": [
+              "sensor_fuel_flow"
+            ],
+            "fuel_p": [
+              "sensor_fuel_low_press"
+            ],
+            "rail_p": [
+              "sensor_fuel_rail_press"
+            ],
+            "rpm": [
+              "sensor_rpm",
+              "sensor_crank"
+            ],
+            "charge_t": [
+              "sensor_charge_air_temp"
+            ],
+            "gearbox_t": [
+              "sensor_gearbox_temp"
+            ],
+            "fuel_t": [
+              "sensor_fuel_temp"
+            ]
+          },
+          "marker": false,
+          "marker_for": null
+        },
+        "vrde_jayem_2_2l": {
+          "by_channel": {
+            "egt[{cyl}]": [
+              "sensor_egt_{cyl}"
+            ],
+            "oil_p": [
+              "sensor_oil_press"
+            ],
+            "oil_t": [
+              "sensor_oil_temp"
+            ],
+            "coolant_t": [
+              "sensor_coolant_temp"
+            ],
+            "map_kpa": [
+              "sensor_map",
+              "sensor_boost"
+            ],
+            "fuel_flow": [
+              "sensor_fuel_flow"
+            ],
+            "rail_p": [
+              "rail_pressure_sensor"
+            ],
+            "rpm": [
+              "sensor_rpm",
+              "sensor_crank_1"
+            ],
+            "charge_t": [
+              "sensor_charge_air_temp"
+            ],
+            "vibration_orders.*": [
+              "sensor_gearbox_vibration"
+            ]
+          },
+          "marker": false,
+          "marker_for": null
+        },
+        "rotax_912is": {
+          "by_channel": {
+            "*": [
+              "ecu"
+            ]
+          },
+          "marker": true,
+          "marker_for": "sensor part (not modelled yet; label shows the channel)"
+        },
+        "rotax_915is": {
+          "by_channel": {
+            "*": [
+              "ecu"
+            ]
+          },
+          "marker": true,
+          "marker_for": "sensor part (not modelled yet; label shows the channel)"
+        },
+        "rotax_914": {
+          "by_channel": {
+            "*": []
+          },
+          "marker": true,
+          "marker_for": "sensor part (not modelled yet; label shows the channel)"
+        }
+      },
+      "channel_scope": null
+    },
+    {
+      "id": "S05",
+      "name": "SENSOR_DROPOUT",
+      "kind": "SENSOR",
+      "scope": "CHANNEL",
+      "applies_when": [],
+      "legacy_ids": [],
+      "plant_mode_legacy": null,
+      "parameter_effects": [
+        {
+          "component": "sensors",
+          "parameter": "{channel}.dropout",
+          "op": "set",
+          "at_full_severity": 1.0
+        }
+      ],
+      "default_severity": 0.8,
+      "default_ramp_s": 30.0,
+      "expected_signature": [
+        {
+          "channel": "{channel}",
+          "direction": 0,
+          "min_delta": 0,
+          "unit": "channel unit",
+          "note": "only this channel changes; related channels stay consistent"
+        }
+      ],
+      "detect_window_s": 120,
+      "status_at_full_severity": "ADVISORY",
+      "ata_chapter": "77/79",
+      "maintenance_action": {
+        "text": "Replace or recalibrate the {channel} sensor and check its wiring.",
+        "source": "ANUMAAN-authored (audit R section 22)"
+      },
+      "mitigation_inflight": {
+        "text": "Treat {channel} as unavailable; use the twin's virtual value; if the channel is safety-critical (oil pressure, CHT/coolant) land as soon as practical.",
+        "source": "ANUMAAN-authored; check against the engine OM abnormal-operation section"
+      },
+      "physics_explanation": "Only the {channel} measurement is wrong; the engine itself is healthy, so physically related channels do not move with it.",
+      "ps_categories": [
+        "sensor drift/failure"
+      ],
+      "description": "no value / invalid flag",
+      "components": {
+        "austro_ae300": {
+          "by_channel": {
+            "egt[{cyl}]": [
+              "sensor_egt_{cyl}"
+            ],
+            "oil_p": [
+              "sensor_oil_press"
+            ],
+            "oil_t": [
+              "sensor_oil_temp"
+            ],
+            "coolant_t": [
+              "sensor_coolant_temp"
+            ],
+            "map_kpa": [
+              "sensor_boost"
+            ],
+            "fuel_flow": [
+              "sensor_fuel_flow"
+            ],
+            "fuel_p": [
+              "sensor_fuel_low_press"
+            ],
+            "rail_p": [
+              "sensor_fuel_rail_press"
+            ],
+            "rpm": [
+              "sensor_rpm",
+              "sensor_crank"
+            ],
+            "charge_t": [
+              "sensor_charge_air_temp"
+            ],
+            "gearbox_t": [
+              "sensor_gearbox_temp"
+            ],
+            "fuel_t": [
+              "sensor_fuel_temp"
+            ]
+          },
+          "marker": false,
+          "marker_for": null
+        },
+        "vrde_jayem_2_2l": {
+          "by_channel": {
+            "egt[{cyl}]": [
+              "sensor_egt_{cyl}"
+            ],
+            "oil_p": [
+              "sensor_oil_press"
+            ],
+            "oil_t": [
+              "sensor_oil_temp"
+            ],
+            "coolant_t": [
+              "sensor_coolant_temp"
+            ],
+            "map_kpa": [
+              "sensor_map",
+              "sensor_boost"
+            ],
+            "fuel_flow": [
+              "sensor_fuel_flow"
+            ],
+            "rail_p": [
+              "rail_pressure_sensor"
+            ],
+            "rpm": [
+              "sensor_rpm",
+              "sensor_crank_1"
+            ],
+            "charge_t": [
+              "sensor_charge_air_temp"
+            ],
+            "vibration_orders.*": [
+              "sensor_gearbox_vibration"
+            ]
+          },
+          "marker": false,
+          "marker_for": null
+        },
+        "rotax_912is": {
+          "by_channel": {
+            "*": [
+              "ecu"
+            ]
+          },
+          "marker": true,
+          "marker_for": "sensor part (not modelled yet; label shows the channel)"
+        },
+        "rotax_915is": {
+          "by_channel": {
+            "*": [
+              "ecu"
+            ]
+          },
+          "marker": true,
+          "marker_for": "sensor part (not modelled yet; label shows the channel)"
+        },
+        "rotax_914": {
+          "by_channel": {
+            "*": []
+          },
+          "marker": true,
+          "marker_for": "sensor part (not modelled yet; label shows the channel)"
+        }
+      },
+      "channel_scope": null
+    },
+    {
+      "id": "S06",
+      "name": "SENSOR_OUT_OF_RANGE",
+      "kind": "SENSOR",
+      "scope": "CHANNEL",
+      "applies_when": [],
+      "legacy_ids": [],
+      "plant_mode_legacy": null,
+      "parameter_effects": [
+        {
+          "component": "sensors",
+          "parameter": "{channel}.out_of_range",
+          "op": "set",
+          "at_full_severity": 1.0
+        }
+      ],
+      "default_severity": 0.8,
+      "default_ramp_s": 30.0,
+      "expected_signature": [
+        {
+          "channel": "{channel}",
+          "direction": 0,
+          "min_delta": 0,
+          "unit": "channel unit",
+          "note": "only this channel changes; related channels stay consistent"
+        }
+      ],
+      "detect_window_s": 120,
+      "status_at_full_severity": "ADVISORY",
+      "ata_chapter": "77/79",
+      "maintenance_action": {
+        "text": "Replace or recalibrate the {channel} sensor and check its wiring.",
+        "source": "ANUMAAN-authored (audit R section 22)"
+      },
+      "mitigation_inflight": {
+        "text": "Treat {channel} as unavailable; use the twin's virtual value; if the channel is safety-critical (oil pressure, CHT/coolant) land as soon as practical.",
+        "source": "ANUMAAN-authored; check against the engine OM abnormal-operation section"
+      },
+      "physics_explanation": "Only the {channel} measurement is wrong; the engine itself is healthy, so physically related channels do not move with it.",
+      "ps_categories": [
+        "sensor drift/failure"
+      ],
+      "description": "physically impossible value (short/open circuit)",
+      "components": {
+        "austro_ae300": {
+          "by_channel": {
+            "egt[{cyl}]": [
+              "sensor_egt_{cyl}"
+            ],
+            "oil_p": [
+              "sensor_oil_press"
+            ],
+            "oil_t": [
+              "sensor_oil_temp"
+            ],
+            "coolant_t": [
+              "sensor_coolant_temp"
+            ],
+            "map_kpa": [
+              "sensor_boost"
+            ],
+            "fuel_flow": [
+              "sensor_fuel_flow"
+            ],
+            "fuel_p": [
+              "sensor_fuel_low_press"
+            ],
+            "rail_p": [
+              "sensor_fuel_rail_press"
+            ],
+            "rpm": [
+              "sensor_rpm",
+              "sensor_crank"
+            ],
+            "charge_t": [
+              "sensor_charge_air_temp"
+            ],
+            "gearbox_t": [
+              "sensor_gearbox_temp"
+            ],
+            "fuel_t": [
+              "sensor_fuel_temp"
+            ]
+          },
+          "marker": false,
+          "marker_for": null
+        },
+        "vrde_jayem_2_2l": {
+          "by_channel": {
+            "egt[{cyl}]": [
+              "sensor_egt_{cyl}"
+            ],
+            "oil_p": [
+              "sensor_oil_press"
+            ],
+            "oil_t": [
+              "sensor_oil_temp"
+            ],
+            "coolant_t": [
+              "sensor_coolant_temp"
+            ],
+            "map_kpa": [
+              "sensor_map",
+              "sensor_boost"
+            ],
+            "fuel_flow": [
+              "sensor_fuel_flow"
+            ],
+            "rail_p": [
+              "rail_pressure_sensor"
+            ],
+            "rpm": [
+              "sensor_rpm",
+              "sensor_crank_1"
+            ],
+            "charge_t": [
+              "sensor_charge_air_temp"
+            ],
+            "vibration_orders.*": [
+              "sensor_gearbox_vibration"
+            ]
+          },
+          "marker": false,
+          "marker_for": null
+        },
+        "rotax_912is": {
+          "by_channel": {
+            "*": [
+              "ecu"
+            ]
+          },
+          "marker": true,
+          "marker_for": "sensor part (not modelled yet; label shows the channel)"
+        },
+        "rotax_915is": {
+          "by_channel": {
+            "*": [
+              "ecu"
+            ]
+          },
+          "marker": true,
+          "marker_for": "sensor part (not modelled yet; label shows the channel)"
+        },
+        "rotax_914": {
+          "by_channel": {
+            "*": []
+          },
+          "marker": true,
+          "marker_for": "sensor part (not modelled yet; label shows the channel)"
+        }
+      },
+      "channel_scope": null
+    },
+    {
+      "id": "S07",
+      "name": "SENSOR_LANE_DISAGREEMENT",
+      "kind": "SENSOR",
+      "scope": "CHANNEL",
+      "applies_when": [],
+      "legacy_ids": [],
+      "plant_mode_legacy": null,
+      "parameter_effects": [
+        {
+          "component": "sensors",
+          "parameter": "{channel}.lane_split",
+          "op": "set",
+          "at_full_severity": 1.0
+        }
+      ],
+      "default_severity": 0.8,
+      "default_ramp_s": 30.0,
+      "expected_signature": [
+        {
+          "channel": "{channel}",
+          "direction": 0,
+          "min_delta": 0,
+          "unit": "channel unit",
+          "note": "only this channel changes; related channels stay consistent"
+        }
+      ],
+      "detect_window_s": 120,
+      "status_at_full_severity": "ADVISORY",
+      "ata_chapter": "77/79",
+      "maintenance_action": {
+        "text": "Replace or recalibrate the {channel} sensor and check its wiring.",
+        "source": "ANUMAAN-authored (audit R section 22)"
+      },
+      "mitigation_inflight": {
+        "text": "Treat {channel} as unavailable; use the twin's virtual value; if the channel is safety-critical (oil pressure, CHT/coolant) land as soon as practical.",
+        "source": "ANUMAAN-authored; check against the engine OM abnormal-operation section"
+      },
+      "physics_explanation": "Only the {channel} measurement is wrong; the engine itself is healthy, so physically related channels do not move with it.",
+      "ps_categories": [
+        "sensor drift/failure"
+      ],
+      "description": "dual sensors disagree",
+      "components": {
+        "austro_ae300": {
+          "by_channel": {
+            "egt[{cyl}]": [
+              "sensor_egt_{cyl}"
+            ],
+            "oil_p": [
+              "sensor_oil_press"
+            ],
+            "oil_t": [
+              "sensor_oil_temp"
+            ],
+            "coolant_t": [
+              "sensor_coolant_temp"
+            ],
+            "map_kpa": [
+              "sensor_boost"
+            ],
+            "fuel_flow": [
+              "sensor_fuel_flow"
+            ],
+            "fuel_p": [
+              "sensor_fuel_low_press"
+            ],
+            "rail_p": [
+              "sensor_fuel_rail_press"
+            ],
+            "rpm": [
+              "sensor_rpm",
+              "sensor_crank"
+            ],
+            "charge_t": [
+              "sensor_charge_air_temp"
+            ],
+            "gearbox_t": [
+              "sensor_gearbox_temp"
+            ],
+            "fuel_t": [
+              "sensor_fuel_temp"
+            ]
+          },
+          "marker": false,
+          "marker_for": null
+        },
+        "vrde_jayem_2_2l": {
+          "by_channel": {
+            "egt[{cyl}]": [
+              "sensor_egt_{cyl}"
+            ],
+            "oil_p": [
+              "sensor_oil_press"
+            ],
+            "oil_t": [
+              "sensor_oil_temp"
+            ],
+            "coolant_t": [
+              "sensor_coolant_temp"
+            ],
+            "map_kpa": [
+              "sensor_map",
+              "sensor_boost"
+            ],
+            "fuel_flow": [
+              "sensor_fuel_flow"
+            ],
+            "rail_p": [
+              "rail_pressure_sensor"
+            ],
+            "rpm": [
+              "sensor_rpm",
+              "sensor_crank_1"
+            ],
+            "charge_t": [
+              "sensor_charge_air_temp"
+            ],
+            "vibration_orders.*": [
+              "sensor_gearbox_vibration"
+            ]
+          },
+          "marker": false,
+          "marker_for": null
+        },
+        "rotax_912is": {
+          "by_channel": {
+            "*": [
+              "ecu"
+            ]
+          },
+          "marker": true,
+          "marker_for": "sensor part (not modelled yet; label shows the channel)"
+        },
+        "rotax_915is": {
+          "by_channel": {
+            "*": [
+              "ecu"
+            ]
+          },
+          "marker": true,
+          "marker_for": "sensor part (not modelled yet; label shows the channel)"
+        },
+        "rotax_914": {
+          "by_channel": {
+            "*": []
+          },
+          "marker": true,
+          "marker_for": "sensor part (not modelled yet; label shows the channel)"
+        }
+      },
+      "channel_scope": null
+    }
+  ]
+}
