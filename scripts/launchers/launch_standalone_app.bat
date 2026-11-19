@@ -20,9 +20,9 @@ echo.
 set "PYTHONUTF8=1"
 
 rem 1. Resolve 3D blend model (Rotax 912 iS Sport 109-mesh model)
-set "TARGET_BLEND=%ROOT%assets\blender\rotax_912_is_sport.blend"
-if not exist "%TARGET_BLEND%" set "TARGET_BLEND=%ROOT%assets\blender\rotax_912is_showcase.blend"
-if not exist "%TARGET_BLEND%" set "TARGET_BLEND=%ROOT%assets\blender\anumaan_master_twin.blend"
+set "TARGET_BLEND=%ROOT%assets\blender\engines\rotax_912is\rotax_912is.blend"
+if not exist "%TARGET_BLEND%" set "TARGET_BLEND=%ROOT%assets\blender\engines\rotax_912is\variants\rotax_912is_showcase.blend"
+if not exist "%TARGET_BLEND%" set "TARGET_BLEND=%ROOT%assets\blender\scenes\anumaan_master_twin.blend"
 
 if not exist "%TARGET_BLEND%" (
     echo [ERROR] No 3D model file found!
@@ -78,4 +78,4 @@ echo.
 
 echo.
 echo Blender exited. Check output above for errors.
-pause
+pause

@@ -42,7 +42,7 @@ FAULT_TARGET_PARTS: Dict[int, List[str]] = {
     1: [
         'Cooling_Air_Baffle_M_PlasticWhite_0',
         # 'Cooling_Air_Baffle_M_PlasticCable_0' removed -- no such object in
-        # assets/blender/rotax_912_is_sport.blend; only a PlasticWhite variant
+        # assets/blender/engines/rotax_912is/rotax_912is.blend; only a PlasticWhite variant
         # of this part exists (confirmed via headless Blender object dump,
         # scratch/real_objects.txt). Kept as a comment, not silently dropped,
         # in case a future asset revision reintroduces a cable-material variant.

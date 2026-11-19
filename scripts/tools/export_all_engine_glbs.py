@@ -11,10 +11,10 @@ REPO_ROOT = r"e:\backup-llm\backup-no-llm\3d_engine"
 OUTPUT_DIR = os.path.join(REPO_ROOT, "web", "site", "assets", "models")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-MASTER_BLEND = os.path.join(REPO_ROOT, "assets", "blender", "anumaan_master_twin.blend")
-ROTAX_BLEND = os.path.join(REPO_ROOT, "assets", "blender", "rotax_912_is_sport.blend")
-AUSTRO_BLEND = os.path.join(REPO_ROOT, "assets", "models", "engines", "austro_ae330.blend")
-VRDE_BLEND = os.path.join(REPO_ROOT, "assets", "models", "engines", "tei_pd170.blend")
+MASTER_BLEND = os.path.join(REPO_ROOT, "assets", "blender", "scenes", "anumaan_master_twin.blend")
+ROTAX_BLEND = os.path.join(REPO_ROOT, "assets", "blender", "engines", "rotax_912is", "rotax_912is.blend")
+AUSTRO_BLEND = os.path.join(REPO_ROOT, "assets", "blender", "engines", "austro_ae300", "austro_ae300.blend")
+VRDE_BLEND = os.path.join(REPO_ROOT, "assets", "blender", "reference", "tei_pd170", "tei_pd170.blend")
 
 def export_collection_to_glb(col_name, output_path, center_offset=None, scale_mult=1.0):
     print(f"\n[EXPORTER] Preparing export for {col_name} -> {output_path}...")

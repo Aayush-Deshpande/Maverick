@@ -33,10 +33,10 @@ for src in sorted(glob.glob(os.path.join(ROOT, "launch_*.bat"))):
         text = "\n".join(lines)
 
     if name == "launch_rotax_914_cad.bat":
-        text = text.replace('"assets\\blender\\rotax_914.blend"', '"%ROOT%assets\\blender\\rotax_914.blend"')
+        text = text.replace('"assets\\blender\\engines\\rotax_914\\rotax_914.blend"', '"%ROOT%assets\\blender\\engines\\rotax_914\\rotax_914.blend"')
     if name == "launch_austro_ae300_cad.bat":
         # audit #64: assets/blender/austro_ae300.blend never existed; the AE300 model file is the AE330-shaped one
-        text = text.replace("%ROOT%assets\\blender\\austro_ae300.blend", "%ROOT%assets\\models\\engines\\austro_ae330.blend")
+        text = text.replace("%ROOT%assets\\blender\\austro_ae300.blend", "%ROOT%assets\\blender\\engines\\austro_ae300\\austro_ae300.blend")
 
     if crlf:
         text = text.replace("\n", "\r\n")

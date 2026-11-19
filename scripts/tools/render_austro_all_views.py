@@ -3,7 +3,7 @@ import os
 import shutil
 from pathlib import Path
 
-blend_path = r"e:\backup-llm\backup-no-llm\3d_engine\assets\models\engines\austro_ae330.blend"
+blend_path = r"e:\backup-llm\backup-no-llm\3d_engine\assets\blender\engines\austro_ae300\austro_ae300.blend"
 renders_dir = r"e:\backup-llm\backup-no-llm\3d_engine\assets\renders\engines\austro_ae330"
 os.makedirs(renders_dir, exist_ok=True)
 

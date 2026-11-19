@@ -280,7 +280,7 @@ ENGINE_CONFIGS = {
         "title": "AUSTRO ENGINE AE300 / AE330",
         "subtitle": "2.0L COMMON-RAIL TURBO DIESEL // DRDO ANUMAAN",
         "power_str": "1,991 CC | 180 HP @ 3,880 RPM | JET-A1 MULTI-FUEL",
-        "source_blend": REPO_ROOT / "assets" / "models" / "engines" / "austro_ae330.blend",
+        "source_blend": REPO_ROOT / "assets" / "blender" / "engines" / "austro_ae300" / "austro_ae300.blend",
         "out_blend": BLENDER_ROOT / "austro_ae300_showcase.blend",
         "output_dir": RENDERS_ROOT / "austro_ae300",
         "exclude_meshes": ["Studio_Cyclorama"],

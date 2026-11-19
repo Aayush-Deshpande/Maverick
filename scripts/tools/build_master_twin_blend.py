@@ -17,10 +17,10 @@ import mathutils
 import math
 
 REPO_ROOT = r"e:\backup-llm\backup-no-llm\3d_engine"
-ROTAX_BLEND = os.path.join(REPO_ROOT, "assets", "blender", "rotax_912_is_sport.blend")
-AUSTRO_BLEND = os.path.join(REPO_ROOT, "assets", "models", "engines", "austro_ae330.blend")
-VRDE_BLEND = os.path.join(REPO_ROOT, "assets", "models", "engines", "tei_pd170.blend")
-OUTPUT_BLEND = os.path.join(REPO_ROOT, "assets", "blender", "anumaan_master_twin.blend")
+ROTAX_BLEND = os.path.join(REPO_ROOT, "assets", "blender", "engines", "rotax_912is", "rotax_912is.blend")
+AUSTRO_BLEND = os.path.join(REPO_ROOT, "assets", "blender", "engines", "austro_ae300", "austro_ae300.blend")
+VRDE_BLEND = os.path.join(REPO_ROOT, "assets", "blender", "reference", "tei_pd170", "tei_pd170.blend")
+OUTPUT_BLEND = os.path.join(REPO_ROOT, "assets", "blender", "scenes", "anumaan_master_twin.blend")
 
 def main():
     print("[BUILDER] Loading Base Rotax Blend...")
@@ -51,7 +51,7 @@ def main():
     print(f"[BUILDER] Linked {len(rotax_objs)} meshes into Collection_Rotax_912iS")
 
     # 3. Append Rotax 914 F Turbo CAD objects
-    rotax_914_blend = os.path.join(REPO_ROOT, "assets", "blender", "rotax_914.blend")
+    rotax_914_blend = os.path.join(REPO_ROOT, "assets", "blender", "engines", "rotax_914", "rotax_914.blend")
     if os.path.exists(rotax_914_blend):
         print(f"[BUILDER] Appending Rotax 914 Turbo from {rotax_914_blend}...")
         with bpy.data.libraries.load(rotax_914_blend) as (data_from, data_to):
@@ -62,7 +62,7 @@ def main():
         print(f"[BUILDER] Appended {len(data_to.objects)} Rotax 914 CAD meshes into Collection_Rotax_914")
 
     # 4. Append Rotax 915 iS Turbo objects
-    rotax_915_blend = os.path.join(REPO_ROOT, "assets", "blender", "rotax_915.blend")
+    rotax_915_blend = os.path.join(REPO_ROOT, "assets", "blender", "engines", "rotax_915is", "rotax_915is.blend")
     if os.path.exists(rotax_915_blend):
         print(f"[BUILDER] Appending Rotax 915 from {rotax_915_blend}...")
         with bpy.data.libraries.load(rotax_915_blend) as (data_from, data_to):

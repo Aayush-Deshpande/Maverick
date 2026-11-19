@@ -1,8 +1,8 @@
 """
 Engine Blend Generator — Creates dedicated, fully-configured standalone .blend files
 for all engine variants:
-- VRDE / Jayem 2.2L (Indigenous DRDO CRDi Diesel) -> assets/blender/vrde_jayem_2_2l.blend
-- Rotax 914 F (Turbocharged TCU)                  -> assets/blender/rotax_914.blend & rotax_914_f.blend
+- VRDE / Jayem 2.2L (Indigenous DRDO CRDi Diesel) -> assets/blender/engines/vrde_jayem_2_2l/vrde_jayem_2_2l.blend
+- Rotax 914 F (Turbocharged TCU)                  -> assets/blender/engines/rotax_914/rotax_914.blend & rotax_914_f.blend
 - Austro Engine AE300 (Jet-A1 Common Rail Diesel) -> assets/blender/austro_ae300.blend
 """
 

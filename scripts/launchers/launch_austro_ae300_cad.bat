@@ -20,4 +20,4 @@ if not defined BLENDER_EXE (
 )
 
 echo [OK] Opening Austro Engine AE300 Diesel Model in Blender...
-"%BLENDER_EXE%" "%ROOT%assets\models\engines\austro_ae330.blend"
+"%BLENDER_EXE%" "%ROOT%assets\blender\engines\austro_ae300\austro_ae300.blend"

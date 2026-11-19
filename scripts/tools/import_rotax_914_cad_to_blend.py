@@ -3,7 +3,7 @@ Import Rotax 914 CAD STL to Master Blend File
 Imports the genuine 122.8 MB Rotax 914 Turbo CAD mesh, scales/centers/orients it properly,
 separates into components/loose parts, applies multi-material shading (engine block, cylinder heads,
 turbocharger turbine/compressor, exhaust downpipes, intake runners, fasteners), sets up studio lighting,
-and saves to assets/blender/rotax_914.blend and assets/blender/rotax_914_f.blend.
+and saves to assets/blender/engines/rotax_914/rotax_914.blend and assets/blender/_archive/rotax_914_f.blend.
 """
 
 import bpy
@@ -15,8 +15,8 @@ from pathlib import Path
 
 REPO_ROOT = Path(r"e:\backup-llm\backup-no-llm\3d_engine")
 STL_PATH = REPO_ROOT / "assets" / "blender" / "rotax_914_cad_raw.stl"
-OUT_BLEND = REPO_ROOT / "assets" / "blender" / "rotax_914.blend"
-OUT_BLEND_F = REPO_ROOT / "assets" / "blender" / "rotax_914_f.blend"
+OUT_BLEND = REPO_ROOT / "assets" / "blender" / "engines" / "rotax_914" / "rotax_914.blend"
+OUT_BLEND_F = REPO_ROOT / "assets" / "blender" / "_archive" / "rotax_914_f.blend"
 
 def create_pbr_material(name, base_color, metallic=0.0, roughness=0.5, specular=0.5):
     mat = bpy.data.materials.get(name)

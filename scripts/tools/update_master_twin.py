@@ -1,6 +1,6 @@
 """
 Update Master Twin Blend:
-Ensures assets/blender/anumaan_master_twin.blend has all 5 collections properly populated
+Ensures assets/blender/scenes/anumaan_master_twin.blend has all 5 collections properly populated
 with their distinct engine meshes and materials.
 """
 
@@ -8,9 +8,9 @@ import bpy
 from pathlib import Path
 
 REPO_ROOT = Path(r"e:\backup-llm\backup-no-llm\3d_engine")
-MASTER_BLEND = REPO_ROOT / "assets" / "blender" / "anumaan_master_twin.blend"
-ROTAX_914_BLEND = REPO_ROOT / "assets" / "blender" / "rotax_914.blend"
-ROTAX_915_BLEND = REPO_ROOT / "assets" / "blender" / "rotax_915.blend"
+MASTER_BLEND = REPO_ROOT / "assets" / "blender" / "scenes" / "anumaan_master_twin.blend"
+ROTAX_914_BLEND = REPO_ROOT / "assets" / "blender" / "engines" / "rotax_914" / "rotax_914.blend"
+ROTAX_915_BLEND = REPO_ROOT / "assets" / "blender" / "engines" / "rotax_915is" / "rotax_915is.blend"
 
 def update_master_twin():
     print(f"Opening Master Blend: {MASTER_BLEND}")

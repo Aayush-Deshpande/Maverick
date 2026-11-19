@@ -20,7 +20,7 @@ echo.
 
 set "PYTHONUTF8=1"
 set "ANUMAAN_ENGINE_ID=rotax_915is"
-set "TARGET_BLEND=%ROOT%assets\blender\anumaan_master_twin.blend"
+set "TARGET_BLEND=%ROOT%assets\blender\scenes\anumaan_master_twin.blend"
 
 set "BLENDER_EXE="
 if exist "D:\Blender\blender.exe" set "BLENDER_EXE=D:\Blender\blender.exe"

@@ -20,4 +20,4 @@ if not defined BLENDER_EXE (
 )
 
 echo [OK] Opening Rotax 915 iS Master CAD Model in Blender...
-"%BLENDER_EXE%" "%ROOT%assets\blender\rotax_915.blend"
+"%BLENDER_EXE%" "%ROOT%assets\blender\engines\rotax_915is\rotax_915is.blend"

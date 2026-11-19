@@ -20,4 +20,4 @@ if not defined BLENDER_EXE (
 )
 
 echo [OK] Opening VRDE / Jayem 2.2L Indigenous CRDi Diesel Model in Blender...
-"%BLENDER_EXE%" "%ROOT%assets\blender\vrde_jayem_2_2l.blend"
+"%BLENDER_EXE%" "%ROOT%assets\blender\engines\vrde_jayem_2_2l\vrde_jayem_2_2l.blend"

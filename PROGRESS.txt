@@ -97,3 +97,38 @@ Note: the hook scans the WHOLE command text, including heredocs and quoted strin
   mentions a blocked phrase is stopped too. Loosening it was refused by the auto-mode safety check (a guard should
   not be weakened by the agent it guards), so it stays strict. Workaround: write text files with the Edit/Write
   tools, and keep blocked phrases out of shell commands and commit messages. Prasad can relax it by hand if wanted.
+
+=== 19 Nov 2026  P0-03 Inventory (f695a42)
+docs/cleanup/inventory_before.csv: 3,211 rows (3,193 tracked + 18 untracked assets) with size and md5.
+scripts/assets/inventory.py re-creates it. The rotax_914.blend1 backup has the same md5 as the committed
+rotax_914.blend (a840a3f7...).
+
+=== 19 Nov 2026  P0-04/P0-05 Moves and launchers (d1038ee)
+Moves: submitted texts -> docs/submission; screenshots -> docs/screenshots; UpdatedReport + final_touch ->
+  docs/history. archive_tracked: doc_generators/ (14 scripts/folders), experiments/, synthetic_rag_corpus/ (21
+  generated "manuals"), crazy_landing/ (renamed from web/usavionix/mirror), docs_study_zip/. Every archive move is
+  logged in archive_tracked/ARCHIVE_LOG.txt.
+Also: Datasets -> data/external (paths fixed); .gitmodules removed; data/documents kept empty with a .gitkeep (the
+  loader indexes any .md/.txt, so no README there); 23 launchers -> scripts/launchers with
+  ROOT=%~dp0..\..\ (check_launchers.py: 0 problems); start_anumaan.bat menu at the root; run_app.py finds
+  D:\Blender (#63); AE300 CAD launcher fixed (#64); requirements-optional.txt; docs/README.txt;
+  docs/reference/SOURCES.txt.
+EASA TCDS E.121 issue 17 and E.200 issue 12 downloaded to docs/reference/oem/ (local; marked proprietary).
+  sha256: E121 fc7568a9...0bf37c, E200 f9636b31...45bcac, OM-912 i 75c2ca58...d2d3.
+  E.121 confirms 915 iSc: max continuous 99 kW @ 5500 rpm up to the 15,000 ft critical altitude; take-off 104 kW
+  @ 5800 rpm.
+Tests after the moves: 333 passed, the same 3 known failures (identical to the baseline).
+
+=== 19 Nov 2026  P0-06 Assets layout
+Rotax 914 comparison (headless): rotax_914.blend and rotax_914_f.blend are identical in content (594 objects, 590
+  meshes, 490,617 triangles, 13 materials, same names). Per D25 rotax_914.blend is the master and _f is archived.
+Moves: 24 entries (engines/<id>/ masters + variants + import/cad; reference/tei_pd170; airframes; terrain;
+  scenes; _archive for 3 duplicates). 30 code/launcher files rewritten to the new paths (every path style); 915
+  references point at the master. Untracked .blend1 backups moved to assets/blender/_archive/blend1_backups/
+  (local).
+Checks:
+  - T-REPO-1: all 52 binary assets keep their md5 (0 missing);
+  - all 7 masters open headless in Blender 5.2 (912 iS Sport 109 meshes = the 109-node Draco GLB);
+  - launchers 0 problems.
+Registers: assets/ASSET_REGISTER.csv, assets/blender/_archive/ARCHIVE_REGISTER.csv. assets/AGENTS.md updated.
+Your 914 .blend edits from 06:03 are still unstaged (now at the new paths). Question 3 still open.

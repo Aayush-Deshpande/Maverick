@@ -12,4 +12,4 @@ if not defined BLENDER_EXE (
     pause
     exit /b 1
 )
-start "" "%BLENDER_EXE%" "%ROOT%assets\blender\rotax_914.blend"
+start "" "%BLENDER_EXE%" "%ROOT%assets\blender\engines\rotax_914\rotax_914.blend"

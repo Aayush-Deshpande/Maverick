@@ -15,8 +15,8 @@ from pathlib import Path
 
 REPO_ROOT = Path(r"e:\backup-llm\backup-no-llm\3d_engine")
 STL_PATH = REPO_ROOT / "assets" / "blender" / "rotax_914_cad_raw.stl"
-OUT_BLEND_914 = REPO_ROOT / "assets" / "blender" / "rotax_914.blend"
-OUT_BLEND_914F = REPO_ROOT / "assets" / "blender" / "rotax_914_f.blend"
+OUT_BLEND_914 = REPO_ROOT / "assets" / "blender" / "engines" / "rotax_914" / "rotax_914.blend"
+OUT_BLEND_914F = REPO_ROOT / "assets" / "blender" / "_archive" / "rotax_914_f.blend"
 OUT_GLB = REPO_ROOT / "web" / "site" / "assets" / "models" / "rotax_914.glb"
 RENDER_DIR = REPO_ROOT / "assets" / "renders" / "engines" / "rotax_914"
 RENDER_DIR.mkdir(parents=True, exist_ok=True)

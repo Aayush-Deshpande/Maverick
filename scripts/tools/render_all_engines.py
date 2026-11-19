@@ -22,7 +22,7 @@ RENDERS_ROOT = REPO_ROOT / "assets" / "renders" / "engines"
 
 ENGINE_RENDER_SPECS = {
     "rotax_912is": {
-        "blend_file": REPO_ROOT / "assets" / "blender" / "rotax_912_is_sport.blend",
+        "blend_file": REPO_ROOT / "assets" / "blender" / "engines" / "rotax_912is" / "rotax_912is.blend",
         "output_dir": RENDERS_ROOT / "rotax_912is",
         "default_center": mathutils.Vector((1.93, 61.65, -35.32)),
         "shots": [
@@ -64,7 +64,7 @@ ENGINE_RENDER_SPECS = {
         ],
     },
     "rotax_914": {
-        "blend_file": REPO_ROOT / "assets" / "blender" / "rotax_912_is_sport.blend",
+        "blend_file": REPO_ROOT / "assets" / "blender" / "engines" / "rotax_912is" / "rotax_912is.blend",
         "output_dir": RENDERS_ROOT / "rotax_914",
         "default_center": mathutils.Vector((1.93, 61.65, -35.32)),
         "shots": [
@@ -107,7 +107,7 @@ ENGINE_RENDER_SPECS = {
         ],
     },
     "rotax_915is": {
-        "blend_file": REPO_ROOT / "assets" / "blender" / "rotax_912_is_sport.blend",
+        "blend_file": REPO_ROOT / "assets" / "blender" / "engines" / "rotax_912is" / "rotax_912is.blend",
         "output_dir": RENDERS_ROOT / "rotax_915is",
         "default_center": mathutils.Vector((1.93, 61.65, -35.32)),
         "shots": [
@@ -134,7 +134,7 @@ ENGINE_RENDER_SPECS = {
         ],
     },
     "austro_ae300": {
-        "blend_file": REPO_ROOT / "assets" / "models" / "engines" / "austro_ae330.blend",
+        "blend_file": REPO_ROOT / "assets" / "blender" / "engines" / "austro_ae300" / "austro_ae300.blend",
         "output_dir": RENDERS_ROOT / "austro_ae300",
         "default_center": mathutils.Vector((0.0, 0.25, 0.0)),
         "shots": [
@@ -188,7 +188,7 @@ ENGINE_RENDER_SPECS = {
         ],
     },
     "vrde_jayem_2_2l": {
-        "blend_file": REPO_ROOT / "assets" / "models" / "engines" / "tei_pd170.blend",
+        "blend_file": REPO_ROOT / "assets" / "blender" / "reference" / "tei_pd170" / "tei_pd170.blend",
         "output_dir": RENDERS_ROOT / "vrde_jayem_2_2l",
         "default_center": mathutils.Vector((0.0, 0.0, 0.0)),
         "shots": [
