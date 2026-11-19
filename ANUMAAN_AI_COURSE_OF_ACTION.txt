@@ -47,7 +47,7 @@ Contents
   AI instruction files:
     AGENTS.md      global rules for every AI tool (source of truth for rules)
     CLAUDE.md      imports AGENTS.md + DECISIONS.md (Claude Code loads it automatically)
-    DECISIONS.md   binding decisions D1-D43 (wins over every other document)
+    DECISIONS.md   binding decisions D1-D47 (wins over every other document)
     PROGRESS.txt   session log; the first entry holds the test baseline
     <folder>/AGENTS.md + <folder>/CLAUDE.md in backend, frontend, configs, tests, apps, assets, scripts, docs, data,
     web, docs_site, archive_tracked: what is in the folder, what it becomes, the folder's rules.
@@ -564,7 +564,9 @@ M0-02 Fault registry
   Do:
     - configs/faults.json with all 44 entries and their fields (id, name, legacy_ids, kind, scope, engines,
       applicability rule, parameter effects, default severity/ramp, expected signature, detect window, status at
-      full severity, ATA chapter, maintenance action, UI text);
+      full severity, ATA chapter, maintenance action, UI text, plus for the copilot agent (D45):
+      mitigation_inflight, maintenance_steps, physics_explanation, each with a source: OM page or
+      "ANUMAAN-authored");
     - configs/schema/faults.schema.json;
     - backend/faults/registry.py (load, validate, applicability, {cyl} resolution).
   Tests: T-CFG-1; applicability tests (F12 914 only; F05 912/915; F06-F09 AE/VRDE; F01 not on CI).
@@ -903,7 +905,8 @@ B-03 914:
      - reassign the 320 "wastegate" objects (by size, then visual check);
      - identify cylinders visually (ASK: Prasad confirms each);
      - add carburettors, oil system, TCU and sensors.
-B-04 912:
+B-04 912 (geometry confirmed correct by Prasad, D47: only add grouping and placeholders, never change the
+     geometry):
      - split the merged base into crankcase/barrels/heads;
      - add component empties;
      - add placeholders (injectors, plugs, sensors, airbox, oil pump/cooler, radiator, prop flange).
@@ -957,7 +960,9 @@ Today:
   - scripts/ingest_rag_docs.py.
   - Voice: backend/voice (whisper.cpp STT, Kokoro TTS) feeds the same copilot.
   - The old quantized Qwen3-4B weights are gone (D31).
-  - Prasad reports the RAG as "completely broken".
+  - Prasad reports the RAG as "completely broken". Root causes found: the corpus is generated text (D44); the
+    reranker is missing (flashrank); the voice packages are missing; Ollama needs OLLAMA_MODELS at start; there is
+    no tool access to the live state.
 AI-01 Diagnose (read-only first):
       - start the backend with ANUMAAN_LLM_PROVIDER=none, then ollama (qwen2.5:7b-instruct), then gemini;
       - call the copilot and voice endpoints with 10 fixed questions;
@@ -979,7 +984,11 @@ AI-03 Ingestion and index:
         -> text) and the engine data sheet (P Part 2);
       - pin the embedding model (all-MiniLM-L6-v2, or nomic-embed-text via Ollama if Prasad pulls it - ASK) with a
         local cache path from configs/llm.json, so nothing downloads silently at demo time.
-AI-03a Real document corpus (D34):
+AI-03a Real document corpus (D34, D44). Already downloaded 19 Nov: docs/reference/oem/OM_912iSeries_ED2_R1.pdf
+      (official Rotax OM-912 i Rev. 1, 92 pages; gitignored, BRP-Rotax property; source
+      https://rotax-owner.com/manuals/OM_912iSeries_ED2_R1.pdf). Write docs/reference/SOURCES.txt (URL, edition, date,
+      sha256 for each document) plus scripts/assets/fetch_reference_docs.py to re-download everything.
+      Then:
       - collect public, official documents into docs/reference/ with their source URL in docs/reference/SOURCES.txt:
         EASA TCDS E.121 (Rotax 912/915 series) and E.200 (Austro E4/AE300), the Rotax 912 i Series Operators Manual
         and the Rotax 915 iS Operators Manual from the manufacturer's public documentation site, the DRDO 180 hp
@@ -992,13 +1001,62 @@ AI-04 Retrieval quality:
         above 3500 rpm" -> Rotax 914 OM page);
       - measure recall@5 and MRR, and keep the reranker only if it improves them;
       - target recall@5 >= 0.8 (report the real number).
-AI-05 Grounded answers:
-      - the copilot prompt gets the live structured state (status, reasons, hypotheses with evidence, RUL band) plus
-        the retrieved chunks;
-      - answers carry citations [doc, page];
-      - the guardrails keep the LLM from inventing diagnoses, numbers or limits: every number in the answer must
-        appear in the state or the retrieved text (automatic check; drop or flag the sentence otherwise);
-      - with provider=none, the extractive answer path still works.
+AI-05 Live-state copilot AGENT (D45) - replaces the earlier "grounded answers" card
+  Goal: ask "what is going on with engine 2?" or "how do I fix this?" and get an answer built from the LIVE system:
+  physics parameters, readings vs limits, diagnosis evidence, registry mitigation and maintenance steps, prognosis,
+  and the real manuals. All with sources. No invented numbers.
+  Tools (backend/agent/tools.py; read-only; each one is a thin wrapper over /api/v1 or configs, unit-tested):
+    get_engine_state(engine_id)            status level + reasons, engine_state, readings {value, unit, quality,
+                                           limit band}, derived (power, BSFC, efficiency, lambda, MAP), data age
+    get_physics_parameters(engine_id)      twin health parameters with sigma (cooling effectiveness, oil pump
+                                           health, injector flow per cylinder, turbo efficiency, filter loss, ...)
+                                           + calibrated model constants with provenance
+    get_limits(engine_id, channel?)        bands + rpm rules + provenance (OM page)
+    get_hypotheses(engine_id)              ranked faults with supporting/contradicting residuals, cylinder,
+                                           FMECA severity
+    get_fault_knowledge(fault_id, engine_id) registry entry: physics mechanism, expected signature, in-flight
+                                           mitigation, maintenance steps, ATA chapter, components, manual refs
+    get_prognosis(engine_id)               time-to-limit list, RUL band (95 %), mission reliability, RUL-path
+                                           disagreement flag
+    get_events(engine_id, since_s)         timeline: injections (training mode), detections, status changes
+    get_work_orders(engine_id)             open/closed maintenance
+    get_component(engine_id, component_id) what the part is, which faults touch it, its live readings
+    search_manuals(query, engine_id?)      RAG over the REAL corpus only (D34/D44), returns chunks with
+                                           [document, edition, page]
+  Answer contract (the same 7 sections for every "what/why/fix" question; the UI renders them as cards):
+    1. What is happening: status, top reasons, key readings vs limits with units and data age.
+    2. Why: the physics chain in plain words, using the parameters. Example: "oil pump health estimate 0.62 ->
+       pressure 1.6 bar at 4800 rpm, below the 2.0 bar normal band (OM p.2-3); oil temperature rising 0.8 C/min
+       because bearing friction increases".
+    3. Immediate mitigation (crew/operator now): from the registry + the OM abnormal-operation section, cited.
+    4. Fix / maintenance course of action: ATA chapter, inspection steps, parts, and whether a work order exists.
+       The agent may PROPOSE creating one; the operator confirms.
+    5. Prognosis and mission impact: time-to-limit, RUL band, mission reliability, divert advice when the planner
+       says so.
+    6. Confidence and unknowns: hypothesis probability, isolability ambiguity, quarantined sensors, ASSUMED data.
+    7. Sources: tool names + document/page citations.
+  Guards:
+    - number-grounding check: every number in the answer must appear in a tool result or a cited chunk; otherwise
+      the sentence is removed or flagged;
+    - the answer must never contradict the deterministic status/diagnosis;
+    - no write tools (no fault injection, no lever changes);
+    - the tool-call budget per question is capped (e.g. 8 calls) with a timeout;
+    - the provider is unavailable -> deterministic template (LLM=none) built from the same tools.
+  Providers (check current docs first, D39):
+    - Ollama /api/chat with a `tools` array (JSON-schema functions; the reply carries message.tool_calls; results
+      go back as role "tool"); qwen2.5:7b-instruct supports tool calling.
+    - Gemini function calling with the google-genai SDK (`from google import genai`; function declarations in a
+      Tool, passed through the config). Do not use the legacy google-generativeai package.
+  Registry additions this needs (do them in M0-02 so they exist early):
+    - in configs/faults.json, per fault: mitigation_inflight (text + source: OM page or "ANUMAAN-authored"),
+      maintenance_steps (ordered list + ATA + source), physics_explanation (one paragraph template with parameter
+      placeholders).
+  Tests:
+    - tool unit tests;
+    - an agent test with a scripted mock provider that calls the tools;
+    - a golden-answer test per demo fault (F01, F06, F23, S03): all 7 sections present, numbers grounded, status
+      matches;
+    - a live smoke test per provider (skipped when unreachable).
 AI-06 Voice path: STT -> copilot -> TTS uses AI-05 and reports per-stage latency. When a voice model is missing,
       the voice UI says so (D33).
 AI-07 Tests and demo:

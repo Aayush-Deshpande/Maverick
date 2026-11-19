@@ -9,7 +9,7 @@ Phase:        PHASE 0 - sort out the workspace (course of action section 4)
 Card:         P0-02 - guard hook (P0-01 done)
 Branch:       Beta (local only, not pushed), created from main 9b5942e. main untouched.
 Last commit:  P0-01 on Beta (see git log -1). main still 9b5942e.
-State:        Planning finished. Instruction files written: AGENTS.md, CLAUDE.md, DECISIONS.md (D1-D43), and
+State:        Planning finished. Instruction files written: AGENTS.md, CLAUDE.md, DECISIONS.md (D1-D47), and
               AGENTS.md + CLAUDE.md in 12 folders. Course of action v2 (solo) written. No code changed.
 Next step:    P0-02 guard hook (.claude/settings.json), then P0-03 inventory with md5, then P0-04 (moves, including
               web/Crazy_Landing -> archive_tracked/crazy_landing, D42). Unstaged on purpose: data/graph_db/
@@ -36,6 +36,11 @@ File coverage manifest: every file (3,153 tracked + 305 untracked) maps to a pla
 Noticed 19 Nov 06:03: assets/blender/rotax_914.blend and rotax_914_f.blend were saved in Blender (modified on disk,
   about 19 KB larger). Blender kept the previous versions as .blend1, byte-size identical to the committed files.
   Not staged, not touched. Question 3 below.
+19 Nov: checked the RAG manuals - generated, not official (D44 evidence). Downloaded the official Rotax OM-912 i
+  (92 pages) to docs/reference/oem/ (gitignored). 912 iS Sport limits from the OM recorded (D46: max continuous
+  72 kW, EGT 950 C, coolant 120 C, fuel 2.8-3.2 bar). Copilot redesigned as a live-state tool-using agent (D45,
+  card AI-05).
+Prasad confirmed: the 912 iS Sport 3D model is correct (D47). Goal: whatever works for the application.
 Open questions for Prasad:
   1. When to push Beta to origin (and confirm Render/Vercel do not auto-build Beta first, D30).
   2. Phase 8b: pull an Ollama embedding model (nomic-embed-text), or keep sentence-transformers MiniLM? (MiniLM and

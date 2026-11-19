@@ -225,6 +225,24 @@ Rule: every field keeps "provenance": {"status": TCDS|OM|DRDO|OWNER|ASSUMED|CALI
 the tag in a tooltip on every limit and rated value. If two sources disagree, keep both in "notes" and choose one
 explicitly.
 
+ROTAX 912 iS SPORT (NA gasoline, port fuel injection, dual-lane ECU, air-cooled barrels + liquid-cooled heads,
+dry-sump oil, gear 2.43). SOURCE: official Rotax OM-912 i, Rev. 1, June 2019, pages 2-2 to 2-5 (local copy in
+docs/reference/oem/, DECISIONS D46). These values REPLACE the earlier draft below them.
+  take-off                 73.5 kW @ 5800 rpm (max 5 min)                                  OM p.2-2
+  max continuous           72 kW @ 5500 rpm (912 iS Sport and iSc; plain 912 iS = 69 kW)    OM p.2-2  -> config 69 WRONG
+  idle                     min 1400 rpm                                                     OM p.2-2
+  oil pressure             min 0.8 bar below 3500 rpm; normal 2.0-5.0 bar above 3500 rpm;
+                           max 7 bar (short period, cold start)                             OM p.2-3
+  oil temperature          max 130 C, min 50 C, normal approx. 90-110 C                     OM p.2-3
+  coolant temperature      max 120 C. This is the 912 i head-temperature limit; the OM
+                           gives NO separate CHT limit                                       OM p.2-4  -> config "CHT 135" is not a 912 i limit
+  EGT                      max 950 C                                                        OM p.2-4  -> config 850 WRONG
+  fuel pressure at rail    2.8-3.2 bar; 2.5-3.5 bar allowed for max 3 s after a power change OM p.2-4
+  ambient                  max 60 C manifold temperature in flight; max 50 C ambient at
+                           start; min -20 C oil temperature at start                        OM p.2-4
+  acceleration / attitude  -0.5 g for max 5 s; static roll angle max 40 deg                 OM p.2-3
+  power take-off limits    external alternator max 600 W; hydraulic prop governor max 600 W OM p.2-5
+  Earlier draft (kept for history):
 ROTAX 912 iS / iSc (NA gasoline, port fuel injection, dual-lane ECU, air-cooled barrels + liquid-cooled heads,
 dry-sump oil, gear 2.43)
   rated_power_kw            73.5 @ 5800 rpm, 5 min (TCDS E.121)                       config 73.5 OK

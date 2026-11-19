@@ -110,3 +110,6 @@ tools/
 
 # runtime output (DECISIONS D6, card M0-11)
 var/
+
+# Official OEM manuals: copyrighted, keep local (DECISIONS D44). Sources in docs/reference/SOURCES.txt
+docs/reference/oem/
