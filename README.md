@@ -6,7 +6,21 @@ enhancement of aero piston engines used in MALE UAVs. Physics-based twin, ML fau
 per-cylinder crank-angle combustion diagnostics, conformal-calibrated RUL, computed mission
 reliability, 3D CAD visualization, and a React ground control station.
 
-**Start here if you're continuing this project (human or LLM):** [`docs/build/MENTAL_MODEL.md`](docs/build/MENTAL_MODEL.md)
+## START HERE (branch Beta, from 19 Nov 2026)
+- **Run it:** double-click `start_anumaan.bat`. Its menu starts the backend, the dashboard, the Blender twin, the 3D window, the tunnel, and more. All launchers live in `scripts/launchers/`.
+- **What is where:** `STRUCTURE.txt`, which includes the external dependencies: models on D:, Blender, the Gemini key.
+- **Rules for any AI agent:** `AGENTS.md` (Claude Code reads `CLAUDE.md`, which imports it). Every major folder has its own `AGENTS.md`.
+- **Decisions:** `DECISIONS.md` (binding). Progress and the next step: `PROGRESS.txt` (the RESUME HERE block).
+- **The plan:**
+  - `ANUMAAN_AI_COURSE_OF_ACTION.txt`: phases 0-10, the cards, and checks;
+  - `ANUMAAN_ROADMAP_AND_PS_COVERAGE.txt`;
+  - `ANUMAAN_COMPONENTS_ADDENDUM.txt`;
+  - `ANUMAAN_AUDIT_REPORT.txt`: issues 1-73.
+- **Honesty notes:**
+  - The old RAG "manuals" were generated text and are archived (`archive_tracked/synthetic_rag_corpus/`).
+  - The sections below describe the system as it was before the Beta work. They are rewritten in card M8-05.
+
+**Older hand-off docs (history, see DECISIONS D17):** [`docs/build/MENTAL_MODEL.md`](docs/build/MENTAL_MODEL.md)
 — one read, tells you what's real, what's designed-but-unbuilt, and the traps (a large fraction of
 this repo's code is disconnected from the live demo, not missing). Then
 [`docs/build/SUPERSEDED_VS_CURRENT.md`](docs/build/SUPERSEDED_VS_CURRENT.md) before touching any
@@ -82,7 +96,7 @@ competitive audit and the full technical design (docs 07–12).
 ├── requirements.txt
 ├── pytest.ini
 ├── run_app.py                    Unified interactive launcher
-└── launch_*.bat                  Windows one-click launchers (see below)
+└── start_anumaan.bat             Windows launcher menu (all launchers: scripts/launchers/)
 ```
 
 ---
@@ -103,11 +117,11 @@ The Three.js engine twin is served by the same FastAPI service: start `python ru
 and open `http://127.0.0.1:8000/app`. Engine selection, live telemetry, flight-condition
 controls, and fault injection are available in the browser UI; no separate Three.js launcher is needed.
 
-### Windows one-click launchers
+### Windows one-click launchers (in scripts/launchers/, or use start_anumaan.bat)
 - `launch_backend_server.bat` — FastAPI telemetry/control backend (`http://127.0.0.1:8000`, docs at `/docs`).
 - `launch_standalone_app.bat` — starts the backend if not already running, then opens the native
-  Blender 3D digital twin viewport (`assets/blender/rotax_912_is_sport.blend`).
-- `launch_canyon_simulation.bat` — Ladakh canyon flight simulation (`assets/models/terrain.blend`).
+  Blender 3D digital twin viewport (`assets/blender/engines/rotax_912is/rotax_912is.blend`).
+- `launch_canyon_simulation.bat` — Ladakh canyon flight simulation (`assets/blender/terrain/terrain_N34E077.blend`).
 - `launch_web_dashboard.bat` — builds and serves the React GCS dashboard.
 - `launch_anumaan_site.bat` — serves the static presentation site (`web/site/`).
 - `launch_mission_graph.bat` — simulates missions, then opens the mission graph viewer.
@@ -121,7 +135,7 @@ launch_web_dashboard.bat      # then serve the dashboard
 Open `http://localhost:5173` (laptop) or `http://<laptop-lan-ip>:5173` (phone on the same Wi-Fi).
 
 ### Opening the 3D twin directly in Blender
-1. Open [`assets/blender/rotax_912_is_sport.blend`](assets/blender/rotax_912_is_sport.blend) in Blender.
+1. Open [`assets/blender/engines/rotax_912is/rotax_912is.blend`](assets/blender/engines/rotax_912is/rotax_912is.blend) in Blender.
 2. Run [`apps/blender_twin/standalone_digital_twin_app.py`](apps/blender_twin/standalone_digital_twin_app.py) from the Scripting workspace.
 
 ---

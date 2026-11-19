@@ -106,7 +106,24 @@ unity_bridge/
 
 # Downloaded third-party binaries for local dev tooling (e.g. ngrok.exe, ~33MB) —
 # fetched on demand by launch_public_tunnel.bat, never committed
-tools/
+/tools/
+
+# Engine GLB copies made by scripts/assets/sync_web_models.mjs from assets/web/engines/ (card P0-07, D28)
+frontend/public/models/rotax_912is.glb
+frontend/public/models/rotax_914.glb
+frontend/public/models/rotax_915is.glb
+frontend/public/models/austro_ae300.glb
+frontend/public/models/vrde_jayem_2_2l.glb
+docs_site/public/assets/models/rotax_912is.glb
+docs_site/public/assets/models/rotax_914.glb
+docs_site/public/assets/models/rotax_915is.glb
+docs_site/public/assets/models/austro_ae300.glb
+docs_site/public/assets/models/vrde_jayem_2_2l.glb
+web/site/assets/models/rotax_912is.glb
+web/site/assets/models/rotax_914.glb
+web/site/assets/models/rotax_915is.glb
+web/site/assets/models/austro_ae300.glb
+web/site/assets/models/vrde_jayem_2_2l.glb
 
 # runtime output (DECISIONS D6, card M0-11)
 var/

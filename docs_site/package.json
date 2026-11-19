@@ -4,6 +4,9 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
+    "sync-models": "node ../scripts/assets/sync_web_models.mjs docs_site",
+    "predev": "npm run sync-models",
+    "prebuild": "npm run sync-models",
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview"

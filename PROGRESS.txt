@@ -5,16 +5,20 @@ section 19.1. Update the RESUME HERE block at every commit and at the end of eve
 =====================================================================================================================
 RESUME HERE  (last updated 19 Nov 2026)
 =====================================================================================================================
-Phase:        PHASE 0 - sort out the workspace (course of action section 4)
-Card:         P0-03 - inventory with md5 (P0-01, P0-02 done)
+Phase:        PHASE 0 DONE (P0-01..P0-09). Next: PHASE 1 (M0), card M0-01 then M0-02.
+Card:         M0-02 started early: configs/faults.json generated (44 faults) by scripts/assets/build_fault_registry.py.
+              NOT committed yet; it needs schema + loader + tests first (card M0-02 Done-when).
 Branch:       Beta (local only, not pushed), created from main 9b5942e. main untouched.
-Last commit:  P0-01 on Beta (see git log -1). main still 9b5942e.
-State:        Planning finished. Instruction files written: AGENTS.md, CLAUDE.md, DECISIONS.md (D1-D47), and
-              AGENTS.md + CLAUDE.md in 12 folders. Course of action v2 (solo) written. No code changed.
-Next step:    P0-03 inventory with md5, then P0-04 (moves, including
-              web/Crazy_Landing -> archive_tracked/crazy_landing, D42). Unstaged on purpose: data/graph_db/
-              fleet_graph.json (runtime), the 914 .blend files (question 3), and web/usavionix deletions +
-              web/Crazy_Landing (P0-04).
+Last commit:  P0-07/08/09 on Beta (see git log -1). main still 9b5942e.
+State:        Workspace sorted: archive + history moves, launchers in scripts/launchers + start_anumaan.bat, assets in
+              assets/blender/engines/<id>/, one web GLB copy per engine (assets/web/engines + sync script), STRUCTURE.txt,
+              guard hook. Tests at baseline after every Phase 0 commit. DECISIONS D1-D49.
+Next step:    M0-01 engine data corrections (configs/engines/*.json; keep flat operating_limits keys because
+              backend/core/limits.py and tests use them; add banded limits + new keys; sources: OM-912 i,
+              EASA TCDS E.121/E.200 in docs/reference/oem/). Then M0-02 (schema + registry loader + tests for the
+              faults.json already generated).
+              Unstaged on purpose: data/graph_db/fleet_graph.json (runtime, M0-11) and your 914 .blend edits
+              (question 3, now at assets/blender/engines/rotax_914/ and assets/blender/_archive/).
 Answered 19 Nov (recorded as D25-D33):
   - 914 master: headless inspection decides (D25); the 912 iS Sport stays the reference engine.
   - Voice/: stays as local model storage; the stale .gitmodules is removed in P0-04 (D26).
@@ -132,3 +136,20 @@ Checks:
   - launchers 0 problems.
 Registers: assets/ASSET_REGISTER.csv, assets/blender/_archive/ARCHIVE_REGISTER.csv. assets/AGENTS.md updated.
 Your 914 .blend edits from 06:03 are still unstaged (now at the new paths). Question 3 still open.
+
+=== 19 Nov 2026  P0-07/P0-08/P0-09 Single web models, structure map, LFS decision
+P0-07:
+  - assets/web/engines/<id>.glb is the only committed web copy (from the Draco set; it matches the masters).
+  - scripts/assets/sync_web_models.mjs copies it to frontend, docs_site and web/site; the copies are gitignored.
+    npm predev/prebuild run the sync for frontend and docs_site; the static-site launcher runs it for web/site.
+  - md5 check: 12 copies were identical and are now untracked. web/site's 915 (actually the 912 file) and its older
+    AE300/VRDE exports went to archive_tracked/web_site_old_models/. web/site now shows the correct 915.
+  - frontend "npm run build" passes with the sync step.
+  - .gitignore "tools/" narrowed to "/tools/" (it was also ignoring scripts/tools).
+P0-08: STRUCTURE.txt (folders + external dependencies); README "START HERE" block; launcher paths in README.
+P0-09: decision D48 - .blend not made lockable (read-only files + network locks bring no benefit when solo).
+Coverage: file_coverage.py 0 uncovered (rules added for the new Phase 0 files).
+CHECKPOINT PHASE 0:
+  - pytest at baseline after P0-04/05 and after P0-06 (333 passed, same 3 known failures);
+  - T-REPO-1 passed; launchers 0 problems; Blender masters open; frontend build passes; main still 9b5942e.
+  - Remaining manual check for Prasad: start_anumaan.bat options 1-3 on your PC.
