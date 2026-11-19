@@ -6,6 +6,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
+import { preloader } from './preload';
 
 export interface ComponentMap {
   highlight: { fault_rgb: number[]; ghost_rgb: number[] };
@@ -66,7 +67,8 @@ export class EngineBay {
     this.ghostMat.color.setRGB(gr, gg, gb); this.ghostMat.emissive.setRGB(0.01, 0.08, 0.18);
     const draco = new DRACOLoader(); draco.setDecoderPath('/draco/');
     const loader = new GLTFLoader(); loader.setDRACOLoader(draco);
-    const gltf = await loader.loadAsync('/models/rotax_912is.glb');
+    const buf = await preloader.bytes('/models/rotax_912is.glb');
+    const gltf = buf ? await loader.parseAsync(buf, '/models/') : await loader.loadAsync('/models/rotax_912is.glb');
     draco.dispose();
     const root = gltf.scene;
     this.scene.add(root);

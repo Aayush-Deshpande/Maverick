@@ -8,6 +8,7 @@ import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment
 import { CHAPTERS, STARTS, TOTAL, T_TOUCH, T_GLIDE } from './story';
 import { T_CONFIRM, readout } from './timeline';
 import { EngineBay, type BayLabel, type ComponentMap } from './bay';
+import { preloader } from './preload';
 
 /* ------------------------------------------------------------------ noise */
 
@@ -419,7 +420,9 @@ export class SortieWorld {
     const draco = new DRACOLoader();
     draco.setDecoderPath('/draco/');
     const loader = new GLTFLoader(); loader.setDRACOLoader(draco);
-    const gltf = await loader.loadAsync('/models/uav_predator.glb');
+    // the bytes come from the preloader (already downloaded, with progress); fetch only if it failed
+    const buf = await preloader.bytes('/models/uav_predator.glb');
+    const gltf = buf ? await loader.parseAsync(buf, '/models/') : await loader.loadAsync('/models/uav_predator.glb');
     draco.dispose();
     const model = gltf.scene;
     // normalise: centre it, nose to +Z, ~30 units span

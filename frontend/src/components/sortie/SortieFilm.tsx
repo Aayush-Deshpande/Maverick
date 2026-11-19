@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ArrowDown, ArrowUpRight, Box, ChevronLeft, ChevronRight, Pause, Play, RotateCcw, Volume2, VolumeX } from 'lucide-react';
 import { CHAPTERS, DIRECTIVE, GLIDE, INJECTION, OIL, STARTS, TOTAL, T_INJECT, chapterAt, oilExpected, oilMeasured, startOf } from './story';
 import { INSERT, RADIO, RADIO_HOLD, T_CONFIRM, readout, type Readout } from './timeline';
@@ -9,6 +10,7 @@ import { subsystemName, type ComponentMap } from './bay';
 import type { Screen, SortieWorld } from './world';
 import { SortieSound } from './sound';
 import { warmEngineModels } from './warmup';
+import { preloader } from './preload';
 import './sortie.css';
 
 interface Props {
@@ -35,6 +37,7 @@ const pad2 = (n: number) => String(Math.floor(n)).padStart(2, '0');
 const sstep = (a: number, b: number, x: number) => { const k = Math.min(1, Math.max(0, (x - a) / (b - a))); return k * k * (3 - 2 * k); };
 /** Sortie elapsed time: the film opens six hours into the eighteen-hour sortie. */
 const missionClock = (t: number) => { const s = 6 * 3600 + 14 * 60 + 7 + t; return `T+${pad2(s / 3600)}:${pad2((s % 3600) / 60)}:${pad2(s % 60)}`; };
+const mb = (b: number) => (b / 1e6).toFixed(1);
 const radioAt = (t: number) => { for (let i = RADIO.length - 1; i >= 0; i--) if (t >= RADIO[i].at) return t < RADIO[i].at + RADIO_HOLD ? i : -1; return -1; };
 
 /** Oil pressure, measured against what the twin expects, over the last 16 story seconds. */
@@ -102,6 +105,17 @@ export function SortieFilm({ onRunDemo, onOpenConsole, onOpenTwin, evidenceHref,
   const [bayInfo, setBayInfo] = useState<{ ready: boolean; meshes: number }>({ ready: false, meshes: 0 });
   const [muted, setMuted] = useState(true);
   const [opening, setOpening] = useState(0);
+  const [forceBegin, setForceBegin] = useState(false);
+  // the loading dialog: polled while it is on screen
+  const [load, setLoad] = useState(() => ({ ...preloader.summary(), tasks: preloader.tasks.map((t) => ({ ...t })), ready: preloader.ready, failed: preloader.anyFailed }));
+  useEffect(() => {
+    if (previewAt !== null) return;
+    const id = window.setInterval(() => {
+      setLoad({ ...preloader.summary(), tasks: preloader.tasks.map((t) => ({ ...t })), ready: preloader.ready, failed: preloader.anyFailed });
+      if (preloader.ready) window.clearInterval(id);
+    }, 200);
+    return () => window.clearInterval(id);
+  }, [previewAt]);
 
   const enterPhase = useCallback((p: Phase, seconds = 0) => {
     const c = clock.current;
@@ -122,7 +136,8 @@ export function SortieFilm({ onRunDemo, onOpenConsole, onOpenTwin, evidenceHref,
   }, [enterPhase]);
 
   useEffect(() => {
-    void startReservoir();
+    preloader.start();
+    void startReservoir().then((res) => preloader.step('reservoir', !res));
     const el = host.current, section = root.current, mind = mindRef.current;
     if (!el || !section || !mind) return;
     let raf = 0, disposed = false, last = performance.now(), lastUi = 0, lastGateFrame = 0;
@@ -150,23 +165,24 @@ export function SortieFilm({ onRunDemo, onOpenConsole, onOpenTwin, evidenceHref,
         if (disposed) return;
         w = new mod.SortieWorld(el);
       } catch {
-        setStatus('nogl'); clock.current.ready = true; return;
+        setStatus('nogl'); clock.current.ready = true; preloader.step('scene', true); preloader.step('aircraft', true); preloader.step('bay', true); return;
       }
       world.current = w;
       w.resize();
       ro = new ResizeObserver(() => w.resize()); ro.observe(el);
-      w.loadAircraft().catch(() => {}).finally(async () => {
+      w.loadAircraft().then(() => preloader.step('aircraft'), () => preloader.step('aircraft', true)).finally(async () => {
         if (disposed) return;
         clock.current.ready = true; setStatus('ready');
         const v = insertVid.current;
         if (v && !v.src) { v.preload = 'auto'; v.src = INSERT.src; v.load(); }
         // the engine bay (the real CAD and the shared component map), then the engine section's models
         try {
-          const res = await fetch('/twin/component_map.json', { cache: 'force-cache' });
-          const map = (await res.json()) as ComponentMap;
+          const raw = await preloader.bytes('/twin/component_map.json');
+          const map = (raw ? JSON.parse(new TextDecoder().decode(raw)) : await (await fetch('/twin/component_map.json')).json()) as ComponentMap;
           await w.loadBay(map);
+          preloader.step('bay');
           if (!disposed) setBayInfo({ ready: true, meshes: w.bay?.meshCount ?? 0 });
-        } catch { /* the Inside chapter falls back to the Blender renders */ }
+        } catch { preloader.step('bay', true); /* the Inside chapter falls back to the Blender renders */ }
         void warmEngineModels();
       });
 
@@ -177,7 +193,11 @@ export function SortieFilm({ onRunDemo, onOpenConsole, onOpenTwin, evidenceHref,
         const active = c.visible && !document.hidden;
         if (active !== wasActive) { wasActive = active; sound.current?.setActive(active); }
         if (!active) return;
-        if (c.phase === 'gate') { if (now - lastGateFrame > 500) { lastGateFrame = now; w.frame(c.t, c.real, 0.016); } return; }
+        if (c.phase === 'gate') {
+          // behind the dialog: one frame every half second; the first one compiles the shaders
+          if (now - lastGateFrame > 500) { lastGateFrame = now; w.frame(c.t, c.real, 0.016); preloader.step('scene'); }
+          return;
+        }
         if (c.phase === 'insert' && now >= c.phaseEnd) backToAir();
         const running = c.phase === 'play' && c.playing && c.ready;
         const prev = c.t;
@@ -267,7 +287,14 @@ export function SortieFilm({ onRunDemo, onOpenConsole, onOpenTwin, evidenceHref,
     (window as unknown as { __sortie?: unknown }).__sortie = { clock: clock.current };
   }, []);
 
-  useEffect(() => { if (armed && phase === 'gate') gateBtn.current?.focus({ preventScroll: true }); }, [armed, phase]);
+  const canBegin = load.ready || forceBegin;
+  useEffect(() => { if (armed && phase === 'gate' && canBegin) gateBtn.current?.focus({ preventScroll: true }); }, [armed, phase, canBegin]);
+  // the site behind the dialog does not scroll until the film begins
+  useEffect(() => {
+    if (previewAt !== null || phase !== 'gate') return;
+    document.documentElement.classList.add('so-locked');
+    return () => document.documentElement.classList.remove('so-locked');
+  }, [phase, previewAt]);
 
   /** Must run inside the click: Safari only lets audio start in the same task as the gesture. */
   const soundOn = useCallback(() => {
@@ -478,19 +505,47 @@ export function SortieFilm({ onRunDemo, onOpenConsole, onOpenTwin, evidenceHref,
         </div>
       </div>
 
-      <div className={`so-gate${gated && armed ? ' is-shown' : ''}`} role="dialog" aria-modal="false" aria-labelledby="so-gate-title" hidden={!gated}>
-        {armed && (
-          <div className="so-gate-inner">
-            <p id="so-gate-title" className="so-gate-title">What we built, running</p>
-            <p className="so-gate-lede">Ninety seconds. A fault injected into the real CAD, caught by our detector computed live in your browser, named from memory, and the airframe brought home.</p>
-            <div className="so-gate-actions">
-              <button ref={gateBtn} type="button" className="so-btn so-btn-light" onClick={() => begin(true)}><Volume2 size={17} aria-hidden /> Begin with sound</button>
-              <button type="button" className="so-btn so-btn-ghost" onClick={() => begin(false)}>Watch without sound</button>
+      {/* the gate, over the whole site: assets load first (with progress and time left), then a click,
+          which is the only way a browser allows sound */}
+      {previewAt === null && gated && typeof document !== 'undefined' && createPortal(
+        <div className={`so-gate${armed ? ' is-shown' : ''}`} role="dialog" aria-modal="true" aria-labelledby="so-gate-title">
+          {armed && (canBegin ? (
+            <div className="so-gate-inner" key="ready">
+              <p id="so-gate-title" className="so-gate-title">What we built, running</p>
+              <p className="so-gate-lede">Ninety seconds. A fault injected into the real CAD, caught by our detector computed live in your browser, named from memory, and the airframe brought home.</p>
+              {load.failed && <p className="so-gate-warn">Some assets did not load; the film will use stills where it has to.</p>}
+              <div className="so-gate-actions">
+                <button ref={gateBtn} type="button" className="so-btn so-btn-light" onClick={() => begin(true)}><Volume2 size={17} aria-hidden /> Begin with sound</button>
+                <button type="button" className="so-btn so-btn-ghost" onClick={() => begin(false)}>Watch without sound</button>
+              </div>
+              <button type="button" className="so-gate-skip" onClick={() => { begin(false); document.querySelector(evidenceHref)?.scrollIntoView(); }}>Or skip to the evidence <ArrowDown size={14} aria-hidden /></button>
             </div>
-            <a className="so-gate-skip" href={evidenceHref}>Or skip to the evidence <ArrowDown size={14} aria-hidden /></a>
-          </div>
-        )}
-      </div>
+          ) : (
+            <div className="so-gate-inner so-loading" key="loading" aria-live="polite">
+              <p id="so-gate-title" className="so-gate-title">Please wait · loading assets</p>
+              <div className="so-load-bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(load.progress * 100)}>
+                <span style={{ transform: `scaleX(${load.progress})` }} />
+              </div>
+              <p className="so-load-figs">
+                <output>{Math.round(load.progress * 100)}%</output>
+                <span>{mb(load.loaded)} of {mb(load.total)} MB</span>
+                <span>{load.eta === null ? 'estimating time…' : load.eta < 1 ? 'almost there' : `about ${Math.ceil(load.eta)} s left`}</span>
+              </p>
+              <ul className="so-load-list">
+                {load.tasks.map((task) => (
+                  <li key={task.id} className={task.failed ? 'is-failed' : task.done ? 'is-done' : undefined}>
+                    <span className="so-load-mark" aria-hidden>{task.failed ? '!' : task.done ? '✓' : ''}</span>
+                    <span>{task.label}</span>
+                    <small>{task.kind === 'bytes' ? (task.done ? `${mb(task.total)} MB` : `${Math.round((task.loaded / Math.max(1, task.total)) * 100)}%`) : task.done ? 'done' : ''}</small>
+                  </li>
+                ))}
+              </ul>
+              {load.elapsed > 20 && <button type="button" className="so-gate-skip" onClick={() => setForceBegin(true)}>Continue without waiting</button>}
+            </div>
+          ))}
+        </div>,
+        document.body,
+      )}
     </section>
   );
 }

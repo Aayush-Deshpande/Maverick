@@ -434,3 +434,37 @@
   .so-baytag { display: none; }
   .so-inject { top: 70px; }
 }
+
+/* ---------- the gate over the whole site: loading, then begin ----------
+   Rendered in a portal on <body>, so it carries its own tokens. */
+.so-gate {
+  --so-ink: #f4f6f5; --so-soft: rgba(244, 246, 245, 0.72); --so-mute: rgba(244, 246, 245, 0.5);
+  --so-cyan: #58e6f2; --so-rose: #ff4f8b; --so-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --f-display: 'Sofia Sans Extra Condensed', 'Sofia Sans Condensed', 'Arial Narrow', sans-serif;
+  --f-label: 'Sofia Sans Condensed', 'Arial Narrow', sans-serif;
+  --f-body: 'Sofia Sans', system-ui, sans-serif;
+  --f-data: 'JetBrains Mono', ui-monospace, monospace;
+  position: fixed; inset: 0; z-index: 99990; font-family: var(--f-body); -webkit-font-smoothing: antialiased;
+}
+.so-gate .so-btn { font-family: var(--f-label); }
+html.so-locked, html.so-locked body { overflow: hidden; }
+.so-gate-skip { background: none; border: 0; cursor: pointer; }
+.so-gate-warn { margin: -14px auto 22px; font-size: 14px; color: #ffb347; }
+.so-loading { width: min(560px, 100%); text-align: left; }
+.so-loading .so-gate-title { text-align: center; }
+.so-load-bar { position: relative; height: 4px; margin: 28px 0 12px; background: rgba(244, 246, 245, 0.12); overflow: hidden; }
+.so-load-bar span { position: absolute; inset: 0; transform-origin: left; background: var(--so-cyan); transition: transform 240ms linear; }
+.so-load-figs { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0 0 22px; font-family: var(--f-data); font-size: 13px; color: var(--so-soft); font-variant-numeric: tabular-nums; }
+.so-load-figs output { color: var(--so-ink); font-weight: 600; }
+.so-load-figs span:last-child { margin-left: auto; color: var(--so-cyan); }
+.so-load-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; }
+.so-load-list li { display: grid; grid-template-columns: 18px 1fr auto; align-items: baseline; gap: 10px; font-size: 14.5px; color: var(--so-mute); transition: color 300ms; }
+.so-load-list li.is-done { color: var(--so-soft); }
+.so-load-list li.is-failed { color: #ffb347; }
+.so-load-list small { font-family: var(--f-data); font-size: 12px; font-variant-numeric: tabular-nums; }
+.so-load-mark { font-family: var(--f-data); font-size: 12px; color: var(--so-cyan); }
+.so-load-list li:not(.is-done) .so-load-mark::before { content: ''; display: inline-block; width: 7px; height: 7px; border: 1.5px solid rgba(244, 246, 245, 0.35); border-top-color: var(--so-cyan); border-radius: 50%; animation: so-spin 900ms linear infinite; }
+@keyframes so-spin { to { transform: rotate(360deg); } }
+.so-loading .so-gate-skip { display: block; margin: 22px auto 0; }
+@media (max-width: 760px) { .so-load-list li { font-size: 13px; } .so-load-figs span:last-child { margin-left: 0; } }
+@media (prefers-reduced-motion: reduce) { .so-load-list li:not(.is-done) .so-load-mark::before { animation: none; } }
