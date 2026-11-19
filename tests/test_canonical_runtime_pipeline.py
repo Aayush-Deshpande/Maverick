@@ -55,7 +55,7 @@ def test_canonical_runtime_pipeline_end_to_end():
     assert "h_min_um" in f.virtual_sensors
     assert "P_ind_kw" in f.virtual_sensors
     assert f.virtual_sensors["P_max_bar"] > 20.0
-    assert f.virtual_sensors["TIT_degC"] > 500.0
+    assert f.virtual_sensors["TIT_degC"] is None          # the 912 has no turbine: NO DATA
 
     # 3. Thermofluid UKF State Observer
     assert last_tick.ukf is not None

@@ -127,6 +127,8 @@ class TurbochargerSpec:
     map_takeoff_max_kpa: Optional[float] = None
     map_continuous_max_kpa: Optional[float] = None
     boost_control: str = "WASTEGATE"
+    # TCU schedule: nominal airbox pressure vs throttle-sensor position (914 OM Fig. 6); None = full target always
+    tcu_nominal_airbox: Optional[dict] = None
 
 
 @dataclass

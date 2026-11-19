@@ -45,6 +45,15 @@
         "map_takeoff_max_kpa": {"type": ["number", "null"]},
         "map_continuous_max_kpa": {"type": ["number", "null"]},
         "boost_control": {"enum": ["WASTEGATE", "VGT"]},
+        "tcu_nominal_airbox": {
+          "type": ["object", "null"],
+          "required": ["lever_full_scale_pct", "throttle_pct", "airbox_hpa"],
+          "properties": {
+            "lever_full_scale_pct": {"type": "number", "exclusiveMinimum": 0},
+            "throttle_pct": {"type": "array", "items": {"type": "number"}, "minItems": 2},
+            "airbox_hpa": {"type": "array", "items": {"type": "number", "exclusiveMinimum": 0}, "minItems": 2}
+          }
+        },
         "intercooled": {"type": "boolean"}
       }
     },

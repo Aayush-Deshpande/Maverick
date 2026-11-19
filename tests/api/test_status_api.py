@@ -33,6 +33,12 @@ def _tick(client, n):
         client.hub.tick_all()
 
 
+def test_nominal_state_is_go(client):
+    _tick(client, 5)
+    st = _state(client)["status"]
+    assert st["level"] == "GO" and st["reasons"] == []
+
+
 def test_engine_command_validation(client):
     assert client.post(f"/api/v1/engines/{ENGINE}/engine", json={"command": "FLY"}).status_code == 422
     assert client.post(f"/api/v1/engines/{ENGINE}/engine", json={"command": "STOP", "x": 1}).status_code == 422

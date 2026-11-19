@@ -64,7 +64,7 @@ LEGACY_CHANNELS = {"oil_press": "oil_p", "oil_temp": "oil_t", "map": "map_kpa", 
 
 
 def canonical_channel(name: str) -> str:
-    """'CHT_2' / 'cht_2' -> 'cht[2]'; legacy validator names -> Frame names."""
+    """'CHT_<k>' / 'cht_<k>' -> 'cht[<k>]'; legacy validator names -> Frame names."""
     low = name.lower()
     if low in LEGACY_CHANNELS:
         return LEGACY_CHANNELS[low]

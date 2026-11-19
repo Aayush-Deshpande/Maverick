@@ -53,6 +53,12 @@ class MeanValueEngine:
         self._air_key, self._air_val = None, None
         lam = cfg.nominal_lambda
         self.nominal_lambda = float(lam.value if hasattr(lam, "value") else lam)
+        ecu = physics_values(cfg.engine_id, "ecu")
+        # mixture map (SI): POWER enrichment at/above the switch throttle, ECO below; the configured nominal lambda
+        # is used for both when the engine documents no modes
+        self.lambda_power = ecu.get("lambda_power", self.nominal_lambda)
+        self.lambda_eco = ecu.get("lambda_eco", self.nominal_lambda)
+        self.eco_below_throttle_pct = ecu.get("eco_below_throttle_pct")
         self.turbo = Turbo.for_engine(cfg, physics_values(cfg.engine_id, "induction")["wot_map_ratio"])
         if self.turbo is not None:
             self.calibrate_turbo()
@@ -74,7 +80,7 @@ class MeanValueEngine:
         """Steady operating point. SI: throttle_pct is the butterfly. CI (quality-governed): throttle_pct is the power
         lever = share of the full-load injection quantity; there is no butterfly. Per-cylinder faults enter through
         `injector` (flow coefficients) and `quality` (combustion quality); see backend/sim/fuel.py and combustion.py."""
-        lam = self.nominal_lambda if lam is None else lam
+        lam = self.mixture_lambda(throttle_pct) if lam is None else lam
         n = self.n_cyl
         inj = list(injector) if injector is not None else [1.0] * n
         qual = list(quality) if quality is not None else [1.0] * n
@@ -92,7 +98,15 @@ class MeanValueEngine:
             for _ in range(8):       # filter drop solved in closed form; boost depends on flow: short fixed point
                 if self.turbo is not None:
                     target = None if map_target_pa is None else map_target_pa / self.wot_map_ratio
-                    p_src = self.turbo.steady_charge(atm, mdot, target_pa=target, health=turbo_health)
+                    takeoff_range = False
+                    if target is None and not self.ci:
+                        target = self.turbo.scheduled_target(throttle_pct)          # TCU follows the throttle
+                        takeoff_range = target is not None and target > (self.turbo.continuous_target() or target)
+                    p_src = self.turbo.steady_charge(atm, mdot, target_pa=target, health=turbo_health,
+                                                     takeoff_range=takeoff_range)
+                    if takeoff_range:        # the take-off cap never takes boost below the continuous schedule
+                        p_src = max(p_src, self.turbo.steady_charge(atm, mdot, target_pa=self.turbo.continuous_target(),
+                                                                    health=turbo_health))
                     t_src = self.turbo.charge_temperature_k(atm, p_src,
                                                             (turbo_health or {}).get("intercooler_fouling", 0.0))
                     self.turbo.t_charge_k = t_src
@@ -132,6 +146,12 @@ class MeanValueEngine:
                               indicated_w=indicated, friction_w=friction, brake_w=indicated - friction,
                               cyl_fuel_kg_s=cyl_fuel, cyl_indicated_w=cyl_w, cyl_lambda=cyl_lam,
                               cyl_burnt=cyl_burnt, fuel_pressure_bar=p_fuel)
+
+    def mixture_lambda(self, throttle_pct: float) -> float:
+        """ECU lambda target for a spark-ignition engine (CI engines are quality-governed: lambda follows the fuel)."""
+        if self.eco_below_throttle_pct is not None and throttle_pct < self.eco_below_throttle_pct:
+            return self.lambda_eco
+        return self.lambda_power
 
     @property
     def wot_map_ratio(self) -> float:

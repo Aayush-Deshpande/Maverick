@@ -189,12 +189,12 @@
       "ref": "convective conductance ~ (rho V)^0.8 (Dittus-Boelter / Colburn)"
     },
     "oil_thermostat_open_c": {
-      "value": 80.0,
+      "value": 90.0,
       "status": "ASSUMED",
-      "ref": "installation oil-cooler thermostat starts opening (Rotax installations commonly fit one)"
+      "ref": "installation oil-cooler thermostat starts opening (Rotax installations commonly fit one); 90 C keeps cold-cruise oil inside the OM-912 i normal band 90-110 C"
     },
     "oil_thermostat_full_c": {
-      "value": 95.0,
+      "value": 98.0,
       "status": "ASSUMED",
       "ref": "oil-cooler thermostat fully open (below the 100 C calibration target, so calibration is unaffected)"
     },
@@ -553,6 +553,11 @@
       "value": 0.02,
       "status": "ASSUMED",
       "ref": "accelerometer channel noise floor (1 sigma, mm/s) independent of amplitude"
+    },
+    "noise_pressure_floor_bar": {
+      "value": 0.03,
+      "status": "ASSUMED",
+      "ref": "oil / fuel / rail pressure transducer noise floor (1 sigma, bar), independent of the reading"
     }
   },
   "build_variation": {

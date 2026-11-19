@@ -42,6 +42,7 @@ class Turbo:
     t_charge_k: float = T0_K
     pressure_ratio: float = 1.0
     compressor_pa: float = P0_PA        # compressor outlet before any leak (sets the shaft speed)
+    schedule: Optional[Dict[str, Any]] = None    # TCU nominal airbox pressure vs throttle (configs/engines turbo)
 
     @classmethod
     def for_engine(cls, cfg: Any, wot_map_ratio: float) -> Optional["Turbo"]:
@@ -53,7 +54,8 @@ class Turbo:
         return cls(target_pa=map_target / wot_map_ratio, lag_s=float(t.lag_time_constant_sec),
                    intercooled=bool(t.intercooled), eta_c=ph["compressor_efficiency"],
                    ic_eff=ph["intercooler_effectiveness"], no_boost_pr=ph["no_boost_pressure_ratio"],
-                   bearing_pr_loss=ph["bearing_pr_loss"], bearing_lag_gain=ph["bearing_lag_gain"])
+                   bearing_pr_loss=ph["bearing_pr_loss"], bearing_lag_gain=ph["bearing_lag_gain"],
+                   schedule=t.tcu_nominal_airbox)
 
     @staticmethod
     def corrected_flow(mdot: float, atm: Atmosphere) -> float:
@@ -72,12 +74,38 @@ class Turbo:
         pr = max(1.0, self.pr_a - self.pr_b * m_corr)
         return 1.0 + (pr - 1.0) * (1.0 - self.bearing_pr_loss * bearing_wear)
 
+    def scheduled_target(self, throttle_pct: float) -> Optional[float]:
+        """TCU nominal airbox pressure for this lever position, scaled so the take-off point is the calibrated
+        take-off target (the documented curve gives the shape). None when no schedule is documented."""
+        s = self.schedule
+        if not s:
+            return None
+        x = min(max(throttle_pct, 0.0), 100.0) * s["lever_full_scale_pct"] / 100.0
+        xs, ys = s["throttle_pct"], s["airbox_hpa"]
+        if x <= xs[0]:
+            y = ys[0]
+        elif x >= xs[-1]:
+            y = ys[-1]
+        else:
+            k = next(i for i in range(1, len(xs)) if x <= xs[i])
+            y = ys[k - 1] + (ys[k] - ys[k - 1]) * (x - xs[k - 1]) / (xs[k] - xs[k - 1])
+        return self.target_pa * y / ys[-1]
+
+    def continuous_target(self) -> Optional[float]:
+        """Highest scheduled airbox pressure below the take-off step (the max-continuous plateau)."""
+        s = self.schedule
+        if not s:
+            return None
+        ys = s["airbox_hpa"]
+        below = [y for y in ys if y < ys[-1]]
+        return self.target_pa * max(below) / ys[-1] if below else None
+
     def steady_charge(self, atm: Atmosphere, mdot: float, target_pa: Optional[float] = None,
-                      health: Optional[Dict[str, Any]] = None) -> float:
+                      health: Optional[Dict[str, Any]] = None, takeoff_range: bool = False) -> float:
         """Charge pressure the controller reaches at steady state."""
         hl = health or {}
         target = self.target_pa if target_pa is None else target_pa
-        if target_pa is None and self.takeoff_pr_limit is not None:
+        if (target_pa is None or takeoff_range) and self.takeoff_pr_limit is not None:
             target = min(target, atm.pressure_pa * self.takeoff_pr_limit)
         limit = atm.pressure_pa * self.pr_max(self.corrected_flow(mdot, atm), hl.get("bearing_wear", 0.0))
         if hl.get("wastegate_stuck") == "OPEN":

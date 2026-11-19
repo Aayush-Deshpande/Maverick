@@ -39,7 +39,36 @@
     "critical_altitude_takeoff_ft": 8000.0,
     "map_takeoff_max_kpa": 135.0,
     "map_continuous_max_kpa": 120.0,
-    "boost_control": "WASTEGATE"
+    "boost_control": "WASTEGATE",
+    "tcu_nominal_airbox": {
+      "lever_full_scale_pct": 115.0,
+      "throttle_pct": [
+        0.0,
+        15.0,
+        47.0,
+        60.0,
+        70.0,
+        80.0,
+        90.0,
+        100.0,
+        108.0,
+        110.0,
+        115.0
+      ],
+      "airbox_hpa": [
+        1000.0,
+        1000.0,
+        1000.0,
+        1050.0,
+        1085.0,
+        1120.0,
+        1160.0,
+        1220.0,
+        1220.0,
+        1370.0,
+        1370.0
+      ]
+    }
   },
   "rated_power_kw": 84.5,
   "rated_rpm": 5800.0,
@@ -56,7 +85,7 @@
   "rail_pressure_bar": null,
   "fuel_cloud_point_c": null,
   "fuel_cfpp_c": null,
-  "source": "Rotax 914 Operator's + Installation Manual (docs/reference/); PRIMARY TARGET — global MALE standard, matches NASA ACES real telemetry",
+  "source": "Rotax 914 Operator's + Installation Manual (docs/reference/); PRIMARY TARGET \u2014 global MALE standard, matches NASA ACES real telemetry",
   "provenance": {
     "layout.bore_mm": {
       "status": "MANUAL",
@@ -169,6 +198,10 @@
     "operating_limits.coolant_t_max_c": {
       "status": "MANUAL",
       "ref": "BRP-Rotax Operators Manual 914 (docs/reference/Rotax914_Operators_Manual.pdf) p.2-4 (coolant exit temperature)"
+    },
+    "turbo.tcu_nominal_airbox": {
+      "status": "MANUAL",
+      "ref": "Rotax 914 OM Ed. 2 Rev. 0 p. 7-10 Fig. 6 'Throttle position versus nominal airbox pressure' and its table (idle ~0 %: 1500 hPa - ignored, the closed butterfly sets MAP there; max continuous 100-108 %: 1220 hPa; take-off 110-115 %: 1370 hPa). Points between 47 and 100 % digitized from the figure (+-10 hPa). Throttle sensor 0-115 % is linear over the lever (p. 7-9), so lever 100 % = sensor 115 %."
     }
   },
   "operating_limits": {

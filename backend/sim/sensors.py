@@ -18,6 +18,7 @@ KIND = {"temperature": ("cht", "egt", "oil_t", "coolant_t", "gearbox_t", "charge
         "flow": ("fuel_flow",), "electrical": ("bus_v", "batt_i", "alt_i"), "vibration": ("vib",)}
 
 
+BAR_CHANNELS = ("oil_p",)                 # noise floor applies to the oil-pressure sender (fuel is regulated)
 _KIND_CACHE: Dict[str, Optional[str]] = {}
 
 
@@ -45,7 +46,8 @@ class SensorLayer:
         if k == "temperature":
             return ph["noise_temperature_c"]
         if k == "pressure":
-            return ph["noise_pressure_rel"] * abs(value)
+            rel = ph["noise_pressure_rel"] * abs(value)
+            return max(rel, ph["noise_pressure_floor_bar"]) if channel in BAR_CHANNELS else rel
         if k == "rpm":
             return ph["noise_rpm"]
         if k == "flow":

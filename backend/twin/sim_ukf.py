@@ -4,10 +4,10 @@ unscented variant").
 Unscented Kalman filter whose process model is backend/sim/thermal.py driven by MEASURED inputs only:
   rpm, throttle, altitude, OAT, airspeed -> steady heat inputs from backend/sim/engine.py, scaled so the total fuel
   equals the measured fuel flow (sensor fusion: the model's split per cylinder, the meter's total).
-State x = [CHT_1..n, T_coolant, T_oil,  k_head_1..n, k_radiator, k_oil_cooler]
+State x = [CHT_k (k = 1..n), T_coolant, T_oil,  k_head_k, k_radiator, k_oil_cooler]
   temperatures follow the heat balances; the k's are health parameters (1 = as calibrated) as random walks, so a
   cooling problem appears as "cylinder 2 head cooling at 0.7" with a confidence interval, not only as a hot reading.
-Measurement z = [CHT_1..n, T_coolant (when measured), T_oil]. Noise R from configs/physics sensors; Q from
+Measurement z = [CHT_k (k = 1..n), T_coolant (when measured), T_oil]. Noise R from configs/physics sensors; Q from
 configs/physics twin. NIS (normalised innovation squared) feeds the validity monitor.
 The twin builds its OWN model instance from the engine config: it never sees the plant, its build spread or its
 faults (T-DYN-4).
@@ -110,7 +110,7 @@ class SimThermalUKF:
     # -- one observer step ----------------------------------------------------------------------------------
     def step(self, frame: Any, skip: Iterable[str] = ()) -> float:
         """Predict to frame.t with the measured inputs, then update with the measured temperatures that are present
-        and not in `skip` (quarantined channels: cht_1.., coolant_t, oil_t). Returns NIS."""
+        and not in `skip` (quarantined channels: cht_<k>, coolant_t, oil_t). Returns NIS."""
         n = self.n
         if not self.initialised:
             self.x[:n] = frame.cht
@@ -127,7 +127,7 @@ class SimThermalUKF:
         d = sig - self.x
         q = np.diag([self.q_temp * dt] * self.n_states + [self.q_param * dt] * self.n_params)
         self.P = (self.wc[:, None] * d).T @ d + q
-        # measurement: whichever of CHT_1..n, coolant, oil are measured and trusted
+        # measurement: whichever of CHT_k, coolant, oil are measured and trusted
         skip = set(skip)
         cand = [(i, frame.cht[i], f"cht_{i + 1}") for i in range(n)] + [(n, frame.coolant_t, "coolant_t"),
                                                                          (n + 1, frame.oil_t, "oil_t")]

@@ -1,5 +1,5 @@
-"""M2-01 status evaluator (P Part 4 Step 2.2, D4): T-STS-3..5. T-STS-1 (fault -> registry level) needs the M3
-diagnosis hypotheses; T-STS-2 (nominal hour all GO) comes with the held physics batch (PROGRESS Questions 9)."""
+"""M2-01 status evaluator (P Part 4 Step 2.2, D4): T-STS-2..5. T-STS-1 (fault -> registry level) needs the M3
+diagnosis hypotheses and is added with M3."""
 from types import SimpleNamespace
 
 import pytest
@@ -21,6 +21,20 @@ def frame(**kw):
 @pytest.fixture
 def ev():
     return StatusEvaluator(load_engine_config(ENGINE))
+
+
+@pytest.mark.parametrize("engine_id", available_engines())
+def test_t_sts_2_one_nominal_hour_is_all_go(engine_id):
+    """1 h of nominal cruise (default levers): zero non-GO frames."""
+    src = PlantSource(engine_id, seed=2)
+    ev = StatusEvaluator(src.cfg)
+    bad = []
+    for _ in range(3600):
+        f, _ = src.step(1.0, throttle_pct=60.0, altitude_ft=9000.0, oat_c=10.0)
+        st = ev.evaluate(f.t, f, engine_state=f.engine_state)
+        if st.level != "GO":
+            bad.append((round(f.t), st.level, [r.text for r in st.reasons]))
+    assert not bad, bad[:5]
 
 
 def test_t_sts_3_every_non_go_level_has_a_reason(ev):

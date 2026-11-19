@@ -232,5 +232,24 @@
   },
   "notes": {
     "variant": "Modelled engine is the 912 iS Sport (D47); its max continuous rating equals the 912 iSc (72 kW)."
+  },
+  "physics": {
+    "ecu": {
+      "lambda_power": {
+        "value": 0.865,
+        "status": "CALIBRATED",
+        "ref": "POWER mode (>= 97 % throttle): WOT 5500/5800 rpm points give 0.859/0.867; OM-912 i Rev. 1 (June 2019) p. 5-5 Fig. 4 'Fuel consumption over manifold pressure' (974 hPa, AVGAS 0.72 kg/l, fuels.json), fitted on the backend/sim speed-density air model with volumetric efficiency 0.95 (ASSUMED), 20 Nov 2026"
+      },
+      "lambda_eco": {
+        "value": 1.18,
+        "status": "CALIBRATED",
+        "ref": "ECO mode: median of 27 points (4000/5000/5500 rpm x 500-900 mbar) = 1.18, spread 1.12-1.35 (leaner at 4000 rpm: the model's constant volumetric efficiency, see PROGRESS M1-14b); OM-912 i Rev. 1 (June 2019) p. 5-5 Fig. 4 'Fuel consumption over manifold pressure' (974 hPa, AVGAS 0.72 kg/l, fuels.json), fitted on the backend/sim speed-density air model with volumetric efficiency 0.95 (ASSUMED), 20 Nov 2026"
+      },
+      "eco_below_throttle_pct": {
+        "value": 97.0,
+        "status": "MANUAL",
+        "ref": "OM-912 i Rev. 1 p. 5-5 NOTE: switchover between ECO and POWER is about 97 % of throttle position"
+      }
+    }
   }
 }
