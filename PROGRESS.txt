@@ -9,7 +9,7 @@ Phase:        PHASE 1 (M0) cards done (M0-01..M0-12; M0-10 reduced, see its entr
               look by Prasad), then Phase 2 in demo-first order: M1-01 sim package + clock, M1-02 atmosphere, ...
 Card:         M1-14 (M1-01..13 done).
 Branch:       Beta (pushed by Prasad up to ae82c70; later commits local). main untouched (9b5942e).
-Last commit:  M1-14 part 1 on Beta (SimSource + fast solver; runtime switch NOT committed) (see git log -1).
+Last commit:  M1-14 part 2 on Beta (live runtime on backend/sim) (see git log -1).
 State:        ONE simulator: RuntimeHub. EngineStateService runs no loop; /api/state, /api/control, /ws/telemetry,
               /ws/blender, /api/health, copilot and voice read the v1 runtime (legacy_adapter.py). D52 command security
               on every command path. Test baseline now: 430 passed, 1 failed (ratchet: engine_service/copilot brand
@@ -43,7 +43,7 @@ Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produ
                   masks battery faults (F34 bus_v); the boost controller compensates a leak below its limit
                   (F13/F14 map_kpa); F35 shows only on a cold start; F37 is hunting, not a mean prop_rpm shift;
                   F23 oil_t; F11 fuel_flow; F05 clog at severity 1 is past the lean misfire limit (EGT/CHT fall).
-              (8) M1-14 DECISION NEEDED - switching the live runtime to backend/sim (working tree, uncommitted:
+              (8) ANSWERED 20 Nov: Prasad approved option (a). Was: switching the live runtime to backend/sim (working tree, uncommitted:
                   engine_runtime.py, faults/manager.py RuntimeAdapter, sources/plant_source.py facade, api_v1.py,
                   test ports) leaves 5 legacy-inference tests failing; asserts NOT changed, NOT xfailed:
                   - test_detect_stack::test_calibration_is_per_tail: far-tail alarm rate 12 % (needs > 20 %); per-tail
@@ -591,3 +591,12 @@ Speed: steady MAP now closed form (psi(pr)/pr = r is independent of upstream pre
   tick 15 ms with the full pipeline (was 66 ms). eta_i unchanged.
 tests/sim/test_source.py 13 passed. Ratchet now guards every backend/sim module at zero (two docstrings made generic).
 T-FLT-1 slow run not repeated (solver equal within 1e-9; turbo fixed point now converges instead of a fixed 8 passes).
+
+=== 20 Nov 2026  M1-14 part 2: live runtime on backend/sim
+PlantSource is a facade over SimSource (fixed internal steps, sensors at publish). EngineRuntime.inject_fault takes
+  registry ids or legacy names (validated by configs/faults.json; a legacy mode that was engine-wide in the old library
+  and is per-cylinder in the registry applies to all cylinders); apply_fault takes registry faults. FaultManager uses
+  RuntimeAdapter (was LegacyRuntimeAdapter): every registry fault is simulated, ramps keep their t0.
+Tests: 5 legacy-inference tests strict xfail with M3-01/02 reasons (Prasad approved, Questions 8); ports listed there.
+Full suite: 567 passed, 1 failed (ratchet, known), 7 skipped, 17 xfailed.
+Next: M1-14 rest (sim/maps.py performance maps, T-DYN-2/3), then M1-16/17, M2-01..03, M3.

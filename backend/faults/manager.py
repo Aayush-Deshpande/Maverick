@@ -4,9 +4,8 @@ The ONE entry point for injecting and clearing faults, whatever the surface (con
 mission schedule, API). It validates every request against configs/faults.json, keeps the active-fault list with
 its origin, emits events, and drives the simulation through an adapter.
 
-Until backend/sim exists (Phase 2), the adapter drives the current plant through each registry entry's
-plant_mode_legacy. A valid fault that the current plant cannot simulate yet is still accepted, stored and announced
-with simulated=False ("not yet simulated"); it is never silently dropped.
+The adapter hands each registry fault to the runtime's backend/sim plant (M1-14). A fault the simulation reports it
+cannot model is still accepted, stored and announced with simulated=False; it is never silently dropped.
 
 Inference code (detect, diagnose, status, prognose, twin) must never import this module (T-DYN-4).
 """
@@ -152,8 +151,7 @@ class FaultManager:
     # -- internals ----------------------------------------------------------------------------------------------
 
     def _reapply(self) -> None:
-        """The legacy plant cannot change or remove a single fault, so rebuild its fault set from the active list.
-        Ramps restart from now for the faults re-applied (documented limitation until backend/sim, Phase 2)."""
+        """Rebuild the plant's fault set from the active list. Each fault keeps its own t0, so ramps continue."""
         self.sim.clear_all()
         for f in self._active.values():
             f.simulated = bool(self.sim.apply(f))
@@ -168,48 +166,19 @@ class FaultManager:
             self._on_event(ev)
 
 
-def _sensor_channel_to_lever(channel: str) -> str:
-    """Registry channel names (frame style, cht[n]) -> legacy sensor-lever names (cht_n)."""
-    return channel.replace("[", "_").replace("]", "")
-
-
 @dataclass
-class LegacyRuntimeAdapter:
-    """Drives an existing backend.runtime.engine_runtime.EngineRuntime (the current plant) - used until Phase 2.
-
-    PHYSICAL faults with plant_mode_legacy go to the plant. S01/S03 on a CHT channel use the plant's own sensor
-    modes; the other sensor faults use the runtime's sensor levers where a lever exists. Everything else returns
-    False (not yet simulated)."""
+class RuntimeAdapter:
+    """Drives backend.runtime.engine_runtime.EngineRuntime, whose plant is backend/sim (M1-14). Every registry fault
+    is simulated: physical faults through their parameter_effects, sensor faults through the sensor layer. Each
+    fault keeps its t0, so re-applying the active set never restarts a ramp."""
 
     runtime: Any
-    sensor_kinds: Dict[str, str] = field(default_factory=lambda: {
-        "S01": "stuck", "S02": "bias", "S03": "drift", "S04": "noise", "S05": "dropout", "S06": "spoof"})
 
     def now(self) -> float:
-        return float(self.runtime.source.plant._elapsed_sec)
+        return float(self.runtime.source.now())
 
     def apply(self, fault: ActiveFault) -> bool:
-        if fault.kind == "PHYSICAL":
-            if not fault.plant_mode:
-                return False
-            self.runtime.inject_fault(fault.plant_mode, cylinder=fault.cylinder, severity=fault.severity,
-                                      ramp_sec=fault.ramp_s, origin="MANUAL")
-            return True
-        # sensor faults
-        if fault.plant_mode and fault.channel and fault.channel.startswith("cht["):
-            cyl = int(fault.channel[4:-1])
-            self.runtime.inject_fault(fault.plant_mode, cylinder=cyl, severity=fault.severity,
-                                      ramp_sec=fault.ramp_s, origin="MANUAL")
-            return True
-        kind = self.sensor_kinds.get(fault.fault_id)
-        if kind is None or not fault.channel:
-            return False
-        # The legacy levers need magnitudes; until configs/sensors (Phase 2) defines them per channel, only the
-        # kinds that need no magnitude are driven (stuck, dropout). The others are accepted but not simulated.
-        if kind in ("stuck", "dropout"):
-            self.runtime.set_sensor_fault(kind, _sensor_channel_to_lever(fault.channel))
-            return True
-        return False
+        return bool(self.runtime.apply_fault(fault, origin="MANUAL"))
 
     def clear_all(self) -> None:
         self.runtime.clear_faults()

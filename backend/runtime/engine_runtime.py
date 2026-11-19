@@ -15,6 +15,7 @@ import threading
 import time
 from collections import deque
 from dataclasses import dataclass, field
+from types import SimpleNamespace
 from typing import Any, Deque, Dict, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
@@ -26,6 +27,7 @@ from backend.runtime.levers import Levers
 from backend.runtime.registry import FAULT_REGISTRY, faults_for, thermal_visible_faults
 from backend.runtime.sensor_levers import SensorLevers
 from backend.sources import PlantSource
+from backend.sim.source import registry as sim_registry
 
 from backend.physics.sensor_validator import SensorSanityValidator, SanityReport
 from backend.dsp.order_tracker import OrderTracker
@@ -197,14 +199,20 @@ class EngineRuntime:
             if self.heavy_ready:
                 return
             cal = self.detector.cal
-            faults = thermal_visible_faults(self.cfg)
+            faults = []
+            for mode in thermal_visible_faults(self.cfg):       # legacy library names -> registry faults
+                try:
+                    self.source._resolve(mode)
+                    faults.append(mode)
+                except ValueError:
+                    pass
             seqs, labs = [], []
 
             def collect(fault: Optional[str], seed_off: int):
                 src = PlantSource(self.engine_id, seed=self.seed)
                 rng = np.random.default_rng(self.seed * 31 + seed_off)
                 if fault:
-                    cyl = int(rng.integers(1, src.n_cylinders + 1)) if FAULT_REGISTRY[fault].per_cylinder else None
+                    cyl = int(rng.integers(1, src.n_cylinders + 1)) if src._resolve(fault).scope == "CYLINDER" else None
                     src.inject_fault(fault, cylinder=cyl, severity=0.9, ramp_sec=120.0)
                 op, U = _WARM_SCHEDULE[0], []
                 for i in range(260):
@@ -253,24 +261,36 @@ class EngineRuntime:
 
     def inject_fault(self, mode: str, cylinder: Optional[int] = None, severity: float = 0.8,
                      ramp_sec: float = 60.0, origin: str = "MANUAL") -> Dict[str, Any]:
-        if mode == "COOLING_LOSS":
-            mode = "COOLING_DEGRADATION"
-        spec = FAULT_REGISTRY.get(mode)
-        if spec is None or not spec.applies_to(self.cfg):
-            raise ValueError(f"{mode!r} is not a valid fault for {self.engine_id}")
-        if spec.per_cylinder:
-            if cylinder is None or not 1 <= cylinder <= self.cfg.cylinder_count:
-                raise ValueError(f"{mode} needs cylinder 1..{self.cfg.cylinder_count}")
-        else:
+        """Registry id (F01..S07) or a registry plant_mode_legacy name, validated against configs/faults.json.
+        A legacy name given without a cylinder keeps its legacy meaning: every cylinder (registry ids need one)."""
+        spec = self.source._resolve(mode)
+        channel = None
+        legacy = FAULT_REGISTRY.get(mode)                    # old library: was this mode engine-wide?
+        all_cylinders = (spec.scope == "CYLINDER" and cylinder is None and legacy is not None
+                         and not legacy.per_cylinder)
+        if spec.scope == "CHANNEL":
+            channel = f"cht[{cylinder}]" if cylinder is not None else None
             cylinder = None
+        elif spec.scope != "CYLINDER":
+            cylinder = None
+        sim_registry().validate_request(self.cfg, spec.id, cylinder=1 if all_cylinders else cylinder,
+                                        channel=channel, severity=severity, ramp_s=ramp_sec)
+        fault = SimpleNamespace(fault_id=spec.id, cylinder=cylinder, channel=channel, severity=float(severity),
+                                ramp_s=float(ramp_sec), t0_s=self.source.now())
+        self.apply_fault(fault, origin=origin)
+        return {"mode": spec.id, "cylinder": cylinder, "channel": channel, "severity": severity,
+                "ramp_sec": ramp_sec, "origin": origin, "t": fault.t0_s}
+
+    def apply_fault(self, fault: Any, origin: str = "MANUAL") -> bool:
+        """Hand one registry fault (fault_id, cylinder, channel, severity, ramp_s, t0_s) to the plant."""
         with self._lock:
-            self.source.inject_fault(mode, cylinder=cylinder, severity=severity, ramp_sec=ramp_sec)
+            ok = self.source.apply(fault)
             if origin == "MANUAL":
                 self.manual_origin = True
-            rec = {"mode": mode, "cylinder": cylinder, "severity": severity, "ramp_sec": ramp_sec,
-                   "origin": origin, "t": self.source.plant._elapsed_sec}
-            self.injected.append(rec)
-            return rec
+            self.injected.append({"mode": fault.fault_id, "cylinder": fault.cylinder, "channel": fault.channel,
+                                  "severity": fault.severity, "ramp_sec": fault.ramp_s, "origin": origin,
+                                  "t": fault.t0_s})
+            return ok
 
     def clear_faults(self) -> None:
         with self._lock:

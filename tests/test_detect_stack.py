@@ -7,6 +7,7 @@ from backend.detect import (PersistenceGate, Reservoir, ResidualDetector, TailCa
                             conformal_threshold)
 from backend.sources import PlantSource
 
+M3_PORT = "M1-14 (Prasad approved 20 Nov): legacy-detector test on the backend/sim plant; re-ported in M3-01/02. "
 OPS = [(45, 2000, 25), (60, 9000, 10), (75, 12000, 0), (90, 18000, -15), (70, 5000, 30)]
 
 
@@ -67,6 +68,7 @@ def test_false_alarm_rate_bounded_on_fresh_nominal(tail914):
     assert np.mean(raw) < 0.08
 
 
+@pytest.mark.xfail(strict=True, reason=M3_PORT + "build variation gives ~12 % far-tail alarms, not > 20 %")
 def test_calibration_is_per_tail(tail914, det914):
     """A different tail (other build variation) is NOT covered by this tail's calibration: this is why
     the design is 'N calibrations, not N detectors' (D31) and why a new tail needs its own nominal run."""
@@ -75,7 +77,8 @@ def test_calibration_is_per_tail(tail914, det914):
     assert far_other > 0.2
 
 
-@pytest.mark.parametrize("fault", ["MISFIRE", "COOLING_DEGRADATION", "OIL_PRESSURE_LOSS"])
+@pytest.mark.parametrize("fault", ["MISFIRE", pytest.param("COOLING_DEGRADATION", marks=pytest.mark.xfail(
+    strict=True, reason=M3_PORT + "F19 moves one liquid-head Rotax CHT only 2-3 C (T-FLT-1 gap)")), "OIL_PRESSURE_LOSS"])
 def test_detects_faults_and_ranks_above_nominal(tail914, det914, fault):
     nom = run("rotax_914", 0, n=300, src=tail914[0], run_seed=200)
     bad = run("rotax_914", 0, fault=fault, n=300, run_seed=201)[60:]
@@ -97,7 +100,10 @@ def test_persistence_gate():
     assert [g.update(x) for x in (1, 0, 1, 0, 1)] == [False, False, False, False, True]
 
 
-@pytest.mark.parametrize("engine", ["rotax_912is", "vrde_jayem_2_2l"])
+@pytest.mark.parametrize("engine", [
+    pytest.param("rotax_912is", marks=pytest.mark.xfail(strict=True, reason=M3_PORT + "F19 is weak on liquid-head CHT")),
+    pytest.param("vrde_jayem_2_2l", marks=pytest.mark.xfail(strict=True, reason=M3_PORT + "no registry cooling fault "
+                                                                          "applies to the VRDE"))])
 def test_engine_agnostic_same_code_path(engine):
     src = PlantSource(engine, seed=3)
     d = ResidualDetector.calibrate(run(engine, 3, n=700, src=src, run_seed=1), alpha=0.01)

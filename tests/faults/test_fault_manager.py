@@ -1,7 +1,7 @@
 """Card M0-04: fault manager. Edge cases from ANUMAAN_AUDIT_REPORT.txt section 19.4 that apply at this layer."""
 import pytest
 
-from backend.faults.manager import FaultManager, LegacyRuntimeAdapter
+from backend.faults.manager import FaultManager, RuntimeAdapter
 from backend.faults.registry import FaultRejected, load_fault_registry
 from backend.physics.engine_config import load_engine_config
 
@@ -110,12 +110,12 @@ def test_sensor_fault_needs_a_channel(mgr):
     assert f.channel == "cht[2]" and f.cylinder is None
 
 
-def test_legacy_runtime_adapter_drives_the_real_plant():
+def test_runtime_adapter_drives_the_real_plant():
     from backend.runtime.engine_runtime import EngineRuntime
     rt = EngineRuntime("rotax_912is", seed=3)
-    m = FaultManager(load_fault_registry(), rt.cfg, LegacyRuntimeAdapter(rt))
+    m = FaultManager(load_fault_registry(), rt.cfg, RuntimeAdapter(rt))
     f = m.inject("F01", cylinder=2, severity=0.9, ramp_s=1, source="test")
     assert f.simulated
-    assert [(i["mode"], i["cylinder"]) for i in rt.injected] == [("MISFIRE", 2)]
+    assert [(i["mode"], i["cylinder"]) for i in rt.injected] == [("F01", 2)]
     m.clear()
     assert rt.injected == []

@@ -22,7 +22,7 @@ from typing import Any, Dict, List, Optional, Set
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, ConfigDict, Field
 
-from backend.faults.manager import FaultManager, LegacyRuntimeAdapter
+from backend.faults.manager import FaultManager, RuntimeAdapter
 from backend.faults.registry import FaultRejected, load_fault_registry
 from backend.physics.engine_config import load_engine_config
 from backend.server.security import COMMAND_LOG, command_guard
@@ -66,7 +66,7 @@ class Services:
                     raise HTTPException(404, f"unknown engine {engine_id!r}; have {sorted(self.hub.runtimes)}")
                 rt = self.hub.runtimes[engine_id]
                 ch = EngineChannel(engine_id, manager=None)  # type: ignore[arg-type]
-                ch.manager = FaultManager(REGISTRY, rt.cfg, LegacyRuntimeAdapter(rt), on_event=ch.pending_events.append)
+                ch.manager = FaultManager(REGISTRY, rt.cfg, RuntimeAdapter(rt), on_event=ch.pending_events.append)
                 self.channels[engine_id] = ch
             return self.channels[engine_id]
 

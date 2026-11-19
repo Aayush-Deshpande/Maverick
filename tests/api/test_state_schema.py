@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from backend.faults.manager import FaultManager, LegacyRuntimeAdapter
+from backend.faults.manager import FaultManager, RuntimeAdapter
 from backend.faults.registry import load_fault_registry
 from backend.server.state_builder import build_state, resolve_fault_components
 from backend.server.state_schema import StateMessage, state_json_schema
@@ -31,7 +31,7 @@ def runtime_912():
 
 
 def test_state_from_a_real_tick_validates_and_keeps_unknown_status(runtime_912):
-    mgr = FaultManager(load_fault_registry(), runtime_912.cfg, LegacyRuntimeAdapter(runtime_912))
+    mgr = FaultManager(load_fault_registry(), runtime_912.cfg, RuntimeAdapter(runtime_912))
     mgr.inject("F01", cylinder=2, severity=0.8, ramp_s=1, source="test")
     tick = runtime_912.tick()
     msg = build_state(tick, seq=1, registry=mgr.registry, active_faults=mgr.active(), fault_events=mgr.history())
@@ -45,7 +45,7 @@ def test_state_from_a_real_tick_validates_and_keeps_unknown_status(runtime_912):
 
 
 def test_training_mode_shows_injected_outline_with_exact_nodes(runtime_912):
-    mgr = FaultManager(load_fault_registry(), runtime_912.cfg, LegacyRuntimeAdapter(runtime_912))
+    mgr = FaultManager(load_fault_registry(), runtime_912.cfg, RuntimeAdapter(runtime_912))
     mgr.inject("F23", source="test")
     msg = build_state(runtime_912.tick(), seq=2, registry=mgr.registry, active_faults=mgr.active(),
                       training_mode=True)
