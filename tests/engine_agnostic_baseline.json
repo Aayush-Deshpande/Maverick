@@ -194,6 +194,11 @@
     "cyl": 0,
     "model": 0
   },
+  "backend/status/evaluator.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
   "backend/telemetry/can_streamer.py": {
     "brand": 4,
     "cyl": 64,

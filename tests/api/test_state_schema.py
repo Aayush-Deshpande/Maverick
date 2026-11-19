@@ -36,7 +36,9 @@ def test_state_from_a_real_tick_validates_and_keeps_unknown_status(runtime_912):
     tick = runtime_912.tick()
     msg = build_state(tick, seq=1, registry=mgr.registry, active_faults=mgr.active(), fault_events=mgr.history())
     StateMessage.model_validate(msg.model_dump())
-    assert msg.status.level == "UNKNOWN"                      # never a default GO (M2-01 fills it)
+    # M2-01: the evaluator's verdict from observables (never a hard-coded GO); non-GO always carries a reason
+    assert msg.status.level in ("ENGINE_OFF", "GO", "ADVISORY", "CAUTION", "NO-GO")
+    assert msg.status.level in ("GO", "ENGINE_OFF") or msg.status.reasons
     assert msg.readings["rpm"].unit == "rpm" and msg.readings["rpm"].value is not None
     assert "cht[1]" in msg.readings and msg.readings["oil_p"].unit == "bar"
     assert msg.active_faults[0].fault_id == "F01" and msg.active_faults[0].cylinder == 2

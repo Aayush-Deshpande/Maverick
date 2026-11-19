@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "description": "Engine status evaluator rules (card M2-01, P Part 4 Step 2.2, DECISIONS D4). Limits themselves live in configs/engines/<id>.json 'limits'; this file holds only the evaluator's rule constants and the channel -> subsystem map.",
+  "levels": [
+    "ENGINE_OFF",
+    "GO",
+    "ADVISORY",
+    "CAUTION",
+    "NO-GO"
+  ],
+  "exit_margin_fraction_of_band": {
+    "value": 0.02,
+    "status": "ASSUMED",
+    "ref": "P Step 2.2 hysteresis: exit only after the value is back inside the band by 2 % of the band span"
+  },
+  "exit_hold_s": {
+    "value": 10.0,
+    "status": "ASSUMED",
+    "ref": "P Step 2.2 hysteresis: ... for 10 s (simulated seconds, D8)"
+  },
+  "hypothesis_posterior_min": {
+    "value": 0.7,
+    "status": "ASSUMED",
+    "ref": "P Step 2.2: a hypothesis with posterior >= 0.7 sets that fault's status_at_full_severity"
+  },
+  "subsystems": {
+    "ref": "channel -> subsystem, for 'two quarantined sensors on the same subsystem -> CAUTION' (P Step 2.2)",
+    "map": {
+      "cht": "cylinder_heads",
+      "egt": "exhaust",
+      "coolant_t": "cooling",
+      "oil_p": "lubrication",
+      "oil_t": "lubrication",
+      "gearbox_t": "gearbox",
+      "fuel_flow": "fuel",
+      "fuel_p": "fuel",
+      "rail_p": "fuel",
+      "fuel_t": "fuel",
+      "map_kpa": "induction",
+      "rpm": "speed",
+      "prop_rpm": "speed",
+      "bus_v": "electrical",
+      "bus_i": "electrical",
+      "batt_i": "electrical",
+      "vibration": "vibration"
+    }
+  }
+}

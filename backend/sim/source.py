@@ -144,15 +144,19 @@ class SimSource:
     def emit(self) -> Tuple[Frame, TruthRecord]:
         """Measure the latest plant outputs (sensor layer) into a Frame, plus the evaluation-only TruthRecord."""
         o = self.last
-        m = self.sensors.measure(true_channels(o, self.ci), o.t, self._sensor_faults)
+        true = true_channels(o, self.ci)
+        true.update({f"vib[{k}]": v for k, v in o.vibration.items()})
+        m = self.sensors.measure(true, o.t, self._sensor_faults)
         n = self.n_cylinders
         frame = Frame(t=o.t, source="PLANT", engine_config_id=self.engine_config_id, tail_id=self.tail_id,
                       engine_serial=self.engine_serial, rpm=m["rpm"], prop_rpm=m["prop_rpm"], throttle=o.throttle_pct,
                       map_kpa=m["map_kpa"], cht=[m[f"cht[{i}]"] for i in range(1, n + 1)],
                       egt=[m[f"egt[{i}]"] for i in range(1, n + 1)], coolant_t=m["coolant_t"], oil_p=m["oil_p"],
-                      oil_t=m["oil_t"], fuel_flow=m["fuel_flow"], rail_p=m.get("rail_p"),
+                      oil_t=m["oil_t"], fuel_flow=m["fuel_flow"], rail_p=m.get("rail_p"), fuel_p=m.get("fuel_p"),
+                      gearbox_t=m["gearbox_t"], engine_state=o.state,
                       ign_cmd=o.ign_timing_btdc, bus_v=m["bus_v"], bus_i=m["alt_i"], batt_i=m["batt_i"],
-                      alt=o.altitude_ft, oat=o.oat_c, tas=o.tas_kt, vibration_orders=dict(o.vibration))
+                      alt=o.altitude_ft, oat=o.oat_c, tas=o.tas_kt,
+                      vibration_orders={k: m[f"vib[{k}]"] for k in o.vibration if m[f"vib[{k}]"] is not None})
         truth = TruthRecord(t=o.t, failed=o.state == FAILED, failure_mode=o.failure,
                             active_faults=[FaultTruth(mode=f.fault_id, location=f.cylinder, severity=f.severity,
                                                       onset_t=f.t0_s, ramp_sec=f.ramp_s) for f in self.faults],

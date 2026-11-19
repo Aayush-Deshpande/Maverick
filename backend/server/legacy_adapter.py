@@ -51,13 +51,10 @@ _ANALYTICS_UNAVAILABLE = {
     "anomaly_score": "detection from evidence arrives in M3-02",
     "health_index": "twin health parameters arrive in M3-01",
     "diagnosed_fault_id": "isolation from evidence arrives in M3-05",
-    "go_no_go": "status evaluator arrives in M2-01",
     "rul_p10_hours": "prognostics arrive in M4-03",
     "ata_chapter": "directive from the top hypothesis arrives in M3-06",
 }
 _NOT_YET = {
-    "START_ENGINE": "engine start/stop arrives with the engine state machine (card M1-12)",
-    "STOP_ENGINE": "engine start/stop arrives with the engine state machine (card M1-12)",
     "SET_REGIME": "mission presets arrive in card M5-02; use POST /api/v1/engines/{id}/levers",
     "EXPORT_DEBRIEF": "use POST /api/debrief until the sortie report writer (card M5-06)",
     "SET_ROLE": "the role is a client-side view setting and is no longer sent to the server (audit #42)",
@@ -107,7 +104,8 @@ def legacy_state(engine_id: str = LEGACY_ENGINE_ID) -> Optional[Dict[str, Any]]:
     analytics.update({
         "residuals": m["residuals"],
         "status_level": m["status"]["level"],
-        "go_no_go_reason": None,
+        "go_no_go": m["status"]["level"],
+        "go_no_go_reason": (m["status"]["reasons"][0]["text"] if m["status"]["reasons"] else None),
         "emergency_checklist": [],
         # training-mode display of the COMMANDED fault (D5): parts come from the registry + component manifest
         "target_parts": target_parts,
@@ -159,6 +157,8 @@ def legacy_command(cmd: ControlCommand, engine_id: str = LEGACY_ENGINE_ID) -> Di
         except ValidationError as exc:
             raise _reject("LEVER_REJECTED", exc.errors()[0]["msg"]) from None
         return {"status": "SUCCESS", "levers": services().hub.runtimes[engine_id].set_levers(**{field: value})}
+    if action in ("START_ENGINE", "STOP_ENGINE"):
+        return {"status": "SUCCESS", **services().hub.runtimes[engine_id].engine_command(action.split("_")[0])}
     if action in _NOT_YET:
         raise _reject("NOT_AVAILABLE", f"{action}: {_NOT_YET[action]}")
     raise _reject("UNKNOWN_ACTION", f"unknown action {cmd.action!r}")

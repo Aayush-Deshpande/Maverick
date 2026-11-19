@@ -83,6 +83,9 @@ class Frame:
     fuel_flow: Optional[float] = None     # kg/h (mass flow; convert at the adapter)
     fuel_t: Optional[float] = None        # degC
     rail_p: Optional[float] = None        # bar
+    fuel_p: Optional[float] = None        # bar, low-pressure / port-injection supply
+    gearbox_t: Optional[float] = None     # degC
+    engine_state: Optional[str] = None    # ECU-published OFF | CRANKING | RUNNING | FAILED
 
     soi_cmd: List[float] = field(default_factory=list)   # deg BTDC, per cylinder
     qty_cmd: List[float] = field(default_factory=list)   # mm3/stroke, per cylinder

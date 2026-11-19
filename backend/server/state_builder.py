@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
 
 from backend.core.frame import Q_FROZEN, Q_INTERPOLATED, Q_LANE_DISAGREE, Q_OUT_OF_RANGE, Q_SHIELDED, Q_STALE
-from backend.server.state_schema import ActiveFaultOut, EventOut, Highlight, Reading, StateMessage, Status
+from backend.server.state_schema import ActiveFaultOut, EventOut, Highlight, Reading, Reason, StateMessage, Status
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -73,6 +73,14 @@ def resolve_fault_components(fault_raw: Dict[str, Any], engine_id: str, cylinder
     return ids, marker if entry.get("marker") else None
 
 
+def _status(st: Optional[Dict[str, Any]]) -> Status:
+    if not st:
+        return Status(level="UNKNOWN")
+    return Status(level=st["level"], latched=st.get("latched", False),
+                  reasons=[Reason(**{k: r.get(k) for k in ("code", "text", "channel", "fault_id", "value", "limit")})
+                           for r in st.get("reasons", [])])
+
+
 def build_state(tick: Any, seq: int, *, registry: Any = None, active_faults: Iterable[Any] = (),
                 fault_events: Iterable[Any] = (), rate_hz_actual: Optional[float] = None, time_scale: float = 1.0,
                 levers: Optional[Dict[str, Optional[float]]] = None, training_mode: bool = False) -> StateMessage:
@@ -127,10 +135,10 @@ def build_state(tick: Any, seq: int, *, registry: Any = None, active_faults: Ite
                                              "ratios": {k: float(v) for k, v in det.ratios.items()},
                                              "candidate": tick.heavy},          # tier-1 readout scores (not probabilities)
         hypotheses=[],
-        status=Status(level="UNKNOWN"),
+        status=_status(getattr(tick, "status", None)),
         highlights=highlights,
         prognostics=tick.prognostics, reliability=tick.reliability,
         active_faults=faults_out, events_since=events,
         vibration_orders={k: float(v) for k, v in (f.vibration_orders or {}).items()},
-        virtual_sensors={k: float(v) for k, v in (f.virtual_sensors or {}).items()},
+        virtual_sensors={k: float(v) for k, v in (f.virtual_sensors or {}).items() if v is not None},
     )

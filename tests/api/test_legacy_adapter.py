@@ -60,7 +60,9 @@ def test_state_comes_from_v1_runtime_with_nulls_not_defaults(client):     # was 
     # the old fixed values (audit section 4) are gone: unavailable fields are null with a reason
     for key in ("LAMBDA_AFR", "INJ_TIMING_BTDC", "BSFC_G_KWH", "THERMAL_EFFICIENCY", "POWER_KW"):
         assert t[key] is None and key in data["unavailable"]
-    assert a["go_no_go"] is None and a["status_level"] == "UNKNOWN"
+    # M2-01: GO/NO-GO is the status evaluator's level, the same value the v1 state carries (never a default)
+    assert a["go_no_go"] == a["status_level"] == v1["status"]["level"]
+    assert a["go_no_go"] in ("ENGINE_OFF", "GO", "ADVISORY", "CAUTION", "NO-GO")
 
 
 def test_set_fault_and_clear(client):                                     # was test_control_fault_activation_and_clearing
@@ -120,15 +122,19 @@ def test_throttle_and_environment_read_back(client):                      # was 
     assert r.status_code == 422                                           # same range as /api/v1 levers
 
 
-def test_stop_and_start_rejected_with_reason_until_m1_12(client):         # was test_control_engine_stop_and_start
-    for action in ("STOP_ENGINE", "START_ENGINE"):
-        r = client.post("/api/control", json={"action": action})
-        assert r.status_code == 422 and "M1-12" in r.json()["detail"]["message"]
-
-
-@pytest.mark.xfail(strict=True, reason="T-M0-4: engine start/stop needs the engine state machine (card M1-12)")
-def test_stop_really_stops_the_engine(client):
+def test_stop_really_stops_the_engine_and_start_restarts_it(client):     # T-M0-4 (M1-12 state machine, M2-01)
+    rt = client.hub.runtimes[LEGACY_ENGINE_ID]
+    rt.set_levers(throttle=15.0, snap=True)
     assert client.post("/api/control", json={"action": "STOP_ENGINE"}).status_code == 200
+    for _ in range(40):
+        client.hub.tick_all()
+    v1 = client.get(f"/api/v1/engines/{LEGACY_ENGINE_ID}/state").json()
+    assert v1["readings"]["rpm"]["value"] < 100 and v1["status"]["level"] == "ENGINE_OFF"
+    assert client.post("/api/control", json={"action": "START_ENGINE"}).status_code == 200
+    for _ in range(40):
+        client.hub.tick_all()
+    v1 = client.get(f"/api/v1/engines/{LEGACY_ENGINE_ID}/state").json()
+    assert v1["readings"]["rpm"]["value"] > 1000 and v1["status"]["level"] != "ENGINE_OFF"
 
 
 def test_ws_telemetry_streams_v1_state_and_takes_commands(client):

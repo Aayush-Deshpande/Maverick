@@ -466,7 +466,7 @@ export const PropulsionEngineerPanel: React.FC<PropulsionEngineerPanelProps> = (
           <div className="bg-surface-card p-3 rounded border border-surface-border">
             <span className="text-[10px] text-slate-500 block">PEAK CYLINDER PRESSURE (P_max)</span>
             <span className="text-lg font-bold font-mono text-emerald-400 mt-1 block">
-              {fmt(t.virtual_sensors?.['P_max_bar'] ?? 65.2, 1)} bar
+              {fmt(t.virtual_sensors?.['P_max_bar'], 1)} bar
             </span>
             <span className="text-[10px] text-slate-500">In-cylinder combustion peak</span>
           </div>
@@ -474,7 +474,7 @@ export const PropulsionEngineerPanel: React.FC<PropulsionEngineerPanelProps> = (
           <div className="bg-surface-card p-3 rounded border border-surface-border">
             <span className="text-[10px] text-slate-500 block">TURBINE INLET TEMP (TIT)</span>
             <span className="text-lg font-bold font-mono text-amber-400 mt-1 block">
-              {fmt(t.virtual_sensors?.['TIT_degC'] ?? 810.0, 1)} °C
+              {fmt(t.virtual_sensors?.['TIT_degC'], 1)} °C
             </span>
             <span className="text-[10px] text-slate-500">Pre-turbine collector state</span>
           </div>
@@ -482,7 +482,7 @@ export const PropulsionEngineerPanel: React.FC<PropulsionEngineerPanelProps> = (
           <div className="bg-surface-card p-3 rounded border border-surface-border">
             <span className="text-[10px] text-slate-500 block">MIN OIL FILM THICKNESS (h_min)</span>
             <span className="text-lg font-bold font-mono text-slate-100 mt-1 block">
-              {fmt(t.virtual_sensors?.['h_min_um'] ?? 2.8, 2)} µm
+              {fmt(t.virtual_sensors?.['h_min_um'], 2)} µm
             </span>
             <span className="text-[10px] text-slate-500">Hydrodynamic journal safety</span>
           </div>
@@ -490,7 +490,7 @@ export const PropulsionEngineerPanel: React.FC<PropulsionEngineerPanelProps> = (
           <div className="bg-surface-card p-3 rounded border border-surface-border">
             <span className="text-[10px] text-slate-500 block">INDICATED POWER (P_ind)</span>
             <span className="text-lg font-bold font-mono text-indigo-300 mt-1 block">
-              {fmt(t.virtual_sensors?.['P_ind_kw'] ?? 72.4, 1)} kW
+              {fmt(t.virtual_sensors?.['P_ind_kw'], 1)} kW
             </span>
             <span className="text-[10px] text-slate-500">Gross gas thermodynamic work</span>
           </div>

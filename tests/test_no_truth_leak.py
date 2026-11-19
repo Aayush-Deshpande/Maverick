@@ -35,6 +35,7 @@ SCANNED_PACKAGES = [
     REPO_ROOT / "backend" / "foundation",
     REPO_ROOT / "backend" / "security",
     REPO_ROOT / "backend" / "federation",
+    REPO_ROOT / "backend" / "status",          # M2-01 status evaluator (AGENTS rule 10)
 ]
 
 FORBIDDEN_ATTRS = {"FAULT_ID", "HEALTH_INDEX", "RUL_HOURS"}

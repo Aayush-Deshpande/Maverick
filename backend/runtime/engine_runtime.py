@@ -41,6 +41,7 @@ from backend.mission.reliability import (
 )
 from backend.mission.glide import UAVGlidePolar
 from backend.agent.diagnostic_agent import DiagnosticAgent
+from backend.status.evaluator import StatusEvaluator
 
 DT = 1.0                      # simulated seconds per tick (calibrated at this cadence)
 WARMUP_TICKS = 900            # ground run-up used to calibrate this tail
@@ -68,6 +69,7 @@ class Tick:
     reliability: Optional[Dict[str, Any]] = None
     glide: Optional[Dict[str, Any]] = None
     diagnosis: Optional[Dict[str, Any]] = None
+    status: Optional[Dict[str, Any]] = None           # backend/status evaluator (M2-01)
     # Transitions raised on this tick only (usually empty). The client appends them
     # to its timeline; /events backfills after a reconnect.
     events: List[Dict[str, Any]] = field(default_factory=list)
@@ -139,9 +141,8 @@ class EngineRuntime:
         self.virtual_synthesizer = VirtualSensorSynthesizer(self.cfg)
         sigma_map = {f"cht_{i+1}": 4.5 for i in range(self.cfg.cylinder_count)}
         sigma_map["oil_t"] = 3.5
-        sigma_map["oil_p"] = 0.35
-        self.validity_monitor = TwinValidityMonitor(
-            channels=[f"cht_{i+1}" for i in range(self.cfg.cylinder_count)] + ["oil_t", "oil_p"],
+        self.validity_monitor = TwinValidityMonitor(              # oil pressure: no twin model, so no residual
+            channels=[f"cht_{i+1}" for i in range(self.cfg.cylinder_count)] + ["oil_t"],
             expected_sigma=sigma_map,
         )
         self.damage_accumulator = DamageAccumulator(name=f"{self.engine_id}_cyl1_head")
@@ -161,6 +162,7 @@ class EngineRuntime:
         self.reliability_engine = MissionReliabilityEngine(components=components, seed=seed)
         self.glide_polar = UAVGlidePolar()
         self.agent = DiagnosticAgent()
+        self.status_evaluator = StatusEvaluator(self.cfg)
 
         self._tick_count = 0
         self._cached_orders: Optional[Dict[str, float]] = None
@@ -292,6 +294,12 @@ class EngineRuntime:
                                   "t": fault.t0_s})
             return ok
 
+    def engine_command(self, command: str) -> Dict[str, Any]:
+        with self._lock:
+            {"START": self.source.start, "STOP": self.source.stop, "RESET": self.source.reset}[command]()
+            self.manual_origin = True
+            return {"command": command, "engine_state": self.source.plant.state}
+
     def clear_faults(self) -> None:
         with self._lock:
             self.source.clear_faults()
@@ -350,16 +358,18 @@ class EngineRuntime:
                 rpm_val = float(frame.rpm or 5000.0)
                 thr_val = float(frame.throttle or 70.0)
                 self._cached_orders = self.order_tracker.track(rpm=rpm_val, throttle_pct=thr_val)
-            frame.vibration_orders = self._cached_orders
+            # measured orders (the plant's accelerometer, faults included) win; the tracker only adds the extra
+            # keys legacy consumers read until the DSP stage is rebuilt on measured data (M3)
+            frame.vibration_orders = {**self._cached_orders, **(frame.vibration_orders or {})}
             rpm_val = float(frame.rpm or 5000.0)
             thr_val = float(frame.throttle or 70.0)
 
             # 3. State Observer (Thermofluid UKF) - 4 Hz cadence
-            if (self._tick_count % 5 == 1) or (self._cached_ukf is None):
-                ff_val = float(frame.fuel_flow or 18.0)
-                oat_val = float(frame.oat or 15.0)
-                self.ukf.predict(rpm_val, thr_val, ff_val, oat_val)
-                meas_z = np.array(frame.cht + [float(frame.oil_t or 85.0)], dtype=np.float64)
+            ukf_inputs = (frame.rpm, frame.throttle, frame.fuel_flow, frame.oat, frame.oil_t)
+            ukf_ready = all(v is not None for v in ukf_inputs) and all(v is not None for v in frame.cht)
+            if ukf_ready and ((self._tick_count % 5 == 1) or (self._cached_ukf is None)):
+                self.ukf.predict(float(frame.rpm), float(frame.throttle), float(frame.fuel_flow), float(frame.oat))
+                meas_z = np.array(frame.cht + [float(frame.oil_t)], dtype=np.float64)
                 # Shield quarantined sensors from UKF to prevent state corruption
                 for i in range(min(len(frame.cht), self.cfg.cylinder_count)):
                     ch_name = f"cht_{i+1}"
@@ -370,8 +380,10 @@ class EngineRuntime:
                 ukf_nis = self.ukf.update(meas_z)
                 ukf_params = self.ukf.get_parameter_estimates(frame.t)
                 self._cached_ukf = (ukf_nis, ukf_params)
-            else:
+            elif self._cached_ukf is not None:
                 ukf_nis, ukf_params = self._cached_ukf
+            else:
+                ukf_nis, ukf_params = 0.0, []                  # no measured inputs yet: no twin estimate
 
             ukf_dict = {
                 "nis": round(ukf_nis, 4),
@@ -383,11 +395,7 @@ class EngineRuntime:
             }
 
             # 4. Virtual Sensor Synthesis
-            eta_cool_vals = [p.mean for p in ukf_params if p.name == "eta_cool"]
-            eta_cool_m = float(np.mean(eta_cool_vals)) if eta_cool_vals else 1.0
-            rad_vals = [p.mean for p in ukf_params if p.name == "eta_radiator"]
-            eta_rad_m = float(rad_vals[0]) if rad_vals else 1.0
-            virt = self.virtual_synthesizer.synthesize(frame, eta_cool_mean=eta_cool_m, eta_rad=eta_rad_m)
+            virt = self.virtual_synthesizer.synthesize(frame)
             frame.virtual_sensors = virt
 
             # 5. Anomaly Detection (ResidualDetector)
@@ -413,10 +421,12 @@ class EngineRuntime:
                 # 6. Twin Validity & 3-Way Attribution
                 res_dict = {}
                 for i in range(min(len(frame.cht), self.cfg.cylinder_count)):
-                    res_dict[f"cht_{i+1}"] = frame.cht[i] - float(self.ukf.x[i])
-                res_dict["oil_t"] = float(frame.oil_t or 85.0) - float(self.ukf.x[self.cfg.cylinder_count + 1])
-                res_dict["oil_p"] = float(frame.oil_p or 3.5) - 3.5
-                self.validity_monitor.update(res_dict, operating_point={"throttle": thr_val, "rpm": rpm_val, "alt": float(frame.alt or 20000.0)})
+                    if frame.cht[i] is not None:
+                        res_dict[f"cht_{i+1}"] = frame.cht[i] - float(self.ukf.x[i])
+                if frame.oil_t is not None:
+                    res_dict["oil_t"] = float(frame.oil_t) - float(self.ukf.x[self.cfg.cylinder_count + 1])
+                self.validity_monitor.update(res_dict, operating_point={"throttle": frame.throttle, "rpm": frame.rpm,
+                                                                        "alt": frame.alt})
                 verdict = self.validity_monitor.assess(
                     fault_suspected=bool(det and det.confirmed),
                     sensor_quarantined=_quarantined_lower
@@ -551,6 +561,8 @@ class EngineRuntime:
                 frame, det, sanity_dict, validity_dict, diagnosis_dict
             )
 
+            status = self.status_evaluator.evaluate(frame.t, frame, engine_state=frame.engine_state,
+                                                    quarantined=_quarantined_lower).to_dict()
             t = Tick(
                 engine_id=self.engine_id,
                 frame=frame,
@@ -564,6 +576,7 @@ class EngineRuntime:
                 reliability=reliability_dict,
                 glide=glide_dict,
                 diagnosis=diagnosis_dict,
+                status=status,
                 events=tick_events,
             )
             self.buffer.append(t)

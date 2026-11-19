@@ -82,7 +82,7 @@ def test_websocket_subscriber_sees_fault_injected_by_another_client(client):
         assert seen is not None, "subscriber never saw the injected fault"
         f = next(f for f in seen.active_faults if f.fault_id == "F01")
         assert f.cylinder == 2 and f.source == "3d" and f.components == ["wiring_harness"]
-        assert seen.status.level == "UNKNOWN"
+        assert seen.status.level != "UNKNOWN"                    # M2-01 evaluator runs on every tick
     client.delete("/api/v1/engines/rotax_912is/faults")
 
 

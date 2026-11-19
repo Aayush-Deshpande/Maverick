@@ -55,7 +55,7 @@ class EngineTelemetry(BaseModel):
     POWER_KW: float = Field(65.0, description="Engine brake shaft power (kW)")
     THERMAL_EFFICIENCY: float = Field(0.31, description="Engine brake thermal efficiency (0.0 - 1.0)")
     vibration_orders: Dict[str, float] = Field(default_factory=dict, description="1X, 2X, 3X vibration order components")
-    virtual_sensors: Dict[str, float] = Field(default_factory=dict, description="P_max, TIT, h_min, P_ind virtual sensor values")
+    virtual_sensors: Dict[str, Optional[float]] = Field(default_factory=dict, description="P_max, TIT, h_min, P_ind virtual sensor values (null = not applicable / no data)")
 
 
 

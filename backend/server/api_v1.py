@@ -17,7 +17,7 @@ import threading
 import time
 import uuid
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Literal, Optional, Set
 
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, ConfigDict, Field
@@ -126,6 +126,11 @@ class LeverRequest(BaseModel):
     oat_c: Optional[float] = Field(default=None, ge=-60, le=60)
 
 
+class EngineCommand(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    command: Literal["START", "STOP", "RESET"]
+
+
 def _reject(exc: FaultRejected) -> HTTPException:
     return HTTPException(status_code=422, detail={"code": "FAULT_REJECTED", "message": str(exc)})
 
@@ -214,6 +219,21 @@ def v1_levers(engine_id: str, body: LeverRequest, cmd: Dict[str, Any] = Depends(
     if body.oat_c is not None:
         kw["oat_c"] = body.oat_c
     return {"engine_id": engine_id, "targets": rt.set_levers(**kw)}
+
+
+@router.post("/api/v1/engines/{engine_id}/engine")
+def v1_engine_command(engine_id: str, body: EngineCommand, cmd: Dict[str, Any] = Depends(command_guard)) -> Dict[str, Any]:
+    """Engine state machine (M1-12): START (crank), STOP (fuel off), RESET (after a failure, R 19.4)."""
+    services().channel(engine_id)
+    return {"engine_id": engine_id, **services().hub.runtimes[engine_id].engine_command(body.command)}
+
+
+@router.post("/api/v1/engines/{engine_id}/status/acknowledge")
+def v1_status_ack(engine_id: str, cmd: Dict[str, Any] = Depends(command_guard)) -> Dict[str, Any]:
+    """Acknowledge a latched NO-GO; it clears once its cause has also cleared (P Step 2.2)."""
+    services().channel(engine_id)
+    services().hub.runtimes[engine_id].status_evaluator.acknowledge()
+    return {"engine_id": engine_id, "acknowledged": True}
 
 
 @router.get("/api/v1/commands")

@@ -15,7 +15,7 @@ from backend.sim.params import physics_values
 
 KIND = {"temperature": ("cht", "egt", "oil_t", "coolant_t", "gearbox_t", "charge_t"),
         "pressure": ("oil_p", "fuel_p", "rail_p", "map_kpa"), "rpm": ("rpm", "prop_rpm"),
-        "flow": ("fuel_flow",), "electrical": ("bus_v", "batt_i", "alt_i")}
+        "flow": ("fuel_flow",), "electrical": ("bus_v", "batt_i", "alt_i"), "vibration": ("vib",)}
 
 
 _KIND_CACHE: Dict[str, Optional[str]] = {}
@@ -52,6 +52,8 @@ class SensorLayer:
             return ph["noise_flow_rel"] * abs(value)
         if k == "electrical":
             return ph["noise_electrical_rel"] * abs(value)
+        if k == "vibration":
+            return max(ph["noise_vibration_rel"] * abs(value), ph["noise_vibration_floor_mm_s"])
         return 0.0
 
     def measure(self, true_values: Dict[str, Optional[float]], t_s: float,
