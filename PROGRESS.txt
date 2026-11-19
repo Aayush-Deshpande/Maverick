@@ -5,11 +5,11 @@ section 19.1. Update the RESUME HERE block at every commit and at the end of eve
 =====================================================================================================================
 RESUME HERE  (last updated 19 Nov 2026)
 =====================================================================================================================
-Phase:        PHASE 1 (M0) in progress. Done: M0-01..M0-08 (08a + 08b). NEXT: M0-09 frontend single store + Vitest
-              (ASK Prasad: vitest is a new dev dependency). Then M0-10 other clients, M0-11 var/, M0-12 dynamic tests.
-Card:         M0-09.
+Phase:        PHASE 1 (M0) in progress. Done: M0-01..M0-08, M0-11. Waiting on Prasad: M0-09 (vitest dependency).
+              NEXT without waiting: M0-12 dynamic-rule tests, then M0-10 other clients. Then M0-09 after the OK.
+Card:         M0-12 (M0-09 blocked on Questions 4).
 Branch:       Beta (pushed by Prasad up to ae82c70; later commits local). main untouched (9b5942e).
-Last commit:  M0-08b on Beta (see git log -1).
+Last commit:  M0-11 on Beta (see git log -1).
 State:        ONE simulator: RuntimeHub. EngineStateService runs no loop; /api/state, /api/control, /ws/telemetry,
               /ws/blender, /api/health, copilot and voice read the v1 runtime (legacy_adapter.py). D52 command security
               on every command path. Test baseline now: 430 passed, 1 failed (ratchet: engine_service/copilot brand
@@ -18,8 +18,8 @@ Next step:    M0-09 (needs Prasad's OK for vitest@<current> as a frontend devDep
               - frontend/src/store (zustand) + one socket manager on /ws/v1 (reconnect, seq resync, stale 2 s,
                 disconnected 10 s); remove the extra sockets/polls; real rate + data age; sliders read lever values;
               - panels tolerate null (show NO DATA) - the legacy Tactical GCS now receives nulls (see Questions).
-              Unstaged on purpose: data/graph_db/fleet_graph.json (M0-11), the 914 .blend re-saves (D50),
-              docs/cleanup/file_coverage_latest.csv (regenerated scan output).
+              Unstaged on purpose: data/graph_db/fleet_graph.json (old runtime copy, see Questions 5), the 914 .blend
+              re-saves (D50), docs/cleanup/file_coverage_latest.csv (regenerated scan output).
 Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produce yet (lambda, timing, BSFC, power,
               vibration, GO/NO-GO); some may show blanks or crash on .toFixed(null) until M0-09. Beta only.
               (2) STOP/START return 422 until the engine state machine (M1-12).
@@ -27,6 +27,10 @@ Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produ
               through the full 6 s legacy fault ramp (140 ticks instead of 40). Thresholds unchanged. It used to pass
               only because the removed background loop ticked the same object in parallel. Please confirm.
               (4) M0-09 needs vitest (new dev dependency). OK to add?
+              (5) M0-11: data/graph_db/fleet_graph.json still has local runtime changes from older runs. The server
+              no longer writes it (runtime copy = var/graph_db/fleet_graph.json, seeded from the committed version).
+              OK to restore the tracked file to its committed content (git restore)? Nothing is lost: a copy of the
+              local version can go to var/ first.
 Answered 19 Nov (recorded as D25-D33):
   - 914 master: headless inspection decides (D25); the 912 iS Sport stays the reference engine.
   - Voice/: stays as local model storage; the stale .gitmodules is removed in P0-04 (D26).
@@ -332,4 +336,20 @@ Tests after: 430 passed, 1 failed (ratchet, known), 7 skipped, 2 xfailed. test_r
   cpu_cost now pass (no second simulator competing for CPU).
 Still on the legacy service (not simulators; each has its own card): mission graph / CBM work orders (M4-05),
   debrief export (M5-06), copilot and voice objects (AI-05/AI-06).
+
+=== 19 Nov 2026  M0-11 Runtime output to var/ (AI: Claude Code, Opus 5.5)
+New: backend/runtime/paths.py - var_dir() ($ANUMAAN_VAR_DIR, else <repo>/var, gitignored), var_path(), seeded_file().
+Changed writers/readers: engine_service.py (fleet graph -> var/graph_db/fleet_graph.json seeded from the tracked
+  data/graph_db/fleet_graph.seed.json = committed HEAD content; live telemetry CSV -> var/telemetry/live_sorties),
+  graph/mission_reporter.py (-> var/mission_reports), reports/report_dump_writer.py and telemetry/replay_engine.py
+  (-> var/report_dump), apps/mission_graph_viewer/report_scanner.py (same rule, inline because it runs in Blender),
+  scripts/launchers/launch_mission_graph.bat, AGENTS.md + data/AGENTS.md wording.
+Local data moved (not deleted): report_dump/ (48 sortie bundles, gitignored) -> var/report_dump/. The 40 tracked
+  data/mission_reports/*.md and the old data/telemetry/live_sorties CSVs stay where they are (history).
+Tests: tests/test_runtime_output.py (4; shown failing first with all 6 old paths listed): no writer hard-codes a
+  tracked runtime location, env override, seed copied once and never written back, var/ gitignored.
+  The regex was tightened once after the first run (it flagged the new var/report_dump subfolder).
+Full suite: 434 passed, 1 failed (ratchet, known), 7 skipped, 2 xfailed.
+Not done: restoring data/graph_db/fleet_graph.json to its committed content (card says ASK; Questions 5). T-M0-6's
+  "10 min run then git status clean" live check is left for after that restore.
 

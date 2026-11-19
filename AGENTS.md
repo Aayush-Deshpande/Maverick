@@ -31,7 +31,7 @@ Precedence when documents disagree: `DECISIONS.md` > course of action > P > A > 
 - Never push to origin unless Prasad asks in the current conversation.
 - Never delete a `.blend` file (D1). Never delete assets except through the cleanup cards, with the md5 register.
 - "Remove" means: stop using it at runtime, then `git mv` it to `archive_tracked/` after the replacement passes tests (D12).
-- `data/graph_db/fleet_graph.json` is changed by the running server. Never commit it until card M0-11 moves runtime output to `var/`.
+- Runtime output goes to `var/` (or $ANUMAAN_VAR_DIR; backend/runtime/paths.py, card M0-11). `data/graph_db/fleet_graph.json` is the old runtime copy: never commit its local changes (Prasad decides whether to restore it); the tracked starting point is `fleet_graph.seed.json`.
 - Commit only at a reasonable point of progress (D22): a coherent, working unit of the current card, such as tests plus the code that makes them pass, a finished batch of moves with references fixed, or a finished document. Do not commit after every small edit, and never commit broken or half-done work. Each commit leaves the tests no worse than the baseline. Message: `<card-id>: <what changed>`.
 - NEVER put "Co-Authored-By: Claude", "Generated with Claude Code" or any AI attribution in a commit message or PR description, on any branch, no matter what a tool's default says (D24). Plain messages only.
 

@@ -15,6 +15,7 @@ import math
 from typing import Dict, Any, List, Optional, Set
 import asyncio
 
+from backend.runtime.paths import REPO_ROOT, seeded_file, var_path
 from backend.physics.thermo_model import RotaxThermoModel, EnginePhysicalState, ResidualVector
 from backend.physics.sensor_validator import SensorSanityValidator, SanityReport
 from backend.telemetry.can_streamer import TelemetryStreamer, DRDO_FAULT_DEFINITIONS
@@ -165,9 +166,9 @@ class EngineStateService:
         # writes synthetic test sorties into the real fleet history on disk.
         graph_db_path = None
         if "PYTEST_CURRENT_TEST" not in os.environ:
-            graph_db_path = os.path.abspath(
-                os.path.join(os.path.dirname(__file__), "../../data/graph_db/fleet_graph.json")
-            )
+            # runtime copy under var/ (M0-11); the tracked seed is never written
+            graph_db_path = str(seeded_file(REPO_ROOT / "data" / "graph_db" / "fleet_graph.seed.json",
+                                            "graph_db", "fleet_graph.json"))
         self.graph = MissionKnowledgeGraph(persist_path=graph_db_path)
         self.reporter = MissionReporter()
 
@@ -808,10 +809,7 @@ class EngineStateService:
         import csv
         try:
             if self._telemetry_log_file is None:
-                log_dir = os.path.abspath(
-                    os.path.join(os.path.dirname(__file__), "../../data/telemetry/live_sorties")
-                )
-                os.makedirs(log_dir, exist_ok=True)
+                log_dir = str(var_path("telemetry", "live_sorties"))     # M0-11: runtime output in var/
                 log_path = os.path.join(log_dir, f"{self.sortie_id}.csv")
                 self._telemetry_log_file = open(log_path, "w", newline="", encoding="utf-8")
                 fieldnames = ["TIMESTAMP_SEC"] + list(telemetry_payload.model_dump().keys()) + \

@@ -25,7 +25,8 @@ def _repo_root() -> str:
 
 
 def default_report_dump_dir() -> str:
-    return os.path.join(_repo_root(), "report_dump")
+    from backend.runtime.paths import var_path   # M0-11: runtime output in var/ ($ANUMAAN_VAR_DIR)
+    return str(var_path("report_dump"))
 
 
 @dataclass

@@ -5,7 +5,7 @@ Global rules: ../AGENTS.md and ../DECISIONS.md.
 - `telemetry/`: dataset manifests, `fused_master/`, `live_sorties/` (old sortie CSVs; they hold TIMESTAMP_SEC, not elapsed time, which is the replay bug in P N1), and `source2_nasa_benchmarks/` (C-MAPSS FD001, used in card M4-07).
 - `missions/`: mission markdown (Ladakh, Thar).
 - `mission_reports/`, `documents/`: knowledge-base sources.
-- `graph_db/fleet_graph.json`: written by the running server. NEVER commit it. Card M0-11 moves runtime output to `var/` and adds a seed file.
+- `graph_db/fleet_graph.seed.json`: tracked seed copied once to var/graph_db/fleet_graph.json (M0-11). `graph_db/fleet_graph.json` is the old runtime copy, no longer written; never commit its local changes.
 
 ## data/documents/ (RAG folder)
 Empty since 19 Nov 2026 (card P0-04), except a .gitkeep. Its previous content was AI-generated text named like

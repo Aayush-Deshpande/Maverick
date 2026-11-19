@@ -44,8 +44,10 @@ _MAX_REPORT_BYTES = 4 * 1024 * 1024  # a report body larger than this is truncat
 
 
 def default_report_root() -> str:
-    """<repo>/report_dump, resolved from this file rather than Blender's cwd."""
-    return os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "report_dump"))
+    """var/report_dump (M0-11), resolved from this file rather than Blender's cwd."""
+    # Same rule as backend/runtime/paths.py (M0-11); this file runs inside Blender without the backend on sys.path.
+    var_root = os.environ.get("ANUMAAN_VAR_DIR") or os.path.join(os.path.dirname(__file__), "..", "..", "var")
+    return os.path.abspath(os.path.join(var_root, "report_dump"))
 
 
 def category_style(name: str) -> Dict[str, Any]:

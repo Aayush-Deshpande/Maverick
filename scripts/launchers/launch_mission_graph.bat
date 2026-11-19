@@ -14,8 +14,8 @@ rem Python so a degree sign or delta in a report can't crash the embedded script
 rem legacy-codepage console.
 set PYTHONUTF8=1
 
-if not exist "%ROOT%report_dump" (
-    echo [WARN] report_dump\ not found - no missions to display.
+if not exist "%ROOT%var\report_dump" (
+    echo [WARN] var\report_dump\ not found - no missions to display.
     echo        Generate some with:  python scripts\simulate_missions.py
     echo.
 )
