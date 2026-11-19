@@ -1,0 +1,62 @@
+[
+  {
+    "asset": "rotax_912is",
+    "file_mb": 16.78,
+    "meshes": 109,
+    "materials": 31,
+    "images": 2,
+    "base_color_textured_materials": 6,
+    "normal_mapped_materials": 0,
+    "animations": 0
+  },
+  {
+    "asset": "rotax_914",
+    "file_mb": 6.08,
+    "meshes": 590,
+    "materials": 13,
+    "images": 0,
+    "base_color_textured_materials": 0,
+    "normal_mapped_materials": 0,
+    "animations": 0
+  },
+  {
+    "asset": "rotax_915is",
+    "file_mb": 19.15,
+    "meshes": 15,
+    "materials": 77,
+    "images": 0,
+    "base_color_textured_materials": 0,
+    "normal_mapped_materials": 0,
+    "animations": 0
+  },
+  {
+    "asset": "austro_ae300",
+    "file_mb": 1.99,
+    "meshes": 164,
+    "materials": 21,
+    "images": 2,
+    "base_color_textured_materials": 3,
+    "normal_mapped_materials": 0,
+    "animations": 0
+  },
+  {
+    "asset": "vrde_jayem_2_2l",
+    "file_mb": 0.9,
+    "meshes": 274,
+    "materials": 24,
+    "images": 1,
+    "base_color_textured_materials": 1,
+    "normal_mapped_materials": 0,
+    "animations": 0
+  },
+  {
+    "asset": "uav_predator",
+    "file_mb": 6.64,
+    "meshes": 18,
+    "materials": 10,
+    "images": 14,
+    "base_color_textured_materials": 4,
+    "normal_mapped_materials": 4,
+    "animations": 0
+  }
+]

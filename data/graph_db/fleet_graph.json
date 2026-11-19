@@ -1263,6 +1263,54 @@
       "min_altitude_ft": null,
       "max_altitude_ft": null,
       "telemetry_log_path": null
+    },
+    "SORTIE-SRV-20261118-212411": {
+      "sortie_id": "SORTIE-SRV-20261118-212411",
+      "region": "LADAKH",
+      "start_timestamp": 1795017254.796847,
+      "end_timestamp": null,
+      "flight_hours": 0.0,
+      "final_health_index": 1.0,
+      "status": "ACTIVE",
+      "uav_tail_number": "TAPAS-BH-201-AF01",
+      "start_health_index": 1.0,
+      "min_oat_c": null,
+      "max_oat_c": null,
+      "min_altitude_ft": null,
+      "max_altitude_ft": null,
+      "telemetry_log_path": null
+    },
+    "SORTIE-SRV-20261118-214059": {
+      "sortie_id": "SORTIE-SRV-20261118-214059",
+      "region": "LADAKH",
+      "start_timestamp": 1795018261.289659,
+      "end_timestamp": null,
+      "flight_hours": 0.0,
+      "final_health_index": 1.0,
+      "status": "ACTIVE",
+      "uav_tail_number": "TAPAS-BH-201-AF01",
+      "start_health_index": 1.0,
+      "min_oat_c": -22.0,
+      "max_oat_c": 10.0,
+      "min_altitude_ft": 9000.0,
+      "max_altitude_ft": 20000.0,
+      "telemetry_log_path": "E:\\backup-llm\\backup-no-llm\\3d_engine\\data\\telemetry\\live_sorties\\SORTIE-SRV-20261118-214059.csv"
+    },
+    "SORTIE-SRV-20261119-125605": {
+      "sortie_id": "SORTIE-SRV-20261119-125605",
+      "region": "LADAKH",
+      "start_timestamp": 1795073168.614763,
+      "end_timestamp": null,
+      "flight_hours": 0.0,
+      "final_health_index": 1.0,
+      "status": "ACTIVE",
+      "uav_tail_number": "TAPAS-BH-201-AF01",
+      "start_health_index": 1.0,
+      "min_oat_c": null,
+      "max_oat_c": null,
+      "min_altitude_ft": null,
+      "max_altitude_ft": null,
+      "telemetry_log_path": null
     }
   },
   "subsystems": {
@@ -8008,6 +8056,19 @@
       "ata_chapter": "ATA 72-10",
       "recommended_action": "Limit rapid throttle transients, avoid critical RPM resonance zones (4,000-4,400 RPM), and schedule post-flight clutch overhaul.",
       "trend_note": "Sub-threshold drift detected in d_FUEL_FLOW (+161.46/hr)"
+    },
+    "ANOM-0514": {
+      "event_id": "ANOM-0514",
+      "sortie_id": "SORTIE-SRV-20261118-214059",
+      "subsystem_id": "SUB_FUEL_SYS",
+      "timestamp_epoch": 1795018382.9716952,
+      "fault_id": 2,
+      "fault_name": "FUEL_INJECTOR_1_CLOG",
+      "severity": "CRITICAL",
+      "anomaly_score": 0.879,
+      "ata_chapter": "ATA 73-10",
+      "recommended_action": "Switch FADEC control map to Lane B backup schedule and activate auxiliary electric fuel boost pump.",
+      "trend_note": null
     }
   },
   "maintenance_actions": {
@@ -14666,6 +14727,19 @@
       "limiting_component": "Fuel_Injection_Rail",
       "signoff_epoch": null,
       "signoff_inspector": null
+    },
+    "MAINT-0513": {
+      "action_id": "MAINT-0513",
+      "sortie_id": "SORTIE-SRV-20261118-214059",
+      "subsystem_id": "SUB_FUEL_SYS",
+      "ata_chapter": "ATA 73-10",
+      "description": "Remove Injector #1 and perform ultrasonic nozzle backflush and flow-rate calibration.",
+      "status": "OPEN",
+      "rul_p10_hours": null,
+      "rul_p50_hours": null,
+      "limiting_component": null,
+      "signoff_epoch": null,
+      "signoff_inspector": null
     }
   },
   "sortie_anomalies": {
@@ -15303,7 +15377,12 @@
       "ANOM-0512",
       "ANOM-0513"
     ],
-    "SORTIE-SRV-20261007-140832": []
+    "SORTIE-SRV-20261007-140832": [],
+    "SORTIE-SRV-20261118-212411": [],
+    "SORTIE-SRV-20261118-214059": [
+      "ANOM-0514"
+    ],
+    "SORTIE-SRV-20261119-125605": []
   },
   "subsystem_anomalies": {
     "SUB_CYL_2": [
@@ -15483,7 +15562,8 @@
       "ANOM-0488",
       "ANOM-0510",
       "ANOM-0511",
-      "ANOM-0512"
+      "ANOM-0512",
+      "ANOM-0514"
     ],
     "SUB_IGNITION": [
       "ANOM-0003",
@@ -16470,6 +16550,11 @@
       "MAINT-0511",
       "MAINT-0512"
     ],
-    "SORTIE-SRV-20261007-140832": []
+    "SORTIE-SRV-20261007-140832": [],
+    "SORTIE-SRV-20261118-212411": [],
+    "SORTIE-SRV-20261118-214059": [
+      "MAINT-0513"
+    ],
+    "SORTIE-SRV-20261119-125605": []
   }
 }
