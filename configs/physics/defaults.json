@@ -8,9 +8,9 @@
       "ref": "plenum + runners ~1.5x swept volume (MVEM literature, Hendricks & Sorenson SAE 900616)"
     },
     "volumetric_efficiency": {
-      "value": 0.88,
+      "value": 0.95,
       "status": "ASSUMED",
-      "ref": "typical 2-valve aero piston engine at rated speed; refined by M1-06 calibration"
+      "ref": "tuned intake of a high-revving aero piston engine at rated speed; together with friction it gives an indicated efficiency in the 0.30-0.42 SI range after calibration (tests/sim/test_engine_power.py)"
     },
     "throttle_cd": {
       "value": 0.8,
@@ -83,6 +83,23 @@
       "value": 0.04,
       "status": "ASSUMED",
       "ref": "knock tendency rise per degree of over-advance (exponential index form)"
+    }
+  },
+  "friction": {
+    "fmep_a_kpa": {
+      "value": 60.0,
+      "status": "ASSUMED",
+      "ref": "FMEP = a + b (N/1000) + c (N/1000)^2 kPa (Chen-Flynn form). Heywood eq. 13.15 automotive values (97/15/5, incl. pumping) give ~23 kW at 5800 rpm on a 1.35 L engine (mechanical efficiency 0.76); reduced to ~0.82 mechanical efficiency at rated, typical of aero engines at WOT"
+    },
+    "fmep_b_kpa_per_krpm": {
+      "value": 12.0,
+      "status": "ASSUMED",
+      "ref": "see fmep_a_kpa"
+    },
+    "fmep_c_kpa_per_krpm2": {
+      "value": 3.5,
+      "status": "ASSUMED",
+      "ref": "see fmep_a_kpa"
     }
   }
 }

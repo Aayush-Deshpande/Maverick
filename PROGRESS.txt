@@ -7,9 +7,9 @@ RESUME HERE  (last updated 19 Nov 2026)
 =====================================================================================================================
 Phase:        PHASE 1 (M0) cards done (M0-01..M0-12; M0-10 reduced, see its entry). NEXT: CHECKPOINT PHASE 1 (manual
               look by Prasad), then Phase 2 in demo-first order: M1-01 sim package + clock, M1-02 atmosphere, ...
-Card:         M1-06 (M1-01..05 done).
+Card:         M1-07 (M1-01..06 done).
 Branch:       Beta (pushed by Prasad up to ae82c70; later commits local). main untouched (9b5942e).
-Last commit:  M1-05 on Beta (see git log -1).
+Last commit:  M1-06 on Beta (see git log -1).
 State:        ONE simulator: RuntimeHub. EngineStateService runs no loop; /api/state, /api/control, /ws/telemetry,
               /ws/blender, /api/health, copilot and voice read the v1 runtime (legacy_adapter.py). D52 command security
               on every command path. Test baseline now: 430 passed, 1 failed (ratchet: engine_service/copilot brand
@@ -435,4 +435,19 @@ backend/sim/combustion.py: W_i = m_f LHV eta_i f(lambda) f(timing) quality; SI r
   lean-loss shape, best lambda 1.1, lean misfire 1.45, MBT loss 0.0004/deg^2, smoke lambda_min 1.3, COV base 1.5 %,
   COV limit 5 %, knock reference + advance sensitivity.
 Tests tests/sim/test_combustion.py 15 passed; tests/sim 41 passed.
+
+=== 19 Nov 2026  M1-06 Friction, brake power, 912 calibration (AI: Claude Code, Opus 5.5)
+backend/sim/engine.py (new, grows through M1-14): steady power chain induction -> fuel (lambda) -> combustion ->
+  FMEP friction -> brake; eta_i CALIBRATED at start-up from take-off power (R 21.5 step 1).
+Rotax 912 iS Sport result: eta_i 0.420, mechanical efficiency 0.82, take-off 73.5 kW, BSFC 240 g/kWh (17.7 kg/h),
+  max continuous at 5500 rpm WOT = 71.0 kW vs 72.0 (TCDS/OM) = -1.4 % (T-PHY-2 pass, not tuned).
+  Altitude vs Gagg-Farrar (T-PHY-5, not yet a test): -3 % at 10,000 ft, -5.6 % at 15,000 ft (just outside +-5 %);
+  to revisit with the charge-temperature/thermal model (M1-07) before T-PHY-5 is switched on in M1-14.
+ASSUMED changed (configs/physics/defaults.json): eta_v 0.88 -> 0.95 and FMEP 97/15/5 -> 60/12/3.5 kPa. Heywood's
+  automotive friction (incl. pumping) gave 23 kW friction at 5800 rpm and an unphysical eta_i 0.49; the new values
+  give mechanical efficiency 0.82 and eta_i in the 0.30-0.42 SI range (refs in the file). Reason written there.
+Turbo engines and diesels are NOT calibrated yet (they need boost, M1-10/M1-11); their probe gave eta_i > 1.
+Tests tests/sim/test_engine_power.py 5 (912): T-PHY-1, T-PHY-2, BSFC band, altitude/heat trend, throttle + F13.
+  Written after probing the numbers (thresholds are the P Part 7 catalogue values, not fitted).
+Full suite 483 passed, 1 failed (ratchet, known), 7 skipped, 7 xfailed.
 
