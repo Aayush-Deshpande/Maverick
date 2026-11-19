@@ -7,7 +7,7 @@ RESUME HERE  (last updated 19 Nov 2026)
 =====================================================================================================================
 Phase:        PHASE 1 (M0) cards done (M0-01..M0-12; M0-10 reduced, see its entry). NEXT: CHECKPOINT PHASE 1 (manual
               look by Prasad), then Phase 2 in demo-first order: M1-01 sim package + clock, M1-02 atmosphere, ...
-Card:         M3-04 novelty gate next (M1-01..14, M2-01..03, M3-01..03 done; M1-14b/M1-16/M1-17 held - Questions 9, 10).
+Card:         M3-04 novelty gate IN PROGRESS (M1-01..14, M2-01..03, M3-01..03 done; M1-14b/M1-16/M1-17 held - Questions 9, 10).
 Branch:       Beta (pushed by Prasad up to ae82c70; later commits local). main untouched (9b5942e).
 Last commit:  M3-03 on Beta (sensor FDI, VIRTUAL values) (see git log -1).
 State:        ONE simulator: RuntimeHub. EngineStateService runs no loop; /api/state, /api/control, /ws/telemetry,
@@ -703,3 +703,20 @@ Quarantined temperature channels are published with the observer's estimate, qua
 Measured: nominal 30 min x 5 engines -> 0-2 stray verdicts per engine; S01 caught after 9 s (10-frame window), S04/
   S05/S06 at once, S07 in 0-2 s. Latency ~0.25 ms per frame (idea text I-02 said ~40 ms; our number is ~0.3 ms).
 Full suite: 623 passed, 1 failed (ratchet, known).
+
+=== 20 Nov 2026  M3-04 IN PROGRESS (not committed) - RESUME HERE NEXT SESSION
+Working tree (uncommitted): backend/detect/autoencoder.py (AutoencoderScorer: sklearn MLPRegressor 16-4-16 tanh,
+  EVT threshold = peaks-over-threshold GPD fit, scipy.stats.genpareto.fit(excess, floc=0); APIs checked on the
+  installed scipy 1.18.1 / scikit-learn 1.9.1) and configs/detect.json "autoencoder" section. The wiring into
+  ResidualDetector.calibrate was REVERTED (detector.py = committed) because of the false-alarm measurement below.
+FlyHash: already wired as the fly_bloom scorer in ResidualDetector (no work needed for that half of M3-04).
+Measured false alarms, 1 nominal flight hour per engine (runtime, seed 21), with ae_evt OR-ed into the raw alarm:
+  confirmed episodes/FH: AE300 0, 912 0, 914 0, 915 0, VRDE 3 (idea text claimed ~1 per 3 FH);
+  raw-alarm frames/h: AE300 136 (134 from ae_evt), VRDE 235 (all ae_evt), 912 17, 914 6, 915 0.
+  -> the EVT threshold is too low on the diesels (holdout too small / not representative of the calibration
+  schedule's operating points). Next: fit the AE threshold on more nominal data (or per operating region), or keep
+  ae_evt as a separate novelty channel like the CUSUM drift channel; then tests (EVT FA ~ alpha on synthetic tails,
+  separation AUC, determinism) and report FA per FH in the PROGRESS entry and docs.
+Then: M3-05 isolation (Bayesian, sensor vs process hypotheses incl. S02/S03 bias/drift), M3-06 explanation,
+  M3-07 remove truth-reading diagnosis/reliability, M3-08 evaluation harness (ROC per fault, seeds disjoint).
+Open for Prasad: Questions 9 (held physics batch + reservoir test marker) and 10 (pipeline TIT test line).
