@@ -324,6 +324,18 @@
     "Hypothesis": {
       "additionalProperties": false,
       "properties": {
+        "channel": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Channel"
+        },
         "contradicting": {
           "default": [],
           "items": {
@@ -355,6 +367,29 @@
           ],
           "title": "Fault Id"
         },
+        "group": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "ambiguity group: hypotheses these channels cannot tell apart",
+          "title": "Group"
+        },
+        "kind": {
+          "default": "PROCESS",
+          "enum": [
+            "NOMINAL",
+            "PROCESS",
+            "SENSOR"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
         "name": {
           "title": "Name",
           "type": "string"
@@ -370,6 +405,19 @@
           ],
           "default": null,
           "title": "Posterior"
+        },
+        "severity": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "estimated severity relative to the calibrated signature",
+          "title": "Severity"
         },
         "supporting": {
           "default": [],

@@ -10,6 +10,7 @@ imported: rithram/fbfc is MIT, clembarr/ffbf has no licence (decision D35).
 from __future__ import annotations
 
 import numpy as np
+from sklearn.covariance import LedoitWolf
 
 from backend.ml.flyhash_novelty import FlyHashEncoder
 
@@ -49,8 +50,11 @@ class Mahalanobis:
     name = "mahalanobis"
 
     def fit(self, Z: np.ndarray) -> "Mahalanobis":
-        self.mu = Z.mean(0)
-        self.P = np.linalg.pinv(np.cov(Z.T) + 1e-6 * np.eye(Z.shape[1]))
+        # Ledoit-Wolf shrinkage toward a scaled identity: the calibration run covers few operating conditions, and
+        # an unshrunk inverse amplifies directions that barely varied there (nominal false alarms, PROGRESS M3-04)
+        lw = LedoitWolf().fit(Z)
+        self.mu = lw.location_
+        self.P = lw.precision_
         return self
 
     def score(self, Z: np.ndarray) -> np.ndarray:

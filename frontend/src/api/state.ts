@@ -56,13 +56,23 @@ export type MarkerFor1 = string | null;
 export type Nodes = string[];
 export type Reason = string;
 export type Highlights = Highlight[];
-export type Channel2 = string;
+export type Channel2 = string | null;
+export type Channel3 = string;
 export type Z = number;
 export type Contradicting = Evidence[];
 export type Cylinder1 = number | null;
 export type FaultId2 = string | null;
+/**
+ * ambiguity group: hypotheses these channels cannot tell apart
+ */
+export type Group1 = string | null;
+export type Kind1 = "NOMINAL" | "PROCESS" | "SENSOR";
 export type Name1 = string;
 export type Posterior = number | null;
+/**
+ * estimated severity relative to the calibrated signature
+ */
+export type Severity1 = number | null;
 export type Supporting = Evidence[];
 export type Hypotheses = Hypothesis[];
 export type Maintenance = {
@@ -92,7 +102,7 @@ export type Latched = boolean;
  * UNKNOWN until the status evaluator (card M2-01) runs
  */
 export type Level2 = "ENGINE_OFF" | "GO" | "ADVISORY" | "CAUTION" | "NO-GO" | "UNKNOWN";
-export type Channel3 = string | null;
+export type Channel4 = string | null;
 export type Code1 = string;
 export type FaultId3 = string | null;
 export type Limit = number | null;
@@ -188,15 +198,19 @@ export interface Highlight {
   reason: Reason;
 }
 export interface Hypothesis {
+  channel?: Channel2;
   contradicting?: Contradicting;
   cylinder?: Cylinder1;
   fault_id: FaultId2;
+  group?: Group1;
+  kind?: Kind1;
   name: Name1;
   posterior?: Posterior;
+  severity?: Severity1;
   supporting?: Supporting;
 }
 export interface Evidence {
-  channel: Channel2;
+  channel: Channel3;
   z: Z;
 }
 export interface Levers {
@@ -227,7 +241,7 @@ export interface Status {
   reasons?: Reasons;
 }
 export interface Reason1 {
-  channel?: Channel3;
+  channel?: Channel4;
   code: Code1;
   fault_id?: FaultId3;
   limit?: Limit;

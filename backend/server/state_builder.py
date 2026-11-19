@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
 
 from backend.core.frame import Q_FROZEN, Q_INTERPOLATED, Q_LANE_DISAGREE, Q_OUT_OF_RANGE, Q_SHIELDED, Q_STALE
-from backend.server.state_schema import (ActiveFaultOut, AlertOut, EventOut, Highlight, Reading, Reason, StateMessage,
+from backend.server.state_schema import (ActiveFaultOut, AlertOut, EventOut, Highlight, Hypothesis, Reading, Reason, StateMessage,
                                          Status)
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -137,7 +137,7 @@ def build_state(tick: Any, seq: int, *, registry: Any = None, active_faults: Ite
                                              "candidate": tick.heavy,           # tier-1 readout scores (not probabilities)
                                              "drift": det.drift,                 # M3-02 CUSUM slow-drift channel
                                              "novelty": det.novelty},            # M3-04 autoencoder + EVT channel
-        hypotheses=[],
+        hypotheses=[Hypothesis(**h) for h in getattr(tick, "hypotheses", None) or []],   # M3-05 isolator
         status=_status(getattr(tick, "status", None)),
         alerts=[AlertOut(**a) for a in (getattr(tick, "status", None) or {}).get("alerts", [])],
         master=(getattr(tick, "status", None) or {}).get("master", {}),

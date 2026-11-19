@@ -1,116 +1,73 @@
 # Residual Analysis
 
-The residual is the single mathematical quantity that bridges ANUMAAN's physics core to its diagnostic reasoning. [The Digital Twin Core](05-the-digital-twin.md) introduced the concept; this article treats it as the core subject in its own right: the interface between physics and diagnostics, the analytical parity space that isolates sensor drift from mechanical engine failure, and the normalized 7-channel residual vector that drives downstream machine learning.
+A residual is what is left of a reading after everything the physics can explain has been subtracted. ANUMAAN's detection, isolation and explanation all work on residuals, so the quality of the residual sets the quality of everything downstream. This page describes how the residual is built, why each step exists, and what it achieves on the simulated fleet.
 
 ---
 
-## What a Residual Is
+## 1. The model-informed residual
 
-A residual is the difference between a validated observed telemetry value and the value the 0D/1D physics core predicts for the engine's current operating point:
+For every frame, in time order, and for every monitored channel $c$ (each cylinder head temperature, each exhaust gas temperature, oil pressure, oil temperature, fuel flow, manifold pressure, engine speed):
 
-$$\mathbf{r}_{\text{phys}}(t) = \mathbf{y}_{\text{valid}}(t) - \mathbf{h}_{\text{mvem}}(\hat{\mathbf{x}}_{\text{twin}}(t), \mathbf{u}(t))$$
+$$r_c(t) = y_c(t) - \underbrace{\hat y_c^{\,\text{model}}(t)}_{\text{nominal physics}} - \underbrace{\hat y_c^{\,\text{tail}}(t)}_{\text{this engine's offset}}, \qquad z_c(t) = \frac{r_c(t)}{\sigma_c}$$
 
-Every term on the right side matters:
-- **$\mathbf{y}_{\text{valid}}(t)$:** A validated sensor reading that has already passed through range limiters, rate-of-change filters, and analytical parity space checks.
-- **$\mathbf{h}_{\text{mvem}}(\hat{\mathbf{x}}(t), \mathbf{u}(t))$:** Not a static threshold or a lookup table, but the instantaneous output of the 0D/1D Mean Value Engine Model and slider-crank kinematics, recomputed continuously from altitude, outside air temperature, throttle position, and airspeed.
+**Nominal physics, $\hat y^{\text{model}}$.** The same engine model that drives the simulator (mean-value air path, combustion, ECU schedules, thermal network) runs alongside the stream, driven only by measured inputs: lever position, engine speed, altitude, outside air temperature, airspeed and, on spark-ignition engines, the ECU-published ignition timing.
 
-The residual is what remains once the physically explainable part of a reading has been subtracted out.
+| Channel group | How the nominal value is predicted |
+|---|---|
+| Manifold pressure, fuel flow | Steady operating point of the mean-value engine at the measured lever and speed, including the ECU mixture map (ECO/POWER), knock retard and the turbo controller's boost schedule |
+| Cylinder head, exhaust, oil temperatures | The thermal network **integrated in time** with those heat inputs, so slow temperatures follow a lever change with their real time constants instead of jumping |
+| Oil pressure | Pump and relief-valve law at the measured speed and oil temperature |
+| Engine speed | Propeller balance from the lever alone (governed propeller: the set speed; fixed pitch: brake power = propeller power), capped by the ECU rev limiter where the engine has one |
 
----
+**This engine's offset, $\hat y^{\text{tail}}$.** No two engines are built alike. A short nominal run identifies the tail:
 
-## Telemetry Deviation Discrimination Matrix
+1. *Physical identification.* Volumetric efficiency is the median ratio of measured to predicted fuel flow (fuel follows air on a mixture-controlled engine). The friction factor is the value that best explains the measured oil temperature (a three-point parabola fit). Both are applied to the tail's own copy of the model.
+2. *Statistical correction.* A ridge regression per channel learns the remaining small offset from a smooth command polynomial, four model outputs (brake power, balance speed, fuel, manifold pressure ratio) and the channel's own predicted rise above ambient. Multiplicative build spread then becomes linear.
+3. *Robust scale.* Rows more than six robust standard deviations away (for example an overspeed fuel cut during the calibration run) are excluded before $\sigma_c$ is estimated.
 
-In airborne propulsion monitoring, deviations occur for very different reasons. The system mathematically discriminates between four distinct sources of telemetry deviation before raising alarms:
-
-| Phenomenon | Physical & Mathematical Signature | Classification & Action |
-| :--- | :--- | :--- |
-| **Environmental Lapse**<br/>(e.g., Climb to 25,000 ft, Leh Cold) | All cylinders shift uniformly with ambient lapse; $\text{MAP}$ residual $r_{\text{map}} \approx 0$; EKF state whiteness preserved. | **Normal Aerothermal Shift**<br/>No alarm; baseline automatically tracks. |
-| **Normal Throttle Step**<br/>(e.g., Combat Break / Full Boost) | Transient dynamic lag in MAP and RPM matching engine inertia $J_{\text{eng}}$; thermodynamic conservation satisfied. | **Normal Dynamic Variation**<br/>Transient lag window masked; no alarm. |
-| **Sensor Hardware Fault**<br/>(e.g., Thermocouple Open / Drift) | Single sensor jumps step-wise or drifts; analytical parity residual $\mathbf{r}_p$ spikes; thermodynamic residuals remain flat. | **Sensor Degradation**<br/>Isolate faulty sensor; switch to EKF virtual sensor; warn GCS. |
-| **Real Engine Failure**<br/>(e.g., Piston Ring Blow-by) | Multiple cross-correlated residuals violate limits; $\Delta P_{\text{crankcase}} > 0, \Delta T_{\text{oil}} > 0, P_{\max}$ drops. | **Confirmed Mechanical Fault**<br/>Escalate to Bayesian diagnosis & FMECA classification. |
+**What is never used.** The residual reads the measured frame and the engine configuration only. It never sees the simulator's truth or the list of injected faults; an automated test (`tests/test_no_truth_leak.py`) scans the inference packages to keep it that way.
 
 ---
 
-## Analytical Redundancy & Parity Space Formulation
+## 2. Why each step was needed (measured)
 
-A residual computed from a failed sensor is not evidence of engine degradation: it is a sensor fault. Blindly feeding corrupted sensor data into machine learning models triggers dangerous false alarms that could needlessly abort critical missions.
+One nominal flight hour per engine, six ten-minute legs (60 %/9,000 ft, 75 %/12,000 ft, 90 %/15,000 ft, 55 %/5,000 ft, 70 %/9,000 ft, 85 %/3,000 ft), test tail seed 1001. The table shows confirmed false-alarm episodes per flight hour as each step was added. Evidence class: SIMULATION.
 
-To solve this, ANUMAAN implements **Parity Space Residual Analysis**:
+| Residual design | AE300 | 912 iS | 914 | 915 iS | VRDE |
+|---|---|---|---|---|---|
+| Quadratic in the commands only | 5 | 12 | 9 | 1 | 6 |
+| + nominal model predictions | 6 | 0 | 9 | 15 | 27 |
+| + measured timing, tail identification, robust scale | 1 | 0 | 0 | 11* | 0 |
+
+\* The remaining 915 iS episodes all occur at 90 % lever above 12,000 ft, where the fixed-pitch engine runs in its rev limiter (an overspeed condition the status evaluator reports in its own right). Inside the limiter the fuel-cut cycle is faster than the 1 Hz frame, so fuel flow, exhaust temperature and speed carry no evidence there and only the slow temperatures are scored.
+
+The same change made the detector more sensitive, because the per-channel scale $\sigma_c$ shrank. Cylinder head temperature noise fell from about 3.2 °C to 0.8 °C, and a radiator blockage (F21) on the 914 is now confirmed after 193 s instead of 904 s.
+
+---
+
+## 3. From residual to decisions
 
 ```mermaid
-flowchart TB
-    Raw["Raw Sensor Vector y_raw(t)"] --> Lim["Range & Slew-Rate Limiting (|dy/dt| > max)"]
-    Lim --> Parity["Parity Space Transformation: r_p(t) = V_p * y_meas(t)"]
-    Parity --> Check{"Parity Vector ||r_p|| > Threshold?"}
-    Check -->|Yes| SensFault["Sensor Fault Isolated<br/>(Column Signature v_p,j identifies faulty probe)"]
-    SensFault --> Freeze["Quarantine Sensor; Freeze Channel;<br/>Synthesize EKF Virtual Sensor"]
-    Check -->|No| Valid["Validated Sensor Vector y_valid(t)"]
-    Valid --> Diff["Subtract 0D/1D MVEM Prediction: r(t) = y_valid - y_mvem"]
-    Diff --> Norm["Normalized 7-Channel Residual Vector r*(t)"]
+flowchart LR
+    F["Measured frame"] --> FDI["Sensor validation<br/>(range, rate, frozen, noise, lane)"]
+    FDI --> R["Model-informed residual z"]
+    R --> D["Detector<br/>(conformal thresholds, 3-of-5 persistence)"]
+    R --> C["CUSUM drift channel"]
+    R --> N["Autoencoder novelty channel<br/>(EVT threshold)"]
+    R --> I["Bayesian isolation"]
+    D & C & N --> I
+    I --> X["Directive from the fault registry"]
 ```
 
-For a sensor measurement model $\mathbf{y}_s(t) = \mathbf{C}_s \mathbf{x}(t) + \mathbf{f}_s(t) + \mathbf{v}(t)$, the parity transformation matrix $\mathbf{V}_p$ is constructed such that:
-
-$$\mathbf{V}_p \mathbf{C}_s = \mathbf{0}$$
-
-Applying this transformation eliminates the unmeasured state dynamics:
-
-$$\mathbf{r}_p(t) = \mathbf{V}_p \cdot \mathbf{y}_s(t) = \mathbf{V}_p \cdot \mathbf{f}_s(t) + \mathbf{V}_p \cdot \mathbf{v}(t)$$
-
-Under healthy sensor conditions, $\mathbb{E}[\mathbf{r}_p(t)] = \mathbf{0}$. If sensor $j$ experiences a bias or open-circuit fault $f_{s,j}(t)$, the parity vector points along the dedicated column signature $\mathbf{v}_{p,j}$, isolating the faulty sensor within $40\text{ ms}$ before any engine diagnostic model is evaluated.
-
-![Sensor Suspect State Isolating Tachometer Probe](/assets/blender/08_sensor_suspect_rpm.png)
-*Figure 1: Sensor validation shielding: uncorroborated RPM sensor jitter isolated as a suspect gauge without triggering false propulsion alarms.*
+- **Sensor validation first.** A quarantined channel gets $z_c = 0$ (no evidence) and is published as a virtual value from the state observer.
+- **Detection** uses three scorers on a 13-feature summary of $z$ (cylinder blocks are summarised by mean, max, min and spread, so four- and six-cylinder engines share one detector): FlyHash familiarity, Mahalanobis distance with Ledoit–Wolf shrinkage, and the largest $|z|$. Each has a split-conformal threshold from held-out nominal frames and must persist 3 of 5 frames. See [The AI and ML Architecture](09-ai-ml-architecture.md).
+- **Isolation** uses the unclipped $z$ vector. See [Fault Diagnosis](11-fault-diagnosis.md).
 
 ---
 
-## The 7-Channel Normalized Residual Vector
+## 4. Sensor fault or engine fault?
 
-Once sensor validity is confirmed, the system calculates the **Normalized Physics Residual Vector** $\mathbf{r}^*(t) \in \mathbb{R}^7$:
+A failed sender moves one channel. A real fault moves its physically coupled channels together. ANUMAAN uses both facts:
 
-$$\mathbf{r}^*(t) = \begin{bmatrix}
-r_1^*(t) \\[4pt]
-r_2^*(t) \\[4pt]
-r_3^*(t) \\[4pt]
-r_4^*(t) \\[4pt]
-r_5^*(t) \\[4pt]
-r_6^*(t) \\[4pt]
-r_7^*(t)
-\end{bmatrix} = \begin{bmatrix}
-\frac{EGT_{\text{meas}} - \widehat{EGT}_{\text{mvem}}}{\sigma_{\text{egt}}} & \text{Exhaust Gas Temperature Residual} \\[6pt]
-\frac{CHT_{\text{meas}}^{\max} - \widehat{CHT}_{\text{mvem}}^{\max}}{\sigma_{\text{cht}}} & \text{Cylinder Head Temperature Residual} \\[6pt]
-\frac{P_{\text{oil,meas}} - \widehat{P}_{\text{oil,mvem}}}{\sigma_{\text{poil}}} & \text{Oil Pressure Residual} \\[6pt]
-\frac{T_{\text{oil,meas}} - \widehat{T}_{\text{oil,mvem}}}{\sigma_{\text{toil}}} & \text{Oil Sump Temperature Residual} \\[6pt]
-\frac{MAP_{\text{meas}} - \widehat{MAP}_{\text{mvem}}}{\sigma_{\text{map}}} & \text{Manifold Absolute Pressure Residual} \\[6pt]
-\frac{\dot{m}_{f,\text{meas}} - \widehat{\dot{m}}_{f,\text{mvem}}}{\sigma_{\text{fuel}}} & \text{Fuel Flow Consumption Residual} \\[6pt]
-\frac{\Delta CHT_{\text{cyl1-4}}}{\sigma_{\text{spread}}} & \text{Inter-Cylinder Thermal Imbalance Residual}
-\end{bmatrix}$$
-
-Because the 0D/1D MVEM model explicitly accounts for altitude derating, ram-air dynamic pressure, ambient temperature lapse, and throttle dynamics, **these normalized residuals remain zero-mean Gaussian noise under all healthy flight regimes**. Any sustained deviation ($\|\mathbf{r}^*(t)\| > \tau$) represents true thermodynamic degradation.
-
----
-
-## Cross-Channel Corroboration
-
-A single anomalous channel is required to show physical cross-coupling before an alarm is confirmed:
-- When the crank-angle torque-deficit observer flags a combustion drop on Cylinder #2, the system checks whether Cylinder #2's EGT residual also decreases over its characteristic thermal lag ($\tau \approx 5 - 15\text{ s}$).
-- Agreement between these independent channels confirms genuine combustion failure.
-- Disagreement (e.g. torque drop with zero EGT change) quarantines the crank pickup sensor rather than declaring an engine emergency.
-
----
-
-## Downstream Pipeline Feeding
-
-The normalized residual vector $\mathbf{r}^*(t)$ is the sole input forwarded to downstream intelligence:
-1. **Bio-Inspired Sparse Novelty Coding:** Projects $\mathbf{r}^*(t)$ through a random expansion matrix into a sparse Kenyon cell representation to detect novel anomalies without requiring labeled failure datasets.
-2. **Bayesian Diagnosis & FMECA Network:** Evaluates residual directional signatures ($\text{sign}(\mathbf{r}^*)$) to isolate the failure mode (e.g., injector clog vs. wastegate stuck open).
-3. **Extreme Value Theory (EVT) Anomaly Gate:** Dynamically evaluates reconstruction errors against a Generalized Pareto Distribution to guarantee false-alarm rates $\le 10^{-4}$.
-
----
-
-## Related Systems
-
-- [The Digital Twin Core](05-the-digital-twin.md)
-- [Engine Physics and Thermodynamics](06-engine-physics.md)
-- [Bio-Inspired Sparse Novelty Coding](10-bio-inspired-sparse-novelty-coding.md)
-- [Fault Diagnosis and Isolation](11-fault-diagnosis.md)
+- One-channel checks (dropout, impossible value, impossible rate, frozen, excess noise, lane disagreement) catch the obvious sender failures within 0–9 s at about 0.3 ms per frame.
+- A bias or slow drift looks like a real change on one channel, so it is left to the isolator. There it competes as a "sensor offset" hypothesis against every process fault. The isolator also knows which sensors are model **inputs**. A biased oil-temperature sender shifts the *predicted* oil pressure, while a genuinely hotter oil does not, and that difference separates the two.

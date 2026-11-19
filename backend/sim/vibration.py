@@ -25,11 +25,12 @@ class Vibration:
     n_cyl: int
     firing_order: Sequence[int]
     ph: Dict[str, float]
+    prop_rpm_ref: float = 1.0           # rated propeller rpm: prop_1x_mm_s is the amplitude there
 
     @classmethod
     def for_engine(cls, cfg: Any) -> "Vibration":
         return cls(n_cyl=cfg.cylinder_count, firing_order=list(cfg.layout.firing_order),
-                   ph=physics_values(cfg.engine_id, "vibration"))
+                   ph=physics_values(cfg.engine_id, "vibration"), prop_rpm_ref=cfg.rated_rpm / cfg.gearbox_ratio)
 
     def _order(self, torques_by_firing: Sequence[float], m: float) -> float:
         n = self.n_cyl
@@ -55,7 +56,7 @@ class Vibration:
             "1X": gain * load * self._order(t, 1.0) / mean * mount * ph["low_order_gain"],
             "firing": gain * load * self._order(t, self.n_cyl / 2) / mean * mount,
             "prop_1X": ph["prop_1x_mm_s"] * (1 + (ph["prop_imbalance_gain"] - 1) * prop_imbalance) * mount
-                       * (max(prop_rpm, 0.0) / 2300.0) ** 2,
+                       * (max(prop_rpm, 0.0) / self.prop_rpm_ref) ** 2,
             "gear_mesh": ph["gear_mesh_mm_s_at_rated"] * load * (1 + (ph["gear_damage_gain"] - 1) * gear_damage) * mount,
         }
         out["rms"] = math.sqrt(sum(v * v for v in out.values()))

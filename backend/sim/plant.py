@@ -21,6 +21,8 @@ from backend.sim.params import physics_values
 from backend.sim.rotor import Rotor
 from backend.sim.vibration import Vibration
 
+MECHANICAL_FUEL_SYSTEM = "CARBURETTOR"           # configs/schema fuel_system without electronic fuel control
+
 OFF, CRANKING, RUNNING, FAILED = "OFF", "CRANKING", "RUNNING", "FAILED"
 
 
@@ -73,6 +75,21 @@ class PlantOutputs:
     tas_kt: float
 
 
+def knock_controlled_point(core: MeanValueEngine, ecu: Dict[str, Any], throttle_pct: float, rpm: float,
+                           atm: Atmosphere, timing_error_deg: float = 0.0, knock_factor: float = 1.0,
+                           **steady_kw: Any) -> tuple:
+    """Operating point after the ECU knock control (spark ignition: timing retard proportional to the knock index
+    above 1). Shared by the plant and the detector's nominal reference so both run the same control law.
+    Returns (OperatingPoint, knock index, retard deg)."""
+    op = core.steady_point(throttle_pct, rpm, atm, timing_error_deg=timing_error_deg, **steady_kw)
+    knock = core.combustion.knock_index(op.map_pa, (core.turbo.t_charge_k if core.turbo else atm.temperature_k),
+                                        max(0.0, timing_error_deg)) * knock_factor
+    retard = max(0.0, knock - 1.0) * ecu["knock_retard_deg_per_index"] if core.combustion.spark_ignition else 0.0
+    if retard > 0:
+        op = core.steady_point(throttle_pct, rpm, atm, timing_error_deg=timing_error_deg + retard, **steady_kw)
+    return op, knock, retard
+
+
 class SimEngine:
     def __init__(self, cfg: Any) -> None:
         self.cfg = cfg
@@ -82,6 +99,7 @@ class SimEngine:
         self.vibration = Vibration.for_engine(cfg)
         self.ecu = physics_values(cfg.engine_id, "ecu")
         self.fx = physics_values(cfg.engine_id, "fault_effects")
+        self.ecu_fuel_cut = cfg.fuel_system != MECHANICAL_FUEL_SYSTEM
         self._gov = (self.rotor.kp, self.rotor.ki)
         self.sm = physics_values(cfg.engine_id, "state_machine")
         self.levers = Levers()
@@ -136,7 +154,7 @@ class SimEngine:
         timing_err = hl.get("timing_error_deg", 0.0) + (self.ecu["lane_loss_timing_error_deg"] if lane_lost and comb.spark_ignition else 0.0)
         overspeed = (self.cfg.overspeed_rpm or self.cfg.rated_rpm) * (1 + self.ecu["overspeed_fuel_cut_margin"])
         fuel_on = self.state == RUNNING or (self.state == CRANKING and self._crank_fuel_ok(dt, hl))
-        fuel_on = fuel_on and rpm < overspeed
+        fuel_on = fuel_on and (rpm < overspeed or not self.ecu_fuel_cut)    # a carburettor has no ECU to cut fuel
         quality = list(hl.get("quality") or [1.0] * n)
         if self.core.thermal.coolant_c < self.fx["glow_warm_c"]:            # F35 matters only cold
             quality = [q * (self.fx["glow_cold_quality"] if g else 1.0)
@@ -145,17 +163,10 @@ class SimEngine:
         if not fuel_on:
             quality = [0.0] * n
 
-        op = self.core.steady_point(throttle, max(rpm, 1.0), atm, filter_factor=hl.get("filter_factor", 1.0),
-                                    turbo_health=hl.get("turbo"), fuel_health=hl.get("fuel"),
-                                    injector=hl.get("injector"), quality=quality, timing_error_deg=timing_err)
-        knock = comb.knock_index(op.map_pa, (self.core.turbo.t_charge_k if self.core.turbo else atm.temperature_k),
-                                 max(0.0, timing_err)) * hl.get("knock_factor", 1.0)
-        retard = max(0.0, knock - 1.0) * self.ecu["knock_retard_deg_per_index"] if comb.spark_ignition else 0.0
-        if retard > 0:
-            op = self.core.steady_point(throttle, max(rpm, 1.0), atm, filter_factor=hl.get("filter_factor", 1.0),
-                                        turbo_health=hl.get("turbo"), fuel_health=hl.get("fuel"),
-                                        injector=hl.get("injector"), quality=quality,
-                                        timing_error_deg=timing_err + retard)
+        op, knock, retard = knock_controlled_point(self.core, self.ecu, throttle, max(rpm, 1.0), atm, timing_err,
+                                           hl.get("knock_factor", 1.0), filter_factor=hl.get("filter_factor", 1.0),
+                                           turbo_health=hl.get("turbo"), fuel_health=hl.get("fuel"),
+                                           injector=hl.get("injector"), quality=quality)
         friction_w = op.friction_w * self.core.thermal.friction_multiplier
         brake_w = (op.indicated_w - friction_w) if fuel_on else -friction_w
         if self.state == FAILED:

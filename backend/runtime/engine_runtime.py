@@ -40,7 +40,8 @@ from backend.mission.reliability import (
     MissionReliabilityEngine, ISR_18H_PROFILE, DEFAULT_COMPONENTS, components_for_fault,
 )
 from backend.mission.glide import UAVGlidePolar
-from backend.agent.diagnostic_agent import DiagnosticAgent
+from backend.diagnose.directive import directive, status_hypotheses
+from backend.diagnose.isolator import BayesianIsolator
 from backend.status.alerts import AlertManager
 from backend.status.evaluator import StatusEvaluator
 
@@ -71,6 +72,8 @@ class Tick:
     reliability: Optional[Dict[str, Any]] = None
     glide: Optional[Dict[str, Any]] = None
     diagnosis: Optional[Dict[str, Any]] = None
+    # M3-05 ranked isolation hypotheses (IsolationHypothesis.to_dict), published while an alarm is active
+    hypotheses: List[Dict[str, Any]] = field(default_factory=list)
     status: Optional[Dict[str, Any]] = None           # backend/status evaluator (M2-01)
     # Transitions raised on this tick only (usually empty). The client appends them
     # to its timeline; /events backfills after a reconnect.
@@ -165,7 +168,8 @@ class EngineRuntime:
             components = [c for c in components if c.name != "turbocharger"]
         self.reliability_engine = MissionReliabilityEngine(components=components, seed=seed)
         self.glide_polar = UAVGlidePolar()
-        self.agent = DiagnosticAgent()
+        self.isolator: Optional[BayesianIsolator] = None          # built on the detector's channels at calibration
+        self._cached_hypotheses: List[Dict[str, Any]] = []
         self.status_evaluator = StatusEvaluator(self.cfg)
         self.alert_manager = AlertManager()
 
@@ -186,15 +190,18 @@ class EngineRuntime:
     def calibrate(self) -> None:
         """Nominal ground run-up on THIS tail, then fit calibration + conformal thresholds."""
         rng = np.random.default_rng(self.seed + 12345)
-        op, frames = _WARM_SCHEDULE[0], []
+        op, frames, order = _WARM_SCHEDULE[0], [], []
         for i in range(self._warmup_ticks + 24):
-            if i % 30 == 0:
-                op = _WARM_SCHEDULE[int(rng.integers(len(_WARM_SCHEDULE)))]
+            if i % 30 == 0:                      # every schedule point once per cycle (shuffled): envelope coverage
+                if not order:
+                    order = list(rng.permutation(len(_WARM_SCHEDULE)))
+                op = _WARM_SCHEDULE[int(order.pop())]
             f, _ = self.source.step(DT, throttle_pct=op[0], altitude_ft=op[1], oat_c=op[2])
             if i >= 24:
                 frames.append(f)
         with self._lock:
             self.detector = ResidualDetector.calibrate(frames, alpha=0.01)
+            self.isolator = BayesianIsolator(self.engine_id, self.detector.cal.channel_names())
             self.levers = Levers()
             self.ready = True
 
@@ -314,6 +321,9 @@ class EngineRuntime:
             self.validity_monitor.reset()
             self._cached_validity = None
             self._cached_diagnosis = None
+            self._cached_hypotheses = []
+            if self.isolator is not None:
+                self.isolator.reset()
             self._cached_prognostics = None
             if self.detector:
                 self.detector.gate.reset()
@@ -359,15 +369,12 @@ class EngineRuntime:
                     _quarantined_lower.append(k.lower())
 
             # 2. Vibration Order Tracking (DSP) - 10 Hz cadence
-            if (self._tick_count % 2 == 1) or (self._cached_orders is None):
-                rpm_val = float(frame.rpm or 5000.0)
-                thr_val = float(frame.throttle or 70.0)
-                self._cached_orders = self.order_tracker.track(rpm=rpm_val, throttle_pct=thr_val)
+            if frame.rpm is not None and frame.throttle is not None and (
+                    (self._tick_count % 2 == 1) or (self._cached_orders is None)):
+                self._cached_orders = self.order_tracker.track(rpm=float(frame.rpm), throttle_pct=float(frame.throttle))
             # measured orders (the plant's accelerometer, faults included) win; the tracker only adds the extra
             # keys legacy consumers read until the DSP stage is rebuilt on measured data (M3)
-            frame.vibration_orders = {**self._cached_orders, **(frame.vibration_orders or {})}
-            rpm_val = float(frame.rpm or 5000.0)
-            thr_val = float(frame.throttle or 70.0)
+            frame.vibration_orders = {**(self._cached_orders or {}), **(frame.vibration_orders or {})}
 
             # 3. State observer (M3-01: UKF on the M1 thermal model, measured inputs only)
             if self.ukf.ready(frame) and ((self._tick_count % UKF_EVERY == self._ukf_phase)
@@ -415,6 +422,8 @@ class EngineRuntime:
                 if top_chans and all(c in _quarantined_lower for c in top_chans):
                     det.raw_alarm = False
                     det.confirmed = False
+            if det is not None and self.isolator is not None and det.z_raw is not None:
+                self.isolator.update(det.z_raw)
 
             hv = None
             if heavy and self.reservoir is not None and self.detector is not None:
@@ -443,9 +452,19 @@ class EngineRuntime:
                 )
                 self._cached_validity = verdict.as_dict()
 
+                # 6b. Isolation (M3-05): Bayesian posterior over registry faults and sensor offsets while any
+                # detection channel is alarming; evidence only, never the injected list (M3-07, T-DYN-4)
+                alarm = bool(det and (det.confirmed or (det.drift or {}).get("alarm") or (det.novelty or {}).get("alarm")))
+                if alarm and self.isolator is not None:
+                    hyps = self.isolator.posterior(self.detector.cal.sensor_coupling(frame))
+                    self._cached_hypotheses = [h.to_dict() for h in hyps]
+                else:
+                    self._cached_hypotheses = []
+
                 # 7. Fatigue Damage Accumulation & Conformal RUL Intervals
-                head_t = float(frame.cht[0]) if frame.cht else 115.0
-                self.damage_accumulator.update(frame.t, head_t)
+                head_t = float(frame.cht[0]) if frame.cht and frame.cht[0] is not None else None
+                if head_t is not None:
+                    self.damage_accumulator.update(frame.t, head_t)
                 self._dmg_finalise_counter += 1
                 if self._dmg_finalise_counter >= 100:
                     self.damage_accumulator.finalise()
@@ -462,31 +481,14 @@ class EngineRuntime:
                 # 8. Mission Reliability & Glide Polar Reachability
                 _n_cyl = self.cfg.cylinder_count
                 _cyl_dmg = {f"cylinder_head_{i+1}": dmg_state.total for i in range(_n_cyl)}
-                active_cyl = 1
-                active_inj = self.injected or (
-                    [{"mode": getattr(f, "mode", ""), "cylinder": getattr(f, "location", 1), "severity": getattr(f, "severity", 1.0)}
-                     for f in getattr(truth, "active_faults", [])]
-                )
-                if active_inj:
-                    active_cyl = active_inj[-1].get("cylinder") or 1
-                elif det and det.top_channels:
-                    active_cyl = _first_cylinder_index(det.top_channels) or 1
-                excess_temp = max(0.0, head_t - 110.0)
-                sev_factor = 1.0 + (excess_temp / 10.0) ** 2.0
-                _cyl_dmg[f"cylinder_head_{active_cyl}"] = min(0.85, dmg_state.total * 15.0 * sev_factor)
-
-                # Attribute the active fault to the components it actually degrades.
-                # Previously only cylinder-head damage reached the reliability engine, so
-                # `limiting_component` was fixed by base hazard rate and never moved when
-                # a fault was confirmed -- a misfire left the fuel pump as the limiter.
-                for _inj in active_inj:
-                    _mode = str(_inj.get("mode", ""))
-                    _sev = float(_inj.get("severity") or 0.0)
-                    _cyl = _inj.get("cylinder") or active_cyl
-                    for _comp in components_for_fault(_mode, _cyl):
-                        # Severity is a 0..1 command; cap well below certain failure so a
-                        # commanded fault degrades reliability without asserting a loss.
-                        _dmg = min(0.90, max(0.05, _sev) * 0.75 + dmg_state.total)
+                # Attribute damage to the components of the ISOLATED faults (posterior x estimated severity), so the
+                # limiting component follows the evidence. The injected-fault list is never read (M3-07).
+                for h in self._cached_hypotheses:
+                    if h["kind"] != "PROCESS":
+                        continue
+                    weight = h["posterior"] * min(1.0, max(0.0, h.get("severity") or 0.0))
+                    for _comp in components_for_fault(h["name"], h.get("cylinder")):
+                        _dmg = min(0.90, weight * 0.75 + dmg_state.total)
                         _cyl_dmg[_comp] = max(_cyl_dmg.get(_comp, 0.0), _dmg)
                 self.reliability_engine.set_damage(_cyl_dmg)
                 rel_result = self.reliability_engine.analytic_reliability(profile=ISR_18H_PROFILE)
@@ -516,50 +518,8 @@ class EngineRuntime:
                 }
                 self._cached_glide = glide_assessment.as_dict()
 
-                # 9. FMECA Diagnostic Directive & XAI Reasoning
-                if det and det.confirmed:
-                    fault_id = 1
-                    cyl_num = 1
-                    if active_inj:
-                        last_inj = active_inj[-1]
-                        mode = last_inj.get("mode", "")
-                        cyl_num = last_inj.get("cylinder") or 1
-                        if "COOLING" in mode:
-                            fault_id = 1
-                        elif "INJECTOR" in mode:
-                            fault_id = 2
-                        elif "MISFIRE" in mode:
-                            fault_id = 3
-                        elif "OIL_PRESSURE" in mode:
-                            fault_id = 4
-                        elif "VIBRATION" in mode or "GEARBOX" in mode:
-                            fault_id = 5
-                        elif "ALTERNATOR" in mode:
-                            fault_id = 7
-                        elif "MAP" in mode or "TURBO" in mode:
-                            fault_id = 8
-                    elif det.top_channels:
-                        top_name = det.top_channels[0][0].lower()
-                        if "cht" in top_name:
-                            fault_id = 1
-                        elif "egt" in top_name:
-                            fault_id = 2
-                        elif "oil_p" in top_name or "oil_t" in top_name:
-                            fault_id = 4
-                        elif "rpm" in top_name:
-                            fault_id = 3
-                        # The leading channel names the subsystem but not always the
-                        # cylinder: a misfire drives rpm/oil_p hardest while the cylinder
-                        # identity sits in a lower-ranked cht_N/egt_N. Scan the whole
-                        # ranked list for the first per-cylinder channel instead of
-                        # defaulting to cylinder 1 and mislabelling the directive.
-                        cyl_num = _first_cylinder_index(det.top_channels) or 1
-
-                    dir_obj = self.agent.diagnose(fault_id, confidence=0.98, cylinder=cyl_num)
-                    self._cached_diagnosis = dir_obj.to_dict()
-                else:
-                    dir_obj = self.agent.diagnose(0, confidence=0.99)
-                    self._cached_diagnosis = dir_obj.to_dict()
+                # 9. Deterministic directive from the registry for the leading hypothesis (M3-06/I-07)
+                self._cached_diagnosis = directive(self._cached_hypotheses)
 
             validity_dict = self._cached_validity
             prognostics_dict = self._cached_prognostics
@@ -572,7 +532,8 @@ class EngineRuntime:
             )
 
             verdict = self.status_evaluator.evaluate(frame.t, frame, engine_state=frame.engine_state,
-                                                     quarantined=_quarantined_lower)
+                                                     quarantined=_quarantined_lower,
+                                                     hypotheses=status_hypotheses(self._cached_hypotheses))
             alerts = [a.to_dict() for a in self.alert_manager.update(frame.t, verdict)]
             status = {**verdict.to_dict(), "alerts": alerts, "master": self.alert_manager.master()}
             t = Tick(
@@ -588,6 +549,7 @@ class EngineRuntime:
                 reliability=reliability_dict,
                 glide=glide_dict,
                 diagnosis=diagnosis_dict,
+                hypotheses=list(self._cached_hypotheses),
                 status=status,
                 events=tick_events,
             )

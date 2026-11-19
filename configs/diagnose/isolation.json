@@ -1,0 +1,34 @@
+{
+  "schema_version": "isolation/1",
+  "description": "Bayesian fault isolation settings (card M3-05, idea text I-05). Signatures: configs/diagnose/signatures/<engine_id>.json (CALIBRATED). FMECA: docs/reliability/fmeca.json (MIL-STD-1629A style, ANUMAAN-authored).",
+  "fmeca_map": {
+    "status": "ASSUMED",
+    "ref": "ANUMAAN mapping of the registry faults (configs/faults.json) onto the FMECA modes by failure mechanism; null = no FMECA mode covers it (default occurrence used)",
+    "value": {
+      "F01": "FM-01", "F02": "FM-05", "F03": "FM-05", "F04": "FM-18", "F05": "FM-02", "F06": "FM-02", "F07": "FM-03",
+      "F08": "FM-03", "F09": "FM-04", "F10": "FM-16", "F11": "FM-05", "F12": "FM-08", "F13": "FM-08", "F14": "FM-13",
+      "F15": "FM-13", "F16": "FM-13", "F17": "FM-14", "F18": "FM-06", "F19": "FM-06", "F20": "FM-06", "F21": "FM-06",
+      "F22": "FM-06", "F23": "FM-10", "F24": "FM-10", "F25": "FM-06", "F26": "FM-11", "F27": "FM-20", "F28": null,
+      "F29": null, "F30": "FM-07", "F31": "FM-07", "F32": "FM-17", "F33": "FM-17", "F34": "FM-17", "F35": "FM-05",
+      "F36": "FM-18", "F37": null,
+      "S01": "FM-19", "S02": "FM-19", "S03": "FM-19", "S04": "FM-19", "S05": "FM-19", "S06": "FM-19", "S07": "FM-18"
+    }
+  },
+  "default_occurrence": {"value": 3, "status": "ASSUMED", "ref": "FMECA occurrence (1-10) for faults no FMECA mode covers"},
+  "nominal_log_odds": {
+    "value": 2.0,
+    "status": "ASSUMED",
+    "ref": "prior log odds of 'no fault' against the strongest single fault hypothesis while an alarm is active (alarms can be false: the model must earn its call)"
+  },
+  "window_frames": {"value": 10, "status": "ASSUMED", "ref": "exponential averaging of the residual z-vector before isolation (frames)"},
+  "residual_var": {
+    "value": 0.5,
+    "status": "ASSUMED",
+    "ref": "variance (z^2) of the averaged residual per channel: model error is correlated in time, so averaging removes only part of it"
+  },
+  "severity_max": {"value": 1.5, "status": "ASSUMED", "ref": "upper bound of the uniform prior on fault severity relative to the signature (severity 1)"},
+  "sensor_bias_max_z": {"value": 30.0, "status": "ASSUMED", "ref": "bound of the uniform prior on a single-channel sensor offset (z units)"},
+  "ambiguity_cosine": {"value": 0.95, "status": "ASSUMED", "ref": "signatures this collinear cannot be told apart: reported as one ambiguity group"},
+  "top_k": {"value": 5, "status": "ASSUMED", "ref": "hypotheses published"},
+  "min_posterior": {"value": 0.02, "status": "ASSUMED", "ref": "hypotheses below this posterior are not published"}
+}

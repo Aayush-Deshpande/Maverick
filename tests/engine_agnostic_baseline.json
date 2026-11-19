@@ -24,7 +24,22 @@
     "cyl": 0,
     "model": 0
   },
+  "backend/detect/reference.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
   "backend/detect/sensor_fdi.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/diagnose/directive.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/diagnose/isolator.py": {
     "brand": 0,
     "cyl": 0,
     "model": 0

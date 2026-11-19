@@ -47,8 +47,16 @@ class AutoencoderScorer:
         return self
 
     def score(self, Z: np.ndarray) -> np.ndarray:
+        """Forward pass on the trained weights (tanh hidden layers, identity output: MLPRegressor's network); the
+        same numbers as net.predict without its per-call validation overhead, which dominated one-frame scoring."""
         X = (np.atleast_2d(Z) - self.mu) / self.sd
-        return np.mean((self.net.predict(X) - X) ** 2, axis=1)
+        h = X
+        last = len(self.net.coefs_) - 1
+        for i, (w, b) in enumerate(zip(self.net.coefs_, self.net.intercepts_)):
+            h = h @ w + b
+            if i < last:
+                h = np.tanh(h)
+        return np.mean((h - X) ** 2, axis=1)
 
     def evt_threshold(self, nominal_scores: np.ndarray, alpha: float) -> float:
         """Peaks-over-threshold GPD fit on nominal scores; threshold at per-frame false-alarm rate alpha."""

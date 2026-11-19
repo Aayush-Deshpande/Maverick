@@ -1,102 +1,66 @@
 # The AI and ML Architecture
 
-ANUMAAN's intelligence layer is not one monolithic neural network asked to solve every problem. In aviation propulsion health monitoring, attempting to answer *"is this normal?"*, *"which component is failing?"*, *"how much life remains?"*, and *"what should the pilot do?"* with a single black-box classifier leads to unexplainable, uncertifiable decisions.
-
-Instead, ANUMAAN structures its intelligence as a **disciplined cyber-physical stack of distinct engineering stages**. Every layer sits directly on top of the digital twin's 0D/1D physics core, where first-principles thermodynamic conservation equations constrain and guide downstream machine learning.
+ANUMAAN does not ask one neural network to answer "is this normal?", "what is failing?", "how long will it last?" and "can the mission continue?". Each question gets the method that suits it, and every method works on the same foundation: a **physics-informed residual** (what the measured engine does that the nominal engine model, tuned to this tail, does not explain). Physics removes everything that is expected (altitude, lever, ECU schedules, thermal lag), so the learning components see only the unexplained part and need far less data.
 
 ---
 
-## Algorithmic Benchmarking: Why Hybrid Physics + AI?
-
-A foundational question in aerospace condition monitoring is whether to use pure physics, pure deep learning, or a hybrid approach. The table below benchmarks the paradigms:
-
-| Feature / Dimension | Pure Physics-Based Model | Pure Data-Driven AI/ML | Proposed Hybrid Digital Twin (Physics + AI) |
-| :--- | :--- | :--- | :--- |
-| **Governing Principle** | First principles (Mass, momentum, energy conservation). | Statistical pattern recognition and deep learning. | **Physics observer as baseline; AI learns residual discrepancies.** |
-| **Training Data Requirement**| Very Low (Requires physical dimensions and dyno maps). | Massive (Requires thousands of hours of labeled data). | **Moderate (Calibrated on modest healthy data + synthetic HIL).** |
-| **Generalization Capability**| High (Extrapolates well across flight envelopes). | Poor (Fails completely outside training distribution). | **Superior (Physics bounds constrain extrapolation).** |
-| **Unmodeled Dynamics Tracking**| Very Poor (Rigid equations ignore mechanical wear). | High (Captures subtle multi-variable correlations). | **High (AI residual captures wear without violating physics).** |
-| **Computational Overhead** | Low to Moderate (Real-time ODE integration). | Low to High (Depends on neural architecture). | **Moderate (Optimized INT8 runtime + lightweight EKF).** |
-| **Explainability to Pilot** | 100% Transparent (Direct physical state variables). | Opaque / Black-Box (Abstract tensor weights). | **High (SHAP attribution tied to physical thermodynamic states).** |
-| **DO-178C Certifiability** | High (Deterministic mathematics). | Extremely Difficult (Non-deterministic, data-dependent). | **High (Certified via Run-Time Monitor architecture).** |
-| **Early Fault Detection** | Moderate (Requires significant thermodynamic deviation). | Very High (Detects subtle micro-correlations). | **Superior (Combines statistical sensitivity with physical validation).** |
-| **RUL Uncertainty Bounds** | Heuristic / Rule-based. | Overconfident point estimates. | **Mathematically Guaranteed (Conformal Prediction intervals).** |
-
----
-
-## The Six-Stage Cyber-Physical AI Stack
-
-ANUMAAN decomposes propulsion intelligence into six sequential, auditable layers:
+## The stack
 
 ```mermaid
 flowchart TB
-    subgraph Physics["1. Physics & State Observer Layer"]
-        Res["0D/1D MVEM + EKF State Observer<br/>Produces Normalized Physics Residuals r*(t)"]
-    end
-    subgraph Novelty["2. Novelty & Anomaly Detection"]
-        Bloom["Bio-Inspired Sparse Novelty Coding (FlyHash)<br/>Unsupervised Projection into Sparse Kenyon Space"]
-        POT["Extreme Value Theory (EVT) Peaks-Over-Threshold<br/>Guaranteed False Alarm Rate alpha <= 10^-4"]
-        Res --> Bloom
-        Bloom --> POT
-    end
-    subgraph Diagnosis["3. Bayesian Fault Diagnosis & ATA Directives"]
-        BN["Bayesian Belief Network (FMECA Taxonomy)<br/>Ranks Probable Fault Hypotheses"]
-        ATA["Deterministic ATA-Chapter Rule Engine<br/>Outputs Airworthiness Emergency Directives"]
-        POT --> BN
-        BN --> ATA
-    end
-    subgraph Prognostics["4. Damage Kinetics & Conformal Prognostics"]
-        Damage["Physics Damage Kinetics (Arrhenius / Paris-Erdogan)<br/>Wiener Process Continuous Degradation Drift"]
-        Conf["Split Conformal Prediction Engine<br/>Guaranteed 95% Confidence Bounds [RUL_low, RUL_high]"]
-        BN --> Damage
-        Damage --> Conf
-    end
-    subgraph Mission["5. Tactical Mission Reliability Reasoning"]
-        MC["Monte Carlo Phase Hazard Rate Integration<br/>Computes R = P(Mission Completes Without Abort)"]
-        Cone["Aerodynamic Glide Polar Coupling (L/D)<br/>Dynamic 3D Reachability Cone & Emergency Divert"]
-        Conf --> MC
-        MC --> Cone
-    end
-    subgraph Advisory["6. Prescriptive Operator Advisory"]
-        Esc["3-Tier Escalation Protocol:<br/>1. Reliability Report -> 2. Power Derate -> 3. Alternate Profile"]
-        Cone --> Esc
-    end
+    F["Measured frame (sim, replay or bus)"] --> V["1. Sensor validation and virtual sensors"]
+    V --> R["2. Physics-informed residual<br/>(nominal model + tail identification + per-tail regression)"]
+    R --> D["3. Detection<br/>FlyHash · Mahalanobis (Ledoit-Wolf) · max |z|<br/>split-conformal thresholds · 3-of-5 persistence"]
+    R --> C["CUSUM slow-drift channel"]
+    R --> N["Autoencoder + EVT novelty channel"]
+    D & C & N --> I["4. Bayesian isolation<br/>(registry faults, sensor offsets, ambiguity groups)"]
+    I --> X["5. Directive from the fault registry<br/>(root cause, mitigation, maintenance, ATA)"]
+    R --> O["State observer (UKF): health parameters"]
 ```
 
-1. **Physics Residual Generation:** The 0D/1D MVEM model computes the expected physical state at every tick. Subtracting expected from observed produces the normalized 7-channel residual vector $\mathbf{r}^*(t)$, removing flight regime dependence before AI models ever evaluate the data.
-2. **Bio-Inspired Sparse Novelty Coding:** Modeled on the fruit fly olfactory circuit (FlyHash), roughly 50 input features project onto an expanded population of sparse Kenyon cells with winner-take-all inhibition. Runs every tick without requiring labeled training data.
-3. **Bayesian Diagnosis & Deterministic ATA Agent:** Evaluates residual directional signatures against the FMECA taxonomy to calculate posterior fault probabilities $P(F_k \mid \mathbf{r}^*)$. The deterministic ATA rule engine converts top hypotheses into FAA/EASA-compliant maintenance directives without invoking non-deterministic language models.
-4. **Degradation Modeling & Conformal RUL:** Arrhenius thermal reaction kinetics and Paris-Erdogan fatigue crack equations model damage accumulation. Split conformal prediction outputs calibrated 95% confidence intervals $[RUL_{\text{lower}}, RUL_{\text{upper}}]$, strictly rejecting fake scalar precision.
-5. **Tactical Mission Reliability:** Evaluates mission completion probability $R$ across remaining flight phases using Monte Carlo hazard integration, and computes aerodynamic glide reachability cones ($L/D$) over local terrain.
-6. **Prescriptive Advisory Escalation:** Escalates through a defined operational sequence: a component reliability report, a calculated throttle derate recommendation with endurance trade-offs, and an alternative achievable flight profile.
+| Stage | Technique | Why this technique | Where |
+|---|---|---|---|
+| Sensor validation | Range, rate, frozen-window variance, robust noise (median second difference), lane disagreement; quarantined channels replaced by the observer's estimate (VIRTUAL) | A failed sender must not look like an engine fault; one-channel checks are instant and explainable | `backend/detect/sensor_fdi.py` |
+| State observer | Unscented Kalman filter on the thermal network, health parameters as random-walk states | Tracks slow degradation (cooling, radiator, oil cooler) as physical parameters, not black-box scores | `backend/twin/sim_ukf.py` |
+| Residual | Nominal engine model on measured inputs; tail identification (volumetric efficiency, friction); per-channel ridge regression with model regressors; robust MAD scale | Removes the operating point so one detector serves every engine and condition; see [Residual Analysis](08-residual-analysis.md) | `backend/detect/reference.py`, `calibration.py` |
+| Detection | Three scorers on a 13-feature residual summary, split-conformal thresholds on held-out nominal frames, 3-of-5 persistence | Conformal thresholds give a finite-sample false-alarm bound on nominal frames of the calibration distribution; persistence trades a few seconds for far fewer nuisance alarms | `backend/detect/detector.py`, `scorers.py` |
+| Novelty | FlyHash expand-and-sparsify familiarity (see [Bio-Inspired Sparse Novelty Coding](10-bio-inspired-sparse-novelty-coding.md)); autoencoder (16-4-16 tanh MLP) reconstruction error with a Generalized Pareto peaks-over-threshold threshold | EVT extrapolates the false-alarm level beyond what the held-out sample can resolve (an empirical quantile at α = 10⁻⁴ needs 10,000 frames) | `backend/detect/autoencoder.py` |
+| Slow drift | Two-sided CUSUM on the residual vector | Catches drifts that never cross a one-frame threshold | `backend/detect/cusum.py` |
+| Isolation | Bayesian posterior over registry faults and per-sensor offsets; Gaussian likelihood with severity integrated out in closed form; FMECA-occurrence priors; calibrated signatures | Gives a probability, the cylinder, the estimated severity and the honest alternatives, and separates a sensor offset from an engine fault | `backend/diagnose/isolator.py`, [Fault Diagnosis](11-fault-diagnosis.md) |
+| Directive | Deterministic lookup in the fault registry (never generated text) | Maintenance and in-flight actions must be traceable to a source | `backend/diagnose/directive.py` |
+
+Prognostics (remaining useful life with conformal intervals) and mission reliability are built on top of these outputs in the next phases; their pages describe them as they land.
 
 ---
 
-## Safety Architecture: ASTM F3269-17 Simplex Run-Time Monitor
+## Measured behaviour (evidence class: SIMULATION)
 
-To bridge modern AI/ML with aerospace DO-178C DAL-C airworthiness certification, non-deterministic machine learning components (such as neural encoders and RAG copilots) are supervised by an **ASTM F3269-17 Simplex Run-Time Monitor**:
+| Measure | Result |
+|---|---|
+| Nominal varied-lever flight hour, confirmed false-alarm episodes | AE300 1, 912 iS 0, 914 0, VRDE 0; 915 iS 11, all inside its rev limiter at 90 % lever above 12,000 ft |
+| Sensor validation latency | ~0.3 ms per frame |
+| Sender faults caught (stuck, dropout, out of range, lane split, noise) | 0–9 s after onset |
+| Autoencoder EVT threshold | exceedance within a factor of 2 of α = 10⁻⁴ from 2,000 held-out scores (synthetic heavy tail) |
+| Autoencoder scoring cost | ~21 µs per frame (numpy forward pass) |
+| Five engines at 20 Hz, all stages | under the 20 ms tick budget |
 
-```mermaid
-flowchart LR
-    Sens["Telemetry Stream / Residuals"] --> Mon{"ASTM F3269-17<br/>Run-Time Safety Monitor"}
-    Sens --> AI["Complex AI / ML Function<br/>(Neural Anomaly / LLM Copilot)"]
-    AI --> Mon
-    Mon -->|Valid, Within Latency & Physical Bounds| Out["Operator Display / Action"]
-    Mon -->|Anomaly / Timeout / Out-of-Bounds| Fallback["Certified Deterministic Safety Envelope<br/>(Hardcoded Physics Limits & ATA Checklist)"]
-    Fallback --> Out
-```
+Simulation results are never quoted as flight performance. Every number above comes from simulated engines with per-tail build spread and sensor noise. Test tails (seeds ≥ 1000) are separate from the tails used to build signatures (seeds 11, 12).
 
-- **Execution Bound:** The monitor verifies that AI outputs arrive within the $15\text{ ms}$ processing deadline.
-- **Physical Plausibility Gate:** The monitor cross-checks neural predictions against first-principles thermodynamic conservation. If an AI model hallucinated a negative fuel burn or impossible RPM surge, the monitor rejects the output within $10\text{ ms}$.
-- **Deterministic Failover:** If the complex model fails or times out, control immediately reverts to a certified deterministic lookup envelope, ensuring the aircraft is never placed in an unmonitored state.
+---
+
+## Design rules that keep it honest
+
+- **No truth leaks.** Detection, isolation, status and highlights read only the measured frame and configuration. A test scans these packages for any access to the simulator's truth.
+- **No invented numbers.** A missing reading is "no data", never a default value.
+- **Every threshold has a source:** a conformal quantile, an EVT fit, an engine manual limit, or a value marked ASSUMED in the configuration.
 
 ---
 
 ## Related Systems
 
+- [Residual Analysis](08-residual-analysis.md)
 - [Bio-Inspired Sparse Novelty Coding](10-bio-inspired-sparse-novelty-coding.md)
 - [Fault Diagnosis and Isolation](11-fault-diagnosis.md)
 - [Vibration Analysis and Order Tracking](12-vibration-analysis.md)
-- [Degradation Modeling and Wear Kinetics](13-degradation-modeling.md)
 - [Remaining Useful Life Estimation](14-remaining-useful-life.md)
 - [Mission Reliability Enhancement](17-mission-reliability.md)

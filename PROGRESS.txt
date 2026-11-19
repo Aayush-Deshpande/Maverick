@@ -7,7 +7,7 @@ RESUME HERE  (last updated 20 Nov 2026, overnight autonomous session)
 =====================================================================================================================
 Phase:        PHASE 1 (M0) cards done (M0-01..M0-12; M0-10 reduced, see its entry). NEXT: CHECKPOINT PHASE 1 (manual
               look by Prasad), then Phase 2 in demo-first order: M1-01 sim package + clock, M1-02 atmosphere, ...
-Card:         M3-05 isolation NEXT (M1-01..17, M2-01..03, M3-01..04 done). Prasad away until ~08:45 20 Nov with full
+Card:         M3-05/06/07 landing (model-informed residual, Bayesian isolator, registry directive); NEXT M3-08 harness. Prasad away until ~08:45 20 Nov with full
               permission (installs to D:, any package/model/dataset): KEEP BUILDING card after card, never wait.
 Branch:       Beta (pushed by Prasad up to ae82c70; later commits local). main untouched (9b5942e).
 Last commit:  M3-04 on Beta (see git log -1).
@@ -750,3 +750,60 @@ NEXT (start of M3-05/M3-08 work): model-informed baseline - feed the nominal Mea
 shap 0.54.1 installed (Prasad OK, M3-06; pip cache on D:, package in the Python site-packages).
 Open (from the code): engine_runtime.py 364/370 'frame.throttle or 70.0' fallback (rule 2) and vibration.py literal
   2300 rpm - fix in M3-05 cleanup.
+
+=== 20 Nov 2026  M3-04b/M3-05/M3-06/M3-07: model-informed residual, Bayesian isolation, registry directive
+Problem found: on a VARIED-lever nominal hour the residual detector false-alarmed 1-12 times per engine (the steady-
+  lever test hid it): the quadratic-in-commands baseline cannot follow throttle body, altitude, ECU/TCU schedules,
+  knock retard, thermal lag or the rev limiter.
+Fix (backend/detect/reference.py, calibration.py schema tail_calibration/2): the NOMINAL engine model predicts every
+  channel from measured inputs (steady_point at measured lever/rpm/atm; thermal network integrated in time; oil pump
+  law at measured rpm/oil_t; propeller-balance rpm capped by the ECU fuel cut; measured ECU ignition timing on SI).
+  Tail identification at calibration: volumetric efficiency = median measured/predicted fuel flow (SI), friction =
+  parabola fit on oil_t. Then a per-channel ridge (command polynomial + 4 model regressors + own predicted rise)
+  and a robust (MAD, 6 sigma) scale. Bugs fixed on the way: NaN sigma from Y.mean over NaN rows (VRDE was blind on
+  EGT/fuel/rpm), holdout scored twice (stateful reference). Mahalanobis uses Ledoit-Wolf shrinkage (sklearn 1.9.1).
+  Plant fix: overspeed fuel cut only with electronic fuel control (the carburetted 914 has no ECU to cut fuel);
+  knock_controlled_point shared by plant and reference.
+Measured (SIMULATION, tail seed 1001, 6 x 10 min legs): confirmed FA episodes/FH before -> after:
+  AE300 5 -> 1, 912 12 -> 0, 914 9 -> 0, 915 1 -> 11 (all inside the rev limiter at 90 % lever above 12 kft, an
+  overspeed state; fast channels carry no evidence there), VRDE 6 -> 0. Sensitivity up: CHT sigma 3.2 -> 0.8 C;
+  914 F21 confirmed 904 s -> 193 s; AE300 F21 never -> 185 s. 914 F19 (2-3 C on one liquid head) no longer confirmed
+  within 1200 s (weak fault; for M3-08). Two strict xfails now pass and were removed (per-tail calibration, reservoir).
+Isolation (backend/diagnose/isolator.py): hypotheses NOMINAL / registry PROCESS faults (cylinder faults permuted) /
+  SENSOR offset per channel; Gaussian likelihood on the EMA residual with severity integrated out in closed form
+  (normal-CDF difference: Occam penalty); priors from FMECA occurrence (configs/diagnose/isolation.json fmeca_map,
+  ASSUMED); ambiguity groups by signature cosine; sensor hypotheses use the calibration's sensor_coupling (a biased
+  INPUT sensor, rpm/oil_t, also moves the channels predicted from it). Signatures: scripts/diagnose/gen_signatures.py
+  -> configs/diagnose/signatures/<engine>.json (CALIBRATED, seeds 11/12, severity 0.5 per-unit, stops at engine
+  failure). 912 check (seed 1001): top-3 7/7, top-1 5/7 (F20/F21 coolant vs radiator, F23 vs oil_p sender: same
+  channels move - reported as alternatives).
+Runtime (M3-07): diagnosis and reliability damage attribution no longer read the injected-fault list; hypotheses
+  (state.hypotheses, schema + frontend types regenerated) and backend/diagnose/directive.py (registry root cause,
+  mitigation, maintenance action, ATA, alternatives) replace the DiagnosticAgent legacy-id path. head_t 115 C
+  fallback removed. Autoencoder scoring = numpy forward pass (identical to predict, 21 us vs ~500 us/frame) to keep
+  the 5-engine tick under 20 ms.
+Tests: tests/detect/test_reference.py, tests/diagnose/test_isolator.py. Docs: docs_site/technical/08 rewritten to the
+  implemented method with measured numbers (it described parity-space/EKF/40 ms claims we do not run).
+Prasad 20 Nov: keep docs_site updated in final-report style as work lands (memory feedback-final-report-docs).
+Also in this unit:
+  - residual scores coolant_t, gearbox_t, bus_v, fuel_p where the engine has them (bus_v/fuel_p regression-only);
+    the detector's 13-feature vector keeps the original 5 scalars (tests + reservoir dims), the extra channels feed
+    the CUSUM drift channel and the isolator; signatures regenerated for all 5 engines on the extended channel set;
+  - status evaluator gets the hypotheses (registry status_at_full_severity for engine faults, ADVISORY for a sensor
+    offset: T-STS-4) via backend/diagnose/directive.status_hypotheses;
+  - backend/evaluation/tail.py (calibrated test tail, shared by scripts/tests), backend/evaluation/run_matrix.py
+    (M3-08 harness: nominal hours vs limits-only baseline, fault matrix with detect time / baseline time / ROC AUC /
+    isolation rank, sensor-noise x1.5 independent plant variant), scripts/diagnose/eval_isolation.py;
+  - perf: load_fault_registry re-validated its JSON schema per call (100 ms) - diagnose uses the cached
+    backend.sim.source.registry(); sensor_coupling snapshots/restores the reference instead of deep copies;
+  - frontend EngineRuntimeConsole: Fault isolation panel (posterior, engine/sensor, location, severity, evidence,
+    ambiguity) and an honest footer; tsc clean;
+  - removed rule breaks: vibration prop term literal 2300 rpm -> rated propeller rpm from config; order tracker
+    'frame.rpm or 5000 / frame.throttle or 70' fallbacks -> skipped when missing.
+  912 isolation report (seed 1001, 2 cruise points, 25 faults + 4 sensor offsets): top-1 26/58, top-3 36/58; misses
+    are faults with no trace in the scored channels (F24 oil qty, F27/F28/F29 vibration, F33/F34 electrical, F03
+    knock) or physically shared patterns (F04/F36 lane loss vs F11 timing, F05 clog = lean misfire vs F01).
+
+Known, not yet fixed: engine_runtime conformal RUL calibrated on synthetic 'truths' (preds + 0.25 sin) and the
+  damage->RUL formula with literals (M4); glide uav_lat/lon/alt literals (M5); vibration.py 2300 rpm literal;
+  'frame.throttle or 70.0' in the order tracker call.

@@ -31,6 +31,7 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
   const det = (state?.detections ?? null) as Detections | null;
   const detectorEntries = Object.entries(det?.ratios ?? {}).sort((a, b) => b[1] - a[1]);
   const activeFaults = state?.active_faults ?? [];
+  const hypotheses = state?.hypotheses ?? [];
   const fault = faults.find((f) => f.id === faultId);
   const age = dataAgeMs(runtime.slot, now);
   const live = runtime.connection === 'LIVE';
@@ -123,6 +124,19 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
           {det.confirmed ? <AlertTriangle className="w-4 h-4 shrink-0" /> : det.raw_alarm ? <CircleHelp className="w-4 h-4 shrink-0" /> : <Check className="w-4 h-4 shrink-0" />}
           <span>{det.confirmed ? 'Persistence confirmed anomaly' : det.raw_alarm ? 'Raw anomaly — persistence gate has not confirmed it' : 'No active residual alarm'}{det.top_channels?.length ? ` · Leading channels: ${channelEvidence(det.top_channels)}` : ''}</span>
         </div>}
+        {hypotheses.length > 0 && <div className="mt-4 rounded-sm border border-surface-border bg-white/[0.03] p-3">
+          <div className="text-xs font-medium font-mono text-slate-200">Fault isolation <span className="font-normal text-slate-500">(Bayesian posterior over registry faults and sensor offsets)</span></div>
+          <div className="mt-3 space-y-2.5">{hypotheses.map((h, i) => {
+            const where = h.cylinder ? `cyl ${h.cylinder}` : h.channel ? h.channel : '';
+            const support = (h.supporting ?? []).map((e) => `${e.channel} ${num(e.z, 1)}σ`).join(', ');
+            const ambiguous = i > 0 && h.group && h.group === hypotheses[0].group;
+            return <div key={`${h.fault_id}-${where}-${i}`}>
+              <div className="flex justify-between gap-2 text-xs font-mono"><span className="truncate text-slate-200">{h.fault_id ? `${h.fault_id} · ` : ''}{title(h.name)}{where ? ` · ${where}` : ''}<span className="ml-1.5 text-slate-500">{h.kind === 'SENSOR' ? 'sensor' : h.kind === 'PROCESS' ? 'engine' : ''}{ambiguous ? ' · cannot be told apart' : ''}</span></span><span className="tabular-nums text-slate-300">{h.posterior == null ? NO_DATA : num(h.posterior * 100, 0)}%</span></div>
+              <div className="mt-1 h-1 rounded-full bg-surface overflow-hidden border border-surface-border"><div className={`h-full ${h.kind === 'NOMINAL' ? 'bg-success' : h.kind === 'SENSOR' ? 'bg-accent' : 'bg-warning'}`} style={{ width: h.posterior == null ? '0%' : `${Math.max(2, h.posterior * 100)}%` }} /></div>
+              {(support || h.severity != null) && <div className="mt-1 text-xs font-mono text-slate-500">{h.severity != null ? `est. severity ${num(h.severity, 2)}` : ''}{support ? ` · evidence: ${support}` : ''}</div>}
+            </div>;
+          })}</div>
+        </div>}
         {det?.candidate && <div className="mt-4 rounded-sm border border-accent/40 bg-accent/5 p-3"><div className="flex items-center justify-between"><div className="text-xs font-medium font-mono text-accent">Selected-engine reservoir · tier 1 <span className="font-normal opacity-70">(readout scores, not probabilities)</span></div><span className="text-xs font-mono text-accent font-semibold">Candidate: {title(det.candidate.label)}</span></div><div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2">{det.candidate.classes.map((label, i) => <div key={label} className="rounded-sm bg-black/30 border border-surface-border p-2"><div className="truncate text-xs font-mono text-slate-400">{title(label)}</div><div className="mt-1 text-xs font-mono font-medium text-white tabular-nums">{num(det.candidate?.scores[i], 3)}</div></div>)}</div></div>}
       </section>
 
@@ -151,6 +165,6 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
       <div className="flex items-center justify-between gap-3"><div><h3 className="font-semibold text-white">Live engine channels</h3><p className="text-xs text-slate-500 mt-1">From the v1 state message · {state?.evidence_class ?? 'SIMULATION'} evidence</p></div><Radio className="w-4 h-4 text-slate-500" /></div>
       {readings.length ? <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2">{readings.map(([name, r]) => <div key={name} className="rounded border border-white/[0.06] bg-black/10 px-3 py-2"><div className="truncate text-xs text-slate-500" title={name}>{name.replace(/_/g, ' ')}{r.quality !== 'OK' ? ` · ${r.quality}` : ''}</div><div className="mt-1 text-sm font-medium tabular-nums text-slate-200">{num(r.value, 2)}<span className="ml-1 text-xs text-slate-500">{r.unit}</span></div></div>)}</div> : <div className="mt-4 text-sm text-slate-500">Waiting for calibrated engine frames…</div>}
     </section>
-    <div className="flex items-start gap-2 px-1 text-xs leading-relaxed text-slate-600"><CircleHelp className="w-3.5 h-3.5 shrink-0 mt-0.5" /><span>This console runs virtual plant data. Engine status stays UNKNOWN until the status evaluator (card M2-01); diagnosis from evidence arrives in M3.</span></div>
+    <div className="flex items-start gap-2 px-1 text-xs leading-relaxed text-slate-600"><CircleHelp className="w-3.5 h-3.5 shrink-0 mt-0.5" /><span>This console runs virtual plant data (SIMULATION evidence). Detection, isolation and status read only the measured channels; injected scenarios are shown for training only.</span></div>
   </div>;
 }

@@ -72,8 +72,12 @@ class Evidence(_M):
 class Hypothesis(_M):
     fault_id: Optional[str]
     name: str
+    kind: Literal["NOMINAL", "PROCESS", "SENSOR"] = "PROCESS"   # SENSOR: one sender offset (S02/S03), not the engine
     cylinder: Optional[int] = None
+    channel: Optional[str] = None
     posterior: Optional[float] = None
+    severity: Optional[float] = Field(None, description="estimated severity relative to the calibrated signature")
+    group: Optional[str] = Field(None, description="ambiguity group: hypotheses these channels cannot tell apart")
     supporting: List[Evidence] = []
     contradicting: List[Evidence] = []
 

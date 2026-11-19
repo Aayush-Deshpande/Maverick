@@ -29,7 +29,7 @@ import numpy as np
 
 from backend.core.frame import Frame
 from backend.detect.autoencoder import AutoencoderScorer
-from backend.detect.calibration import TailCalibration
+from backend.detect.calibration import Z_CLIP, TailCalibration
 from backend.detect.cusum import TwoSidedCusum, load_detect_config
 from backend.detect.scorers import FlyBloomScorer, MaxAbsZ, Mahalanobis
 
@@ -47,6 +47,8 @@ class DetectionResult:
     drift: Optional[Dict[str, object]] = None
     # M3-04 autoencoder novelty channel (EVT threshold, own persistence gate): {score, ratio, raw, alarm}
     novelty: Optional[Dict[str, object]] = None
+    # unclipped residual z-vector in calibration channel order (input of the M3-05 isolator)
+    z_raw: Optional[np.ndarray] = None
 
     @property
     def score(self) -> float:
@@ -109,12 +111,12 @@ class ResidualDetector:
                              f"for alpha={alpha}; got {len(frames)} total")
         cal = TailCalibration.fit(frames[:cut])
         Ztr = np.vstack([cal.features(cal.z(f)) for f in frames[:cut]])
-        Zho = np.vstack([cal.features(cal.z(f)) for f in frames[cut:]])
+        raw_ho = np.vstack([cal.z(f) for f in frames[cut:]])           # once, in time order (stateful reference)
+        Zho = np.vstack([cal.features(z) for z in raw_ho])
         scorers = [FlyBloomScorer(Ztr.shape[1]).fit(Ztr), Mahalanobis().fit(Ztr), MaxAbsZ().fit(Ztr)]
         thr = {s.name: conformal_threshold(s.score(Zho), alpha) for s in scorers}
         dc = load_detect_config()
         cusum = TwoSidedCusum(len(cal.channel_names()), dc["cusum_k_sigma"]["value"])
-        raw_ho = np.vstack([cal.z(f) for f in frames[cut:]])
         thr[cusum.name] = max(conformal_threshold(cusum.run(raw_ho), alpha), 1e-6)
         ae = AutoencoderScorer(dc["autoencoder"]).fit(Ztr)
         thr[ae.name] = ae.evt_threshold(ae.score(Zho), float(dc["autoencoder"]["evt_alpha"]["value"]))
@@ -124,7 +126,8 @@ class ResidualDetector:
 
     # ---- inference -----------------------------------------------------------------------
     def score(self, frame: Frame, top_k: int = 3, shielded_channels: Sequence[str] | None = None) -> DetectionResult:
-        z = self.cal.z(frame, shielded_channels=shielded_channels)
+        z_raw = self.cal.z(frame, shielded_channels=shielded_channels, clip=False)   # stateful reference: once per frame
+        z = np.clip(z_raw, -Z_CLIP, Z_CLIP)
         feat = self.cal.features(z)[None, :]
         scores = {n: float(s.score(feat)[0]) for n, s in self.scorers.items()}
         ratios = {n: scores[n] / max(self.thresholds[n], 1e-12) for n in scores}
@@ -142,7 +145,7 @@ class ResidualDetector:
             ratio = s / max(self.thresholds[self.novelty.name], 1e-12)
             novelty = {"score": s, "ratio": ratio, "raw": ratio > 1.0, "alarm": self.novelty_gate.update(ratio > 1.0)}
         return DetectionResult(frame.t, scores, ratios, raw, self.gate.update(raw),
-                               [(names[i], float(z[i])) for i in order], drift=drift, novelty=novelty)
+                               [(names[i], float(z[i])) for i in order], drift=drift, novelty=novelty, z_raw=z_raw)
 
 
 def conformal_threshold(nominal_scores: np.ndarray, alpha: float) -> float:
