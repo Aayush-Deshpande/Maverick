@@ -292,5 +292,32 @@
       "status": "ASSUMED",
       "ref": "soft engine mounts put rigid-body modes near the 0.5/1st order at cruise rpm, so low orders reach the sensor amplified relative to the firing order"
     }
+  },
+  "turbo": {
+    "compressor_efficiency": {
+      "value": 0.72,
+      "status": "ASSUMED",
+      "ref": "small automotive/aero turbocharger compressor isentropic efficiency"
+    },
+    "intercooler_effectiveness": {
+      "value": 0.7,
+      "status": "ASSUMED",
+      "ref": "air-to-air intercooler effectiveness (only when configs/engines turbo.intercooled)"
+    },
+    "no_boost_pressure_ratio": {
+      "value": 1.03,
+      "status": "ASSUMED",
+      "ref": "pressure ratio left when the wastegate is stuck open (F15): the compressor windmills"
+    },
+    "bearing_pr_loss": {
+      "value": 0.25,
+      "status": "ASSUMED",
+      "ref": "F17: share of the available pressure ratio margin lost at full bearing wear"
+    },
+    "bearing_lag_gain": {
+      "value": 2.0,
+      "status": "ASSUMED",
+      "ref": "F17: spool time constant multiplier at full bearing wear"
+    }
   }
 }

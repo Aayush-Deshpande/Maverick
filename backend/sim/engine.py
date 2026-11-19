@@ -15,6 +15,7 @@ from backend.sim.combustion import Combustion
 from backend.sim.induction import Induction, throttle_area_fraction
 from backend.sim.params import physics_values
 from backend.sim.thermal import HeatInputs, Thermal
+from backend.sim.turbo import Turbo
 
 
 @dataclass
@@ -42,6 +43,9 @@ class MeanValueEngine:
         self.fmep = (fr["fmep_a_kpa"] * 1e3, fr["fmep_b_kpa_per_krpm"] * 1e3, fr["fmep_c_kpa_per_krpm2"] * 1e3)
         lam = cfg.nominal_lambda
         self.nominal_lambda = float(lam.value if hasattr(lam, "value") else lam)
+        self.turbo = Turbo.for_engine(cfg, physics_values(cfg.engine_id, "induction")["wot_map_ratio"])
+        if self.turbo is not None:
+            self.calibrate_turbo()
         self.calibrate()
         self.thermal = Thermal.for_engine(cfg, self.combustion.lhv_j_kg)
         self.calibrate_thermal()
@@ -53,14 +57,22 @@ class MeanValueEngine:
         return (a + b * k + c * k * k) * self.induction.displaced_m3 * rpm / 120.0
 
     def steady_point(self, throttle_pct: float, rpm: float, atm: Atmosphere, lam: Optional[float] = None,
-                     filter_factor: float = 1.0) -> OperatingPoint:
+                     filter_factor: float = 1.0, map_target_pa: Optional[float] = None,
+                     turbo_health: Optional[Dict] = None) -> OperatingPoint:
+        """Steady operating point. map_target_pa: boost controller MAP target (turbo engines; default take-off)."""
         lam = self.nominal_lambda if lam is None else lam
         ind = self.induction
         mdot = 0.0
-        for _ in range(4):                                   # filter drop depends on flow: fixed-point iteration
-            p_up = atm.pressure_pa - ind.k_filter * filter_factor * mdot ** 2
-            map_pa = ind._steady_map(throttle_area_fraction(throttle_pct, ind.idle_fraction), p_up, atm.temperature_k, rpm)
-            mdot = ind.cylinder_flow(map_pa, atm.temperature_k, rpm)
+        p_src, t_src = atm.pressure_pa, atm.temperature_k
+        frac = throttle_area_fraction(throttle_pct, ind.idle_fraction)
+        for _ in range(8):                                   # flow-dependent filter drop and boost: fixed point
+            if self.turbo is not None:
+                target = None if map_target_pa is None else map_target_pa / self.wot_map_ratio
+                p_src = self.turbo.steady_charge(atm, mdot, target_pa=target, health=turbo_health)
+                t_src = self.turbo.charge_temperature_k(atm, p_src, (turbo_health or {}).get("intercooler_fouling", 0.0))
+            p_up = p_src - ind.k_filter * filter_factor * mdot ** 2
+            map_pa = ind._steady_map(frac, p_up, t_src, rpm)
+            mdot = ind.cylinder_flow(map_pa, t_src, rpm)
         cycles_per_s = rpm / 120.0
         m_air_cyl = mdot / max(cycles_per_s * self.n_cyl, 1e-9)
         m_fuel_cyl = self.combustion.deliverable_fuel(m_air_cyl / (self.combustion.stoich_afr * lam), m_air_cyl)
@@ -70,6 +82,23 @@ class MeanValueEngine:
         return OperatingPoint(rpm=rpm, map_pa=map_pa, mdot_air_kg_s=mdot,
                               mdot_fuel_kg_s=m_fuel_cyl * self.n_cyl * cycles_per_s, indicated_w=indicated,
                               friction_w=friction, brake_w=indicated - friction)
+
+    @property
+    def wot_map_ratio(self) -> float:
+        return physics_values(self.cfg.engine_id, "induction")["wot_map_ratio"]
+
+    def calibrate_turbo(self) -> None:
+        """Turbo capability (flat PR_max) from the documented critical altitude; a documented lower take-off
+        critical altitude becomes the TCU take-off pressure-ratio cap (both CALIBRATED, see backend/sim/turbo.py)."""
+        t = self.cfg.turbo
+        to_kpa = t.map_takeoff_max_kpa or t.max_boost_kpa
+        if t.critical_altitude_takeoff_ft is not None and t.map_continuous_max_kpa is not None:
+            cap_kpa, cap_alt = t.map_continuous_max_kpa, t.critical_altitude_ft
+            self.turbo.takeoff_pr_limit = (to_kpa * 1000.0 / self.wot_map_ratio) / Atmosphere.at(t.critical_altitude_takeoff_ft).pressure_pa
+        else:
+            cap_kpa, cap_alt = to_kpa, t.critical_altitude_ft
+        pr = (cap_kpa * 1000.0 / self.wot_map_ratio) / Atmosphere.at(cap_alt).pressure_pa
+        self.turbo.calibrate_line([(0.0, pr)])
 
     # -- calibration (R 21.5 step 1) -----------------------------------------------------------------------
     def calibrate(self) -> Dict[str, float]:

@@ -7,9 +7,9 @@ RESUME HERE  (last updated 19 Nov 2026)
 =====================================================================================================================
 Phase:        PHASE 1 (M0) cards done (M0-01..M0-12; M0-10 reduced, see its entry). NEXT: CHECKPOINT PHASE 1 (manual
               look by Prasad), then Phase 2 in demo-first order: M1-01 sim package + clock, M1-02 atmosphere, ...
-Card:         M1-10 (M1-01..09 done).
+Card:         M1-11 (M1-01..10 done).
 Branch:       Beta (pushed by Prasad up to ae82c70; later commits local). main untouched (9b5942e).
-Last commit:  M1-09 on Beta (see git log -1).
+Last commit:  M1-10 on Beta (see git log -1).
 State:        ONE simulator: RuntimeHub. EngineStateService runs no loop; /api/state, /api/control, /ws/telemetry,
               /ws/blender, /api/health, copilot and voice read the v1 runtime (legacy_adapter.py). D52 command security
               on every command path. Test baseline now: 430 passed, 1 failed (ratchet: engine_service/copilot brand
@@ -26,6 +26,13 @@ Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produ
               (3) M0-08b changed tests/test_causal_propagation.py::test_engine_service_dynamic_subsystems to tick
               through the full 6 s legacy fault ramp (140 ticks instead of 40). Thresholds unchanged. It used to pass
               only because the removed background loop ticked the same object in parallel. Please confirm.
+              (6) M1-10 physics questions (tests are strict xfails, not skipped):
+                  a) Rotax 914 T-PHY-4: without an intercooler the model loses ~6 % take-off power at 8,000 ft
+                     (compressor discharge 345 K vs 326 K at SL); the OM says power holds to 8,000 ft. Need a
+                     confirmed compressor efficiency, or confirm the airbox/charge-temperature behaviour.
+                  b) T-PHY-3 at ISA-30: MAP-limited engines make 105-112 % of rated on a cold day (dense air at the
+                     same MAP; true for the NA 912 too). Keep the criterion for ISA..ISA+35 only, or add a documented
+                     cold-day limit?
               (4) ANSWERED 19 Nov: dependencies OK. Prasad: no subagents (token cost); keep sessions lean.
               (5) M0-11: data/graph_db/fleet_graph.json still has local runtime changes from older runs. The server
               no longer writes it (runtime copy = var/graph_db/fleet_graph.json, seeded from the committed version).
@@ -486,4 +493,19 @@ ASSUMED added ("vibration"): firing-order 0.45 mm/s at rated, 2 % manufacturing 
 Tests tests/sim/test_vibration.py 7 passed: misfire raises 0.5X and 1X >= 3x and RMS on all engines (P 1.3i),
   firing order scales with torque, F27/F28 hit only their own order, F29 raises all, frequencies follow rpm.
 Crank-angle model at 1 Hz (crank_dynamics.py) is not wired yet; that comes with the facade (M1-14).
+
+=== 19 Nov 2026  M1-10 Turbo, boost control, intercooler; 914/915 calibration (AI: Claude Code, Opus 5.5)
+backend/sim/turbo.py: controller holds the charge pressure for the MAP target; capability limited by a pressure-ratio
+  line (flat, CALIBRATED from the documented critical altitude) so the critical altitude emerges; Rotax 914's lower
+  documented take-off critical altitude (8,000 ft at 1350 hPa vs continuous 16,000 ft at 1200 hPa) is the TCU
+  take-off PR cap (one compressor line cannot give both: the 16,000 ft point has the higher corrected flow).
+  Compressor discharge temperature, intercooler; F14 leak, F15/F16 wastegate stuck open/closed, F17 bearing (PR
+  margin + spool lag), F18 fouling. engine.py: steady_point runs induction from the charge pressure/temperature.
+Results: 914 eta_i 0.426, take-off 84.5 kW at 134 kPa, max continuous 74.7 vs 73.5 (+1.6 %); 915 eta_i 0.401,
+  104 kW at 143 kPa, max continuous 100.0 vs 99 (+1 %), holds power to 15,000 ft then falls.
+ASSUMED added ("turbo"): compressor efficiency 0.72, intercooler effectiveness 0.7, no-boost PR 1.03, bearing gains.
+Tests tests/sim/test_turbo.py: 12 passed, 3 strict xfail = Questions 6a/6b. Test fixes during the card (my own new
+  tests): leak tested at the capability critical altitude (a leak below it is legitimately compensated); stuck-open
+  check relative to the healthy engine; bearing wear tested at the continuous target where capability binds.
+Diesels (AE300, VRDE) are turbocharged too but quality-governed; they are calibrated in M1-11.
 
