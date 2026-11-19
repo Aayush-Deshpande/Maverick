@@ -213,3 +213,21 @@ Known limitation (documented in code): the legacy plant cannot change one fault,
   re-applied and their ramps restart. Removed when backend/sim replaces the plant (Phase 2).
 Tests: tests/faults/test_fault_manager.py 17 passed (one drives the real 912 plant).
 Not wired into the server yet: that is M0-06/M0-07 (API v1, one simulator).
+
+=== 19 Nov 2026  M0-05 State message schema
+- backend/server/state_schema.py: pydantic StateMessage v1 (P Step 0.7). Fields the runtime cannot fill yet are
+  null or empty; status starts UNKNOWN, not GO.
+- backend/server/state_builder.py: tick -> StateMessage:
+  - readings with units (from the Frame contract) and quality decoded from the Frame bitmask;
+  - active faults with components resolved per engine (incl. {cyl} and channel sensors);
+  - INJECTED highlights with exact GLB nodes only in training mode (D5).
+- configs/schema/state.schema.json exported by scripts/assets/export_state_schema.py.
+- frontend/src/api/state.ts generated with json-schema-to-typescript 16.0.0 (npm run gen:types, devDependency).
+  Docs checked: npm view json-schema-to-typescript (16.0.0, 2026-08-28); pydantic 2.13.5.
+Tests: tests/api/test_state_schema.py 6 passed:
+  - T-API-2 drift check;
+  - a real 912 tick validates;
+  - null not default;
+  - training-mode outline uses exact Oil_Tank_* nodes;
+  - per-cylinder / marker / sensor-channel resolution.
+  Frontend tsc passes.

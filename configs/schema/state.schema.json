@@ -1,0 +1,709 @@
+{
+  "$defs": {
+    "ActiveFaultOut": {
+      "additionalProperties": false,
+      "properties": {
+        "channel": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Channel"
+        },
+        "components": {
+          "default": [],
+          "description": "resolved component ids (training mode display only, D5)",
+          "items": {
+            "type": "string"
+          },
+          "title": "Components",
+          "type": "array"
+        },
+        "cylinder": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cylinder"
+        },
+        "fault_id": {
+          "title": "Fault Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "PHYSICAL",
+            "SENSOR"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "marker_for": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Marker For"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "ramp_s": {
+          "title": "Ramp S",
+          "type": "number"
+        },
+        "severity": {
+          "title": "Severity",
+          "type": "number"
+        },
+        "simulated": {
+          "title": "Simulated",
+          "type": "boolean"
+        },
+        "source": {
+          "title": "Source",
+          "type": "string"
+        },
+        "t0_s": {
+          "title": "T0 S",
+          "type": "number"
+        },
+        "uuid": {
+          "title": "Uuid",
+          "type": "string"
+        }
+      },
+      "required": [
+        "uuid",
+        "fault_id",
+        "name",
+        "kind",
+        "severity",
+        "ramp_s",
+        "source",
+        "t0_s",
+        "simulated"
+      ],
+      "title": "ActiveFaultOut",
+      "type": "object"
+    },
+    "EventOut": {
+      "additionalProperties": false,
+      "properties": {
+        "seq": {
+          "title": "Seq",
+          "type": "integer"
+        },
+        "source": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source"
+        },
+        "t_s": {
+          "title": "T S",
+          "type": "number"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "type": {
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "seq",
+        "t_s",
+        "type",
+        "text"
+      ],
+      "title": "EventOut",
+      "type": "object"
+    },
+    "Evidence": {
+      "additionalProperties": false,
+      "properties": {
+        "channel": {
+          "title": "Channel",
+          "type": "string"
+        },
+        "z": {
+          "title": "Z",
+          "type": "number"
+        }
+      },
+      "required": [
+        "channel",
+        "z"
+      ],
+      "title": "Evidence",
+      "type": "object"
+    },
+    "Highlight": {
+      "additionalProperties": false,
+      "properties": {
+        "component_id": {
+          "title": "Component Id",
+          "type": "string"
+        },
+        "level": {
+          "enum": [
+            "NO-GO",
+            "CAUTION",
+            "ADVISORY",
+            "SENSOR",
+            "INJECTED"
+          ],
+          "title": "Level",
+          "type": "string"
+        },
+        "marker_for": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Marker For"
+        },
+        "nodes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Nodes",
+          "type": "array"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "component_id",
+        "nodes",
+        "level",
+        "reason"
+      ],
+      "title": "Highlight",
+      "type": "object"
+    },
+    "Hypothesis": {
+      "additionalProperties": false,
+      "properties": {
+        "contradicting": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Evidence"
+          },
+          "title": "Contradicting",
+          "type": "array"
+        },
+        "cylinder": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cylinder"
+        },
+        "fault_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Fault Id"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "posterior": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Posterior"
+        },
+        "supporting": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Evidence"
+          },
+          "title": "Supporting",
+          "type": "array"
+        }
+      },
+      "required": [
+        "fault_id",
+        "name"
+      ],
+      "title": "Hypothesis",
+      "type": "object"
+    },
+    "Reading": {
+      "additionalProperties": false,
+      "properties": {
+        "age_ms": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Age Ms"
+        },
+        "quality": {
+          "default": "OK",
+          "enum": [
+            "OK",
+            "SUSPECT",
+            "QUARANTINED",
+            "VIRTUAL",
+            "NO_DATA"
+          ],
+          "title": "Quality",
+          "type": "string"
+        },
+        "unit": {
+          "title": "Unit",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "null when there is no data (never a default)",
+          "title": "Value"
+        }
+      },
+      "required": [
+        "value",
+        "unit"
+      ],
+      "title": "Reading",
+      "type": "object"
+    },
+    "Reason": {
+      "additionalProperties": false,
+      "properties": {
+        "channel": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Channel"
+        },
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "fault_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fault Id"
+        },
+        "limit": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Limit"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Value"
+        }
+      },
+      "required": [
+        "code",
+        "text"
+      ],
+      "title": "Reason",
+      "type": "object"
+    },
+    "Status": {
+      "additionalProperties": false,
+      "properties": {
+        "acknowledged": {
+          "default": false,
+          "title": "Acknowledged",
+          "type": "boolean"
+        },
+        "latched": {
+          "default": false,
+          "title": "Latched",
+          "type": "boolean"
+        },
+        "level": {
+          "description": "UNKNOWN until the status evaluator (card M2-01) runs",
+          "enum": [
+            "ENGINE_OFF",
+            "GO",
+            "ADVISORY",
+            "CAUTION",
+            "NO-GO",
+            "UNKNOWN"
+          ],
+          "title": "Level",
+          "type": "string"
+        },
+        "reasons": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Reason"
+          },
+          "title": "Reasons",
+          "type": "array"
+        }
+      },
+      "required": [
+        "level"
+      ],
+      "title": "Status",
+      "type": "object"
+    }
+  },
+  "$id": "anumaan/configs/schema/state.schema.json",
+  "additionalProperties": false,
+  "properties": {
+    "active_faults": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/ActiveFaultOut"
+      },
+      "title": "Active Faults",
+      "type": "array"
+    },
+    "derived": {
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "default": {},
+      "title": "Derived",
+      "type": "object"
+    },
+    "detections": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Detections"
+    },
+    "engine_id": {
+      "title": "Engine Id",
+      "type": "string"
+    },
+    "engine_state": {
+      "anyOf": [
+        {
+          "enum": [
+            "OFF",
+            "CRANKING",
+            "RUNNING",
+            "DEGRADED",
+            "FAILED",
+            "CALIBRATING"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Engine State"
+    },
+    "environment": {
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "default": {},
+      "title": "Environment",
+      "type": "object"
+    },
+    "events_since": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/EventOut"
+      },
+      "title": "Events Since",
+      "type": "array"
+    },
+    "evidence_class": {
+      "default": "SIMULATION",
+      "enum": [
+        "SIMULATION",
+        "PUBLIC_PROXY",
+        "REAL_FLIGHT"
+      ],
+      "title": "Evidence Class",
+      "type": "string"
+    },
+    "highlights": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/Highlight"
+      },
+      "title": "Highlights",
+      "type": "array"
+    },
+    "hypotheses": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/Hypothesis"
+      },
+      "title": "Hypotheses",
+      "type": "array"
+    },
+    "levers": {
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "default": {},
+      "title": "Levers",
+      "type": "object"
+    },
+    "maintenance": {
+      "default": [],
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Maintenance",
+      "type": "array"
+    },
+    "prognostics": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Prognostics"
+    },
+    "rate_hz_actual": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Rate Hz Actual"
+    },
+    "readings": {
+      "additionalProperties": {
+        "$ref": "#/$defs/Reading"
+      },
+      "default": {},
+      "title": "Readings",
+      "type": "object"
+    },
+    "reliability": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Reliability"
+    },
+    "residuals": {
+      "additionalProperties": {
+        "type": "number"
+      },
+      "default": {},
+      "title": "Residuals",
+      "type": "object"
+    },
+    "schema_version": {
+      "const": 1,
+      "default": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "seq": {
+      "title": "Seq",
+      "type": "integer"
+    },
+    "sim_time_s": {
+      "title": "Sim Time S",
+      "type": "number"
+    },
+    "source": {
+      "default": "SIM",
+      "enum": [
+        "SIM",
+        "REPLAY",
+        "CAN",
+        "MAVLINK"
+      ],
+      "title": "Source",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/Status"
+    },
+    "time_scale": {
+      "default": 1.0,
+      "title": "Time Scale",
+      "type": "number"
+    },
+    "twin": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Twin"
+    },
+    "vibration_orders": {
+      "additionalProperties": {
+        "type": "number"
+      },
+      "default": {},
+      "title": "Vibration Orders",
+      "type": "object"
+    },
+    "virtual_sensors": {
+      "additionalProperties": {
+        "type": "number"
+      },
+      "default": {},
+      "title": "Virtual Sensors",
+      "type": "object"
+    },
+    "wall_time_iso": {
+      "title": "Wall Time Iso",
+      "type": "string"
+    }
+  },
+  "required": [
+    "engine_id",
+    "seq",
+    "sim_time_s",
+    "wall_time_iso",
+    "status"
+  ],
+  "title": "StateMessage",
+  "type": "object"
+}
