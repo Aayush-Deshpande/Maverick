@@ -7,9 +7,9 @@ RESUME HERE  (last updated 19 Nov 2026)
 =====================================================================================================================
 Phase:        PHASE 1 (M0) cards done (M0-01..M0-12; M0-10 reduced, see its entry). NEXT: CHECKPOINT PHASE 1 (manual
               look by Prasad), then Phase 2 in demo-first order: M1-01 sim package + clock, M1-02 atmosphere, ...
-Card:         M1-01 (after the Phase 1 checkpoint look).
+Card:         M1-03 (M1-01/02 done).
 Branch:       Beta (pushed by Prasad up to ae82c70; later commits local). main untouched (9b5942e).
-Last commit:  M0-10 on Beta (see git log -1).
+Last commit:  M1-01/M1-02 on Beta (see git log -1).
 State:        ONE simulator: RuntimeHub. EngineStateService runs no loop; /api/state, /api/control, /ws/telemetry,
               /ws/blender, /api/health, copilot and voice read the v1 runtime (legacy_adapter.py). D52 command security
               on every command path. Test baseline now: 430 passed, 1 failed (ratchet: engine_service/copilot brand
@@ -398,4 +398,11 @@ NOT done (reduced scope, D10 says the old window is retired by the React Three F
   profiles and manifest-driven exact-node highlighting in apps/threejs_twin; the Blender app's private 1-8 fault
   labels. Both come with M6-05 / the Blender app move to /ws/v1. Blender changes compile but were not run in Blender.
 Full suite: 437 passed, 1 failed (ratchet, known), 7 skipped, 7 xfailed.
+
+=== 19 Nov 2026  M1-01 + M1-02 Sim package, clock, atmosphere (AI: Claude Code, Opus 5.5)
+backend/sim/ created (pure package). clock.py: fixed internal step 0.05 s (configs/runtime.json sim), time scales
+  1/5/20/60 (D8), integer step counter (no float drift). atmosphere.py: ISA troposphere + ISA deviation or OAT +
+  humidity (Magnus) with dry/vapour partial pressures. Tests tests/sim 11 passed (ICAO ISA table points within 0.1 %,
+  hot day lowers density not pressure, humidity lowers density 0-3 %, OAT input, clock substeps + exact sim time).
+Not wired into the plant yet: that is M1-14 (facade over virtual_engine.py).
 

@@ -24,5 +24,15 @@
       "http://127.0.0.1:8000"
     ],
     "note": "DECISIONS D52. Command endpoints need the token when the env var is set (always set it when the server is reachable beyond this machine). Read-only endpoints stay open. CORS origins come from the env var (comma-separated); without it only the local dev origins are allowed, never '*'."
+  },
+  "sim": {
+    "internal_step_s": 0.05,
+    "time_scales": [
+      1,
+      5,
+      20,
+      60
+    ],
+    "note": "DECISIONS D8: default 1x, selectable 1/5/20/60x. Plant integrates at internal_step_s; each published frame runs time_scale * (1/tick_rate_hz) / internal_step_s steps (R 21.3). 0.05 s keeps 60x affordable (60 steps per frame); fast first-order states (MAP, spool) use the exact exponential update so they stay stable at this step (T-PHY-9, T-PHY-11)."
   }
 }
