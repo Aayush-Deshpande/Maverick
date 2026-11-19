@@ -7,9 +7,9 @@ RESUME HERE  (last updated 19 Nov 2026)
 =====================================================================================================================
 Phase:        PHASE 1 (M0) cards done (M0-01..M0-12; M0-10 reduced, see its entry). NEXT: CHECKPOINT PHASE 1 (manual
               look by Prasad), then Phase 2 in demo-first order: M1-01 sim package + clock, M1-02 atmosphere, ...
-Card:         M1-08 (M1-01..07 done).
+Card:         M1-09 (M1-01..08 done).
 Branch:       Beta (pushed by Prasad up to ae82c70; later commits local). main untouched (9b5942e).
-Last commit:  M1-07 on Beta (see git log -1).
+Last commit:  M1-08 on Beta (see git log -1).
 State:        ONE simulator: RuntimeHub. EngineStateService runs no loop; /api/state, /api/control, /ws/telemetry,
               /ws/blender, /api/health, copilot and voice read the v1 runtime (legacy_adapter.py). D52 command security
               on every command path. Test baseline now: 430 passed, 1 failed (ratchet: engine_service/copilot brand
@@ -467,4 +467,13 @@ ASSUMED added (configs/physics/defaults.json "thermal", "oil"): wall heat 22 %, 
 Tests tests/sim/test_thermal.py 8 passed: T-PHY-6 (config limits, >= 5 % margin), take-off below warning, cruise in
   the oil normal band, T-PHY-7 rpm rule + relief, F19 heats only its cylinder, F23 pressure falls + oil heats +
   friction rises, F25 oil +10 C, CHT minutes-scale (T-PHY-9).
+
+=== 19 Nov 2026  M1-08 Electrical (AI: Claude Code, Opus 5.5)
+backend/sim/electrical.py: alternators (cut-in -> full-output rpm, health F32), regulator (+offset F33), battery
+  (linear OCV, internal resistance and capacity scaled by health F34, charge acceptance + limit, SOC integration),
+  bus loads. Bus voltage, alternator/battery/load currents and SOC are computed (old constant 14.2 V gone once wired).
+configs/installations/electrical.json (new): default 14 V installation (ASSUMED) + Rotax 912 iS two generators
+  (A 16 A for the ECU above ~2500 rpm, B 30 A airframe: OWNER, P Part 2, needs OM confirmation).
+Tests tests/sim/test_electrical.py 10 passed (regulated + charging on all engines, F32 discharge with falling voltage,
+  below cut-in on battery, F33 overvoltage, F34 deeper sag, 912 has two generators).
 

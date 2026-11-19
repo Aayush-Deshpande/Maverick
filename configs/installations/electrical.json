@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "description": "Electrical installation data (card M1-08, P Part 2 'electrical defaults are installation parameters'). Per engine id, else 'default'. Alternator figures that come from manufacturer documents are marked PUBLIC/OWNER with refs; the rest is ASSUMED installation data.",
+  "default": {
+    "bus_nominal_v": {"value": 14.0, "status": "ASSUMED", "ref": "14 V bus (P Part 2: bus voltage is an installation parameter, some airframes run 28 V)"},
+    "regulator_setpoint_v": {"value": 14.2, "status": "ASSUMED", "ref": "typical 14 V regulator setpoint"},
+    "battery_capacity_ah": {"value": 18.0, "status": "ASSUMED", "ref": "typical light-aircraft / MALE UAV 12 V battery"},
+    "battery_ocv_full_v": {"value": 12.8, "status": "ASSUMED", "ref": "12 V battery open-circuit voltage at 100 % state of charge"},
+    "battery_ocv_empty_v": {"value": 11.6, "status": "ASSUMED", "ref": "open-circuit voltage at 0 % usable charge (linear OCV model)"},
+    "battery_internal_ohm": {"value": 0.02, "status": "ASSUMED", "ref": "internal resistance of a healthy 18 Ah battery"},
+    "battery_charge_limit_a": {"value": 10.0, "status": "ASSUMED", "ref": "charge current limit"},
+    "load_w": {"value": 250.0, "status": "ASSUMED", "ref": "engine ECU + fuel pumps + avionics + payload load on the bus"},
+    "alternators": [
+      {"name": "alternator", "rated_a": {"value": 40.0, "status": "ASSUMED", "ref": "generic engine-driven alternator"},
+       "cut_in_rpm": {"value": 1200.0, "status": "ASSUMED", "ref": "starts charging above idle"},
+       "full_output_rpm": {"value": 3000.0, "status": "ASSUMED", "ref": "full rated current from this engine rpm"}}
+    ]
+  },
+  "rotax_912is": {
+    "alternators": [
+      {"name": "generator_A_ecu", "rated_a": {"value": 16.0, "status": "OWNER", "ref": "rotax-owner.com 912iS generator/lane description (P Part 2, needs OM confirmation)"},
+       "cut_in_rpm": {"value": 2500.0, "status": "OWNER", "ref": "ECU moves to Gen A above ~2500 rpm (P Part 2)"},
+       "full_output_rpm": {"value": 4000.0, "status": "ASSUMED", "ref": "full output rpm"}},
+      {"name": "generator_B_airframe", "rated_a": {"value": 30.0, "status": "OWNER", "ref": "rotax-owner.com 912iS generator/lane description (P Part 2)"},
+       "cut_in_rpm": {"value": 1200.0, "status": "ASSUMED", "ref": "charges from idle"},
+       "full_output_rpm": {"value": 3500.0, "status": "ASSUMED", "ref": "full output rpm"}}
+    ]
+  }
+}
