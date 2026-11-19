@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "description": "Runtime settings (card M0-07, DECISIONS D5/D52). Read by backend/runtime/hub.py.",
+  "tick_rate_hz": 20.0,
+  "idle_tick_divisor": 5,
+  "idle_tick_divisor_note": "Engines nobody subscribes to tick at tick_rate_hz / idle_tick_divisor to save CPU/memory on small hosts; every subscribed engine ticks at full rate.",
+  "data_source": "DIRECT",
+  "data_source_note": "DIRECT (in-process simulation) now; CAN / MAVLINK / REPLAY sources arrive in M5-M7 behind the same Frame contract."
+}

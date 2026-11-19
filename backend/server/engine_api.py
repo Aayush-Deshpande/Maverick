@@ -38,7 +38,7 @@ def get_hub() -> RuntimeHub:
             def boot():
                 _hub.calibrate_all()
                 _hub.select(_hub.selected)
-                _hub.start(rate_hz=20.0)
+                _hub.start()
 
             threading.Thread(target=boot, daemon=True, name="hub-boot").start()
         return _hub

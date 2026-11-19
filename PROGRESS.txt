@@ -5,27 +5,23 @@ section 19.1. Update the RESUME HERE block at every commit and at the end of eve
 =====================================================================================================================
 RESUME HERE  (last updated 19 Nov 2026)
 =====================================================================================================================
-Phase:        PHASE 1 (M0) in progress. Done: M0-01..M0-06 (engine data, fault registry, components, fault
-              manager, state schema, API v1 + /ws/v1). NEXT: M0-07 (one simulator: remove the sync_from_tick call
-              from backend/runtime/hub.py; every subscribed engine ticks at full rate; IDLE_TICK_DIVISOR into
-              configs/runtime.json; port the 9 legacy-coupled tests per D38). Then M0-08 legacy adapter,
-              M0-09 frontend store, M0-10 other clients, M0-11 var/, M0-12 dynamic tests.
-Card:         M0-07.
-Branch:       Beta (local only, not pushed), created from main 9b5942e. main untouched.
-Last commit:  M0-02/M0-03 on Beta (see git log -1). main still 9b5942e.
-State:        Workspace sorted: archive + history moves, launchers in scripts/launchers + start_anumaan.bat, assets in
-              assets/blender/engines/<id>/, one web GLB copy per engine (assets/web/engines + sync script), STRUCTURE.txt,
-              guard hook. Tests at baseline after every Phase 0 commit. DECISIONS D1-D49.
-Next step:    M0-04 fault manager on top of backend/faults/registry.py:
-              - inject/clear/list/history;
-              - request_id dedupe; the same fault + cylinder updates the severity;
-              - events with source;
-              - drives the CURRENT plant through each entry's plant_mode_legacy until backend/sim exists (M1);
-                faults with no plant mode yet are accepted, stored, and reported as "not yet simulated" (never
-                silently dropped).
-              Tests for the R 19.4 edge cases.
-              Unstaged on purpose: data/graph_db/fleet_graph.json (runtime, M0-11) and your 914 .blend edits
-              (question 3, now at assets/blender/engines/rotax_914/ and assets/blender/_archive/).
+Phase:        PHASE 1 (M0) in progress. Done: M0-01..M0-07. NEXT: M0-08 legacy adapter + D52 security on
+              /api/v1 (command token when ANUMAAN_API_TOKEN is set, per-client command rate limit, CORS origins from
+              env, command log). Then M0-09 frontend store, M0-10 other clients, M0-11 var/, M0-12 dynamic tests.
+Card:         M0-08.
+Branch:       Beta (pushed by Prasad; origin/Beta = ae82c70). main untouched (9b5942e).
+Last commit:  M0-07 on Beta (see git log -1).
+State:        One simulator per engine: the hub no longer writes into EngineStateService. Every subscribed engine
+              ticks at full rate; tick rate and idle divisor come from configs/runtime.json. DECISIONS D1-D52.
+Next step:    M0-08:
+              - backend/server/legacy_adapter.py: /api/state, /ws/telemetry, /api/control read and command the
+                v1 runtime (nulls, never constants); legacy fault ids via legacy_ids only, 422 otherwise;
+              - stop EngineStateService's own 20 Hz loop and can_streamer as data sources;
+              - port tests/test_server_api.py, the serialization test in test_canonical_runtime_pipeline.py and
+                the service test in test_causal_propagation.py to the new path (D38), listing old -> new;
+              - D52 security on /api/v1 commands, with tests (T-OPS-4).
+              Unstaged on purpose: data/graph_db/fleet_graph.json (runtime, M0-11), the 914 .blend re-saves (D50),
+              docs/cleanup/file_coverage_latest.csv (regenerated scan output).
 Answered 19 Nov (recorded as D25-D33):
   - 914 master: headless inspection decides (D25); the 912 iS Sport stays the reference engine.
   - Voice/: stays as local model storage; the stale .gitmodules is removed in P0-04 (D26).
@@ -252,3 +248,22 @@ Tests: tests/api/test_api_v1.py 8 passed:
   - a WebSocket subscriber sees a fault injected by another client, with components ["wiring_harness"];
   - latest-only queue.
 Old endpoints (/api/engines/*, /api/control, /ws/telemetry) are untouched until M0-07/M0-08.
+
+=== 19 Nov 2026  M0-07 One simulator per engine (AI: Claude Code, Opus 5.5)
+Changed: backend/runtime/hub.py, backend/server/api_v1.py, backend/server/engine_api.py, configs/runtime.json (new),
+  tests/api/test_one_simulator.py (new).
+- hub.tick_all no longer calls EngineStateService.sync_from_tick (the 912 had two simulators writing one state;
+  the old try/except-pass also hid every error there, audit #60).
+- load_runtime_settings() reads configs/runtime.json (tick_rate_hz, idle_tick_divisor); invalid values raise.
+  IDLE_TICK_DIVISOR constant removed (V12).
+- hub.set_active(engines): the /ws/v1 broadcaster marks subscribed engines; they tick at full rate. Engines nobody
+  watches tick at the idle rate; the set resets when the last client leaves.
+- engine_api boot uses the configured tick rate.
+Tests before: full suite 413 passed, 3 failed (the known 3), 7 skipped, 1 xfailed.
+Tests after:  417 passed, 2 failed (ratchet + concurrent_load, both known; test_cpu_cost_is_small now passes),
+  7 skipped, 1 xfailed. New: test_one_simulator.py 3 passed (T-M0-5 AST check, divisor from config, active engine
+  ticks at the selected engine's rate); shown failing first (ImportError).
+Not done in M0-07 (moved to M0-08 where the legacy service is retired): stopping EngineStateService's own loop and
+  can_streamer, and the D38 test ports, because those tests exercise the legacy service that M0-08 replaces.
+ASSUMED values added: none.
+

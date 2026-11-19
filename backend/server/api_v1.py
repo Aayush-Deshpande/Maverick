@@ -244,6 +244,7 @@ class Broadcaster:
     async def _run(self) -> None:
         while self.clients:
             wanted = set().union(*(c.engines for c in self.clients.values())) if self.clients else set()
+            services().hub.set_active(wanted)            # watched engines tick at full rate (M0-07)
             for engine_id in wanted:
                 try:
                     msg = services().build_message(engine_id)
@@ -255,6 +256,8 @@ class Broadcaster:
                     if engine_id in c.engines:
                         c.offer(msg)
             await asyncio.sleep(BROADCAST_POLL_S)
+        if _services is not None:
+            _services.hub.set_active(set())               # nobody watches: back to the idle rate
 
 
 BROADCASTER = Broadcaster()
