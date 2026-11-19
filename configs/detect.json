@@ -109,5 +109,38 @@
       "status": "ASSUMED",
       "ref": "clean frames before an automatically quarantined channel is trusted again"
     }
+  },
+  "autoencoder": {
+    "description": "Reconstruction-error novelty scorer with an EVT threshold (card M3-04, idea text I-03/I-04).",
+    "hidden_units": {
+      "value": 16,
+      "status": "ASSUMED",
+      "ref": "hidden layer width of the autoencoder"
+    },
+    "bottleneck_units": {
+      "value": 4,
+      "status": "ASSUMED",
+      "ref": "bottleneck width: narrower than the 13 residual features, so only normal structure reconstructs"
+    },
+    "max_iter": {
+      "value": 400,
+      "status": "ASSUMED",
+      "ref": "training epochs (adam)"
+    },
+    "evt_tail_quantile": {
+      "value": 0.9,
+      "status": "ASSUMED",
+      "ref": "peaks-over-threshold level u for the Generalized Pareto fit of nominal scores"
+    },
+    "evt_alpha": {
+      "value": 0.001,
+      "status": "ASSUMED",
+      "ref": "per-frame false-alarm target of the novelty channel; the GPD tail extrapolates it from fewer than 1/alpha held-out frames"
+    },
+    "random_state": {
+      "value": 7,
+      "status": "ASSUMED",
+      "ref": "fixed seed: the scorer is deterministic"
+    }
   }
 }

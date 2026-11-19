@@ -135,7 +135,8 @@ def build_state(tick: Any, seq: int, *, registry: Any = None, active_faults: Ite
                                              "scores": {k: float(v) for k, v in det.scores.items()},
                                              "ratios": {k: float(v) for k, v in det.ratios.items()},
                                              "candidate": tick.heavy,           # tier-1 readout scores (not probabilities)
-                                             "drift": det.drift},                # M3-02 CUSUM slow-drift channel
+                                             "drift": det.drift,                 # M3-02 CUSUM slow-drift channel
+                                             "novelty": det.novelty},            # M3-04 autoencoder + EVT channel
         hypotheses=[],
         status=_status(getattr(tick, "status", None)),
         alerts=[AlertOut(**a) for a in (getattr(tick, "status", None) or {}).get("alerts", [])],

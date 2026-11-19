@@ -74,6 +74,8 @@ GUARDED = [
     "backend/twin/sim_ukf.py",
     "backend/detect/cusum.py",
     "backend/detect/sensor_fdi.py",
+    "backend/detect/autoencoder.py",
+    "backend/twin/virtual_sensors.py",
     "backend/sim/params.py",
     "backend/sim/plant.py",
     "backend/sim/rotor.py",

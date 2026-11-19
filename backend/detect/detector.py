@@ -7,6 +7,11 @@ scores -> per-scorer conformal threshold -> alarm if ANY scorer exceeds its thre
 PersistenceGate (k of the last n frames) -> confirmed alarm.  Evidence = the top |z| channels, so every
 alarm is explainable without a model.
 
+Two side channels never feed the alarm above: the two-sided CUSUM slow-drift channel (M3-02) and the
+autoencoder novelty channel with an EVT threshold (M3-04, backend/detect/autoencoder.py), which has its own
+persistence gate. On a nominal hour the novelty channel still fires on the diesels (PROGRESS M3-04), so it is
+reported as evidence only until the M3-08 evaluation harness shows it adds detection without false alarms.
+
 Thresholds are split-conformal quantiles of scores on held-out NOMINAL calibration frames: for a
 per-scorer target false-alarm rate ``alpha`` the raw false-alarm rate on exchangeable nominal frames is
 <= alpha (finite-sample quantile ceil((n+1)(1-alpha))/n).  This is a guarantee about nominal frames of the
@@ -23,6 +28,7 @@ from typing import Deque, Dict, List, Optional, Sequence
 import numpy as np
 
 from backend.core.frame import Frame
+from backend.detect.autoencoder import AutoencoderScorer
 from backend.detect.calibration import TailCalibration
 from backend.detect.cusum import TwoSidedCusum, load_detect_config
 from backend.detect.scorers import FlyBloomScorer, MaxAbsZ, Mahalanobis
@@ -39,6 +45,8 @@ class DetectionResult:
     evidence_class: str = "SIMULATION"  # set by the caller's source; PLANT frames -> SIMULATION
     # M3-02 slow-drift channel (two-sided CUSUM), kept apart from the per-frame alarm: {stat, ratio, alarm, top}
     drift: Optional[Dict[str, object]] = None
+    # M3-04 autoencoder novelty channel (EVT threshold, own persistence gate): {score, ratio, raw, alarm}
+    novelty: Optional[Dict[str, object]] = None
 
     @property
     def score(self) -> float:
@@ -76,9 +84,12 @@ class PersistenceGate:
 
 class ResidualDetector:
     def __init__(self, calibration: TailCalibration, scorers: Sequence, thresholds: Dict[str, float],
-                 alpha: float, gate: PersistenceGate | None = None, cusum: TwoSidedCusum | None = None) -> None:
+                 alpha: float, gate: PersistenceGate | None = None, cusum: TwoSidedCusum | None = None,
+                 novelty: AutoencoderScorer | None = None) -> None:
         self.cal = calibration
         self.cusum = cusum                       # M3-02: slow-drift accumulator (None on old saved detectors)
+        self.novelty = novelty                   # M3-04: autoencoder novelty scorer (None on old saved detectors)
+        self.novelty_gate = PersistenceGate(gate.k, gate.n) if gate is not None else PersistenceGate()
         self.scorers = {s.name: s for s in scorers}
         self.thresholds = dict(thresholds)
         self.alpha = alpha
@@ -105,9 +116,11 @@ class ResidualDetector:
         cusum = TwoSidedCusum(len(cal.channel_names()), dc["cusum_k_sigma"]["value"])
         raw_ho = np.vstack([cal.z(f) for f in frames[cut:]])
         thr[cusum.name] = max(conformal_threshold(cusum.run(raw_ho), alpha), 1e-6)
+        ae = AutoencoderScorer(dc["autoencoder"]).fit(Ztr)
+        thr[ae.name] = ae.evt_threshold(ae.score(Zho), float(dc["autoencoder"]["evt_alpha"]["value"]))
         if gate is None:
             gate = PersistenceGate(int(dc["persistence_k"]["value"]), int(dc["persistence_n"]["value"]))
-        return cls(cal, scorers, thr, alpha, gate, cusum)
+        return cls(cal, scorers, thr, alpha, gate, cusum, ae)
 
     # ---- inference -----------------------------------------------------------------------
     def score(self, frame: Frame, top_k: int = 3, shielded_channels: Sequence[str] | None = None) -> DetectionResult:
@@ -123,8 +136,13 @@ class ResidualDetector:
             stat = self.cusum.update(z)
             ratio = stat / max(self.thresholds[self.cusum.name], 1e-12)
             drift = {"stat": stat, "ratio": ratio, "alarm": ratio > 1.0, "top": self.cusum.top(names)}
+        novelty = None
+        if self.novelty is not None:
+            s = float(self.novelty.score(feat)[0])
+            ratio = s / max(self.thresholds[self.novelty.name], 1e-12)
+            novelty = {"score": s, "ratio": ratio, "raw": ratio > 1.0, "alarm": self.novelty_gate.update(ratio > 1.0)}
         return DetectionResult(frame.t, scores, ratios, raw, self.gate.update(raw),
-                               [(names[i], float(z[i])) for i in order], drift=drift)
+                               [(names[i], float(z[i])) for i in order], drift=drift, novelty=novelty)
 
 
 def conformal_threshold(nominal_scores: np.ndarray, alpha: float) -> float:

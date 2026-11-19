@@ -3,13 +3,14 @@ Rules: AGENTS.md ("If the context resets"), DECISIONS.md D22/D23. Entry format: 
 section 19.1. Update the RESUME HERE block at every commit and at the end of every session.
 
 =====================================================================================================================
-RESUME HERE  (last updated 19 Nov 2026)
+RESUME HERE  (last updated 20 Nov 2026, overnight autonomous session)
 =====================================================================================================================
 Phase:        PHASE 1 (M0) cards done (M0-01..M0-12; M0-10 reduced, see its entry). NEXT: CHECKPOINT PHASE 1 (manual
               look by Prasad), then Phase 2 in demo-first order: M1-01 sim package + clock, M1-02 atmosphere, ...
-Card:         M3-04 novelty gate IN PROGRESS (M1-01..14, M2-01..03, M3-01..03 done; M1-14b/M1-16/M1-17 held - Questions 9, 10).
+Card:         M3-05 isolation NEXT (M1-01..17, M2-01..03, M3-01..04 done). Prasad away until ~08:45 20 Nov with full
+              permission (installs to D:, any package/model/dataset): KEEP BUILDING card after card, never wait.
 Branch:       Beta (pushed by Prasad up to ae82c70; later commits local). main untouched (9b5942e).
-Last commit:  M3-03 on Beta (sensor FDI, VIRTUAL values) (see git log -1).
+Last commit:  M3-04 on Beta (see git log -1).
 State:        ONE simulator: RuntimeHub. EngineStateService runs no loop; /api/state, /api/control, /ws/telemetry,
               /ws/blender, /api/health, copilot and voice read the v1 runtime (legacy_adapter.py). D52 command security
               on every command path. Test baseline now: 430 passed, 1 failed (ratchet: engine_service/copilot brand
@@ -61,7 +62,7 @@ Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produ
                   30 C 100 %; hub isolation test uses OIL_PRESSURE_LOSS; legacy names without a cylinder = all cyls.
                   Pre-existing: runtime DT = 1.0 s per 20 Hz tick = 20x real time (D8 says 1x default); fixed with
                   the clock in M3 when detection runs in simulated seconds.
-              (9) HELD PHYSICS BATCH (20 Nov, uncommitted; full files saved in the session scratchpad
+              (9) ANSWERED 20 Nov (applied, commit 75f2b94). Was: HELD PHYSICS BATCH (20 Nov, uncommitted; full files saved in the session scratchpad
                   held_physics/ and described here so they can be re-applied):
                   - 912 ECU mixture CALIBRATED from OM-912 i p. 5-5 Fig. 4: POWER lambda 0.865 (>= 97 % throttle),
                     ECO lambda 1.18; BSFC 278 g/kWh at take-off (manual 276), ~227 ECO cruise (manual ~235);
@@ -77,12 +78,12 @@ Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produ
                   the 5 tests approved in (8)); T-FLT-1 loses 5 pairs net (912 F21/F27, 914 F01/F04, 915 F01/F20:
                   smaller signatures at a true 75 % cruise). The guard blocked marking the reservoir test.
                   Decide: OK to mark it strict xfail (M3 port) and re-baseline T-FLT-1 to 58 pairs?
-              (10) M1-17 virtual sensors rewritten on M1 physics (peak pressure, TIT = port EGT - manifold loss,
+              (10) ANSWERED 20 Nov (changed, 75f2b94). Was: M1-17 virtual sensors rewritten on M1 physics (peak pressure, TIT = port EGT - manifold loss,
                   Ocvirk oil film, indicated power; None when an input is missing), held because
                   tests/test_canonical_runtime_pipeline.py:58 asserts the 912 (no turbine) has TIT > 500 C. Please
                   change that line to `assert f.virtual_sensors["TIT_degC"] is None` or allow me to.
               (4) ANSWERED 19 Nov: dependencies OK. Prasad: no subagents (token cost); keep sessions lean.
-              (5) M0-11: data/graph_db/fleet_graph.json still has local runtime changes from older runs. The server
+              (5) ANSWERED 20 Nov: restored (git restore). Was: M0-11: data/graph_db/fleet_graph.json still has local runtime changes from older runs. The server
               no longer writes it (runtime copy = var/graph_db/fleet_graph.json, seeded from the committed version).
               OK to restore the tracked file to its committed content (git restore)? Nothing is lost: a copy of the
               local version can go to var/ first.
@@ -720,3 +721,32 @@ Measured false alarms, 1 nominal flight hour per engine (runtime, seed 21), with
 Then: M3-05 isolation (Bayesian, sensor vs process hypotheses incl. S02/S03 bias/drift), M3-06 explanation,
   M3-07 remove truth-reading diagnosis/reliability, M3-08 evaluation harness (ROC per fault, seeds disjoint).
 Open for Prasad: Questions 9 (held physics batch + reservoir test marker) and 10 (pipeline TIT test line).
+
+=== 20 Nov 2026  M1-14b/M1-16/M1-17 applied (Prasad: Q9, Q10 yes; fleet_graph.json restored)
+Held physics batch merged by hand onto the air-cache engine.py (3-way merge, base b3c9d60); oil thermostat 90-98 C
+  re-applied from the note (the file was not in the saved batch). Reservoir test strict-xfailed, T-FLT-1 baseline 58,
+  pipeline test expects TIT None on the 912. Ratchet: comment literals cht_2/CHT_1..n removed from status/evaluator.py
+  and twin/sim_ukf.py (they had raised 0 -> 2/4); autoencoder.py and virtual_sensors.py added at zero.
+Full suite: 635 passed, 1 failed (ratchet: engine_service/copilot legacy literals, known), 12 xfailed.
+
+=== 20 Nov 2026  M3-04 novelty gate (Prasad: separate novelty channel)
+backend/detect/autoencoder.py (MLPRegressor 16-4-16 tanh on the 13 residual features; EVT threshold = GPD peaks-over-
+  threshold, scipy.stats.genpareto, alpha 1e-3 in configs/detect.json) is a SIDE channel of ResidualDetector like the
+  CUSUM drift: DetectionResult.novelty {score, ratio, raw, alarm}, own 3-of-5 persistence gate, never OR-ed into the
+  main alarm; published as state.detections.novelty. FlyHash = the fly_bloom scorer (already wired).
+Tests tests/detect/test_autoencoder.py: EVT exceedance within 2x of alpha=1e-4 from 2000 held-out scores (an
+  empirical quantile cannot resolve it), AUC > 0.95 on broken latent structure, deterministic fit, side channel.
+Measured (SIMULATION, runtime seed 1001, calibration ~1 s per engine):
+  steady-lever nominal hour: main 0 / novelty 0 episodes on all 5 engines;
+  VARIED-lever nominal hour (6 x 10 min: 60/9k, 75/12k, 90/15k, 55/5k, 70/9k, 85/3k): main confirmed episodes
+    AE300 5, 912 12, 914 9, 915 1, VRDE 6; novelty episodes 8, 0, 3, 24, 14. Idea text claimed ~1 per 3 FH: NOT met.
+    Cause: steady-state misfit where the ECU/TCU schedules step (912 at 85 %: ECO/POWER fuel_flow+map; 915 at 90 %
+    lever = TCU take-off range) - the smooth quadratic command regression cannot follow them.
+  faults (914): F19 main 1122 s / novelty 1023 s; F21 904 / 707; F23 22 / 29; F01 5 / 5. AE300 F21: main never,
+    novelty 1020 s. The novelty channel adds earlier detection of slow thermal faults.
+NEXT (start of M3-05/M3-08 work): model-informed baseline - feed the nominal MeanValueEngine steady prediction
+  (operating-point table over throttle x altitude, cached in var/) into TailCalibration so the regression only
+  learns the tail's build offset; then re-measure varied-lever FA (target < 1/FH, checkpoint Phase 3).
+shap 0.54.1 installed (Prasad OK, M3-06; pip cache on D:, package in the Python site-packages).
+Open (from the code): engine_runtime.py 364/370 'frame.throttle or 70.0' fallback (rule 2) and vibration.py literal
+  2300 rpm - fix in M3-05 cleanup.
