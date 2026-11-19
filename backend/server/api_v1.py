@@ -126,6 +126,12 @@ class LeverRequest(BaseModel):
     oat_c: Optional[float] = Field(default=None, ge=-60, le=60)
 
 
+class AlertCommand(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    alert_id: Optional[str] = Field(default=None, max_length=200, description="omit to acknowledge every alert")
+    duration_s: Optional[float] = Field(default=None, gt=0, le=86400)
+
+
 class EngineCommand(BaseModel):
     model_config = ConfigDict(extra="forbid")
     command: Literal["START", "STOP", "RESET"]
@@ -234,6 +240,34 @@ def v1_status_ack(engine_id: str, cmd: Dict[str, Any] = Depends(command_guard)) 
     services().channel(engine_id)
     services().hub.runtimes[engine_id].status_evaluator.acknowledge()
     return {"engine_id": engine_id, "acknowledged": True}
+
+
+@router.post("/api/v1/engines/{engine_id}/alerts/acknowledge")
+def v1_alert_ack(engine_id: str, body: AlertCommand, cmd: Dict[str, Any] = Depends(command_guard)) -> Dict[str, Any]:
+    services().channel(engine_id)
+    rt = services().hub.runtimes[engine_id]
+    try:
+        ids = rt.alert_manager.acknowledge(body.alert_id)
+    except KeyError:
+        raise HTTPException(404, {"code": "NO_SUCH_ALERT", "message": f"no alert {body.alert_id!r}"}) from None
+    if any(a.level == "NO-GO" for a in rt.alert_manager.alerts.values()) or body.alert_id is None:
+        rt.status_evaluator.acknowledge()                     # acknowledging the warning also releases the latch
+    return {"engine_id": engine_id, "acknowledged": ids}
+
+
+@router.post("/api/v1/engines/{engine_id}/alerts/shelve")
+def v1_alert_shelve(engine_id: str, body: AlertCommand, cmd: Dict[str, Any] = Depends(command_guard)) -> Dict[str, Any]:
+    services().channel(engine_id)
+    rt = services().hub.runtimes[engine_id]
+    if not body.alert_id or body.duration_s is None:
+        raise HTTPException(422, {"code": "SHELVE_REJECTED", "message": "shelve needs alert_id and duration_s"})
+    try:
+        a = rt.alert_manager.shelve(body.alert_id, rt.source.now(), body.duration_s)
+    except KeyError:
+        raise HTTPException(404, {"code": "NO_SUCH_ALERT", "message": f"no alert {body.alert_id!r}"}) from None
+    except ValueError as exc:
+        raise HTTPException(422, {"code": "SHELVE_REJECTED", "message": str(exc)}) from None
+    return {"engine_id": engine_id, "alert": a.to_dict()}
 
 
 @router.get("/api/v1/commands")

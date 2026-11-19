@@ -53,3 +53,19 @@ def test_failed_oil_pump_gives_caution_with_the_reading_and_ack_reaches_the_eval
     ev = client.hub.runtimes[ENGINE].status_evaluator
     assert client.post(f"/api/v1/engines/{ENGINE}/status/acknowledge").status_code == 200
     assert ev._acknowledged
+
+
+def test_alerts_in_state_and_their_commands(client):
+    client.post(f"/api/v1/engines/{ENGINE}/faults", json={"fault_id": "F23", "severity": 1.0, "ramp_s": 5,
+                                                         "source": "test"})
+    _tick(client, 20)
+    msg = _state(client)
+    oil = [a for a in msg["alerts"] if a["channel"] == "oil_p" and a["active"]]
+    assert oil and oil[0]["level"] == "CAUTION" and oil[0]["action"] and msg["master"]["caution"] is True
+    r = client.post(f"/api/v1/engines/{ENGINE}/alerts/shelve", json={"alert_id": oil[0]["id"], "duration_s": 30})
+    assert r.status_code == 200 and r.json()["alert"]["shelved_until"] is not None
+    assert client.post(f"/api/v1/engines/{ENGINE}/alerts/shelve", json={"alert_id": "nope", "duration_s": 5}).status_code == 404
+    assert client.post(f"/api/v1/engines/{ENGINE}/alerts/acknowledge", json={}).status_code == 200
+    _tick(client, 1)
+    assert _state(client)["master"] == {"warning": False, "caution": False}
+    client.delete(f"/api/v1/engines/{ENGINE}/faults")

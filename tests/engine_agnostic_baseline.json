@@ -194,6 +194,11 @@
     "cyl": 0,
     "model": 0
   },
+  "backend/status/alerts.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
   "backend/status/evaluator.py": {
     "brand": 0,
     "cyl": 0,

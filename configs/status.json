@@ -44,5 +44,24 @@
       "batt_i": "electrical",
       "vibration": "vibration"
     }
+  },
+  "max_shelve_s": {
+    "value": 1800.0,
+    "status": "ASSUMED",
+    "ref": "longest shelve before automatic un-shelve (U3 / ISA-18.2 shelving with a time limit); NO-GO alerts cannot be shelved"
+  },
+  "alert_actions": {
+    "ref": "operator action per reason code (U3: every alert has an action, else it is an event). Fault-specific actions come from the registry mitigation via the hypothesis (M3).",
+    "ENGINE_FAILED": "Engine not running: follow the engine-failure / restart checklist; select a landing site.",
+    "LIMIT_WARNING_HIGH": "Above the operating limit: reduce power now and land as soon as practicable.",
+    "LIMIT_WARNING_LOW": "Below the operating limit: reduce power now and land as soon as practicable.",
+    "LIMIT_CAUTION_HIGH": "Outside the normal range: reduce power or increase cooling airflow and watch the trend.",
+    "LIMIT_CAUTION_LOW": "Outside the normal range: check the trend and the related readings; adjust power.",
+    "TIME_LIMIT": "Time-limited power exceeded: reduce to maximum continuous power.",
+    "TIME_TO_LIMIT": "Predicted to reach a limit before the mission ends: plan to reduce power or return early.",
+    "SENSORS_QUARANTINED": "Several sensors of one subsystem are not trusted: cross-check, treat the subsystem as unmonitored.",
+    "SENSOR_QUARANTINED": "Sensor not trusted: use the related readings; schedule a sensor check.",
+    "HYPOTHESIS": "Suspected fault: see the diagnosis for the recommended action.",
+    "LATCHED": "A NO-GO occurred: review the cause and acknowledge before the next flight."
   }
 }

@@ -41,6 +41,7 @@ from backend.mission.reliability import (
 )
 from backend.mission.glide import UAVGlidePolar
 from backend.agent.diagnostic_agent import DiagnosticAgent
+from backend.status.alerts import AlertManager
 from backend.status.evaluator import StatusEvaluator
 
 DT = 1.0                      # simulated seconds per tick (calibrated at this cadence)
@@ -163,6 +164,7 @@ class EngineRuntime:
         self.glide_polar = UAVGlidePolar()
         self.agent = DiagnosticAgent()
         self.status_evaluator = StatusEvaluator(self.cfg)
+        self.alert_manager = AlertManager()
 
         self._tick_count = 0
         self._cached_orders: Optional[Dict[str, float]] = None
@@ -561,8 +563,10 @@ class EngineRuntime:
                 frame, det, sanity_dict, validity_dict, diagnosis_dict
             )
 
-            status = self.status_evaluator.evaluate(frame.t, frame, engine_state=frame.engine_state,
-                                                    quarantined=_quarantined_lower).to_dict()
+            verdict = self.status_evaluator.evaluate(frame.t, frame, engine_state=frame.engine_state,
+                                                     quarantined=_quarantined_lower)
+            alerts = [a.to_dict() for a in self.alert_manager.update(frame.t, verdict)]
+            status = {**verdict.to_dict(), "alerts": alerts, "master": self.alert_manager.master()}
             t = Tick(
                 engine_id=self.engine_id,
                 frame=frame,

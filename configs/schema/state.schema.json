@@ -103,6 +103,113 @@
       "title": "ActiveFaultOut",
       "type": "object"
     },
+    "AlertOut": {
+      "additionalProperties": false,
+      "properties": {
+        "acknowledged": {
+          "title": "Acknowledged",
+          "type": "boolean"
+        },
+        "action": {
+          "description": "operator action (U3: every alert has one)",
+          "title": "Action",
+          "type": "string"
+        },
+        "active": {
+          "title": "Active",
+          "type": "boolean"
+        },
+        "channel": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Channel"
+        },
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "count": {
+          "title": "Count",
+          "type": "integer"
+        },
+        "fault_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fault Id"
+        },
+        "first_s": {
+          "title": "First S",
+          "type": "number"
+        },
+        "group": {
+          "description": "root cause: the fault id of a hypothesis, else the channel's subsystem",
+          "title": "Group",
+          "type": "string"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "last_s": {
+          "title": "Last S",
+          "type": "number"
+        },
+        "level": {
+          "enum": [
+            "NO-GO",
+            "CAUTION",
+            "ADVISORY"
+          ],
+          "title": "Level",
+          "type": "string"
+        },
+        "shelved_until": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Shelved Until"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "level",
+        "code",
+        "text",
+        "action",
+        "group",
+        "first_s",
+        "last_s",
+        "count",
+        "active",
+        "acknowledged"
+      ],
+      "title": "AlertOut",
+      "type": "object"
+    },
     "EventOut": {
       "additionalProperties": false,
       "properties": {
@@ -451,6 +558,14 @@
       "title": "Active Faults",
       "type": "array"
     },
+    "alerts": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/AlertOut"
+      },
+      "title": "Alerts",
+      "type": "array"
+    },
     "derived": {
       "additionalProperties": {
         "anyOf": [
@@ -575,6 +690,14 @@
       },
       "title": "Maintenance",
       "type": "array"
+    },
+    "master": {
+      "additionalProperties": {
+        "type": "boolean"
+      },
+      "description": "master warning / caution (unacknowledged)",
+      "title": "Master",
+      "type": "object"
     },
     "prognostics": {
       "anyOf": [

@@ -7,9 +7,9 @@ RESUME HERE  (last updated 19 Nov 2026)
 =====================================================================================================================
 Phase:        PHASE 1 (M0) cards done (M0-01..M0-12; M0-10 reduced, see its entry). NEXT: CHECKPOINT PHASE 1 (manual
               look by Prasad), then Phase 2 in demo-first order: M1-01 sim package + clock, M1-02 atmosphere, ...
-Card:         M2-03 alerts next (M1-01..14, M2-01, M2-02 done; M1-14b/M1-16/M1-17 held - Questions 9, 10).
+Card:         M3-01 next (M1-01..14, M2-01..03 done; M1-14b/M1-16/M1-17 held - Questions 9, 10).
 Branch:       Beta (pushed by Prasad up to ae82c70; later commits local). main untouched (9b5942e).
-Last commit:  M2-01/M2-02 on Beta (status evaluator, old GO logic out) (see git log -1).
+Last commit:  M2-03 on Beta (alerts) (see git log -1).
 State:        ONE simulator: RuntimeHub. EngineStateService runs no loop; /api/state, /api/control, /ws/telemetry,
               /ws/blender, /api/health, copilot and voice read the v1 runtime (legacy_adapter.py). D52 command security
               on every command path. Test baseline now: 430 passed, 1 failed (ratchet: engine_service/copilot brand
@@ -655,3 +655,14 @@ Tests: tests/status (T-STS-3/4/5, bands, time limit), tests/api/test_status_api.
   "UNKNOWN until M2-01". Full suite: 593 passed (+), 1 failed (ratchet, known).
 Found, not fixed (M3): reliability engine reads the commanded fault severity (truth leak, engine_runtime damage
   block); OrderTracker extra keys (3X_prop, bpfo...) are synthesized, not measured; runtime DT 1 s @ 20 Hz = 20x.
+
+=== 20 Nov 2026  M2-03 alerts
+backend/status/alerts.py: one alert per status reason (code + channel/fault) with first/last time, activation count,
+  acknowledge, shelve (max 1800 s, ASSUMED; NO-GO cannot be shelved) with automatic un-shelve, root-cause group (fault
+  of a hypothesis, else the channel's subsystem), operator action per code (configs/status.json alert_actions; a reason
+  without an action stays an event - U3). Master warning/caution = active, unacknowledged, unshelved NO-GO/CAUTION.
+  State message gains alerts[], master{}, engine_state (schema + frontend/src/api/state.ts regenerated).
+  Guarded commands: POST /api/v1/engines/{id}/alerts/acknowledge {alert_id?}, /alerts/shelve {alert_id, duration_s}.
+Tests: tests/status/test_alerts.py, tests/api/test_status_api.py. Full suite 599 passed, 1 failed (ratchet, known).
+PS check (20 Nov): the official SIH PS-26054 text is not on the public SIH2025 dataset; the line-by-line coverage in
+  P Part 3 (from the PS we were given) stays the checklist.

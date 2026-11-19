@@ -70,6 +70,7 @@ GUARDED = [
     "backend/sim/induction.py",
     "backend/sim/maps.py",
     "backend/status/evaluator.py",
+    "backend/status/alerts.py",
     "backend/sim/params.py",
     "backend/sim/plant.py",
     "backend/sim/rotor.py",

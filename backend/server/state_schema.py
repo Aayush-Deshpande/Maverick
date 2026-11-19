@@ -47,6 +47,23 @@ class Status(_M):
     acknowledged: bool = False
 
 
+class AlertOut(_M):
+    id: str
+    level: Literal["NO-GO", "CAUTION", "ADVISORY"]
+    code: str
+    text: str
+    action: str = Field(description="operator action (U3: every alert has one)")
+    group: str = Field(description="root cause: the fault id of a hypothesis, else the channel's subsystem")
+    channel: Optional[str] = None
+    fault_id: Optional[str] = None
+    first_s: float
+    last_s: float
+    count: int
+    active: bool
+    acknowledged: bool
+    shelved_until: Optional[float] = None
+
+
 class Evidence(_M):
     channel: str
     z: float
@@ -113,6 +130,8 @@ class StateMessage(_M):
     detections: Optional[Dict[str, Any]] = None
     hypotheses: List[Hypothesis] = []
     status: Status
+    alerts: List[AlertOut] = []
+    master: Dict[str, bool] = Field(default_factory=dict, description="master warning / caution (unacknowledged)")
     highlights: List[Highlight] = []
     prognostics: Optional[Dict[str, Any]] = None
     reliability: Optional[Dict[str, Any]] = None
