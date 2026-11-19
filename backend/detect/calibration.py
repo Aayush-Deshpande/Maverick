@@ -38,16 +38,17 @@ def _command(frame: Frame) -> tuple[float, float, float]:
     return float(frame.throttle), float(frame.alt), float(frame.oat)
 
 
-def _measure(frame: Frame, n_cyl: int, scalars: Sequence[str]) -> np.ndarray:
+def _measure(frame: Frame, n_cyl: int, scalars: Sequence[str], strict: bool = True) -> np.ndarray:
+    """Calibration (strict) needs every channel. Scoring accepts a missing reading (dropout) as NaN: it is
+    unmeasured, so it contributes no evidence (z = 0), and is never replaced by a made-up number."""
     if len(frame.cht) != n_cyl or len(frame.egt) != n_cyl:
         raise ValueError(f"expected {n_cyl} CHT/EGT channels, got {len(frame.cht)}/{len(frame.egt)}")
-    vals = list(frame.cht) + list(frame.egt)
-    for name in scalars:
-        v = getattr(frame, name)
-        if v is None:
-            raise ValueError(f"Frame is missing calibrated channel {name!r}")
-        vals.append(float(v))
-    return np.asarray(vals, dtype=float)
+    vals = list(frame.cht) + list(frame.egt) + [getattr(frame, name) for name in scalars]
+    if strict:
+        missing = [n for n, v in zip(["cht"] * n_cyl + ["egt"] * n_cyl + list(scalars), vals) if v is None]
+        if missing:
+            raise ValueError(f"Frame is missing calibrated channel {missing[0]!r}")
+    return np.asarray([np.nan if v is None else float(v) for v in vals], dtype=float)
 
 
 class TailCalibration:
@@ -91,8 +92,8 @@ class TailCalibration:
         """Per-channel z-scored residual, order: cht[0..n), egt[0..n), *scalars."""
         thr, alt, oat = _command(frame)
         pred = _design(np.array([thr]), np.array([alt]), np.array([oat]))[0] @ self.coef + self.intercept
-        meas = _measure(frame, self.n_cyl, self.scalars)
-        z = (meas - pred) / self.sigma
+        meas = _measure(frame, self.n_cyl, self.scalars, strict=False)
+        z = np.nan_to_num((meas - pred) / self.sigma, nan=0.0)
         names = self.channel_names()
         shielded = set(s.lower() for s in (shielded_channels or []))
         q = getattr(frame, "quality", {}) or {}

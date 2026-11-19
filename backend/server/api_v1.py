@@ -23,6 +23,7 @@ from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisco
 from pydantic import BaseModel, ConfigDict, Field
 
 from backend.faults.manager import FaultManager, RuntimeAdapter
+from backend.sim.maps import maps_for
 from backend.faults.registry import FaultRejected, load_fault_registry
 from backend.physics.engine_config import load_engine_config
 from backend.server.security import COMMAND_LOG, command_guard
@@ -145,6 +146,13 @@ def v1_engines() -> Dict[str, Any]:
 def v1_engine_config(engine_id: str) -> Dict[str, Any]:
     services().channel(engine_id)
     return load_engine_config(engine_id).to_dict()
+
+
+@router.get("/api/v1/engines/{engine_id}/maps")
+def v1_engine_maps(engine_id: str) -> Dict[str, Any]:
+    """Performance maps of the calibrated plant (backend/sim/maps.py; evidence SIMULATION)."""
+    services().channel(engine_id)
+    return maps_for(load_engine_config(engine_id))
 
 
 @router.get("/api/v1/faults")

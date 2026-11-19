@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "engine_id": "austro_ae300",
+  "description": "Sensor expectations for the dynamic-rule tests (P Part 0.3): T-DYN-2 load-dependent channels and T-DYN-3 perturbation signs from a trimmed cruise point. Noise is in configs/physics/defaults.json sensors.",
+  "load_dependent": {
+    "channels": [
+      "rpm",
+      "cht[*]",
+      "egt[*]",
+      "oil_t",
+      "oil_p",
+      "fuel_flow"
+    ],
+    "status": "ASSUMED",
+    "ref": "channels that must follow a throttle/altitude sweep. Excluded on purpose: coolant_t (thermostat-regulated), bus_v and fuel/rail pressure (regulated; a load-dependent common-rail pressure map is a known model gap), map_kpa (the boost controller holds the target on a quality-governed diesel)"
+  },
+  "cruise_trim": {
+    "throttle_pct": 55.0,
+    "altitude_ft": 5000.0,
+    "isa_dev_c": 0.0,
+    "humidity_pct": 0.0,
+    "tas_kt": null,
+    "status": "ASSUMED",
+    "ref": "generic cruise point for T-DYN-3 (tas null = installation design airspeed); below the overspeed cut on every engine"
+  },
+  "sensitivity": {
+    "throttle_pct": {
+      "delta": 10.0,
+      "expect": {
+        "power_kw": 1,
+        "fuel_flow": 1,
+        "cht_mean": 1,
+        "oil_t": 1,
+        "egt_mean": 1
+      }
+    },
+    "isa_dev_c": {
+      "delta": 10.0,
+      "expect": {
+        "power_kw": -1,
+        "cht_mean": 1,
+        "oil_t": 1,
+        "coolant_t": 1
+      }
+    },
+    "tas_kt": {
+      "delta": 10.0,
+      "expect": {
+        "cht_mean": -1,
+        "oil_t": -1,
+        "coolant_t": -1
+      }
+    },
+    "status": "ASSUMED",
+    "ref": "expected signs from first principles: more throttle -> more air/fuel/heat; warmer air -> less dense charge, less power, hotter engine; more airspeed -> more cooling air; altitude -> less power on a naturally aspirated engine (turbo and diesels hold power below their critical altitude, so no sign is declared); humid air -> water vapour displaces oxygen, less power (spark ignition at fixed lambda). Prop rpm setpoint +100 is not declared yet: the governor has no setpoint lever (M5 mission levers)."
+  }
+}

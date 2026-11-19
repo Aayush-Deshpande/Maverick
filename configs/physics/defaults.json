@@ -571,5 +571,22 @@
       "status": "ASSUMED",
       "ref": "turbo compressor efficiency: build-to-build manufacturing spread (1 sigma, relative), sampled once per tail seed; carried over from the retired backend/plant/virtual_engine.py EngineVariation (D31: N calibrations, not N detectors)"
     }
+  },
+  "maps": {
+    "rpm_fraction_min": {
+      "value": 0.4,
+      "status": "ASSUMED",
+      "ref": "lowest map rpm as a share of rated rpm (performance-map grid, P 1.3q)"
+    },
+    "rpm_points": {
+      "value": 13,
+      "status": "ASSUMED",
+      "ref": "rpm grid points from the minimum to rated rpm"
+    },
+    "load_step_pct": {
+      "value": 10.0,
+      "status": "ASSUMED",
+      "ref": "throttle (spark ignition) or power-lever (diesel) step of the map grid"
+    }
   }
 }

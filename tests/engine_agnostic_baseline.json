@@ -139,6 +139,11 @@
     "cyl": 0,
     "model": 0
   },
+  "backend/sim/maps.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
   "backend/sim/params.py": {
     "brand": 0,
     "cyl": 0,

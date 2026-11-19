@@ -68,6 +68,7 @@ GUARDED = [
     "backend/sim/faults.py",
     "backend/sim/fuel.py",
     "backend/sim/induction.py",
+    "backend/sim/maps.py",
     "backend/sim/params.py",
     "backend/sim/plant.py",
     "backend/sim/rotor.py",

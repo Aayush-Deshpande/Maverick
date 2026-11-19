@@ -43,3 +43,9 @@ class Atmosphere:
         p_v = min(rh * saturation_pressure_pa(t - 273.15), p)
         rho = (p - p_v) / (R_DRY * t) + p_v / (R_VAPOUR * t)
         return cls(altitude_m=h, temperature_k=t, pressure_pa=p, density_kg_m3=rho, vapour_pressure_pa=p_v)
+
+    @property
+    def dry_air_mass_fraction(self) -> float:
+        """Share of the intake gas mass that is dry air (oxygen carrier); water vapour displaces it."""
+        rho_dry = (self.pressure_pa - self.vapour_pressure_pa) / (R_DRY * self.temperature_k)
+        return rho_dry / self.density_kg_m3 if self.density_kg_m3 > 0 else 1.0

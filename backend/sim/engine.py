@@ -92,7 +92,7 @@ class MeanValueEngine:
             if self.turbo is None or abs(mdot - prev) <= 1e-10 * max(mdot, 1e-12):
                 break
         cycles_per_s = rpm / 120.0
-        m_air_cyl = mdot / max(cycles_per_s * n, 1e-9)
+        m_air_cyl = mdot * atm.dry_air_mass_fraction / max(cycles_per_s * n, 1e-9)   # dry air burns the fuel
         p_fuel = self.fuel.steady_pressure(fuel_health)
         delivery = self.fuel.delivery_factor(p_fuel)
         afr = self.combustion.stoich_afr

@@ -7,9 +7,9 @@ RESUME HERE  (last updated 19 Nov 2026)
 =====================================================================================================================
 Phase:        PHASE 1 (M0) cards done (M0-01..M0-12; M0-10 reduced, see its entry). NEXT: CHECKPOINT PHASE 1 (manual
               look by Prasad), then Phase 2 in demo-first order: M1-01 sim package + clock, M1-02 atmosphere, ...
-Card:         M1-14 (M1-01..13 done).
+Card:         M1-14b BSFC calibration, then M1-16 (M1-01..14 done).
 Branch:       Beta (pushed by Prasad up to ae82c70; later commits local). main untouched (9b5942e).
-Last commit:  M1-14 part 2 on Beta (live runtime on backend/sim) (see git log -1).
+Last commit:  M1-14 part 3 on Beta (maps, T-DYN-2/3/6/8) (see git log -1).
 State:        ONE simulator: RuntimeHub. EngineStateService runs no loop; /api/state, /api/control, /ws/telemetry,
               /ws/blender, /api/health, copilot and voice read the v1 runtime (legacy_adapter.py). D52 command security
               on every command path. Test baseline now: 430 passed, 1 failed (ratchet: engine_service/copilot brand
@@ -600,3 +600,19 @@ PlantSource is a facade over SimSource (fixed internal steps, sensors at publish
 Tests: 5 legacy-inference tests strict xfail with M3-01/02 reasons (Prasad approved, Questions 8); ports listed there.
 Full suite: 567 passed, 1 failed (ratchet, known), 7 skipped, 17 xfailed.
 Next: M1-14 rest (sim/maps.py performance maps, T-DYN-2/3), then M1-16/17, M2-01..03, M3.
+
+=== 20 Nov 2026  M1-14 part 3: performance maps, T-DYN-2/3/6/8 on
+backend/sim/maps.py: rpm x load sweep of the calibrated steady chain at ISA SL (power, BSFC, brake efficiency, MAP,
+  EGT), var/maps/<engine>.json, GET /api/v1/engines/{id}/maps. Grid in configs/physics maps (ASSUMED).
+configs/sensors/<engine>.json (NEW): load-dependent channels, cruise trim, sensitivity signs (ASSUMED, first-principles
+  reasons in ref). T-DYN-2 (5 engines), T-DYN-3 (5 engines), T-DYN-6 (config-only fault F99 moves its signature),
+  T-DYN-8 (S05 dropout -> no reading in the state) pass. T-DYN-5 still xfail (GLB + UI part, M8).
+Physics fix: combustion burns DRY air (Atmosphere.dry_air_mass_fraction); humid air now lowers SI power ~0.5 % at
+  +40 % RH (was a tiny rise through the prop only).
+Bug fix: detector scoring no longer crashes on a dropped channel (unmeasured -> no evidence, never a fallback number).
+Model gaps logged: common-rail pressure has no load map (constant); diesel MAP held by the boost target; no prop rpm
+  setpoint lever (T-DYN-3 prop +100 rpm not declared).
+FOUND (next step M1-14b): SI BSFC is 15-25 % too low vs the manuals (912: 240 g/kWh at rated vs MANUAL 285;
+  914 240 vs 295). Plan: calibrate volumetric efficiency (or full-load lambda) so BSFC at the manual point matches,
+  eta_i then re-fits; re-run T-FLT-1. Diesels: Question 6c (brake efficiency 0.54 at best point).
+Full suite: 586 passed, 1 failed (ratchet, known), 7 skipped, 13 xfailed.
