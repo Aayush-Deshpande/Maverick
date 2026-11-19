@@ -32,10 +32,10 @@ SCALARS = ("rpm", "prop_rpm", "map_kpa", "coolant_t", "oil_p", "oil_t", "fuel_fl
 def _quality(bits: Optional[int]) -> str:
     if not bits:
         return "OK"
+    if bits & Q_INTERPOLATED:                   # the twin's estimate stands in for a quarantined sensor
+        return "VIRTUAL"
     if bits & Q_SHIELDED:
         return "QUARANTINED"
-    if bits & Q_INTERPOLATED:
-        return "VIRTUAL"
     if bits & (Q_FROZEN | Q_OUT_OF_RANGE | Q_LANE_DISAGREE | Q_STALE):
         return "SUSPECT"
     return "OK"

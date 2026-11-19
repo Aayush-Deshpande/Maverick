@@ -106,6 +106,7 @@ class Frame:
     vibration_orders: Dict[str, float] = field(default_factory=dict)   # 1X, 2X, 3X order amplitudes (mm/s)
     virtual_sensors: Dict[str, float] = field(default_factory=dict)    # Pmax, TIT, h_min synthesized by UKF
 
+    lane_b: Dict[str, float] = field(default_factory=dict)            # second-lane reading of dual sensors (S07)
     quality: Dict[str, int] = field(default_factory=dict)
     schema_version: str = FRAME_SCHEMA_VERSION
 

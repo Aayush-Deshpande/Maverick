@@ -1,7 +1,113 @@
 {
   "schema_version": 1,
   "description": "Residual detector settings (cards M3-02..M3-04). Thresholds themselves are fitted per tail on nominal frames; these are the design constants.",
-  "cusum_k_sigma": {"value": 0.5, "status": "ASSUMED", "ref": "CUSUM allowance in residual sigmas: tuned for the fastest detection of a sustained 1-sigma shift (Montgomery, Introduction to Statistical Quality Control, ch. 9: k = delta/2)"},
-  "persistence_k": {"value": 3, "status": "ASSUMED", "ref": "confirm when k of the last n raw alarms fired; at 1 frame/s this is the idea text's ~3 s persistence"},
-  "persistence_n": {"value": 5, "status": "ASSUMED", "ref": "persistence window (frames)"}
+  "cusum_k_sigma": {
+    "value": 0.5,
+    "status": "ASSUMED",
+    "ref": "CUSUM allowance in residual sigmas: tuned for the fastest detection of a sustained 1-sigma shift (Montgomery, Introduction to Statistical Quality Control, ch. 9: k = delta/2)"
+  },
+  "persistence_k": {
+    "value": 3,
+    "status": "ASSUMED",
+    "ref": "confirm when k of the last n raw alarms fired; at 1 frame/s this is the idea text's ~3 s persistence"
+  },
+  "persistence_n": {
+    "value": 5,
+    "status": "ASSUMED",
+    "ref": "persistence window (frames)"
+  },
+  "fdi": {
+    "description": "Sensor validation / fault detection and isolation (card M3-03). Physical sensor ranges and rates per sensor kind; noise sigma comes from the sensor model in configs/physics sensors (the datasheet noise of the sender).",
+    "kinds": {
+      "cht": "temperature",
+      "egt": "egt",
+      "coolant_t": "temperature",
+      "oil_t": "temperature",
+      "gearbox_t": "temperature",
+      "oil_p": "pressure_bar",
+      "fuel_p": "pressure_bar",
+      "rail_p": "rail_bar",
+      "map_kpa": "pressure_kpa",
+      "rpm": "speed",
+      "prop_rpm": "speed",
+      "fuel_flow": "flow",
+      "bus_v": "voltage"
+    },
+    "range": {
+      "ref": "sensor measuring range: a reading outside it is impossible for the sender (S06), not an engine state",
+      "temperature": [
+        -60.0,
+        250.0
+      ],
+      "egt": [
+        -60.0,
+        1200.0
+      ],
+      "pressure_bar": [
+        -0.5,
+        15.0
+      ],
+      "rail_bar": [
+        0.0,
+        2500.0
+      ],
+      "pressure_kpa": [
+        5.0,
+        400.0
+      ],
+      "speed": [
+        0.0,
+        12000.0
+      ],
+      "flow": [
+        0.0,
+        200.0
+      ],
+      "voltage": [
+        0.0,
+        40.0
+      ]
+    },
+    "max_rate_per_s": {
+      "ref": "fastest physical change per second; a faster jump is a sensor artefact (open thermocouple, ADC glitch)",
+      "temperature": 15.0,
+      "egt": 250.0,
+      "pressure_bar": 8.0,
+      "rail_bar": 2000.0,
+      "pressure_kpa": 200.0,
+      "speed": 4000.0,
+      "flow": 60.0,
+      "voltage": 10.0
+    },
+    "freeze_window": {
+      "value": 10,
+      "status": "ASSUMED",
+      "ref": "frames without variation before a channel counts as stuck (S01)"
+    },
+    "freeze_var_fraction": {
+      "value": 0.02,
+      "status": "ASSUMED",
+      "ref": "stuck when the window variance is below this share of the sender's noise variance"
+    },
+    "noise_window": {
+      "value": 10,
+      "status": "ASSUMED",
+      "ref": "frames used for the excess-noise check (S04)"
+    },
+    "noise_var_factor": {
+      "value": 49.0,
+      "status": "ASSUMED",
+      "ref": "noisy when the robust (median second-difference) noise estimate exceeds 7 x the sender's sigma; 5 x gave ~1 stray quarantine per 15 min on nominal flights"
+    },
+    "lane_sigma": {
+      "value": 8.0,
+      "status": "ASSUMED",
+      "ref": "lane A/B disagreement threshold in sender sigmas (S07)"
+    },
+    "recover_frames": {
+      "value": 30,
+      "status": "ASSUMED",
+      "ref": "clean frames before an automatically quarantined channel is trusted again"
+    }
+  }
 }

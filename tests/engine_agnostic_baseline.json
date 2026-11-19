@@ -19,6 +19,11 @@
     "cyl": 0,
     "model": 0
   },
+  "backend/detect/sensor_fdi.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
   "backend/faults/manager.py": {
     "brand": 0,
     "cyl": 0,

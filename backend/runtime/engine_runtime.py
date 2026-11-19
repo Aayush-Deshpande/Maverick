@@ -20,7 +20,7 @@ from typing import Any, Deque, Dict, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 
-from backend.core.frame import Frame, TruthRecord, Q_SHIELDED
+from backend.core.frame import Frame, TruthRecord, Q_INTERPOLATED, Q_SHIELDED
 from backend.detect import DetectionResult, Reservoir, ResidualDetector
 from backend.physics.engine_config import EngineConfig, load_engine_config
 from backend.runtime.levers import Levers
@@ -29,7 +29,7 @@ from backend.runtime.sensor_levers import SensorLevers
 from backend.sources import PlantSource
 from backend.sim.source import registry as sim_registry
 
-from backend.physics.sensor_validator import SensorSanityValidator, SanityReport
+from backend.detect.sensor_fdi import SensorFDI
 from backend.dsp.order_tracker import OrderTracker
 from backend.twin.sim_ukf import SimThermalUKF
 from backend.twin.virtual_sensors import VirtualSensorSynthesizer
@@ -137,7 +137,7 @@ class EngineRuntime:
         self.heavy_ready = False
 
         # Scientific, DSP, and State Estimation Modules
-        self.sanity_validator = SensorSanityValidator()
+        self.sensor_fdi = SensorFDI(engine_config_id)     # M3-03 sensor validation (replaces the legacy validator)
         self.order_tracker = OrderTracker(self.cfg, seed=seed)
         self.ukf = SimThermalUKF(self.cfg)
         # observer cadence: every UKF_EVERY ticks, phase-shifted per engine so five engines never update together
@@ -310,7 +310,7 @@ class EngineRuntime:
             self.source.clear_faults()
             self.sensor_levers.clear()
             self.injected.clear()
-            self.sanity_validator.reset()
+            self.sensor_fdi.reset()
             self.validity_monitor.reset()
             self._cached_validity = None
             self._cached_diagnosis = None
@@ -323,7 +323,7 @@ class EngineRuntime:
     def set_sensor_fault(self, kind: str, channel: str, **kwargs) -> None:
         """Inject sensor-level fault (R7): bias, drift, stuck, noise, dropout, spoof."""
         with self._lock:
-            self.sanity_validator.quarantine(channel)
+            self.sensor_fdi.quarantine(channel)
             if kind == "bias":
                 self.sensor_levers.inject_bias(channel, kwargs.get("offset", 0.0))
             elif kind == "drift":
@@ -349,13 +349,11 @@ class EngineRuntime:
                 truth = TruthRecord(t=frame.t, origin="REPLAY")
 
             # 1. Sensor Sanity Validation & Residual Shielding (R7)
-            sanity_rep = self.sanity_validator.validate(frame, dt_sec=DT)
-            sanity_dict = sanity_rep.to_dict()
-            _quarantined_lower = [ch.lower() for ch in sanity_rep.failed_channels]
-            if not sanity_rep.all_sensors_valid:
-                for ch in sanity_rep.failed_channels:
-                    frame.quality[ch] = (frame.quality.get(ch, 0) | Q_SHIELDED)
-                    frame.quality[ch.lower()] = (frame.quality.get(ch.lower(), 0) | Q_SHIELDED)
+            fdi = self.sensor_fdi.validate(frame)
+            sanity_dict = fdi.to_dict()
+            _quarantined_lower = list(fdi.quarantined)
+            for ch in fdi.quarantined:
+                frame.quality[ch] = frame.quality.get(ch, 0) | Q_SHIELDED
             for k, v in getattr(frame, "quality", {}).items():
                 if (v & Q_SHIELDED) != 0 and k.lower() not in _quarantined_lower:
                     _quarantined_lower.append(k.lower())
@@ -383,6 +381,18 @@ class EngineRuntime:
                 ukf_nis, ukf_params = self._cached_ukf
             else:
                 ukf_nis, ukf_params = 0.0, []                  # no measured inputs yet: no twin estimate
+
+            # quarantined temperature sensors: publish the observer's estimate instead, marked VIRTUAL (M3-03)
+            if self.ukf.initialised:
+                est = self.ukf.estimates()
+                for ch in _quarantined_lower:
+                    if ch not in est:
+                        continue
+                    if ch.startswith("cht_"):
+                        frame.cht[int(ch[4:]) - 1] = est[ch]
+                    else:
+                        setattr(frame, ch, est[ch])
+                    frame.quality[ch] = frame.quality.get(ch, 0) | Q_SHIELDED | Q_INTERPOLATED
 
             ukf_dict = {
                 "nis": round(ukf_nis, 4),

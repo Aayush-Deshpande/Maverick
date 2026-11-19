@@ -156,7 +156,9 @@ class SimSource:
                       gearbox_t=m["gearbox_t"], engine_state=o.state,
                       ign_cmd=o.ign_timing_btdc, bus_v=m["bus_v"], bus_i=m["alt_i"], batt_i=m["batt_i"],
                       alt=o.altitude_ft, oat=o.oat_c, tas=o.tas_kt,
-                      vibration_orders={k: m[f"vib[{k}]"] for k in o.vibration if m[f"vib[{k}]"] is not None})
+                      vibration_orders={k: m[f"vib[{k}]"] for k in o.vibration if m[f"vib[{k}]"] is not None},
+                      lane_b={k[:-len(".lane_b")].replace("[", "_").replace("]", ""): v for k, v in m.items()
+                              if k.endswith(".lane_b") and v is not None})
         truth = TruthRecord(t=o.t, failed=o.state == FAILED, failure_mode=o.failure,
                             active_faults=[FaultTruth(mode=f.fault_id, location=f.cylinder, severity=f.severity,
                                                       onset_t=f.t0_s, ramp_sec=f.ramp_s) for f in self.faults],
