@@ -60,7 +60,7 @@ Precedence when documents disagree: `DECISIONS.md` > course of action > P > A > 
 - Write the acceptance test first and show it failing, then make it pass.
 - Never weaken a test: no raised tolerance, no skip, no deleted assert, no mocked physics in physics tests. If a test looks wrong, stop and ask.
 - Backend: `python -m pytest -q -p no:cacheprovider` (narrow to the relevant files while working; the full run takes about 5 minutes).
-- Baseline on Beta (19 Nov 2026): 333 passed, 3 failed, 7 skipped, 1 xfailed. The 3 known failures are:
+- Baseline on Beta (19 Nov 2026, after M0-08b): 430 passed, 1 failed, 7 skipped, 2 xfailed. The known failure is the ratchet below (the two timing tests now pass since the second simulator was removed in M0-07/M0-08b). Original Phase 0 baseline: 333 passed, 3 failed:
   - `test_engine_agnostic_ratchet.py::test_engine_specific_literals_never_increase`
   - `test_runtime_hub.py::test_cpu_cost_is_small`
   - `test_runtime_hub.py::test_all_five_engines_concurrent_load_and_isolation`

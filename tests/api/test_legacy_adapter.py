@@ -181,3 +181,42 @@ def test_cors_never_wildcard(monkeypatch):
     assert security.cors_origins() == ["https://a.example", "https://b.example"]
     monkeypatch.delenv(SEC["cors_origins_env"])
     assert security.cors_origins() == SEC["cors_dev_origins"]
+
+
+# ---- M0-08b: the legacy service is no longer a simulator ---------------------------------------------------------
+
+def test_legacy_service_runs_no_simulation_loop():                         # T-M0-5 (service side)
+    import ast
+    from pathlib import Path
+    src = Path(__file__).resolve().parents[2] / "backend" / "server" / "engine_service.py"
+    tree = ast.parse(src.read_text(encoding="utf-8"))
+    funcs = {n.name for n in ast.walk(tree) if isinstance(n, ast.FunctionDef)}
+    assert "_run_loop" not in funcs and "sync_from_tick" not in funcs
+    assert sum(1 for n in tree.body for m in ast.walk(n)
+               if isinstance(m, ast.FunctionDef) and m.name == "get_latest_state") == 1      # audit #44
+
+
+def test_health_reports_v1_engine_fields(client):
+    client.post("/api/control", json={"action": "SET_FAULT", "fault_id": 4})
+    client.hub.tick_all()
+    h = client.get("/api/health").json()
+    assert h["active_fault_id"] == 4 and h["is_engine_running"] is None
+    assert h["loop_frequency_hz"] == load_runtime_settings()["tick_rate_hz"]
+    client.post("/api/control", json={"action": "CLEAR_FAULT"})
+
+
+def test_copilot_reads_v1_state(client, monkeypatch):
+    from backend.server.engine_service import EngineStateService
+    seen = {}
+
+    def fake_ask(query, state, diagnosed):
+        seen.update(state=state, diagnosed=diagnosed)
+        return {"status": "SUCCESS"}
+
+    monkeypatch.setattr(EngineStateService.get_instance().copilot, "ask", fake_ask)
+    client.hub.tick_all()
+    assert client.post("/api/ai/ask", json={"query": "status?"}).status_code == 200
+    v1 = client.get(f"/api/v1/engines/{LEGACY_ENGINE_ID}/state").json()
+    assert seen["state"]["engine_id"] == LEGACY_ENGINE_ID
+    assert seen["state"]["telemetry"]["ENGINE_RPM"] == v1["readings"]["rpm"]["value"]
+    assert seen["diagnosed"] is None                       # no diagnosis until M3-05, never a default 0

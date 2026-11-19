@@ -173,8 +173,8 @@ class ServerHealthResponse(BaseModel):
     status: str = "ONLINE"
     service: str = "Rotax 912 iS Digital Twin Server"
     sortie_id: str
-    is_engine_running: bool
-    active_fault_id: int
+    is_engine_running: Optional[bool] = None   # null until the engine state machine (M1-12)
+    active_fault_id: Optional[int] = None
     connected_web_clients: int
     connected_blender_clients: int
-    loop_frequency_hz: float = 20.0
+    loop_frequency_hz: float = Field(..., description="configured tick rate (configs/runtime.json)")
