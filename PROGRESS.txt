@@ -7,9 +7,9 @@ RESUME HERE  (last updated 19 Nov 2026)
 =====================================================================================================================
 Phase:        PHASE 1 (M0) cards done (M0-01..M0-12; M0-10 reduced, see its entry). NEXT: CHECKPOINT PHASE 1 (manual
               look by Prasad), then Phase 2 in demo-first order: M1-01 sim package + clock, M1-02 atmosphere, ...
-Card:         M1-12 (M1-01..11 done).
+Card:         M1-13 (M1-01..12 done).
 Branch:       Beta (pushed by Prasad up to ae82c70; later commits local). main untouched (9b5942e).
-Last commit:  M1-11 on Beta (see git log -1).
+Last commit:  M1-12 on Beta (see git log -1).
 State:        ONE simulator: RuntimeHub. EngineStateService runs no loop; /api/state, /api/control, /ws/telemetry,
               /ws/blender, /api/health, copilot and voice read the v1 runtime (legacy_adapter.py). D52 command security
               on every command path. Test baseline now: 430 passed, 1 failed (ratchet: engine_service/copilot brand
@@ -526,4 +526,20 @@ Results: AE300 / VRDE meet take-off power; VRDE flat to 11,000 ft then falls (12
   eta_i 0.58/0.56 and BSFC 163/168 are implausible -> Questions 6c (strict xfail).
 Tests tests/sim/test_fuel.py 12 passed, 2 strict xfail. Known gap: lean-of-best SI EGT should RISE slightly; the
   energy-balance EGT falls when a cylinder leans. Fix with a lambda-dependent combustion-phasing term in M1-13.
+
+=== 19 Nov 2026  M1-12 ECU + state machine + dynamic plant (AI: Claude Code, Opus 5.5)
+backend/sim/plant.py (SimEngine): one fixed step = atmosphere -> ECU (lane loss, timing incl. drift and knock retard,
+  overspeed fuel cut) -> quasi-steady power chain at the current rpm -> torque lag (turbo spool / NA 0.1 s) -> rotor ->
+  thermal -> electrical -> vibration -> state machine. States OFF / CRANKING / RUNNING / FAILED (seizure after the
+  oil-pressure minimum for 20 s, overheat above warning x 1.08 for 60 s; flameout -> OFF). START / STOP / RESET; CI
+  cold start waits for glow preheat. "Degraded" is NOT a plant state (status evaluator's verdict from evidence).
+  Published: rpm, prop rpm, MAP, CHT/EGT per cylinder, coolant, oil T/p, gearbox T, fuel flow + pressure, bus V,
+  alternator/battery A, SOC, power, torque, BSFC, lambda per cylinder, ignition/injection timing, COV_IMEP, knock
+  index, charge temperature, boost PR, vibration orders. 0.4 ms per step.
+ASSUMED added ("ecu", "state_machine"): lane-loss ignition energy/phasing, overspeed margin, knock retard, NA torque lag,
+  starter torque, run threshold, glow preheat 5 s, seize 20 s, overheat margin/time.
+Tests tests/sim/test_plant.py 13 passed: stop spins down on the ground + restart on all 5 engines, diesel glow
+  preheat, F23 seizure stays FAILED after clearing until RESET, overspeed fuel cut, SI lane loss (COV up, power down,
+  timing changes), F11 timing drift published, determinism, <= 2 ms per step.
+Known: AE300 EGT ~260 C at 75 % (too low) - same root as Question 6c (diesel air/lambda data).
 

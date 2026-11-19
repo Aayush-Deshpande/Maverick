@@ -346,5 +346,69 @@
       "status": "ASSUMED",
       "ref": "diesel low-pressure supply at the HP pump inlet (AE300 TCDS band 4-7 bar)"
     }
+  },
+  "ecu": {
+    "lane_loss_ignition_energy": {
+      "value": 0.5,
+      "status": "ASSUMED",
+      "ref": "SI dual ignition: one circuit lost halves ignition energy (slower burn) (R 22 F04)"
+    },
+    "lane_loss_timing_error_deg": {
+      "value": 4.0,
+      "status": "ASSUMED",
+      "ref": "single-plug burn is slower: effective phasing error after a lane loss"
+    },
+    "overspeed_fuel_cut_margin": {
+      "value": 0.03,
+      "status": "ASSUMED",
+      "ref": "fuel cut above overspeed (or rated) rpm x (1 + margin)"
+    },
+    "knock_retard_deg_per_index": {
+      "value": 10.0,
+      "status": "ASSUMED",
+      "ref": "knock control retards ignition 10 deg per unit of knock index above 1 (F03 shows as timing retard)"
+    },
+    "torque_lag_na_s": {
+      "value": 0.1,
+      "status": "ASSUMED",
+      "ref": "torque response of a naturally aspirated engine (fuel transport + manifold)"
+    }
+  },
+  "state_machine": {
+    "starter_torque_nm": {
+      "value": 25.0,
+      "status": "ASSUMED",
+      "ref": "starter torque at the crankshaft while cranking"
+    },
+    "run_rpm_fraction_of_idle": {
+      "value": 0.7,
+      "status": "ASSUMED",
+      "ref": "engine counts as running above this fraction of idle rpm"
+    },
+    "glow_preheat_s": {
+      "value": 5.0,
+      "status": "ASSUMED",
+      "ref": "CI cold start: glow plugs must preheat this long below 20 C coolant before fuel is admitted"
+    },
+    "seize_time_s": {
+      "value": 20.0,
+      "status": "ASSUMED",
+      "ref": "seizure after oil pressure stays below its minimum for this long at load (R 21.4 t_seize)"
+    },
+    "overheat_margin": {
+      "value": 0.08,
+      "status": "ASSUMED",
+      "ref": "overheat failure above warning limit x (1 + margin)"
+    },
+    "overheat_time_s": {
+      "value": 60.0,
+      "status": "ASSUMED",
+      "ref": "... sustained for this long (R 21.4 t_overheat)"
+    },
+    "fuel_starvation_fraction": {
+      "value": 0.3,
+      "status": "ASSUMED",
+      "ref": "fuel delivery below this share of demand = starvation"
+    }
   }
 }
