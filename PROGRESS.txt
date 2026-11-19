@@ -7,9 +7,9 @@ RESUME HERE  (last updated 19 Nov 2026)
 =====================================================================================================================
 Phase:        PHASE 1 (M0) cards done (M0-01..M0-12; M0-10 reduced, see its entry). NEXT: CHECKPOINT PHASE 1 (manual
               look by Prasad), then Phase 2 in demo-first order: M1-01 sim package + clock, M1-02 atmosphere, ...
-Card:         M1-11 (M1-01..10 done).
+Card:         M1-12 (M1-01..11 done).
 Branch:       Beta (pushed by Prasad up to ae82c70; later commits local). main untouched (9b5942e).
-Last commit:  M1-10 on Beta (see git log -1).
+Last commit:  M1-11 on Beta (see git log -1).
 State:        ONE simulator: RuntimeHub. EngineStateService runs no loop; /api/state, /api/control, /ws/telemetry,
               /ws/blender, /api/health, copilot and voice read the v1 runtime (legacy_adapter.py). D52 command security
               on every command path. Test baseline now: 430 passed, 1 failed (ratchet: engine_service/copilot brand
@@ -33,6 +33,10 @@ Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produ
                   b) T-PHY-3 at ISA-30: MAP-limited engines make 105-112 % of rated on a cold day (dense air at the
                      same MAP; true for the NA 912 too). Keep the criterion for ISA..ISA+35 only, or add a documented
                      cold-day limit?
+                  c) Diesels (M1-11): the ASSUMED (AE300) / PLACEHOLDER (VRDE) full-load lambda 1.55/1.52 and max
+                     boost 190/195 kPa give too little air for rated power: eta_i 0.56-0.58 (CI ~0.42-0.50), BSFC
+                     163-168 g/kWh vs config 235/218 and the VRDE brochure ~215. Sourced values, or OK to derive
+                     lambda/boost from BSFC? (strict xfail test_diesel_calibration_is_physically_plausible)
               (4) ANSWERED 19 Nov: dependencies OK. Prasad: no subagents (token cost); keep sessions lean.
               (5) M0-11: data/graph_db/fleet_graph.json still has local runtime changes from older runs. The server
               no longer writes it (runtime copy = var/graph_db/fleet_graph.json, seeded from the committed version).
@@ -508,4 +512,18 @@ Tests tests/sim/test_turbo.py: 12 passed, 3 strict xfail = Questions 6a/6b. Test
   tests): leak tested at the capability critical altitude (a leak below it is legitimately compensated); stuck-open
   check relative to the healthy engine; bearing wear tested at the continuous target where capability binds.
 Diesels (AE300, VRDE) are turbocharged too but quality-governed; they are calibrated in M1-11.
+
+=== 19 Nov 2026  M1-11 Fuel systems + diesel calibration (AI: Claude Code, Opus 5.5)
+backend/sim/fuel.py: port injection (open-loop, flow ~ sqrt(dp)), carburettor (supply starvation), common rail (rail
+  lag, ECU pulse-width stretch up to 130 %, then delivery falls); F05-F08 per-cylinder injector coefficients, F09 rail
+  health, F10 supply health. engine.py: per-cylinder fuel / work / lambda / burnt share; CI quality-governed (power
+  lever = share of the full-load injection quantity, CALIBRATED from rated air at the full-load lambda) with a
+  boost-compensated full-load limit (power falls as soon as air falls) and the smoke limit as the hard cap; heat inputs
+  per cylinder. engine_config.from_dict ignores the "physics" block (read by backend/sim/params.py).
+Configs: CI friction override in austro_ae300 / vrde_jayem_2_2l (ASSUMED, one line each); "fuel" constants in
+  configs/physics/defaults.json (rail lag 0.3 s, pulse-width limit 1.3, SI 3.0 bar, carb 0.3 bar, CI supply 5.5 bar).
+Results: AE300 / VRDE meet take-off power; VRDE flat to 11,000 ft then falls (128 kW at 13k, 119 at 15k).
+  eta_i 0.58/0.56 and BSFC 163/168 are implausible -> Questions 6c (strict xfail).
+Tests tests/sim/test_fuel.py 12 passed, 2 strict xfail. Known gap: lean-of-best SI EGT should RISE slightly; the
+  energy-balance EGT falls when a cylinder leans. Fix with a lambda-dependent combustion-phasing term in M1-13.
 

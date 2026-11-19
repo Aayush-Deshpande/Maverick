@@ -311,6 +311,7 @@ class EngineConfig:
         data = dict(data)
         layout = data.pop("layout", None)
         turbo = data.pop("turbo", None)
+        data.pop("physics", None)       # model constants: read by backend/sim/params.py, not part of EngineConfig
         cfg = cls(**data)
         if layout:
             cfg.layout = CylinderLayout(**layout)

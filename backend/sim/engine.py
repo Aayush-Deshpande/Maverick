@@ -7,11 +7,12 @@ Steady-state power chain used for calibration and the T-PHY tests:
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional, Sequence
 
 from backend.sim.atmosphere import Atmosphere
 from backend.sim.combustion import Combustion
+from backend.sim.fuel import FuelSystem
 from backend.sim.induction import Induction, throttle_area_fraction
 from backend.sim.params import physics_values
 from backend.sim.thermal import HeatInputs, Thermal
@@ -27,6 +28,11 @@ class OperatingPoint:
     indicated_w: float
     friction_w: float
     brake_w: float
+    cyl_fuel_kg_s: List[float] = field(default_factory=list)
+    cyl_indicated_w: List[float] = field(default_factory=list)
+    cyl_lambda: List[float] = field(default_factory=list)
+    cyl_burnt: List[float] = field(default_factory=list)
+    fuel_pressure_bar: Optional[float] = None
 
     @property
     def bsfc_g_kwh(self) -> Optional[float]:
@@ -39,6 +45,9 @@ class MeanValueEngine:
         self.n_cyl = cfg.cylinder_count
         self.induction = Induction.for_engine(cfg)
         self.combustion = Combustion.for_engine(cfg)
+        self.fuel = FuelSystem.for_engine(cfg)
+        self.ci = not self.combustion.spark_ignition
+        self.ci_full_fuel_cyl = 0.0          # CI injection quantity per cycle at full lever (CALIBRATED)
         fr = physics_values(cfg.engine_id, "friction")
         self.fmep = (fr["fmep_a_kpa"] * 1e3, fr["fmep_b_kpa_per_krpm"] * 1e3, fr["fmep_c_kpa_per_krpm2"] * 1e3)
         lam = cfg.nominal_lambda
@@ -58,13 +67,20 @@ class MeanValueEngine:
 
     def steady_point(self, throttle_pct: float, rpm: float, atm: Atmosphere, lam: Optional[float] = None,
                      filter_factor: float = 1.0, map_target_pa: Optional[float] = None,
-                     turbo_health: Optional[Dict] = None) -> OperatingPoint:
-        """Steady operating point. map_target_pa: boost controller MAP target (turbo engines; default take-off)."""
+                     turbo_health: Optional[Dict] = None, fuel_health: Optional[Dict] = None,
+                     injector: Optional[Sequence[float]] = None, quality: Optional[Sequence[float]] = None,
+                     timing_error_deg: float = 0.0) -> OperatingPoint:
+        """Steady operating point. SI: throttle_pct is the butterfly. CI (quality-governed): throttle_pct is the power
+        lever = share of the full-load injection quantity; there is no butterfly. Per-cylinder faults enter through
+        `injector` (flow coefficients) and `quality` (combustion quality); see backend/sim/fuel.py and combustion.py."""
         lam = self.nominal_lambda if lam is None else lam
+        n = self.n_cyl
+        inj = list(injector) if injector is not None else [1.0] * n
+        qual = list(quality) if quality is not None else [1.0] * n
         ind = self.induction
         mdot = 0.0
         p_src, t_src = atm.pressure_pa, atm.temperature_k
-        frac = throttle_area_fraction(throttle_pct, ind.idle_fraction)
+        frac = throttle_area_fraction(100.0 if self.ci else throttle_pct, ind.idle_fraction)
         for _ in range(8):                                   # flow-dependent filter drop and boost: fixed point
             if self.turbo is not None:
                 target = None if map_target_pa is None else map_target_pa / self.wot_map_ratio
@@ -74,14 +90,32 @@ class MeanValueEngine:
             map_pa = ind._steady_map(frac, p_up, t_src, rpm)
             mdot = ind.cylinder_flow(map_pa, t_src, rpm)
         cycles_per_s = rpm / 120.0
-        m_air_cyl = mdot / max(cycles_per_s * self.n_cyl, 1e-9)
-        m_fuel_cyl = self.combustion.deliverable_fuel(m_air_cyl / (self.combustion.stoich_afr * lam), m_air_cyl)
-        w_cyl = self.combustion.indicated_work_j(m_fuel_cyl, lam)
-        indicated = w_cyl * self.n_cyl * cycles_per_s
+        m_air_cyl = mdot / max(cycles_per_s * n, 1e-9)
+        p_fuel = self.fuel.steady_pressure(fuel_health)
+        delivery = self.fuel.delivery_factor(p_fuel)
+        afr = self.combustion.stoich_afr
+        cyl_fuel, cyl_w, cyl_lam, cyl_burnt = [], [], [], []
+        for i in range(n):
+            if self.ci:
+                # boost-compensated full-load limit: the ECU never fuels richer than the full-load lambda, so power
+                # falls as soon as air falls (above the critical altitude, boost leak); smoke limit stays the hard cap
+                full = min(self.ci_full_fuel_cyl, m_air_cyl / (afr * self.nominal_lambda))
+                demand = min(max(throttle_pct, 0.0), 100.0) / 100.0 * full * inj[i] * delivery
+            else:
+                demand = m_air_cyl / (afr * lam) * inj[i] * delivery
+            m_f = self.combustion.deliverable_fuel(demand, m_air_cyl)
+            lam_i = m_air_cyl / (afr * m_f) if m_f > 0 else float("inf")
+            w = self.combustion.indicated_work_j(m_f, lam_i, timing_error_deg, qual[i])
+            cyl_fuel.append(m_f * cycles_per_s)
+            cyl_w.append(w * cycles_per_s)
+            cyl_lam.append(lam_i)
+            cyl_burnt.append(0.0 if m_f <= 0 else min(1.0, w / max(m_f * self.combustion.lhv_j_kg * self.combustion.eta_i, 1e-12)))
+        indicated = sum(cyl_w)
         friction = self.friction_w(rpm)
-        return OperatingPoint(rpm=rpm, map_pa=map_pa, mdot_air_kg_s=mdot,
-                              mdot_fuel_kg_s=m_fuel_cyl * self.n_cyl * cycles_per_s, indicated_w=indicated,
-                              friction_w=friction, brake_w=indicated - friction)
+        return OperatingPoint(rpm=rpm, map_pa=map_pa, mdot_air_kg_s=mdot, mdot_fuel_kg_s=sum(cyl_fuel),
+                              indicated_w=indicated, friction_w=friction, brake_w=indicated - friction,
+                              cyl_fuel_kg_s=cyl_fuel, cyl_indicated_w=cyl_w, cyl_lambda=cyl_lam,
+                              cyl_burnt=cyl_burnt, fuel_pressure_bar=p_fuel)
 
     @property
     def wot_map_ratio(self) -> float:
@@ -104,6 +138,11 @@ class MeanValueEngine:
     def calibrate(self) -> Dict[str, float]:
         sl = Atmosphere.at(0)
         self.combustion.eta_i = 1.0
+        if self.ci:   # full-load injection quantity: rated air at the documented full-load lambda (configs/engines)
+            self.ci_full_fuel_cyl = 1.0
+            air = self.steady_point(100, self.cfg.rated_rpm, sl).mdot_air_kg_s
+            self.ci_full_fuel_cyl = air / (self.cfg.rated_rpm / 120.0 * self.n_cyl) / (
+                self.combustion.stoich_afr * self.nominal_lambda)
         unit = self.steady_point(100, self.cfg.rated_rpm, sl)          # indicated power per unit eta_i
         target = self.cfg.rated_power_kw * 1000.0
         self.combustion.eta_i = (target + unit.friction_w) / unit.indicated_w
@@ -113,9 +152,10 @@ class MeanValueEngine:
     # -- heat (M1-07) --------------------------------------------------------------------------------------
     def heat_inputs(self, op: OperatingPoint, atm: Atmosphere, friction_multiplier: float = 1.0) -> HeatInputs:
         n = self.n_cyl
-        return HeatInputs(rpm=op.rpm, fuel_kg_s=[op.mdot_fuel_kg_s / n] * n, burnt=[1.0] * n,
-                          indicated_w=[op.indicated_w / n] * n,
-                          exhaust_kg_s=[(op.mdot_air_kg_s + op.mdot_fuel_kg_s) / n] * n,
+        air_cyl = op.mdot_air_kg_s / n
+        return HeatInputs(rpm=op.rpm, fuel_kg_s=list(op.cyl_fuel_kg_s), burnt=list(op.cyl_burnt),
+                          indicated_w=list(op.cyl_indicated_w),
+                          exhaust_kg_s=[air_cyl + f for f in op.cyl_fuel_kg_s],
                           friction_w=op.friction_w * friction_multiplier, brake_w=op.brake_w,
                           manifold_t_k=atm.temperature_k)
 

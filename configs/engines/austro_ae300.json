@@ -1,4 +1,5 @@
 {
+  "physics": {"friction": {"fmep_a_kpa": {"value": 75.0, "status": "ASSUMED", "ref": "CI engine FMEP higher than SI (Heywood eq. 13.16 form: higher compression, injection pump drive)"}, "fmep_b_kpa_per_krpm": {"value": 30.0, "status": "ASSUMED", "ref": "see fmep_a_kpa"}, "fmep_c_kpa_per_krpm2": {"value": 4.0, "status": "ASSUMED", "ref": "see fmep_a_kpa"}}},
   "engine_id": "austro_ae300",
   "display_name": "Austro Engine AE300 (E4)",
   "manufacturer": "Austro Engine GmbH (Diamond Aircraft)",
