@@ -5,11 +5,11 @@ section 19.1. Update the RESUME HERE block at every commit and at the end of eve
 =====================================================================================================================
 RESUME HERE  (last updated 19 Nov 2026)
 =====================================================================================================================
-Phase:        PHASE 1 (M0) in progress. Done: M0-01..M0-09b, M0-11, M0-12. NEXT: M0-10 (old 3D window + Blender app
-              on /api/v1), then CHECKPOINT PHASE 1, then Phase 2 in the demo-first order (course of action section 20).
-Card:         M0-10.
+Phase:        PHASE 1 (M0) cards done (M0-01..M0-12; M0-10 reduced, see its entry). NEXT: CHECKPOINT PHASE 1 (manual
+              look by Prasad), then Phase 2 in demo-first order: M1-01 sim package + clock, M1-02 atmosphere, ...
+Card:         M1-01 (after the Phase 1 checkpoint look).
 Branch:       Beta (pushed by Prasad up to ae82c70; later commits local). main untouched (9b5942e).
-Last commit:  M0-09b on Beta (see git log -1).
+Last commit:  M0-10 on Beta (see git log -1).
 State:        ONE simulator: RuntimeHub. EngineStateService runs no loop; /api/state, /api/control, /ws/telemetry,
               /ws/blender, /api/health, copilot and voice read the v1 runtime (legacy_adapter.py). D52 command security
               on every command path. Test baseline now: 430 passed, 1 failed (ratchet: engine_service/copilot brand
@@ -384,4 +384,18 @@ Tests: src/store/engineStore.test.ts 8 passed (Vitest); tsc passes. Backend unto
 Still on the legacy socket (M6 replaces these panels): the Tactical GCS tabs use useTelemetrySocket (/ws/telemetry
   + its fallback poll). Not checked in a browser yet (Prasad: open the console tab once).
 Tests: Vitest 8 passed; tsc OK; tests/api + tests/dynamic green (T-DYN-1 caught one "?? 0", fixed).
+
+=== 19 Nov 2026  M0-10 Other clients on one fault path (reduced scope) (AI: Claude Code, Opus 5.5)
+- backend/server/engine_api.py (used by the old 3D window and the Blender app): POST/DELETE /api/engines/{id}/faults now
+  go through the ONE v1 FaultManager, so faults from the old 3D window show in the console and vice versa. Numeric
+  ids only via registry legacy_ids (audit #18 fixed: no list position, no MISFIRE-cyl-1 fallback, unmapped -> 422);
+  "mode" via registry plant_mode_legacy. Command guard (D52) on faults, levers and select; lever ranges = v1.
+- apps/blender_twin/standalone_digital_twin_app.py: offline sine telemetry removed (V10/audit #33); history graphs
+  start empty and only take real finite samples; null ids/values from the server no longer crash it (NaN shown).
+- tests/test_engine_api.py ported (D38): checks the v1 active list shows F01 cyl 2 after an old-endpoint inject,
+  legacy id 4 = OIL_PRESSURE_LOSS, id 9 -> 422 (stronger than the old "origin == MANUAL").
+NOT done (reduced scope, D10 says the old window is retired by the React Three Fiber viewer M6-05): AE300/VRDE
+  profiles and manifest-driven exact-node highlighting in apps/threejs_twin; the Blender app's private 1-8 fault
+  labels. Both come with M6-05 / the Blender app move to /ws/v1. Blender changes compile but were not run in Blender.
+Full suite: 437 passed, 1 failed (ratchet, known), 7 skipped, 7 xfailed.
 

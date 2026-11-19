@@ -14,10 +14,14 @@ def client():
     for _ in range(5):
         h.tick_all()
     api._hub = h
+    import backend.server.api_v1 as api_v1
+    api_v1._services = api_v1.Services(h)
     app = FastAPI()
     app.include_router(api.router)
+    app.include_router(api_v1.router)
     yield TestClient(app)
     api._hub = None
+    api_v1._services = None
 
 
 def test_list_and_profiles(client):
@@ -40,7 +44,14 @@ def test_fault_validation_and_select(client):
     assert client.post("/api/engines/rotax_912is/faults", json={"mode": "BOOST_LEAK"}).status_code == 422
     assert client.post("/api/engines/rotax_914/faults", json={"mode": "MISFIRE"}).status_code == 422
     ok = client.post("/api/engines/rotax_914/faults", json={"mode": "MISFIRE", "cylinder": 2})
-    assert ok.status_code == 200 and ok.json()["origin"] == "MANUAL"
+    assert ok.status_code == 200 and ok.json()["fault"]["source"] == "legacy"
+    # M0-10: the old endpoint goes through the ONE fault manager, so v1 clients see the same fault
+    active = client.get("/api/v1/engines/rotax_914/faults").json()["active"]
+    assert [(f["fault_id"], f["cylinder"]) for f in active] == [("F01", 2)]
+    # numeric ids only through registry legacy_ids (audit #18): 4 = oil pressure loss, 9 is not mapped
+    four = client.post("/api/engines/rotax_914/faults", json={"fault_id": 4})
+    assert four.status_code == 200 and four.json()["fault"]["name"] == "OIL_PRESSURE_LOSS"
+    assert client.post("/api/engines/rotax_914/faults", json={"fault_id": 9}).status_code == 422
     assert client.delete("/api/engines/rotax_914/faults").status_code == 200
     assert client.post("/api/engines/select", json={"engine_id": "nope"}).status_code == 404
     assert client.post("/api/engines/select", json={"engine_id": "rotax_912is"}).json()["selected"] == "rotax_912is"
