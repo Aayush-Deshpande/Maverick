@@ -1,4 +1,5 @@
-"""Fuel systems (card M1-11, R 21.4, P 1.3l): port injection (912/915), carburettor (914), common rail (AE300/VRDE).
+"""Fuel systems (card M1-11, R 21.4, P 1.3l): port injection, carburettor and common rail; each
+engine's configs/engines fuel_system picks one.
 
 Faults act on parameters only:
   injector flow coefficient per cylinder   (F05 clog, F06 coking, F07 stuck open, F08 stuck closed)

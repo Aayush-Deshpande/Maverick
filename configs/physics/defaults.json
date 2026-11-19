@@ -544,5 +544,32 @@
       "status": "ASSUMED",
       "ref": "S06: short/open circuit reads this multiple of the normal value"
     }
+  },
+  "build_variation": {
+    "volumetric_efficiency": {
+      "value": 0.02,
+      "status": "ASSUMED",
+      "ref": "volumetric efficiency: build-to-build manufacturing spread (1 sigma, relative), sampled once per tail seed; carried over from the retired backend/plant/virtual_engine.py EngineVariation (D31: N calibrations, not N detectors)"
+    },
+    "friction": {
+      "value": 0.06,
+      "status": "ASSUMED",
+      "ref": "friction mean effective pressure: build-to-build manufacturing spread (1 sigma, relative), sampled once per tail seed; carried over from the retired backend/plant/virtual_engine.py EngineVariation (D31: N calibrations, not N detectors)"
+    },
+    "head_cooling": {
+      "value": 0.045,
+      "status": "ASSUMED",
+      "ref": "per-cylinder head heat-transfer conductances (to coolant and to air): build-to-build manufacturing spread (1 sigma, relative), sampled once per tail seed; carried over from the retired backend/plant/virtual_engine.py EngineVariation (D31: N calibrations, not N detectors)"
+    },
+    "injector_trim": {
+      "value": 0.018,
+      "status": "ASSUMED",
+      "ref": "per-cylinder injector / jet flow: build-to-build manufacturing spread (1 sigma, relative), sampled once per tail seed; carried over from the retired backend/plant/virtual_engine.py EngineVariation (D31: N calibrations, not N detectors)"
+    },
+    "compressor_efficiency": {
+      "value": 0.035,
+      "status": "ASSUMED",
+      "ref": "turbo compressor efficiency: build-to-build manufacturing spread (1 sigma, relative), sampled once per tail seed; carried over from the retired backend/plant/virtual_engine.py EngineVariation (D31: N calibrations, not N detectors)"
+    }
   }
 }

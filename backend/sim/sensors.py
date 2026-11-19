@@ -18,9 +18,14 @@ KIND = {"temperature": ("cht", "egt", "oil_t", "coolant_t", "gearbox_t", "charge
         "flow": ("fuel_flow",), "electrical": ("bus_v", "batt_i", "alt_i")}
 
 
+_KIND_CACHE: Dict[str, Optional[str]] = {}
+
+
 def _kind(channel: str) -> Optional[str]:
-    base = channel.split("[")[0]
-    return next((k for k, names in KIND.items() if base in names), None)
+    if channel not in _KIND_CACHE:
+        base = channel.split("[")[0]
+        _KIND_CACHE[channel] = next((k for k, names in KIND.items() if base in names), None)
+    return _KIND_CACHE[channel]
 
 
 class SensorLayer:

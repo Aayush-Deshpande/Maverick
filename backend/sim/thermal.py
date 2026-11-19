@@ -129,6 +129,7 @@ class Thermal:
              health: Optional[Dict[str, Any]] = None) -> None:
         hl = health or {}
         cooling_eff = hl.get("cooling_eff") or [1.0] * self.n_cyl
+        conductance = hl.get("head_conductance") or [1.0] * self.n_cyl        # build spread of the head (per tail)
         s = self._air_scale(atm, tas_kt)
         ta = atm.temperature_k - KELVIN
         f_wall = self.ph["wall_heat_fraction"]
@@ -137,8 +138,8 @@ class Thermal:
         for i in range(self.n_cyl):
             q = h.fuel_kg_s[i] * self.lhv * h.burnt[i]
             fuel_heat += q
-            q_hc = self.g_hc * hl.get("coolant_flow", 1.0) * (self.cht[i] - self.coolant_c)
-            q_ha = self.g_ha * s * cooling_eff[i] * (self.cht[i] - ta)
+            q_hc = self.g_hc * conductance[i] * hl.get("coolant_flow", 1.0) * (self.cht[i] - self.coolant_c)
+            q_ha = self.g_ha * conductance[i] * s * cooling_eff[i] * (self.cht[i] - ta)
             self.cht[i] += dt * (f_wall * hl.get("wall_heat_factor", 1.0) * q - q_hc - q_ha) / self.c_head
             to_coolant += q_hc
             target = self._egt_target(h, i) * ((hl.get("egt_factor") or [1.0] * self.n_cyl)[i])

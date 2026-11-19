@@ -29,6 +29,46 @@ def _psi(pr: float) -> float:
     return math.sqrt(max(0.0, 2 * g / (g - 1) * (pr ** (2 / g) - pr ** ((g + 1) / g))))
 
 
+PSI_CRIT = _psi(P_CRIT)
+_PR_GRID = [P_CRIT + (1.0 - P_CRIT) * i / 256 for i in range(257)]       # psi(pr)/pr falls monotonically on it
+_G_GRID = [_psi(x) / x for x in _PR_GRID]
+
+
+def pressure_ratio_for(r: float) -> float:
+    """Solve psi(pr) = r * pr for the manifold/upstream pressure ratio (choked: closed form; subsonic: tabulated
+    bracket + Illinois regula falsi to 1e-12)."""
+    if r <= 0.0:
+        return 1.0
+    if r >= _G_GRID[0]:
+        return PSI_CRIT / r                                     # choked throttle: flow fixed, pr from the cylinders
+    lo, hi = 0, len(_G_GRID) - 1
+    while hi - lo > 1:                                          # g is decreasing in pr
+        mid = (lo + hi) // 2
+        if _G_GRID[mid] > r:
+            lo = mid
+        else:
+            hi = mid
+    a, b = _PR_GRID[lo], _PR_GRID[hi]
+    fa, fb = _psi(a) - r * a, _psi(b) - r * b
+    side = 0
+    for _ in range(60):
+        x = (a * fb - b * fa) / (fb - fa) if fb != fa else 0.5 * (a + b)
+        fx = _psi(x) - r * x
+        if fx > 0:
+            a, fa = x, fx
+            if side == 1:
+                fb *= 0.5
+            side = 1
+        else:
+            b, fb = x, fx
+            if side == -1:
+                fa *= 0.5
+            side = -1
+        if b - a < 1e-12 or fx == 0.0:
+            break
+    return x
+
+
 def throttle_area_fraction(throttle_pct: float, idle_fraction: float) -> float:
     """Butterfly opening -> flow area fraction (cosine law), with a closed-throttle leakage floor."""
     t = min(max(throttle_pct, 0.0), 100.0) / 100.0
@@ -76,15 +116,32 @@ class Induction:
         self.map_pa = p_man
 
     # -- dynamics ------------------------------------------------------------------------------------------
+    def steady_ratio(self, frac: float, t_k: float, rpm: float) -> float:
+        """Steady manifold/upstream pressure ratio (independent of the upstream pressure)."""
+        c = self.cd * self.area_m2 * frac / math.sqrt(R_DRY * t_k)
+        if c <= 0.0:
+            return 0.0
+        return pressure_ratio_for(self.eta_v * self.displaced_m3 * max(rpm, 0.0) / (120.0 * R_DRY * t_k) / c)
+
+    def steady_flow(self, frac: float, p_src: float, t_k: float, rpm: float, filter_factor: float = 1.0):
+        """Steady (mdot, MAP) with the filter drop k*mdot^2: mdot = a*(p_src - k*mdot^2), a = cylinder flow per Pa
+        of upstream pressure, solved in closed form (positive root)."""
+        pr = self.steady_ratio(frac, t_k, rpm)
+        a = self.cylinder_flow(pr, t_k, rpm)
+        k = self.k_filter * filter_factor
+        if a <= 0.0:
+            return 0.0, pr * p_src
+        mdot = a * p_src if k <= 0.0 else (math.sqrt(1.0 + 4.0 * a * a * k * p_src) - 1.0) / (2.0 * a * k)
+        return mdot, pr * (p_src - k * mdot * mdot)
+
     def _steady_map(self, frac: float, p_up: float, t_k: float, rpm: float) -> float:
-        lo, hi = 0.0, p_up
-        for _ in range(50):                                   # bisection: throttle flow falls, cylinder flow rises
-            mid = 0.5 * (lo + hi)
-            if self.throttle_flow(frac, p_up, t_k, mid) > self.cylinder_flow(mid, t_k, rpm):
-                lo = mid
-            else:
-                hi = mid
-        return 0.5 * (lo + hi)
+        """Throttle flow = cylinder flow. Dividing both by p_up leaves psi(pr) = r * pr with
+        r = cylinder-flow coefficient / throttle-flow coefficient, so pr does not depend on p_up."""
+        c = self.cd * self.area_m2 * frac / math.sqrt(R_DRY * t_k)
+        d = self.eta_v * self.displaced_m3 * max(rpm, 0.0) / (120.0 * R_DRY * t_k)
+        if c <= 0.0:
+            return 0.0
+        return p_up * pressure_ratio_for(d / c)
 
     def step(self, dt: float, throttle_pct: float, rpm: float, atm: Atmosphere, filter_factor: float = 1.0,
              source_pressure_pa: Optional[float] = None, source_temp_k: Optional[float] = None) -> float:

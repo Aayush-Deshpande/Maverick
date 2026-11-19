@@ -58,6 +58,25 @@ GUARDED = [
     "backend/faults/manager.py",
     "backend/faults/registry.py",
     "backend/runtime/hub.py",
+    # M1 physics package (cards M1-01..M1-14): engine-agnostic by construction
+    "backend/sim/__init__.py",
+    "backend/sim/atmosphere.py",
+    "backend/sim/clock.py",
+    "backend/sim/combustion.py",
+    "backend/sim/electrical.py",
+    "backend/sim/engine.py",
+    "backend/sim/faults.py",
+    "backend/sim/fuel.py",
+    "backend/sim/induction.py",
+    "backend/sim/params.py",
+    "backend/sim/plant.py",
+    "backend/sim/rotor.py",
+    "backend/sim/sensors.py",
+    "backend/sim/signature.py",
+    "backend/sim/source.py",
+    "backend/sim/thermal.py",
+    "backend/sim/turbo.py",
+    "backend/sim/vibration.py",
 ]
 
 PATTERNS = {

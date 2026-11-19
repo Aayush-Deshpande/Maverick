@@ -15,13 +15,13 @@
     "model": 0
   },
   "backend/faults/manager.py": {
-    "cyl": 0,
     "brand": 0,
+    "cyl": 0,
     "model": 0
   },
   "backend/faults/registry.py": {
-    "cyl": 0,
     "brand": 0,
+    "cyl": 0,
     "model": 0
   },
   "backend/ml/anomaly_detector.py": {
@@ -55,13 +55,13 @@
     "model": 5
   },
   "backend/runtime/hub.py": {
-    "cyl": 0,
     "brand": 0,
+    "cyl": 0,
     "model": 0
   },
   "backend/server/api_v1.py": {
-    "cyl": 0,
     "brand": 0,
+    "cyl": 0,
     "model": 0
   },
   "backend/server/engine_service.py": {
@@ -70,8 +70,8 @@
     "model": 3
   },
   "backend/server/legacy_adapter.py": {
-    "cyl": 0,
     "brand": 0,
+    "cyl": 0,
     "model": 0
   },
   "backend/server/schemas.py": {
@@ -80,18 +80,108 @@
     "model": 2
   },
   "backend/server/security.py": {
-    "cyl": 0,
     "brand": 0,
+    "cyl": 0,
     "model": 0
   },
   "backend/server/state_builder.py": {
-    "cyl": 0,
     "brand": 0,
+    "cyl": 0,
     "model": 0
   },
   "backend/server/state_schema.py": {
-    "cyl": 0,
     "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/sim/__init__.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/sim/atmosphere.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/sim/clock.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/sim/combustion.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/sim/electrical.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/sim/engine.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/sim/faults.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/sim/fuel.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/sim/induction.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/sim/params.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/sim/plant.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/sim/rotor.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/sim/sensors.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/sim/signature.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/sim/source.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/sim/thermal.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/sim/turbo.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/sim/vibration.py": {
+    "brand": 0,
+    "cyl": 0,
     "model": 0
   },
   "backend/sources/plant_source.py": {

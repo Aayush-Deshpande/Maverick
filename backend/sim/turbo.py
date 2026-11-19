@@ -6,7 +6,7 @@ pressure ratio falls as corrected mass flow rises,
   PR_max(m_corr) = a - b * m_corr,     m_corr = mdot * sqrt(T_in / T_ref) / (p_in / p_ref)
 so the critical altitude EMERGES (wastegate fully closed and MAP still falling). The line is CALIBRATED flat (b = 0)
 from the documented critical altitude of the turbo's own capability. Where the manufacturer documents a LOWER
-take-off critical altitude (Rotax 914: take-off power to 8,000 ft at 1350 hPa, continuous to 16,000 ft at 1200 hPa),
+take-off critical altitude (an engine whose config gives take-off power to a lower altitude than continuous power),
 that limit is the boost controller's: the TCU caps the take-off pressure ratio (takeoff_pr_limit, CALIBRATED), since a
 single compressor speed line cannot give more pressure ratio at the higher corrected flow of the 16,000 ft point.
 Faults act on parameters: boost leak (F14) loses a share of the boost and the controller compensates until PR_max;

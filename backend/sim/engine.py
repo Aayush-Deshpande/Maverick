@@ -81,15 +81,16 @@ class MeanValueEngine:
         mdot = 0.0
         p_src, t_src = atm.pressure_pa, atm.temperature_k
         frac = throttle_area_fraction(100.0 if self.ci else throttle_pct, ind.idle_fraction)
-        for _ in range(8):                                   # flow-dependent filter drop and boost: fixed point
+        for _ in range(8):           # filter drop solved in closed form; boost depends on flow: short fixed point
             if self.turbo is not None:
                 target = None if map_target_pa is None else map_target_pa / self.wot_map_ratio
                 p_src = self.turbo.steady_charge(atm, mdot, target_pa=target, health=turbo_health)
                 t_src = self.turbo.charge_temperature_k(atm, p_src, (turbo_health or {}).get("intercooler_fouling", 0.0))
                 self.turbo.t_charge_k = t_src
-            p_up = p_src - ind.k_filter * filter_factor * mdot ** 2
-            map_pa = ind._steady_map(frac, p_up, t_src, rpm)
-            mdot = ind.cylinder_flow(map_pa, t_src, rpm)
+            prev = mdot
+            mdot, map_pa = ind.steady_flow(frac, p_src, t_src, rpm, filter_factor)
+            if self.turbo is None or abs(mdot - prev) <= 1e-10 * max(mdot, 1e-12):
+                break
         cycles_per_s = rpm / 120.0
         m_air_cyl = mdot / max(cycles_per_s * n, 1e-9)
         p_fuel = self.fuel.steady_pressure(fuel_health)
