@@ -14,6 +14,7 @@ from backend.sim.atmosphere import Atmosphere
 from backend.sim.combustion import Combustion
 from backend.sim.induction import Induction, throttle_area_fraction
 from backend.sim.params import physics_values
+from backend.sim.thermal import HeatInputs, Thermal
 
 
 @dataclass
@@ -42,6 +43,8 @@ class MeanValueEngine:
         lam = cfg.nominal_lambda
         self.nominal_lambda = float(lam.value if hasattr(lam, "value") else lam)
         self.calibrate()
+        self.thermal = Thermal.for_engine(cfg, self.combustion.lhv_j_kg)
+        self.calibrate_thermal()
 
     # -- pieces --------------------------------------------------------------------------------------------
     def friction_w(self, rpm: float) -> float:
@@ -77,3 +80,34 @@ class MeanValueEngine:
         self.combustion.eta_i = (target + unit.friction_w) / unit.indicated_w
         self.calibration = {"eta_i": self.combustion.eta_i, "status": "CALIBRATED"}
         return self.calibration
+
+    # -- heat (M1-07) --------------------------------------------------------------------------------------
+    def heat_inputs(self, op: OperatingPoint, atm: Atmosphere, friction_multiplier: float = 1.0) -> HeatInputs:
+        n = self.n_cyl
+        return HeatInputs(rpm=op.rpm, fuel_kg_s=[op.mdot_fuel_kg_s / n] * n, burnt=[1.0] * n,
+                          indicated_w=[op.indicated_w / n] * n,
+                          exhaust_kg_s=[(op.mdot_air_kg_s + op.mdot_fuel_kg_s) / n] * n,
+                          friction_w=op.friction_w * friction_multiplier, brake_w=op.brake_w,
+                          manifold_t_k=atm.temperature_k)
+
+    def calibration_atmosphere(self) -> Atmosphere:
+        return Atmosphere.at(0, isa_dev_c=self.thermal.ph["calibration_isa_dev_c"])
+
+    def calibrate_thermal(self) -> None:
+        """R 21.5 step 4: max continuous rpm, WOT, ISA+15, design airspeed -> temperatures at their targets."""
+        from backend.sim.rotor import load_propellers
+        atm = self.calibration_atmosphere()
+        props = load_propellers()["CONSTANT_SPEED" if self.cfg.propeller_governor else "FIXED_PITCH"]
+        self.design_tas_kt = float(props["design_tas_kt"]["value"])
+        op = self.steady_point(100, self.cfg.max_continuous_rpm, atm)
+        self.thermal.calibrate(self.heat_inputs(op, atm), atm, self.design_tas_kt, self.cfg.rated_rpm)
+
+    def settle_thermal(self, throttle_pct: float, rpm: float, atm: Atmosphere, tas_kt: Optional[float] = None,
+                       seconds: float = 3600.0, dt: float = 0.5, health: Optional[Dict] = None) -> Thermal:
+        """Run the heat balances to (near) steady state at a fixed operating point (tests, maps)."""
+        tas = self.design_tas_kt if tas_kt is None else tas_kt
+        for _ in range(int(seconds / dt)):
+            op = self.steady_point(throttle_pct, rpm, atm)
+            self.thermal.step(dt, self.heat_inputs(op, atm, self.thermal.friction_multiplier), atm, tas, health)
+        return self.thermal
+

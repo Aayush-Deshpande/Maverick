@@ -101,5 +101,154 @@
       "status": "ASSUMED",
       "ref": "see fmep_a_kpa"
     }
+  },
+  "thermal": {
+    "wall_heat_fraction": {
+      "value": 0.22,
+      "status": "ASSUMED",
+      "ref": "share of fuel energy to the combustion-chamber walls (Heywood ch. 12: 15-35 %)"
+    },
+    "head_to_coolant_fraction": {
+      "value": 0.7,
+      "status": "ASSUMED",
+      "ref": "share of wall heat leaving through the coolant (liquid-cooled heads); the rest via barrel fins to cooling air"
+    },
+    "oil_fuel_heat_fraction": {
+      "value": 0.04,
+      "status": "ASSUMED",
+      "ref": "share of fuel energy rejected to the oil (piston cooling, Heywood ch. 12)"
+    },
+    "oil_friction_heat_fraction": {
+      "value": 0.5,
+      "status": "ASSUMED",
+      "ref": "share of friction power ending up in the oil"
+    },
+    "gear_efficiency": {
+      "value": 0.975,
+      "status": "ASSUMED",
+      "ref": "single-stage reduction gearbox efficiency"
+    },
+    "exhaust_cp_j_kgk": {
+      "value": 1150.0,
+      "status": "ASSUMED",
+      "ref": "exhaust gas specific heat at 800-900 C"
+    },
+    "calibration_isa_dev_c": {
+      "value": 15.0,
+      "status": "ASSUMED",
+      "ref": "R 21.5 step 4: cooling calibrated at max continuous, ISA+15, design airspeed"
+    },
+    "target_coolant_c": {
+      "value": 90.0,
+      "status": "ASSUMED",
+      "ref": "normal coolant operating temperature at max continuous (inside every engine's limits)"
+    },
+    "target_head_minus_coolant_c": {
+      "value": 15.0,
+      "status": "ASSUMED",
+      "ref": "head runs above coolant exit temperature"
+    },
+    "target_oil_c": {
+      "value": 100.0,
+      "status": "ASSUMED",
+      "ref": "normal oil temperature (inside the 90-110 C normal band where the OM gives one)"
+    },
+    "target_gearbox_c": {
+      "value": 85.0,
+      "status": "ASSUMED",
+      "ref": "gearbox oil temperature at max continuous"
+    },
+    "tau_head_s": {
+      "value": 60.0,
+      "status": "ASSUMED",
+      "ref": "cylinder head thermal time constant (minutes-scale CHT response, T-PHY-9)"
+    },
+    "tau_coolant_s": {
+      "value": 180.0,
+      "status": "ASSUMED",
+      "ref": "coolant loop time constant"
+    },
+    "tau_oil_s": {
+      "value": 300.0,
+      "status": "ASSUMED",
+      "ref": "oil system time constant"
+    },
+    "tau_gearbox_s": {
+      "value": 600.0,
+      "status": "ASSUMED",
+      "ref": "gearbox time constant"
+    },
+    "tau_egt_s": {
+      "value": 3.0,
+      "status": "ASSUMED",
+      "ref": "EGT sensor/gas time constant (audit section 2)"
+    },
+    "cooling_flow_exponent": {
+      "value": 0.8,
+      "status": "ASSUMED",
+      "ref": "convective conductance ~ (rho V)^0.8 (Dittus-Boelter / Colburn)"
+    },
+    "oil_thermostat_open_c": {
+      "value": 80.0,
+      "status": "ASSUMED",
+      "ref": "installation oil-cooler thermostat starts opening (Rotax installations commonly fit one)"
+    },
+    "oil_thermostat_full_c": {
+      "value": 95.0,
+      "status": "ASSUMED",
+      "ref": "oil-cooler thermostat fully open (below the 100 C calibration target, so calibration is unaffected)"
+    },
+    "coolant_thermostat_open_c": {
+      "value": 75.0,
+      "status": "ASSUMED",
+      "ref": "coolant thermostat / radiator bypass starts opening"
+    },
+    "coolant_thermostat_full_c": {
+      "value": 88.0,
+      "status": "ASSUMED",
+      "ref": "coolant thermostat fully open (below the 90 C calibration target)"
+    },
+    "thermostat_min_open": {
+      "value": 0.1,
+      "status": "ASSUMED",
+      "ref": "bypass leakage when closed"
+    }
+  },
+  "oil": {
+    "vogel_a_mpas": {
+      "value": 0.1366,
+      "status": "ASSUMED",
+      "ref": "Vogel mu = a exp(b/(T + c)), T in C; SAE 30-class constants (Seeton 2006 fit form)"
+    },
+    "vogel_b": {
+      "value": 797.8,
+      "status": "ASSUMED",
+      "ref": "Vogel constant"
+    },
+    "vogel_c": {
+      "value": 95.6,
+      "status": "ASSUMED",
+      "ref": "Vogel constant (T + c)"
+    },
+    "relief_bar": {
+      "value": 5.0,
+      "status": "ASSUMED",
+      "ref": "relief valve cracks at the top of the 2-5 bar normal band (R 21.5 step 5)"
+    },
+    "calibration_rpm_fraction": {
+      "value": 0.6,
+      "status": "ASSUMED",
+      "ref": "pump calibrated at 60 % of rated rpm with hot oil"
+    },
+    "calibration_pressure_bar": {
+      "value": 2.8,
+      "status": "ASSUMED",
+      "ref": "oil pressure at the calibration point (inside the normal band)"
+    },
+    "low_pressure_friction_gain": {
+      "value": 3.0,
+      "status": "ASSUMED",
+      "ref": "boundary lubrication: bearing friction x (1 + gain * deficit^2) below the minimum pressure (seizure chain, R 21.4)"
+    }
   }
 }

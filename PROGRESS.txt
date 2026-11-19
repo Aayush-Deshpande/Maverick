@@ -7,9 +7,9 @@ RESUME HERE  (last updated 19 Nov 2026)
 =====================================================================================================================
 Phase:        PHASE 1 (M0) cards done (M0-01..M0-12; M0-10 reduced, see its entry). NEXT: CHECKPOINT PHASE 1 (manual
               look by Prasad), then Phase 2 in demo-first order: M1-01 sim package + clock, M1-02 atmosphere, ...
-Card:         M1-07 (M1-01..06 done).
+Card:         M1-08 (M1-01..07 done).
 Branch:       Beta (pushed by Prasad up to ae82c70; later commits local). main untouched (9b5942e).
-Last commit:  M1-06 on Beta (see git log -1).
+Last commit:  M1-07 on Beta (see git log -1).
 State:        ONE simulator: RuntimeHub. EngineStateService runs no loop; /api/state, /api/control, /ws/telemetry,
               /ws/blender, /api/health, copilot and voice read the v1 runtime (legacy_adapter.py). D52 command security
               on every command path. Test baseline now: 430 passed, 1 failed (ratchet: engine_service/copilot brand
@@ -450,4 +450,21 @@ Turbo engines and diesels are NOT calibrated yet (they need boost, M1-10/M1-11);
 Tests tests/sim/test_engine_power.py 5 (912): T-PHY-1, T-PHY-2, BSFC band, altitude/heat trend, throttle + F13.
   Written after probing the numbers (thresholds are the P Part 7 catalogue values, not fitted).
 Full suite 483 passed, 1 failed (ratchet, known), 7 skipped, 7 xfailed.
+
+=== 19 Nov 2026  M1-07 Thermal, coolant, oil, gearbox (AI: Claude Code, Opus 5.5)
+backend/sim/thermal.py: per-cylinder head heat balance (coolant + air paths), EGT from the energy balance with lag,
+  coolant loop with radiator, oil heat (friction + fuel share) and cooler, Vogel viscosity oil pressure with relief
+  valve, low-pressure boundary-lubrication friction rise (seizure chain), gearbox loss heat; air-side conductances
+  scale with (rho V)^0.8; thermostats on oil cooler and radiator (F22 stuck OPEN/CLOSED). Conductances, capacities
+  and pump constant CALIBRATED per engine at max continuous, ISA+15, design TAS (R 21.5 step 4).
+912 results: max cont ISA+15 CHT 105 / coolant 90 / oil 100 / gearbox 85 / EGT 885 / oil p 4.4 bar; take-off ISA+15
+  CHT 109 / coolant 93 / oil 106 / EGT 885 (limit 950); cruise 9,000 ft 60 % coolant 81 / oil 90; oil pressure
+  0.92 bar idle hot, 2.3 at 3500, 3.8 at 5800, relief 5.0 cold.
+ASSUMED added (configs/physics/defaults.json "thermal", "oil"): wall heat 22 %, head-to-coolant 70 %, oil heat
+  shares, gear efficiency 0.975, exhaust cp, temperature targets, time constants, (rho V)^0.8, Vogel SAE30 constants,
+  relief 5 bar, pump calibration point, boundary-lubrication gain, installation thermostats (oil 80-95 C, coolant
+  75-88 C). Known gap: idle EGT stays ~850 C (no load-dependent wall-heat share yet); revisit in M1-12/M1-14.
+Tests tests/sim/test_thermal.py 8 passed: T-PHY-6 (config limits, >= 5 % margin), take-off below warning, cruise in
+  the oil normal band, T-PHY-7 rpm rule + relief, F19 heats only its cylinder, F23 pressure falls + oil heats +
+  friction rises, F25 oil +10 C, CHT minutes-scale (T-PHY-9).
 
