@@ -17,7 +17,9 @@ type Props = {
 };
 
 const PAGE = 9;                                    // keys 1-9 pick a fault on the current page
-const LEVEL_TEXT: Record<string, string> = { 'NO-GO': 'text-critical', CAUTION: 'text-warning', ADVISORY: 'text-cyan-700' };
+// annunciator strip in the status banner's alert colours (D4): red NO-GO, amber CAUTION, cyan ADVISORY
+const STRIP: Record<string, string> = { 'NO-GO': 'border-l-critical text-critical', CAUTION: 'border-l-warning text-warning',
+  ADVISORY: 'border-l-cyan-600 text-cyan-700' };
 const title = (v: string) => v.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
 let counter = 0;
 const newRequestId = () => globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${++counter}`;
@@ -69,41 +71,49 @@ export default function TwinStage(p: Props) {
   }, [shown, cyl, pages, p]);
 
   const highlights = (p.state?.highlights ?? []) as Array<{ component_id: string; level: string; reason: string }>;
+  const label = 'text-[11px] uppercase tracking-[0.18em] font-mono text-slate-400';
+  const key = 'inline-flex h-6 min-w-6 items-center justify-center rounded-[3px] border border-surface-border-strong bg-surface-card px-1.5 font-mono text-[11px] text-slate-200 shadow-[0_1px_0_rgba(0,0,0,0.25)]';
   return (
     <div className="relative h-[calc(100vh-11rem)] min-h-[480px] overflow-hidden rounded-sm border border-surface-border bg-[#e8e7df]">
-      <Suspense fallback={<div className="p-6 text-xs font-mono text-slate-500">Loading 3D view…</div>}>
+      <Suspense fallback={<div className="p-6 text-xs font-mono text-slate-400">Loading 3D view…</div>}>
         <EngineViewer3D engineId={p.engineId} highlights={p.state?.highlights} api={p.api} injected={injected} fill focusSignal={focus} bare />
       </Suspense>
 
-      {/* top right: engine */}
-      <div className="absolute right-6 top-6 flex items-center gap-2">
-        <select value={p.engineId ?? ''} onChange={(e) => p.onSelectEngine(e.target.value)} aria-label="Engine"
-          className="rounded-xl border border-slate-200/80 bg-white/60 text-slate-900 shadow-lg backdrop-blur-xl px-4 py-2 text-sm [&>option]:text-black">
+      {/* top right: powerplant */}
+      <label className="surface-panel absolute right-4 top-4 flex items-center gap-3 rounded-sm px-3 py-2">
+        <span className={label}>Powerplant</span>
+        <select value={p.engineId ?? ''} onChange={(e) => p.onSelectEngine(e.target.value)}
+          className="bg-transparent text-xs font-mono text-white outline-none">
           {p.engines.map((e) => <option key={e.engine_id} value={e.engine_id}>{e.display_name ?? e.engine_id}</option>)}
         </select>
-      </div>
+      </label>
 
       {/* left: faults on the keyboard */}
-      <aside className="absolute left-6 top-6 w-[min(320px,calc(100%-3rem))] rounded-2xl border border-slate-200/80 bg-white/60 text-slate-900 shadow-lg backdrop-blur-xl p-4 text-xs"
-        aria-label="Keyboard fault controls">
-        <div className="font-semibold text-slate-900">Inject a fault</div>
-        <ol className="mt-2 space-y-0.5 font-mono">
-          {shown.map((f, i) => <li key={f.id} className="flex gap-2 text-slate-800">
-            <span className="w-4 text-slate-500">{i + 1}</span><span className="truncate">{title(f.name)}{f.scope === 'CYLINDER' ? ` (cyl ${cyl})` : ''}</span>
+      <aside className="surface-panel absolute left-4 top-4 w-[min(300px,calc(100%-2rem))] rounded-sm p-3" aria-label="Keyboard fault controls">
+        <div className="flex items-center justify-between"><span className={label}>Inject a fault</span>
+          <span className="font-mono text-[11px] text-slate-500">page {page + 1}/{pages}</span></div>
+        <ol className="mt-2 space-y-1">
+          {shown.map((f, i) => <li key={f.id} className="flex items-center gap-2.5 text-xs text-slate-200">
+            <kbd className={key}>{i + 1}</kbd><span className="truncate">{title(f.name)}{f.scope === 'CYLINDER' ? <span className="text-slate-500"> · cyl {cyl}</span> : null}</span>
           </li>)}
         </ol>
-        <div className="mt-2 border-t border-slate-200 pt-2 font-mono text-slate-500">
-          1-9 inject · 0 clear all · Q/E page {page + 1}/{pages} · C cylinder {cyl} · F focus · T training {p.training ? 'on' : 'off'}
+        <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1.5 border-t border-surface-border pt-3 text-[11px] text-slate-400">
+          <span><kbd className={key}>0</kbd> clear all</span><span><kbd className={key}>Q</kbd><kbd className={`${key} ml-1`}>E</kbd> page</span>
+          <span><kbd className={key}>C</kbd> cylinder {cyl}</span><span><kbd className={key}>F</kbd> focus</span>
+          <span className="col-span-2"><kbd className={key}>T</kbd> training {p.training ? 'on' : 'off'}</span>
         </div>
       </aside>
 
-      {/* bottom: what is going on */}
-      <div className="absolute inset-x-6 bottom-6 rounded-2xl border border-slate-200/80 bg-white/60 text-slate-900 shadow-lg backdrop-blur-xl px-5 py-3 text-sm" aria-live="polite">
-        <span className={`font-semibold ${status ? LEVEL_TEXT[status] ?? 'text-slate-900' : 'text-slate-500'}`}>{status ?? 'NO DATA'}</span>
-        {reason && status !== 'GO' && <span className="ml-2 text-slate-800">{reason}</span>}
-        {active.length > 0 && <span className="ml-3 text-slate-500">Injected: {active.map((f) => `${f.fault_id}${f.cylinder ? ` cyl ${f.cylinder}` : ''}`).join(', ')}</span>}
-        {highlights.length > 0 && <div className="mt-1 text-xs text-slate-600">{highlights.map((h) => `${h.level} · ${h.component_id.replace(/_/g, ' ')} · ${h.reason}`).join('   |   ')}</div>}
-        {notice && <div className="mt-1 text-xs text-slate-800">{notice}</div>}
+      {/* bottom: annunciator */}
+      <div className={`surface-panel absolute inset-x-4 bottom-4 rounded-sm border-l-4 px-4 py-2.5 ${status && STRIP[status] ? STRIP[status] : 'border-l-surface-border text-slate-200'}`} aria-live="polite">
+        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <span className="font-mono text-sm font-semibold tracking-wider">{status ?? 'NO DATA'}</span>
+          {reason && status !== 'GO' && <span className="text-xs text-slate-200">{reason}</span>}
+          {active.length > 0 && <span className="text-xs text-slate-400">injected {active.map((f) => `${f.fault_id}${f.cylinder ? `·c${f.cylinder}` : ''}`).join('  ')}</span>}
+          {notice && <span className="ml-auto text-xs opacity-80">{notice}</span>}
+        </div>
+        {highlights.length > 0 && <div className="mt-1 font-mono text-[11px] text-slate-400">
+          {highlights.map((h) => `${h.component_id.replace(/_/g, ' ')} — ${h.reason}`).join('   ·   ')}</div>}
       </div>
     </div>
   );
