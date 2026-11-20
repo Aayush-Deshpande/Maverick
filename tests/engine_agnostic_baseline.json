@@ -49,6 +49,11 @@
     "cyl": 0,
     "model": 0
   },
+  "backend/evaluation/cmapss.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
   "backend/faults/manager.py": {
     "brand": 0,
     "cyl": 0,
@@ -93,6 +98,11 @@
     "brand": 8,
     "cyl": 48,
     "model": 5
+  },
+  "backend/prognose/rul_model.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
   },
   "backend/prognose/trends.py": {
     "brand": 0,

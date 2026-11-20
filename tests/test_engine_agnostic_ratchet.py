@@ -81,6 +81,8 @@ GUARDED = [
     "backend/prognose/trends.py",
     "backend/maintenance/work_orders.py",
     "backend/detect/adaptive.py",
+    "backend/prognose/rul_model.py",
+    "backend/evaluation/cmapss.py",
     "backend/twin/virtual_sensors.py",
     "backend/sim/params.py",
     "backend/sim/plant.py",

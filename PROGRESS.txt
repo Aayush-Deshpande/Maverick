@@ -846,3 +846,11 @@ backend/detect/adaptive.py: EWMA of the residual mean/variance (configs/detect.j
   be absorbed; rollback to any kept version; persisted var/baselines/<tail>.json; status (version, reason,
   learning) published in prognostics.baseline. Wired after the status evaluator in the runtime.
 Tests: tests/detect/test_adaptive.py (every guard, step limit, rollback).
+
+=== 20 Nov 2026  M4-07 C-MAPSS FD001 benchmark (T-PRG-5), RUL pipeline core for M4-03
+backend/prognose/rul_model.py: ConformalRUL = HistGradientBoostingRegressor (scikit-learn 1.9.1) + split conformal
+  calibrated on WHOLE held-out trajectories, scale ~ predicted RUL; split_groups by trajectory id.
+backend/evaluation/cmapss.py on data/telemetry/source2_nasa_benchmarks/train_FD001.txt (only the train file is in
+  the repo: units split 60/20/20, seeds 0-2), RUL cap 125, rolling mean/slope 15 cycles. Result (PUBLIC_PROXY,
+  turbofan): RMSE 16.8 (all cycles), 3.5 (last cycle), coverage 94.4 % (95 % target), width 89 cycles.
+  -> reports/evaluation/cmapss_fd001_<date>.json; docs_site page 15. Test: tests/prognose/test_cmapss.py.

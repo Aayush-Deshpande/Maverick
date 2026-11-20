@@ -32,6 +32,22 @@ Aerospace certification frameworks mandate that distinct failure modes be isolat
 
 C-MAPSS and N-CMAPSS are turbofan datasets, not piston engine datasets, but they are the field's standard benchmark for the RUL estimation problem itself: given multivariate degrading sensor trends, predict remaining cycles to failure, and be scored on the field's asymmetric penalty convention that penalizes late predictions more heavily than early ones. Validating a RUL pipeline's mechanics and its scoring behavior on C-MAPSS establishes that the pipeline is sound before it is pointed at piston-engine degradation trajectories from the synthetic generator or the engine-class proxies.
 
+**Measured on C-MAPSS FD001 (evidence class: PUBLIC_PROXY).** The repository holds the FD001 training file (100 run-to-failure units), so the units are split into disjoint training, conformal-calibration and test units, over three random splits. The pipeline is:
+
+- **Features:** per-sensor rolling mean and slope over 15 cycles, plus the cycle count.
+- **Target:** RUL capped at 125 cycles.
+- **Point model:** gradient-boosted trees.
+- **Interval:** split-conformal 95 % interval, calibrated on whole held-out units.
+
+| Measure (mean of 3 splits) | Result |
+|---|---|
+| RMSE, all test cycles | 16.8 cycles |
+| RMSE, last observed cycle of each test unit | 3.5 cycles |
+| Interval coverage (target 95 %) | 94.4 % |
+| Mean interval width | 89 cycles (wide far from failure, narrow near it) |
+
+This validates the method only: C-MAPSS is a simulated turbofan, not a piston engine. Reproduce with `python -m backend.evaluation.cmapss`.
+
 ### Vibration and bearing methodology
 
 CWRU, Paderborn, XJTU-SY, FEMTO, and IMS form a five-dataset cluster covering seeded and naturally developed bearing faults at high sampling rates, with XJTU-SY and FEMTO additionally offering full run-to-failure trajectories. This cluster is what validates the order-tracking and envelope-analysis methodology used against the engine's own gearbox and bearing channels: tach-synchronous resampling and Hilbert envelope demodulation are general vibration-diagnostics techniques, and these five datasets are where that general capability is exercised and checked, independent of engine make or fault list.
