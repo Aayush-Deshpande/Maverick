@@ -43,6 +43,12 @@ def main(engines: list[str]) -> int:
     app = FastAPI()
     app.include_router(legacy_api.router)
     app.include_router(api_v1.router)
+    from backend.server.legacy_adapter import legacy_command
+    from backend.server.schemas import ControlCommand
+
+    @app.post("/api/control")                                   # the Tactical GCS route, as backend/server/main.py
+    def control(cmd: ControlCommand):
+        return legacy_command(cmd)
     client = TestClient(app)
     reg = {f["id"]: f for f in json.loads((ROOT / "configs" / "faults.json").read_text(encoding="utf-8"))["faults"]}
     svc = api_v1.services()

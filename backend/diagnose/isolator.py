@@ -116,10 +116,22 @@ class BayesianIsolator:
                 self.hyp.append((fid, "PROCESS", None, None, base, prior))
         s_prior = math.log(occ.get(fm_map.get(SENSOR_FAULT_ID) or "", default_occ)) - math.log(max(len(self.channels), 1))
         self.names[SENSOR_FAULT_ID] = reg.get(SENSOR_FAULT_ID).name
+        shared = _v(cfg, "shared_sensors")                  # sensor name -> prefix of the channels it feeds (D61)
+        grouped = {ch for ch in self.channels for p in shared.values() if ch.startswith(p)}
         for i, ch in enumerate(self.channels):
+            if ch in grouped:
+                continue
             e = np.zeros(len(self.channels))
             e[i] = 1.0
             self.hyp.append((SENSOR_FAULT_ID, "SENSOR", None, ch, e, s_prior))
+        self.sensor_groups: Dict[str, List[int]] = {}
+        for sensor, prefix in shared.items():                # one hypothesis: all of that sensor's channels shift
+            idx = [i for i, ch in enumerate(self.channels) if ch.startswith(prefix)]
+            if idx:
+                self.sensor_groups[sensor] = idx
+                e = np.zeros(len(self.channels))
+                e[idx] = 1.0 / math.sqrt(len(idx))
+                self.hyp.append((SENSOR_FAULT_ID, "SENSOR", None, sensor, e, s_prior))
         best_prior = max((h[5] for h in self.hyp), default=0.0)
         self.nominal_prior = best_prior + float(_v(cfg, "nominal_log_odds"))
         self.groups = self._ambiguity_groups()
@@ -167,7 +179,7 @@ class BayesianIsolator:
         idx = {c: i for i, c in enumerate(self.channels)}
         for fid, kind, cyl, ch, m, prior in self.hyp:
             if kind == "SENSOR" and coupling is not None:
-                m = coupling[:, idx[ch]]
+                m = self._coupled(coupling, idx, ch)
             lo, hi = (0.0, self.s_max) if kind == "PROCESS" else (-self.b_max, self.b_max)
             ll, s = _log_marginal(z, m, self.var, lo, hi)
             logs.append(prior + ll)
@@ -185,12 +197,19 @@ class BayesianIsolator:
                 continue
             fid, kind, cyl, ch, m, _prior = self.hyp[i - 1]
             if kind == "SENSOR" and coupling is not None:
-                m = coupling[:, idx[ch]]
+                m = self._coupled(coupling, idx, ch)
             out.append(IsolationHypothesis(fid, self.names.get(fid, fid), kind, float(p[i]), cylinder=cyl, channel=ch,
                                            severity=sev[i], group=self.groups[i - 1],
                                            supporting=self._evidence(z, m, agree=True),
                                            contradicting=self._evidence(z, m, agree=False)))
         return out
+
+    def _coupled(self, coupling: np.ndarray, idx: Dict[str, int], ch: str) -> np.ndarray:
+        """Sensor-offset signature through the calibration coupling: one channel, or a shared sensor's channels."""
+        if ch in idx:
+            return coupling[:, idx[ch]]
+        cols = self.sensor_groups[ch]
+        return coupling[:, cols].sum(axis=1) / math.sqrt(len(cols))
 
     def _evidence(self, z: np.ndarray, m: np.ndarray, agree: bool, k: int = 3) -> List[tuple]:
         """Channels that support the hypothesis (z along the signature) or contradict it (signature expects a
