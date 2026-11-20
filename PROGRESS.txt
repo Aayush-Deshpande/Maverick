@@ -12,7 +12,7 @@ Card:         M5-09 glide/divert DONE; M5-11 plan view + altitude profile DONE; 
               IN PROGRESS: Q12 close-out - 915 governed (configs done), oil relief
               5.0 -> 4.8 bar (ASSUMED, see entry), signatures for all 5 engines regenerating
               (scripts/diagnose/gen_signatures.py), then full suite, run_matrix re-measure (docs page 11 table:
-              the 915 row is still the fixed-pitch one), 915 fleet RUL report -> docs page 14 row ROW_915.
+              the 915 row is still the fixed-pitch one). (915 fleet RUL report + docs page 14 DONE.)
 Branch:       Beta (local commits not pushed). main untouched (9b5942e).
 Last commit:  see git log -1 (M5-09 glide reachability + divert).
 State:        Full suite before Q12 close-out: 686 passed, 2 failed (both from the 915 governor change, fixed:
@@ -997,4 +997,14 @@ View content: Operator = status, fleet, key tiles, levers/mission/faults, progno
   Mission = status, levers/mission, route/glide planner.
 Tests: tsc OK; vitest 14 passed. Not yet: browser check of the layout (CPU busy with fleet training); legacy
   tabs (App.tsx 'legacy' workspace) untouched.
+
+=== 20 Nov 2026 M4-03 fleet RUL results for all five engines -> docs_site page 14 (AI: Claude Code)
+Reports: reports/evaluation/sim_rul_<engine>_2026-11-20.json (200 tails each, 3 splits by tail, 40 test tails).
+  Mean coverage (target 95 %): AE300 95.3, 912 94.2, 914 95.2, 915 93.5 (one split 89.1), VRDE 95.0.
+  RMSE 166-225 h on mean lives 924-1011 h; mean interval width 798-962 h (wide early in life, by design).
+  Models in var/models (local only). Trained in one process started before the oil relief change (5.0 -> 4.8 bar);
+  the relief only matters at high rpm and the fleet flies 70 % cruise, so no retrain was done.
+Docs: page 14 rewritten to what is built (fleet, features, conformal by tail, measured table, UNAVAILABLE without a
+  model, not-yet-built: second physical RUL path and per-regime coverage). Removed unsupported claims
+  ("mathematically guaranteed", depot records, example interval numbers).
 

@@ -1,8 +1,9 @@
-w# Remaining Useful Life Estimation
+# Remaining Useful Life Estimation
 
-Knowing that a component is degrading is fundamentally different from knowing how much safe operating time remains before it must be overhauled. Remaining useful life (RUL) estimation is where ANUMAAN converts damage accumulation into an actionable operational quantity. 
-
-This article establishes ANUMAAN's strict airworthiness discipline: **zero fabricated scalar point estimates, dual-path physics/data extrapolation, and Split Conformal Prediction intervals with mathematically guaranteed 95% empirical coverage.**
+Knowing that a component is degrading is different from knowing how much safe operating time remains. ANUMAAN answers
+this in two layers. The first, *time to limit*, says when a reading will cross its engine-manual limit if the
+present trend continues. The second, *remaining useful life* (RUL), says how many flight hours remain until a
+wear process ends the engine's life, with a 95 % interval. Mission planning uses the lower end of that interval.
 
 ---
 
@@ -16,96 +17,72 @@ Before a full remaining-useful-life model, the twin answers a narrower question:
 
 **Measured (SIMULATION).** Slow faults (radiator blockage on the 914 and AE300, oil-cooler blockage on the 914) were ramped over 30 minutes at high power on a hot day, on test tails 1001 and 1002. A time-to-limit appeared before the limit was reached in every run. The true crossing time (the noise-free value) fell inside the predicted interval for **85 of 103 predictions (83 %)**; the acceptance target is 80 %.
 
-> **Status of the RUL model below.** The two-path RUL with conformal intervals is being built on a simulated run-to-failure fleet. Until it is measured, the live display labels its RUL field as a placeholder and quotes no RUL numbers.
+## Remaining useful life (in service now)
 
-## The Aviation Prognostics Reality: Why Point Estimates are Unsafe
+**Why a simulated fleet.** No public run-to-failure data exists for aero piston engines, and engines are never run to
+destruction in service. ANUMAAN therefore trains its RUL model on a *simulated* fleet in which the end of life is
+known, and labels every result SIMULATION.
 
-In academic machine learning competitions, algorithms are often trained on datasets like NASA C-MAPSS, where turbofan engines are run on testbenches until catastrophic destruction. In real military and commercial aviation:
-1. **Engines are never operated to destruction in flight:** Aircraft powerplants are overhauled at conservative Time-Between-Overhaul ($TBO$) intervals (e.g., 1,200 to 2,000 flight hours).
-2. **True run-to-failure data for aero-piston engines does not exist in the public domain.**
-3. **Point estimates are dangerous:** An uncalibrated prediction like $\text{RUL} = 14.2\text{ hours}$ invites a mission commander to launch a 13-hour combat mission. If the true remaining life is 11 hours, the airframe is lost.
+**The fleet.** Each trajectory is one tail with its own seed: its own build spread, sensor noise and wear-rate
+multipliers.
 
-ANUMAAN grounds prognostics on a disciplined multi-source framework:
+- Slow wear processes (`backend/sim/wear.py`, `configs/wear.json`) drive registry faults: bearing wear, radiator and
+  oil-cooler fouling, injector coking and turbo bearing wear, where they apply to the engine.
+- Each tail draws a lognormal per-process rate multiplier, and the rate grows with load and oil temperature.
+- The tail flies a cruise point (70 % lever, 8,000 ft). Each plant second stands for 2 flight hours of wear.
+- End of life is the first wear process reaching full severity.
+- The tail's residual detector is calibrated while healthy, exactly as in service.
+- 200 tails per engine (seeds 5000 and up, disjoint from the signature tails 11/12 and the test tails 1001/1002).
 
-| Data Source | Operational Role | Engineering Boundary |
-| :--- | :--- | :--- |
-| **Physics Damage Kinetics**<br/>(Thermodynamic Stressors) | Arrhenius thermal aging, Paris-Erdogan crack growth, and Archard wear. | Provides the deterministic baseline wear rate $\mu_{\text{physics}}(t)$. |
-| **Fleet Maintenance Records**<br/>(Airbase Depot Vaults) | Historical teardown measurements, oil spectrographic wear counts. | Forms the prior population distribution over component life. |
-| **Test-Rig / HIL Fault Injections**<br/>(Controlled Ground Runs) | Non-linear fault progression maps and sensor cross-couplings. | Used exclusively for signature validation, not absolute life claims. |
-| **In-Flight Live Telemetry**<br/>(Active Aircraft Flight Mission) | Real-time observation of cumulative stress cycles and residual drift rate $\beta(t)$. | Drives individual engine stochastic Wiener drift. |
+**Features and model.** At every sample the model sees what the twin sees: the mean residual z-vector of the last
+window and the flight hours so far. The label (hours to end of life) comes from the plant and is training data only;
+it is never an input at runtime.
 
----
+- The point estimate comes from gradient-boosted trees (`HistGradientBoostingRegressor`).
+- The interval is *split conformal*. It is calibrated on whole trajectories held out from training, so the unit
+  of exchangeability is the tail, not the sample (samples of one tail are strongly correlated).
+- The interval half-width is q · scale(x), with a scale that grows with the predicted RUL, because far-from-failure
+  predictions are less certain.
+- The conformal guarantee holds only for tails drawn from the same distribution. Coverage is therefore *measured* on
+  test tails the model never saw, never assumed.
 
-## Dual-Path RUL Architecture
+**Measured (SIMULATION, 200 tails per engine, 3 random splits by tail, 40 test tails each, target 95 %).**
 
-ANUMAAN computes remaining life through two independent, concurrent estimators:
-1. **Physics-of-Failure Path:** Extrapolates cumulative damage fraction $D(t)$ from [Degradation Modeling](13-degradation-modeling.md) to the critical limit $D_{\text{crit}} = 1.0$ using the current Arrhenius and Paris-Erdogan stress accumulation rates:
-   $$\widehat{\text{RUL}}_{\text{phys}} = \frac{1.0 - D(t)}{\dot{D}_{\text{current}}}$$
-2. **Data-Driven Path:** Extrapolates observed trends in degrading thermodynamic state residuals ($\Delta CHT, \Delta P_{\text{oil}}, \text{BSFC}$) to their operational boundary limits using an online exponential Wiener drift estimator.
+| Engine | Mean life (h) | RMSE (h) | Empirical coverage (mean, per split) | Mean interval width (h) |
+|---|---|---|---|---|
+| Austro AE300 | 974 | 199 | 95.3 % (95.9 / 95.9 / 93.9) | 935 |
+| Rotax 912 iS | 1,011 | 225 | 94.2 % (95.4 / 94.6 / 92.6) | 962 |
+| Rotax 914 | 937 | 166 | 95.2 % (96.8 / 92.2 / 96.5) | 875 |
+| Rotax 915 iS | 924 | 172 | 93.5 % (95.6 / 89.1 / 95.9) | 798 |
+| VRDE 2.2 L | 960 | 176 | 95.0 % (95.2 / 95.9 / 93.8) | 836 |
 
-The two estimates are combined into $\widehat{\text{RUL}}_{\text{point}}$. When the two paths diverge by more than a calibrated threshold, that divergence is itself annunciated to the propulsion engineer as an alert of unmodeled operational dynamics.
+**What the numbers mean.**
 
-```mermaid
-flowchart TB
-    subgraph Estimators["Dual-Path Estimator"]
-        PoF["Physics-of-Failure Path<br/>(Arrhenius & Paris-Erdogan Kinetics)"]
-        Data["Data-Driven Path<br/>(Wiener Drift Process)"]
-        PoF --> Point["Combined Point Estimate RUL_hat"]
-        Data --> Point
-    end
+- Coverage averages 93.5–95.3 % across the engines. Individual splits range from 89 % to 97 %.
+- The 915 iS falls short: one of its three splits covered only 89.1 %, and its mean is 93.5 %. With 40 test tails
+  per split, coverage moves by a few points between splits. The 915 is therefore reported as close to, but below,
+  the 95 % target. It is not rounded up.
+- The intervals are wide, about 85–95 % of the mean life. With residual evidence alone, a healthy engine early in
+  life looks much like any other, so far from failure the model can honestly say little.
+- The interval narrows as wear becomes visible in the residuals.
+- These figures describe the simulated fleet only. They are not field accuracy.
 
-    subgraph Conformal["Split Conformal Prediction Engine"]
-        Calib["Calibration Set (Held-Out Mission Trajectories)"]
-        Scores["Nonconformity Scores: s_i = |y_true - y_hat| / sigma_hat"]
-        Quantile["Empirical Quantile q_hat (1 - alpha = 0.95)"]
-        Calib --> Scores
-        Scores --> Quantile
-    end
+**In service.** `backend/prognose/rul_service.py` loads the engine type's model from `var/models/rul_<engine>.pkl`
+and builds the same features from the live residuals. Each tick it returns the point estimate, the lower and upper
+bound, and the coverage target.
 
-    Point --> Final["Certified Conformal Prediction Interval:<br/>[RUL_low, RUL_high] with 95% Guaranteed Coverage"]
-    Quantile --> Final
-    Final --> Decision["Go / No-Go Launch & Dynamic Flight Derating"]
-```
+- Without a trained model the RUL is reported as **UNAVAILABLE**, with the command that trains it. It never shows an
+  invented number.
+- The console's time-to-limit card shows the RUL with its band.
+- To retrain an engine's model and refresh its report, run
+  `python -m backend.evaluation.sim_rul <engine_id> 200`; the report goes to
+  `reports/evaluation/sim_rul_<engine>_<date>.json`.
 
----
+**Not yet built.** There are two gaps:
 
-## Split Conformal Prediction Formulation
-
-To provide aerospace-grade statistical guarantees without arbitrary Gaussian assumptions, ANUMAAN implements **Inductive Split Conformal Prediction**:
-
-### 1. Calibration on Exchangeable Missions
-Given a held-out calibration set of $n$ complete mission trajectories that played no role in fitting the point estimator:
-$$\mathcal{D}_{\text{cal}} = \big\{ (\mathbf{x}_j, \text{RUL}_j) \big\}_{j=1}^n$$
-
-Because consecutive time samples within a flight are auto-correlated, **the exchangeable unit is the complete mission trajectory**, not individual ticks.
-
-### 2. Normalized Nonconformity Scores
-For each calibration mission $j$, the normalized nonconformity score accounts for heteroscedastic uncertainty:
-$$s_j = \frac{|\text{RUL}_j - \widehat{\text{RUL}}(\mathbf{x}_j)|}{\hat{\sigma}(\mathbf{x}_j)}$$
-
-Where $\hat{\sigma}(\mathbf{x}_j)$ is a local difficulty estimator reflecting component age and operating temperature.
-
-### 3. Finite-Sample Quantile Calculation
-For a target miscoverage rate $\alpha = 0.05$ (guaranteeing 95% statistical coverage), the conformal correction $q_{1-\alpha}$ is the adjusted empirical quantile:
-$$q_{1-\alpha} = \text{Quantile}\left( \{s_j\}_{j=1}^n, \; \frac{\lceil (n+1)(1-\alpha) \rceil}{n} \right)$$
-
-### 4. Certified Interval Generation
-For any incoming live flight telemetry frame $\mathbf{x}_{n+1}$:
-$$\mathcal{C}_{0.95}(\mathbf{x}_{n+1}) = \left[ \widehat{\text{RUL}}_{n+1} - q_{1-\alpha} \cdot \hat{\sigma}_{n+1}, \quad \widehat{\text{RUL}}_{n+1} + q_{1-\alpha} \cdot \hat{\sigma}_{n+1} \right]$$
-
-This satisfies the finite-sample distribution-free coverage guarantee:
-$$\mathbb{P}\Big( \text{RUL}_{\text{true}} \in \mathcal{C}_{0.95}(\mathbf{x}_{n+1}) \Big) \ge 0.95$$
-
----
-
-## Operational Presentation: Respecting Airworthiness Honesty
-
-On the Ground Control Station displays, remaining useful life is strictly rendered as:
-
-$$\mathbf{RUL} = [142\text{ hrs}, \; 186\text{ hrs}] \quad (95\%\text{ Confidence Interval, } \hat{\mu} = 164\text{ hrs})$$
-
-- **The Conservative Lower Bound Governs Decisions:** The tactical mission planner compares planned mission duration against $\text{RUL}_{\text{lower}} = 142\text{ hrs}$, never against the point estimate $\hat{\mu} = 164\text{ hrs}$.
-- **Zero False Precision:** The system never issues false exact scalars like $164.21\text{ hrs}$.
+- **A second, independent RUL path.** The plan calls for a physical damage-accumulation path next to the data path,
+  with disagreement flagged to the engineer. Today only the data path runs.
+- **Coverage per operating regime.** The fleet flies one cruise regime, so there is nothing yet to report per regime.
 
 ---
 

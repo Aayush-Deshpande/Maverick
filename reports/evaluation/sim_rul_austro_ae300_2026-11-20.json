@@ -1,0 +1,37 @@
+{
+ "engine_id": "austro_ae300",
+ "evidence_class": "SIMULATION",
+ "trajectories": 200,
+ "samples": 4980,
+ "target_coverage": 0.95,
+ "hours_per_step": 2.0,
+ "mean_life_h": 974.02,
+ "runs": [
+  {
+   "split": 0,
+   "test_trajectories": 40,
+   "rmse_h": 189.5959366534069,
+   "coverage": 0.9594594594594594,
+   "mean_width_h": 956.1115755218588
+  },
+  {
+   "split": 1,
+   "test_trajectories": 40,
+   "rmse_h": 216.03104035031,
+   "coverage": 0.9593082400813835,
+   "mean_width_h": 989.268448915079
+  },
+  {
+   "split": 2,
+   "test_trajectories": 40,
+   "rmse_h": 190.34753474322267,
+   "coverage": 0.9390715667311412,
+   "mean_width_h": 860.2116295763216
+  }
+ ],
+ "mean": {
+  "rmse_h": 198.6581705823132,
+  "coverage": 0.9526130887573281,
+  "mean_width_h": 935.1972180044198
+ }
+}
