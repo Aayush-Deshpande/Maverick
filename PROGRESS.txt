@@ -1136,3 +1136,18 @@ Changed: frontend utils/labels.tsx (+test; fetch + context, exact -> {n} pattern
 Browser (912, F23 injected, training off): banner "No-go" + sentence + plain reasons; 3D lights exactly the 4
   Oil_Tank nodes from the diagnosis (data-highlighted-nodes hook).
 Tests: vitest 25, tests/status 15, tests/dynamic 15.
+
+=== 20 Nov 2026 Main landing import: standards check against Beta's rules (Prasad: "our pwd had rules about
+    maintainability, consistency, code standards, folder structure, CLAUDE.md/AGENTS.md") (AI: Claude Code)
+Commits: ef6a397 (import, amended: an earlier commit 684e3ed had swept the staged import in under a "PROGRESS only"
+  message; it was local and unpushed and is now one accurate commit), then this one.
+Checked against frontend/AGENTS.md and D5/D49/D57:
+  - FIXED: App.tsx "3D twin" tab pointed at main's /twin/index.html (own fault->part map, legacy API). Restored to
+    Beta's apps/threejs_twin on /api/v1, so every 3D surface highlights from configs/faults.json + components.
+  - OK: the film's "POST /api/engines/.../faults" is display text only (no request is sent).
+  - OK: engine GLBs stay Beta's single copy (D49); main's compressed copies were not taken.
+  - DOCUMENTED: frontend/AGENTS.md "Today" rewritten (was main@9b5942e): product layer vs presentation layer
+    (D57), what each folder is, the survey adapter, and the kept debts (second three.js + second component map in
+    public/twin used only by the film; survey polling).
+  - Not imported from main (backend/apps/tests/web/review/output/task.md): listed in RESUME HERE.
+

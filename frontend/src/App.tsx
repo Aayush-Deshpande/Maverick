@@ -164,7 +164,9 @@ export function App() {
             </div>
             <iframe
               title="ANUMAAN interactive engine twin"
-              src={`/twin/index.html?backend=${encodeURIComponent(serverUrl)}`}
+              // Beta's twin (apps/threejs_twin, on /api/v1 since M0-10): highlights from the shared registry and manifests.
+              // main's /twin page is used only by the landing film (presentation, D57).
+              src={`${serverUrl}/apps/threejs_twin/?backend=${encodeURIComponent(serverUrl)}`}
               className="block h-[calc(100vh-12rem)] min-h-[680px] w-full bg-[#e8e7df]"
               allow="fullscreen"
             />
