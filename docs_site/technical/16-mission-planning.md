@@ -80,10 +80,67 @@ The first line states the evidence class.
 
 ---
 
-## 6. Not yet built
+## 6. Terrain-aware route planning
 
-- Terrain-aware route planning (Copernicus DEM, A* with clearance and climb feasibility) and replanning when engine health drops.
-- The glide-reachability map driven by the aircraft's real position.
+The planner answers one operational question: *can this aircraft, with this engine in its present condition, get from here to there over the terrain?*
+
+**Terrain.** Elevation comes from the Copernicus GLO-30 digital surface model (30 m posts), the public ESA dataset on the AWS open-data registry. The demonstration tile N34 E077 covers Leh and the Nubra valley. As a check, the model reads 3263 m at Leh airfield, against a published elevation of about 3256 m. If the tile has not been downloaded, the service reports TERRAIN UNAVAILABLE. It never plans over an assumed flat earth.
+
+**Search.** The tile is divided into planning cells of 60 × 60 posts (about 1.85 km × 1.5 km at 34° N). Each cell carries the **highest** elevation inside it, which makes the clearance check conservative. Altitude is divided into 1000 ft layers. An A* search moves level to the eight neighbouring cells, or climbs or descends one layer inside a cell (a climbing orbit). A diagonal move must clear both cells it cuts across. A state is usable only when:
+
+$$h_{\text{layer}} \ge z_{\max}(\text{cell}) + 1000\ \text{ft} \quad\text{and}\quad h_{\text{layer}} \le h_{\text{ceiling}}(\text{engine health})$$
+
+The route cost is distance plus three metres for every metre climbed (an energy weighting). The heuristic is the great-circle distance to the goal, which never overestimates, so the route found is the cheapest one available.
+
+**Engine health enters through the service ceiling.** Available power is computed by the calibrated engine model at full lever and maximum-continuous rpm in the actual atmosphere. It is then multiplied by a **power factor**:
+
+$$\text{PF} = \min\!\left(1, \frac{\text{MAP}_{\text{measured}}}{\text{MAP}_{\text{model}}}\right) \cdot \min\!\left(1, \frac{\text{rpm}_{\text{measured}}}{\text{rpm}_{\text{model}}}\right)$$
+
+The model term is evaluated at the measured lever, air and rpm. The rpm term is used only with a fixed-pitch propeller, where lost torque shows as lost rpm. The power factor uses measured evidence only, never the list of injected faults. With no running engine there is no evidence, and the planner refuses to assume a healthy engine.
+
+Climb rate follows from a drag polar for the airframe:
+
+$$\text{ROC} = \frac{\eta_p P_{\text{avail}} \cdot \text{PF} - D \cdot V}{W}, \qquad D = \tfrac12 \rho V^2 S \left(C_{D0} + k C_L^2\right)$$
+
+Climb is flown at constant equivalent airspeed. The service ceiling is the highest layer where the climb rate is at least 100 ft/min. The airframe values describe a generic single-engine MALE UAV. They are labelled ASSUMED, because no specific airframe's data is public.
+
+**Refusal and replanning.** When no route exists, the planner searches again with a raised ceiling to find the lowest altitude that any route over the terrain needs. It then states both numbers. Replanning means planning again from the present position with the present power factor.
+
+**Measured (SIMULATION, Rotax 912 iS Sport, ISA, Leh → Thoise, over the Ladakh range):**
+
+| Power factor | Service ceiling | Result |
+| :--- | :--- | :--- |
+| 1.00 (healthy) | 20,000 ft | Route found: 61 km, highest layer 20,000 ft, minimum terrain clearance 1,074 ft |
+| 0.85 | 18,000 ft | Refused: terrain on every route needs 20,000 ft |
+| 0.70 | 15,000 ft | Refused, same reason |
+| 0.50 | 9,000 ft | Refused, same reason |
+
+Power factor measured at 90 % lever, 9000 ft:
+
+| Engine and fault (severity 1) | Power factor |
+| :--- | :--- |
+| Healthy tails | 0.98–1.00 |
+| Rotax 912 air-filter blockage | 0.95 |
+| Rotax 914 wastegate stuck open | 0.54 |
+| VRDE wastegate stuck open | 0.37 |
+| AE300 boost leak | 1.00 |
+
+The AE300 boost leak is a known limitation. At that operating point the governed diesel still reaches its manifold-pressure target, so the measured air path shows no loss.
+
+**API.**
+
+- `GET /api/v1/terrain/elevation?lat=&lon=`
+- `POST /api/v1/planning/route` with the engine, start (with altitude), goal, ISA deviation and an optional operator power factor. The response returns the waypoints with altitude, terrain and climb rate, the distance, the minimum clearance, the ceiling, the power-factor source (MEASURED with its ratios, or OPERATOR), and the refusal reason when there is one.
+
+**Acceptance test (T-MIS-6).** The test uses synthetic terrain: a 5800 m ridge with a single 4500 m pass. With a healthy engine the route goes through the pass and never over the ridge. Without the pass, the route is refused with its reason. At power factor 0.7 the pass is no longer reachable, so the route is refused, and a goal on the same side of the ridge is still planned below the reduced ceiling.
+
+---
+
+## 7. Not yet built
+
+- The glide-reachability map driven by the aircraft's real position, and one-click divert through the planner.
+- A map view of the route in the console.
+- Wind and no-fly zones in the route cost.
 - A converter for the recordings made by the earlier prototype.
 
 ---
