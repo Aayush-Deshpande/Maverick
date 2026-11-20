@@ -1,0 +1,16 @@
+{
+  "schema_version": "wear/1",
+  "description": "Slow wear processes (card M4-01, P Part 4 Step 4.1). Each grows the severity of a registry fault (0..1, the registry's own parameter effects) over operating hours, scaled by its stressor. Rates are ASSUMED (no public wear data for these engines): chosen so a healthy tail reaches severity 1 in a few hundred to a few thousand flight hours. Per-tail spread: lognormal multiplier.",
+  "tail_rate_sigma": {"value": 0.35, "status": "ASSUMED", "ref": "lognormal sigma of the per-tail rate multiplier (manufacturing and usage spread)"},
+  "processes": {
+    "status": "ASSUMED",
+    "ref": "ANUMAAN wear laws from P Step 4.1; rate = severity per flight hour at stress 1",
+    "value": [
+      {"fault_id": "F26", "name": "main bearing wear", "rate_per_h": 0.0006, "stress": "load_oil_temp", "oil_t_ref_c": 100.0, "oil_t_scale_c": 20.0},
+      {"fault_id": "F21", "name": "radiator fouling", "rate_per_h": 0.0009, "stress": "hours"},
+      {"fault_id": "F25", "name": "oil cooler fouling", "rate_per_h": 0.0007, "stress": "hours"},
+      {"fault_id": "F06", "name": "injector coking (low load)", "rate_per_h": 0.0015, "stress": "low_load", "low_load_fraction": 0.4, "cylinder": "random"},
+      {"fault_id": "F17", "name": "turbo bearing wear", "rate_per_h": 0.0008, "stress": "load_oil_temp", "oil_t_ref_c": 100.0, "oil_t_scale_c": 20.0}
+    ]
+  }
+}

@@ -1,89 +1,99 @@
-"""Virtual Sensor Synthesis Module (B4.2, CAP-11, DRDO PS-26054).
+"""Virtual sensors (card M1-17, idea text section 15, I-01): quantities no sensor measures, estimated from the
+measured Frame with the M1 model equations and calibrated constants. They never read plant truth (T-DYN-4) and
+every input that is missing makes the output None (NO DATA), never a substituted number. Quality: VIRTUAL.
 
-Synthesizes unmeasured physical quantities from physical thermodynamic state and UKF estimates:
-1. P_max (bar): Peak in-cylinder combustion pressure.
-2. TIT (degC): Turbine Inlet Temperature (critical turbine/turbocharger thermal limit).
-3. h_min (um): Minimum journal bearing hydrodynamic oil film thickness.
-4. P_ind (kW): Indicated engine power.
+  Peak cylinder pressure (bar):
+    p_comp = MAP * CR^n                                        (polytropic compression of the measured charge)
+    dp_cv  = (gamma - 1) * m_burnt * LHV / V_c,  V_c = V_d / (CR - 1)
+    m_burnt per cycle = min(fuel, air / AFR_stoich) from the measured fuel flow and speed-density air at MAP
+    P_max  = p_comp + f_peak * dp_cv
+  Turbine inlet temperature (C), turbo engines only:
+    TIT = EGT_mean - f_manifold * (EGT_mean - T_amb)     (measured port EGTs, manifold heat loss)
+    A turbo shaft-power balance cannot give TIT here: the wastegate bypasses an unknown share of the exhaust, and
+    assuming full turbine flow put TIT 400-500 C below the measured port EGT (checked 20 Nov 2026).
+  Minimum oil-film thickness (um) - Ocvirk short journal bearing:
+    W = mu U L^3 / (4 c^2) * eps / (1 - eps^2)^2 * sqrt(pi^2 (1 - eps^2) + 16 eps^2),   h_min = c (1 - eps)
+    W = peak gas force on one bearing, U = journal surface speed, mu = Vogel viscosity at the measured oil T
+  Indicated power (kW): m_burnt * LHV * eta_i (eta_i CALIBRATED in backend/sim/engine.py).
+Bearing geometry is ASSUMED (configs/physics virtual_sensors) and labelled as such.
 """
-
 from __future__ import annotations
 
 import math
-from typing import Dict, List, Optional
-import numpy as np
+from typing import Dict, Optional
 
 from backend.core.frame import Frame
 from backend.physics.engine_config import EngineConfig
+from backend.sim.atmosphere import R_DRY
+from backend.sim.engine import MeanValueEngine
+from backend.sim.params import physics_values
+from backend.sim.thermal import oil_viscosity_mpas
+
+KELVIN = 273.15
+PA_PER_BAR = 1e5
+PA_PER_KPA = 1e3
+S_PER_H = 3600.0
 
 
 class VirtualSensorSynthesizer:
-    """Synthesizes high-fidelity virtual sensor streams from measurable telemetry and UKF state."""
-
     def __init__(self, cfg: EngineConfig) -> None:
         self.cfg = cfg
+        self.ph = physics_values(cfg.engine_id, "virtual_sensors")
+        self.oil = physics_values(cfg.engine_id, "oil")
+        model = MeanValueEngine(cfg)                     # calibrated constants only (eta_i, VE, fuel properties)
+        self.eta_i = model.combustion.eta_i
+        self.lhv = model.combustion.lhv_j_kg
+        self.afr = model.combustion.stoich_afr
+        self.eta_v = model.induction.eta_v
+        self.eta_c = model.turbo.eta_c if model.turbo is not None else None
+        self.n = cfg.cylinder_count
         self.cr = cfg.layout.compression_ratio
-        self.radial_clearance_um = 25.0  # 25 um nominal journal bearing clearance
-        self.bore_m = cfg.layout.bore_mm / 1000.0
-        self.stroke_m = cfg.layout.stroke_mm / 1000.0
-        self.piston_area_m2 = math.pi * (self.bore_m / 2.0) ** 2
-        self.disp_per_cyl_m3 = self.piston_area_m2 * self.stroke_m
-        self.total_disp_m3 = self.disp_per_cyl_m3 * cfg.cylinder_count
+        self.vd_cyl = cfg.layout.displacement_cc * 1e-6 / self.n
+        self.v_c = self.vd_cyl / (self.cr - 1.0)
+        self.piston_area = math.pi * (cfg.layout.bore_mm / 2000.0) ** 2
 
-    def synthesize(
-        self,
-        frame: Frame,
-        eta_cool_mean: float = 1.0,
-        eta_rad: float = 1.0,
-    ) -> Dict[str, float]:
-        """Synthesize virtual sensor values for one Frame."""
-        rpm = max(100.0, float(frame.rpm or 0.0))
-        throttle = max(0.0, min(100.0, float(frame.throttle or 0.0)))
-        map_bar = max(0.2, (frame.map_kpa or 100.0) / 100.0)
-        oil_t = float(frame.oil_t or 85.0)
-        oil_p = max(0.1, float(frame.oil_p or 3.5))
-        egt_vals = [float(x) for x in frame.egt] if frame.egt else [650.0]
-        fuel_flow = float(frame.fuel_flow or 18.0)  # kg/h
+    def synthesize(self, frame: Frame) -> Dict[str, Optional[float]]:
+        out: Dict[str, Optional[float]] = {"P_max_bar": None, "TIT_degC": None, "h_min_um": None, "P_ind_kw": None}
+        rpm, map_kpa, fuel = frame.rpm, frame.map_kpa, frame.fuel_flow
+        if rpm is None or map_kpa is None or fuel is None or frame.oat is None or rpm <= 0:
+            return out
+        cycles = rpm / 120.0 * self.n                                         # cycles per second, all cylinders
+        t_in = frame.oat + KELVIN
+        map_pa = map_kpa * PA_PER_KPA
+        air_cyc = self.eta_v * map_pa / (R_DRY * t_in) * self.vd_cyl          # speed-density air per cycle
+        burnt = min(fuel / S_PER_H / cycles, air_cyc / self.afr)
+        out["P_ind_kw"] = burnt * self.lhv * self.eta_i * cycles / 1000.0
+        ph = self.ph
+        p_comp = map_pa * self.cr ** ph["compression_polytropic_n"]
+        dp = (ph["combustion_gamma"] - 1.0) * burnt * self.lhv / self.v_c
+        p_max = p_comp + ph["peak_pressure_fraction"] * dp
+        out["P_max_bar"] = p_max / PA_PER_BAR
+        out["TIT_degC"] = self._tit(frame)
+        out["h_min_um"] = self._h_min(frame, p_max, rpm)
+        return out
 
-        # 1. P_max (bar) - Peak in-cylinder pressure
-        gamma = 1.33
-        p_comp_bar = map_bar * (self.cr ** gamma)
-        # Combustion rise scaled by throttle and cooling efficiency
-        comb_mult = 1.0 + 1.85 * (throttle / 100.0) * max(0.3, eta_cool_mean)
-        p_max = p_comp_bar * comb_mult
+    def _tit(self, frame: Frame) -> Optional[float]:
+        if self.eta_c is None or not frame.egt or any(v is None for v in frame.egt) or frame.oat is None:
+            return None                                                       # no turbine, or a port EGT missing
+        egt = sum(frame.egt) / len(frame.egt)
+        return egt - self.ph["manifold_heat_loss_fraction"] * (egt - frame.oat)
 
-        # 2. TIT (degC) - Turbine Inlet Temperature
-        mean_egt = sum(egt_vals) / len(egt_vals)
-        # Turbochargers or exhaust manifolds concentrate heat before expansion
-        tit_delta = 25.0 + 35.0 * (throttle / 100.0) if self.cfg.is_turbocharged else 15.0
-        tit = mean_egt + tit_delta
+    def _h_min(self, frame: Frame, p_max_pa: float, rpm: float) -> Optional[float]:
+        if frame.oil_t is None:
+            return None
+        ph = self.ph
+        mu = oil_viscosity_mpas(frame.oil_t, self.oil["vogel_a_mpas"], self.oil["vogel_b"], self.oil["vogel_c"]) / 1e3
+        d = ph["bearing_diameter_mm"] / 1e3
+        length = ph["bearing_length_mm"] / 1e3
+        c = ph["bearing_radial_clearance_um"] / 1e6
+        k = mu * (math.pi * d * rpm / 60.0) * length ** 3 / (4.0 * c * c)
+        w = ph["bearing_load_share"] * p_max_pa * self.piston_area
 
-        # 3. h_min (um) - Minimum oil film thickness (Raimondi-Boyd hydrodynamic lubrication)
-        # Dynamic viscosity: mu_0 ~ 0.015 Pa*s at 80 degC, decaying exponentially with temperature
-        mu_oil = 0.015 * math.exp(-0.032 * (oil_t - 80.0))
-        n_rps = rpm / 60.0
-        # Peak bearing load
-        w_peak_n = max(1000.0, (p_max * 1e5) * self.piston_area_m2)
-        # Sommerfeld number proxy
-        p_bearing_pa = w_peak_n / (self.bore_m * 0.025)  # Projected bearing area
-        sommerfeld = (mu_oil * n_rps / p_bearing_pa) * ((0.025 / (self.radial_clearance_um * 1e-6)) ** 2)
-        # Pressure feed contribution
-        press_factor = min(1.2, oil_p / 3.0)
-        # Eccentricity ratio epsilon -> h_min = c * (1 - epsilon)
-        epsilon = 1.0 / (1.0 + math.sqrt(max(1e-6, sommerfeld * 12.0 * press_factor)))
-        h_min = self.radial_clearance_um * (1.0 - min(0.96, epsilon))
+        def load(eps: float) -> float:
+            return k * eps / (1 - eps * eps) ** 2 * math.sqrt(math.pi ** 2 * (1 - eps * eps) + 16 * eps * eps)
 
-        # 4. P_ind (kW) - Indicated Power
-        # IMEP estimate from p_max and CR
-        imep_bar = p_max * 0.22 * (throttle / 100.0) + 1.5
-        w_rad_s = rpm * 2.0 * math.pi / 60.0
-        # Work per cycle: IMEP * V_disp
-        p_ind_w = (imep_bar * 1e5 * self.total_disp_m3 * (n_rps / 2.0))
-        p_ind_kw = max(0.0, p_ind_w / 1000.0)
-
-        return {
-            "P_max_bar": round(p_max, 2),
-            "TIT_degC": round(tit, 1),
-            "h_min_um": round(h_min, 2),
-            "P_ind_kw": round(p_ind_kw, 2),
-        }
+        lo, hi = 0.0, 0.999
+        for _ in range(60):                                                   # load rises monotonically with eps
+            mid = 0.5 * (lo + hi)
+            lo, hi = (mid, hi) if load(mid) < w else (lo, mid)
+        return c * (1.0 - 0.5 * (lo + hi)) * 1e6

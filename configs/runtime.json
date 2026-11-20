@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "description": "Runtime settings (card M0-07, DECISIONS D5/D52). Read by backend/runtime/hub.py.",
+  "tick_rate_hz": 20.0,
+  "idle_tick_divisor": 5,
+  "idle_tick_divisor_note": "Engines nobody subscribes to tick at tick_rate_hz / idle_tick_divisor to save CPU/memory on small hosts; every subscribed engine ticks at full rate.",
+  "data_source": "DIRECT",
+  "data_source_note": "DIRECT: frames straight from the in-process plant. CAN (M7-02): every frame crosses a python-can bus as the v2 DBC messages (configs/can/anumaan_engine_v2.dbc), is checked by the CAN intrusion detector and decoded before the twin sees it. REPLAY is the recording hub.",
+  "default_engine_id": "rotax_912is",
+  "default_engine_id_note": "Engine every client opens on first visit (Prasad 20 Nov 2026; D25/D47: the Rotax 912 iS Sport is the reference engine and first for demos). A ?engine= URL parameter or the user's later choice overrides it.",
+  "legacy_engine_id": "rotax_912is",
+  "legacy_engine_id_note": "Engine that the deprecated /api/state, /api/control and /ws/telemetry endpoints represent (card M0-08). They are adapters onto /api/v1 and go away when every client uses /api/v1.",
+  "security": {
+    "token_env": "ANUMAAN_API_TOKEN",
+    "token_header": "X-ANUMAAN-Token",
+    "command_rate_limit": {
+      "max_commands": 20,
+      "window_s": 1.0
+    },
+    "command_log_size": 1000,
+    "cors_origins_env": "ANUMAAN_CORS_ORIGINS",
+    "cors_dev_origins": [
+      "http://localhost:5173",
+      "http://127.0.0.1:5173",
+      "http://localhost:8000",
+      "http://127.0.0.1:8000"
+    ],
+    "note": "DECISIONS D52. Command endpoints need the token when the env var is set (always set it when the server is reachable beyond this machine). Read-only endpoints stay open. CORS origins come from the env var (comma-separated); without it only the local dev origins are allowed, never '*'."
+  },
+  "sim": {
+    "internal_step_s": 0.05,
+    "time_scales": [
+      1,
+      5,
+      20,
+      60
+    ],
+    "note": "DECISIONS D8: default 1x, selectable 1/5/20/60x. Plant integrates at internal_step_s; each published frame runs time_scale * (1/tick_rate_hz) / internal_step_s steps (R 21.3). 0.05 s keeps 60x affordable (60 steps per frame); fast first-order states (MAP, spool) use the exact exponential update so they stay stable at this step (T-PHY-9, T-PHY-11)."
+  },
+  "can_interface": "virtual",
+  "can_interface_note": "python-can interface used when data_source is CAN: 'virtual' (in-process, Windows/CI) or 'socketcan' with a vcan0/can0 channel on Linux.",
+  "restart_settle_s": 60,
+  "restart_settle_s_note": "After START/RESET the start-up transient (cranking, rpm climbing, temperatures settling) is not a fault: diagnosis neither learns nor reports for this many simulated seconds, and starts again from a clean state (real engine monitors suppress diagnosis during start-up). ASSUMED."
+}

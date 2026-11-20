@@ -338,6 +338,10 @@ class SensorSanityValidator:
                         ]
                         if other_shifts and max(other_shifts) > limit * 0.6:
                             is_isolated = False # Engine-wide combustion shift, not single thermocouple drift
+                    elif ch == "OIL_PRESS" and shift < 0:
+                        # Fail-safe: one sensor cannot tell a failing pump from a drifting sender, so a FALL in oil
+                        # pressure is always treated as real and never hidden from detection/status (M2-02).
+                        is_isolated = False
                     elif ch == "OIL_TEMP":
                         cht_shifts = [
                             abs(sum(self._history[c][-q_len:]) / q_len - sum(self._history[c][:q_len]) / q_len)

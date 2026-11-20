@@ -1,0 +1,19 @@
+{
+  "schema_version": "maintenance/1",
+  "description": "Work-order rules (card M4-05, P Part 4 Step 4.5).",
+  "open_posterior": {
+    "value": 0.7,
+    "status": "ASSUMED",
+    "ref": "P Step 4.5: a hypothesis with posterior >= 0.7 opens a work order"
+  },
+  "time_to_limit_open_s": {
+    "value": 3600.0,
+    "status": "ASSUMED",
+    "ref": "a trend predicted to reach its limit within 1 h opens a work order"
+  },
+  "stable_evaluations": {
+    "value": 6,
+    "status": "ASSUMED",
+    "ref": "the same hypothesis must lead with posterior >= open_posterior on this many consecutive isolation evaluations (about 30 s on the 5-tick cadence) before a work order opens: early, unsettled rankings do not create orders"
+  }
+}

@@ -432,7 +432,6 @@
     .engine-menu { backdrop-filter: blur(12px); }
     .engine-select-trigger { background: var(--cyan-dim); }
     .engine-select-trigger:hover, .engine-select-trigger[aria-expanded="true"] { background: rgba(189,75,43,.15); }
-    .tool-btn .tkey { background: var(--cyan-dim); color: var(--cyan); }
     .tool-btn.active { color: #fff; background: var(--cyan); border-color: var(--cyan); box-shadow: none; }
     .tool-btn.active .tkey { color: #fff; background: rgba(16,27,32,.18); }
     .engine-option:hover, .engine-option.selected { background: var(--cyan-dim); border-color: var(--cyan-border); }
@@ -442,19 +441,8 @@
     .station-pill .key { background: rgba(189,75,43,.12); }
     .fault-select { color: var(--white); background: #f7f6f0; border-color: var(--cyan-border); }
     .fault-select option { color: var(--white); background: #f7f6f0; }
-    .fault-title, .fault-alert-icon, .fault-alert-title { color: #a63c32; }
-    .fault-close:hover { color: var(--white); }
-    .fault-btn { color: #87342b; background: rgba(166,60,50,.08); border-color: rgba(166,60,50,.28); }
-    .fault-btn:hover { background: rgba(166,60,50,.14); border-color: #a63c32; }
-    .fault-btn.clear { color: #36724d; background: rgba(54,114,77,.08); border-color: rgba(54,114,77,.28); }
-    .fault-btn.clear:hover { background: rgba(54,114,77,.14); }
-    .fault-range-row input { accent-color: var(--cyan); }
-    .fault-range-value { color: #94601d; }
-    .diagnostic-state { color: #36724d; }
-    .diagnostic-state.alert { color: #94601d; }
-    .diagnostic-state.fault { color: #a63c32; }
-    .fault-hud-alert { background: rgba(166,60,50,.1); border-color: #a63c32; }
-    .fault-alert-desc { color: #73302a; }
+    .fault-btn { color: #87342b; background: rgba(166,60,50,.08); }
+    .fault-btn.clear { color: #36724d; background: rgba(54,114,77,.08); }
     .fault-alert-desc { color: #73302a; }
     .evidence-chip { color: #805118; background: rgba(148,96,29,.09); border-color: rgba(148,96,29,.24); }
     .diagnostic-footer { border-color: var(--cyan-border); }
@@ -462,6 +450,9 @@
     .loading-bar, .load-bar-wrap { background: rgba(16,27,32,.1); }
     .vignette { background: none; }
     .key-hint { color: rgba(189,75,43,.72); }
+    /* The hint block sits under the bottom fault/regime bars on anything but a very wide screen; the toolbar
+       buttons already show their keys, so hide it rather than overlap. */
+    @media (max-width: 1899px) { .key-hint { display: none; } }
 
     /* ── READABILITY & DECLUTTER PASS ──────────────────────────────
        The base styles above were tuned for a dense dark HUD (7-9px mono
@@ -731,7 +722,7 @@ const ENGINE_PROFILES = {
     name: 'ROTAX 912 iS',
     title: 'ROTAX 912 iS SPORT',
     subtitle: '100 HP NATURALLY ASPIRATED EFI • DUAL FADEC (LANE A/B) • PS-26054',
-    glb: 'assets/models/draco/rotax_912is.glb',
+    glb: '/models/rotax_912is.glb',
     camPos: [0, 0, 304],
     camTarget: [1.932, 61.648, -35.324],
     subsystems: {
@@ -792,7 +783,7 @@ const ENGINE_PROFILES = {
     name: 'ROTAX 914 F',
     title: 'ROTAX 914 F TURBO',
     subtitle: '115 HP TURBOCHARGED ROTAX TCU • EXHAUST WASTEGATE ACTUATION',
-    glb: 'assets/models/draco/rotax_914.glb',
+    glb: '/models/rotax_914.glb',
     camPos: [0, 0, 1920],
     camTarget: [-96.029, -0.100, -48.409],
     subsystems: {
@@ -853,7 +844,7 @@ const ENGINE_PROFILES = {
     name: 'ROTAX 915 iS',
     title: 'ROTAX 915 iS TURBO',
     subtitle: '141 HP TURBO INTERCOOLED FADEC • CRUISE ALTITUDE 23,000 FT',
-    glb: 'assets/models/draco/rotax_915is.glb',
+    glb: '/models/rotax_915is.glb',
     camPos: [0, 0, 3.28],
     camTarget: [-0.241, -0.076, -0.124],
     subsystems: {
@@ -950,49 +941,49 @@ const ENGINE_FAULT_TARGETS = {
   },
   rotax_915is: {
     MISFIRE: {
-      parts: [], focusPoint: [-0.05, 0.12, -0.08], angle: -45, elev: 20,
+      parts: ['Main engine'], angle: -45, elev: 18,
       label: 'CYLINDER MISFIRE', shortLabel: 'MISFIRE',
-      description: 'Combustion imbalance detected at cylinder bank. 3D reticle marks combustion chamber zone.'
+      description: 'Combustion imbalance detected. The engine core is highlighted for inspection.'
     },
     COOLING_DEGRADATION: {
-      parts: ['Air baffles'], angle: -35, elev: 23,
+      parts: ['Air baffles', 'Main engine'], angle: -35, elev: 23,
       label: 'COOLING DEGRADATION', shortLabel: 'COOLING',
-      description: 'Engine ram-air cooling baffles highlighted while plant models reduced heat rejection.'
+      description: 'The engine and its cooling baffles are highlighted while the plant models reduced heat rejection.'
     },
     OIL_PRESSURE_LOSS: {
       parts: ['Oil tank'], angle: 130, elev: 22,
       label: 'OIL PRESSURE LOSS', shortLabel: 'OIL PRESSURE',
-      description: 'Oil reservoir highlighted while scavenge pressure drop is simulated.'
+      description: 'Oil pressure loss is active in the physics plant; the reservoir is highlighted as system context.'
     },
     AIR_FILTER_BLOCKAGE: {
       parts: ['Air baffles'], angle: 75, elev: 24,
       label: 'AIR FILTER BLOCKAGE', shortLabel: 'AIRFLOW',
-      description: 'Air induction baffles highlighted as intake airflow restriction context.'
+      description: 'The intake filter is not separately named in this asset; the intake-air baffles are highlighted as context.'
     },
     BOOST_LEAK: {
       parts: ['Intercooler'], angle: 90, elev: 22,
       label: 'BOOST LEAK', shortLabel: 'BOOST LEAK',
-      description: 'Charge-air intercooler assembly highlighted for pressure seal inspection.'
+      description: 'Charge-air pressure loss is active; the intercooler and charge-air path are highlighted.'
     },
     WASTEGATE_STUCK_OPEN: {
       parts: ['Overboost valve', 'Magnetovalve'], angle: 180, elev: 18,
       label: 'WASTEGATE STUCK OPEN', shortLabel: 'BOOST CONTROL',
-      description: 'Overboost valve and electronic magnetovalve actuator highlighted.'
+      description: 'Boost control is outside its expected range. The overboost and control valves are highlighted.'
     },
     TURBO_BEARING_WEAR: {
-      parts: ['Overboost valve', 'Magnetovalve'], focusPoint: [-0.35, -0.38, 0.02], angle: 180, elev: 18,
+      parts: ['Main engine'], angle: 180, elev: 18,
       label: 'TURBO BEARING WEAR', shortLabel: 'TURBO BEARINGS',
-      description: 'Garrett turbocharger rotating assembly and boost control valves highlighted.'
+      description: 'Turbo internals are not separated in this asset; the engine assembly is highlighted as visual context.'
     },
     SENSOR_STUCK: {
-      parts: ['Ambient sensor', 'ECU'], angle: -45, elev: 20,
+      parts: ['Main engine'], angle: -45, elev: 18,
       label: 'CYLINDER HEAD SENSOR STUCK', shortLabel: 'SENSOR STUCK',
-      description: 'Ambient/temperature sensor and ECU telemetry interface highlighted.'
+      description: 'A cylinder-head temperature sensor is frozen while plant temperature continues to evolve.'
     },
     SENSOR_BIAS_DRIFT: {
-      parts: ['Ambient sensor', 'ECU'], angle: -45, elev: 20,
+      parts: ['Main engine'], angle: -45, elev: 18,
       label: 'CYLINDER HEAD SENSOR DRIFT', shortLabel: 'SENSOR DRIFT',
-      description: 'Sensor channel calibration drift highlighted on telemetry sensor and ECU bus.'
+      description: 'A cylinder-head temperature channel drifts away from its true plant value.'
     }
   }
 };
@@ -1157,20 +1148,20 @@ scene.add(beaconGroup);
 
 // Outer rotating reticle ring
 const beaconRingGeo = new THREE.RingGeometry(0.85, 0.95, 32);
-const beaconRingMat = new THREE.MeshBasicMaterial({ color: 0x00e5ff, side: THREE.DoubleSide, transparent: true, opacity: 0.85 });
+const beaconRingMat = new THREE.MeshBasicMaterial({ color: 0xbd4b2b, side: THREE.DoubleSide, transparent: true, opacity: 0.85 });
 const beaconRing = new THREE.Mesh(beaconRingGeo, beaconRingMat);
 beaconRing.rotation.x = Math.PI / 2;
 beaconGroup.add(beaconRing);
 
 // Inner pulsing core
 const beaconCoreGeo = new THREE.SphereGeometry(0.22, 16, 16);
-const beaconCoreMat = new THREE.MeshBasicMaterial({ color: 0x00e5ff, transparent: true, opacity: 0.9 });
+const beaconCoreMat = new THREE.MeshBasicMaterial({ color: 0xbd4b2b, transparent: true, opacity: 0.9 });
 const beaconCore = new THREE.Mesh(beaconCoreGeo, beaconCoreMat);
 beaconGroup.add(beaconCore);
 
 // Vertical laser tether line
 const tetherGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, -2, 0)]);
-const tetherMat = new THREE.LineBasicMaterial({ color: 0x00e5ff, transparent: true, opacity: 0.65 });
+const tetherMat = new THREE.LineBasicMaterial({ color: 0xbd4b2b, transparent: true, opacity: 0.65 });
 const beaconTether = new THREE.Line(tetherGeo, tetherMat);
 beaconGroup.add(beaconTether);
 
@@ -1201,20 +1192,14 @@ const faultMat = new THREE.MeshStandardMaterial({
 // Used only when a fault location exists but the GLB has no separable component mesh.
 const faultLocator = new THREE.Group();
 const faultLocatorRing = new THREE.Mesh(
-  new THREE.TorusGeometry(1, 0.05, 12, 48),
-  new THREE.MeshBasicMaterial({ color: 0xff6600, transparent: true, opacity: 0.95, depthTest: false })
+  new THREE.TorusGeometry(1, 0.055, 8, 48),
+  new THREE.MeshBasicMaterial({ color: 0xff7a18, transparent: true, opacity: 0.95, depthTest: false })
 );
 const faultLocatorCore = new THREE.Mesh(
-  new THREE.SphereGeometry(0.14, 16, 12),
-  new THREE.MeshBasicMaterial({ color: 0xffa000, transparent: true, opacity: 0.95, depthTest: false })
+  new THREE.SphereGeometry(0.13, 16, 12),
+  new THREE.MeshBasicMaterial({ color: 0xff9a35, transparent: true, opacity: 0.9, depthTest: false })
 );
-const tickGeo = new THREE.BoxGeometry(0.04, 0.35, 0.04);
-const tickMat = new THREE.MeshBasicMaterial({ color: 0xff8a24, transparent: true, opacity: 0.95, depthTest: false });
-const tickN = new THREE.Mesh(tickGeo, tickMat); tickN.position.y = 1.15;
-const tickS = new THREE.Mesh(tickGeo, tickMat); tickS.position.y = -1.15;
-const tickW = new THREE.Mesh(tickGeo, tickMat); tickW.position.x = -1.15; tickW.rotation.z = Math.PI / 2;
-const tickE = new THREE.Mesh(tickGeo, tickMat); tickE.position.x = 1.15; tickE.rotation.z = Math.PI / 2;
-faultLocator.add(faultLocatorRing, faultLocatorCore, tickN, tickS, tickW, tickE);
+faultLocator.add(faultLocatorRing, faultLocatorCore);
 faultLocator.renderOrder = 1000;
 faultLocator.visible = false;
 scene.add(faultLocator);
@@ -1449,9 +1434,7 @@ function applyStationInspection(root, stationId, profile) {
     const name = child.name.toLowerCase();
     const isStation = patterns.some(p => name.includes(p));
     if (isStation) {
-      const orig = originalMaterials.get(child.uuid);
-      child.material = orig || child.material;
-      if (child.material) child.material.wireframe = isWireframe;
+      child.material = faultMat;
     } else {
       child.material = ghostMat;
     }
@@ -1710,23 +1693,14 @@ function toggleWireframe() {
 let activeFault = null;
 
 function faultOptionsForEngine(engineId) {
-  const backendFaults = BACKEND_ENGINE_PROFILES[engineId]?.faults;
-  if (backendFaults && backendFaults.length) {
-    return backendFaults.filter(fault => ENGINE_FAULT_TARGETS[engineId]?.[fault.mode]);
-  }
-  if (ENGINE_FAULT_TARGETS[engineId]) {
-    return Object.entries(ENGINE_FAULT_TARGETS[engineId]).map(([mode, target], idx) => ({
-      mode,
-      id: target.id || (idx + 1),
-      label: target.label,
-      shortLabel: target.shortLabel,
-      description: target.description,
-      per_cylinder: false,
-      scalar_visible: true,
-      layer: 'L2'
+  if (engineId === 'rotax_912is') {
+    return Object.entries(ENGINE_FAULT_TARGETS[engineId]).map(([mode, target]) => ({
+      mode, id: target.id, label: target.label, description: target.description,
+      per_cylinder: false, scalar_visible: true, layer: 'L2'
     }));
   }
-  return [];
+  return (BACKEND_ENGINE_PROFILES[engineId]?.faults || [])
+    .filter(fault => ENGINE_FAULT_TARGETS[engineId]?.[fault.mode]);
 }
 
 function updateFaultOptions(engineId) {
@@ -1741,30 +1715,26 @@ function updateFaultOptions(engineId) {
   if (!choices.length) {
     const option = document.createElement('option');
     option.value = '';
-    option.textContent = 'No mapped plant faults available';
+    option.textContent = backendProfilesLoaded ? 'No mapped plant faults available' : 'Waiting for physics backend…';
     select.appendChild(option);
   } else {
     choices.forEach((fault) => {
       const option = document.createElement('option');
       option.value = fault.mode;
-      const target = ENGINE_FAULT_TARGETS[engineId]?.[fault.mode];
-      const lbl = target ? target.label : fault.mode;
-      option.textContent = `${fault.id ? `${String(fault.id).padStart(2, '0')} · ` : ''}${lbl}${fault.layer === 'L3' ? ' · SENSOR' : ''}`;
-      option.title = fault.description || (target ? target.description : '');
+      option.textContent = `${fault.id ? `${String(fault.id).padStart(2, '0')} · ` : ''}${ENGINE_FAULT_TARGETS[engineId][fault.mode].label}${fault.layer === 'L3' ? ' · SENSOR' : ''}`;
+      option.title = fault.description;
       select.appendChild(option);
     });
     if (choices.some(fault => fault.mode === selectedMode)) select.value = selectedMode;
   }
-  select.disabled = !choices.length;
-  document.getElementById('btn-inject-fault').disabled = !choices.length;
-  document.getElementById('btn-clear-fault').disabled = false;
+  select.disabled = !backendSelectionReady || !choices.length;
+  document.getElementById('btn-inject-fault').disabled = !backendSelectionReady || !choices.length;
+  document.getElementById('btn-clear-fault').disabled = !backendSelectionReady;
   document.querySelectorAll('.regime-btn').forEach(button => { button.disabled = !backendSelectionReady; });
   document.getElementById('altitude-control').disabled = !backendSelectionReady;
   document.getElementById('oat-control').disabled = !backendSelectionReady;
-  document.getElementById('fault-note').textContent = !backendSelectionReady
-    ? 'STANDALONE 3D MODE · Visual fault simulation and targeting active.'
-    : engineId === 'rotax_912is'
-    ? 'PS-26054 scenario list · mesh matches are exact; unmapped geometry is shown with a 3D target locator.'
+  document.getElementById('fault-note').textContent = engineId === 'rotax_912is' && backendSelectionReady
+    ? 'PS-26054 scenario list · mesh matches are exact; unmapped geometry is shown with a location marker.'
     : runtime?.ready
     ? `${runtime.n_cylinders} cylinders · severity and onset ramp apply to the plant model.`
     : 'Waiting for this engine’s physics calibration.';
@@ -1834,22 +1804,15 @@ function applyFaultHighlight(root, faultType) {
   let matched = 0;
   root.traverse((child) => {
     if (!child.isMesh) return;
-    const isFaultTarget = targets.length > 0 && targets.some(name => meshMatchesFaultPart(child, name, exactNames, root));
+    const isFaultTarget = targets.some(name => meshMatchesFaultPart(child, name, exactNames, root));
     child.material = isFaultTarget ? faultMat : ghostMat;
     matched += isFaultTarget ? 1 : 0;
   });
   faultMat.wireframe = isWireframe;
   ghostMat.wireframe = isWireframe;
   if (matched === 0) {
-    if (target.focusPoint) {
-      // Keep entire engine in holographic ghost blueprint so the 3D locator is visible inside
-      root.traverse((child) => {
-        if (child.isMesh) child.material = ghostMat;
-      });
-    } else {
-      restoreAllSolid(root);
-      console.warn(`No GLB meshes matched ${currentEngineId}/${faultType}:`, target.parts);
-    }
+    restoreAllSolid(root);
+    if (!target.focusPoint) console.warn(`No GLB meshes matched ${currentEngineId}/${faultType}:`, target.parts);
   }
   return matched;
 }
@@ -1859,7 +1822,12 @@ function computeFaultCamera(engineId, faultType) {
   const target = ENGINE_FAULT_TARGETS[engineId]?.[faultType];
   if (!target) return computeStationCamera(engineId, 0);
   const bounds = profile.runtimeFaults && profile.runtimeFaults[faultType];
-  const focusPoint = target.focusPoint;
+  // The legacy 912 fault anchors were authored before the GLB export changed
+  // the model axes. Mesh-derived bounds are already in GLB coordinates; the
+  // hand-authored fallback points need the same (x, z, -y) conversion.
+  const focusPoint = target.focusPoint && engineId === 'rotax_912is'
+    ? [target.focusPoint[0], target.focusPoint[2], -target.focusPoint[1]]
+    : target.focusPoint;
   const focus = bounds?.center || (focusPoint ? new THREE.Vector3(...focusPoint) : null);
   if (!focus) return computeStationCamera(engineId, 0);
   // A locator-only fault has no component bounds to frame. Give it enough
@@ -1916,9 +1884,12 @@ function setFaultVisual(faultType, origin = 'commanded', evidence = []) {
   if (currentModel) {
     activeVisualFaultModel = currentModel;
     const matched = applyFaultHighlight(currentModel, faultType);
-    faultLocator.visible = (matched === 0 || !faultTarget.parts.length) && !!faultTarget.focusPoint;
+    faultLocator.visible = matched === 0 && !!faultTarget.focusPoint;
     if (faultLocator.visible) {
-      faultLocator.position.set(...faultTarget.focusPoint);
+      const point = currentEngineId === 'rotax_912is'
+        ? [faultTarget.focusPoint[0], faultTarget.focusPoint[2], -faultTarget.focusPoint[1]]
+        : faultTarget.focusPoint;
+      faultLocator.position.set(...point);
       const locatorScale = Math.max((profile.runtimeOverview?.radius || 20) * 0.045, 1.5);
       faultLocator.scale.setScalar(locatorScale);
     }
@@ -1934,41 +1905,32 @@ function setFaultVisual(faultType, origin = 'commanded', evidence = []) {
 
 async function injectSelectedFault() {
   const mode = document.getElementById('fault-mode-select').value;
-  if (!mode) return;
-  const target = ENGINE_FAULT_TARGETS[currentEngineId]?.[mode];
-  if (!target) return;
-  const severity = Number(document.getElementById('fault-severity').value) || 0.7;
-  const rampSec = Number(document.getElementById('fault-ramp').value) || 2;
-
-  commandedFaultByEngine[currentEngineId] = mode;
-  setFaultVisual(mode, 'commanded');
-
-  if (!backendSelectionReady) {
-    document.getElementById('fault-note').textContent = `[OFFLINE 3D] Injected ${target.label} · 3D fault target active.`;
-    return;
-  }
-
   const runtimeFault = BACKEND_ENGINE_PROFILES[currentEngineId]?.faults?.find(fault => fault.mode === mode);
   const scenario = currentEngineId === 'rotax_912is' ? faultOptionsForEngine(currentEngineId).find(fault => fault.mode === mode) : null;
+  if (!mode || !(scenario || runtimeFault) || !backendSelectionReady) return;
   const button = document.getElementById('btn-inject-fault');
   button.disabled = true;
   document.getElementById('fault-note').textContent = 'Applying fault to the engine plant…';
+  const severity = Number(document.getElementById('fault-severity').value);
+  const rampSec = Number(document.getElementById('fault-ramp').value);
   const legacy912 = currentEngineId === 'rotax_912is';
   const body = legacy912
-    ? { action: 'SET_FAULT', fault_id: scenario ? scenario.id : 1, severity, ramp_duration_sec: rampSec }
+    ? { action: 'SET_FAULT', fault_id: scenario.id, severity, ramp_duration_sec: rampSec }
     : { mode, severity, ramp_sec: rampSec };
-  if (!legacy912 && runtimeFault?.per_cylinder) body.cylinder = Number(document.getElementById('fault-cylinder-select').value || 1);
+  if (!legacy912 && runtimeFault.per_cylinder) body.cylinder = Number(document.getElementById('fault-cylinder-select').value || 1);
   try {
     const response = await fetch(legacy912 ? `${API_BASE}/api/control` : `${API_BASE}/api/engines/${currentEngineId}/faults`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
     });
     const result = await response.json();
     if (!response.ok || result.status === 'ERROR') throw new Error(result.detail || result.message || `HTTP ${response.status}`);
-    document.getElementById('fault-note').textContent = `Injected ${target.label} · ${Math.round(severity * 100)}% · ${rampSec} simulated-second ramp.`;
+    commandedFaultByEngine[currentEngineId] = mode;
+    setFaultVisual(mode, 'commanded');
+    document.getElementById('fault-note').textContent = `Injected ${ENGINE_FAULT_TARGETS[currentEngineId][mode].label} · ${Math.round(severity * 100)}% · ${rampSec} simulated-second ramp.`;
   } catch (error) {
-    document.getElementById('fault-note').textContent = `Visual active; backend plant injection returned: ${error.message}`;
+    document.getElementById('fault-note').textContent = `Injection failed: ${error.message}`;
   } finally {
-    button.disabled = false;
+    button.disabled = !backendSelectionReady;
   }
 }
 
@@ -1981,17 +1943,8 @@ function triggerFault(faultMode) {
 }
 
 async function clearFault() {
+  if (!backendSelectionReady) return;
   const clearButton = document.getElementById('btn-clear-fault');
-  delete commandedFaultByEngine[currentEngineId];
-  clearFaultVisual();
-
-  if (!backendSelectionReady) {
-    document.getElementById('fault-note').textContent = '[OFFLINE 3D] Fault cleared. Full engine view restored.';
-    document.getElementById('fault-modal').classList.remove('open');
-    document.getElementById('btn-faults').classList.remove('active');
-    return;
-  }
-
   clearButton.disabled = true;
   document.getElementById('fault-note').textContent = 'Clearing plant faults…';
   try {
@@ -2001,13 +1954,15 @@ async function clearFault() {
       : await fetch(`${API_BASE}/api/engines/${currentEngineId}/faults`, { method: 'DELETE' });
     const result = await response.json();
     if (!response.ok || result.status === 'ERROR') throw new Error(result.detail || result.message || `HTTP ${response.status}`);
-    document.getElementById('fault-note').textContent = 'Plant faults cleared. Baseline restored.';
+    delete commandedFaultByEngine[currentEngineId];
+    clearFaultVisual();
+    document.getElementById('fault-note').textContent = 'Plant faults cleared. Detector will settle as residuals return to baseline.';
     document.getElementById('fault-modal').classList.remove('open');
     document.getElementById('btn-faults').classList.remove('active');
   } catch (error) {
-    document.getElementById('fault-note').textContent = `Visual cleared; backend clear returned: ${error.message}`;
+    document.getElementById('fault-note').textContent = `Clear failed: ${error.message}`;
   } finally {
-    clearButton.disabled = false;
+    clearButton.disabled = !backendSelectionReady;
   }
 }
 
@@ -2693,7 +2648,6 @@ function animate() {
   }
 
   if (faultLocator.visible) {
-    faultLocator.quaternion.copy(camera.quaternion);
     const pulse = 1 + 0.08 * Math.sin(Date.now() * 0.006);
     faultLocatorRing.scale.setScalar(pulse);
     faultLocatorCore.material.opacity = 0.7 + 0.25 * Math.sin(Date.now() * 0.008);
@@ -2701,7 +2655,7 @@ function animate() {
 
   updateTelemetry();
 
-  if (activeFault) {
+  if (activeFault || currentStation !== 0) {
     faultMat.emissiveIntensity = 2.6 + 1.2 * Math.sin(Date.now() * 0.008);
   }
 

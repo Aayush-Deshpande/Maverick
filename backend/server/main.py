@@ -17,7 +17,7 @@ import sys
 import uuid
 from pathlib import Path
 from dataclasses import asdict
-from typing import Set, List, Optional
+from typing import Any, Dict, Set, List, Optional
 from contextlib import asynccontextmanager
 
 # Forces UTF-8 stdout/stderr regardless of the launching console's code page. On Windows,
@@ -42,12 +42,12 @@ try:
 except ImportError:
     pass
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, UploadFile, File, Form
+from fastapi import Depends, FastAPI, WebSocket, WebSocketDisconnect, HTTPException, UploadFile, File, Form
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from backend.server.schemas import (
     UnifiedTelemetryState,
@@ -56,7 +56,13 @@ from backend.server.schemas import (
     VoiceConverseResponse,
 )
 from backend.server.engine_service import EngineStateService
+import backend.server.api_v1 as api_v1_module
+from backend.runtime.hub import load_runtime_settings
+from backend.server.legacy_adapter import legacy_command, legacy_state
+from backend.server.security import (check_command, client_key, command_guard, cors_origins, finish_command,
+                                     token_from)
 from backend.server.engine_api import router as engine_router
+from backend.server.api_v1 import router as v1_router  # card M0-06: /api/v1 + /ws/v1
 from backend.telemetry.replay_engine import ReplayEngine
 from backend.agent.llm_engine import LocalLLMEngine
 from backend.voice.stt_engine import LocalWhisperSTT
@@ -134,6 +140,7 @@ app = FastAPI(
 )
 
 app.include_router(engine_router)
+app.include_router(v1_router)
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _THREEJS_TWIN = _REPO_ROOT / "apps" / "threejs_twin"
@@ -147,7 +154,11 @@ def serve_threejs_twin():
 
 app.mount("/apps/threejs_twin", StaticFiles(directory=_THREEJS_TWIN, html=True), name="threejs-twin-assets")
 
+# compressed engine models (D49): the synced frontend copy, else the committed canonical folder, so the 3D twin
+# page always loads the same Draco files as the console viewer (never the 80 MB uncompressed exports)
 _MODELS_DIR = _REPO_ROOT / "frontend" / "public" / "models"
+if not any(_MODELS_DIR.glob("*.glb")):
+    _MODELS_DIR = _REPO_ROOT / "assets" / "web" / "engines"
 if _MODELS_DIR.exists():
     app.mount("/models", StaticFiles(directory=_MODELS_DIR), name="static-models")
 
@@ -159,13 +170,13 @@ _IMAGES_DIR = _REPO_ROOT / "frontend" / "public" / "images"
 if _IMAGES_DIR.exists():
     app.mount("/images", StaticFiles(directory=_IMAGES_DIR), name="static-images")
 
-# CORS: permissive by default for local development; set ANUMAAN_CORS_ORIGINS to a comma-separated
-# list of frontend origins (e.g. https://anumaan.vercel.app) in production.
-_CORS_ORIGINS = [o.strip() for o in os.environ.get("ANUMAAN_CORS_ORIGINS", "*").split(",") if o.strip()] or ["*"]
+# CORS (D52): origins from ANUMAAN_CORS_ORIGINS (comma-separated), else the local dev origins in
+# configs/runtime.json. Never "*".
+_CORS_ORIGINS = cors_origins()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_CORS_ORIGINS,
-    allow_credentials=_CORS_ORIGINS != ["*"],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -175,11 +186,13 @@ async def broadcast_telemetry_loop(service: EngineStateService):
     """Broadcasts unified 20 Hz state frames to all connected Web & Blender clients."""
     while True:
         try:
-            state = service.get_latest_state()
-            state_json = state.model_dump_json()
+            # every client gets the v1 runtime in the legacy shape (M0-08); M0-10 moves them to /ws/v1
+            state = legacy_state() if (active_web_sockets or active_blender_sockets) else None
+            state_json = json.dumps(state) if state is not None else None
+            blender_json = state_json
 
             # 1. Broadcast to Web/Mobile clients
-            if active_web_sockets:
+            if active_web_sockets and state_json is not None:
                 dead_sockets = set()
                 for ws in list(active_web_sockets):
                     try:
@@ -189,11 +202,11 @@ async def broadcast_telemetry_loop(service: EngineStateService):
                 active_web_sockets.difference_update(dead_sockets)
 
             # 2. Broadcast to Blender clients
-            if active_blender_sockets:
+            if active_blender_sockets and blender_json is not None:
                 dead_blender = set()
                 for ws in list(active_blender_sockets):
                     try:
-                        await ws.send_text(state_json)
+                        await ws.send_text(blender_json)
                     except Exception:
                         dead_blender.add(ws)
                 active_blender_sockets.difference_update(dead_blender)
@@ -239,33 +252,33 @@ def root():
 @app.get("/api/health", response_model=ServerHealthResponse)
 def get_health():
     service = EngineStateService.get_instance()
-    state = service.get_latest_state()
+    # engine fields come from the v1 runtime (M0-08b); null until the hub has a tick or a state machine (M1-12)
+    state = legacy_state() if api_v1_module._services is not None else None
     return ServerHealthResponse(
         status="ONLINE",
-        sortie_id=state.sortie_id,
-        is_engine_running=state.is_engine_running,
-        active_fault_id=state.active_commanded_fault_id,
+        sortie_id=service.sortie_id,
+        is_engine_running=None,
+        active_fault_id=None if state is None else state["active_commanded_fault_id"],
+        loop_frequency_hz=load_runtime_settings()["tick_rate_hz"],
         connected_web_clients=len(active_web_sockets),
         connected_blender_clients=len(active_blender_sockets),
-        loop_frequency_hz=20.0
     )
 
 
-@app.get("/api/state", response_model=UnifiedTelemetryState)
+@app.get("/api/state")
 def get_current_state():
-    """Returns the instant snapshot of the authoritative engine state."""
-    service = EngineStateService.get_instance()
-    return service.get_latest_state()
+    """DEPRECATED (use /api/v1). Legacy-shaped snapshot of the v1 runtime (card M0-08); nulls, never defaults."""
+    state = legacy_state()
+    if state is None:
+        raise HTTPException(503, {"code": "CALIBRATING", "message": "the engine has no tick yet"})
+    return state
 
 
 @app.post("/api/control")
-def post_control_command(cmd: ControlCommand):
-    """Executes an incoming engine/fault control command."""
-    service = EngineStateService.get_instance()
-    result = service.handle_command(cmd)
-    if result.get("status") == "ERROR":
-        raise HTTPException(status_code=400, detail=result.get("message"))
-    return result
+def post_control_command(cmd: ControlCommand, entry: Dict[str, Any] = Depends(command_guard)):
+    """DEPRECATED (use /api/v1). Runs a legacy command on the v1 runtime; 422 with a reason when it cannot."""
+    entry.update(source="legacy", request_id=None)
+    return legacy_command(cmd)
 
 
 @app.post("/api/debrief")
@@ -401,12 +414,12 @@ async def warmup_ai_engine():
 async def ask_ai_copilot(req: AIAskRequest):
     """Free-text mission copilot query (guardrails + RAG retrieval + optional LLM synthesis)."""
     service = EngineStateService.get_instance()
-    state = service.get_latest_state()
+    state = _copilot_state()
     result = await asyncio.to_thread(
         service.copilot.ask,
         req.query,
-        state.model_dump(),
-        state.analytics.diagnosed_fault_id or None,
+        state,
+        state["analytics"]["diagnosed_fault_id"],
     )
     return result
 
@@ -504,15 +517,15 @@ async def voice_converse(
             response="I didn't catch that. Could you try again?",
         )
 
-    state = service.get_latest_state()
+    state = _copilot_state()
     THINKING_STREAM.start(session_id)
     try:
         result = await asyncio.to_thread(
             service.copilot.ask_voice,
             transcript,
             session_id,
-            state.model_dump(),
-            state.analytics.diagnosed_fault_id or None,
+            state,
+            state["analytics"]["diagnosed_fault_id"],
             lambda delta: THINKING_STREAM.append(session_id, delta),
         )
     finally:
@@ -553,6 +566,36 @@ def get_voice_thinking(session_id: str):
 # WebSocket Endpoints
 # ──────────────────────────────────────────────────────────────────────────────
 
+def _copilot_state() -> Dict[str, Any]:
+    """The copilot/voice context is the v1 runtime in the legacy shape (M0-08b); 503 while calibrating."""
+    state = legacy_state()
+    if state is None:
+        raise HTTPException(503, {"code": "CALIBRATING", "message": "the engine has no tick yet"})
+    return state
+
+
+async def _ws_command(websocket: WebSocket, path: str, client: str, token: Optional[str], msg: Any) -> None:
+    """One legacy command over a WebSocket: same token, rate limit, log and adapter as POST /api/control (D52)."""
+    try:
+        entry = check_command("WS", path, client, token)
+    except HTTPException as exc:
+        await websocket.send_text(json.dumps({"type": "ERROR", "status": exc.status_code, "detail": exc.detail}))
+        return
+    entry["source"] = "legacy"
+    try:
+        res = legacy_command(ControlCommand(**msg))
+    except HTTPException as exc:
+        finish_command(entry, f"{exc.status_code} {exc.detail}")
+        await websocket.send_text(json.dumps({"type": "ERROR", "status": exc.status_code, "detail": exc.detail}))
+        return
+    except (TypeError, ValidationError) as exc:
+        finish_command(entry, "422 invalid command")
+        await websocket.send_text(json.dumps({"type": "ERROR", "status": 422, "message": str(exc)}))
+        return
+    finish_command(entry, "OK")
+    await websocket.send_text(json.dumps({"type": "COMMAND_RESULT", **res}))
+
+
 @app.websocket("/ws/telemetry")
 async def websocket_telemetry_endpoint(websocket: WebSocket):
     """
@@ -563,20 +606,21 @@ async def websocket_telemetry_endpoint(websocket: WebSocket):
     active_web_sockets.add(websocket)
     logger.info(f"[WebSocket] Mobile/Web client connected. Total web clients: {len(active_web_sockets)}")
     
-    service = EngineStateService.get_instance()
-    # Send immediate initial state
-    await websocket.send_text(service.get_latest_state().model_dump_json())
+    state = legacy_state()
+    if state is not None:
+        await websocket.send_text(json.dumps(state))
+    token = token_from(websocket.headers, websocket.query_params)
+    client = client_key(websocket.client.host if websocket.client else None, token)
 
     try:
         while True:
             data = await websocket.receive_text()
             try:
                 msg = json.loads(data)
-                cmd = ControlCommand(**msg)
-                res = service.handle_command(cmd)
-                await websocket.send_text(json.dumps({"type": "COMMAND_RESULT", **res}))
-            except Exception as e:
-                await websocket.send_text(json.dumps({"type": "ERROR", "message": str(e)}))
+            except ValueError as exc:
+                await websocket.send_text(json.dumps({"type": "ERROR", "status": 422, "message": str(exc)}))
+                continue
+            await _ws_command(websocket, "/ws/telemetry", client, token, msg)
     except WebSocketDisconnect:
         active_web_sockets.discard(websocket)
         logger.info(f"[WebSocket] Web client disconnected. Remaining: {len(active_web_sockets)}")
@@ -595,8 +639,11 @@ async def websocket_blender_endpoint(websocket: WebSocket):
     active_blender_sockets.add(websocket)
     logger.info(f"[WebSocket] Blender client connected! Total Blender clients: {len(active_blender_sockets)}")
 
-    service = EngineStateService.get_instance()
-    await websocket.send_text(service.get_latest_state().model_dump_json())
+    state = legacy_state()
+    if state is not None:
+        await websocket.send_text(json.dumps(state))
+    token = token_from(websocket.headers, websocket.query_params)
+    client = client_key(websocket.client.host if websocket.client else None, token)
 
     try:
         while True:
@@ -604,12 +651,11 @@ async def websocket_blender_endpoint(websocket: WebSocket):
             data = await websocket.receive_text()
             try:
                 msg = json.loads(data)
-                if "action" in msg:
-                    cmd = ControlCommand(**msg)
-                    res = service.handle_command(cmd)
-                    await websocket.send_text(json.dumps({"type": "COMMAND_RESULT", **res}))
-            except Exception:
-                pass
+            except ValueError as exc:
+                await websocket.send_text(json.dumps({"type": "ERROR", "status": 422, "message": str(exc)}))
+                continue
+            if isinstance(msg, dict) and "action" in msg:
+                await _ws_command(websocket, "/ws/blender", client, token, msg)
     except WebSocketDisconnect:
         active_blender_sockets.discard(websocket)
         logger.info(f"[WebSocket] Blender client disconnected. Remaining: {len(active_blender_sockets)}")

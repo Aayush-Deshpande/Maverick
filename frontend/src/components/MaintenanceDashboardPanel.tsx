@@ -124,7 +124,7 @@ export const MaintenanceDashboardPanel: React.FC<MaintenanceDashboardPanelProps>
       <div className="surface-panel p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 border border-surface-border">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono font-semibold bg-accent-dim text-accent border border-accent-muted">
+            <span className="px-2 py-0.5 rounded-sm text-xs font-mono font-semibold bg-accent-dim text-accent border border-accent-muted">
               VIS-04 / CBM-01
             </span>
             <h2 className="text-sm font-semibold text-white tracking-wide font-mono uppercase">
@@ -168,7 +168,7 @@ export const MaintenanceDashboardPanel: React.FC<MaintenanceDashboardPanelProps>
           }`}
         >
           <span>{feedbackMsg.text}</span>
-          <button onClick={() => setFeedbackMsg(null)} className="text-slate-400 hover:text-white ml-2 text-[10px]">
+          <button onClick={() => setFeedbackMsg(null)} className="text-slate-400 hover:text-white ml-2 text-xs">
             Dismiss
           </button>
         </div>
@@ -179,19 +179,19 @@ export const MaintenanceDashboardPanel: React.FC<MaintenanceDashboardPanelProps>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-surface-border pb-3">
           <div>
             <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono font-semibold bg-accent-dim text-accent border border-accent-muted">
+              <span className="px-2 py-0.5 rounded-sm text-xs font-mono font-semibold bg-accent-dim text-accent border border-accent-muted">
                 F12 / AIM-05
               </span>
               <h3 className="text-xs font-semibold text-white uppercase tracking-wider font-mono">
                 Split-Conformal Remaining Useful Life (RUL) with 90% Coverage
               </h3>
             </div>
-            <p className="text-[11px] text-slate-400 mt-0.5 font-mono">
+            <p className="text-xs text-slate-400 mt-0.5 font-mono">
               Finite-sample distribution-free uncertainty intervals: P10 conservative lower bound, P50 median, P90 optimistic upper bound.
             </p>
           </div>
 
-          <div className="px-2.5 py-1 rounded-sm bg-surface-card border border-surface-border text-[10px] font-mono text-slate-300 flex items-center gap-1.5">
+          <div className="px-2.5 py-1 rounded-sm bg-surface-card border border-surface-border text-xs font-mono text-slate-300 flex items-center gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5 text-accent" />
             <span>Guaranteed Coverage: 90% (α = 0.10)</span>
           </div>
@@ -220,20 +220,20 @@ export const MaintenanceDashboardPanel: React.FC<MaintenanceDashboardPanelProps>
                 <div className="flex justify-between items-start">
                   <div>
                     <span className="text-xs font-semibold text-white block">{meta.name}</span>
-                    <span className="text-[10px] text-slate-500 font-mono">{meta.ata}</span>
+                    <span className="text-xs text-slate-500 font-mono">{meta.ata}</span>
                   </div>
                   {isLimiting ? (
-                    <span className="px-1.5 py-0.5 rounded text-[9px] font-bold font-mono bg-critical-dim text-critical border border-critical-muted">
+                    <span className="px-1.5 py-0.5 rounded text-xs font-bold font-mono bg-critical-dim text-critical border border-critical-muted">
                       LIMITING
                     </span>
                   ) : (
-                    <span className="text-[10px] text-slate-500 font-mono">TBO {meta.tboHours}h</span>
+                    <span className="text-xs text-slate-500 font-mono">TBO {meta.tboHours}h</span>
                   )}
                 </div>
 
                 {/* Progress Bar */}
                 <div className="mt-3 space-y-1">
-                  <div className="flex justify-between text-[10px] font-mono">
+                  <div className="flex justify-between text-xs font-mono">
                     <span className="text-slate-400">P10 Conservative RUL:</span>
                     <span className={`font-bold ${isLimiting ? 'text-critical' : 'text-slate-100'}`}>
                       {p10 >= 500 ? '>500h' : `${fmt(p10)} h`}
@@ -252,15 +252,15 @@ export const MaintenanceDashboardPanel: React.FC<MaintenanceDashboardPanelProps>
                 {/* Conformal Bounds Trio */}
                 <div className="grid grid-cols-3 gap-1 pt-2 mt-2 border-t border-surface-border/50 text-center font-mono">
                   <div className="bg-white/[0.02] p-1 rounded">
-                    <span className="text-[9px] text-slate-500 block">P10 Low</span>
+                    <span className="text-xs text-slate-500 block">P10 Low</span>
                     <span className="text-xs font-semibold text-slate-300">{fmt(p10, 0)}h</span>
                   </div>
                   <div className="bg-white/[0.02] p-1 rounded">
-                    <span className="text-[9px] text-slate-500 block">P50 Med</span>
+                    <span className="text-xs text-slate-500 block">P50 Med</span>
                     <span className="text-xs font-semibold text-slate-200">{fmt(p50, 0)}h</span>
                   </div>
                   <div className="bg-white/[0.02] p-1 rounded">
-                    <span className="text-[9px] text-slate-500 block">P90 High</span>
+                    <span className="text-xs text-slate-500 block">P90 High</span>
                     <span className="text-xs font-semibold text-slate-400">{fmt(p90, 0)}h</span>
                   </div>
                 </div>
@@ -279,7 +279,7 @@ export const MaintenanceDashboardPanel: React.FC<MaintenanceDashboardPanelProps>
               CBM Work Order Dispatch &amp; Inspector Sign-Off Queue
             </h3>
           </div>
-          <span className="text-[10px] font-mono text-slate-500">
+          <span className="text-xs font-mono text-slate-500">
             {workOrders.filter((w) => w.status === 'OPEN').length} Open Orders
           </span>
         </div>
@@ -292,7 +292,7 @@ export const MaintenanceDashboardPanel: React.FC<MaintenanceDashboardPanelProps>
           <div className="overflow-x-auto">
             <table className="w-full text-xs border-collapse">
               <thead>
-                <tr className="text-[9px] uppercase tracking-wider text-slate-500 border-b border-surface-border text-left">
+                <tr className="text-xs uppercase tracking-wider text-slate-500 border-b border-surface-border text-left">
                   <th className="py-2 pr-3">Action ID</th>
                   <th className="py-2 px-3">ATA Chapter</th>
                   <th className="py-2 px-3">Sortie</th>
@@ -310,7 +310,7 @@ export const MaintenanceDashboardPanel: React.FC<MaintenanceDashboardPanelProps>
                         {wo.action_id}
                       </td>
                       <td className="py-2.5 px-3">
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-white/5 border border-surface-border text-slate-300">
+                        <span className="px-1.5 py-0.5 rounded text-xs font-mono bg-white/5 border border-surface-border text-slate-300">
                           {wo.ata_chapter}
                         </span>
                       </td>
@@ -320,7 +320,7 @@ export const MaintenanceDashboardPanel: React.FC<MaintenanceDashboardPanelProps>
                       </td>
                       <td className="py-2.5 px-3">
                         <span
-                          className={`px-2 py-0.5 rounded text-[10px] font-mono font-semibold border ${
+                          className={`px-2 py-0.5 rounded text-xs font-mono font-semibold border ${
                             isOpen
                               ? 'bg-amber-500/10 text-amber-300 border-amber-500/30'
                               : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
@@ -334,12 +334,12 @@ export const MaintenanceDashboardPanel: React.FC<MaintenanceDashboardPanelProps>
                           <button
                             onClick={() => handleSignOff(wo.action_id)}
                             disabled={signingOffId === wo.action_id}
-                            className="px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30 text-[11px] font-medium transition-colors disabled:opacity-50"
+                            className="px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30 text-xs font-medium transition-colors disabled:opacity-50"
                           >
                             {signingOffId === wo.action_id ? 'Signing...' : 'Sign-Off & Close'}
                           </button>
                         ) : (
-                          <span className="text-[10px] font-mono text-slate-500">
+                          <span className="text-xs font-mono text-slate-500">
                             Closed by {wo.signoff_inspector || 'Inspector'}
                           </span>
                         )}
@@ -365,7 +365,7 @@ export const MaintenanceDashboardPanel: React.FC<MaintenanceDashboardPanelProps>
 
           <div className="flex items-center gap-2">
             <span
-              className={`px-2 py-0.5 rounded text-[10px] font-mono font-semibold border ${
+              className={`px-2 py-0.5 rounded text-xs font-mono font-semibold border ${
                 driftDetected
                   ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
                   : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20'
@@ -375,7 +375,7 @@ export const MaintenanceDashboardPanel: React.FC<MaintenanceDashboardPanelProps>
             </span>
 
             <span
-              className={`px-2 py-0.5 rounded text-[10px] font-mono font-semibold border ${
+              className={`px-2 py-0.5 rounded text-xs font-mono font-semibold border ${
                 failedSensors.length > 0
                   ? 'bg-critical-dim text-critical border-critical-muted'
                   : 'bg-surface-card text-slate-400 border-surface-border'
@@ -386,7 +386,7 @@ export const MaintenanceDashboardPanel: React.FC<MaintenanceDashboardPanelProps>
           </div>
         </div>
 
-        <p className="text-[11px] text-slate-400">
+        <p className="text-xs text-slate-400">
           Continuous cross-channel statistical drift tests. Drifting or flatlined sensors are quarantined and zeroed out from model residuals to prevent false engine anomaly alarms.
         </p>
 
@@ -402,9 +402,9 @@ export const MaintenanceDashboardPanel: React.FC<MaintenanceDashboardPanelProps>
                     : 'bg-surface-card border-surface-border text-slate-300'
                 }`}
               >
-                <div className="text-[10px] text-slate-500 truncate">{sc.label}</div>
+                <div className="text-xs text-slate-500 truncate">{sc.label}</div>
                 <div className="font-mono font-semibold mt-0.5">{sc.val}</div>
-                <div className="text-[9px] font-mono mt-1">
+                <div className="text-xs font-mono mt-1">
                   {isQuarantined ? (
                     <span className="text-critical font-bold">SHIELDED</span>
                   ) : (
@@ -418,7 +418,7 @@ export const MaintenanceDashboardPanel: React.FC<MaintenanceDashboardPanelProps>
 
         {sanity?.advisory && (
           <div className="text-xs text-slate-300 bg-white/[0.02] p-2.5 rounded border border-surface-border/60">
-            <span className="text-slate-500 font-mono text-[10px] block mb-0.5">SENSOR SANITY ADVISORY</span>
+            <span className="text-slate-500 font-mono text-xs block mb-0.5">SENSOR SANITY ADVISORY</span>
             {sanity.advisory}
           </div>
         )}
@@ -433,26 +433,26 @@ export const MaintenanceDashboardPanel: React.FC<MaintenanceDashboardPanelProps>
               Diagnosed Prescriptive Action &amp; Maintenance Directives
             </h3>
           </div>
-          <span className="text-[10px] font-mono text-slate-400">
+          <span className="text-xs font-mono text-slate-400">
             ATA: {a.ata_chapter || 'ATA-00'} · Subsystem: {a.subsystem || 'All Systems'}
           </span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
           <div className="bg-surface-card p-3 rounded border border-surface-border space-y-2">
-            <span className="text-[10px] font-mono text-slate-500 block uppercase">
+            <span className="text-xs font-mono text-slate-500 block uppercase">
               Prescriptive Corrective Procedure
             </span>
             <p className="text-slate-200 leading-relaxed">
               {a.prescriptive_action || 'All engine subsystems operating within normal tolerances. Continue routine pre-flight inspections.'}
             </p>
-            <div className="pt-2 border-t border-surface-border/50 text-[11px] text-slate-400 font-mono">
+            <div className="pt-2 border-t border-surface-border/50 text-xs text-slate-400 font-mono">
               Root Cause: <span className="text-slate-200">{a.root_cause || 'None identified'}</span>
             </div>
           </div>
 
           <div className="bg-surface-card p-3 rounded border border-surface-border space-y-2">
-            <span className="text-[10px] font-mono text-slate-500 block uppercase">
+            <span className="text-xs font-mono text-slate-500 block uppercase">
               Emergency &amp; Standard Checklist
             </span>
             {a.emergency_checklist && a.emergency_checklist.length > 0 ? (

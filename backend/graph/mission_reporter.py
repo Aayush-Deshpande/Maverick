@@ -57,9 +57,8 @@ class MissionReporter:
 
     def __init__(self, output_dir: Optional[str] = None):
         if output_dir is None:
-            output_dir = os.path.abspath(
-                os.path.join(os.path.dirname(__file__), "../../data/mission_reports")
-            )
+            from backend.runtime.paths import var_path   # M0-11: runtime output in var/
+            output_dir = str(var_path("mission_reports"))
         self.output_dir = output_dir
         os.makedirs(self.output_dir, exist_ok=True)
 

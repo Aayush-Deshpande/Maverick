@@ -1,0 +1,32 @@
+{
+  "schema_version": "prognose/1",
+  "description": "Trend and time-to-limit settings (card M4-02, P Part 4 Step 4.2). Trends run on the model-informed residual, so lever and altitude changes do not look like wear. Values ASSUMED unless stated.",
+  "trend_sample_s": {
+    "value": 10.0,
+    "status": "ASSUMED",
+    "ref": "one trend sample per 10 s of sim time (Theil-Sen is O(n^2) per fit)"
+  },
+  "trend_windows_s": {
+    "value": [
+      600.0,
+      3600.0
+    ],
+    "status": "ASSUMED",
+    "ref": "P Step 4.2 sliding windows: 10 min and 1 h (mission window comes with M5)"
+  },
+  "trend_min_points": {
+    "value": 30,
+    "status": "ASSUMED",
+    "ref": "fewer samples than this give no trend"
+  },
+  "trend_confidence": {
+    "value": 0.95,
+    "status": "ASSUMED",
+    "ref": "Theil-Sen slope confidence level; a trend is significant only when the whole interval points toward the limit"
+  },
+  "trend_horizon_s": {
+    "value": 36000.0,
+    "status": "ASSUMED",
+    "ref": "time-to-limit beyond 10 h is not reported (a trend is not extrapolated that far)"
+  }
+}

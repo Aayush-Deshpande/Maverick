@@ -1,0 +1,26 @@
+{
+  "_comment": "Card M7-01/02: which Frame field travels in which DBC signal (configs/can/anumaan_engine_v2.dbc). Per-cylinder lists use field.index (0 = cylinder 1); vibration orders use vibration_orders.<order>. Fields an engine does not measure are sent as NOT AVAILABLE and decode to null.",
+  "dbc": "configs/can/anumaan_engine_v2.dbc",
+  "counter_signal": "Counter",
+  "signals": {
+    "rpm": ["ANU_SPEED", "EngineSpeed"],
+    "prop_rpm": ["ANU_SPEED", "PropSpeed"],
+    "map_kpa": ["ANU_SPEED", "ManifoldPressure"],
+    "throttle": ["ANU_SPEED", "Throttle"],
+    "cht.0": ["ANU_CHT", "Cht1"], "cht.1": ["ANU_CHT", "Cht2"], "cht.2": ["ANU_CHT", "Cht3"], "cht.3": ["ANU_CHT", "Cht4"],
+    "egt.0": ["ANU_EGT", "Egt1"], "egt.1": ["ANU_EGT", "Egt2"], "egt.2": ["ANU_EGT", "Egt3"], "egt.3": ["ANU_EGT", "Egt4"],
+    "oil_p": ["ANU_FLUID", "OilPressure"],
+    "oil_t": ["ANU_FLUID", "OilTemperature"],
+    "coolant_t": ["ANU_FLUID", "CoolantTemperature"],
+    "fuel_flow": ["ANU_FLUID", "FuelFlow"],
+    "fuel_p": ["ANU_FUEL_ELEC", "FuelPressure"],
+    "rail_p": ["ANU_FUEL_ELEC", "RailPressure"],
+    "bus_v": ["ANU_FUEL_ELEC", "BusVoltage"],
+    "bus_i": ["ANU_FUEL_ELEC", "BusCurrent"],
+    "batt_i": ["ANU_FUEL_ELEC", "BatteryCurrent"],
+    "vibration_orders.0.5X": ["ANU_VIB_STATUS", "VibHalfOrder"],
+    "vibration_orders.1X": ["ANU_VIB_STATUS", "VibFirstOrder"],
+    "vibration_orders.2X": ["ANU_VIB_STATUS", "VibFiringOrder"],
+    "gearbox_t": ["ANU_VIB_STATUS", "GearboxTemperature"]
+  }
+}

@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "language": "en",
+  "description": "Human-readable names for the console (P Part 6 X10, M6-06). Display text only: never a reading, limit or engine value. Channel keys use {n} for the cylinder number in both forms the system uses (cht[1] in readings, cht_1 in residuals). Component ids not listed here are shown humanized (oil_filter -> Oil filter, injector_3 -> Injector 3).",
+  "channels": {
+    "rpm": "Engine speed",
+    "prop_rpm": "Propeller speed",
+    "cht[{n}]": "Cylinder {n} head temperature",
+    "cht_{n}": "Cylinder {n} head temperature",
+    "egt[{n}]": "Cylinder {n} exhaust gas temperature",
+    "egt_{n}": "Cylinder {n} exhaust gas temperature",
+    "oil_p": "Oil pressure",
+    "oil_t": "Oil temperature",
+    "coolant_t": "Coolant temperature",
+    "gearbox_t": "Gearbox temperature",
+    "fuel_flow": "Fuel flow",
+    "fuel_p": "Fuel pressure",
+    "rail_p": "Fuel rail pressure",
+    "map_kpa": "Manifold pressure",
+    "bus_v": "Bus voltage",
+    "bus_i": "Bus current",
+    "batt_i": "Battery current",
+    "vib_1X": "Vibration, engine 1x order",
+    "vib_firing": "Vibration, firing order",
+    "vib_gear_mesh": "Vibration, gear mesh",
+    "vib_knock": "Vibration, knock band",
+    "vib_prop_1X": "Vibration, propeller 1x",
+    "vib_turbo": "Vibration, turbocharger",
+    "power_ind_kw_est": "Indicated power (estimate)",
+    "bsfc_ind_g_kwh_est": "Fuel used per kWh (indicated, estimate)",
+    "thermal_eff_ind_est": "Thermal efficiency (indicated, estimate)"
+  },
+  "components": {
+    "ecu": "Engine control unit (ECU)",
+    "ecu_lane_a": "ECU lane A",
+    "ecu_lane_b": "ECU lane B",
+    "ecu_hardware": "ECU mounting and connectors",
+    "hp_fuel_pump": "High-pressure fuel pump",
+    "fuel_line_hp_{n}": "High-pressure fuel line, cylinder {n}",
+    "fuel_line_{n}": "Fuel line, cylinder {n}",
+    "injector_{n}": "Injector, cylinder {n}",
+    "glow_plug_{n}": "Glow plug, cylinder {n}",
+    "sensor_egt_{n}": "Exhaust temperature sensor, cylinder {n}",
+    "crankcase_cylinders_base": "Crankcase and cylinders",
+    "cylinder_bank_unverified": "Cylinder bank",
+    "main_engine_MERGED": "Engine (one merged part in this 3D model)",
+    "wastegate_MISSEGMENTED": "Turbo and wastegate area (parts not separated in this 3D model)",
+    "unnamed_cad_parts": "Unidentified model parts",
+    "map": "Manifold pressure sensor",
+    "sensor_map": "Manifold pressure sensor",
+    "sensor_oil_press": "Oil pressure sensor",
+    "sensor_oil_temp": "Oil temperature sensor",
+    "sensor_rpm": "Engine speed sensor",
+    "sensor_crank": "Crankshaft position sensor",
+    "sensor_cam": "Camshaft position sensor",
+    "turbo_hp": "High-pressure turbocharger",
+    "turbo_lp": "Low-pressure turbocharger",
+    "prop_flange": "Propeller flange",
+    "prop_governor": "Propeller governor"
+  },
+  "status": {
+    "GO": {
+      "title": "Engine healthy",
+      "text": "All readings are inside their limits and no fault is suspected."
+    },
+    "ADVISORY": {
+      "title": "Advisory",
+      "text": "Something needs attention, but the mission can continue. The reasons are listed below."
+    },
+    "CAUTION": {
+      "title": "Caution",
+      "text": "A reading or a suspected fault needs action soon. Follow the actions listed below."
+    },
+    "NO-GO": {
+      "title": "No-go",
+      "text": "Do not continue the mission on this engine: a limit is exceeded or a serious fault is likely. Follow the actions listed below."
+    },
+    "ENGINE_OFF": {
+      "title": "Engine off",
+      "text": "The engine is not running."
+    },
+    "UNKNOWN": {
+      "title": "Waiting for data",
+      "text": "No status yet: the engine is still calibrating or the connection is down."
+    }
+  }
+}

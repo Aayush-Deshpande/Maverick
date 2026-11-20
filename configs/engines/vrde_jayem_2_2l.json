@@ -1,4 +1,5 @@
 {
+  "physics": {"friction": {"fmep_a_kpa": {"value": 75.0, "status": "ASSUMED", "ref": "CI engine FMEP higher than SI (Heywood eq. 13.16 form: higher compression, injection pump drive)"}, "fmep_b_kpa_per_krpm": {"value": 30.0, "status": "ASSUMED", "ref": "see fmep_a_kpa"}, "fmep_c_kpa_per_krpm2": {"value": 4.0, "status": "ASSUMED", "ref": "see fmep_a_kpa"}}},
   "engine_id": "vrde_jayem_2_2l",
   "display_name": "VRDE-Jayem 2.2L Turbocharged Aero-Diesel (parametrised, mostly assumed)",
   "manufacturer": "DRDO VRDE / Jayem Automotives Ltd",
@@ -24,13 +25,14 @@
     "compression_ratio": 17.2
   },
   "turbo": {
-    "max_boost_kpa": 195.0,
-    "critical_altitude_ft": 20000.0,
+    "max_boost_kpa": 227.0,
+    "critical_altitude_ft": 11000.0,
     "wastegate_controlled": true,
     "max_shaft_rpm": 210000.0,
     "intercooled": true,
     "lag_time_constant_sec": 0.95,
-    "surge_margin_min": 0.12
+    "surge_margin_min": 0.12,
+    "boost_control": "WASTEGATE"
   },
   "rated_power_kw": 134.2,
   "rated_rpm": 3800.0,
@@ -38,10 +40,10 @@
   "max_continuous_rpm": 3600.0,
   "idle_rpm": 780.0,
   "gearbox_ratio": 1.65,
-  "dry_mass_kg": 182.0,
+  "dry_mass_kg": 195.0,
   "tbo_hours": 2000.0,
   "nominal_bsfc_g_kwh": 218.0,
-  "nominal_lambda": 1.52,
+  "nominal_lambda": 1.35,
   "nominal_inj_timing_btdc": 9.5,
   "nominal_ign_timing_btdc": null,
   "rail_pressure_bar": 1850.0,
@@ -94,12 +96,12 @@
       "ref": "typical CRDi CR range; no source"
     },
     "turbo.max_boost_kpa": {
-      "status": "PLACEHOLDER",
-      "ref": "no source"
+      "status": "CALIBRATED",
+      "ref": "2026-11-20 (D55): derived, not measured. Full-load lambda fixed at 1.35 (common-rail diesels run near the smoke limit, ~1.3-1.4 at full load); max boost solved so the calibrated plant reproduces the published BSFC 215 g/kWh (VRDE brochure, ASSUMED midpoint of <210 / 220) at take-off, SL ISA (eta_i 0.436). Was 195.0 kPa / lambda 1.52, which gave BSFC ~165 and EGT ~206 C"
     },
     "turbo.critical_altitude_ft": {
-      "status": "PLACEHOLDER",
-      "ref": "no source -- do not confuse with the public 32,000 ft operating ceiling, which is an airframe/engine ceiling, not the turbo's boost-hold altitude"
+      "status": "PUBLIC",
+      "ref": "DRDO product page '180 hp diesel engine for UAV' (drdo.gov.in) + VRDE brochure summaries: take-off power 180 hp held constant up to 11,000 ft (was 20,000, unsourced)"
     },
     "turbo.max_shaft_rpm": {
       "status": "PLACEHOLDER",
@@ -142,8 +144,8 @@
       "ref": "no source"
     },
     "dry_mass_kg": {
-      "status": "PLACEHOLDER",
-      "ref": "no source"
+      "status": "PUBLIC",
+      "ref": "DRDO product page '180 hp diesel engine for UAV' (drdo.gov.in) + VRDE brochure summaries: dry weight about 195 kg (brochures say <195 / 195 kg)"
     },
     "tbo_hours": {
       "status": "ASSUMED",
@@ -154,8 +156,8 @@
       "ref": "no source"
     },
     "nominal_lambda": {
-      "status": "PLACEHOLDER",
-      "ref": "no source"
+      "status": "CALIBRATED",
+      "ref": "2026-11-20 (D55): derived, not measured. Full-load lambda fixed at 1.35 (common-rail diesels run near the smoke limit, ~1.3-1.4 at full load); max boost solved so the calibrated plant reproduces the published BSFC 215 g/kWh (VRDE brochure, ASSUMED midpoint of <210 / 220) at take-off, SL ISA (eta_i 0.436). Was 195.0 kPa / lambda 1.52, which gave BSFC ~165 and EGT ~206 C"
     },
     "nominal_inj_timing_btdc": {
       "status": "PLACEHOLDER",
@@ -195,5 +197,18 @@
     "egt_max_c": 750.0,
     "oil_p_min_bar": 0.8,
     "oil_t_max_c": 130.0
+  },
+  "fuel_system": "COMMON_RAIL",
+  "ignition_circuits": 0,
+  "ecu_lanes": 2,
+  "glow_plugs": true,
+  "thermostat": true,
+  "propeller_governor": true,
+  "limits": {},
+  "notes": {
+    "rpm": "Later DRDO brochure gives a 3900 rpm maximum; rated_rpm stays ASSUMED.",
+    "bsfc": "Brochures give best-economy BSFC <210 g/kWh (early) and 220 g/kWh (later).",
+    "fadec": "FADEC with dual redundancy (DRDO); ecu_lanes=2 follows that statement.",
+    "geometry": "3D model is TEI PD170 geometry (representative)."
   }
 }

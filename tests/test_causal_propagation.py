@@ -89,6 +89,9 @@ def test_streamer_fault_causality():
 def test_engine_service_dynamic_subsystems():
     """Verify that EngineStateService computes real-time subsystem health from physics residuals."""
     service = EngineStateService()
+    # M0-08b: the service no longer runs a background loop that ticked this same object in parallel, so the test
+    # now advances sim time itself through the full legacy fault ramp (6 s default = 120 ticks of 0.05 s).
+    RAMP_TICKS = 140
     
     # Check Nominal
     service._tick(0.05)
@@ -103,7 +106,7 @@ def test_engine_service_dynamic_subsystems():
 
     # Command Fault 4 (Oil Pressure Decay)
     service.set_fault(4)
-    for _ in range(40):
+    for _ in range(RAMP_TICKS):
         service._tick(0.05)
     
     f4_state = service.get_latest_state()
@@ -113,14 +116,14 @@ def test_engine_service_dynamic_subsystems():
 
     # Command Fault 3 (Ignition Misfire)
     service.set_fault(3)
-    for _ in range(40):
+    for _ in range(RAMP_TICKS):
         service._tick(0.05)
     f3_state = service.get_latest_state()
     assert f3_state.analytics.subsystem_health["electrical"] < 0.65, "Electrical health must drop on ignition misfire"
 
     # Command Fault 8 (Dual FADEC Drift)
     service.set_fault(8)
-    for _ in range(40):
+    for _ in range(RAMP_TICKS):
         service._tick(0.05)
     f8_state = service.get_latest_state()
     assert f8_state.analytics.subsystem_health["fuel_system"] < 0.70, "Fuel system health must drop on FADEC MAP drift"
@@ -128,7 +131,7 @@ def test_engine_service_dynamic_subsystems():
 
     # Clear fault back to nominal
     service.clear_fault()
-    for _ in range(40):
+    for _ in range(RAMP_TICKS):
         service._tick(0.05)
     nom_cleared = service.get_latest_state()
     assert nom_cleared.analytics.subsystem_health["propulsion"] >= 0.85

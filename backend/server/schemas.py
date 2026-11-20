@@ -55,7 +55,7 @@ class EngineTelemetry(BaseModel):
     POWER_KW: float = Field(65.0, description="Engine brake shaft power (kW)")
     THERMAL_EFFICIENCY: float = Field(0.31, description="Engine brake thermal efficiency (0.0 - 1.0)")
     vibration_orders: Dict[str, float] = Field(default_factory=dict, description="1X, 2X, 3X vibration order components")
-    virtual_sensors: Dict[str, float] = Field(default_factory=dict, description="P_max, TIT, h_min, P_ind virtual sensor values")
+    virtual_sensors: Dict[str, Optional[float]] = Field(default_factory=dict, description="P_max, TIT, h_min, P_ind virtual sensor values (null = not applicable / no data)")
 
 
 
@@ -173,8 +173,8 @@ class ServerHealthResponse(BaseModel):
     status: str = "ONLINE"
     service: str = "Rotax 912 iS Digital Twin Server"
     sortie_id: str
-    is_engine_running: bool
-    active_fault_id: int
+    is_engine_running: Optional[bool] = None   # null until the engine state machine (M1-12)
+    active_fault_id: Optional[int] = None
     connected_web_clients: int
     connected_blender_clients: int
-    loop_frequency_hz: float = 20.0
+    loop_frequency_hz: float = Field(..., description="configured tick rate (configs/runtime.json)")

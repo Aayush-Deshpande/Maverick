@@ -1,0 +1,64 @@
+ANUMAAN - REPOSITORY STRUCTURE (one line per top-level item; every folder has its own AGENTS.md + CLAUDE.md)
+Updated: 19 Nov 2026 (Phase 0). Rules: AGENTS.md. Decisions: DECISIONS.md. Where we are: PROGRESS.txt (RESUME HERE).
+
+START HERE
+  start_anumaan.bat              menu that starts everything (backend, dashboard, Blender twin, 3D window, tunnel, ...)
+  AGENTS.md / CLAUDE.md          rules for every AI agent (CLAUDE.md imports AGENTS.md + DECISIONS.md)
+  DECISIONS.md                   binding decisions D1, D2, ... (newest at the bottom)
+  PROGRESS.txt                   session log; the RESUME HERE block at the top says what to do next
+  ANUMAAN_AI_COURSE_OF_ACTION.txt   the plan: phases 0-10, cards, checks, prompts
+  ANUMAAN_ROADMAP_AND_PS_COVERAGE.txt  dynamic rule, engine data, PS coverage, milestones, test catalogue
+  ANUMAAN_COMPONENTS_ADDENDUM.txt   3D components per engine and the fault->component matrix
+  ANUMAAN_AUDIT_REPORT.txt       what was broken (issues 1-73) and the physics/fault specification
+
+CODE
+  backend/        FastAPI server, simulation, twin, detection, diagnosis, prognostics, copilot (backend/AGENTS.md)
+  frontend/       React + Vite + React Three Fiber web app (GCS dashboard, 3D) (frontend/AGENTS.md)
+  apps/           standalone clients: Blender twin apps, old three.js 3D window, desktop tools (apps/AGENTS.md)
+  configs/        engine data, CAN DBC, MAVLink; later faults/components/sensors/missions (configs/AGENTS.md)
+  tests/          pytest suite (baseline 333 passed / 3 known failures) (tests/AGENTS.md)
+  tests_e2e/      Playwright browser tests (added in card M6-07)
+  scripts/        launchers/ (all .bat), assets/ (inventory, scans, moves), blender/ (headless bpy tools),
+                  hooks/ (AI command guard), tools/ (older Blender build/render/export scripts), lib/, validate/
+  run_app.py      Python launcher (backend / Blender apps); finds Blender via BLENDER_EXE or D:\Blender
+
+ASSETS AND DATA
+  assets/         Blender sources (assets/blender/engines/<id>/...), models, renders, textures, manifests
+                  (assets/AGENTS.md; .blend files are never deleted)
+  data/           telemetry datasets, missions, mission reports, external/ (public dataset download scripts),
+                  documents/ (RAG folder, empty until card AI-03), graph_db/ (runtime file; moves to var/ in M0-11)
+  vendor/         third-party tools/libraries (PrognosticsMetricsLibrary, tools); local models are ignored
+  var/            runtime output (gitignored; created in card M0-11)
+
+DOCUMENTATION AND SITES
+  docs/           documentation index in docs/README.txt; reference/ (real manuals; reference/oem/ local only),
+                  submission/ (the submitted idea texts), history/ (old generated docs), cleanup/ (scans), build/
+                  (old AI hand-off docs, history)
+  docs_site/      public documentation website (Vite + React)
+  web/            static presentation site (web/site)
+
+ARCHIVE
+  archive_tracked/  retired code and files, kept with history (ARCHIVE_LOG.txt lists every move): doc_generators,
+                    experiments, synthetic_rag_corpus (generated fake manuals, never index), crazy_landing (Prasad's
+                    separate experiment), docs_study_zip, plus older archives
+
+DEPLOY AND CONFIG FILES (root, where the platforms expect them)
+  Dockerfile, .dockerignore, render.yaml (Render deploys main), railway.json, firebase.json, .firebaserc, pytest.ini,
+  requirements.txt, requirements-server.txt, requirements-optional.txt (optional features, D36), .env.example
+  (.env holds secrets and is never committed), .gitignore, .gitattributes (Git LFS for .blend and other binaries)
+
+EXTERNAL DEPENDENCIES (not in the repo; DECISIONS D33, D40, D43) - what | where | needed for | if missing
+  Ollama + models      | D:\AI\ollama\models (env OLLAMA_MODELS): qwen2.5 1.5b/7b/7b-instruct, coder 7b
+                       | copilot LLM (ANUMAAN_LLM_PROVIDER=ollama) | copilot answers deterministically (provider none)
+  Gemini API key       | .env GEMINI_API_KEY | copilot LLM (provider gemini) | provider reported UNAVAILABLE
+  Hugging Face models  | D:\AI\huggingface (env HF_HOME): all-MiniLM-L6-v2, bge-large-en-v1.5, Kokoro-82M,
+                       faster-whisper-small.en | RAG embeddings, voice | RAG ranking/voice UNAVAILABLE
+  Whisper large-v3-turbo | D:\AI\whisper\large-v3-turbo.pt | optional STT | not used by default
+  Voice models         | Voice/ (ignored): Kokoro-82M, ggml-tiny.en.bin (whisper.cpp) | voice copilot
+                       | voice UNAVAILABLE (the packages pywhispercpp + kokoro are also needed, requirements-optional.txt)
+  Blender 5.2          | D:\Blender\blender.exe (or env BLENDER_EXE) | Blender apps, asset pipeline | launchers report not found
+  Official manuals     | docs/reference/oem/ (gitignored; sources in docs/reference/SOURCES.txt) | RAG corpus | not cited
+  NASA ACES raw data   | data/telemetry/nasa_aces/raw (ignored, about 2 GB) | ACES loader (PUBLIC_PROXY) | loader unavailable
+  Blender backups      | assets/blender/_archive/blend1_backups/ (local, ignored) | safety copies only | -
+  Caches on D:         | PIP_CACHE_DIR=D:\AI\pip-cache, TORCH_HOME=D:\AI\torch, npm cache D:\AI\npm-cache,
+                       PLAYWRIGHT_BROWSERS_PATH=D:\AI\ms-playwright, UV_CACHE_DIR=D:\AI\uv-cache (C: is nearly full)

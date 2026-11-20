@@ -1,0 +1,807 @@
+ANUMAAN (SIH PS-26054) - 3D COMPONENTS AND FAULT HIGHLIGHTING ADDENDUM
+Follow-up to ANUMAAN_AUDIT_REPORT.txt (the version already shared with the team).
+Date: 18 Nov 2026. Branch audited: main, commit 9b5942e. No project file was changed.
+
+This document completes the "components" part that was left short in the earlier report (sections 22, 23 and 27).
+It gives, for every engine, the exact list of 3D components that exist today (checked against the real model
+files), the components that are missing, how to add them, which components every fault must highlight on every
+engine, and how to wire it so the same parts light up no matter where the fault is injected.
+
+
+1. HOW THIS WAS CHECKED
+
+A read-only script opened each engine model used by the 3D window (apps/threejs_twin/assets/models/draco/*.glb),
+read every mesh node name, grouped the nodes into proposed components with name patterns, and reported:
+- how many model nodes belong to each component,
+- which components do not exist in the model (MISSING),
+- which model nodes were not assigned to any component (UNASSIGNED).
+Result summary:
+  Rotax 912 iS : 106 nodes -> 17 components exist, 40 needed components missing, 0 unassigned.
+  Rotax 914    : 590 nodes -> 13 components exist (2 of them unreliable), 36 missing, 0 unassigned.
+  Rotax 915 iS : 15 nodes  -> 11 components exist (1 is the whole engine merged), 40 missing, 0 unassigned.
+  Austro AE300 : 163 nodes -> 69 components exist, 3 missing (radiator, thermostat, VGT actuator), 0 unassigned.
+  VRDE 2.2 L   : 426 nodes -> 67 components exist, 3 missing (radiator, airbox/filter, ECU), 2 unassigned
+                 (Crank_Sensor_Wire_1/2 - belong to sensor_crank_1/2).
+Conclusion: the two diesel models are ready for full per-part and per-cylinder highlighting today. The three Rotax
+models need Blender work before most faults can highlight the right part.
+
+
+2. CORRECTIONS TO SECTION 27 ("FAST FIX") OF THE EARLIER REPORT
+
+2.1 Rotax 914 cylinder heads: section 27 said "rename cylinder heads to Cylinder_Head_1..4 by position". The model
+    check shows the names do not mean what they say:
+      Rotax914_Cylinder_Bank_1  is about 244 x 144 x 162 units - it spans BOTH cylinders on one side of the boxer.
+      Rotax914_Cylinder_Head_4 and _5 are about 122 units wide - single barrels on the other side.
+      Rotax914_Cylinder_Head_2 and _3 are about 208 x 90 units and sit higher (y = 102.8) - probably head covers or
+      heads spanning two cylinders.
+    So the names cannot be trusted. Open the file in Blender, identify each object visually, then split/rename.
+    Do not rename by position alone.
+2.2 Rotax 914 "wastegate" (320 objects): median object size is about 9 units, only 26 objects are larger than 50
+    units. Most of the 320 are small fittings, clamps and bolts wrongly labelled. Reassign them by looking at them
+    in Blender (small ones -> fasteners/plumbing; large ones -> exhaust, turbo, wastegate). Only the real wastegate
+    and its actuator may keep the wastegate name.
+2.3 Rotax 912: every physical part is split into several objects by material (for example the ECU is 20 objects,
+    the base engine 21 objects). A component must therefore list SEVERAL node names. Exact-name matching is still
+    the rule, but the manifest stores the full list of exact names (generated once from the patterns in section 3).
+2.4 Draco files: the compressed Rotax 912 file in frontend/public/models has 109 nodes, the uncompressed one used by
+    the 3D window has 106. They are different exports. Regenerate all web files from the fixed .blend files with one
+    export script; do not mix the two old exports.
+2.5 Section 27 said the AE300 and VRDE "can be filled completely today" - confirmed, except radiator, thermostat
+    (AE300), VGT actuator (AE300), airbox/filter and ECU (VRDE), which do not exist in those models.
+
+
+3. COMPONENT MANIFEST PER ENGINE (what exists today, verified)
+
+Format: component_id = node name pattern (number of model nodes it matches).
+{n} = cylinder number 1-4. These patterns are used ONCE to generate the exact node-name lists in the manifest
+files; the viewer then matches exact names only.
+
+3.1 Rotax 912 iS (rotax_912is.glb)
+EXISTS:
+  crankcase_cylinders_base = Rotax_912i_Base_* (21)   - crankcase, barrels and heads merged together
+  covers                   = Covers_Theme_* (10)
+  cert_plate               = Cert_912iSSport_* (2)
+  cooling_air_baffle       = Cooling_Air_Baffle_* (1)
+  coolant_hoses            = Water_Hoses_* (7)
+  ecu                      = ECU_* (20)
+  wiring_harness           = Wiring_Harness_* (7)
+  exhaust                  = Exhaust_System_* (5)
+  alternator               = External_Alternator_* (2)
+  fuel_pump                = Fuel_Pump_* (6)
+  gearbox                  = Gearbox_Type_2_* (5)
+  oil_tank                 = Oil_Tank_* (4)
+  engine_mount             = Engine_Suspension_Frame_* (2)
+  starter                  = Starter_09Kw_* (2)
+  starter_relay            = Starter_Relay_* (5)
+  vacuum_pump              = Vacuum_Pump_Drive_* (2)
+  fittings                 = Fittings_* (5)
+MISSING (must be added or split in Blender):
+  cylinder_head_1..4, cylinder_barrel_1..4, injector_1..4, fuel_rail, spark_plug_1..4, ignition_coil_1..4,
+  airbox_filter, intake_manifold, oil_pump, oil_cooler, radiator, water_pump, prop_flange,
+  sensor_cht_1..4, sensor_egt_1..4, sensor_oil_press, sensor_oil_temp, sensor_map, sensor_coolant_temp.
+
+3.2 Rotax 914 (rotax_914.glb)
+EXISTS:
+  crankcase                = Rotax914_Crankcase_Block (1)
+  cylinder_bank_unverified = Rotax914_Cylinder_Bank_1, Rotax914_Cylinder_Head_2..5 (5)  - names unreliable (2.1)
+  rocker_covers            = Rotax914_Rocker_Cover_Red_* (2)
+  coolant_lines            = Rotax914_Coolant_Line_* (11)
+  intake_manifold          = Rotax914_Intake_Manifold_* (6)
+  turbo_compressor         = Rotax914_Turbo_Compressor_* (6)
+  turbo_turbine            = Rotax914_Turbo_Turbine_Exhaust_* (14)
+  wastegate_MISSEGMENTED   = Rotax914_Turbo_Wastegate_* (320)  - mostly not wastegate (2.2)
+  exhaust                  = Rotax914_Plumbing_Exhaust_* (24)
+  gearbox                  = Rotax914_Gearbox_Front_* (4)
+  prop_flange              = Rotax914_Prop_Flange, Rotax914_Prop_Flange.001 (2)
+  starter                  = Rotax914_Starter_Motor_* (3)
+  fasteners                = Rotax914_Fitting_Fastener_* (192)
+MISSING:
+  cylinder_head_1..4, cylinder_barrel_1..4, carburettor_1, carburettor_2, airbox_filter, tcu (turbo control unit),
+  wastegate (true part), wastegate_actuator, oil_tank, oil_pump, oil_cooler, radiator, water_pump, alternator,
+  fuel_pump, ignition_cdi, spark_plug_1..4, sensor_cht_1..4, sensor_egt_1..4, sensor_oil_press, sensor_oil_temp,
+  sensor_map.
+
+3.3 Rotax 915 iS (rotax_915is.glb)
+EXISTS:
+  main_engine_MERGED   = Main engine (1)   - almost the whole engine is this one object
+  air_baffles          = Air baffles (1)
+  intercooler          = Intercooler (1)
+  oil_tank             = Oil tank (1)
+  overboost_valve      = Overboost valve (1)
+  magneto_valve_block  = Magnetovalve (1)
+  ecu                  = ECU (1)
+  fusebox              = Fusebox (1)
+  gearbox              = Tranny (1)
+  ambient_sensor       = Ambient sensor (1)
+  unnamed_cad_parts    = 5608_@OIS@_5081, 6270_@OIS@_5818, 6289_@OIS@_5818, 7767_@OIS@_7310, 7786_@OIS@_7310 (5)
+MISSING:
+  cylinder_head_1..4, cylinder_barrel_1..4, crankcase, turbocharger, wastegate, injector_1..4, fuel_rail,
+  spark_plug_1..4, intake_manifold, airbox_filter, exhaust, oil_pump, oil_cooler, radiator, water_pump,
+  coolant_hoses, alternator, prop_flange, sensor_egt_1..4, sensor_cht_1..4, sensor_oil_press, sensor_map.
+
+3.4 Austro AE300 (austro_ae300.glb) - representative AE330-shaped geometry, label it as such in the UI
+EXISTS:
+  engine_block = Engine_Block_* (1)              cylinder_head = Cylinder_Head_* (1)
+  valve_cover = Valve_Cover*, Cam_Cover_Bolts* (2)   crank_pulley = Crank_Pulley* (1)
+  injector_1..4 = Injector_{n}_M* (1 each)       fuel_line_1..4 = Fuel_Line_{n}_M* (1 each)
+  injector_hardware = Injector_Hold_Downs*, Injector_Plugs* (2)
+  common_rail = Common_Rail_* (1)                rail_pressure_valve = Rail_PLV_Valve* (1)
+  hp_fuel_pump = HP_Fuel_Pump*, HP_Fuel_Nuts* (3)    fuel_metering_unit = Fuel_Pump_ZME* (1)
+  aux_fuel_pump = Aux_Pump* (1)                  fuel_lines_misc = Fuel_Banjo*, Fuel_Line_Comp*, Fuel_Line_Dampers*,
+                                                 Fuel_Quick*, Fuel_Spill* (5)
+  glow_plugs = Glow_Plugs_* (1, all four in one object)   glow_control_unit = Glow_Plug_Control_Unit*, GPC_* (3)
+  air_filter = Air_Filter_Box*, Air_Filter_Duct*, Air_Cleaner_Straps*, Air_Intake_Duct* (4)
+  intake_manifold = Intake_Manifold*, Manifold_Fasteners* (2)
+  turbocharger = Turbocharger*, VGT_Label*, Heat_Shield_Turbo* (3)
+  turbo_oil_lines = Turbo_Oil_Feed*, Turbo_Oil_Drain* (2)   turbo_coolant_lines = Turbo_Coolant_Lines* (1)
+  boost_pipes = Boost_Pipe_*, Silicone_Coupler_*, Hose_Clamps_* (12)   intercooler = Intercooler* (3)
+  exhaust = Exhaust_Manifold*, Exhaust_Downpipe* (2)
+  water_pump = Water_Pump* (3)                   coolant_hoses = Coolant_*, Bypass_Hose* (5)
+  oil_sump = Oil_Sump* (3)   oil_filter = Oil_Filter_* (1)   oil_cooler = Oil_Cooler_* (1)
+  oil_fill_dipstick = Oil_Dipstick*, Oil_Filler*, Dipstick* (5)
+  crankcase_breather = Crankcase_Breather*, Breather_Hose*, Top_Breather_Hose* (3)
+  gearbox = Gearbox*, GB_Bolt_* (19)   prop_flange = Prop_Flange* (1)
+  prop_governor = Prop_Governor_PCU*, PCU_Oil_Line* (2)
+  alternator = Generator_1*, Alternator_* (6)    belt_drive = Serpentine_Belt*, Belt_Tensioner*, Idler_Pulley* (4)
+  vacuum_pump = Vacuum_Tandem_Pump* (1)          starter = Starter* (2)          timing_gear = Timing_Gear_Aux* (1)
+  ecu_lane_a = ECU_Lane_A* (1)   ecu_lane_b = ECU_Lane_B* (1)   ecu_hardware = ECU_Bayonet*, ECU_Details*, ECU_Label* (5)
+  wiring_harness = Wiring_Harness*, Engine_Harness_Loom*, Harness_P_Clamps*, Wire_Marker* (10)
+  engine_mount = Engine_Mount_Frame*, Lord_Mount_* (3)
+  sensor_egt_1..4 = Sensor_EGT_{n}_* (1 each)    sensor_boost = Sensor_Boost* (2)
+  sensor_charge_air_temp (1), sensor_coolant_temp (2), sensor_oil_press (1), sensor_oil_temp (1),
+  sensor_fuel_rail_press (1), sensor_fuel_low_press (1), sensor_fuel_temp (1), sensor_fuel_flow (1),
+  sensor_rpm (1), sensor_crank (1), sensor_cam (2), sensor_gearbox_temp (1), sensor_gearbox_press (1),
+  sensor_turbine_inlet_temp = Sensor_TIT* (1)
+  misc = Blanket_Safety_Wire*, Brass_Fittings*, Cabin_Heat_Ports*, Torque_Seal_Marks* (4)
+MISSING: radiator, thermostat, vgt_actuator.
+NOTE: there is one Cylinder_Head and one Glow_Plugs object for all four cylinders, so per-cylinder highlighting on
+the AE300 works through injector_{n}, fuel_line_{n} and sensor_egt_{n}, not the head. Optionally split the head
+and glow plugs per cylinder in Blender.
+
+3.5 VRDE / Jayem 2.2 L (vrde_jayem_2_2l.glb) - geometry is the TEI PD170 model, label it as representative
+EXISTS:
+  engine_block = Engine_Block*, BH_Bolt_*, Bellhousing_Dowel_*, Intermediate_Bellhousing*, HB_Bolt_* (42)
+  cylinder_head = Cylinder_Head*, Label_Cyl_Head*, TC_Bolt_* (12)   valve_cover = Valve_Cover*, VC_Bolt_* (11)
+  flywheel (1)   timing_cover = Timing_Cover_* (2)
+  injector_1..4 = Injector_{n}_M*, Injector_{n}_LeakOff*, Injector_{n}_Wire* (4 each)
+  fuel_line_hp_1..4 = Fuel_Line_HP_Cyl{n}* (1 each)   glow_plug_1..4 = Glow_Plug_Cyl{n}* (1 each)
+  common_rail = Common_Rail* (2)   rail_relief_valve (1)   rail_pressure_sensor (1)   hp_fuel_pump (1)
+  fuel_filter = Fuel_Filter_ASAK*, Fuel_Hose_ASAK*, ASAK_* (3)   fuel_return = Fuel_Return_LeakOff_Rail* (1)
+  intake_manifold = Intake_Manifold*, Intake_Runner_Boss_*, InMan_Bolt_* (13)   intercooler (1)
+  turbo_hp = Turbo_HP_CHRA/CompressorVolute/Inlet_Cap/OilBoss/Turbine/TurbineVolute/VBand* (8)
+  turbo_lp = Turbo_LP_* (8)
+  turbo_ducts = Turbo_Interstage_Duct*, Turbo_Silicone_Coupler*, Turbo_T_Clamp_*, Swept_C_Hose_Clamp*,
+                Jubilee_Clamp_* (15)
+  turbo_oil_drain = Turbo_Oil_Drain*, Turbo_Drain_* (4)
+  wastegate = Wastegate_*, Turbo_HP_Wastegate_* (10)
+  exhaust = Exhaust_*, ExMan_Bolt_* (11)
+  water_pump (1)   thermostat = Thermostat_Housing (1)   coolant_hoses = Coolant_*, Top_Coolant_* (10)
+  oil_sump = Oil_Sump*, Sump_Bolt*, Sump_Drain_Plug* (38)   oil_filter (4)   oil_cooler (2)
+  oil_fill_dipstick = Oil_Filler_Cap*, Dipstick_Grip*, Label_Engine_Oil* (4)   crankcase_breather (1)
+  gearbox = Gearbox_* (except Governor and Lower_Port_Sensor), GBCover_Bolt_*, GB_Flange_Bolt_*,
+            Label_Reduction_Gbx* (53)
+  prop_governor = Gearbox_Governor*, Governor_Port_Cap* (2)
+  prop_flange = Prop_Flange*, Prop_Shaft_Cap*, Flange_Bolt_* (8)
+  alternator_1 = Generator_1* (1)   alternator_2 = Generator_2* (1)
+  alternator_wiring = Alternator_*, Power_Drop_Cable_* (12)   belt_drive = Serpentine_Belt*, Belt_Tensioner* (2)
+  starter = Starter* (6)
+  wiring_harness = Harness_*, Connector_Mil_*, Common_Rail_Wire_Tray*, Label_Harness_Tag* (57)
+  engine_mount = Engine_Mount_*, Mount_* (8)   lifting_eyes (2)
+  sensor_egt_1..4 (1 each), sensor_boost (1), sensor_map (1), sensor_charge_air_temp (1), sensor_coolant_temp (2),
+  sensor_oil_press (2), sensor_oil_temp (1), sensor_fuel_rail_press (1), sensor_fuel_flow (1), sensor_rpm (1),
+  sensor_crank_1 = Crank_Sensor_1* incl. Crank_Sensor_Wire_1 (2), sensor_crank_2 (2),
+  sensor_gearbox_vibration = Sensor_Vibration_Gearbox*, Gearbox_Lower_Port_Sensor* (2)
+  misc = Hose_Fitting_*, Port_Sensor_Yellow_Cap*, Label_*, Retainer_Bolt_*, Torque_Seal_Marks* (26)
+MISSING: radiator, airbox_filter, ecu.
+NOTE: one Cylinder_Head object for all cylinders (same as AE300); per-cylinder highlighting works through
+injector_{n}, fuel_line_hp_{n}, glow_plug_{n}, sensor_egt_{n}.
+
+
+4. BLENDER WORK LIST TO ADD THE MISSING COMPONENTS (Blender 5.2 at D:\Blender\blender.exe)
+
+General rules for all engines
+- Work on the master .blend per engine (assets/blender/<engine>.blend); delete duplicate copies afterwards
+  (rotax_915.blend == rotax_915is.blend; three 914 copies).
+- Naming: one object (or one empty with child objects) per component, named exactly <component_id> from section 3,
+  per-cylinder ones with the cylinder number (cylinder numbering must follow the manufacturer's numbering - check the
+  Rotax/Austro installation drawings: Rotax 912/914/915 cylinders 1-4 with 1/3 on one side and 2/4 on the other).
+- Add a custom property component_id on every component object (exported to glTF "extras" when "Include > Custom
+  Properties" is on).
+- Material-split meshes (912): keep the material objects but parent them under one empty named after the
+  component; the manifest lists all child node names.
+- Placeholder parts are allowed where real geometry is missing (a simple, correctly placed and sized shape with a
+  neutral material) - far better than lighting the whole engine. Mark them with custom property placeholder=true so
+  they can be replaced later.
+- After editing: apply transforms, check normals, export with modifiers applied, then run the asset test (section 8).
+
+Rotax 912 iS
+1. Separate the merged base (Rotax_912i_Base_*, 21 objects) into: crankcase, cylinder_barrel_1..4,
+   cylinder_head_1..4, intake_manifold, using Edit Mode > Separate > By Loose Parts, then join pieces per component
+   and rename. Each piece must keep its material.
+2. Add placeholders (if geometry is not inside the base): injector_1..4 + fuel_rail (on the intake side of each
+   head), spark_plug_1..4 and ignition_coil_1..4 (two plugs per cylinder exist on Rotax; one placeholder per
+   cylinder is enough for highlighting), airbox_filter, oil_pump, oil_cooler, radiator, water_pump, prop_flange,
+   sensor_cht_1..4 (on each head), sensor_egt_1..4 (on each exhaust pipe near the head), sensor_oil_press,
+   sensor_oil_temp, sensor_map, sensor_coolant_temp.
+3. Parent the existing material-split objects of each existing component (ECU 20 objects, Water_Hoses 7, etc.)
+   under one empty per component.
+
+Rotax 914
+1. Inspect Rotax914_Cylinder_Bank_1 and Rotax914_Cylinder_Head_2..5 visually; split and rename into
+   cylinder_barrel_1..4 and cylinder_head_1..4 with correct cylinder numbers (see correction 2.1).
+2. Reassign the 320 Rotax914_Turbo_Wastegate_* objects: select by size (small ones -> fasteners/plumbing), check the
+   26 large ones individually (exhaust, turbo housing, wastegate, actuator). Only the true wastegate keeps the name.
+3. Add placeholders: carburettor_1, carburettor_2 (the 914 is carburetted), airbox_filter, tcu, wastegate_actuator,
+   oil_tank, oil_pump, oil_cooler, radiator, water_pump, alternator, fuel_pump, ignition_cdi, spark_plug_1..4,
+   sensor_cht_1..4, sensor_egt_1..4, sensor_oil_press, sensor_oil_temp, sensor_map.
+
+Rotax 915 iS
+1. "Main engine" (one object, 114 material parts): Separate > By Material first (it already has the material split
+   in its primitives), then By Loose Parts, then join and rename into crankcase, cylinder_barrel_1..4,
+   cylinder_head_1..4, turbocharger, wastegate, intake_manifold, exhaust, injector_1..4, fuel_rail, water_pump,
+   coolant_hoses, alternator, prop_flange, sensors.
+2. Rename the five CAD-id objects (5608_@OIS@_5081 etc.) after identifying them.
+3. Add placeholders for anything that is not in the geometry (airbox_filter, oil_pump, oil_cooler, radiator,
+   sensor_egt_1..4, sensor_cht_1..4, sensor_oil_press, sensor_map).
+
+Austro AE300
+1. Add placeholders: radiator, thermostat, vgt_actuator (on the turbocharger).
+2. Optional: split Cylinder_Head and Glow_Plugs per cylinder (cylinder_head_1..4, glow_plug_1..4).
+3. Label in the UI as "representative geometry (AE330 shape)" unless real AE300 geometry is obtained.
+
+VRDE / Jayem 2.2 L
+1. Add placeholders: radiator, airbox_filter, ecu (the model has a harness and connectors but no ECU box).
+2. Assign Crank_Sensor_Wire_1/2 to sensor_crank_1/2.
+3. Optional: split Cylinder_Head per cylinder.
+4. Label in the UI as "representative 2.2 L CRDI geometry" until real VRDE/Jayem geometry is available.
+
+
+5. FAULT -> COMPONENT MATRIX FOR EVERY ENGINE
+
+Read each line as:  engine: NOW = what to highlight with today's models  |  TARGET = after the Blender work.
+"n/a" = fault does not apply to that engine. {n} = the faulty cylinder. Fault ids match section 22 of the report.
+Where NOW has no real part, the viewer shows the NOW parts plus a location marker at the TARGET part's position
+(the existing orange "INJECTOR_1_LOCATOR" approach), so the operator still sees where the problem is.
+
+F01 IGNITION_MISFIRE (per cylinder)
+  912: NOW wiring_harness + marker | TARGET spark_plug_{n}, ignition_coil_{n}, cylinder_head_{n}
+  914: NOW cylinder_bank_unverified + marker | TARGET spark_plug_{n}, ignition_cdi, cylinder_head_{n}
+  915: NOW main_engine_MERGED + marker | TARGET spark_plug_{n}, cylinder_head_{n}
+  AE300, VRDE: n/a (compression ignition - use F08 instead)
+F02 COMBUSTION_INSTABILITY (per cylinder)
+  912/914/915: same as F01
+  AE300: NOW injector_{n}, fuel_line_{n} | TARGET same + cylinder_head_{n}
+  VRDE: NOW injector_{n}, fuel_line_hp_{n} | TARGET same + cylinder_head_{n}
+F03 DETONATION / KNOCK
+  912: NOW crankcase_cylinders_base + marker | TARGET cylinder_head_1..4
+  914: NOW cylinder_bank_unverified | TARGET cylinder_head_1..4
+  915: NOW main_engine_MERGED | TARGET cylinder_head_1..4
+  AE300, VRDE: n/a
+F04 IGNITION_LANE_FAILURE
+  912: NOW ecu, wiring_harness | TARGET same
+  914: NOW marker | TARGET ignition_cdi
+  915: NOW ecu, fusebox | TARGET same
+  AE300, VRDE: n/a (see F36)
+F05 INJECTOR_CLOG_SI (per cylinder)
+  912: NOW fuel_pump + marker at injector {n} | TARGET injector_{n}, fuel_rail
+  914: n/a (carburetted - see F10/F12)
+  915: NOW main_engine_MERGED + marker | TARGET injector_{n}, fuel_rail
+  AE300, VRDE: n/a (see F06-F08)
+F06 INJECTOR_COKING_CI (per cylinder)
+  AE300: NOW injector_{n}, fuel_line_{n} | TARGET same
+  VRDE: NOW injector_{n}, fuel_line_hp_{n} | TARGET same
+  Rotax engines: n/a
+F07 INJECTOR_STUCK_OPEN / LEAKING (per cylinder)
+  AE300: NOW injector_{n}, common_rail | TARGET same
+  VRDE: NOW injector_{n}, fuel_return | TARGET same
+  912/915: NOW as F05 | TARGET injector_{n}, fuel_rail
+  914: n/a
+F08 INJECTOR_STUCK_CLOSED / NEEDLE STICK (per cylinder)
+  AE300: NOW injector_{n} | VRDE: NOW injector_{n} | Rotax: n/a
+F09 RAIL_PRESSURE_DECAY
+  AE300: NOW hp_fuel_pump, common_rail, rail_pressure_valve, sensor_fuel_rail_press | TARGET same
+  VRDE: NOW hp_fuel_pump, common_rail, rail_relief_valve, rail_pressure_sensor | TARGET same
+  Rotax: n/a
+F10 FUEL_SUPPLY_LOW_PRESSURE
+  912: NOW fuel_pump | TARGET fuel_pump, fuel_rail
+  914: NOW marker | TARGET fuel_pump, carburettor_1, carburettor_2
+  915: NOW marker | TARGET fuel_pump (add), fuel_rail
+  AE300: NOW fuel_metering_unit, aux_fuel_pump, sensor_fuel_low_press | TARGET same
+  VRDE: NOW fuel_filter | TARGET fuel_filter + low-pressure pump (add)
+F11 INJECTION_TIMING_DRIFT
+  912: NOW ecu | TARGET same
+  914: NOW marker | TARGET ignition_cdi
+  915: NOW ecu | TARGET same
+  AE300: NOW ecu_lane_a, ecu_lane_b, sensor_cam, sensor_crank | TARGET same
+  VRDE: NOW sensor_crank_1, sensor_crank_2, wiring_harness | TARGET same + ecu (add)
+F12 CARBURETTOR_ICING
+  914 only: NOW intake_manifold + marker | TARGET carburettor_1, carburettor_2
+F13 AIR_FILTER_BLOCKAGE
+  912: NOW marker | TARGET airbox_filter, intake_manifold
+  914: NOW intake_manifold | TARGET airbox_filter, intake_manifold
+  915: NOW marker (do NOT use Air baffles - those are cooling parts) | TARGET airbox_filter
+  AE300: NOW air_filter | TARGET same
+  VRDE: NOW intake_manifold + marker | TARGET airbox_filter, intake_manifold
+F14 BOOST_LEAK
+  912: n/a (not turbocharged)
+  914: NOW turbo_compressor, intake_manifold | TARGET same
+  915: NOW intercooler | TARGET intercooler + charge pipes (add)
+  AE300: NOW boost_pipes, intercooler | TARGET same
+  VRDE: NOW turbo_ducts, intercooler | TARGET same
+F15 WASTEGATE_STUCK_OPEN (AE300: VGT_STUCK_OPEN)
+  914: NOW turbo_turbine + marker (do NOT use wastegate_MISSEGMENTED) | TARGET wastegate, wastegate_actuator
+  915: NOW overboost_valve, magneto_valve_block | TARGET wastegate + same
+  AE300: NOW turbocharger | TARGET turbocharger, vgt_actuator
+  VRDE: NOW wastegate | TARGET same
+  912: n/a
+F16 WASTEGATE_STUCK_CLOSED / OVERBOOST
+  Same components as F15 on each engine.
+F17 TURBO_BEARING_WEAR
+  914: NOW turbo_compressor, turbo_turbine | TARGET same
+  915: NOW marker | TARGET turbocharger
+  AE300: NOW turbocharger, turbo_oil_lines | TARGET same
+  VRDE: NOW turbo_hp, turbo_lp, turbo_oil_drain | TARGET same
+  912: n/a
+F18 INTERCOOLER_FOULING
+  915: NOW intercooler | AE300: NOW intercooler, sensor_charge_air_temp | VRDE: NOW intercooler,
+  sensor_charge_air_temp | 912, 914: n/a (no intercooler)
+F19 COOLING_AIR_DEGRADATION (per cylinder or whole engine)
+  912: NOW cooling_air_baffle | TARGET cooling_air_baffle + cylinder_barrel_{n}
+  914: NOW cylinder_bank_unverified | TARGET baffles (add) + cylinder_barrel_{n}
+  915: NOW air_baffles | TARGET air_baffles + cylinder_barrel_{n}
+  AE300, VRDE: n/a (fully liquid cooled - use F20/F21)
+F20 COOLANT_LOSS / WATER_PUMP_FAILURE
+  912: NOW coolant_hoses | TARGET coolant_hoses, water_pump
+  914: NOW coolant_lines | TARGET coolant_lines, water_pump
+  915: NOW marker | TARGET coolant_hoses, water_pump
+  AE300: NOW water_pump, coolant_hoses, sensor_coolant_temp | TARGET same
+  VRDE: NOW water_pump, coolant_hoses, sensor_coolant_temp | TARGET same
+F21 RADIATOR_BLOCKAGE
+  All engines: NOW marker (no radiator in any model) | TARGET radiator
+F22 THERMOSTAT_STUCK
+  AE300: NOW marker | TARGET thermostat
+  VRDE: NOW thermostat | TARGET same
+  Rotax: only if a thermostat is fitted in the installation; otherwise n/a
+F23 OIL_PRESSURE_LOSS
+  912: NOW oil_tank | TARGET oil_tank, oil_pump, sensor_oil_press
+  914: NOW crankcase + marker | TARGET oil_tank, oil_pump, sensor_oil_press
+  915: NOW oil_tank | TARGET oil_tank, oil_pump, sensor_oil_press
+  AE300: NOW oil_sump, oil_filter, sensor_oil_press | TARGET same
+  VRDE: NOW oil_sump, oil_filter, sensor_oil_press | TARGET same
+F24 OIL_LEAK / LOW_OIL_QUANTITY
+  912: NOW oil_tank | 914: NOW crankcase + marker (TARGET oil_tank) | 915: NOW oil_tank
+  AE300: NOW oil_sump, crankcase_breather | VRDE: NOW oil_sump, crankcase_breather
+F25 OIL_COOLER_BLOCKAGE
+  912/914/915: NOW marker | TARGET oil_cooler
+  AE300: NOW oil_cooler, sensor_oil_temp | VRDE: NOW oil_cooler, sensor_oil_temp
+F26 BEARING_WEAR
+  912: NOW crankcase_cylinders_base | TARGET crankcase
+  914: NOW crankcase | 915: NOW main_engine_MERGED (TARGET crankcase)
+  AE300: NOW engine_block, oil_filter | VRDE: NOW engine_block, oil_filter
+F27 GEARBOX_DAMAGE
+  912: NOW gearbox | 914: NOW gearbox | 915: NOW gearbox (Tranny)
+  AE300: NOW gearbox, sensor_gearbox_temp, sensor_gearbox_press | VRDE: NOW gearbox, sensor_gearbox_vibration
+F28 PROPELLER_IMBALANCE
+  912: NOW marker | TARGET prop_flange
+  914: NOW prop_flange | 915: NOW marker (TARGET prop_flange)
+  AE300: NOW prop_flange | VRDE: NOW prop_flange
+F29 ENGINE_MOUNT_DEGRADATION
+  912: NOW engine_mount | 914: NOW marker (TARGET engine mount, add) | 915: NOW marker (TARGET add)
+  AE300: NOW engine_mount | VRDE: NOW engine_mount
+F30 COMPRESSION_LOSS (per cylinder)
+  912: NOW crankcase_cylinders_base + marker | TARGET cylinder_head_{n}, cylinder_barrel_{n}
+  914: NOW cylinder_bank_unverified | TARGET cylinder_head_{n}, cylinder_barrel_{n}
+  915: NOW main_engine_MERGED + marker | TARGET cylinder_head_{n}, cylinder_barrel_{n}
+  AE300: NOW cylinder_head + marker at cylinder {n} | TARGET cylinder_head_{n} (split)
+  VRDE: NOW cylinder_head + marker at cylinder {n} | TARGET cylinder_head_{n} (split)
+F31 EXHAUST_LEAK / EGT_IMBALANCE (per cylinder)
+  912: NOW exhaust | TARGET exhaust + sensor_egt_{n}
+  914: NOW exhaust | TARGET exhaust + sensor_egt_{n}
+  915: NOW marker | TARGET exhaust + sensor_egt_{n}
+  AE300: NOW exhaust, sensor_egt_{n} | VRDE: NOW exhaust, sensor_egt_{n}
+F32 ALTERNATOR_DEGRADATION / FAILURE
+  912: NOW alternator | 914: NOW marker (TARGET alternator) | 915: NOW marker (TARGET alternator)
+  AE300: NOW alternator, belt_drive | VRDE: NOW alternator_1 (and/or alternator_2), belt_drive, alternator_wiring
+F33 VOLTAGE_REGULATOR_FAULT
+  All: NOW alternator (or marker where missing) + wiring_harness | TARGET regulator (add) - or show in 2D panel only
+F34 BATTERY_DEGRADATION
+  All: battery is airframe-mounted, not in the engine models - show in the 2D electrical panel; 3D shows starter
+  (912 starter, starter_relay; 914 starter; AE300 starter; VRDE starter) as context only.
+F35 GLOW_PLUG_FAILURE (per cylinder)
+  AE300: NOW glow_plugs (all four in one object) + marker at cylinder {n}, glow_control_unit | TARGET glow_plug_{n}
+  VRDE: NOW glow_plug_{n} | TARGET same
+  Rotax: n/a
+F36 ECU_LANE_FAILURE
+  912: NOW ecu | 915: NOW ecu, fusebox | AE300: NOW ecu_lane_a OR ecu_lane_b (the failed lane only)
+  VRDE: NOW wiring_harness + marker | TARGET ecu (add) | 914: n/a (TCU fault -> highlight tcu after adding)
+F37 PROP_GOVERNOR_FAULT
+  AE300: NOW prop_governor | VRDE: NOW prop_governor | Rotax: n/a unless the installation has a governor
+S01-S07 SENSOR FAULTS (per channel)
+  Highlight the sensor component of that channel:
+  CHT_n -> sensor_cht_{n} | EGT_n -> sensor_egt_{n} | oil pressure -> sensor_oil_press | oil temperature ->
+  sensor_oil_temp | coolant temperature -> sensor_coolant_temp | MAP/boost -> sensor_map / sensor_boost |
+  fuel flow -> sensor_fuel_flow | fuel pressure -> sensor_fuel_low_press | rail pressure -> sensor_fuel_rail_press
+  / rail_pressure_sensor | rpm -> sensor_rpm / sensor_crank | charge air temp -> sensor_charge_air_temp |
+  gearbox temp/press -> sensor_gearbox_temp / sensor_gearbox_press | vibration -> sensor_gearbox_vibration.
+  AE300 and VRDE: these exist today for almost all channels (see 3.4/3.5).
+  912/914/915: NOW ecu (912/915) or marker (914) + a "SENSOR" label naming the channel | TARGET the added sensor
+  placeholders from section 4.
+
+Coverage summary
+- AE300: every applicable fault highlights a real part today (radiator, thermostat and VGT actuator use a marker
+  until added).
+- VRDE: every applicable fault highlights a real part today (radiator, airbox and ECU use a marker until added).
+- 912: 13 of the applicable faults have a reasonable part today; all per-cylinder faults and sensor faults need the
+  Blender work.
+- 914: about half need the Blender work (cylinders, carburettors, oil system, wastegate re-segmentation).
+- 915: most faults need the Blender work (the engine is one merged object).
+
+
+6. FILES AND DATA FORMAT
+
+6.1 configs/components/<engine>.json (one per engine), example entry in words:
+  component_id: "injector_2"
+  display_name: "Injector, cylinder 2"
+  subsystem: "fuel_injection"
+  cylinder: 2
+  nodes: exact GLB node names, e.g. ["Injector_2_M_Steel_0"] (generated from the patterns in section 3)
+  placeholder: false
+  focus: camera target point and distance for the "focus" button
+  marker_position: point used when the part is missing (for NOW entries that use a marker)
+  representative_geometry: true/false (true for AE300 and VRDE today, shown as a note in the UI)
+6.2 configs/faults.json (from the report, section 18 step 2) gets, per fault and per engine:
+  components_now: list of component ids (with {cyl} where per-cylinder)
+  components_target: list of component ids after the Blender work
+  marker: true/false (show the location marker because a TARGET part is missing)
+  applies: true/false (n/a engines are false and the fault is not offered for them)
+6.3 One generator script (scripts/tools/build_component_manifests.py) reads each GLB, applies the patterns, writes the
+  manifest files, and fails if any pattern matches nothing or any node is unassigned. Run it after every export.
+
+
+7. HOW THE HIGHLIGHT REACHES EVERY SCREEN
+
+7.1 Backend: when a fault is injected (from any surface), the fault manager stores mode, cylinder, channel,
+  severity, origin. Every state message then includes for each active fault:
+    fault_id, mode, cylinder, channel, origin, severity, components (resolved: {cyl} replaced, "now" list while the
+    target parts do not exist, then the target list), nodes (exact GLB node names), marker (position or null).
+  The diagnosis hypotheses carry the same fields for the detected fault.
+7.2 All viewers draw only what the message says:
+  - React 3D view (new, React Three Fiber): amber outline = injected; red pulse = detected; blue = sensor fault;
+    marker sprite where marker is set; legend of all active faults; restore original materials on clear.
+  - Old 3D window (apps/threejs_twin, until retired): replace ENGINE_FAULT_TARGETS with the nodes from the message;
+    add profiles for austro_ae300 and vrde_jayem_2_2l; move the Rotax 912 from /api/control + /ws/telemetry to
+    /api/engines/rotax_912is/faults + /ws/engines/rotax_912is.
+  - Blender app: read nodes from /api/engines/{id}/state and highlight by exact object name; remove its private
+    fault numbering and offline fake data.
+  - Tactical GCS and console fault buttons: call the same POST /api/engines/{id}/faults.
+7.3 Result: one injection anywhere -> one active fault in the backend -> the same nodes highlighted on every screen
+  on the next state message. Clearing anywhere removes it everywhere.
+
+
+8. TESTS FOR COMPONENTS
+
+1. Manifest test: every pattern matches at least one node; no unassigned nodes (warn), no node in two components
+   (error unless allowed).
+2. Fault coverage test: for every engine and every applicable fault, components_now resolves to at least one existing
+   node OR marker=true with a marker position; components_target exists after the Blender milestone.
+3. No forbidden mappings: the test fails if a fault maps to wastegate_MISSEGMENTED, main_engine_MERGED or
+   crankcase_cylinders_base after the Blender milestone, or to "Air baffles" for an air-filter fault.
+4. Per-cylinder test: for every per-cylinder fault on every engine, cylinder 1..4 resolve to different nodes (or to
+   a marker at different positions).
+5. End-to-end test (Playwright): inject F06 on AE300 cylinder 3 from the console; the 3D view on a second client
+   highlights Injector_3 and Fuel_Line_3 only; clear from the 3D view; both clients show no highlight.
+6. Asset size test: each web model under the size budget (for example 20 MB) and loads with the Draco/Meshopt
+   decoder.
+
+
+9. ORDER OF WORK
+
+Step 1 (no Blender needed): manifest generator + manifests for all five engines, faults.json component fields with
+  the NOW lists, backend resolution, old 3D window and Blender app switched to the message, AE300 and VRDE added to
+  the 3D view, Rotax 912 moved to the new API. After this, injection from anywhere highlights the same parts on all
+  screens, and the two diesels are complete.
+Step 2 (Blender): 915 split, 914 re-segmentation and cylinder identification, 912 component grouping and
+  placeholders, diesel placeholders (radiator, thermostat, VGT actuator, airbox, ECU). Re-export, regenerate
+  manifests, switch faults to the TARGET lists.
+Step 3: React Three Fiber viewer replaces the old 3D window; outline/pulse/marker highlighting; tests 1-6 in CI.
+
+
+=====================================================================================================================
+PART 2 - HOW TO FIX EVERYTHING IN THE PROJECT SO IT WORKS AS INTENDED (file-by-file guide)
+=====================================================================================================================
+
+This part turns every issue in the report (section 15, issues 1-50) into concrete work: which files, what to change,
+what to delete, and how to check it worked. Work in the phase order below; each phase leaves the app runnable.
+Line numbers refer to main @ 9b5942e.
+
+
+PHASE A - ONE SIMULATOR, ONE STATE, ONE FAULT PATH (issues 1, 6, 7, 8, 18, 21, 23, 42, 44, 50)
+
+A1. Stop the second simulator for the Rotax 912 (issues 1, 7, 8)
+  backend/runtime/hub.py, tick_all() lines 47-54: delete the block that calls
+    EngineStateService._instance.sync_from_tick(t).
+  backend/server/engine_service.py:
+    - delete sync_from_tick() (lines 704-846) completely - it writes the fixed values (lambda 14.7, injection timing
+      18.5, ignition 22.0, BSFC 270, efficiency 0.31, battery current 0.2, power = rpm x throttle / 5400, health 1.0)
+      and overwrites throttle/altitude/OAT/engine-running every tick;
+    - delete _run_loop() and the 20 Hz worker thread started in __init__ (lines 244-247 and 249-262);
+    - delete the second get_latest_state() (lines 1032-1043) (issue 44);
+    - replace the string-splitting tricks "".join(["rot","ax_9","12is"]), f"C{'HT'}_{i}", f"E{'GT'}_{i}"
+      (lines 227, 232, 452-457, 723-724) with values from the engine config (fixes the failing ratchet test).
+  Turn EngineStateService into a thin adapter (rename it LegacyStateAdapter, new file
+  backend/api/legacy_adapter.py):
+    - get_state(): take RuntimeHub.runtimes["rotax_912is"].buffer[-1] and translate field names to the old
+      UnifiedTelemetryState names. If a value does not exist in the new runtime, send null, never a constant.
+    - handle_command(): SET_FAULT -> runtime.inject_fault (using legacy_drdo_id from configs/faults.json, never list
+      position); CLEAR_FAULT -> runtime.clear_faults; SET_THROTTLE/SET_ALTITUDE/SET_OAT -> runtime.set_levers;
+      START_ENGINE/STOP_ENGINE -> new runtime start/stop commands (Phase C); SET_REGIME -> lever preset;
+      EXPORT_DEBRIEF -> new report writer (Phase H).
+  backend/server/main.py: broadcast_telemetry_loop() reads from the adapter (or is removed once the Tactical GCS
+    uses the new API, step A4). Remove the EngineStateService start-up from lifespan().
+  backend/telemetry/can_streamer.py: no longer used for live data; keep generate_flight_log only if a test needs it,
+    otherwise move to archive_tracked/. Keep DRDO_FAULT_DEFINITIONS only until configs/faults.json has
+    legacy_drdo_id for all eight PS faults, then delete it.
+  backend/plant/adapter.py: delete (it blends the old streamer with the plant).
+  Check: run the server, inject oil pressure loss from the Tactical GCS, read /api/state 1,000 times in 25 ms steps:
+    oil pressure only decreases; no lambda 14.7 / timing 18.5; SET_THROTTLE 95 shows 95; STOP_ENGINE stops.
+
+A2. Fault id mapping by list position (issue 18)
+  backend/server/engine_api.py lines 166-176: remove the thermal_visible_faults(cfg)[fault_id - 1] lookup and the
+  fallback to MISFIRE cylinder 1. Resolve numeric ids only through legacy_drdo_id in configs/faults.json; reject
+  anything else with 422 and a message.
+
+A3. One fault registry (issue 21) - see section 6 of this addendum and section 22 of the report
+  Create configs/faults.json. Load and validate it in a new backend/faults/registry.py. Replace:
+    backend/plant/virtual_engine.py PLANT_FAULTS, backend/runtime/registry.py _SPECS/FAULT_REGISTRY,
+    backend/ml/detection_pipeline.py FAULT_NAMES, backend/server/engine_service.py FAULT_TARGET_PARTS,
+    backend/telemetry/can_streamer.py DRDO_FAULT_DEFINITIONS, apps/blender_twin/standalone_digital_twin_app.py
+    per-engine 'faults' dicts (lines ~175, 301, 427, 553, 679), apps/blender_twin/standalone_fault_diagnostic_app.py
+    target_parts dicts, apps/blender_twin/flight_mission_recorder.py FAULT_SPECS,
+    apps/threejs_twin/index.html ENGINE_FAULT_TARGETS (line 881), frontend/src/components/FaultMatrix.tsx list.
+  All of them read the registry (backend) or the /api/v1/engines response (frontends).
+
+A4. One fault API for every surface (issues 6, 23)
+  - React console (frontend/src/components/EngineRuntimeConsole.tsx) already uses POST /api/engines/{id}/faults.
+  - Tactical GCS (frontend/src/components/FaultMatrix.tsx, EngineControls.tsx): change onCommand({action:
+    'SET_FAULT'...}) to the same POST, with the selected engine id.
+  - 3D window (apps/threejs_twin/index.html injectSelectedFault() line ~1903, clearFault() line ~1942,
+    connectBackendTelemetry() line ~2499, updateCanonical912Frame() line ~2438): remove the legacy912 branches so the
+    Rotax 912 uses /api/engines/rotax_912is/faults and /ws/engines/rotax_912is like every other engine.
+  - Blender app (standalone_digital_twin_app.py CONTROL_ENDPOINT/LEGACY_CONTROL_ENDPOINT lines ~701-704 and the
+    receiver thread lines ~815-930): use only /api/engines/{id}/state and /faults; delete the legacy /api/state
+    merge (lines ~850-865).
+  - Engine selection becomes per client: remove the global hub.selected effect on what clients see
+    (backend/runtime/hub.py select()); /api/engines/select only warms tier-1. Frontends subscribe to the engine they
+    show. The 3D window's syncBackendEngineSelection() (line ~2347) must not change other clients.
+  - Default engine: the React console and the 3D window open the same engine (from the URL, else the first READY
+    engine in the catalog), and the backend no longer has a hidden "first alphabetical" selection (issue 23).
+  Check: two browsers, one on the console and one on the 3D view, same engine: inject in one, see it in the other
+  on the next message; select a different engine in one, the other does not change.
+
+A5. Tracked files written at runtime (issue 50)
+  backend/server/engine_service.py lines 166-171 (graph_db path) and _log_telemetry_row() (lines 970-996): move the
+  runtime data folder to a path from an environment variable (default ./runtime_data/, add to .gitignore). Ship a
+  clean seed data/graph_db/fleet_graph.seed.json. Restore the modified fleet_graph.json from Git before committing.
+
+A6. Too many connections (issue 42)
+  frontend/src/App.tsx: mount useTelemetrySocket only while the Tactical GCS is open (or remove it after A4).
+  frontend/src/hooks/useEngineRuntime.ts: remove the 1 s /state fallback poll (lines ~103-111) and the 3 s catalog
+  poll (line ~60); refresh the catalog on connect and on FAULT/ENGINE events. 3D window: remove the 2 s
+  /api/engines poll (startBackendMonitor, line ~2432) and read active faults from the state message.
+  App.tsx handleSelectRole/handleTabClick: stop sending SET_ROLE to the server (role is a client view setting).
+
+
+PHASE B - FAULT MANAGER AND HONEST DIAGNOSIS (issues 4, 9, 12, 13, 32, 36, 46)
+
+B1. Fault manager (backend/faults/manager.py, used by EngineRuntime)
+  - Keeps a list of active faults (id, mode, cylinder, channel, severity, ramp, origin, start sim_time, request_id).
+  - Duplicate request_id -> ignored; same mode+cylinder -> update severity.
+  - Clear one (DELETE /faults/{fault_id}) or all; emits FAULT_INJECTED / FAULT_CLEARED events with origin.
+  - Clear also resets: detector persistence gate, sanity validator, validity monitor, caches, and (configurable)
+    the damage accumulator (issue 46: today damage survives a clear).
+  - Validates applicability, cylinder range, severity 0..1, ramp > 0 (422 otherwise).
+
+B2. Remove the "diagnosis from the command" shortcut (issue 4)
+  backend/runtime/engine_runtime.py ingest():
+    - lines 426-450: reliability damage must come from the twin's estimated health parameters and confirmed
+      diagnoses, not from self.injected / truth.active_faults;
+    - lines 480-522: delete the block that picks fault_id from active_inj and the fixed confidence 0.98/0.99;
+      replace with the diagnosis module (B3);
+    - line 145 and lines 406-416: damage from the faulted cylinder's head temperature, not always cht[0] (issue 46).
+  Add tests/test_no_truth_leak_runtime.py: fails if detection/diagnosis/status/reliability code reads
+  self.injected, truth.active_faults or the fault manager (import-linter or AST check).
+
+B3. Diagnosis from evidence (issues 9, 12)
+  New backend/diagnosis/isolation.py:
+    - residual vector per tick: measured - UKF prediction (backend/twin/ukf.py), normalised by the innovation
+      standard deviation;
+    - signature matching against expected_signature in configs/faults.json (direction and relative size per
+      channel), per-cylinder channels give the cylinder;
+    - wire backend/diagnose/bn.py (Bayesian network) and backend/reliability/isolability.py for probabilities and
+      ambiguity groups;
+    - output: hypotheses [{fault_id, cylinder, probability, supporting, contradicting, components}] + UNKNOWN.
+  The legacy RandomForest pipeline (backend/ml/detection_pipeline.py) is retired with the old simulator; this fixes
+  "oil pressure loss -> GEARBOX_VIBRATION" and "engine off -> ALTERNATOR_VOLTAGE_SAG".
+  The ATA directive (backend/agent/diagnostic_agent.py) is looked up from the top hypothesis' registry entry.
+  Check: for every engine and fault, the top-3 hypotheses contain the true fault and cylinder (coverage test).
+
+B4. Sensor fault detection (issue 13)
+  backend/detection/sensor_fdi.py:
+    - stuck: rolling variance of the channel below a floor while correlated channels (other cylinders, rpm, fuel)
+      vary above theirs;
+    - bias/drift: two-sided CUSUM on the normalised innovation of the channel + cross-check with sibling cylinders;
+    - dropout/out-of-range: existing backend/physics/sensor_validator.py checks;
+    - on detection: quarantine the channel (Q_SHIELDED), substitute the virtual sensor
+      (backend/twin/virtual_sensors.py), raise SENSOR fault hypothesis with the sensor component.
+  backend/sim/sensors.py (Phase C): make SENSOR_DRIFT rate realistic but demo-visible (1-3 C/min at severity 1,
+  configurable); give each sensor its own random generator.
+
+B5. Twin validity always INVALID (issue 32)
+  backend/runtime/engine_runtime.py line 398: oil pressure residual must use the UKF/twin prediction, not the
+  constant 3.5 bar; tune TwinValidityMonitor expected_sigma from calibration data.
+
+B6. False alarms (issue 36)
+  backend/detect/calibration.py / detector.py: calibrate thresholds on a longer, more varied nominal run (all lever
+  ranges), use the twin residuals from B3, require persistence; target < 1 false confirmed alarm per hour of
+  nominal flight; measure it in a test.
+
+
+PHASE C - REAL PHYSICS (issues 5, 10, 11, 15, 16, 17, 38, 39, 45)
+
+C1. New backend/sim/ package exactly as in report section 21.2-21.4, wrapped by backend/sources/plant_source.py so
+  the Frame/TruthRecord contract stays the same. Replace the internals of backend/plant/virtual_engine.py with it.
+C2. Calibration (issue 5): backend/sim/calibrate.py runs report section 21.5 for each engine at start-up (cached),
+  using section 20 data (TCDS E.121, E.200, Rotax 914 OM, DRDO 180 hp). Update configs/engines/*.json:
+    912 iSc: 73.5 kW @5800 take-off, 72.0 kW @5500 continuous; oil 0.8 bar min <3500 rpm, 2.0-5.0 bar normal; coolant
+      120 C; CHT 135 C; oil inlet 130 C; EGT limit per OM (not 850 C).
+    914: 84.5 kW @5800, 73.5 kW @5500; MAP 1350/1200 hPa; critical altitude 8,000/16,000 ft; carburetted (no
+      injectors); EGT 950 C; oil 50-130 C.
+    915 iSc: 104 kW @5800, 99 kW @5500, critical altitude 15,000 ft.
+    AE300: 123.5 kW @3880 (2300 prop); over-speed 4220; coolant 60-105 C; oil 50-135 normal, 140 max; gearbox 120 C;
+      oil pressure 0.9 idle / 2.5 at max continuous / 6.5 max; fuel inlet 4-7 bar; max altitude 18,000 ft;
+      replace "cht_max_c" with coolant/gearbox limits.
+    VRDE: 134 kW flat to 11,000 ft; everything else ASSUMED and labelled.
+  Fixes 133-193 % over-power and diesels exceeding limits in cruise.
+C3. Injector and rail faults that do nothing (issue 10): in the new plant, injector faults change the injector flow
+  coefficient used by fuel.py; rail decay changes pump/leak in the rail model. In the meantime (if the old plant is
+  kept briefly): in virtual_engine.py _apply_faults() call self.injectors.inject_fault(...) for INJECTOR_COKING /
+  NEEDLE_STICK / RAIL_PRESSURE_DECAY and make the mean-value rpm use delivered_fuel_fraction as well as
+  combustion_efficiency.
+C4. Turbo bearing wear (issue 11): bearing friction in the turbo power balance (slower spool, lower max PR, extra oil
+  heat and vibration) so it shows at every throttle.
+C5. Fixed 5200 rpm and missing altitude/OAT effects (issue 15): pass real rpm to induction/turbo; rpm from the rotor
+  torque balance with propeller law; density from OAT.
+C6. Oil, failure, electrical, vibration (issues 16, 17): section 21.4 oil (viscosity, relief valve, bearing friction
+  chain, seizure), engine state machine with FAILED -> zero torque, electrical model (14 V / 28 V, alternator,
+  battery SOC), vibration orders from cylinder torque imbalance (misfire must raise vibration).
+C7. Fault applicability (issue 38): registry applies_to rules: no MISFIRE on CI engines (use injector/combustion
+  faults), injector faults for 912 iSc/915 iSc (port injection), carburettor faults for 914.
+C8. Unused models (issue 39): oil_system.py wear metals feed prognostics; crank_dynamics.py runs at 1 Hz for crank
+  speed / misfire features.
+C9. Engine stopped state (issue 45): OFF state cools down physically (no running values), no alternator alarm when off.
+C10. Time scale: sim clock with selectable 1x/5x/20x; message carries sim_time and time_scale; UI shows it.
+Check: tests from report section 18 step 3.14 (power <= rated, limits at cruise, every fault moves its signature,
+oil loss -> seizure, determinism).
+
+
+PHASE D - ENGINE STATUS / GO-NO-GO (issue 2)
+
+D1. New backend/status/evaluator.py (report section 18 step 5): priority rules FAILED/OFF -> limits -> caution bands
+  -> confirmed critical/major diagnosis -> unconfirmed anomaly/quarantined sensor -> remaining life vs mission -> GO;
+  hysteresis and latching; reasons list.
+D2. Delete the old logic: engine_service.py lines 310-311 default "GO / All propulsion subsystems flight-ready",
+  line 889 prognostics.reset() on SET_FAULT, and the dependence on PrognosticsWorker (backend/ml/trend_analyser.py)
+  for GO/NO-GO.
+D3. Add engine_state, go_no_go, reasons, limiting_item, since to the state message; show them in every screen.
+Check: the oil-pressure test from the report (1.61 bar) gives NO-GO at the first tick below the minimum, with the
+reason "Oil pressure below minimum".
+
+
+PHASE E - PROGNOSTICS (issue 14)
+
+E1. backend/runtime/engine_runtime.py lines 146-154 (sine-wave conformal calibration) and line 415 (18 x (1 - 3 x
+  damage)): delete.
+E2. backend/prognostics/: degradation indicators from UKF parameters + oil wear metals + damage; trend fit and
+  time-to-threshold; calibrate bands with backend/evaluation/conformal.py on simulated run-to-failure data
+  generated by the new plant; report achieved coverage.
+E3. Mission reliability (backend/mission/reliability.py) uses the remaining-life distribution and status, not the
+  injected fault list.
+
+
+PHASE F - GCS FRONTEND (issues 22, 34, 42, 49)
+
+F1. frontend/src/store/: zustand store fed by one WebSocket manager (reconnect, resync by seq, stale detection).
+F2. frontend/src/hooks/useEngineRuntime.ts: extend EngineFrame type with engine_state, go_no_go, reasons,
+  active_faults, diagnosis, prognostics, reliability, events, sim_time, time_scale (generate types from OpenAPI).
+F3. frontend/src/components/EngineRuntimeConsole.tsx: add status banner, active-fault list with per-fault clear,
+  diagnosis hypotheses with evidence, trend charts from /api/engines/{id}/history, event timeline from /events,
+  remaining life band, data age and time scale; replace the static "LIVE · 20 Hz SYNCHRONOUS" label (issue 34);
+  sliders initialised from server lever targets (fix 70 % / 12,000 ft vs 60 % / 9,000 ft).
+F4. Tactical GCS panels (ReadingsPanel, CalculationsPanel, MissionReadinessCard, SubsystemHealthCard, DiagnosticCard,
+  PropulsionEngineerPanel, MaintenanceDashboardPanel): read from the store, not useTelemetrySocket.
+F5. Layout (issue 34): replace text-[9px]/text-[10px] (163 places) with a 12 px minimum (14 px values); the 3D panel
+  uses aspect ratio instead of min-h-[680px]; grids collapse to one column below 768 px; VoiceCopilot h-[420px]
+  becomes responsive.
+F6. Backend URL (issue 49): frontend/src/hooks/useTelemetrySocket.ts lines ~97-108: derive from window.location
+  (and wss:// on https), configurable in settings; remove the hard-coded Render URL fallback. backend/server/main.py
+  CORS: set ANUMAAN_CORS_ORIGINS for deployment.
+F7. Landing page (LandingTicker.tsx, LandingGCSPreview.tsx): connect to the backend or label "illustration".
+
+
+PHASE G - 3D AND ASSETS (issues 19, 20, 25, 26, 27, 28, 29, 33, 48)
+
+G1. Everything in sections 1-9 of this addendum (manifests, faults.json component lists, backend resolution, viewers
+  reading the message, Blender work list, tests).
+G2. 3D window until retired (apps/threejs_twin/index.html): add ENGINE_PROFILES for austro_ae300 and vrde_jayem_2_2l
+  (issue 19); highlight from message nodes; exact name matching (applyFaultHighlight line ~1796 uses substring
+  matching for non-912 engines - change to exact list); allow several active faults (activeFault is a single value
+  today) (issue 28); highlight from detection in red and command in amber (issue 25).
+G3. Model files (issue 29): one export script (scripts/tools/export_all_engine_glbs.py exists - extend it) with
+  baking, modifiers applied, custom properties, glTF-Transform compression (no join/flatten on mapped nodes); remove
+  the uncompressed 81-83 MB copies from apps/threejs_twin/assets/models/draco/ and the duplicates in docs_site,
+  web/site, assets/models/draco; one copy in frontend/public/models.
+G4. React Three Fiber viewer (frontend/src/features/twin3d/): useGLTF + Draco/Meshopt/KTX2 decoders, gltfjsx typed
+  components, Selection/Outline for commanded, emissive pulse for detected, marker sprites, click-to-inspect and
+  inject; replace the iframe in App.tsx; retire apps/threejs_twin and the vendored 2021 three.min.js.
+G5. Blender viewport app (issue 20, 33): highlight from message nodes; delete the offline sine-wave fake telemetry
+  (standalone_digital_twin_app.py lines ~905-925) and show OFFLINE; delete its private 1-8 fault numbering.
+G6. Proxies (issue 26): label VRDE (TEI PD170 geometry) and AE300 (AE330 geometry) in the UI until replaced.
+G7. Old fault table part names that do not exist (issue 48): disappears with DRDO_FAULT_DEFINITIONS (A1/A3).
+
+
+PHASE H - MISSION PLANNING, CANYON, REPLAY, REPORTS (issues 24, 30, 31)
+
+H1. Decide on origin/Prasad (issue 24): review and merge backend/mission/executive.py, backend/server/mission_api.py,
+  backend/mission/sortie_exporter.py, tests/test_mission_executive.py and the mission cockpit; or remove the claims
+  from docs_site/technical/16-mission-planning.md and the other docs.
+H2. Terrain service, aircraft performance model, A* planner, feasibility per leg, replanning, web waypoint editor -
+  report section 18 step 9.
+H3. Canyon Blender app (issue 30, 31): apps/blender_twin/standalone_canyon_flight_app.py _apply_flight_intent(): the
+  DIVE_* intents must not set st.fault_overheat = True; make the app a viewer of the mission executive (remove its
+  private engine model lines ~1090-1215 and boolean faults) or retire it.
+H4. Replay: backend/telemetry/replay_engine.py reads sim_time; record sorties with the new recorder; replay through a
+  separate hub instance so it never touches live engines.
+H5. Reports: one writer (merge backend/graph/mission_reporter.py, backend/reports/mission_bundle.py,
+  backend/reports/report_dump_writer.py) built from the sortie recording and event log.
+
+
+PHASE I - CLEANUP, ENVIRONMENT, TESTS (issues 35, 37, 40, 41, 43, 47)
+
+I1. Unused modules (issue 35): wire in diagnose/bn.py, reliability/isolability.py, reliability/fmeca.py,
+  twin/degradation.py, prognose/rul.py, mission/profiles.py; keep telemetry/socketcan_bridge.py and mavlink_efi.py
+  behind the Frame source interface for real data later; archive the rest (foundation/, federation/, link/,
+  economics/, ...) or document them as research.
+I2. Ratchet test (issue 37): remove hard-coded engine names from engine_service.py (gone with A1) and
+  backend/agent/copilot.py (brand/model literals rose 12->14 and 8->10) - read them from the engine config.
+I3. Duplicates (issue 40): report section 13 list - one three.js, one Draco decoder copy, shared Blender HUD helpers in
+  scripts/lib, one create_pbr_material, one time formatter, remove duplicate .blend/GLB/texture copies (~361 MB),
+  rename one of the two ResidualDetector classes (backend/detect/detector.py vs backend/twin/residual_detector.py).
+I4. Environment (issue 41): pin Python version; scikit-learn version matching the saved models (or retrain/remove
+  the RF models with the old pipeline); pin Node.
+I5. Timing-sensitive tests (issue 43): tests/test_runtime_hub.py test_cpu_cost_is_small and
+  test_all_five_engines_concurrent_load_and_isolation - measure relative cost or use generous limits.
+I6. Glide check (issue 47): backend/mission/glide.py uses the real propeller state (feathered only if feathered) and
+  the aircraft's real position from the mission executive.
+I7. Launchers: replace the 24 .bat files with run_app.py commands plus backend/frontend/blender launchers;
+  launch_threejs_twin.bat (831 lines) goes with the old 3D window.
+I8. Docs: regenerate the fault catalogue, physics constants and API pages from the code/config; remove claims of
+  features not on main; update docs/build/CURRENT_STATE.md after each phase.
+
+
+PHASE J - VERIFY EVERYTHING (definition of done from report section 26)
+
+J1. Automated: pytest (unit, physics, fault coverage, status coverage, no-truth-leak, API contract, components),
+  tsc, eslint, Vitest, Playwright end-to-end (inject from 3D, see in console on a second client; clear from phone).
+J2. Manual: the 12-step demo checklist in report section 19.10 on a laptop and a phone at the same time.
+J3. Record results (numbers, not ticks) in docs/IMPLEMENTATION_LOG.md.
+
+
+ISSUE -> PHASE INDEX (report section 15 numbering)
+ 1 A1 | 2 D | 3 A1 (old streamer removed) + C | 4 B2 | 5 C2 | 6 A4 | 7 A1 | 8 A1 | 9 B3 | 10 C3 | 11 C4 | 12 B3, C
+ 13 B4 | 14 E | 15 C5 | 16 C6 | 17 C6 | 18 A2 | 19 G2 | 20 G5, A4 | 21 A3 | 22 F3 | 23 A4 | 24 H1 | 25 G2, G4
+ 26 G6, Blender work list | 27 Blender work list (section 4) | 28 G2, G4 | 29 G3 | 30 H3 | 31 H2, H3 | 32 B5
+ 33 G5 | 34 F3, F5 | 35 I1 | 36 B6 | 37 I2 | 38 C7 | 39 C8 | 40 I3 | 41 I4 | 42 A6 | 43 I5 | 44 A1 | 45 C9
+ 46 B1, B2 | 47 I6 | 48 G7 | 49 F6 | 50 A5
+Every issue in the report has a phase. When all phases A-J are done, the project works as intended: real physics,
+every fault visible and detected, honest GO/NO-GO, the same data and highlights on every screen, and mission
+planning tied to engine health.

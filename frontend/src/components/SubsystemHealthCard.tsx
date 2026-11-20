@@ -99,12 +99,12 @@ export const SubsystemHealthCard: React.FC<SubsystemHealthCardProps> = ({ state 
             <h2 className="text-xs font-semibold text-white">
               Physical Subsystem Health Index
             </h2>
-            <p className="text-[11px] text-slate-500">Physics residuals &amp; anomaly autoencoder coupling</p>
+            <p className="text-xs text-slate-500">Physics residuals &amp; anomaly autoencoder coupling</p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-[11px] text-slate-500">
+          <span className="text-xs text-slate-500">
             Health index:
           </span>
           <span
@@ -143,7 +143,7 @@ export const SubsystemHealthCard: React.FC<SubsystemHealthCardProps> = ({ state 
                     <h3 className="text-xs font-medium text-white leading-tight">
                       {item.name}
                     </h3>
-                    <p className="text-[9px] text-slate-500">
+                    <p className="text-xs text-slate-500">
                       {item.sublabel}
                     </p>
                   </div>
@@ -153,7 +153,7 @@ export const SubsystemHealthCard: React.FC<SubsystemHealthCardProps> = ({ state 
               <div>
                 <div className="flex items-center justify-between text-xs mb-1.5">
                   <span
-                    className={`text-[9px] font-mono font-semibold px-1.5 py-0.5 rounded border ${getScoreClasses(
+                    className={`text-xs font-mono font-semibold px-1.5 py-0.5 rounded border ${getScoreClasses(
                       item.score
                     )}`}
                   >
@@ -169,7 +169,7 @@ export const SubsystemHealthCard: React.FC<SubsystemHealthCardProps> = ({ state 
                   />
                 </div>
 
-                <div className="text-[9px] text-slate-600 mt-1 truncate">
+                <div className="text-xs text-slate-600 mt-1 truncate">
                   Coupled: {item.physicsParam}
                 </div>
               </div>

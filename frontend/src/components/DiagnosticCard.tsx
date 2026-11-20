@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { UnifiedTelemetryState } from '../types/telemetry';
 import { AerospaceMarkdown } from './AerospaceMarkdown';
+import { pct } from '../utils/format';
 
 interface DiagnosticCardProps {
   state: UnifiedTelemetryState;
@@ -95,7 +96,7 @@ export const DiagnosticCard: React.FC<DiagnosticCardProps> = ({
               <span className="text-xs font-medium text-warning">
                 Prognostic early warning [{a.early_warning_trend.alert_level}]: {a.early_warning_trend.channel}
               </span>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-warning-dim border border-warning-muted text-warning">
+              <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-warning-dim border border-warning-muted text-warning">
                 {a.early_warning_trend.drift_rate_per_hr > 0 ? '+' : ''}{a.early_warning_trend.drift_rate_per_hr.toFixed(2)}/hr drift
               </span>
             </div>
@@ -117,19 +118,19 @@ export const DiagnosticCard: React.FC<DiagnosticCardProps> = ({
               <h2 className="text-xs font-semibold text-white">
                 AI Diagnostic Directive &amp; Physical Causality
               </h2>
-              <p className="text-[11px] text-slate-500">Physics twin residuals + local RAG grounding</p>
+              <p className="text-xs text-slate-500">Physics twin residuals + local RAG grounding</p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-mono px-2 py-1 rounded-sm bg-white/5 border border-surface-border text-slate-300">
+            <span className="text-xs font-mono px-2 py-1 rounded-sm bg-white/5 border border-surface-border text-slate-300">
               {a.ata_chapter}
             </span>
-            <span className="text-[10px] px-2 py-1 rounded-sm bg-white/5 border border-surface-border text-slate-400">
+            <span className="text-xs px-2 py-1 rounded-sm bg-white/5 border border-surface-border text-slate-400">
               {a.subsystem}
             </span>
             <span
-              className={`text-[10px] font-semibold px-2 py-1 rounded-sm border ${
+              className={`text-xs font-semibold px-2 py-1 rounded-sm border ${
                 a.severity === 'CRITICAL'
                   ? 'bg-critical-dim text-critical border-critical-muted'
                   : a.severity === 'MAJOR' || a.severity === 'WARNING'
@@ -149,7 +150,7 @@ export const DiagnosticCard: React.FC<DiagnosticCardProps> = ({
               {a.diagnosed_fault_name}
             </span>
             <span className="text-xs text-slate-500">
-              ({(a.diagnosed_confidence * 100).toFixed(0)}% confidence)
+              ({pct(a.diagnosed_confidence)} confidence)
             </span>
           </div>
 
@@ -161,7 +162,7 @@ export const DiagnosticCard: React.FC<DiagnosticCardProps> = ({
 
         {a.causal_chain && a.causal_chain.length > 0 && (
           <div className="space-y-2 pt-1">
-            <span className="text-[11px] font-medium text-slate-400 flex items-center gap-1.5">
+            <span className="text-xs font-medium text-slate-400 flex items-center gap-1.5">
               <ArrowRight className="w-3.5 h-3.5" />
               Deterministic causal propagation cascade
             </span>
@@ -171,7 +172,7 @@ export const DiagnosticCard: React.FC<DiagnosticCardProps> = ({
                   key={idx}
                   className="text-xs text-slate-300 bg-white/[0.02] p-3 rounded-sm border border-surface-border flex items-start gap-2.5"
                 >
-                  <span className="w-5 h-5 rounded-sm bg-white/5 border border-surface-border text-slate-400 text-[10px] font-semibold flex items-center justify-center shrink-0">
+                  <span className="w-5 h-5 rounded-sm bg-white/5 border border-surface-border text-slate-400 text-xs font-semibold flex items-center justify-center shrink-0">
                     {idx + 1}
                   </span>
                   <span className="leading-relaxed text-slate-400">{step}</span>
@@ -183,7 +184,7 @@ export const DiagnosticCard: React.FC<DiagnosticCardProps> = ({
 
         {/* AI reasoning box */}
         <div className="space-y-2 pt-1">
-          <span className="text-[11px] font-medium text-ai-accent flex items-center gap-1.5">
+          <span className="text-xs font-medium text-ai-accent flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5" />
             AI reasoning (local LLM, RAG-grounded)
           </span>
@@ -196,7 +197,7 @@ export const DiagnosticCard: React.FC<DiagnosticCardProps> = ({
                 </span>
                 <span>AI propulsion monitor active — standing by for anomaly onset or operator inquiry.</span>
               </div>
-              <span className="text-[10px] text-slate-500 px-2 py-0.5 rounded-full bg-white/5 border border-surface-border">
+              <span className="text-xs text-slate-500 px-2 py-0.5 rounded-full bg-white/5 border border-surface-border">
                 RAG index ready
               </span>
             </div>
@@ -220,7 +221,7 @@ export const DiagnosticCard: React.FC<DiagnosticCardProps> = ({
           )}
 
           {a.ai_diagnosis?.status === 'ERROR' && (
-            <p className="text-[11px] text-slate-500 bg-white/[0.02] p-3 rounded-sm border border-surface-border">
+            <p className="text-xs text-slate-500 bg-white/[0.02] p-3 rounded-sm border border-surface-border">
               AI reasoning layer offline — deterministic physics causal cascade and telemetry diagnostics above remain fully active.
             </p>
           )}
@@ -229,7 +230,7 @@ export const DiagnosticCard: React.FC<DiagnosticCardProps> = ({
         {/* SOP checklist */}
         {a.emergency_checklist && a.emergency_checklist.length > 0 && (
           <div className="space-y-2 pt-1">
-            <span className="text-[11px] font-medium text-warning flex items-center gap-1.5">
+            <span className="text-xs font-medium text-warning flex items-center gap-1.5">
               <CheckSquare className="w-3.5 h-3.5" />
               Authoritative SOP emergency directive checklist
             </span>
@@ -292,7 +293,7 @@ export const DiagnosticCard: React.FC<DiagnosticCardProps> = ({
                 Ask Mission Copilot
               </span>
             </div>
-            <span className="text-[10px] text-slate-500">
+            <span className="text-xs text-slate-500">
               Retrieval over Rotax OM/MM &amp; DRDO FMECA documents
             </span>
           </div>
@@ -307,7 +308,7 @@ export const DiagnosticCard: React.FC<DiagnosticCardProps> = ({
                   handleAskCopilot(sq);
                 }}
                 disabled={isCopilotAsking}
-                className="text-[11px] px-2.5 py-1 rounded-full bg-white/[0.03] hover:bg-white/[0.06] border border-surface-border text-slate-400 transition-colors disabled:opacity-40"
+                className="text-xs px-2.5 py-1 rounded-full bg-white/[0.03] hover:bg-white/[0.06] border border-surface-border text-slate-400 transition-colors disabled:opacity-40"
               >
                 {sq}
               </button>

@@ -1,0 +1,659 @@
+{
+  "engine_id": "austro_ae300",
+  "glb": "assets/web/engines/austro_ae300.glb",
+  "mesh_nodes": 164,
+  "representative_geometry": "AE330-shaped geometry (representative)",
+  "generated_by": "scripts/assets/build_component_manifests.py (card M0-03; patterns from addendum section 3)",
+  "components": [
+    {
+      "component_id": "injector_1",
+      "subsystem": "fuel",
+      "cylinder": 1,
+      "nodes": [
+        "Injector_1_M_Steel_0"
+      ]
+    },
+    {
+      "component_id": "injector_2",
+      "subsystem": "fuel",
+      "cylinder": 2,
+      "nodes": [
+        "Injector_2_M_Steel_0"
+      ]
+    },
+    {
+      "component_id": "injector_3",
+      "subsystem": "fuel",
+      "cylinder": 3,
+      "nodes": [
+        "Injector_3_M_Steel_0"
+      ]
+    },
+    {
+      "component_id": "injector_4",
+      "subsystem": "fuel",
+      "cylinder": 4,
+      "nodes": [
+        "Injector_4_M_Steel_0"
+      ]
+    },
+    {
+      "component_id": "fuel_line_1",
+      "subsystem": "fuel",
+      "cylinder": 1,
+      "nodes": [
+        "Fuel_Line_1_M_Steel_0"
+      ]
+    },
+    {
+      "component_id": "fuel_line_2",
+      "subsystem": "fuel",
+      "cylinder": 2,
+      "nodes": [
+        "Fuel_Line_2_M_Steel_0"
+      ]
+    },
+    {
+      "component_id": "fuel_line_3",
+      "subsystem": "fuel",
+      "cylinder": 3,
+      "nodes": [
+        "Fuel_Line_3_M_Steel_0"
+      ]
+    },
+    {
+      "component_id": "fuel_line_4",
+      "subsystem": "fuel",
+      "cylinder": 4,
+      "nodes": [
+        "Fuel_Line_4_M_Steel_0"
+      ]
+    },
+    {
+      "component_id": "sensor_egt_1",
+      "subsystem": "sensors",
+      "cylinder": 1,
+      "nodes": [
+        "Sensor_EGT_1_M_Steel_0"
+      ]
+    },
+    {
+      "component_id": "sensor_egt_2",
+      "subsystem": "sensors",
+      "cylinder": 2,
+      "nodes": [
+        "Sensor_EGT_2_M_Steel_0"
+      ]
+    },
+    {
+      "component_id": "sensor_egt_3",
+      "subsystem": "sensors",
+      "cylinder": 3,
+      "nodes": [
+        "Sensor_EGT_3_M_Steel_0"
+      ]
+    },
+    {
+      "component_id": "sensor_egt_4",
+      "subsystem": "sensors",
+      "cylinder": 4,
+      "nodes": [
+        "Sensor_EGT_4_M_Steel_0"
+      ]
+    },
+    {
+      "component_id": "injector_hardware",
+      "subsystem": "fuel",
+      "cylinder": null,
+      "nodes": [
+        "Injector_Hold_Downs_M_SteelDark_0",
+        "Injector_Plugs_M_PlasticBlack_0"
+      ]
+    },
+    {
+      "component_id": "common_rail",
+      "subsystem": "fuel",
+      "cylinder": null,
+      "nodes": [
+        "Common_Rail_M_Steel_0"
+      ]
+    },
+    {
+      "component_id": "rail_pressure_valve",
+      "subsystem": "fuel",
+      "cylinder": null,
+      "nodes": [
+        "Rail_PLV_Valve_M_Steel_0"
+      ]
+    },
+    {
+      "component_id": "hp_fuel_pump",
+      "subsystem": "fuel",
+      "cylinder": null,
+      "nodes": [
+        "HP_Fuel_Nuts_M_Steel_0",
+        "HP_Fuel_Pump_Cover_5Lobe_M_CastAluminium_0",
+        "HP_Fuel_Pump_M_SteelDark_0"
+      ]
+    },
+    {
+      "component_id": "fuel_metering_unit",
+      "subsystem": "fuel",
+      "cylinder": null,
+      "nodes": [
+        "Fuel_Pump_ZME_M_PlasticBlack_0"
+      ]
+    },
+    {
+      "component_id": "aux_fuel_pump",
+      "subsystem": "fuel",
+      "cylinder": null,
+      "nodes": [
+        "Aux_Pump_M_CastAluminium_0"
+      ]
+    },
+    {
+      "component_id": "fuel_lines_misc",
+      "subsystem": "fuel",
+      "cylinder": null,
+      "nodes": [
+        "Fuel_Banjo_Bolts_M_MachinedBrass_0",
+        "Fuel_Line_Comp_Nuts_M_Steel_0",
+        "Fuel_Line_Dampers_M_RubberDark_0",
+        "Fuel_Quick_Disconnects_M_PlasticBlack_0",
+        "Fuel_Spill_Rail_M_RubberDark_0"
+      ]
+    },
+    {
+      "component_id": "glow_plugs",
+      "subsystem": "combustion",
+      "cylinder": null,
+      "nodes": [
+        "Glow_Plugs_M_Steel_0"
+      ],
+      "note": "all four glow plugs in one object"
+    },
+    {
+      "component_id": "glow_control_unit",
+      "subsystem": "combustion",
+      "cylinder": null,
+      "nodes": [
+        "GPC_Connector_M_PlasticBlack_0",
+        "GPC_Label_M_WhiteLabel_0",
+        "Glow_Plug_Control_Unit_M_CastAluminium_0"
+      ]
+    },
+    {
+      "component_id": "air_filter",
+      "subsystem": "induction",
+      "cylinder": null,
+      "nodes": [
+        "Air_Cleaner_Straps_M_Steel_0",
+        "Air_Filter_Box_M_CompositeBlack_0",
+        "Air_Filter_Duct_M_RubberDark_0",
+        "Air_Intake_Duct_M_RubberDark_0"
+      ]
+    },
+    {
+      "component_id": "intake_manifold",
+      "subsystem": "induction",
+      "cylinder": null,
+      "nodes": [
+        "Intake_Manifold_M_CastAluminium_0",
+        "Manifold_Fasteners_M_Steel_0"
+      ]
+    },
+    {
+      "component_id": "turbocharger",
+      "subsystem": "turbo",
+      "cylinder": null,
+      "nodes": [
+        "Heat_Shield_Turbo_M_CrinkleFoil_0",
+        "Turbocharger_M_TurboHousing_0",
+        "VGT_Label_M_WhiteLabel_0"
+      ]
+    },
+    {
+      "component_id": "turbo_oil_lines",
+      "subsystem": "turbo",
+      "cylinder": null,
+      "nodes": [
+        "Turbo_Oil_Drain_Line_M_Steel_0",
+        "Turbo_Oil_Feed_Line_M_Steel_0"
+      ]
+    },
+    {
+      "component_id": "turbo_coolant_lines",
+      "subsystem": "turbo",
+      "cylinder": null,
+      "nodes": [
+        "Turbo_Coolant_Lines_M_Steel_0"
+      ]
+    },
+    {
+      "component_id": "boost_pipes",
+      "subsystem": "turbo",
+      "cylinder": null,
+      "nodes": [
+        "Boost_Pipe_Cold_M_PolishedAlu_0",
+        "Boost_Pipe_Hot_M_PolishedAlu_0",
+        "Boost_Pipe_Label_M_WhiteLabel_0",
+        "Boost_Pipe_PClamps_M_StainlessClamp_0",
+        "Hose_Clamps_1_M_StainlessClamp_0",
+        "Hose_Clamps_2_M_StainlessClamp_0",
+        "Hose_Clamps_3_M_StainlessClamp_0",
+        "Hose_Clamps_4_M_StainlessClamp_0",
+        "Silicone_Coupler_1_M_BlueSilicone_0",
+        "Silicone_Coupler_2_M_BlueSilicone_0",
+        "Silicone_Coupler_3_M_BlueSilicone_0",
+        "Silicone_Coupler_4_M_BlueSilicone_0"
+      ]
+    },
+    {
+      "component_id": "intercooler",
+      "subsystem": "turbo",
+      "cylinder": null,
+      "nodes": [
+        "Intercooler_Inlet_Elbow_M_Rubber_0",
+        "Intercooler_M_CastAluminium_0",
+        "Intercooler_Ram_Duct_M_CompositeBlack_0"
+      ]
+    },
+    {
+      "component_id": "exhaust",
+      "subsystem": "exhaust",
+      "cylinder": null,
+      "nodes": [
+        "Exhaust_Downpipe_M_HeatTintedSteel_0",
+        "Exhaust_Manifold_M_HeatTintedSteel_0"
+      ]
+    },
+    {
+      "component_id": "water_pump",
+      "subsystem": "cooling",
+      "cylinder": null,
+      "nodes": [
+        "Water_Pump_Drain_Petcock_M_MachinedBrass_0",
+        "Water_Pump_Inlet_Elbow_M_BlueSilicone_0",
+        "Water_Pump_M_CastAluminium_0"
+      ]
+    },
+    {
+      "component_id": "coolant_hoses",
+      "subsystem": "cooling",
+      "cylinder": null,
+      "nodes": [
+        "Bypass_Hose_Clamps_M_Steel_0",
+        "Coolant_Bleeder_M_Steel_0",
+        "Coolant_Hose_Blue_M_BlueSilicone_0",
+        "Coolant_Hose_Red_M_RedSilicone_0",
+        "Coolant_Line_FireSleeve_M_RedSilicone_0"
+      ]
+    },
+    {
+      "component_id": "oil_sump",
+      "subsystem": "lubrication",
+      "cylinder": null,
+      "nodes": [
+        "Oil_Sump_Bolts_M_Steel_0",
+        "Oil_Sump_Drain_Plug_M_Steel_0",
+        "Oil_Sump_M_CastAluminium_0"
+      ]
+    },
+    {
+      "component_id": "oil_filter",
+      "subsystem": "lubrication",
+      "cylinder": null,
+      "nodes": [
+        "Oil_Filter_M_MetalPaintedBlack_0"
+      ]
+    },
+    {
+      "component_id": "oil_cooler",
+      "subsystem": "lubrication",
+      "cylinder": null,
+      "nodes": [
+        "Oil_Cooler_M_CastAluminium_0"
+      ]
+    },
+    {
+      "component_id": "oil_fill_dipstick",
+      "subsystem": "lubrication",
+      "cylinder": null,
+      "nodes": [
+        "Dipstick_Handle_M_YellowCap_0",
+        "Oil_Dipstick_Handle_M_YellowCap_0",
+        "Oil_Dipstick_M_Steel_0",
+        "Oil_Dipstick_Tube_M_Steel_0",
+        "Oil_Filler_Cap_M_YellowCap_0"
+      ]
+    },
+    {
+      "component_id": "crankcase_breather",
+      "subsystem": "lubrication",
+      "cylinder": null,
+      "nodes": [
+        "Breather_Hose_M_Rubber_0",
+        "Crankcase_Breather_M_PlasticBlack_0",
+        "Top_Breather_Hose_M_BlueSilicone_0"
+      ]
+    },
+    {
+      "component_id": "prop_governor",
+      "subsystem": "drivetrain",
+      "cylinder": null,
+      "nodes": [
+        "PCU_Oil_Line_M_Steel_0",
+        "Prop_Governor_PCU_M_CastAluminium_0"
+      ]
+    },
+    {
+      "component_id": "prop_flange",
+      "subsystem": "drivetrain",
+      "cylinder": null,
+      "nodes": [
+        "Prop_Flange_M_Steel_0"
+      ]
+    },
+    {
+      "component_id": "gearbox",
+      "subsystem": "drivetrain",
+      "cylinder": null,
+      "nodes": [
+        "GB_Bolt_10_M_Steel_0",
+        "GB_Bolt_11_M_Steel_0",
+        "GB_Bolt_12_M_Steel_0",
+        "GB_Bolt_13_M_Steel_0",
+        "GB_Bolt_14_M_Steel_0",
+        "GB_Bolt_1_M_Steel_0",
+        "GB_Bolt_2_M_Steel_0",
+        "GB_Bolt_3_M_Steel_0",
+        "GB_Bolt_4_M_Steel_0",
+        "GB_Bolt_5_M_Steel_0",
+        "GB_Bolt_6_M_Steel_0",
+        "GB_Bolt_7_M_Steel_0",
+        "GB_Bolt_8_M_Steel_0",
+        "GB_Bolt_9_M_Steel_0",
+        "Gearbox_Cover_Pad_M_CastAluminium_0",
+        "Gearbox_Drain_Plug_M_Steel_0",
+        "Gearbox_Lifting_Lug_M_MetalPaintedBlack_0",
+        "Gearbox_Logo_M_CastAluminium_0",
+        "Gearbox_M_CastAluminium_0"
+      ]
+    },
+    {
+      "component_id": "alternator",
+      "subsystem": "electrical",
+      "cylinder": null,
+      "nodes": [
+        "Alternator_B_Plus_Boot_M_RedSilicone_0",
+        "Alternator_Bracket_M_SteelDark_0",
+        "Alternator_Caution_Placard_M_YellowLabel_0",
+        "Alternator_Details_M_CastAluminium_0",
+        "Alternator_Impeller_Fan_M_Steel_0",
+        "Generator_1_M_CastAluminium_0"
+      ]
+    },
+    {
+      "component_id": "belt_drive",
+      "subsystem": "electrical",
+      "cylinder": null,
+      "nodes": [
+        "Belt_Tensioner_M_CastAluminium_0",
+        "Idler_Pulley_M_Steel_0",
+        "Idler_Pulley_Upper_M_SteelDark_0",
+        "Serpentine_Belt_M_Rubber_0"
+      ]
+    },
+    {
+      "component_id": "vacuum_pump",
+      "subsystem": "accessories",
+      "cylinder": null,
+      "nodes": [
+        "Vacuum_Tandem_Pump_M_CastAluminium_0"
+      ]
+    },
+    {
+      "component_id": "starter",
+      "subsystem": "electrical",
+      "cylinder": null,
+      "nodes": [
+        "Starter_M_MetalPaintedBlack_0",
+        "Starter_Ring_Gear_M_SteelDark_0"
+      ]
+    },
+    {
+      "component_id": "timing_gear",
+      "subsystem": "core",
+      "cylinder": null,
+      "nodes": [
+        "Timing_Gear_Aux_M_SteelDark_0"
+      ]
+    },
+    {
+      "component_id": "ecu_lane_a",
+      "subsystem": "control",
+      "cylinder": null,
+      "nodes": [
+        "ECU_Lane_A_M_MetalPaintedBlack_0"
+      ]
+    },
+    {
+      "component_id": "ecu_lane_b",
+      "subsystem": "control",
+      "cylinder": null,
+      "nodes": [
+        "ECU_Lane_B_M_MetalPaintedBlack_0"
+      ]
+    },
+    {
+      "component_id": "ecu_hardware",
+      "subsystem": "control",
+      "cylinder": null,
+      "nodes": [
+        "ECU_Bayonet_Plugs_M_CastAluminium_0",
+        "ECU_Details_1_M_MetalPaintedBlack_0",
+        "ECU_Details_2_M_MetalPaintedBlack_0",
+        "ECU_Label_1_M_WhiteLabel_0",
+        "ECU_Label_2_M_WhiteLabel_0"
+      ]
+    },
+    {
+      "component_id": "wiring_harness",
+      "subsystem": "electrical",
+      "cylinder": null,
+      "nodes": [
+        "Engine_Harness_Loom_M_PlasticBlack_0",
+        "Ground_Straps_M_BraidedSilver_0",
+        "Harness_P_Clamps_M_Steel_0",
+        "Wire_Marker_1_M_YellowCap_0",
+        "Wire_Marker_2_M_YellowCap_0",
+        "Wire_Marker_3_M_YellowCap_0",
+        "Wire_Marker_4_M_YellowCap_0",
+        "Wire_Marker_5_M_YellowCap_0",
+        "Wire_Marker_6_M_YellowCap_0",
+        "Wire_Marker_Tags_M_YellowLabel_0",
+        "Wiring_Harness_M_BraidedSilver_0"
+      ]
+    },
+    {
+      "component_id": "engine_mount",
+      "subsystem": "structure",
+      "cylinder": null,
+      "nodes": [
+        "Engine_Mount_Frame_M_SteelDark_0",
+        "Lord_Mount_Port_M_CastAluminium_0",
+        "Lord_Mount_Starboard_M_CastAluminium_0"
+      ]
+    },
+    {
+      "component_id": "sensor_boost",
+      "subsystem": "sensors",
+      "cylinder": null,
+      "nodes": [
+        "Sensor_Boost_2_M_Steel_0",
+        "Sensor_Boost_M_Steel_0"
+      ]
+    },
+    {
+      "component_id": "sensor_charge_air_temp",
+      "subsystem": "sensors",
+      "cylinder": null,
+      "nodes": [
+        "Sensor_Charge_Air_Temp_M_Steel_0"
+      ]
+    },
+    {
+      "component_id": "sensor_coolant_temp",
+      "subsystem": "sensors",
+      "cylinder": null,
+      "nodes": [
+        "Sensor_Coolant_Temp_2_M_Steel_0",
+        "Sensor_Coolant_Temp_M_Steel_0"
+      ]
+    },
+    {
+      "component_id": "sensor_oil_press",
+      "subsystem": "sensors",
+      "cylinder": null,
+      "nodes": [
+        "Sensor_Oil_Press_M_Steel_0"
+      ]
+    },
+    {
+      "component_id": "sensor_oil_temp",
+      "subsystem": "sensors",
+      "cylinder": null,
+      "nodes": [
+        "Sensor_Oil_Temp_M_Steel_0"
+      ]
+    },
+    {
+      "component_id": "sensor_fuel_rail_press",
+      "subsystem": "sensors",
+      "cylinder": null,
+      "nodes": [
+        "Sensor_Fuel_Rail_Press_M_Steel_0"
+      ]
+    },
+    {
+      "component_id": "sensor_fuel_low_press",
+      "subsystem": "sensors",
+      "cylinder": null,
+      "nodes": [
+        "Sensor_Fuel_Low_Press_M_Steel_0"
+      ]
+    },
+    {
+      "component_id": "sensor_fuel_temp",
+      "subsystem": "sensors",
+      "cylinder": null,
+      "nodes": [
+        "Sensor_Fuel_Temp_M_Steel_0"
+      ]
+    },
+    {
+      "component_id": "sensor_fuel_flow",
+      "subsystem": "sensors",
+      "cylinder": null,
+      "nodes": [
+        "Sensor_Fuel_Flow_M_Steel_0"
+      ]
+    },
+    {
+      "component_id": "sensor_rpm",
+      "subsystem": "sensors",
+      "cylinder": null,
+      "nodes": [
+        "Sensor_RPM_M_Steel_0"
+      ]
+    },
+    {
+      "component_id": "sensor_crank",
+      "subsystem": "sensors",
+      "cylinder": null,
+      "nodes": [
+        "Sensor_Crank_2_M_Steel_0"
+      ]
+    },
+    {
+      "component_id": "sensor_cam",
+      "subsystem": "sensors",
+      "cylinder": null,
+      "nodes": [
+        "Sensor_Cam_1_M_Steel_0",
+        "Sensor_Cam_2_M_Steel_0"
+      ]
+    },
+    {
+      "component_id": "sensor_gearbox_temp",
+      "subsystem": "sensors",
+      "cylinder": null,
+      "nodes": [
+        "Sensor_Gearbox_Temp_M_Steel_0"
+      ]
+    },
+    {
+      "component_id": "sensor_gearbox_press",
+      "subsystem": "sensors",
+      "cylinder": null,
+      "nodes": [
+        "Sensor_Gearbox_Press_M_Steel_0"
+      ]
+    },
+    {
+      "component_id": "sensor_turbine_inlet_temp",
+      "subsystem": "sensors",
+      "cylinder": null,
+      "nodes": [
+        "Sensor_TIT_M_Steel_0"
+      ]
+    },
+    {
+      "component_id": "crank_pulley",
+      "subsystem": "core",
+      "cylinder": null,
+      "nodes": [
+        "Crank_Pulley_M_SteelDark_0"
+      ]
+    },
+    {
+      "component_id": "valve_cover",
+      "subsystem": "core",
+      "cylinder": null,
+      "nodes": [
+        "Cam_Cover_Bolts_M_Steel_0",
+        "Valve_Cover_M_PlasticBlack_0"
+      ]
+    },
+    {
+      "component_id": "cylinder_head",
+      "subsystem": "core",
+      "cylinder": null,
+      "nodes": [
+        "Cylinder_Head_M_CastAluminium_0"
+      ],
+      "note": "one object for all cylinders"
+    },
+    {
+      "component_id": "engine_block",
+      "subsystem": "core",
+      "cylinder": null,
+      "nodes": [
+        "Engine_Block_M_CastAluminium_0"
+      ]
+    },
+    {
+      "component_id": "misc",
+      "subsystem": "structure",
+      "cylinder": null,
+      "nodes": [
+        "Blanket_Safety_Wire_M_SafetyWire_0",
+        "Brass_Fittings_M_MachinedBrass_0",
+        "Cabin_Heat_Ports_M_MachinedBrass_0",
+        "Torque_Seal_Marks_M_TorqueSealBlue_0"
+      ]
+    }
+  ],
+  "unassigned_nodes": []
+}

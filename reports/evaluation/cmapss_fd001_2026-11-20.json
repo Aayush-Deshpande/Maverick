@@ -1,0 +1,40 @@
+{
+ "dataset": "NASA C-MAPSS FD001 (train file, units split by seed)",
+ "evidence_class": "PUBLIC_PROXY",
+ "note": "turbofan benchmark used to validate the RUL method; not a piston engine",
+ "target_coverage": 0.95,
+ "rul_cap": 125,
+ "window": 15,
+ "runs": [
+  {
+   "seed": 0,
+   "test_units": 20,
+   "rmse_all": 17.975976284839938,
+   "rmse_last_cycle": 3.763377595802891,
+   "coverage": 0.9261674928254631,
+   "mean_width": 81.0370216899121
+  },
+  {
+   "seed": 1,
+   "test_units": 20,
+   "rmse_all": 15.47542338057682,
+   "rmse_last_cycle": 2.679763454021521,
+   "coverage": 0.9525383707201889,
+   "mean_width": 82.89025355052168
+  },
+  {
+   "seed": 2,
+   "test_units": 20,
+   "rmse_all": 17.005870473749784,
+   "rmse_last_cycle": 3.9703598039799384,
+   "coverage": 0.9518072289156626,
+   "mean_width": 102.2524091321736
+  }
+ ],
+ "mean": {
+  "rmse_all": 16.819090046388848,
+  "rmse_last_cycle": 3.471166951268117,
+  "coverage": 0.9435043641537715,
+  "mean_width": 88.7265614575358
+ }
+}

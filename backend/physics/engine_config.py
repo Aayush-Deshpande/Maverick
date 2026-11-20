@@ -50,6 +50,8 @@ PROVENANCE_STATUSES = {
     "MANUAL",       # from a manufacturer manual in docs/reference/
     "ASSUMED",      # engineering judgement, not sourced -- "ref" explains the basis
     "PLACEHOLDER",  # a filler value with no real basis yet; must not be quoted
+    "CALIBRATED",   # produced by our calibration run against sourced data -- "ref" names the run and date (D16)
+    "OWNER",        # owner-community report, needs confirmation -- "ref" gives the link (D16)
 }
 
 # Fields whose values feed a physics or evaluation computation and therefore
@@ -63,10 +65,12 @@ NUMERIC_FIELD_PATHS = [
     "nominal_bsfc_g_kwh", "nominal_lambda", "nominal_inj_timing_btdc",
     "nominal_ign_timing_btdc", "rail_pressure_bar",
     "fuel_cloud_point_c", "fuel_cfpp_c",
+    "overspeed_rpm", "max_operating_altitude_ft", "oil_capacity_l",
 ]
 TURBO_NUMERIC_FIELD_PATHS = [
     "turbo.max_boost_kpa", "turbo.critical_altitude_ft", "turbo.max_shaft_rpm",
     "turbo.lag_time_constant_sec", "turbo.surge_margin_min",
+    "turbo.critical_altitude_takeoff_ft", "turbo.map_takeoff_max_kpa", "turbo.map_continuous_max_kpa",
 ]
 
 
@@ -117,6 +121,14 @@ class TurbochargerSpec:
     intercooled: bool = False
     lag_time_constant_sec: float = 0.8
     surge_margin_min: float = 0.12
+    # M0-01: separate take-off critical altitude (914: 8,000 ft take-off vs 16,000 ft continuous), MAP limits,
+    # and the boost actuator type (WASTEGATE or VGT, used by fault applicability F15/F16).
+    critical_altitude_takeoff_ft: Optional[float] = None
+    map_takeoff_max_kpa: Optional[float] = None
+    map_continuous_max_kpa: Optional[float] = None
+    boost_control: str = "WASTEGATE"
+    # TCU schedule: nominal airbox pressure vs throttle-sensor position (914 OM Fig. 6); None = full target always
+    tcu_nominal_airbox: Optional[dict] = None
 
 
 @dataclass
@@ -151,9 +163,9 @@ class EngineConfig:
     # Nominal fuel/air behaviour used by the thermodynamic model
     nominal_bsfc_g_kwh: float = 285.0
     nominal_lambda: float = 1.0
-    nominal_inj_timing_btdc: float = 18.5
+    nominal_inj_timing_btdc: Optional[float] = 18.5  # None on carburetted engines (914)
     nominal_ign_timing_btdc: Optional[float] = 24.0  # None on CI engines
-    rail_pressure_bar: float = 3.0
+    rail_pressure_bar: Optional[float] = 3.0         # fuel rail pressure; None on carburetted engines
 
     # Fuel thermal properties — drives the CFPP / waxing model (F42)
     fuel_cloud_point_c: Optional[float] = None  # kerosene only
@@ -165,6 +177,22 @@ class EngineConfig:
     # oil_t_max_c. Each needs a provenance entry under "operating_limits.<key>"; PLACEHOLDER limits are
     # used for alerting logic only and must never be quoted as OEM limits.
     operating_limits: Dict[str, float] = field(default_factory=dict)
+
+    # M0-01 additions (configs/AGENTS.md, DECISIONS D16/D46). All optional so older configs still load.
+    # fuel_system: PORT_INJECTION | CARBURETTOR | COMMON_RAIL. Hardware flags drive fault applicability
+    # (configs/faults.json "applies_when"). limits: banded limits per channel, e.g.
+    # {"oil_p": {"unit": "bar", "warning_low": 0.8, "normal": [2.0, 5.0], "rpm_rule": {...}, "ref": "..."}}.
+    fuel_system: str = ""
+    ignition_circuits: int = 0
+    ecu_lanes: int = 0
+    glow_plugs: bool = False
+    thermostat: bool = False
+    propeller_governor: bool = False
+    overspeed_rpm: Optional[float] = None
+    max_operating_altitude_ft: Optional[float] = None
+    oil_capacity_l: Optional[float] = None
+    limits: Dict[str, dict] = field(default_factory=dict)
+    notes: Dict[str, str] = field(default_factory=dict)
 
     # Per-field provenance (B0.4) -- ``source`` above is a single free-text string
     # that cannot express "this one number is public, everything else is a guess",
@@ -285,6 +313,7 @@ class EngineConfig:
         data = dict(data)
         layout = data.pop("layout", None)
         turbo = data.pop("turbo", None)
+        data.pop("physics", None)       # model constants: read by backend/sim/params.py, not part of EngineConfig
         cfg = cls(**data)
         if layout:
             cfg.layout = CylinderLayout(**layout)

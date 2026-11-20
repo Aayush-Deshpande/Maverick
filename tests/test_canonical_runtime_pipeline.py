@@ -55,7 +55,7 @@ def test_canonical_runtime_pipeline_end_to_end():
     assert "h_min_um" in f.virtual_sensors
     assert "P_ind_kw" in f.virtual_sensors
     assert f.virtual_sensors["P_max_bar"] > 20.0
-    assert f.virtual_sensors["TIT_degC"] > 500.0
+    assert f.virtual_sensors["TIT_degC"] is None          # the 912 has no turbine: NO DATA
 
     # 3. Thermofluid UKF State Observer
     assert last_tick.ukf is not None
@@ -75,12 +75,15 @@ def test_canonical_runtime_pipeline_end_to_end():
     assert "damage_total" in dmg
     assert "damage_thermal_lcf" in dmg
 
+    # D38 port (M4-03, Prasad Q13 20 Nov): the fleet-trained conformal RUL replaces the sine-calibrated placeholder.
+    # With a trained model it must give a finite interval around its point; without one, an honest UNAVAILABLE.
     rul = last_tick.prognostics["rul"]
-    assert "rul_point" in rul
-    assert "rul_p_lower" in rul and "rul_p_upper" in rul
-    low, high = rul["rul_p_lower"], rul["rul_p_upper"]
-    assert math.isfinite(low) and math.isfinite(high)
-    assert low <= high
+    if rul["status"] == "OK":
+        low, point, high = rul["rul_lower_h"], rul["rul_h"], rul["rul_upper_h"]
+        assert math.isfinite(low) and math.isfinite(high)
+        assert low <= point <= high
+    else:
+        assert rul["status"] == "UNAVAILABLE" and rul["reason"]
 
     # 6. Mission Reliability & Glide Polar Reachability
     assert last_tick.reliability is not None

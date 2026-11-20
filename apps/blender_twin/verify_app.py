@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 def run_verification():
     base_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.abspath(os.path.join(base_dir, "..", ".."))
-    blend_path = os.path.join(project_root, "assets", "blender", "rotax_912_is_sport.blend")
+    blend_path = os.path.join(project_root, "assets", "blender", "engines", "rotax_912is", "rotax_912is.blend")
     bpy.ops.wm.open_mainfile(filepath=blend_path)
     
     print("\n--- 1. VERIFYING SCENE OBJECTS ---")

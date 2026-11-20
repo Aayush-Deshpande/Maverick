@@ -1,0 +1,45 @@
+{
+  "schema_version": "planning/1",
+  "description": "Terrain route planning (cards M5-07/M5-08, P Part 4 Step 5.7). Airframe values are installation data for a generic single-engine MALE UAV class (no public data for a specific airframe): ASSUMED. The engine side comes from the calibrated engine model (configs/engines), never from this file.",
+  "dem": {"tile": "Copernicus_DSM_COG_10_N34_00_E077_00_DEM", "bucket_url": "https://copernicus-dem-30m.s3.amazonaws.com", "status": "PUBLIC", "ref": "Copernicus GLO-30 DSM, ESA/Airbus, public AWS open data registry (registry.opendata.aws/copernicus-dem); tile N34 E077 covers Leh / Ladakh"},
+  "grid": {
+    "block_px": {"value": 60, "status": "ASSUMED", "ref": "planning cell = 60 x 60 DEM posts (about 1.85 km x 1.5 km at 34 N); cell elevation = block maximum (conservative)"},
+    "layer_ft": {"value": 1000.0, "status": "ASSUMED", "ref": "altitude layer spacing"},
+    "min_layer_ft": {"value": 8000.0, "status": "ASSUMED", "ref": "lowest layer (below the Indus valley floor)"},
+    "max_layer_ft": {"value": 26000.0, "status": "ASSUMED", "ref": "highest layer considered"}
+  },
+  "rules": {
+    "min_clearance_ft": {"value": 1000.0, "status": "ASSUMED", "ref": "minimum terrain clearance above the cell maximum (en-route 300 m class margin)"},
+    "min_climb_rate_fpm": {"value": 100.0, "status": "ASSUMED", "ref": "service-ceiling definition: highest altitude with at least 100 ft/min climb"},
+    "climb_cost_m_per_m": {"value": 3.0, "status": "ASSUMED", "ref": "route cost: metres of horizontal distance equivalent to 1 m of climb (energy)"}
+  },
+  "airframe": {
+    "mass_kg": {"value": 650.0, "status": "ASSUMED", "ref": "single-engine MALE UAV class take-off mass"},
+    "wing_area_m2": {"value": 9.5, "status": "ASSUMED", "ref": "aspect ratio about 18 class wing"},
+    "cd0": {"value": 0.03, "status": "ASSUMED", "ref": "parasite drag coefficient, clean MALE airframe"},
+    "induced_k": {"value": 0.024, "status": "ASSUMED", "ref": "1/(pi*AR*e) with AR 18, e 0.75"},
+    "climb_eas_kt": {"value": 75.0, "status": "ASSUMED", "ref": "climb speed held as equivalent airspeed"},
+    "prop_efficiency": {"value": 0.78, "status": "ASSUMED", "ref": "propeller efficiency in climb"}
+  },
+  "airfields": {
+    "status": "PUBLIC",
+    "ref": "aerodrome reference points from public listings (checked 20 Nov 2026); demonstration presets only, not for navigation",
+    "value": [
+      {"id": "VILH", "name": "Leh (Kushok Bakula Rimpochee)", "lat": 34.1359, "lon": 77.5465, "elevation_ft": 10682, "ref": "https://lfs.aero/flight-support/india/VILH ; https://en.wikipedia.org/wiki/Kushok_Bakula_Rimpochee_Airport"},
+      {"id": "VI57", "name": "Thoise (Nubra valley)", "lat": 34.6525, "lon": 77.3756, "elevation_ft": 10046, "ref": "https://www.pilotnav.com/airport/VI57 ; https://en.wikipedia.org/wiki/Thoise_Air_Force_Station"},
+      {"id": "VI65", "name": "Kargil", "lat": 34.5243, "lon": 76.1559, "elevation_ft": 9604, "ref": "https://en.wikipedia.org/wiki/Kargil_Airport ; https://lfs.aero/flight-support/india/VI65 (ICAO VI65; the old glide.py list called it VIKG, which is Kishangarh)"},
+      {"id": "VISR", "name": "Srinagar", "lat": 33.9883, "lon": 74.775, "elevation_ft": 5437, "ref": "https://skyvector.com/airport/VISR/Srinagar-Airport (33 59.3 N, 74 46.5 E, 5437 ft MSL; other listings give 5429-5495 ft)"},
+      {"id": "VIJR", "name": "Jaisalmer (Thar)", "lat": 26.8887, "lon": 70.865, "elevation_ft": 751, "ref": "https://sprinkle.com/airport/VIJR ; https://en.wikipedia.org/wiki/Jaisalmer_Airport (ARP 26.8887 N, 70.8650 E, 751 ft)"}
+    ]
+  },
+  "glide": {
+    "feathering_propeller": {"value": false, "status": "ASSUMED", "ref": "no feathering propeller is configured for the modelled installations (configs/installations/propellers.json); a stopped engine is assumed to windmill"},
+    "windmill_ld_factor": {"value": 0.724, "status": "ASSUMED", "ref": "L/D with a windmilling propeller relative to the clean (feathered) polar; carried over from the earlier glide module, no airframe source"},
+    "pattern_height_ft": {"value": 1500.0, "status": "ASSUMED", "ref": "height above the airfield at which the glide must arrive (high-key entry)"},
+    "glide_clearance_ft": {"value": 500.0, "status": "ASSUMED", "ref": "minimum height above terrain anywhere along a glide path"},
+    "confident_margin_ft": {"value": 2000.0, "status": "ASSUMED", "ref": "arrival margin above which a divert is REACHABLE_CONFIDENT rather than MARGINAL"},
+    "path_step_m": {"value": 250.0, "status": "ASSUMED", "ref": "terrain sampling step along a glide path (DEM post spacing is about 30 m; ridges narrower than this step can be missed)"},
+    "footprint_bearings": {"value": 36, "status": "ASSUMED", "ref": "number of radial directions in the reachability footprint"}
+  },
+  "start_position": {"lat": 34.1359, "lon": 77.5465, "status": "PUBLIC", "ref": "simulation start position = Leh aerodrome reference point (airfield VILH above); the operator or a mission moves it"}
+}

@@ -62,7 +62,7 @@
 
 ## 3. Generated Showcase Artifacts
 
-- **Showcase Blend Scene:** `assets/blender/rotax_914_showcase.blend`
+- **Showcase Blend Scene:** `assets/blender/engines/rotax_914/variants/rotax_914_showcase.blend`
 - **6-Station Contact Sheet:** `assets/renders/engines/rotax_914/rotax_914_showcase_contact_sheet.png`
 - **Station Beauty Stills:** `assets/renders/engines/rotax_914/stations/`
   - `station_01_architecture_overview.png`

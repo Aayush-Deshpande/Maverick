@@ -9,6 +9,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { UnifiedTelemetryState } from '../types/telemetry';
+import { pct } from '../utils/format';
 
 interface PropulsionEngineerPanelProps {
   state: UnifiedTelemetryState;
@@ -66,7 +67,7 @@ export const PropulsionEngineerPanel: React.FC<PropulsionEngineerPanelProps> = (
       <div className="surface-panel p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 border border-surface-border">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono font-semibold bg-accent-dim text-accent border border-accent-muted">
+            <span className="px-2 py-0.5 rounded-sm text-xs font-mono font-semibold bg-accent-dim text-accent border border-accent-muted">
               VIS-03 / INT-03
             </span>
             <h2 className="text-sm font-semibold text-white tracking-wide font-mono uppercase">
@@ -80,15 +81,15 @@ export const PropulsionEngineerPanel: React.FC<PropulsionEngineerPanelProps> = (
 
         <div className="flex items-center gap-4 text-xs font-mono">
           <div className="px-3 py-1.5 rounded-sm bg-surface-card border border-surface-border">
-            <span className="text-slate-500 block text-[10px]">FADEC LANE</span>
+            <span className="text-slate-500 block text-xs">FADEC LANE</span>
             <span className="font-semibold text-accent">{t.FADEC_ACTIVE_LANE || 'LANE A'}</span>
           </div>
           <div className="px-3 py-1.5 rounded-sm bg-surface-card border border-surface-border">
-            <span className="text-slate-500 block text-[10px]">DISPLACEMENT</span>
+            <span className="text-slate-500 block text-xs">DISPLACEMENT</span>
             <span className="font-semibold text-slate-200">{DISPLACEMENT_CC} cc</span>
           </div>
           <div className="px-3 py-1.5 rounded-sm bg-surface-card border border-surface-border">
-            <span className="text-slate-500 block text-[10px]">GEARBOX RATIO</span>
+            <span className="text-slate-500 block text-xs">GEARBOX RATIO</span>
             <span className="font-semibold text-slate-200">{GEARBOX_RATIO}:1</span>
           </div>
         </div>
@@ -105,7 +106,7 @@ export const PropulsionEngineerPanel: React.FC<PropulsionEngineerPanelProps> = (
                 Brake Power &amp; Envelope
               </h3>
             </div>
-            <span className="text-[10px] font-mono text-slate-500">INT-03</span>
+            <span className="text-xs font-mono text-slate-500">INT-03</span>
           </div>
 
           <div className="space-y-2">
@@ -128,7 +129,7 @@ export const PropulsionEngineerPanel: React.FC<PropulsionEngineerPanelProps> = (
                   style={{ width: `${powerPct}%` }}
                 />
               </div>
-              <div className="flex justify-between text-[10px] font-mono text-slate-500">
+              <div className="flex justify-between text-xs font-mono text-slate-500">
                 <span>0 kW</span>
                 <span>Max Cont. (69 kW)</span>
                 <span>Take-Off (73.5 kW)</span>
@@ -137,11 +138,11 @@ export const PropulsionEngineerPanel: React.FC<PropulsionEngineerPanelProps> = (
 
             <div className="grid grid-cols-2 gap-2 pt-2 border-t border-surface-border/60 text-xs">
               <div className="bg-surface-card p-2 rounded border border-surface-border">
-                <span className="text-[10px] text-slate-500 block">Manifold Press (MAP)</span>
+                <span className="text-xs text-slate-500 block">Manifold Press (MAP)</span>
                 <span className="text-sm font-mono font-semibold text-slate-200">{fmt(t.MAP, 1)} kPa</span>
               </div>
               <div className="bg-surface-card p-2 rounded border border-surface-border">
-                <span className="text-[10px] text-slate-500 block">Density Alt Ratio</span>
+                <span className="text-xs text-slate-500 block">Density Alt Ratio</span>
                 <span className="text-sm font-mono font-semibold text-slate-200">
                   {fmt(Math.exp(-((t.ALTITUDE_FT || 0) * 0.3048) / 8434.0), 2)}
                 </span>
@@ -159,7 +160,7 @@ export const PropulsionEngineerPanel: React.FC<PropulsionEngineerPanelProps> = (
                 Fuel Efficiency (BSFC)
               </h3>
             </div>
-            <span className="text-[10px] font-mono text-slate-500">VIS-07</span>
+            <span className="text-xs font-mono text-slate-500">VIS-07</span>
           </div>
 
           <div className="space-y-2">
@@ -186,8 +187,8 @@ export const PropulsionEngineerPanel: React.FC<PropulsionEngineerPanelProps> = (
               </div>
             </div>
 
-            <div className="text-[11px] text-slate-400 bg-white/[0.02] p-2 rounded border border-surface-border/60">
-              <span className="text-slate-500 font-mono text-[10px] block">CRUISE TARGET</span>
+            <div className="text-xs text-slate-400 bg-white/[0.02] p-2 rounded border border-surface-border/60">
+              <span className="text-slate-500 font-mono text-xs block">CRUISE TARGET</span>
               Rotax nominal eco-cruise target is 250–280 g/kWh at 4300–4800 RPM.
             </div>
           </div>
@@ -202,44 +203,44 @@ export const PropulsionEngineerPanel: React.FC<PropulsionEngineerPanelProps> = (
                 FADEC Timing &amp; Combustion
               </h3>
             </div>
-            <span className="text-[10px] font-mono text-slate-500">HMS-11</span>
+            <span className="text-xs font-mono text-slate-500">HMS-11</span>
           </div>
 
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="bg-surface-card p-2.5 rounded border border-surface-border">
-              <span className="text-[10px] text-slate-500 block">INJ TIMING</span>
+              <span className="text-xs text-slate-500 block">INJ TIMING</span>
               <div className="flex items-baseline gap-1 mt-0.5">
                 <span className="text-base font-bold font-mono text-accent">{fmt(injTiming, 1)}°</span>
-                <span className="text-[10px] text-slate-500">BTDC</span>
+                <span className="text-xs text-slate-500">BTDC</span>
               </div>
             </div>
 
             <div className="bg-surface-card p-2.5 rounded border border-surface-border">
-              <span className="text-[10px] text-slate-500 block">PULSE WIDTH</span>
+              <span className="text-xs text-slate-500 block">PULSE WIDTH</span>
               <div className="flex items-baseline gap-1 mt-0.5">
                 <span className="text-base font-bold font-mono text-slate-100">{fmt(pulseWidth, 2)}</span>
-                <span className="text-[10px] text-slate-500">ms</span>
+                <span className="text-xs text-slate-500">ms</span>
               </div>
             </div>
 
             <div className="bg-surface-card p-2.5 rounded border border-surface-border">
-              <span className="text-[10px] text-slate-500 block">IGN ADVANCE</span>
+              <span className="text-xs text-slate-500 block">IGN ADVANCE</span>
               <div className="flex items-baseline gap-1 mt-0.5">
                 <span className="text-base font-bold font-mono text-amber-400">{fmt(ignTiming, 1)}°</span>
-                <span className="text-[10px] text-slate-500">BTDC</span>
+                <span className="text-xs text-slate-500">BTDC</span>
               </div>
             </div>
 
             <div className="bg-surface-card p-2.5 rounded border border-surface-border">
-              <span className="text-[10px] text-slate-500 block">LAMBDA (AFR)</span>
+              <span className="text-xs text-slate-500 block">LAMBDA (AFR)</span>
               <div className="flex items-baseline gap-1 mt-0.5">
                 <span className="text-base font-bold font-mono text-slate-100">{fmt(lambda, 2)}</span>
-                <span className="text-[10px] text-slate-500">{lambda > 14.8 ? 'Lean' : lambda < 14.5 ? 'Rich' : 'Stoich'}</span>
+                <span className="text-xs text-slate-500">{lambda > 14.8 ? 'Lean' : lambda < 14.5 ? 'Rich' : 'Stoich'}</span>
               </div>
             </div>
           </div>
 
-          <div className="text-[11px] text-slate-400 bg-white/[0.02] p-2 rounded border border-surface-border/60 flex items-center justify-between">
+          <div className="text-xs text-slate-400 bg-white/[0.02] p-2 rounded border border-surface-border/60 flex items-center justify-between">
             <span>Dual Spark Ignition:</span>
             <span className="text-emerald-400 font-medium">Circuit A &amp; B Synced</span>
           </div>
@@ -251,7 +252,7 @@ export const PropulsionEngineerPanel: React.FC<PropulsionEngineerPanelProps> = (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-surface-border pb-3">
           <div>
             <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono font-semibold bg-accent-dim text-accent border border-accent-muted">
+              <span className="px-2 py-0.5 rounded-sm text-xs font-mono font-semibold bg-accent-dim text-accent border border-accent-muted">
                 F13 / G03 / FDP-01
               </span>
               <h3 className="text-sm font-semibold text-white tracking-wide font-mono uppercase">
@@ -269,7 +270,7 @@ export const PropulsionEngineerPanel: React.FC<PropulsionEngineerPanelProps> = (
               <div className="px-3 py-1.5 rounded-sm bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 flex items-center gap-2">
                 <Clock className="w-4 h-4 text-emerald-400" />
                 <div>
-                  <span className="text-[9px] uppercase font-bold tracking-wider block">Lead-Time Advantage</span>
+                  <span className="text-xs uppercase font-bold tracking-wider block">Lead-Time Advantage</span>
                   <span className="text-sm font-mono font-bold">+{leadTimeSec.toFixed(1)} s Ahead of Redline</span>
                 </div>
               </div>
@@ -277,7 +278,7 @@ export const PropulsionEngineerPanel: React.FC<PropulsionEngineerPanelProps> = (
               <div className="px-3 py-1.5 rounded-sm bg-amber-500/10 border border-amber-500/30 text-amber-300 flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 text-amber-400" />
                 <div>
-                  <span className="text-[9px] uppercase font-bold tracking-wider block">Early Warning Active</span>
+                  <span className="text-xs uppercase font-bold tracking-wider block">Early Warning Active</span>
                   <span className="text-xs font-semibold">Twin Alerting Before Redline Breach</span>
                 </div>
               </div>
@@ -299,7 +300,7 @@ export const PropulsionEngineerPanel: React.FC<PropulsionEngineerPanelProps> = (
                 1. Legacy Threshold Monitoring (Rotax OM)
               </span>
               <span
-                className={`px-2 py-0.5 rounded text-[10px] font-mono font-semibold border ${
+                className={`px-2 py-0.5 rounded text-xs font-mono font-semibold border ${
                   conventionalBreached
                     ? 'bg-critical-dim text-critical border-critical-muted'
                     : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
@@ -324,9 +325,9 @@ export const PropulsionEngineerPanel: React.FC<PropulsionEngineerPanelProps> = (
                       : 'bg-white/[0.02] border-surface-border/60 text-slate-400'
                   }`}
                 >
-                  <div className="text-[10px] truncate text-slate-500">{r.param}</div>
+                  <div className="text-xs truncate text-slate-500">{r.param}</div>
                   <div className="font-mono font-semibold text-white mt-0.5">{r.current}</div>
-                  <div className="text-[9px] font-mono text-slate-500">Limit: {r.limit}</div>
+                  <div className="text-xs font-mono text-slate-500">Limit: {r.limit}</div>
                 </div>
               ))}
             </div>
@@ -345,7 +346,7 @@ export const PropulsionEngineerPanel: React.FC<PropulsionEngineerPanelProps> = (
                 2. ANUMAAN Physics-Informed Digital Twin
               </span>
               <span
-                className={`px-2 py-0.5 rounded text-[10px] font-mono font-semibold border ${
+                className={`px-2 py-0.5 rounded text-xs font-mono font-semibold border ${
                   twinDetected
                     ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
                     : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
@@ -362,7 +363,7 @@ export const PropulsionEngineerPanel: React.FC<PropulsionEngineerPanelProps> = (
             <div className="space-y-2 text-xs">
               <div className="flex justify-between items-center bg-white/[0.02] p-2 rounded border border-surface-border/60">
                 <span className="text-slate-400">Overall Anomaly Score:</span>
-                <span className="font-mono font-semibold text-accent">{(a.anomaly_score * 100).toFixed(1)}%</span>
+                <span className="font-mono font-semibold text-accent">{pct(a.anomaly_score, 1)}</span>
               </div>
               <div className="flex justify-between items-center bg-white/[0.02] p-2 rounded border border-surface-border/60">
                 <span className="text-slate-400">Diagnosed Condition:</span>
@@ -373,12 +374,12 @@ export const PropulsionEngineerPanel: React.FC<PropulsionEngineerPanelProps> = (
               <div className="flex justify-between items-center bg-white/[0.02] p-2 rounded border border-surface-border/60">
                 <span className="text-slate-400">Diagnostic Confidence:</span>
                 <span className="font-mono font-semibold text-emerald-400">
-                  {((a.diagnosed_confidence || 0) * 100).toFixed(0)}%
+                  {pct(a.diagnosed_confidence)}
                 </span>
               </div>
             </div>
 
-            <div className="text-[11px] text-slate-300 bg-surface p-2.5 rounded-sm border border-surface-border leading-relaxed font-mono">
+            <div className="text-xs text-slate-300 bg-surface p-2.5 rounded-sm border border-surface-border leading-relaxed font-mono">
               <span className="font-semibold block text-accent mb-0.5">DRDO PS-26054 Capability Validated:</span>
               The twin detects incipient anomalies via multi-dimensional residual divergence while sensor values remain well inside legacy redlines.
             </div>
@@ -395,56 +396,56 @@ export const PropulsionEngineerPanel: React.FC<PropulsionEngineerPanelProps> = (
               Vibration Spectral Orders &amp; Bearing Harmonics (2 kHz DSP)
             </h3>
           </div>
-          <span className="text-[10px] font-mono text-slate-500">HMS-09 / F07</span>
+          <span className="text-xs font-mono text-slate-500">HMS-09 / F07</span>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-6 gap-2 text-xs">
           <div className="bg-surface-card p-2.5 rounded border border-surface-border">
-            <span className="text-[10px] text-slate-500 block">1X CRANKSHAFT</span>
+            <span className="text-xs text-slate-500 block">1X CRANKSHAFT</span>
             <span className="text-base font-bold font-mono text-accent mt-0.5 block">
               {fmt(t.vibration_orders?.['1X'] ?? t.VIB_GEARBOX_RMS, 2)} mm/s
             </span>
-            <span className="text-[9px] text-slate-500">{fmt(crankFreqHz, 1)} Hz fundamental</span>
+            <span className="text-xs text-slate-500">{fmt(crankFreqHz, 1)} Hz fundamental</span>
           </div>
 
           <div className="bg-surface-card p-2.5 rounded border border-surface-border">
-            <span className="text-[10px] text-slate-500 block">2X SECONDARY</span>
+            <span className="text-xs text-slate-500 block">2X SECONDARY</span>
             <span className="text-base font-bold font-mono text-slate-200 mt-0.5 block">
               {fmt(t.vibration_orders?.['2X'] ?? (t.VIB_GEARBOX_RMS * 0.35), 2)} mm/s
             </span>
-            <span className="text-[9px] text-slate-500">Reciprocating 2nd order</span>
+            <span className="text-xs text-slate-500">Reciprocating 2nd order</span>
           </div>
 
           <div className="bg-surface-card p-2.5 rounded border border-surface-border">
-            <span className="text-[10px] text-slate-500 block">3X PROPELLER</span>
+            <span className="text-xs text-slate-500 block">3X PROPELLER</span>
             <span className="text-base font-bold font-mono text-amber-300 mt-0.5 block">
               {fmt(t.vibration_orders?.['3X_prop'] ?? (t.VIB_GEARBOX_RMS * 0.2), 2)} mm/s
             </span>
-            <span className="text-[9px] text-slate-500">{fmt(propFreqHz, 1)} Hz blade pass</span>
+            <span className="text-xs text-slate-500">{fmt(propFreqHz, 1)} Hz blade pass</span>
           </div>
 
           <div className="bg-surface-card p-2.5 rounded border border-surface-border">
-            <span className="text-[10px] text-slate-500 block">0.43X WHIRL</span>
+            <span className="text-xs text-slate-500 block">0.43X WHIRL</span>
             <span className="text-base font-bold font-mono text-slate-200 mt-0.5 block">
               {fmt(t.vibration_orders?.['subharmonic_whirl'] ?? 0.05, 2)} mm/s
             </span>
-            <span className="text-[9px] text-slate-500">Hydrodynamic oil whirl</span>
+            <span className="text-xs text-slate-500">Hydrodynamic oil whirl</span>
           </div>
 
           <div className="bg-surface-card p-2.5 rounded border border-surface-border">
-            <span className="text-[10px] text-slate-500 block">1.69X GEAR MESH</span>
+            <span className="text-xs text-slate-500 block">1.69X GEAR MESH</span>
             <span className="text-base font-bold font-mono text-slate-200 mt-0.5 block">
               {fmt(t.vibration_orders?.['gear_mesh'] ?? 0.15, 2)} mm/s
             </span>
-            <span className="text-[9px] text-slate-500">{fmt(gearMeshHz, 1)} Hz gear mesh</span>
+            <span className="text-xs text-slate-500">{fmt(gearMeshHz, 1)} Hz gear mesh</span>
           </div>
 
           <div className="bg-surface-card p-2.5 rounded border border-surface-border">
-            <span className="text-[10px] text-slate-500 block">3.12X BPFO</span>
+            <span className="text-xs text-slate-500 block">3.12X BPFO</span>
             <span className="text-base font-bold font-mono text-slate-200 mt-0.5 block">
               {fmt(t.vibration_orders?.['bearing_bpfo'] ?? 0.08, 2)} mm/s
             </span>
-            <span className="text-[9px] text-slate-500">Ball pass outer race</span>
+            <span className="text-xs text-slate-500">Ball pass outer race</span>
           </div>
         </div>
       </div>
@@ -458,40 +459,40 @@ export const PropulsionEngineerPanel: React.FC<PropulsionEngineerPanelProps> = (
               Synthesized Virtual Sensors (Thermofluid State Observer)
             </h3>
           </div>
-          <span className="text-[10px] font-mono text-emerald-400">UKF OBSERVER / UNSENSORED DOMAINS</span>
+          <span className="text-xs font-mono text-emerald-400">UKF OBSERVER / UNSENSORED DOMAINS</span>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
           <div className="bg-surface-card p-3 rounded border border-surface-border">
-            <span className="text-[10px] text-slate-500 block">PEAK CYLINDER PRESSURE (P_max)</span>
+            <span className="text-xs text-slate-500 block">PEAK CYLINDER PRESSURE (P_max)</span>
             <span className="text-lg font-bold font-mono text-emerald-400 mt-1 block">
-              {fmt(t.virtual_sensors?.['P_max_bar'] ?? 65.2, 1)} bar
+              {fmt(t.virtual_sensors?.['P_max_bar'], 1)} bar
             </span>
-            <span className="text-[10px] text-slate-500">In-cylinder combustion peak</span>
+            <span className="text-xs text-slate-500">In-cylinder combustion peak</span>
           </div>
 
           <div className="bg-surface-card p-3 rounded border border-surface-border">
-            <span className="text-[10px] text-slate-500 block">TURBINE INLET TEMP (TIT)</span>
+            <span className="text-xs text-slate-500 block">TURBINE INLET TEMP (TIT)</span>
             <span className="text-lg font-bold font-mono text-amber-400 mt-1 block">
-              {fmt(t.virtual_sensors?.['TIT_degC'] ?? 810.0, 1)} °C
+              {fmt(t.virtual_sensors?.['TIT_degC'], 1)} °C
             </span>
-            <span className="text-[10px] text-slate-500">Pre-turbine collector state</span>
+            <span className="text-xs text-slate-500">Pre-turbine collector state</span>
           </div>
 
           <div className="bg-surface-card p-3 rounded border border-surface-border">
-            <span className="text-[10px] text-slate-500 block">MIN OIL FILM THICKNESS (h_min)</span>
+            <span className="text-xs text-slate-500 block">MIN OIL FILM THICKNESS (h_min)</span>
             <span className="text-lg font-bold font-mono text-slate-100 mt-1 block">
-              {fmt(t.virtual_sensors?.['h_min_um'] ?? 2.8, 2)} µm
+              {fmt(t.virtual_sensors?.['h_min_um'], 2)} µm
             </span>
-            <span className="text-[10px] text-slate-500">Hydrodynamic journal safety</span>
+            <span className="text-xs text-slate-500">Hydrodynamic journal safety</span>
           </div>
 
           <div className="bg-surface-card p-3 rounded border border-surface-border">
-            <span className="text-[10px] text-slate-500 block">INDICATED POWER (P_ind)</span>
+            <span className="text-xs text-slate-500 block">INDICATED POWER (P_ind)</span>
             <span className="text-lg font-bold font-mono text-indigo-300 mt-1 block">
-              {fmt(t.virtual_sensors?.['P_ind_kw'] ?? 72.4, 1)} kW
+              {fmt(t.virtual_sensors?.['P_ind_kw'], 1)} kW
             </span>
-            <span className="text-[10px] text-slate-500">Gross gas thermodynamic work</span>
+            <span className="text-xs text-slate-500">Gross gas thermodynamic work</span>
           </div>
         </div>
       </div>
@@ -506,7 +507,7 @@ export const PropulsionEngineerPanel: React.FC<PropulsionEngineerPanelProps> = (
                 Digital Twin Validity &amp; 3-Way Fault Attribution
               </h3>
             </div>
-            <span className={`px-2 py-0.5 rounded-sm text-[10px] font-mono font-semibold ${
+            <span className={`px-2 py-0.5 rounded-sm text-xs font-mono font-semibold ${
               a.twin_validity.verdict === 'VALID' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
             }`}>
               TWIN STATUS: {a.twin_validity.verdict}
@@ -515,30 +516,30 @@ export const PropulsionEngineerPanel: React.FC<PropulsionEngineerPanelProps> = (
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
             <div className="bg-surface-card p-2.5 rounded border border-surface-border">
-              <span className="text-[10px] text-slate-500 block">ATTRIBUTION DECISION</span>
+              <span className="text-xs text-slate-500 block">ATTRIBUTION DECISION</span>
               <span className="text-sm font-bold font-mono text-accent mt-0.5 block">
                 {a.twin_validity.attribution}
               </span>
-              <span className="text-[9px] text-slate-500">3-Way Classifier (Twin vs Engine vs Sensor)</span>
+              <span className="text-xs text-slate-500">3-Way Classifier (Twin vs Engine vs Sensor)</span>
             </div>
 
             <div className="bg-surface-card p-2.5 rounded border border-surface-border">
-              <span className="text-[10px] text-slate-500 block">NORMALIZED INNOVATION SQUARED (NIS)</span>
+              <span className="text-xs text-slate-500 block">NORMALIZED INNOVATION SQUARED (NIS)</span>
               <span className="text-sm font-bold font-mono text-slate-200 mt-0.5 block">
                 χ² = {fmt(a.twin_validity.nis_chi2, 2)}
               </span>
-              <span className="text-[9px] text-slate-500">95% statistical consistency bound</span>
+              <span className="text-xs text-slate-500">95% statistical consistency bound</span>
             </div>
 
             <div className="bg-surface-card p-2.5 rounded border border-surface-border">
-              <span className="text-[10px] text-slate-500 block">RESIDUAL WHITENESS (Ljung-Box)</span>
+              <span className="text-xs text-slate-500 block">RESIDUAL WHITENESS (Ljung-Box)</span>
               <span className="text-sm font-bold font-mono text-emerald-400 mt-0.5 block">
                 p = {fmt(a.twin_validity.whiteness_p_value, 3)}
               </span>
-              <span className="text-[9px] text-slate-500">Uncorrelated innovation check</span>
+              <span className="text-xs text-slate-500">Uncorrelated innovation check</span>
             </div>
           </div>
-          <p className="text-[10.5px] text-slate-400">{a.twin_validity.explanation}</p>
+          <p className="text-xs text-slate-400">{a.twin_validity.explanation}</p>
         </div>
       )}
     </div>

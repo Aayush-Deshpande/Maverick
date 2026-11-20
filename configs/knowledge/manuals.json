@@ -1,0 +1,13 @@
+{
+  "_comment": "Real documents the copilot may cite (D34/D44: manufacturer manuals, certificates, standards only; never generated text). Paths are relative to the repo; files under docs/reference/oem/ are local-only (copyright) and simply skipped when absent. engines: which engine ids a document applies to ('ALL' for standards).",
+  "documents": [
+    {"id": "OM-912i", "path": "docs/reference/oem/OM_912iSeries_ED2_R1.pdf", "title": "BRP-Rotax Operators Manual 912 i Series (OM-912 i)", "edition": "Ed. 2 Rev. 1, 2019-06-01", "engines": ["rotax_912is"]},
+    {"id": "OM-914", "path": "docs/reference/Rotax914_Operators_Manual.pdf", "title": "BRP-Rotax Operators Manual 914 series", "edition": "as filed in docs/reference", "engines": ["rotax_914"]},
+    {"id": "IM-914", "path": "docs/reference/Rotax914_Installation_Manual.pdf", "title": "BRP-Rotax Installation Manual 914 series", "edition": "as filed in docs/reference", "engines": ["rotax_914"]},
+    {"id": "TCDS-E121", "path": "docs/reference/oem/EASA_TCDS_E121_Rotax_912_915.pdf", "title": "EASA Type-Certificate Data Sheet E.121 (Rotax 912/915 series)", "edition": "Issue 17, 2023-12-18", "engines": ["rotax_912is", "rotax_914", "rotax_915is"]},
+    {"id": "TCDS-E200", "path": "docs/reference/oem/EASA_TCDS_E200_Austro_E4_AE300.pdf", "title": "EASA Type-Certificate Data Sheet E.200 (Austro Engine E4 / AE300)", "edition": "Issue 12, 2020-06-30", "engines": ["austro_ae300"]},
+    {"id": "MIL-STD-1629A", "path": "docs/reference/MIL-STD-1629A.pdf", "title": "MIL-STD-1629A Procedures for performing a FMECA", "edition": "1980-11-24", "engines": "ALL"}
+  ],
+  "chunk_chars": 900,
+  "top_k": 5
+}

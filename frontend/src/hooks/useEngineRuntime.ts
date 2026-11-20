@@ -1,133 +1,128 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+/* Engine console data on /api/v1 (card M0-09b). One socket (src/api/socket.ts) feeds one store; engine selection is
+   per client (it never changes what other clients see, audit #23); lists come from the API, never from code. */
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { SocketManager, wsUrl } from '../api/socket';
+import { useEngineStore } from '../store/engineStore';
 
-export interface EngineFault {
-  mode: string;
-  per_cylinder: boolean;
-  scalar_visible: boolean;
-  layer: string;
-  description: string;
-}
-export interface EngineProfile {
+export interface V1Engine {
   engine_id: string;
-  display_name?: string;
-  n_cylinders: number;
-  turbocharged: boolean;
-  compression_ignition: boolean;
+  display_name: string;
+  manufacturer?: string;
+  ignition_mode?: string;
+  induction?: string;
+  fuel_system?: string;
+  cylinders: number;
   ready: boolean;
-  heavy_ready: boolean;
-  tail_id: string;
-  commanded_faults: Array<{ mode: string; cylinder?: number | null; severity: number; origin: string }>;
-  faults: EngineFault[];
 }
-export interface EngineFrame {
-  engine_id: string;
-  t: number;
-  source: string;
-  evidence_class: string;
-  channels: Record<string, number>;
-  cht: number[];
-  egt: number[];
-  detection: null | { scores: Record<string, number>; ratios: Record<string, number>; raw_alarm: boolean; confirmed: boolean; top_channels: Array<string | [string, number]> };
-  heavy: null | { label: string; classes: string[]; scores: number[] };
-  diagnosis?: null | { fault_name: string; ata_chapter: string; manual_reference?: string; subsystem?: string; severity: string; root_cause_explanation?: string; causal_chain?: string[]; prescriptive_action?: string; maintenance_order?: string; confidence?: number; cylinder?: number | null };
-  prognostics?: null | { damage?: { damage_total: number; life_remaining_fraction: number; component?: string }; rul?: { rul_p_lower: number; rul_point: number; rul_p_upper: number; nominal_coverage: number } };
-  reliability?: null | { mission_reliability: number; limiting_component: string; mission_hours: number };
-  glide?: null | { altitude_ft: number; ld_ratio?: number; glide_range_nm: number; time_aloft_min: number; sink_rate_fpm?: number; reachable_count: number; recommended_diversion: null | string | { name?: string; airfield_id?: string }; airfields: Array<{ airfield_id: string; name: string; distance_nm: number; alt_required_ft?: number; alt_margin_ft: number; is_reachable: boolean; status: string }> };
+
+export interface V1Fault {
+  id: string;
+  name: string;
+  kind: 'PHYSICAL' | 'SENSOR';
+  scope: 'ENGINE' | 'CYLINDER' | 'CHANNEL';
+  description: string;
+  default_severity: number;
+  default_ramp_s: number;
 }
-interface EngineIndex { selected: string; tick: number; engines: EngineProfile[] }
-export interface EngineSchema { channels: Array<{ name: string; unit: string; kind: string; cylinder: number | null; required: boolean }>; operating_limits: Record<string, unknown>; components: string[]; provenance_summary: Record<string, number> }
-export interface FleetMember { engine_id: string; ready: boolean; selected?: boolean; t?: number; rpm?: number; max_cht?: number; max_egt?: number; raw_alarm?: boolean | null; confirmed?: boolean | null; top_channels?: string[] }
+
+/* Re-render on a timer so data age keeps counting while no messages arrive. */
+export function useNow(intervalMs: number): number {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), intervalMs);
+    return () => window.clearInterval(id);
+  }, [intervalMs]);
+  return now;
+}
+
+async function readError(response: Response): Promise<string> {
+  try {
+    const body = await response.json() as { detail?: { message?: string } | string };
+    if (typeof body.detail === 'string') return body.detail;
+    if (body.detail?.message) return body.detail.message;
+  } catch { /* fall through to the status line */ }
+  return `Request failed (${response.status})`;
+}
 
 export function useEngineRuntime(serverUrl: string) {
-  const [catalog, setCatalog] = useState<EngineIndex | null>(null);
-  const [schema, setSchema] = useState<EngineSchema | null>(null);
-  const [fleet, setFleet] = useState<FleetMember[]>([]);
-  const [engineId, setEngineId] = useState('rotax_912is');
-  const [frame, setFrame] = useState<EngineFrame | null>(null);
-  const [connected, setConnected] = useState(false);
-  const [latencyMs, setLatencyMs] = useState(0);
+  const [engines, setEngines] = useState<V1Engine[]>([]);
+  const [engineId, setEngineId] = useState<string | null>(null);
+  const [faults, setFaults] = useState<V1Fault[]>([]);
   const [error, setError] = useState('');
-  const socket = useRef<WebSocket | null>(null);
-  const profile = catalog?.engines.find((engine) => engine.engine_id === engineId) ?? null;
+  const manager = useRef<SocketManager | null>(null);
+  const connection = useEngineStore((s) => s.connection);
+  const streamError = useEngineStore((s) => s.lastError);
+  const fleet = useEngineStore((s) => s.engines);
+  const slot = engineId ? fleet[engineId] : undefined;
 
-  const refreshCatalog = useCallback(async () => {
+  const loadEngines = useCallback(async () => {
     try {
-      const response = await fetch(`${serverUrl}/api/engines`, { cache: 'no-store' });
-      if (!response.ok) throw new Error(`Engine list returned ${response.status}`);
-      const data = await response.json() as EngineIndex;
-      setCatalog(data);
+      const response = await fetch(`${serverUrl}/api/v1/engines`, { cache: 'no-store' });
+      if (!response.ok) throw new Error(await readError(response));
+      const data = await response.json() as { engines: V1Engine[]; default_engine_id?: string | null };
+      setEngines(data.engines);
       setError('');
-      if (data.engines.length && !data.engines.some((engine) => engine.engine_id === engineId)) setEngineId(data.selected || data.engines[0].engine_id);
-    } catch (cause) { setError(cause instanceof Error ? cause.message : 'Cannot reach engine runtime'); }
-  }, [serverUrl, engineId]);
+      setEngineId((current) => {
+        if (current && data.engines.some((e) => e.engine_id === current)) return current;
+        const fromUrl = new URLSearchParams(window.location.search).get('engine');
+        // ?engine= first, then the server's configured default (configs/runtime.json), then the first engine listed
+        const pick = [fromUrl, data.default_engine_id].find((id) => id && data.engines.some((e) => e.engine_id === id));
+        return pick ?? data.engines[0]?.engine_id ?? null;
+      });
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Cannot reach the engine runtime');
+    }
+  }, [serverUrl]);
 
-  useEffect(() => { void refreshCatalog(); const id = window.setInterval(() => void refreshCatalog(), 3000); return () => clearInterval(id); }, [refreshCatalog]);
+  // engine list on mount and again after every reconnect (no polling)
+  useEffect(() => { void loadEngines(); }, [loadEngines]);
+  const wasLive = useRef(false);
+  useEffect(() => {
+    if (connection === 'LIVE' && !wasLive.current) void loadEngines();
+    wasLive.current = connection === 'LIVE';
+  }, [connection, loadEngines]);
+
+  // the one socket; subscribed to the whole fleet so the fleet cards and the selected engine share it
+  useEffect(() => {
+    const m = new SocketManager(wsUrl(serverUrl));
+    manager.current = m;
+    m.subscribe('fleet');
+    m.start();
+    return () => { m.stop(); manager.current = null; };
+  }, [serverUrl]);
 
   useEffect(() => {
+    if (!engineId) return;
     let active = true;
-    setSchema(null);
-    fetch(`${serverUrl}/api/engines/${encodeURIComponent(engineId)}/schema`, { cache: 'no-store' })
-      .then((response) => { if (!response.ok) throw new Error(`Profile schema returned ${response.status}`); return response.json() as Promise<EngineSchema>; })
-      .then((data) => { if (active) setSchema(data); })
-      .catch(() => { if (active) setSchema(null); });
+    setFaults([]);
+    fetch(`${serverUrl}/api/v1/faults?engine=${encodeURIComponent(engineId)}`, { cache: 'no-store' })
+      .then(async (r) => { if (!r.ok) throw new Error(await readError(r)); return r.json() as Promise<{ faults: V1Fault[] }>; })
+      .then((d) => { if (active) setFaults(d.faults); })
+      .catch((cause) => { if (active) setError(cause instanceof Error ? cause.message : 'Fault list unavailable'); });
     return () => { active = false; };
   }, [engineId, serverUrl]);
 
-  useEffect(() => {
-    let active = true;
-    let ws: WebSocket | null = null;
-    let retry: number | undefined;
-    const connect = () => {
-      if (!active) return;
-      ws = new WebSocket(`${serverUrl.replace(/^http/, 'ws')}/ws/fleet`);
-      ws.onmessage = (event) => { if (active) { try { setFleet((JSON.parse(event.data) as { engines: FleetMember[] }).engines); } catch { /* ignore malformed fleet snapshot */ } } };
-      ws.onclose = () => { if (active) retry = window.setTimeout(connect, 2000); };
-    };
-    connect();
-    return () => { active = false; if (retry) clearTimeout(retry); ws?.close(); };
-  }, [serverUrl]);
-
-  useEffect(() => {
-    setFrame(null); setConnected(false);
-    const base = serverUrl.replace(/^http/, 'ws');
-    let active = true;
-    let ws: WebSocket | null = null;
-    let retry: number | undefined;
-    let poll: number | undefined;
-    const connect = () => {
-      if (!active) return;
-      ws = new WebSocket(`${base}/ws/engines/${encodeURIComponent(engineId)}`);
-      socket.current = ws;
-      ws.onopen = () => { if (active) setConnected(true); };
-      ws.onmessage = (event) => { if (!active) return; try { setFrame(JSON.parse(event.data) as EngineFrame); setConnected(true); } catch { setError('Received an unreadable engine frame'); } };
-      ws.onerror = () => { if (active) setConnected(false); };
-      ws.onclose = () => { if (active) { setConnected(false); retry = window.setTimeout(connect, 1500); } };
-    };
-    connect();
-    poll = window.setInterval(async () => {
-      if (!active || socket.current?.readyState === WebSocket.OPEN) return;
-      const started = performance.now();
-      try {
-        const response = await fetch(`${serverUrl}/api/engines/${encodeURIComponent(engineId)}/state`, { cache: 'no-store' });
-        if (!response.ok) return;
-        setFrame(await response.json() as EngineFrame); setLatencyMs(Math.round(performance.now() - started)); setConnected(true);
-      } catch { if (active) setConnected(false); }
-    }, 1000);
-    return () => { active = false; if (retry) clearTimeout(retry); if (poll) clearInterval(poll); ws?.close(); if (socket.current === ws) socket.current = null; };
-  }, [engineId, serverUrl]);
-
-  const selectEngine = useCallback(async (id: string) => {
-    setEngineId(id);
-    try {
-      const response = await fetch(`${serverUrl}/api/engines/select`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ engine_id: id }) });
-      if (!response.ok) throw new Error(`Engine selection returned ${response.status}`);
-    }
-    catch { setError('Could not select engine; reconnecting to its stream'); }
-  }, [serverUrl]);
   const command = useCallback(async (path: string, method: string, body?: unknown) => {
-    const response = await fetch(`${serverUrl}/api/engines/${encodeURIComponent(engineId)}${path}`, { method, headers: body ? { 'Content-Type': 'application/json' } : undefined, body: body ? JSON.stringify(body) : undefined });
-    if (!response.ok) throw new Error((await response.text()) || `Request failed (${response.status})`);
-    return response.status === 204 ? null : response.json();
+    if (!engineId) throw new Error('No engine selected');
+    const response = await fetch(`${serverUrl}/api/v1/engines/${encodeURIComponent(engineId)}${path}`, {
+      method, headers: body ? { 'Content-Type': 'application/json' } : undefined, body: body ? JSON.stringify(body) : undefined,
+    });
+    if (!response.ok) throw new Error(await readError(response));
+    return response.json();
   }, [engineId, serverUrl]);
-  return { catalog, fleet, profile, schema, engineId, selectEngine, frame, connected, latencyMs, error, command, refreshCatalog };
+
+  /** A command on an /api/v1 path that is not engine-scoped (e.g. work-order transitions). */
+  const api = useCallback(async (path: string, method: string, body?: unknown) => {
+    const response = await fetch(`${serverUrl}${path}`, {
+      method, headers: body ? { 'Content-Type': 'application/json' } : undefined, body: body ? JSON.stringify(body) : undefined,
+    });
+    if (!response.ok) throw new Error(await readError(response));
+    return response.json();
+  }, [serverUrl]);
+
+  const profile = useMemo(() => engines.find((e) => e.engine_id === engineId) ?? null, [engines, engineId]);
+  return {
+    engines, engineId, selectEngine: setEngineId, profile, faults, fleet, slot, state: slot?.state ?? null,
+    connection, error: error || streamError || '', command, api, refresh: loadEngines,
+  };
 }

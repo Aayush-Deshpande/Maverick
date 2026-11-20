@@ -25,16 +25,46 @@
   },
   "turbo": {
     "max_boost_kpa": 145.0,
-    "critical_altitude_ft": 16500.0,
+    "critical_altitude_ft": 15000.0,
     "wastegate_controlled": true,
     "max_shaft_rpm": 180000.0,
     "intercooled": true,
     "lag_time_constant_sec": 0.75,
-    "surge_margin_min": 0.12
+    "surge_margin_min": 0.12,
+    "boost_control": "WASTEGATE",
+    "tcu_nominal_airbox": {
+      "lever_full_scale_pct": 115.0,
+      "throttle_pct": [
+        0.0,
+        15.0,
+        47.0,
+        60.0,
+        70.0,
+        80.0,
+        90.0,
+        100.0,
+        108.0,
+        110.0,
+        115.0
+      ],
+      "airbox_hpa": [
+        1000.0,
+        1000.0,
+        1000.0,
+        1050.0,
+        1085.0,
+        1120.0,
+        1160.0,
+        1220.0,
+        1220.0,
+        1370.0,
+        1370.0
+      ]
+    }
   },
-  "rated_power_kw": 105.1,
+  "rated_power_kw": 104.0,
   "rated_rpm": 5800.0,
-  "max_continuous_power_kw": 100.7,
+  "max_continuous_power_kw": 99.0,
   "max_continuous_rpm": 5500.0,
   "idle_rpm": 1400.0,
   "gearbox_ratio": 2.4286,
@@ -44,7 +74,7 @@
   "nominal_lambda": 0.95,
   "nominal_inj_timing_btdc": 0.0,
   "nominal_ign_timing_btdc": 26.0,
-  "rail_pressure_bar": 0.35,
+  "rail_pressure_bar": 3.05,
   "fuel_cloud_point_c": null,
   "fuel_cfpp_c": null,
   "source": "Added for the Heron Mk II gap identified in docs/audit/10_red_team_readiness_review.md Sec 2.8: the IAF/Army fly the 915 iS, not the 914, and this repository previously had no config for it. See the per-field \"provenance\" map -- only displacement, power ratings, induction/cooling and TBO are public; bore/stroke/CR, turbo details, gearbox ratio, mass and nominal fuel/air figures are scaled from the shared 912iS/914 architecture (same bore-class, same stroke as the 912 iS/914 family) pending a Rotax 915 iS operator's manual.",
@@ -90,8 +120,8 @@
       "ref": "no source"
     },
     "turbo.critical_altitude_ft": {
-      "status": "PLACEHOLDER",
-      "ref": "no source -- Heron Mk II's >10,000m (~32,800 ft) service ceiling is an airframe figure, not this field (turbo boost-hold altitude)"
+      "status": "PUBLIC",
+      "ref": "EASA TCDS E.121 issue 17 (2023-12-18): max continuous 99 kW up to the critical altitude of 15,000 ft / 4,572 m"
     },
     "turbo.intercooled": {
       "status": "ASSUMED",
@@ -99,15 +129,15 @@
     },
     "rated_power_kw": {
       "status": "PUBLIC",
-      "ref": "141 hp = 105.1 kW takeoff -- BRP-Rotax public spec sheet"
+      "ref": "EASA TCDS E.121 issue 17 (2023-12-18): 915 iSc take-off 104 kW at 5800 rpm (max 5 min); was 105.1 (141 hp marketing value)"
     },
     "max_continuous_power_kw": {
       "status": "PUBLIC",
-      "ref": "135 hp = 100.7 kW continuous -- BRP-Rotax public spec sheet"
+      "ref": "EASA TCDS E.121 issue 17 (2023-12-18): max continuous 99 kW at 5500 rpm up to the critical altitude"
     },
     "rated_rpm": {
-      "status": "ASSUMED",
-      "ref": "assumed identical to 912iS/914 family (5,800 rpm); not independently confirmed"
+      "status": "PUBLIC",
+      "ref": "EASA TCDS E.121 issue 17 (2023-12-18)"
     },
     "gearbox_ratio": {
       "status": "ASSUMED",
@@ -138,12 +168,12 @@
       "ref": "no source"
     },
     "rail_pressure_bar": {
-      "status": "PLACEHOLDER",
-      "ref": "no source"
+      "status": "PUBLIC",
+      "ref": "EASA TCDS E.121 issue 17 (2023-12-18) p.23: 915 iSc fuel pressure 2.9-3.2 bar (nominal = mid band); was 0.35 (wrong)"
     },
     "max_continuous_rpm": {
-      "status": "ASSUMED",
-      "ref": "assumed identical to 912iS/914 family; not independently confirmed"
+      "status": "PUBLIC",
+      "ref": "EASA TCDS E.121 issue 17 (2023-12-18)"
     },
     "idle_rpm": {
       "status": "ASSUMED",
@@ -170,18 +200,85 @@
       "ref": "legacy literal from backend/ml/detection_pipeline.py (135/850) and the plant hard-failure threshold (0.8 bar); typical of the Rotax operator manuals but NOT re-verified against docs/reference (verification row V-limits)"
     },
     "operating_limits.oil_p_min_bar": {
-      "status": "ASSUMED",
-      "ref": "legacy literal from backend/ml/detection_pipeline.py (135/850) and the plant hard-failure threshold (0.8 bar); typical of the Rotax operator manuals but NOT re-verified against docs/reference (verification row V-limits)"
+      "status": "PUBLIC",
+      "ref": "EASA TCDS E.121 issue 17 (2023-12-18) p.24 (below 3500 rpm)"
     },
     "operating_limits.oil_t_max_c": {
+      "status": "PUBLIC",
+      "ref": "EASA TCDS E.121 issue 17 (2023-12-18) p.22"
+    },
+    "oil_capacity_l": {
+      "status": "PUBLIC",
+      "ref": "EASA TCDS E.121 issue 17 (2023-12-18) p.24"
+    },
+    "operating_limits.coolant_t_max_c": {
+      "status": "PUBLIC",
+      "ref": "EASA TCDS E.121 issue 17 (2023-12-18) p.22"
+    },
+    "turbo.tcu_nominal_airbox": {
       "status": "ASSUMED",
-      "ref": "legacy literal from backend/ml/detection_pipeline.py (135/850) and the plant hard-failure threshold (0.8 bar); typical of the Rotax operator manuals but NOT re-verified against docs/reference (verification row V-limits)"
+      "ref": "shape copied from the Rotax 914 OM Ed. 2 p. 7-10 Fig. 6 TCU schedule (same Rotax boost-control family); the 915 iS OM is not in docs/reference. The model scales it so the take-off point is the 915's own calibrated take-off target. Replace with the 915 iS OM schedule when available (PROGRESS Questions)."
+    },
+    "propeller_governor": {
+      "status": "ASSUMED",
+      "ref": "installation choice, not engine data: MALE UAV 915 iSc installations use a constant-speed propeller; governor holds rated rpm like the AE300/VRDE setups (Prasad Q12, 20 Nov 2026). Fixed pitch drove the engine into the ECU rev limiter at high lever."
     }
   },
   "operating_limits": {
     "cht_max_c": 135.0,
     "egt_max_c": 850.0,
     "oil_p_min_bar": 0.8,
-    "oil_t_max_c": 130.0
+    "oil_t_max_c": 130.0,
+    "coolant_t_max_c": 120.0
+  },
+  "oil_capacity_l": 3.0,
+  "fuel_system": "PORT_INJECTION",
+  "ignition_circuits": 2,
+  "ecu_lanes": 2,
+  "glow_plugs": false,
+  "thermostat": false,
+  "propeller_governor": true,
+  "limits": {
+    "oil_p": {
+      "unit": "bar",
+      "warning_low": 0.8,
+      "normal": [
+        2.0,
+        5.0
+      ],
+      "warning_high": 7.0,
+      "rpm_rule": {
+        "above_rpm": 3500,
+        "normal": [
+          2.0,
+          5.0
+        ],
+        "below_min": 0.8
+      },
+      "ref": "EASA TCDS E.121 issue 17 (2023-12-18) p.24"
+    },
+    "oil_t": {
+      "unit": "C",
+      "warning_high": 130.0,
+      "ref": "EASA TCDS E.121 issue 17 (2023-12-18) p.22"
+    },
+    "coolant_t": {
+      "unit": "C",
+      "warning_high": 120.0,
+      "ref": "EASA TCDS E.121 issue 17 (2023-12-18) p.22"
+    },
+    "fuel_p": {
+      "unit": "bar",
+      "normal": [
+        2.9,
+        3.2
+      ],
+      "ref": "EASA TCDS E.121 issue 17 (2023-12-18) p.23"
+    }
+  },
+  "notes": {
+    "egt_cht": "E121 gives no EGT/CHT limit for the 915 iSc; the existing egt_max_c/cht_max_c values stay ASSUMED until the 915 OM is obtained (AI-03a).",
+    "not_916": "Do not mix up with the 916 iSc (117 kW, critical altitude up to 23,000 ft).",
+    "propeller": "Constant-speed propeller since 20 Nov 2026 (Prasad Q12); installation data in configs/installations/propellers.json CONSTANT_SPEED (ASSUMED)."
   }
 }

@@ -1,0 +1,37 @@
+{
+ "engine_id": "vrde_jayem_2_2l",
+ "evidence_class": "SIMULATION",
+ "trajectories": 200,
+ "samples": 4908,
+ "target_coverage": 0.95,
+ "hours_per_step": 2.0,
+ "mean_life_h": 959.64,
+ "runs": [
+  {
+   "split": 0,
+   "test_trajectories": 40,
+   "rmse_h": 164.41075607177333,
+   "coverage": 0.9522292993630573,
+   "mean_width_h": 794.3609486463611
+  },
+  {
+   "split": 1,
+   "test_trajectories": 40,
+   "rmse_h": 190.4540769392453,
+   "coverage": 0.9585062240663901,
+   "mean_width_h": 874.642895752054
+  },
+  {
+   "split": 2,
+   "test_trajectories": 40,
+   "rmse_h": 174.0439957259429,
+   "coverage": 0.9384765625,
+   "mean_width_h": 838.3704760192361
+  }
+ ],
+ "mean": {
+  "rmse_h": 176.3029429123205,
+  "coverage": 0.9497373619764824,
+  "mean_width_h": 835.7914401392169
+ }
+}

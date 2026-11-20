@@ -1,0 +1,1311 @@
+ANUMAAN (SIH PS-26054) - COMPLETE COURSE OF ACTION (SOLO DEVELOPER + AI AGENTS)
+Version 2, 19 Nov 2026. Replaces version 1 (written for a 4-person team).
+Owner: Prasad, working alone with AI agents (Claude Code and others). Branch: Beta. main is never touched.
+
+This file tells you, in order, everything we will do to make ANUMAAN work as intended. That means real physics for
+five engines, every fault visible and detected, honest GO/NO-GO, the same data and 3D highlights everywhere, mission
+planning tied to engine health, a clean repository, and everything promised in the problem statement and in our
+submitted idea text. It also explains how each step is done with AI and how each result is checked.
+
+Contents
+  0. Read-me-first: what exists, document map, how to use this file
+  1. The goal in one page (what "done" looks like)
+  2. Ground rules (git, truth, tests) - short form; full form in AGENTS.md
+  3. How a solo developer works with AI (session loop, review, parallel sessions, context)
+  4. PHASE 0 - SORT OUT THE WORKSPACE (first thing we do; every item in the root folder decided)
+  5. PHASE 1 (M0) - one simulator, one fault path, one state stream
+  6. PHASE 2 (M1 + M2) - real physics for five engines, honest engine status
+  7. PHASE 3 (M3) - twin, detection, isolation, explanation
+  8. PHASE 4 (M6 core) - dashboard and 3D that show the truth
+  9. PHASE 5 (M4) - prognostics, maintenance, adaptive learning
+ 10. PHASE 6 (M5) - missions, replay, reports, canyon planning, glide/divert
+ 11. PHASE 7 (Blender) - fix the engine models
+ 12. PHASE 8 (M6 full + UX) - the experience that makes DRDO remember it
+ 12b. PHASE 8b - LLM copilot and RAG (Ollama or Gemini)
+ 13. PHASE 9 (M7) - CAN, FADEC, edge, security, federated learning
+ 14. PHASE 10 (M8 + M9) - production readiness, docs, final verification
+ 15. Promises in our submitted idea text -> where each one is delivered
+ 16. Problem-statement coverage -> where each item is delivered
+ 17. Review checklist and AI red flags
+ 18. Prompt templates
+ 19. Progress log, checkpoints, what to do when things go wrong
+ 20. Minimum honest demo if time runs short
+
+
+=====================================================================================================================
+0. READ-ME-FIRST
+=====================================================================================================================
+
+0.1 What exists on Beta right now (19 Nov 2026, branch Beta = main 9b5942e + these files, not yet committed)
+  Plan documents (root):
+    ANUMAAN_AUDIT_REPORT.txt              (R)  what is broken today, physics equations (21), fault catalogue (22),
+                                               Part C = full-file scan issues 51-73 (19 Nov)
+    ANUMAAN_COMPONENTS_ADDENDUM.txt       (A)  3D components per engine, fault->component matrix, phases A-J
+    ANUMAAN_ROADMAP_AND_PS_COVERAGE.txt   (P)  dynamic rule (Part 0), engine data (Part 2), PS coverage (3),
+                                               milestones M0-M9 (4), cleanup (5), UX (6), test catalogue (7)
+    ANUMAAN_AI_COURSE_OF_ACTION.txt            this file
+  AI instruction files:
+    AGENTS.md      global rules for every AI tool (source of truth for rules)
+    CLAUDE.md      imports AGENTS.md + DECISIONS.md (Claude Code loads it automatically)
+    DECISIONS.md   binding decisions D1-D47 (wins over every other document)
+    PROGRESS.txt   session log; the first entry holds the test baseline
+    <folder>/AGENTS.md + <folder>/CLAUDE.md in backend, frontend, configs, tests, apps, assets, scripts, docs, data,
+    web, docs_site, archive_tracked: what is in the folder, what it becomes, the folder's rules.
+  Submitted texts (root, move to docs/submission/ in Phase 0):
+    ANUMAAN_Idea_Description.txt, ANUMAAN_Abstract_Summary.txt - what we promised the judges (section 15 here).
+  Test baseline: 333 passed, 3 failed, 7 skipped, 1 xfailed (the 3 known failures are listed in AGENTS.md).
+
+0.1a If the context resets (new session, conversation compacted, switching AI tool) - D23
+  Everything needed to continue lives in the repository, not in any chat history:
+  1. PROGRESS.txt, top block "RESUME HERE": current phase, card, branch, last commit, exact next step, open
+     questions. It is updated at every commit and at the end of every session.
+  2. AGENTS.md (rules + the resume procedure), DECISIONS.md (every decision taken, D1 onwards), this file (the
+     plan), and the folder AGENTS.md files (what is where).
+  3. git: run git branch --show-current, git status and git log --oneline -5. If git disagrees with RESUME HERE,
+     git is right; fix RESUME HERE first.
+  4. The research is already done and written down. Do not search the web again for facts that are already here:
+     - Engine data with sources: P Part 2 and R section 20 (EASA TCDS E.121 / E.200, Rotax 914 OM, DRDO pages,
+       Austro brochure, owner-forum items marked OWNER).
+     - Physics equations: R section 21. Fault behaviour per engine: R section 22.
+     - 3D component facts per engine (checked against the GLB files): A sections 1-5.
+     - Code problems with file:line: R sections 1-15, P Part 0 (V1-V12), P Part 1 (N1-N9).
+     - Standards and techniques: P Part 6 (FAA 25.1322 alerting, ISA-18.2/EEMUA 191 alarm rates, ecological
+       interface design), P Part 4 (CUSUM, conformal RUL, WebSocket fan-out, python-can/cantools, Copernicus DEM,
+       glTF-Transform, Git LFS locking).
+     - Source URLs: P Part 11 and the R "SOURCES" list.
+     Search the web only for a fact that is not in these places, and then add it with its source to the right
+     document (P Part 2 for engine data, DECISIONS.md for decisions).
+  5. Older material from before 18 Nov 2026 (docs/build/, UpdatedReport/, final_touch/) is history (D17).
+
+0.2 Precedence when anything disagrees
+  DECISIONS.md > this file > P > A > R. Old docs in docs/build/ are history (D17).
+
+0.3 How to use this file
+  - Work top to bottom. Each phase has cards (IDs like P0-03, M0-02, M1-07). One card = one AI session or a few.
+  - Each card says: Read (sections to load), Do (steps), Don't (traps), Tests, Done when (checks), and for the
+    important ones a ready Prompt.
+  - After each phase there is a CHECKPOINT. Do not start the next phase until the checkpoint passes.
+  - Being solo means no hand-offs and no merge conflicts, but also no second pair of eyes. That is why every card
+    ends with a second, read-only AI review session (section 3.4) before you merge.
+
+
+=====================================================================================================================
+1. THE GOAL IN ONE PAGE
+=====================================================================================================================
+
+When we are done, this is true (each line has a test in P Part 7):
+  1. One physics simulation per engine (Rotax 912 iSc, 914, 915 iSc, Austro AE300, VRDE 2.2 L).
+     - Power, temperatures, pressures, fuel flow, electrical values and vibration come from equations.
+     - Each engine is calibrated to its certified data (power within 2 %).
+     - Turbo engines hold power to their critical altitude.
+     - No engine breaks its limits in normal cruise.
+  2. Every fault (F01-F37, S01-S07) changes model parameters. Readings move because the physics runs. No fault
+     "does nothing".
+  3. The twin (UKF) tracks the engine. Detection, isolation (with cylinder) and explanation work from sensor
+     evidence only. Sensor faults are recognised as sensor faults.
+  4. Engine status (ENGINE OFF / GO / ADVISORY / CAUTION / NO-GO) follows limits, diagnosis and prognosis, with
+     reasons. It never shows GO while something is wrong.
+  5. RUL and time-to-limit come with calibrated 95 % bands (D18). There are mission reliability, maintenance work
+     orders and adaptive baselines.
+  6. A fault injected from anywhere shows the same everywhere within one tick, including the same 3D parts:
+     console, 3D view, phone, Blender app, mission schedule, voice.
+  7. Mission profiles (high altitude, endurance, hot weather, rapid throttle) and replay work. A sortie report is
+     generated after each flight. The canyon route planner refuses infeasible routes and replans when engine health
+     drops. Glide reachability and divert are available.
+  8. CAN/FADEC, edge node, secure telemetry and federated learning run (simulated hardware, honest labels).
+  9. The repository is clean: every folder has a purpose and its own AI guide, no .blend is lost, one copy of each
+     model, one launcher.
+ 10. Nothing on screen is hard-coded. Adding a 6th engine or a new fault needs only config files (the
+     "completely dynamic" rule, P Part 0).
+
+
+=====================================================================================================================
+2. GROUND RULES (short form - AGENTS.md has the full text)
+=====================================================================================================================
+
+Git:
+  - Work only on Beta or beta/<card-id> branches made from Beta.
+  - Never: commit, merge, rebase, reset or push main; reset --hard; push --force; git clean; checkout -- on files
+    you did not change; stash other work.
+  - Push only when Prasad asks.
+  - Never delete a .blend (D1). "Remove" = stop using it, then git mv to archive_tracked/ after the replacement
+    passes tests (D12).
+  - Do not commit data/graph_db/fleet_graph.json until M0-11.
+  - Commit at reasonable progress points (D22), judged by the situation: a coherent working unit.
+    - Good points: the failing tests plus the code that makes them pass; a batch of moves with all references
+      fixed; a finished document.
+    - Not after every small edit, and never broken work.
+    - Each commit keeps tests at or above the baseline and updates PROGRESS.txt RESUME HERE.
+    - Message: "<card-id>: <what changed>".
+  - NEVER any "Co-Authored-By: Claude" / AI attribution in commit messages or PRs, any branch (D24).
+Truth (P Part 0):
+  - No reading or limit typed into code.
+  - No "or <number>" fallback.
+  - Faults change parameters only.
+  - Inference never reads truth.
+  - No engine, fault or part names in code.
+  - No invented engine data (ASSUMED + PROGRESS.txt).
+  - No fake telemetry.
+Tests:
+  - Run the baseline first.
+  - Write the failing test first.
+  - Never weaken a test.
+  - Every result is labelled SIMULATION / PUBLIC_PROXY / REAL_FLIGHT, with a baseline control and several seeds.
+Current docs (D39): before using any library/tool/service API, check its CURRENT official docs via web search or
+  web fetch, and record the URL + version in the PROGRESS entry. Never code an API from memory.
+Order (D41): the production RAG/copilot (Phase 8b) comes after the main fixes. Phase 0 only archives the fabricated
+  corpus.
+Stop and ask Prasad (the AI must not decide alone):
+  - new engine numbers;
+  - anything that needs looking at a Blender model;
+  - changing a pass criterion;
+  - archiving a module another card uses;
+  - code from origin/Prasad;
+  - main, origin, LFS history or .blend files;
+  - new dependencies.
+
+
+=====================================================================================================================
+3. HOW A SOLO DEVELOPER WORKS WITH AI
+=====================================================================================================================
+
+3.1 The session loop (one card per session)
+  1. git switch Beta, then git switch -c beta/<card-id> (or reuse it if it exists).
+  2. Start the AI session with the "Start a card" prompt (section 18.1).
+  3. The AI reads AGENTS.md, DECISIONS.md, the last PROGRESS entry, the card, the named sections, and the AGENTS.md
+     of the folders it will touch.
+  4. The AI runs the baseline tests and shows the summary.
+  5. The AI checks the current official docs of every library the card uses (D39), then proposes a plan: files,
+     functions, tests, doc URLs. You approve or correct it. Use plan mode in Claude Code.
+  6. The AI writes the tests first (shows them failing), implements in small steps, and runs the tests after each.
+  7. The AI runs the "Done when" checks. You look at the running result yourself: open the UI, call the endpoint,
+     watch the 3D view.
+  8. The AI appends a PROGRESS.txt entry, updates RESUME HERE, and commits when the work is a coherent unit (D22).
+     A card may end with one commit or several; a long card commits at each working milestone inside it.
+  9. A fresh read-only AI session reviews the branch (section 3.4). Fix what it finds.
+ 10. Merge: git switch Beta, then git merge --no-ff beta/<card-id>. Run the phase's quick tests on Beta.
+
+3.2 Size of a card
+  Aim for something reviewable in one sitting: at most ~600 changed lines excluding generated files. The number of
+  commits is decided by progress points (D22), not by a fixed count. If a card grows, split it (M1-07a, M1-07b) and
+  note the split in PROGRESS.txt.
+
+3.3 Parallel AI sessions (optional, solo-friendly)
+  You can run two sessions at once only on different cards that touch different files.
+  - Use git worktrees: git worktree add ../PS054-<card> beta/<card>.
+  - Never run two sessions on the same worktree.
+  - Never run two cards that both edit configs/faults.json, configs/engines/*.json or
+    backend/server/state_schema.py at the same time.
+  Good pairs:
+  - backend physics + frontend view;
+  - Blender scripts + docs;
+  - evaluation harness + UI.
+
+3.4 Second-opinion review (replaces the human reviewer)
+  - Start a NEW session with no history.
+  - Use the review prompt (section 18.3). It must report each checklist item of section 17 as yes/no with evidence.
+  - Then run /code-review on the diff.
+  - Fix the findings in the card session, not in the review session.
+
+3.5 Keeping AI context healthy
+  - Never paste whole R/A/P files. The cards name exact sections.
+  - Long work: commit, end the session, start fresh with the PROGRESS entry as the hand-off.
+  - If the AI loops or contradicts itself, use the "stuck" prompt (18.4), commit what works, and start fresh.
+  - When a decision changes, add it to DECISIONS.md first, then continue.
+
+3.6 Guard rails that run by themselves (card P0-02)
+  - .claude/settings.json gets a PreToolUse hook. It blocks git push, reset --hard, git clean, any --force,
+    switching to main, and deleting *.blend.
+  - Read-only commands (git status/diff/log, pytest, tsc) are allowed without prompts.
+
+
+=====================================================================================================================
+4. PHASE 0 - SORT OUT THE WORKSPACE (do this first; D21: moves, ignores and instruction files only)
+=====================================================================================================================
+
+Why first: every later AI session reads the folder tree. A clean tree with a guide in each folder makes every
+session faster and less error-prone. Nothing in Phase 0 changes behaviour. After every Phase 0 commit, the full test
+run must equal the baseline (333 passed, the same 3 failures), and the backend and frontend must still start.
+
+4.1 What the root folder looks like today (19 Nov 2026) and what happens to each item
+  Legend: KEEP = stays at root. MOVE -> path (git mv). IGNORE = gitignored local output, leave it alone or add to
+  .gitignore. LATER = handled by a later card. ASK = Prasad decides.
+
+  Rules and plans (KEEP at root):
+    AGENTS.md, CLAUDE.md, DECISIONS.md, PROGRESS.txt, README.md, the four ANUMAAN_*.txt plan files.
+    STRUCTURE.txt is NEW (P0-08): one line per top-level folder.
+  Build, deploy and environment files (KEEP; Render/Railway/Firebase/Docker expect them at the root):
+    Dockerfile, .dockerignore, render.yaml, railway.json, firebase.json, .firebaserc, pytest.ini, requirements.txt,
+    requirements-server.txt, run_app.py, .env.example, .gitignore, .gitattributes.
+    .env holds secrets: it stays ignored and is never committed or printed.
+  Submitted texts:
+    ANUMAAN_Idea_Description.txt, ANUMAAN_Abstract_Summary.txt -> MOVE -> docs/submission/
+  Screenshots:
+    full_ui_check.png, shadow_fix_check.png, ui_fix_check.png -> MOVE -> docs/screenshots/
+  Launchers (23 .bat files) -> MOVE -> scripts/launchers/ (P0-05), plus ONE new root launcher start_anumaan.bat.
+    22 of them use %~dp0, meaning "the folder this .bat is in". After the move %~dp0 points to scripts\launchers\,
+    so each launcher gets `set "ROOT=%~dp0..\..\"` at the top and every %~dp0 becomes %ROOT%. Launchers that call
+    other launchers (%~dp0launch_...) call them from the same folder: %~dp0 stays for those calls.
+    launch_threejs_twin.bat (32 KB) moves too; it is archived when the old 3D window retires (D10).
+  Old reports and generated documents:
+    UpdatedReport/ (24 md, an earlier audit) -> MOVE -> docs/history/UpdatedReport/
+    final_touch/ (41 generated blueprint docs) -> MOVE -> docs/history/final_touch/
+      Check first: scripts/blueprint_builder, dt_builder and intent_builder write into final_touch/. Update their
+      output path to docs/history/final_touch/, or leave them writing there and mark them "old docs workflow".
+      The AI greps and reports before moving.
+  Datasets:
+    Datasets/ (14 tracked: README, download_all.py, fetch.py, category folders) -> MOVE -> data/external/
+    Fix the paths printed inside download_all.py and fetch.py ("Datasets/..." -> "data/external/...").
+    Check with git grep that nothing in backend/ reads Datasets/.
+  Experiments:
+    experiments/ (E17-E25 research scripts) -> MOVE -> archive_tracked/experiments/
+    Only after git grep shows that no test or backend module imports them. Log the move in
+    archive_tracked/ARCHIVE_LOG.txt.
+  Third-party code:
+    vendor/ (PrognosticsMetricsLibrary + tools tracked; Qwen3-4B and Voice ignored) -> KEEP. Add
+    vendor/README.txt listing each item with source and licence.
+  Voice models (D26):
+    Voice/ -> KEEP in place, ignored (local model storage).
+      - backend/voice/tts_engine.py and stt_engine.py load Kokoro-82M and ggml-tiny.en.bin from it by default.
+      - The env vars KOKORO_MODEL_DIR and WHISPER_MODEL_PATH override that.
+    .gitmodules -> git rm in P0-04. It declares a submodule that Git never recorded (stale leftover).
+    STRUCTURE.txt says where the voice models come from: Kokoro-82M from huggingface.co/hexgrad/Kokoro-82M, and
+      whisper.cpp ggml-tiny.en.bin.
+  Runtime output (IGNORED today, LATER M0-11 moves it to var/):
+    report_dump/ (mission dumps). It is read by backend/telemetry/replay_engine.py, backend/server/main.py,
+    engine_service.py, backend/reports/*, apps/mission_graph_viewer/* and frontend/vite.config.ts, so it moves only
+    together with the code change in M0-11.
+    data/graph_db/fleet_graph.json (tracked, runtime-modified) -> LATER M0-11.
+  Local caches and tool output (IGNORE; may be emptied, they are regenerated):
+    __pycache__/, .pytest_cache/, graphify-out/, .playwright-mcp/ (old Playwright MCP captures), frontend/dist,
+    docs_site/dist, node_modules.
+  Empty folders:
+    ppt/ (empty, untracked) -> remove the empty folder.
+    tests_e2e/ (empty) -> KEEP; Playwright tests go here in M6-10. Add a README.txt so it is not empty.
+  Local tools:
+    tools/ (ignored; ngrok.exe) -> KEEP ignored. Pipeline scripts go to scripts/blender and scripts/assets (D20).
+  Main code folders (KEEP, each has AGENTS.md/CLAUDE.md now):
+    backend/, frontend/, configs/, tests/, apps/, assets/, scripts/, docs/, data/, docs_site/, web/, archive_tracked/
+  New folders:
+    var/ (runtime output, ignored, created in M0-11), docs/submission/, docs/history/, docs/screenshots/,
+    scripts/launchers/, scripts/blender/, scripts/assets/, data/external/, assets/web/ (P0-07).
+
+4.2 Inside folders (Phase 0 parts; the rest happens in later cards)
+  docs/:
+    - Add docs/README.txt (index): current docs, history, reference, submission.
+    - docs/build/ stays in place but is marked history in docs/AGENTS.md (done).
+    - docs/study.zip is a 160 KB zip of docs/study/ (D42): git mv to archive_tracked/docs_study_zip/.
+  docs_site/:
+    - its PNG screenshots -> docs/screenshots/docs_site/.
+  assets/:
+    - the P Part 5 layout with md5 registers (P0-06);
+    - the two .stp CAD files with Cyrillic names in assets/models/engine-rotax-912is-1.snapshot.15/ ->
+      assets/blender/engines/rotax_912is/import/cad/ (names unchanged, LFS-tracked).
+  web/:
+    - web/usavionix/mirror is Prasad's own separate experiment "Crazy_Landing" (D42).
+      - Prasad renamed it on disk to web/Crazy_Landing/ (269 files). Git now shows web/usavionix/... as deleted and
+        web/Crazy_Landing/ as untracked.
+      - In P0-04: git rm --cached the old web/usavionix paths, then git add + git mv web/Crazy_Landing ->
+        archive_tracked/crazy_landing/ (one commit), with an ARCHIVE_LOG line.
+      - Nothing in the product loads it. git grep finds only text in README/docs/pitch, plus
+        scripts/inject_pixelcode_avionix.py, which is archived with it.
+  scripts/:
+    - launchers come in;
+    - scripts/blender/ and scripts/assets/ are created (empty README.txt) for P0-06/P0-07.
+
+4.4 FULL SUBSYSTEM SCAN (19 Nov 2026) - every backend module and its fate (D37)
+  How it was made: a read-only script parsed all 141 backend modules (git-tracked). For each module it records:
+  lines, docstring, reachable from backend/server (import graph), imported by tests, mentioned in the plan.
+  Result: docs/cleanup/subsystem_scan_2026-11-19.csv. 90 modules run in the server; 66 were mentioned in the plan
+  before this section. Why the earlier audit missed the AI layer: it traced the engine -> fault -> detection ->
+  status -> UI -> 3D path in depth, but never walked the copilot, RAG, voice and knowledge-graph modules one by one.
+  This table closes that gap. Re-run the scan in M8-02 (scripts/assets/subsystem_scan.py, copied from the session
+  scratchpad).
+
+  AI layer (copilot, RAG, voice, knowledge graph) -> Phase 8b (AI-01..AI-07) unless stated
+    agent/copilot.py (deterministic copilot, guardrails, extractive answers)     REUSE AI-05
+    agent/llm_engine.py (none/Ollama/Gemini providers)                          REUSE AI-02 (D31)
+    agent/diagnostic_agent.py (ATA directive lookup)                            REUSE M3-06 (directive from registry)
+    agent/flight_intent.py (natural-language flight intent, PRD F10)            REUSE UX-03 voice/palette; mission commands
+                                                                                 go through the mission API (M5-01)
+    knowledge/loaders/* (pdf, office, text, chunker)                           REUSE AI-03
+    knowledge/retrieval/local_store.py, embedding_index.py, reranker.py         REUSE AI-03/AI-04. MiniLM is installed;
+                                                                                 flashrank is NOT (D36)
+    data/documents/* (7 generated "manuals" x 3 formats)                        ARCHIVE (D34). Real corpus = docs/reference
+                                                                                 (Rotax 914 OM + Installation Manual, MIL-STD-1629A)
+                                                                                 + EASA TCDS E.121/E.200 + Rotax 912 i OM (to obtain,
+                                                                                 card AI-03a) + generated ANUMAAN docs (labelled)
+    scripts/ingest_rag_docs.py (writes the generated manuals and missions)      ARCHIVE the generator part; keep ingestion (AI-03)
+    voice/stt_engine.py (whisper.cpp), tts_engine.py (Kokoro), conversation.py,
+      thinking_stream.py                                                        REUSE AI-06. pywhispercpp + kokoro are NOT
+                                                                                 installed: install with OK (D36) or voice = UNAVAILABLE
+    graph/mission_graph.py (fleet knowledge graph -> var/graph_db, M0-11)       REUSE M4-05 (fleet history, work orders) +
+                                                                                 AI-05 (copilot can query it). Builds from the event log
+                                                                                 and work orders, not from the 20 Hz loop (R 25)
+    graph/mission_reporter.py, reports/mission_bundle.py, report_dump_writer.py MERGE into one writer (M5-06)
+    ml_runtime_lock.py (transformers import lock)                               KEEP (needed by RAG + voice)
+  Detection / diagnosis / prognosis already written but not in the plan
+    core/limits.py (redline evaluation from the profile)                        REUSE M2-01 (status evaluator limit checks)
+    core/frame.py, core/profile.py, core/pipeline.py (OSA-CBM executor)          REUSE M0-05/M8-05 (Frame contract; OSA-CBM doc)
+    alarms/rationalisation.py (ISA-18.2 alarm management, flood suppression)    REUSE M2-03 (do not write a new one)
+    dsp/order_tracker.py (order tracking)                                       REUSE M1-09/M3-02 (vibration order features)
+    ml/crank_diagnostics.py (per-cylinder combustion from crank speed)          REUSE M3-02 (misfire/combustion features)
+    ml/spectral_analyser.py (gearbox FFT)                                       REUSE M3-02 (F27 gear-mesh evidence)
+    ml/flyhash_novelty.py                                                       REUSE M3-04
+    detect/reservoir.py, detect/scorers.py                                      REUSE M3-04 as secondary votes, or ARCHIVE if the
+                                                                                 evaluation shows no gain (M3-08 decides)
+    diagnose/active.py (active diagnosis, information-gain test selection)      REUSE M3-05 (suggest the next check to the
+                                                                                 operator), else RESEARCH
+    twin/model.py, twin/validity.py, twin/history.py, twin/priors.py            REUSE M3-01 (model, validity), M4-06 (history,
+                                                                                 fleet priors for adaptive baselines)
+    evaluation/harness.py, validation.py, prognostic_metrics.py,
+      damage_accumulation.py                                                    REUSE M3-08 (harness, validation), M4-03 (PHM
+                                                                                 metrics, damage path of the two RUL estimates)
+    mission/prescriptive.py (prescriptive advisory + re-planning)               REUSE M5-08 (replanning advice) + M4-05
+    economics/impact.py (fleet economics, mission reliability, cost)           RESEARCH; optional Fleet-wall panel in UX-03
+                                                                                 if numbers are labelled SIMULATION
+  Physics modules not named in the plan
+    physics/engine_config.py (config loader)                                    REUSE everywhere (the loader for configs/engines)
+    physics/fuel_thermal.py (fuel temperature, cold-fuel risk)                  REUSE M1-11 (AE300 min fuel temp -30 C, TCDS)
+    physics/injector_faults.py (CI injector fault library)                      REUSE M1-13 (F06-F09 parameter effects)
+    physics/structure.py (structural/acoustic waveform)                         RESEARCH; optional in M1-09 if needed for orders
+    physics/turbo_model.py                                                      PORT into sim/turbo.py (M1-10)
+    runtime/levers.py, runtime/sensor_levers.py                                 REUSE M0/M1-13 (lever dynamics; S01-S07 sensor states)
+  Edge, link, FADEC, federation, foundation, datasets
+    edge/node.py, edge/compressor.py                                            REUSE M7-03
+    link/link_emulator.py (constrained datalink, store-and-forward)             REUSE M7-03 (shows the tactical-link limit)
+    fadec_emulator/emulator.py (cylinder balancing, UDS, XCP)                   REUSE M7-02
+    federation/aggregator.py (DP + canary gate), colony.py                      REUSE M7-05
+    foundation/forecast_chronos.py, tabpfn_wrapper.py, text_classifier.py       RESEARCH (deps not installed, D36). Do not
+                                                                                 claim in docs unless installed and evaluated
+    datasets/* (synthetic generators "shaped like" ACES, ALFA, NASA battery,
+      C-MAPSS, CWRU; default_3500 benchmark)                                    RENAME + label SIMULATION (M4-07, D35)
+    telemetry/aces_loader.py (real NASA ACES loader; raw data ignored, ~2 GB)   KEEP as PUBLIC_PROXY; listed in external
+                                                                                 dependencies (D33)
+    server/schemas.py                                                           MERGE into server/state_schema.py (M0-05)
+  Non-backend items found
+    data/missions/MISSION_2026_*.md (generated sorties, invented tail numbers)  LABEL SIMULATION / rename (D35)
+    frontend/src/components/VoiceCopilot.tsx                                    REUSE UX-03 + AI-06 (shows UNAVAILABLE when voice
+                                                                                 deps or the provider are missing)
+    frontend/src/components/MissionReplayScrubber.tsx, hooks/useMissionReplay.ts REUSE UX-02/M5-05 (rewire to the replay hub)
+    apps/mission_graph_viewer/* (desktop graph viewer)                          KEEP as an optional tool; reads var/graph_db (M0-11)
+    apps/desktop_gcs/standalone_gui_app.py                                      ASK at M8-02: archive, or keep as an optional client
+                                                                                 of /api/v1
+    scripts/build_*_knowledge_base.py, build_architecture_knowledge.py,
+      blueprint_builder/, dt_builder/, intent_builder/ (generate final_touch docs) ARCHIVE with docs/history/final_touch (P0-04);
+                                                                                 their outputs are history (D17)
+    scripts/populate_engine_references.py (hard-coded E:\ backup path)         ARCHIVE
+  Python packages (19 Nov 2026, local Python 3.14):
+    Installed: sentence_transformers, transformers, torch, scipy, sklearn, networkx.
+    Missing: flashrank, chronos, tabpfn, pywhispercpp, kokoro, shap, cantools, python-can.
+  Ollama (19 Nov 2026):
+    Ollama 0.40.15 with models in D:\AI\ollama\models: qwen2.5:1.5b, qwen2.5:7b, qwen2.5:7b-instruct,
+    qwen2.5-coder:7b. Generation was tested and works: 1.5b answered in 5 s, 7b-instruct in 7 s.
+    The server must start with OLLAMA_MODELS set. Free space: C: 25.6 GB, D: 44.7 GB. New models go to D: only.
+
+4.5 DOWNLOAD-LATER LIST (D40: everything on D:, downloaded only when its phase starts)
+  One-time setup before ANY download (user environment variables, then restart terminals/IDE):
+    HF_HOME=D:\AI\hf                       (Hugging Face models: MiniLM embeddings, Kokoro)
+    PIP_CACHE_DIR=D:\AI\pip-cache          (pip wheels; set 19 Nov)
+    PLAYWRIGHT_BROWSERS_PATH=D:\AI\ms-playwright
+    npm config set cache D:\AI\npm-cache   (npm)
+    TORCH_HOME=D:\AI\torch
+    OLLAMA_MODELS=D:\AI\ollama\models      (already set; restart Ollama after any change)
+  Check before downloading: free space on D: (44.7 GB on 19 Nov) and the size of the item (look it up on its page).
+  | Item | Needed by | Approx size | Where |
+  |---|---|---|---|
+  | vitest (npm dev dependency) | M0-09 | small | frontend/node_modules |
+  | jsonschema / datamodel-code-generator (pip) | M0-02, M0-05 | small | Python env |
+  | @gltf-transform/cli (npm) + KTX-Software (for KTX2) | P0-07 (if regenerating), B-01 | about 100 MB | D: |
+  | Python 3.12 or 3.13 venv + jsbsim | M1-15 (optional) | about 200 MB | D:\AI\venvs\jsbsim |
+  | shap (pip) | M3-06 | about 10 MB | Python env |
+  | Playwright + Chromium | M6-07 | about 300-500 MB | PLAYWRIGHT_BROWSERS_PATH on D: |
+  | Copernicus GLO-30 tile N34 E077 | M5-07 | tens of MB | var/dem/ |
+  | cantools, python-can (pip) | M7-02 | small | Python env |
+  | flashrank (pip) + its model | AI-04 (only if it improves recall) | about 50-100 MB | HF/flashrank cache on D: |
+  | all-MiniLM-L6-v2 (sentence-transformers) or nomic-embed-text (Ollama) | AI-03 | about 90 MB / about 270 MB | HF_HOME / OLLAMA_MODELS |
+  | pywhispercpp, kokoro (pip) + their models (in Voice/) | AI-06 | a few hundred MB | Voice/ (D:) |
+  | real documents (EASA TCDS, Rotax 912 i / 915 iS OM) | AI-03a | about 10-30 MB | docs/reference/ or local (licence) |
+  | chronos, tabpfn | never by default (research, D36) | large | only on request |
+  Already on this PC (D43), so do NOT download again:
+    - D:\AI\huggingface: all-MiniLM-L6-v2, bge-large-en-v1.5, Kokoro-82M, faster-whisper-small.en;
+    - D:\AI\whisper\large-v3-turbo.pt;
+    - Voice/: Kokoro-82M, ggml-tiny.en.bin;
+    - the Ollama models (4) in D:\AI\ollama\models.
+  The Ollama models work, so nothing is deleted (Prasad: only replace them if they do not work).
+  What is really missing: the Python packages (pywhispercpp, kokoro, flashrank, shap, cantools, python-can) and the
+  npm/dev tools in the table. Install each in the phase that needs it. Search the package's current docs first
+  (D39): e.g. kokoro may need espeak-ng on Windows, and pywhispercpp may need a matching wheel for Python 3.14 -
+  check before installing, and ASK if a Python downgrade/venv is needed.
+
+4.3 Phase 0 cards (in this order)
+P0-01 Commit the AI instruction files and the plan
+  Do: git add the 4 plan txt files, AGENTS.md, CLAUDE.md, DECISIONS.md, PROGRESS.txt and the 24 folder
+      AGENTS.md/CLAUDE.md files. Add "var/" to .gitignore. Commit "P0-01: AI instruction files and plan documents".
+  Don't: add data/graph_db/fleet_graph.json.
+  Done when: git log -1 shows the commit on Beta, and git log main -1 is still 9b5942e.
+P0-02 Guard hook
+  Prompt: "Card P0-02. Use the update-config skill. In .claude/settings.json add a PreToolUse hook on Bash/PowerShell
+  that blocks: git push, git reset --hard, git clean, any --force, git checkout main / git switch main, and
+  rm/del/Remove-Item of *.blend. Allow pytest, git status, git diff, git log, npx tsc without prompts. Show the
+  final file, then prove the block by attempting 'git push --dry-run' (it must be blocked)."
+  Done when: the hook blocks the test command; the commit contains only .claude/settings.json.
+P0-03 Inventory before moving (safety net)
+  Do: scripts/assets/inventory.py writes docs/cleanup/inventory_before.csv. It lists every tracked file plus every
+      untracked .blend/.blend1/.glb/.stp/.fbx: path, size, md5, tracked yes/no.
+  Done when: the CSV exists and its count equals git ls-files + the untracked asset count. Committed.
+P0-04 Root documents, screenshots, history folders
+  Do: git mv the submitted texts -> docs/submission/; PNGs -> docs/screenshots/; UpdatedReport/ and final_touch/ ->
+      docs/history/ (after the grep in 4.1); docs_site PNGs -> docs/screenshots/docs_site/; docs/README.txt index;
+      remove the empty ppt/; tests_e2e/README.txt.
+      - git rm the stale .gitmodules (D26).
+      - Generated RAG "manuals" in data/documents/ -> archive_tracked/synthetic_rag_corpus/ + README (D34).
+      - The generator part of scripts/ingest_rag_docs.py, the build_*_knowledge_base.py scripts and
+        populate_engine_references.py -> archive_tracked/ with ARCHIVE_LOG lines (section 4.4).
+      - Add requirements-optional.txt listing the optional dependencies per feature (D36); install nothing yet.
+  Tests: full pytest = baseline; npx tsc --noEmit passes; cd docs_site && npm run build passes (or: same result as
+      before the move).
+P0-05 Launchers
+  Do: git mv launch_*.bat -> scripts/launchers/; in each, add `set "ROOT=%~dp0..\..\"` and replace %~dp0 with
+      %ROOT% for repo paths; create the root start_anumaan.bat menu (backend, frontend, 3D, Blender twin, canyon,
+      tunnel, showcase) that calls the launchers. Update run_app.py and docs that mention launch_*.bat paths.
+  Don't: change what the launchers do.
+  Done when: each launcher starts its target exactly as before (manual check by Prasad: backend + frontend + one
+      Blender launcher); git grep "launch_.*\.bat" shows only new paths.
+P0-06 Assets layout (P Part 5.1-5.3, md5 registers, no deletion)
+  Read: P Part 5, assets/AGENTS.md, A section 4 (only to know the files).
+  Do:
+    - assets/ASSET_REGISTER.csv and assets/blender/_archive/ARCHIVE_REGISTER.csv;
+    - git mv per the P 5.3 move list;
+    - exact duplicates (rotax_915.blend, the second bayraktar_tb3_digital_twin.blend) -> _archive/;
+    - the 914 master is chosen by headless inspection (D25): object count, named components, triangles, size. The
+      more complete file is the master; the other goes to variants/. Print the comparison table in PROGRESS.txt;
+    - .stp files -> rotax_912is/import/cad/;
+    - update every path in the launchers, apps/blender_twin/*.py, scripts/tools/*.py and the manifests
+      (git grep "assets/blender\|assets/models" before and after);
+    - untracked *.blend1 -> assets/blender/_archive/blend1_backups/ (stay local, gitignored, D42).
+  Tests: T-REPO-1 (every md5 in inventory_before.csv still present); open each master headless and compare the
+      object count (scripts/blender/check_open.py); one Blender launcher opens correctly (manual).
+  Prompt: "Card P0-06. Read P Part 5 and assets/AGENTS.md. First print the move table (old path -> new path, md5,
+  reason) and stop for my approval. After approval, git mv in small commits, update every reference found by git
+  grep, then run T-REPO-1 and the headless open check. Never delete a .blend."
+P0-07 One copy of each web model
+  Do:
+    - choose the canonical GLB per engine: the Draco set in assets/models/draco/ (identical to the
+      frontend/public/models copies, 912 = 109 nodes);
+    - git mv it to assets/web/engines/;
+    - frontend (vite publicDir or a copy step in vite.config.ts), docs_site and web/site read that folder at build
+      or dev time;
+    - the duplicate copies (frontend/public/models, docs_site/public/assets/models, web/site/assets/models) are
+      removed from Git only after an md5 check proves each is identical to the canonical file, or (web/site 915) is
+      the known wrong file;
+    - the uncompressed apps/threejs_twin/assets/models/draco/*.glb stay until D10 retirement, since the old window
+      loads them; then archive.
+  Don't: regenerate models (that is Phase 7); delete any .blend.
+  Tests: T-REPO-3 (each app loads each engine model: frontend dev server, docs_site build, web/site page);
+      T-REPO-2 later.
+  Note: web/site will now show the correct 915.
+P0-08 STRUCTURE.txt + README update
+  Do:
+    - STRUCTURE.txt lists every top-level folder: what it is, what is inside, its AGENTS.md.
+    - Add an "External dependencies" section (D33). For each item give: what, where, how to get it, which feature
+      needs it, and what happens if it is missing. Items:
+      - Ollama + models in D:\AI\ollama\models (env OLLAMA_MODELS);
+      - Gemini key in .env;
+      - voice models in Voice/ (Kokoro-82M, ggml-tiny.en.bin);
+      - the sentence-transformers embedding model cache;
+      - Blender 5.2 at D:\Blender;
+      - NASA ACES raw data (data/telemetry/nasa_aces/raw, ignored);
+      - assets/blender/_archive/blend1_backups/ (local, gitignored Blender backups).
+    - Add a "Start here" block to README.md: start_anumaan.bat, the plan documents, AGENTS.md.
+    - Update .env.example to the D31 providers only (none / ollama / gemini) and their variables.
+  Done when: a new AI session asked "where is X" answers from STRUCTURE.txt without searching.
+P0-09 Git LFS locking for .blend (D28)
+  Do:
+    - git lfs track --lockable "*.blend" (the .blend files are already in LFS; this only adds locking);
+    - do NOT add *.glb, *.fbx or *.exr to LFS. About 1 GB of LFS is already used, so the single compressed GLBs
+      stay in normal Git;
+    - commit .gitattributes.
+CHECKPOINT PHASE 0
+  - Full pytest = baseline.
+  - Backend and frontend start through start_anumaan.bat.
+  - T-REPO-1 passes.
+  - The root folder holds only the KEEP list.
+  - Every top-level folder has AGENTS.md + CLAUDE.md.
+  - STRUCTURE.txt matches reality.
+  - main still at 9b5942e.
+
+
+=====================================================================================================================
+5. PHASE 1 (M0) - ONE SIMULATOR, ONE FAULT PATH, ONE STATE STREAM
+=====================================================================================================================
+
+Goal: every surface reads the same state and commands the same engine. A fault injected anywhere shows everywhere
+within two frames. This is the foundation: without it, physics and detection fixes cannot be seen consistently.
+Sources: P Part 4 M0, A Phase A, R 18 steps 1-2, R 19.3-19.4 (edge cases).
+
+M0-01 Engine data corrections (configs/engines/*.json)
+  Read: P Part 2, P N5, R section 20, DECISIONS D7 and D16.
+  Do:
+    - Apply every Part 2 value with provenance (status + ref).
+    - 914: injection timing and rail are null, and it gets fuel_pressure_bar.
+    - 915: 104 / 99 kW, critical altitude 15,000 ft.
+    - AE300: rename max operating altitude; critical altitude ASSUMED; limits become coolant/oil/gearbox/oil
+      pressure/fuel pressure/over-speed.
+    - VRDE: flat to 11,000 ft; rpm and BSFC with both brochure refs.
+    - 912 iSc: max continuous 72 kW.
+    - Limits become banded objects {normal, caution, warning, rpm_rule, time_limit_s}.
+    - Add configs/schema/engine.schema.json.
+  Tests: tests/config/test_engine_configs.py (schema, provenance on every number, 914 has no injection fields);
+      test_engine_config_provenance.py still green.
+  Done when: the session report holds the full old -> new -> source table, and the ASSUMED list is in PROGRESS.txt.
+M0-02 Fault registry
+  Read: R section 22 (all F and S entries), R 22.1-22.2, A 6.2, P Step 0.2, D9.
+  Do:
+    - configs/faults.json with all 44 entries and their fields (id, name, legacy_ids, kind, scope, engines,
+      applicability rule, parameter effects, default severity/ramp, expected signature, detect window, status at
+      full severity, ATA chapter, maintenance action, UI text, plus for the copilot agent (D45):
+      mitigation_inflight, maintenance_steps, physics_explanation, each with a source: OM page or
+      "ANUMAAN-authored");
+    - configs/schema/faults.schema.json;
+    - backend/faults/registry.py (load, validate, applicability, {cyl} resolution).
+  Tests: T-CFG-1; applicability tests (F12 914 only; F05 912/915; F06-F09 AE/VRDE; F01 not on CI).
+M0-03 Component manifests
+  Read: A sections 1-6.
+  Do:
+    - scripts/assets/build_component_manifests.py writes configs/components/<engine>.json with exact node lists,
+      markers and focus points;
+    - fill components_now / components_target per engine in faults.json from A section 5.
+  Tests: A section 8 tests 1-4 (tests/assets/).
+M0-04 Fault manager
+  Read: P Step 0.4, A B1, R 19.4.
+  Do: backend/faults/manager.py:
+    - inject, clear, list, history;
+    - request_id dedupe;
+    - the same mode + cylinder updates severity;
+    - validation with reasons (422);
+    - events carry their source;
+    - clear resets detector gates.
+  Tests: every R 19.4 edge case at this layer; T-FLT-3.
+M0-05 State message schema
+  Read: P Step 0.7, R 24.3, A 7.1, D3-D5.
+  Do: backend/server/state_schema.py (pydantic) and the generated frontend/src/api/state.ts, with a CI drift check.
+  Tests: T-API-2.
+M0-06 API v1 + WebSocket broadcaster
+  Read: P Steps 0.5 and 0.8, R 24.2-24.3, R 19.3, D3.
+  Do: backend/server/api_v1.py and broadcaster.py:
+    - one /ws/v1 socket per client, with subscribe messages;
+    - a latest-only per-client queue, a drop counter, and a send timeout that closes the socket;
+    - a per-engine command queue applied at the start of the tick;
+    - a snapshot on connect, and seq numbers.
+  Tests: T-API-1, T-WS-1, and the cross-client test (inject in A, see it in B next message; selection in A does not
+      change B).
+M0-07 One simulator per engine
+  Read: A A1, P Step 0.6, R section 4.
+  Do:
+    - remove the sync_from_tick call from backend/runtime/hub.py;
+    - stop EngineStateService's loop and can_streamer as data sources;
+    - make selection per client;
+    - move IDLE_TICK_DIVISOR to configs/runtime.json.
+  Tests: T-M0-1 and T-M0-5. Re-run the R section 4 probe: no flicker, no 14.7 / 18.5.
+      - Port the legacy-coupled tests listed in audit #66 to the new path (D38); list old -> new in PROGRESS.txt.
+M0-08 Legacy adapter
+  Read: A A1-A2.
+  Do: backend/server/legacy_adapter.py maps /api/state, /ws/telemetry and /api/control onto v1. Missing values are
+      null. Legacy ids go through legacy_ids, with 422 for anything else. Fix engine_api.py 166-176.
+  Tests: SET_THROTTLE 95 reads back 95; STOP stops; legacy SET_FAULT 4 = oil pressure loss.
+M0-09 Frontend single store + Vitest
+  Read: A A6, A F1-F3, P Step 0.9, frontend/AGENTS.md.
+  Do:
+    - add vitest (ASK: new dev dependency);
+    - src/store (zustand) and one socket manager (reconnect, seq resync, stale after 2 s, disconnected after 10 s);
+    - remove the extra sockets and polls;
+    - real rate and data-age labels;
+    - sliders read the server lever values back.
+  Tests: Vitest store/socket tests; T-UI-3.
+M0-10 Other clients on the API
+  Read: A A4, A G2 (minimal part), A G5, D10, apps/AGENTS.md.
+  Do:
+    - apps/threejs_twin: v1 API for all engines, AE300/VRDE profiles, highlights from message nodes (exact names),
+      remove ENGINE_FAULT_TARGETS;
+    - Blender twin app: v1 API, remove the private 1-8 ids and the offline sine data.
+  Tests: T-M0-2 (Blender part manual, record a short video).
+M0-11 Runtime output to var/
+  Read: A A5, P Step 0.11, D6.
+  Do:
+    - one setting ANUMAAN_VAR_DIR (default var/);
+    - the fleet graph, sortie logs and report_dump (all the readers listed in section 4.1) use it;
+    - add a seed file data/graph_db/fleet_graph.seed.json;
+    - then restore the tracked fleet_graph.json from Git (ASK: confirm its runtime content is not needed).
+  Tests: T-M0-6 (git status clean after a 10 min run).
+M0-12 Dynamic-rule tests
+  Read: P Part 0.
+  Do:
+    - tests/dynamic/ with T-DYN-1 (static scan + allowlist.txt with reasons), T-DYN-4, T-DYN-7, T-DYN-8;
+    - T-DYN-2/3/5/6 as xfail, each naming the card that turns it on.
+CHECKPOINT PHASE 1
+  - T-M0-*, T-WS-1, T-API-*, T-CFG-1, T-DYN-1/4/7/8 green; pytest otherwise equal to the baseline.
+  - Live demo to yourself: inject from the phone and see it on the laptop console and the old 3D window, for all
+    five engines. STOP works. No flicker.
+
+
+=====================================================================================================================
+6. PHASE 2 (M1 + M2) - REAL PHYSICS FOR FIVE ENGINES, HONEST ENGINE STATUS
+=====================================================================================================================
+
+Sources: P Part 4 M1 Steps 1.1-1.6, R section 21 (equations), R section 22 (faults), A Phase C, M2 in P and R 18 step 5.
+Rule for every M1 card:
+  - the module is a pure class in backend/sim/;
+  - constants come from the config "physics" block with provenance;
+  - randomness only from the seeded RNG;
+  - the unit test is written first;
+  - the next card starts only when this card's test passes.
+
+M1-01 Package skeleton, engine assembly, fixed-step sim clock with time scale (R 21.2-21.3, P 1.1, P 1.3o)
+M1-02 Atmosphere: ISA, ISA deviation, humidity (Magnus) (P 1.3a). Test: ISA points within 0.1 %.
+M1-03 Rotor + propeller (Cp, J, efficiency) + constant-speed governor PI (P 1.3b).
+      Test: settles in < 2 s, overshoot < 3 %.
+M1-04 Induction for NA engines: throttle orifice, manifold filling, air filter, real rpm (removes the fixed 5200)
+      (P 1.3c). Test: MAP time constant 0.05-0.3 s.
+M1-05 Fuel table configs/fuels.json; combustion (lambda/timing efficiency, knock margin SI, smoke limit CI); COV_IMEP
+      (P 1.3d).
+M1-06 Friction FMEP + brake power + 912 calibration (P 1.3e-f, R 21.5). Tests: T-PHY-1/2 for the 912.
+M1-07 Thermal per cylinder, coolant loop, oil system (Vogel, relief, seizure chain), gearbox (P 1.3g).
+      Tests: T-PHY-6/7.
+M1-08 Electrical: alternator(s), regulator, battery SOC, loads. The 912 gets two generators with lane switch-over.
+      Bus values come from configs/installations (P 1.3h).
+M1-09 Vibration orders + crank model at 1 Hz (P 1.3i). Test: misfire raises the 0.5/1 order >= 3x.
+M1-10 Turbo + TCU/wastegate/VGT + intercooler; 914/915 calibration (P 1.3j-k). Test: T-PHY-4.
+M1-11 Fuel systems (common rail, port injection, carburettor); AE300/VRDE calibration (P 1.3l-m).
+      Fuel flow = the delivered fuel.
+M1-12 ECU maps (lambda, ignition, start of injection), lanes, limiters, glow plugs; engine state machine
+      (P 1.3n-o).
+M1-13 sim/faults.py (F01-F37) + sim/sensors.py (S01-S07) (P 1.3p, R 22). Tests: T-FLT-1/2/4.
+M1-14 Performance maps (sim/maps.py), plus the facade over plant/virtual_engine.py so the runtime keeps its
+      contract (P 1.3q, 1.4). Tests: T-PHY-3/8/9/10/11; T-DYN-2/3 switched on.
+M1-15 (optional) JSBSim cross-check in a 3.12/3.13 venv (D11).
+M1-16 docs/physics/ENGINE_MODEL.txt with the equations, a generated constants table and validation plots.
+M1-17 Virtual sensors promised in the idea text (section 15, I-01):
+      - in-cylinder peak pressure from the crank model;
+      - turbine inlet temperature from the turbo energy balance;
+      - minimum bearing oil-film thickness from a short-journal-bearing (Ocvirk) approximation using viscosity,
+        speed and load (bearing geometry ASSUMED and labelled).
+      All are published as derived channels with quality VIRTUAL.
+M2-01 backend/status/evaluator.py: levels, rules, hysteresis, latch, reasons (P Step 2.2; D4).
+M2-02 Remove the old GO logic (engine_service.py 310/801/889, trend_analyser 567/603, the oil 3.5 constant).
+M2-03 Alerts: acknowledge, shelve with auto-unshelve, grouping by root cause (P Part 6 U3).
+      Master warning/caution events.
+Prompt pattern for M1: "Card M1-0X. Read P Part 4 Step 1.3<letter>, R 21.4 <part>, configs/AGENTS.md and
+backend/AGENTS.md. Write the unit test first and show it failing. Implement backend/sim/<module>.py as a pure class
+with constants from the config physics block. Report every new constant with its provenance; mark anything not in
+P Part 2 / R 20 as ASSUMED and stop if it is an engine rating or limit."
+CHECKPOINT PHASE 2
+  - T-PHY-1..11 on all five engines.
+  - T-FLT-1: every applicable engine x fault moves its signature. Not a single "no change".
+  - T-STS-1..5.
+  - The R section 3 oil test gives NO-GO at the first tick below minimum, with its reason.
+  - T-DYN-2/3 green.
+
+
+=====================================================================================================================
+7. PHASE 3 (M3) - TWIN, DETECTION, ISOLATION, EXPLANATION
+=====================================================================================================================
+
+Sources: P Part 4 M3, R 18 step 4, A Phase B, idea text sections 5-7.
+M3-01 UKF on the reduced sim model; health parameters as random-walk states; a validity flag that works (NIS band).
+M3-02 Residual z-scores; NIS window test; two-sided CUSUM (backend/detect/cusum.py) calibrated on 10 h nominal per
+      engine; 3 s persistence (idea text).
+M3-03 Sensor validation and FDI (backend/detect/sensor_fdi.py):
+      - range, rate-of-change and cross-sensor checks;
+      - stuck/bias/drift/noise/dropout/out-of-range/lane disagreement;
+      - quarantine plus the VIRTUAL value.
+      Measure the validation latency against the idea text's "about 40 ms" (I-02) and report the real number.
+M3-04 Novelty gate:
+      - wire the existing FlyHash novelty detector (backend/ml/flyhash_novelty.py) on the residual vector;
+      - add the autoencoder reconstruction-error detector with an Extreme Value Theory threshold (GPD fit,
+        scipy.stats.genpareto) (I-03, I-04).
+      Report the false alarm rate per flight hour and compare it with the idea text's claim ("about one per three
+      flight hours"). If our number differs, the docs say our number.
+M3-05 Isolation:
+      - signature matching plus a Bayesian update (wire backend/diagnose/bn.py, backend/reliability/isolability.py);
+      - map F01-F37 onto the ten FMECA modes in backend/reliability/fmeca.py (MIL-STD-1629A style severity) (I-05);
+      - an isolability report.
+M3-06 Explanation:
+      - evidence templates (backend/diagnose/explain.py);
+      - per-channel contribution scores for every hypothesis;
+      - SHAP values where a learned model makes the call (shap KernelExplainer on the learned detector; ASK before
+        adding the shap dependency) (I-06);
+      - deterministic maintenance directive: root cause, action, emergency checklist from the registry (I-07).
+M3-07 Remove truth-based diagnosis (engine_runtime.py 426-450, 480-522). T-DYN-4 must stay green.
+M3-08 Evaluation harness backend/evaluation/run_matrix.py:
+      - engine x fault x severity x ramp x seeds;
+      - 10 h nominal runs;
+      - the threshold-only baseline;
+      - the "independent second plant" check the idea text promises (tests/test_independent_plant_adapter.py
+        exists): the detector is tested against a plant variant with different sensor bias/noise.
+      Output: reports/evaluation/detection_<date>.csv + summary.
+CHECKPOINT PHASE 3
+  - T-DET-1..6.
+  - False alarms < 1 per hour per engine.
+  - Every applicable fault detected at severity 1, and in the top 3 with the right cylinder.
+
+
+=====================================================================================================================
+8. PHASE 4 (M6 core) - DASHBOARD AND 3D THAT SHOW THE TRUTH
+=====================================================================================================================
+
+Why now: after Phases 1-3 the backend is honest. Making it visible early lets you check every later phase by eye.
+Sources: P Part 4 M6, P Part 6, A sections 7-9, A Phase F-G, frontend/AGENTS.md.
+M6-01 Views skeleton and routes:
+      - Operator / Engineer / Maintenance / Fleet / Replay / Mission;
+      - the role is client-side;
+      - Fleet mode (all five engines) plus Deep mode (one engine in detail), as in the idea text (I-12).
+M6-02 Operator view:
+      - status banner with reasons;
+      - master warning/caution with tones;
+      - alert list (ack/shelve);
+      - gauges with limit bands from the config;
+      - data age;
+      - power margin.
+M6-03 Engineer view:
+      - twin vs measured;
+      - residual z-scores;
+      - health parameters with sigma;
+      - virtual sensors (peak pressure, TIT, oil film);
+      - performance map with the live point;
+      - energy Sankey (X1);
+      - vibration orders;
+      - COV_IMEP;
+      - efficiency and BSFC trends.
+M6-04 Maintenance view (filled further in Phase 5):
+      - hypotheses with evidence;
+      - directives;
+      - work-order list.
+M6-05 React Three Fiber viewer:
+      - manifest-driven;
+      - highlights from state.highlights;
+      - multiple faults;
+      - cylinder parts;
+      - click-to-inspect and inject;
+      - camera focus;
+      - Draco/Meshopt decoders;
+      - training-mode INJECTED outline (D5).
+      Retire apps/threejs_twin after T-3D-1..3 (git mv to archive_tracked, D10).
+M6-06 Responsive and accessibility pass:
+      - 12 px minimum (163 places);
+      - AA contrast;
+      - red/amber only for alerts;
+      - 360/768/1280 px;
+      - keyboard.
+M6-07 Playwright suite in tests_e2e/: T-UI-1..8, T-3D-1..3, axe-core (ASK: Playwright dev dependency).
+CHECKPOINT PHASE 4
+  - T-UI-1..8 and T-3D-1..3 green.
+  - On laptop + phone: inject on one, see the same status and highlight on the other, for all five engines.
+
+
+=====================================================================================================================
+9. PHASE 5 (M4) - PROGNOSTICS, MAINTENANCE, ADAPTIVE LEARNING
+=====================================================================================================================
+
+Sources: P Part 4 M4, R 18 step 6, A Phase E, idea text sections 8-9 and 12.
+M4-01 Wear processes (backend/sim/wear.py) and a run-to-failure fleet generator (>= 200 trajectories per engine,
+      disjoint seeds).
+M4-02 Trends (Theil-Sen) and time-to-limit with intervals (backend/prognose/trends.py).
+M4-03 Two independent RUL paths (I-08):
+      (a) physical damage accumulation;
+      (b) residual-drift trend.
+      Combine them, and FLAG disagreement beyond the expected spread to the engineer instead of averaging it away.
+      Use split conformal calibrated by whole mission/trajectory, target 95 % (D18), coverage per regime.
+      Mission planning uses the low bound.
+      Remove the sine calibration and the 18*(1-3*damage) formula.
+M4-04 Mission reliability by Monte Carlo (I-09):
+      - run the planned mission forward many times with randomized failure draws per phase (taxi, take-off, climb,
+        cruise/loiter, descent, landing), using the current health and the RUL distribution;
+      - output P(complete without propulsion abort) with its uncertainty.
+      Feeds status (M2) and the planner.
+M4-05 Maintenance:
+      - work orders from confirmed hypotheses and time-to-limit (backend/maintenance/work_package.py);
+      - sign-off flow persisted in var/maintenance.sqlite;
+      - fleet survival statistics by environmental exposure pull the schedule forward for harsher bases (I-14).
+M4-06 Adaptive per-tail baseline with guards and rollback (PS "adaptive learning").
+M4-07 NASA C-MAPSS FD001 benchmark run, labelled PUBLIC_PROXY; fix or rename the synthetic dataset adapters.
+CHECKPOINT PHASE 5
+  - T-PRG-1..5.
+  - 95 % band empirical coverage reported per engine and regime.
+  - The RUL disagreement flag is shown in the Maintenance view.
+
+
+=====================================================================================================================
+10. PHASE 6 (M5) - MISSIONS, REPLAY, REPORTS, CANYON PLANNING, GLIDE/DIVERT
+=====================================================================================================================
+
+Sources: P Part 4 M5, R 18 step 9, R 19.8, A Phase H, idea text section 9.
+M5-00 (optional) Reference read of origin/Prasad (D29). Nothing is merged or copied. While building M5-01..M5-11
+      the AI may read a file with "git show origin/Prasad:<path>" for ideas only.
+M5-01 Mission executive, built fresh on the v1 API:
+      - one clock;
+      - it drives the levers and the environment, and reads back available power and status;
+      - scheduled faults go through the fault API with source=mission.
+M5-02 Mission profile schema (configs/missions/) and the four PS presets:
+      - High altitude: Leh, to 25,000 ft;
+      - Endurance: 18 h at 20x, plus 24 h for the VRDE;
+      - Hot weather: Thar, ISA+30, dust;
+      - Rapid throttle: 20 cycles.
+M5-03 Time-scale sub-stepping. Detection, trends and RUL run on sim time (T-MIS-2).
+M5-04 Recorder: var/recordings/<sortie>/ with meta, frames, commands and events.
+M5-05 Replay hub with the same WS schema (source=REPLAY); re-run with the same seed; what-if fork; a converter for
+      the old 38 recordings (or label them "metadata only"). Fixes N1.
+M5-06 One sortie report writer (HTML + PDF) that replaces the three legacy writers, with a Merkle root once M7
+      lands.
+M5-07 Terrain service: Copernicus GLO-30 tile N34 E077 from the public bucket, cached in var/dem/, falling back to
+      the terrain.blend heightmap.
+M5-08 Planner:
+      - A* with clearance;
+      - per-leg feasibility from the performance map x twin health;
+      - replans when status changes;
+      - refuses infeasible routes with a reason.
+M5-09 Glide reachability footprint and divert (I-10):
+      - wire backend/mission/glide.py with the real propeller state and position;
+      - rank airfields inside the footprint (airfield list in configs/missions/airfields.json with sources);
+      - a one-click divert creates a new route through the planner.
+M5-10 Canyon Blender app:
+      - remove the "dive to cool" bug, the private engine model and the throttle-speed table;
+      - make it a viewer of the mission executive, or retire it (ASK).
+M5-11 Mission UI:
+      - waypoint editor on terrain;
+      - feasibility colours;
+      - altitude profile;
+      - reachability map (X5);
+      - divert button.
+CHECKPOINT PHASE 6
+  - T-MIS-1..6.
+  - Each PS scenario runs in one click.
+  - Replay of a new sortie is identical to live.
+  - The planner replans after a power-reducing fault.
+
+
+=====================================================================================================================
+11. PHASE 7 (Blender) - FIX THE ENGINE MODELS (no .blend ever deleted)
+=====================================================================================================================
+
+Sources: A section 4 (work list), A section 5 (fault -> component TARGET lists), P Part 5.4, assets/AGENTS.md.
+How AI helps:
+  - the AI writes bpy scripts (select by size/location, rename, parent to empties, add placeholder primitives with
+    the custom property component_id and placeholder=true);
+  - it runs them headless and saves to <file>_work.blend;
+  - you look in Blender and approve;
+  - then the work file replaces the master (lock it first with git lfs lock).
+B-01 Pipeline scripts:
+     - scripts/blender/export_engine.py (custom properties on, modifiers applied, baked textures where needed);
+     - scripts/blender/validate_nodes.py;
+     - scripts/assets/optimize (gltf-transform: Draco/Meshopt, KTX2/WebP, NO join/flatten of mapped nodes; verify
+       the flags with --help and re-validate the node names after optimizing).
+B-02 915: split "Main engine" (by material, then loose parts), rename the CAD-id objects, add placeholders.
+B-03 914:
+     - reassign the 320 "wastegate" objects (by size, then visual check);
+     - identify cylinders visually (ASK: Prasad confirms each);
+     - add carburettors, oil system, TCU and sensors.
+B-04 912 (geometry confirmed correct by Prasad, D47: only add grouping and placeholders, never change the
+     geometry):
+     - split the merged base into crankcase/barrels/heads;
+     - add component empties;
+     - add placeholders (injectors, plugs, sensors, airbox, oil pump/cooler, radiator, prop flange).
+B-05 Diesels:
+     - add radiator, thermostat and VGT actuator (AE300), and airbox and ECU (VRDE);
+     - optionally split the heads per cylinder;
+     - add "representative geometry" labels.
+B-06 Re-export, regenerate the manifests, switch faults to the TARGET lists, and turn on A section 8 test 3
+     (no forbidden mappings).
+CHECKPOINT PHASE 7
+  - T-REPO-2.
+  - A section 8 tests 1-6.
+  - Every per-cylinder fault lights only its cylinder on all five engines.
+  - GLB size budget (< 20 MB) met.
+
+
+=====================================================================================================================
+12. PHASE 8 (M6 full + UX) - THE EXPERIENCE THAT MAKES DRDO REMEMBER IT
+=====================================================================================================================
+
+Sources: P Part 6 (U1-U6, X1-X10, budgets), idea text sections 10-11.
+UX-01 Glass engine: live temperature heat-map, oil-flow and prop-speed animation, exhaust glow (X2).
+      Twin ghost overlay (X3).
+UX-02 Time machine: one timeline for live and replay, scrub to the first detection, what-if fork side by side (X4).
+UX-03 Fleet wall (X6). Voice copilot and Ctrl+K command palette mapped 1:1 onto /api/v1; "why" answers are built
+      from evidence only (X7).
+UX-04 One-click sortie report PDF from the UI (X8). Phone as second screen via QR join (X9). English/Hindi label
+      file (X10).
+UX-05 Latency budget (I-11): measure sensor-to-screen latency end to end. The idea text says < 200 ms; we report
+      the real p50/p95 and fix anything above the budget. Interaction budgets from P 6.3.
+UX-06 Outsider tests:
+      - 10-second test;
+      - SUS >= 80 with 5 people from outside the team;
+      - alert rate per 10 minutes within the ISA-18.2/EEMUA 191 benchmark;
+      - keyboard-only walkthrough (T-UX-1..5).
+CHECKPOINT PHASE 8: T-UX-1..5 and the P 6.3 budgets measured and recorded.
+
+
+=====================================================================================================================
+12b. PHASE 8b - LLM COPILOT AND RAG (OLLAMA OR GEMINI) (D31, D32)
+=====================================================================================================================
+
+Why after Phase 8: the copilot explains the system's state. It only becomes trustworthy once status, diagnosis and
+prognosis are honest (Phases 1-5). The voice copilot UI (UX-03) uses it.
+Today:
+  - backend/agent/llm_engine.py supports none / Ollama-hosted / Gemini through ANUMAAN_LLM_PROVIDER (default none).
+  - backend/agent/copilot.py does retrieval + guardrails + extractive answers.
+  - backend/knowledge/ holds loaders and retrieval: LocalKnowledgeStore reads data/documents/; embedding_index.py
+    loads SentenceTransformer("all-MiniLM-L6-v2") at runtime, which downloads it if it is not cached;
+    reranker.py.
+  - scripts/ingest_rag_docs.py.
+  - Voice: backend/voice (whisper.cpp STT, Kokoro TTS) feeds the same copilot.
+  - The old quantized Qwen3-4B weights are gone (D31).
+  - Prasad reports the RAG as "completely broken". Root causes found: the corpus is generated text (D44); the
+    reranker is missing (flashrank); the voice packages are missing; Ollama needs OLLAMA_MODELS at start; there is
+    no tool access to the live state.
+AI-01 Diagnose (read-only first):
+      - start the backend with ANUMAAN_LLM_PROVIDER=none, then ollama (qwen2.5:7b-instruct), then gemini;
+      - call the copilot and voice endpoints with 10 fixed questions;
+      - record for each: retrieval hits, latency, errors, and where it breaks (ingest, embedding download, index
+        build, retrieval, prompt, provider call, response parsing);
+      - write the findings into PROGRESS.txt before changing anything.
+AI-02 Config and providers:
+      - configs/llm.json: provider, model per provider, timeouts, max tokens, temperature 0-0.3, embedding model name
+        and cache dir;
+      - remove the dead provider branches (sarvam/bharatgen/qwen-gguf) from llm_engine.py and .env.example, or keep
+        them as plain Ollama model names;
+      - health check /api/v1/copilot/status reports provider, model, reachability and the embedding model state;
+      - a missing provider or model gives "UNAVAILABLE" with a reason, never a fake answer.
+AI-03 Ingestion and index:
+      - one ingestion command (scripts/ingest_rag_docs.py) builds a persistent index in var/rag/ (chunks, embeddings,
+        source path, page, hash);
+      - it is incremental by file hash and records the embedding model name + version in the index metadata;
+      - the sources are data/documents/, docs/reference/ manuals, the generated fault catalogue (configs/faults.json
+        -> text) and the engine data sheet (P Part 2);
+      - pin the embedding model (all-MiniLM-L6-v2, or nomic-embed-text via Ollama if Prasad pulls it - ASK) with a
+        local cache path from configs/llm.json, so nothing downloads silently at demo time.
+AI-03a Real document corpus (D34, D44). Already downloaded 19 Nov: docs/reference/oem/OM_912iSeries_ED2_R1.pdf
+      (official Rotax OM-912 i Rev. 1, 92 pages; gitignored, BRP-Rotax property; source
+      https://rotax-owner.com/manuals/OM_912iSeries_ED2_R1.pdf). Write docs/reference/SOURCES.txt (URL, edition, date,
+      sha256 for each document) plus scripts/assets/fetch_reference_docs.py to re-download everything.
+      Then:
+      - collect public, official documents into docs/reference/ with their source URL in docs/reference/SOURCES.txt:
+        EASA TCDS E.121 (Rotax 912/915 series) and E.200 (Austro E4/AE300), the Rotax 912 i Series Operators Manual
+        and the Rotax 915 iS Operators Manual from the manufacturer's public documentation site, the DRDO 180 hp
+        engine product page (saved as text), and MIL-STD-1629A (already present);
+      - check each document's licence/terms; anything not freely redistributable stays local (listed in
+        STRUCTURE.txt external dependencies) instead of being committed;
+      - never index generated text as if it were a manual.
+AI-04 Retrieval quality:
+      - tests/rag/eval_set.json: 30-50 questions with expected source documents (e.g. "oil pressure limit on the 914
+        above 3500 rpm" -> Rotax 914 OM page);
+      - measure recall@5 and MRR, and keep the reranker only if it improves them;
+      - target recall@5 >= 0.8 (report the real number).
+AI-05 Live-state copilot AGENT (D45) - replaces the earlier "grounded answers" card
+  Goal: ask "what is going on with engine 2?" or "how do I fix this?" and get an answer built from the LIVE system:
+  physics parameters, readings vs limits, diagnosis evidence, registry mitigation and maintenance steps, prognosis,
+  and the real manuals. All with sources. No invented numbers.
+  Tools (backend/agent/tools.py; read-only; each one is a thin wrapper over /api/v1 or configs, unit-tested):
+    get_engine_state(engine_id)            status level + reasons, engine_state, readings {value, unit, quality,
+                                           limit band}, derived (power, BSFC, efficiency, lambda, MAP), data age
+    get_physics_parameters(engine_id)      twin health parameters with sigma (cooling effectiveness, oil pump
+                                           health, injector flow per cylinder, turbo efficiency, filter loss, ...)
+                                           + calibrated model constants with provenance
+    get_limits(engine_id, channel?)        bands + rpm rules + provenance (OM page)
+    get_hypotheses(engine_id)              ranked faults with supporting/contradicting residuals, cylinder,
+                                           FMECA severity
+    get_fault_knowledge(fault_id, engine_id) registry entry: physics mechanism, expected signature, in-flight
+                                           mitigation, maintenance steps, ATA chapter, components, manual refs
+    get_prognosis(engine_id)               time-to-limit list, RUL band (95 %), mission reliability, RUL-path
+                                           disagreement flag
+    get_events(engine_id, since_s)         timeline: injections (training mode), detections, status changes
+    get_work_orders(engine_id)             open/closed maintenance
+    get_component(engine_id, component_id) what the part is, which faults touch it, its live readings
+    search_manuals(query, engine_id?)      RAG over the REAL corpus only (D34/D44), returns chunks with
+                                           [document, edition, page]
+  Answer contract (the same 7 sections for every "what/why/fix" question; the UI renders them as cards):
+    1. What is happening: status, top reasons, key readings vs limits with units and data age.
+    2. Why: the physics chain in plain words, using the parameters. Example: "oil pump health estimate 0.62 ->
+       pressure 1.6 bar at 4800 rpm, below the 2.0 bar normal band (OM p.2-3); oil temperature rising 0.8 C/min
+       because bearing friction increases".
+    3. Immediate mitigation (crew/operator now): from the registry + the OM abnormal-operation section, cited.
+    4. Fix / maintenance course of action: ATA chapter, inspection steps, parts, and whether a work order exists.
+       The agent may PROPOSE creating one; the operator confirms.
+    5. Prognosis and mission impact: time-to-limit, RUL band, mission reliability, divert advice when the planner
+       says so.
+    6. Confidence and unknowns: hypothesis probability, isolability ambiguity, quarantined sensors, ASSUMED data.
+    7. Sources: tool names + document/page citations.
+  Guards:
+    - number-grounding check: every number in the answer must appear in a tool result or a cited chunk; otherwise
+      the sentence is removed or flagged;
+    - the answer must never contradict the deterministic status/diagnosis;
+    - no write tools (no fault injection, no lever changes);
+    - the tool-call budget per question is capped (e.g. 8 calls) with a timeout;
+    - the provider is unavailable -> deterministic template (LLM=none) built from the same tools.
+  Providers (check current docs first, D39):
+    - Ollama /api/chat with a `tools` array (JSON-schema functions; the reply carries message.tool_calls; results
+      go back as role "tool"); qwen2.5:7b-instruct supports tool calling.
+    - Gemini function calling with the google-genai SDK (`from google import genai`; function declarations in a
+      Tool, passed through the config). Do not use the legacy google-generativeai package.
+  Registry additions this needs (do them in M0-02 so they exist early):
+    - in configs/faults.json, per fault: mitigation_inflight (text + source: OM page or "ANUMAAN-authored"),
+      maintenance_steps (ordered list + ATA + source), physics_explanation (one paragraph template with parameter
+      placeholders).
+  Tests:
+    - tool unit tests;
+    - an agent test with a scripted mock provider that calls the tools;
+    - a golden-answer test per demo fault (F01, F06, F23, S03): all 7 sections present, numbers grounded, status
+      matches;
+    - a live smoke test per provider (skipped when unreachable).
+AI-06 Voice path: STT -> copilot -> TTS uses AI-05 and reports per-stage latency. When a voice model is missing,
+      the voice UI says so (D33).
+AI-07 Tests and demo:
+      - tests for AI-02..AI-06 run with a mock provider (deterministic) plus one live smoke test per provider
+        (marked, skipped when the provider is unreachable);
+      - demo questions "why is engine 2 in CAUTION?" and "what should maintenance do?" give answers that match the
+        Maintenance view exactly.
+CHECKPOINT PHASE 8b:
+  - the copilot status endpoint is green for Ollama and Gemini;
+  - RAG eval recall@5 reported;
+  - the number-grounding check passes on the demo questions;
+  - no answer contradicts the deterministic status/diagnosis.
+
+
+=====================================================================================================================
+13. PHASE 9 (M7) - CAN, FADEC, EDGE, SECURITY, FEDERATED LEARNING
+=====================================================================================================================
+
+Sources: P Part 4 M7, idea text sections 10 and 12.
+M7-01 Extend configs/can/anumaan_fadec.dbc from 4 messages to the full channel set (about 30 scalar channels, as
+      the idea text says, plus lane status and sequence counters).
+M7-02 python-can virtual bus (Windows) / vcan0 (Linux) with cantools; FADEC emulator from sim/ecu.py; CAN source
+      behind the Frame contract; source switch DIRECT/CAN/REPLAY in configs/runtime.json (T-CAN-1).
+M7-03 Edge node process (I-13):
+      - full-rate features;
+      - a compressed spectral summary of vibration;
+      - about 30 scalar channels at 20 Hz across the "link";
+      - measured bandwidth, CPU and memory (T-CAN-4).
+M7-04 Security: CAN IDS (unknown ID, period, range, sequence gap), optional CMAC, Merkle-chained log with its root
+      in the sortie report (T-CAN-2/3).
+M7-05 Federated learning (I-15):
+      - 5 simulated bases/tails train the learned detector locally;
+      - FedProx-style proximal term anchoring to the global model;
+      - parameter-efficient update (only a small adapter or the last layer);
+      - updates clipped with calibrated Gaussian noise (DP-SGD style, privacy budget epsilon reported);
+      - raw frames never leave a "base".
+      Report detection before/after and the privacy budget, labelled SIMULATION.
+CHECKPOINT PHASE 9: T-CAN-1..4; the federated report exists with epsilon and the detection change.
+
+
+=====================================================================================================================
+14. PHASE 10 (M8 + M9) - PRODUCTION READINESS, DOCUMENTATION, FINAL VERIFICATION
+=====================================================================================================================
+
+M8-01 Structured logs, metrics, /health and /ready, command token, CORS from env, Docker + compose (T-OPS-1/4).
+M8-02 Duplicate code cleanup (R section 13, A I3):
+      - one detector family, one RUL path, one report writer, one sensor validator;
+      - one three.js, one Draco decoder copy;
+      - shared Blender helpers in scripts/lib;
+      - unused modules wired or archived (A I1), with ARCHIVE_LOG entries.
+M8-03 Environment pinning: requirements with versions; scikit-learn matching the saved models, or retrain.
+M8-04 Fix the ratchet test for real (engine literals down) and the two timing tests (relative cost) (A I2, I5).
+M8-05 Docs rewritten to match Beta:
+      - architecture with the OSA-CBM six-layer mapping (backend/osacbm.py) (I-16);
+      - physics model;
+      - ML evaluation;
+      - datasets and provenance;
+      - deployment roadmap (GCS / test rig / fleet / certification path);
+      - fault catalogue generated from faults.json;
+      - fix the problem-statement doc's dead links (N2) and claims (N3);
+      - README;
+      - docs_site pages that describe features we do not have.
+      Wording follows D19 (UKF) and the measured numbers from Phases 3-9.
+M8-06 CI: lint, mypy, pytest suites, tsc, eslint, Vitest, Playwright smoke, docs link check (T-OPS-2/3).
+M9-01 Final verification:
+      - the full P Part 7 catalogue;
+      - the P Part 9 demo script three times on the demo laptop, plus once on the deployed server;
+      - backup video;
+      - tag the result on Beta.
+      Ask Prasad whether and how Beta goes to main (that is Prasad's call, never the AI's).
+CHECKPOINT PHASE 10 = DONE
+  - Every P Part 3 row is WORKS.
+  - Every P Part 10 box is ticked with a passing test ID.
+  - Every section 15 promise is DELIVERED or honestly reworded.
+
+
+=====================================================================================================================
+15. PROMISES IN OUR SUBMITTED IDEA TEXT -> WHERE EACH ONE IS DELIVERED
+=====================================================================================================================
+
+Source: docs/submission/ANUMAAN_Idea_Description.txt and ANUMAAN_Abstract_Summary.txt (at the root until P0-04).
+Rule: every promise is either delivered and measured, or reworded in the docs to what we actually have. We never
+leave a claim we cannot show.
+
+I-01 Kalman-filter state observer with a 0D/1D thermodynamic model, estimating internal states no sensor measures:
+     in-cylinder peak pressure, turbine inlet temperature, bearing oil-film thickness in microns.
+       -> M3-01 (UKF, D19 wording), M1-17 (the three virtual sensors), M6-03 (shown).
+I-02 Sensor range, rate and cross-sensor checks isolating a bad sensor in about 40 ms, with fallback to an estimate.
+       -> M3-03 (measure and report the real latency; fallback = VIRTUAL value).
+I-03 FlyHash sparse-coding novelty detector, training-free, cheap on edge hardware.
+       -> M3-04 (wire backend/ml/flyhash_novelty.py), M7-03 (edge footprint measured).
+I-04 Autoencoder trained on normal data; Extreme Value Theory (GPD) threshold; about 1 false alarm per 3 flight
+     hours; 3 s persistence.
+       -> M3-02 (persistence), M3-04 (AE + GPD; report the measured false alarm rate).
+I-05 Bayesian network over a ten-mode FMECA taxonomy built to MIL-STD-1629A, with severity grades and detection
+     windows.
+       -> M3-05 (bn.py + fmeca.py; F01-F37 mapped onto the ten modes).
+I-06 SHAP breakdown of which channels drove each call.
+       -> M3-06 (contribution scores always; SHAP where a learned model decides).
+I-07 Deterministic maintenance directive: root cause, action, emergency checklist; never generative.
+       -> M3-06 (from the registry), M4-05 (work orders).
+I-08 Two independent RUL estimates (damage accumulation + residual drift); disagreement surfaced; split conformal
+     calibrated on whole missions, 95 %; planning uses the low end.
+       -> M4-03 (D18).
+I-09 Mission reliability by forward Monte Carlo with failure draws per phase.
+       -> M4-04.
+I-10 Live glide-reachability footprint, ranked airfields, one-click divert; mission replay; high-altitude /
+     hot-weather / rapid-throttle simulation.
+       -> M5-09, M5-05, M5-02.
+I-11 Sensor-to-screen latency budget under 200 ms.
+       -> UX-05 (measured, p50/p95 reported).
+I-12 Fleet mode (all five engines) and deep mode; pilot screen (power margin, reachability, one-click divert) and
+     propulsion-engineer console.
+       -> M6-01..03, M5-11.
+I-13 CAN/SocketCAN edge node; compressed vibration spectral summary; about 30 scalar channels at 20 Hz on the link.
+       -> M7-01..03.
+I-14 Fleet survival statistics by environmental exposure pull maintenance forward (autonomous maintenance advisory).
+       -> M4-05.
+I-15 Federated learning at the depot only: local training with a proximal term, parameter-efficient updates,
+     clipping + calibrated noise for differential privacy, physics model never changed.
+       -> M7-05.
+I-16 Six-layer condition-monitoring architecture (OSA-CBM / ISO 13374).
+       -> M8-05 (architecture doc mapped to backend/osacbm.py and the real modules).
+I-17 Testing against an independently built second simulation with its own sensor bias and noise.
+       -> M3-08.
+I-18 Browser 3D twin for each engine with fault-synced part highlighting; higher-fidelity Blender version and a
+     simulated flight environment.
+       -> M6-05, Phase 7, M5-10.
+I-19 Five engines including the indigenous VRDE (Tapas-BH-201 platform).
+       -> M0-01 data (VRDE ASSUMED values labelled), Phase 2 calibration, Phase 7 representative geometry label.
+
+
+=====================================================================================================================
+16. PROBLEM-STATEMENT COVERAGE -> WHERE EACH ITEM IS DELIVERED
+=====================================================================================================================
+
+Full line-by-line table: P Part 3. Short map:
+  Background (estimation, anomaly, degradation, prediction, replay)   -> Phases 3, 5, 6
+  Integrating (sensor data, thermodynamics, performance maps, failure logic, AI/ML) -> Phases 1-3, 5
+  Capable of (visualization, health indicators, abnormal conditions, prediction, RUL, missions, replay) -> 2-6
+  May utilize (CAN, ECU/FADEC, edge, server analytics, AI anomaly, physics-informed, HMI) -> 3, 4, 9
+  A core framework -> Phases 0-1, 10
+  B monitoring parameters (RPM, CHT, EGT, oil, fuel flow, vibration, battery/alternator, injection timing, health
+    indices) -> Phase 2 (+ shown in Phase 4)
+  C detection targets (misfire, injector, cooling, lubrication, sensor, combustion instability, overheating,
+    vibration, threshold-to-predictive) -> Phases 2-3, 5
+  D AI/ML (anomaly, RUL, trend, maintenance, adaptive learning) -> Phases 3, 5
+  E simulation and replay (replay, environment, high altitude, endurance, hot weather, rapid throttle) -> Phase 6
+  F dashboard (status, alerts, efficiency trends, maintenance advisory, mission reports, role views) -> 4, 6, 8
+  Deliverables 1-7 -> Phases 1-10 (docs in Phase 10)
+  Innovation areas -> Phases 3, 5, 8, 9
+Tick P Part 10 only with the passing test ID next to each box.
+
+
+=====================================================================================================================
+17. REVIEW CHECKLIST AND AI RED FLAGS (used by the second-opinion session before every merge)
+=====================================================================================================================
+
+Checklist (all must be yes):
+  [ ] Branch is beta/<card-id> from Beta; git log main -1 is still 9b5942e.
+  [ ] The diff touches only the files the card names (+ tests). No unrelated reformatting.
+  [ ] New tests fail before and pass after (output in the PROGRESS entry).
+  [ ] No weakened test (git diff tests/: no raised tolerance, skip, deleted assert); ratchet baseline not raised.
+  [ ] T-DYN-1 green: no new literal for a reading/limit, no "or <number>", no engine/fault/part name in code.
+  [ ] New engine values are in configs with provenance; ASSUMED values listed in PROGRESS.txt.
+  [ ] No deleted .blend: git diff --name-status Beta... | grep -E "^D.*\.blend$" is empty.
+  [ ] Inference code does not import fault manager or sim truth (T-DYN-4 green; test_no_truth_leak list extended).
+  [ ] Full pytest is no worse than the last PROGRESS baseline.
+  [ ] The behaviour was seen running (endpoint called, UI looked at, or Blender opened), not only unit tests.
+Red flags (reject and fix):
+  - Numbers that match the test's expected values exactly, with no physics behind them.
+  - try/except that swallows errors or returns a default "to keep the UI working".
+  - Math.random / random.random in product code outside the seeded sim RNG.
+  - A new implementation next to an existing module the card said to reuse.
+  - "Calibrated" or "validated" in comments or docs without a test showing it.
+  - Big refactors or renamed public functions the card did not ask for.
+  - Edits to configs/faults.json or configs/engines/*.json by a card that does not own them.
+  - Claims in docs copied from the idea text without a measured number behind them.
+
+
+=====================================================================================================================
+18. PROMPT TEMPLATES
+=====================================================================================================================
+
+18.1 Start a card
+  "Follow AGENTS.md and DECISIONS.md. Card <ID> from ANUMAAN_AI_COURSE_OF_ACTION.txt. Confirm the branch is
+  beta/<ID> (create it from Beta if missing). Read the last PROGRESS.txt entry, the card, only the sections it
+  names, and the AGENTS.md of every folder you will touch. Run the baseline tests for this card and show the
+  summary. Then give me a short plan (files, functions, tests, risks) and wait for my OK."
+18.2 After the plan is approved
+  "Go. Write the tests first and show them failing. Implement in small steps and run the tests after each. Do not
+  touch files outside the plan without asking. At the end run the Done-when checks, append a PROGRESS.txt entry
+  (section 19 format), and commit with the card id."
+18.3 Second-opinion review (new session, read-only)
+  "Read-only review. Do not edit anything. Compare branch beta/<ID> with Beta. For each item of the checklist in
+  ANUMAAN_AI_COURSE_OF_ACTION.txt section 17, answer yes/no with evidence (file:line, command output). Then list
+  bugs, missing tests and red flags, most serious first."
+18.4 Stuck or looping
+  "Stop. Summarise what works, what fails (exact error), and the two most likely causes. Do not commit anything that
+  fails. Propose the smallest next experiment."
+18.5 Blender helper script
+  "Write a bpy script for Blender 5.2 that <task>. It opens <file>, never saves over it, saves the result to
+  <file>_work.blend, and prints a table of changed objects (name before/after, size, location). Run it with
+  D:\Blender\blender.exe -b <file> --python <script> and show the table. Never delete a .blend."
+18.6 Engine data question
+  "Do not guess. Search the manufacturer/TCDS/DRDO sources listed in P Part 11 and R sources. Quote the exact line,
+  document, issue and page/URL, and give the provenance status (PUBLIC/MANUAL/OWNER). If nothing is found, propose
+  an ASSUMED value with reasoning and stop for my approval."
+18.7 Moving files (Phase 0 style)
+  "Print the move table first (old -> new, md5 for binaries, every file that references the old path from git grep)
+  and stop for my approval. Then git mv in small commits, update the references, run the full tests, and compare
+  with the baseline."
+
+
+=====================================================================================================================
+19. PROGRESS LOG, CHECKPOINTS, WHEN THINGS GO WRONG
+=====================================================================================================================
+
+19.1 PROGRESS.txt entry format (newest at the bottom)
+  === <date> <card-id> <title> (AI: <tool/model>)
+  Branch: beta/<card-id>   Commits: <hashes>
+  Changed: <files>
+  Tests before: <command> -> <summary>      Tests after: <command> -> <summary>
+  Done-when checks: <each -> result>
+  Review session: <findings and fixes>
+  ASSUMED values added: <list or none>
+  Questions for Prasad: <list or none>
+  Next: <card> / hand-off notes
+19.2 Checkpoints: at the end of each phase, run the checkpoint list, write a PROGRESS entry "CHECKPOINT PHASE n"
+  with the numbers, and only then start the next phase. If a checkpoint fails, fix it before moving on: later
+  phases build on it.
+19.3 When something goes wrong
+  - A test outside the card breaks: stop, find the cause in this card's diff, fix it, or revert this card's commit
+    (git revert on the card branch; never reset Beta).
+  - A card turns out bigger than planned: commit the working part, split the rest into a new card, note it.
+  - A plan document is wrong (a fact in R/A/P does not match the code): write the correction in DECISIONS.md, then
+    continue. Never silently follow a wrong plan.
+  - Engine data cannot be found: ASSUMED with a label, listed in PROGRESS, shown in the UI tooltip.
+
+
+=====================================================================================================================
+20. MINIMUM HONEST DEMO IF TIME RUNS SHORT
+=====================================================================================================================
+
+Do in this order and stop wherever time ends. Each line leaves a working, honest demo:
+  1. Phase 0 + Phase 1 (clean repo, one simulator, the same faults everywhere).
+  2. M1-01..07 + M1-11 + M1-13 for the demo faults (912 and AE300 calibrated, injector faults working), M2.
+  3. M3-03, M3-05, M3-07 (sensor faults recognised, diagnosis from evidence only).
+  4. M6-02 and M6-05 core (status banner, alerts, the same 3D highlight on every screen, all five engines).
+  5. M5-05 replay fix + one PS scenario preset.
+  6. X1 energy flow and X9 phone second screen (the two features that prove "it is real" fastest).
+Everything not reached is listed honestly in the deployment roadmap (M8-05) as future work.

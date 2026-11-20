@@ -776,10 +776,11 @@ class DigitalTwinClientState:
         self.frame_count = 0
         self.last_fps_calc = time.time()
         
-        self.history_egt = collections.deque([710.0 + random.uniform(-5, 5) for _ in range(40)], maxlen=60)
-        self.history_oil_temp = collections.deque([56.0 + random.uniform(-1, 2) for _ in range(40)], maxlen=60)
-        self.history_oil_press = collections.deque([4.85 + random.uniform(-0.05, 0.05) for _ in range(40)], maxlen=60)
-        self.history_rpm = collections.deque([4670.0 + random.uniform(-15, 15) for _ in range(40)], maxlen=60)
+        # history starts empty: no invented samples (M0-10, audit #33)
+        self.history_egt = collections.deque(maxlen=60)
+        self.history_oil_temp = collections.deque(maxlen=60)
+        self.history_oil_press = collections.deque(maxlen=60)
+        self.history_rpm = collections.deque(maxlen=60)
         self.last_history_sample_time = time.time()
         
         self.active_tab = "3D ENGINE"
@@ -860,8 +861,10 @@ class TelemetryReceiverThread(threading.Thread):
                             if data is None:
                                 data = legacy_data
                             else:
-                                data['active_commanded_fault_id'] = legacy_data.get('active_commanded_fault_id', 0)
-                                data['active_commanded_fault_name'] = legacy_data.get('active_commanded_fault_name', 'NOMINAL')
+                                cid = legacy_data.get('active_commanded_fault_id')
+                                data['active_commanded_fault_id'] = cid if isinstance(cid, int) else 0
+                                data['active_commanded_fault_name'] = legacy_data.get('active_commanded_fault_name') or 'NOMINAL'
+
                 except Exception:
                     pass
 
@@ -869,12 +872,17 @@ class TelemetryReceiverThread(threading.Thread):
                 client_state.is_connected = True
                 client_state.last_packet_time = time.time()
                 client_state.sortie_id = data.get('sortie_id', client_state.sortie_id)
-                client_state.is_engine_running = data.get('is_engine_running', True)
-                client_state.active_commanded_fault_id = data.get('active_commanded_fault_id', client_state.active_commanded_fault_id)
+                running = data.get('is_engine_running')
+                if isinstance(running, bool):
+                    client_state.is_engine_running = running
+                cid = data.get('active_commanded_fault_id', client_state.active_commanded_fault_id)
+                client_state.active_commanded_fault_id = cid if isinstance(cid, int) else 0
                 client_state.active_commanded_fault_name = data.get('active_commanded_fault_name', client_state.active_commanded_fault_name)
                 
                 if 'telemetry' in data and isinstance(data['telemetry'], dict):
-                    client_state.telemetry.update(data['telemetry'])
+                    # null = no data: stored as NaN so the HUD prints "nan" instead of crashing or inventing a value
+                    client_state.telemetry.update({k: (float('nan') if v is None else v)
+                                                   for k, v in data['telemetry'].items()})
                 elif 'state' in data and isinstance(data['state'], dict):
                     client_state.telemetry.update(data['state'])
                     
@@ -900,26 +908,8 @@ class TelemetryReceiverThread(threading.Thread):
                 if 'analytics' in data and isinstance(data['analytics'], dict):
                     client_state.analytics.update(data['analytics'])
             else:
-                # Offline fallback: Synthesize smooth realistic telemetry
+                # Offline: no synthesised telemetry (M0-10, P Part 0 D7); the HUD shows the link as offline.
                 now = time.time()
-                t_sin = math.sin(now * 1.2)
-                t_cos = math.cos(now * 0.8)
-                is_diesel = ('austro' in client_state.engine_id or 'vrde' in client_state.engine_id)
-                base_rpm = 3800.0 if is_diesel else 4800.0
-                
-                client_state.telemetry['ENGINE_RPM'] = base_rpm + 35.0 * t_sin
-                client_state.telemetry['PROP_RPM'] = (client_state.telemetry['ENGINE_RPM'] / 2.43)
-                client_state.telemetry['TPS'] = 72.0 + 1.5 * t_cos
-                client_state.telemetry['OIL_PRESS'] = 4.85 + 0.08 * t_sin
-                client_state.telemetry['OIL_TEMP'] = 58.0 + 0.4 * t_cos
-                client_state.telemetry['FUEL_FLOW'] = 11.2 + 0.2 * t_sin
-                client_state.telemetry['MAP'] = 39.0 + 0.4 * t_cos
-                client_state.telemetry['BUS_VOLTAGE'] = 28.2 if is_diesel else 14.1
-                client_state.telemetry['FUEL_RAIL_P'] = 1600.0 if is_diesel else 3.0
-                for k in range(1, 5):
-                    client_state.telemetry[f'CHT_{k}'] = 95.0 + (k * 1.5) + 0.8 * t_sin
-                    client_state.telemetry[f'EGT_{k}'] = 780.0 + (k * 3.0) + 2.0 * t_cos
-
                 if now - client_state.last_packet_time > 1.0:
                     client_state.is_connected = False
             
@@ -934,7 +924,8 @@ def update_camera_for_backend_fault():
     """
     fid = client_state.active_commanded_fault_id
     if fid == 0 and isinstance(client_state.analytics, dict):
-        fid = client_state.analytics.get('diagnosed_fault_id', 0)
+        dfid = client_state.analytics.get('diagnosed_fault_id')   # null until M3-05
+        fid = dfid if isinstance(dfid, int) else 0
 
     if fid > 0:
         if fid in FAULT_DATABASE:
@@ -1774,18 +1765,20 @@ class OT_DigitalTwinSimulator(bpy.types.Operator):
             if now - client_state.last_history_sample_time >= 0.10:
                 client_state.last_history_sample_time = now
                 t = client_state.telemetry
-                client_state.history_egt.append(t.get('EGT_2', 780.0))
-                client_state.history_oil_temp.append(t.get('OIL_TEMP', 57.4))
-                client_state.history_oil_press.append(t.get('OIL_PRESS', 4.89))
-                client_state.history_rpm.append(t.get('ENGINE_RPM', 4680.0))
+                for hist, key in ((client_state.history_egt, 'EGT_2'), (client_state.history_oil_temp, 'OIL_TEMP'),
+                                  (client_state.history_oil_press, 'OIL_PRESS'), (client_state.history_rpm, 'ENGINE_RPM')):
+                    v = t.get(key)
+                    if client_state.is_connected and isinstance(v, (int, float)) and math.isfinite(v):
+                        hist.append(v)
 
-            if client_state.analytics.get('diagnosed_fault_id', 0) > 0 or client_state.active_commanded_fault_id > 0:
+            if isinstance(client_state.analytics.get('diagnosed_fault_id'), int) and client_state.analytics['diagnosed_fault_id'] > 0 or client_state.active_commanded_fault_id > 0:
                 update_pulsing_emission()
 
             # Reactive fault highlight check: detect GCS / backend commanded or diagnosed fault change
             active_fid = client_state.active_commanded_fault_id
             if active_fid == 0 and isinstance(client_state.analytics, dict):
-                active_fid = client_state.analytics.get('diagnosed_fault_id', 0)
+                dfid = client_state.analytics.get('diagnosed_fault_id')   # null until M3-05
+                active_fid = dfid if isinstance(dfid, int) else 0
 
             if client_state.applied_fault_id != active_fid:
                 client_state.applied_fault_id = active_fid

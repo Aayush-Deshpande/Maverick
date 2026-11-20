@@ -43,7 +43,7 @@ def test_all_engines_tick_and_only_selected_gets_heavy(hub):
 
 def test_fault_isolated_to_one_engine_and_marked_manual(hub):
     a, b = hub.runtimes["rotax_914"], hub.runtimes["rotax_912is"]
-    a.inject_fault("COOLING_DEGRADATION", severity=0.9, ramp_sec=30.0)
+    a.inject_fault("COOLING_DEGRADATION", cylinder=2, severity=0.9, ramp_sec=30.0)   # F19 is per cylinder (M1-14)
     for _ in range(200):
         hub.tick_all()
     assert a.buffer[-1].truth.active_faults and not b.buffer[-1].truth.active_faults
@@ -55,7 +55,10 @@ def test_fault_isolated_to_one_engine_and_marked_manual(hub):
 def test_detector_alarms_on_injected_fault_not_on_other_engine():
     h = RuntimeHub(["rotax_914", "rotax_912is"], seed=5, warmup_ticks=600)
     h.calibrate_all()
-    h.runtimes["rotax_914"].inject_fault("COOLING_DEGRADATION", severity=1.0, ramp_sec=60.0)
+    # M1-14 port: on the backend/sim plant a one-cylinder cooling-air loss (F19) moves the 914's CHT only 2-3 C at
+    # this cruise point (liquid-cooled heads; T-FLT-1 gap, PROGRESS M1-14), so the isolation check uses oil-pressure
+    # loss. Criterion unchanged.
+    h.runtimes["rotax_914"].inject_fault("OIL_PRESSURE_LOSS", severity=1.0, ramp_sec=60.0)
     conf = {e: 0 for e in h.runtimes}
     for _ in range(250):
         for e, t in h.tick_all().items():

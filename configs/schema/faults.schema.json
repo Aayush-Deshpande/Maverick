@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "anumaan/configs/schema/faults.schema.json",
+  "title": "ANUMAAN fault registry (configs/faults.json)",
+  "description": "Card M0-02. One entry per fault F01-F37 / S01-S07 (audit R section 22, DECISIONS D9, D45).",
+  "type": "object",
+  "required": ["schema_version", "faults"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "source": {"type": "string"},
+    "channel_note": {"type": "string"},
+    "faults": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "kind", "scope", "applies_when", "legacy_ids", "parameter_effects",
+                     "default_severity", "default_ramp_s", "expected_signature", "detect_window_s",
+                     "status_at_full_severity", "ata_chapter", "maintenance_action", "mitigation_inflight",
+                     "physics_explanation", "ps_categories", "description", "components"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {"type": "string", "pattern": "^(F|S)[0-9]{2}$"},
+          "name": {"type": "string", "pattern": "^[A-Z0-9_]+$"},
+          "kind": {"enum": ["PHYSICAL", "SENSOR"]},
+          "scope": {"enum": ["ENGINE", "CYLINDER", "CHANNEL"]},
+          "applies_when": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["field", "in"],
+              "additionalProperties": false,
+              "properties": {"field": {"type": "string"}, "in": {"type": "array", "minItems": 1}}
+            }
+          },
+          "legacy_ids": {"type": "array", "items": {"type": "integer", "minimum": 1, "maximum": 8}},
+          "legacy_cylinder": {"type": ["integer", "null"], "minimum": 1, "description": "cylinder the old numeric DRDO fault used (legacy adapter only)"},
+          "plant_mode_legacy": {"type": ["string", "null"]},
+          "parameter_effects": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["component", "parameter", "op", "at_full_severity"],
+              "properties": {
+                "component": {"type": "string"},
+                "parameter": {"type": "string"},
+                "op": {"enum": ["scale", "add", "set"]},
+                "at_full_severity": {"type": "number"}
+              }
+            }
+          },
+          "default_severity": {"type": "number", "minimum": 0, "maximum": 1},
+          "default_ramp_s": {"type": "number", "minimum": 0},
+          "expected_signature": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["channel", "direction", "min_delta", "unit"],
+              "properties": {
+                "applies_when": {
+                  "type": "array",
+                  "description": "this line holds only for engines matching every condition (D59)",
+                  "items": {"type": "object", "required": ["field", "in"], "additionalProperties": false,
+                            "properties": {"field": {"type": "string"}, "in": {"type": "array", "minItems": 1}}}
+                },
+                "channel": {"type": "string"},
+                "direction": {"enum": [-1, 0, 1]},
+                "min_delta": {"type": "number", "minimum": 0},
+                "unit": {"type": "string"}
+              }
+            }
+          },
+          "detect_window_s": {"type": "number", "exclusiveMinimum": 0},
+          "status_at_full_severity": {"enum": ["ADVISORY", "CAUTION", "NO-GO"]},
+          "ecu_reported": {"enum": ["LANE"], "description": "the ECU's self-test reports this fault directly (lane state in the frame); diagnosis takes the report as evidence (D62)"},
+          "immediate_no_go": {"type": "boolean", "description": "hazard (e.g. fire risk): a confident diagnosis is NO-GO at once, not graded by severity (D60)"},
+          "ata_chapter": {"type": "string"},
+          "maintenance_action": {"$ref": "#/$defs/sourced_text"},
+          "mitigation_inflight": {"$ref": "#/$defs/sourced_text"},
+          "physics_explanation": {"type": "string", "minLength": 20},
+          "ps_categories": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+          "description": {"type": "string"},
+          "components": {"type": "object"},
+          "channel_scope": {"type": ["array", "null"]}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "sourced_text": {
+      "type": "object",
+      "required": ["text", "source"],
+      "properties": {"text": {"type": "string", "minLength": 5}, "source": {"type": "string", "minLength": 3}}
+    }
+  }
+}

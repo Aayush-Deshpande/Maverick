@@ -71,8 +71,9 @@ _SEVERITY_RANK = {
 
 
 def default_report_root() -> str:
-    """<repo>/report_dump — resolved relative to this file, not the cwd."""
-    return os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "report_dump"))
+    """var/report_dump (M0-11) - from backend/runtime/paths.py, not the cwd."""
+    from backend.runtime.paths import var_path   # M0-11: runtime output in var/ ($ANUMAAN_VAR_DIR)
+    return str(var_path("report_dump"))
 
 
 def worst_severity(severities: List[str]) -> str:

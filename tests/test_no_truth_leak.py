@@ -35,6 +35,11 @@ SCANNED_PACKAGES = [
     REPO_ROOT / "backend" / "foundation",
     REPO_ROOT / "backend" / "security",
     REPO_ROOT / "backend" / "federation",
+    REPO_ROOT / "backend" / "status",          # M2-01 status evaluator (AGENTS rule 10)
+    REPO_ROOT / "backend" / "recording",       # M5-04/05 recorder + replay re-analysis (AGENTS rule 10)
+    REPO_ROOT / "backend" / "planning",        # M5-08 route feasibility from measured power only
+    REPO_ROOT / "backend" / "terrain",         # M5-07 DEM service
+    REPO_ROOT / "backend" / "agent",           # Phase 8b copilot: explains the diagnosis, never reads the answer
 ]
 
 FORBIDDEN_ATTRS = {"FAULT_ID", "HEALTH_INDEX", "RUL_HOURS"}

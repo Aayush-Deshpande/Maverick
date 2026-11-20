@@ -41,7 +41,7 @@ export const FaultMatrix: React.FC<FaultMatrixProps> = ({ state, onCommand }) =>
             <h2 className="text-xs font-semibold text-white">
               DRDO Fault Injection Matrix
             </h2>
-            <p className="text-[11px] text-slate-500">8 physical degradation modes (PS-26054)</p>
+            <p className="text-xs text-slate-500">8 physical degradation modes (PS-26054)</p>
           </div>
         </div>
 
@@ -88,7 +88,7 @@ export const FaultMatrix: React.FC<FaultMatrixProps> = ({ state, onCommand }) =>
               <div className="flex items-center justify-between w-full">
                 <div className="flex items-center gap-1.5">
                   <span
-                    className={`w-5 h-5 rounded-sm flex items-center justify-center text-[10px] font-mono font-semibold ${
+                    className={`w-5 h-5 rounded-sm flex items-center justify-center text-xs font-mono font-semibold ${
                       isTriggered
                         ? 'bg-critical text-black'
                         : 'bg-surface-card border border-surface-border text-slate-400 group-hover:text-slate-200'
@@ -96,7 +96,7 @@ export const FaultMatrix: React.FC<FaultMatrixProps> = ({ state, onCommand }) =>
                   >
                     F{f.id}
                   </span>
-                  <span className="text-[9px] text-slate-500 uppercase tracking-wide">{f.category}</span>
+                  <span className="text-xs text-slate-500 uppercase tracking-wide">{f.category}</span>
                 </div>
 
                 {isTriggered ? (
@@ -114,7 +114,7 @@ export const FaultMatrix: React.FC<FaultMatrixProps> = ({ state, onCommand }) =>
                 <div className="font-medium text-xs text-white leading-tight">
                   {f.name}
                 </div>
-                <div className="text-[10px] text-slate-500 mt-1 line-clamp-1">
+                <div className="text-xs text-slate-500 mt-1 line-clamp-1">
                   {f.desc}
                 </div>
               </div>

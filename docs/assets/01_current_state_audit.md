@@ -10,8 +10,8 @@
 
 | Asset | Location | Size | Format | Verdict |
 |---|---|---|---|---|
-| **Rotax 912 iS Sport** | `assets/blender/rotax_912_is_sport.blend` | 78 MB | Blender, textured, individually named meshes | ✅ **REUSE AS-IS** — production baseline |
-| **Bayraktar TB3** | `assets/blender/bayraktar_tb3_digital_twin.blend` (⚠️ a second, unresolved copy also exists at `assets/models/bayraktar_tb3_digital_twin.blend` — still-unresolved duplication, see [`docs/audit/06_repo_cleanup_plan.md`](../audit/06_repo_cleanup_plan.md) §6) + `scripts/build_tb3_digital_twin.py` | 219 KB + 68 KB script | Procedurally generated Blender | ⚠️ **REUSE + MODIFY** — see §3 |
+| **Rotax 912 iS Sport** | `assets/blender/engines/rotax_912is/rotax_912is.blend` | 78 MB | Blender, textured, individually named meshes | ✅ **REUSE AS-IS** — production baseline |
+| **Bayraktar TB3** | `assets/blender/airframes/bayraktar_tb3/variants/bayraktar_tb3_digital_twin.blend` (⚠️ a second, unresolved copy also exists at `assets/blender/_archive/bayraktar_tb3_digital_twin.blend` — still-unresolved duplication, see [`docs/audit/06_repo_cleanup_plan.md`](../audit/06_repo_cleanup_plan.md) §6) + `scripts/build_tb3_digital_twin.py` | 219 KB + 68 KB script | Procedurally generated Blender | ⚠️ **REUSE + MODIFY** — see §3 |
 
 **Measured with Blender 5.2.1 (2026-09-16):**
 

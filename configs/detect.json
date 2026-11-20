@@ -1,0 +1,184 @@
+{
+  "schema_version": 1,
+  "description": "Residual detector settings (cards M3-02..M3-04). Thresholds themselves are fitted per tail on nominal frames; these are the design constants.",
+  "cusum_k_sigma": {
+    "value": 0.5,
+    "status": "ASSUMED",
+    "ref": "CUSUM allowance in residual sigmas: tuned for the fastest detection of a sustained 1-sigma shift (Montgomery, Introduction to Statistical Quality Control, ch. 9: k = delta/2)"
+  },
+  "persistence_k": {
+    "value": 3,
+    "status": "ASSUMED",
+    "ref": "confirm when k of the last n raw alarms fired; at 1 frame/s this is the idea text's ~3 s persistence"
+  },
+  "persistence_n": {
+    "value": 5,
+    "status": "ASSUMED",
+    "ref": "persistence window (frames)"
+  },
+  "fdi": {
+    "description": "Sensor validation / fault detection and isolation (card M3-03). Physical sensor ranges and rates per sensor kind; noise sigma comes from the sensor model in configs/physics sensors (the datasheet noise of the sender).",
+    "kinds": {
+      "cht": "temperature",
+      "egt": "egt",
+      "coolant_t": "temperature",
+      "oil_t": "temperature",
+      "gearbox_t": "temperature",
+      "oil_p": "pressure_bar",
+      "fuel_p": "pressure_bar",
+      "rail_p": "rail_bar",
+      "map_kpa": "pressure_kpa",
+      "rpm": "speed",
+      "prop_rpm": "speed",
+      "fuel_flow": "flow",
+      "bus_v": "voltage"
+    },
+    "range": {
+      "ref": "sensor measuring range: a reading outside it is impossible for the sender (S06), not an engine state",
+      "temperature": [
+        -60.0,
+        250.0
+      ],
+      "egt": [
+        -60.0,
+        1200.0
+      ],
+      "pressure_bar": [
+        -0.5,
+        15.0
+      ],
+      "rail_bar": [
+        0.0,
+        2500.0
+      ],
+      "pressure_kpa": [
+        5.0,
+        400.0
+      ],
+      "speed": [
+        0.0,
+        12000.0
+      ],
+      "flow": [
+        0.0,
+        200.0
+      ],
+      "voltage": [
+        0.0,
+        40.0
+      ]
+    },
+    "max_rate_per_s": {
+      "ref": "fastest physical change per second; a faster jump is a sensor artefact (open thermocouple, ADC glitch)",
+      "temperature": 15.0,
+      "egt": 250.0,
+      "pressure_bar": 8.0,
+      "rail_bar": 2000.0,
+      "pressure_kpa": 200.0,
+      "speed": 4000.0,
+      "flow": 60.0,
+      "voltage": 10.0
+    },
+    "freeze_window": {
+      "value": 10,
+      "status": "ASSUMED",
+      "ref": "frames without variation before a channel counts as stuck (S01)"
+    },
+    "freeze_var_fraction": {
+      "value": 0.02,
+      "status": "ASSUMED",
+      "ref": "stuck when the window variance is below this share of the sender's noise variance"
+    },
+    "noise_window": {
+      "value": 10,
+      "status": "ASSUMED",
+      "ref": "frames used for the excess-noise check (S04)"
+    },
+    "noise_var_factor": {
+      "value": 49.0,
+      "status": "ASSUMED",
+      "ref": "noisy when the robust (median second-difference) noise estimate exceeds 7 x the sender's sigma; 5 x gave ~1 stray quarantine per 15 min on nominal flights"
+    },
+    "lane_sigma": {
+      "value": 8.0,
+      "status": "ASSUMED",
+      "ref": "lane A/B disagreement threshold in sender sigmas (S07)"
+    },
+    "recover_frames": {
+      "value": 30,
+      "status": "ASSUMED",
+      "ref": "clean frames before an automatically quarantined channel is trusted again"
+    }
+  },
+  "autoencoder": {
+    "description": "Reconstruction-error novelty scorer with an EVT threshold (card M3-04, idea text I-03/I-04).",
+    "hidden_units": {
+      "value": 16,
+      "status": "ASSUMED",
+      "ref": "hidden layer width of the autoencoder"
+    },
+    "bottleneck_units": {
+      "value": 4,
+      "status": "ASSUMED",
+      "ref": "bottleneck width: narrower than the 13 residual features, so only normal structure reconstructs"
+    },
+    "max_iter": {
+      "value": 400,
+      "status": "ASSUMED",
+      "ref": "training epochs (adam)"
+    },
+    "evt_tail_quantile": {
+      "value": 0.9,
+      "status": "ASSUMED",
+      "ref": "peaks-over-threshold level u for the Generalized Pareto fit of nominal scores"
+    },
+    "evt_alpha": {
+      "value": 0.001,
+      "status": "ASSUMED",
+      "ref": "per-frame false-alarm target of the novelty channel; the GPD tail extrapolates it from fewer than 1/alpha held-out frames"
+    },
+    "random_state": {
+      "value": 7,
+      "status": "ASSUMED",
+      "ref": "fixed seed: the scorer is deterministic"
+    }
+  },
+  "adaptive": {
+    "description": "Adaptive per-tail baseline (card M4-06, P Step 4.6): learns slow, healthy drift of this tail only while it is provably nominal.",
+    "ewma_alpha": {
+      "value": 0.001,
+      "status": "ASSUMED",
+      "ref": "EWMA weight per frame of the residual mean/variance (time constant ~1000 frames)"
+    },
+    "hold_go_s": {
+      "value": 1800.0,
+      "status": "ASSUMED",
+      "ref": "P Step 4.6: status must have been GO for >= 30 min"
+    },
+    "cusum_fraction": {
+      "value": 0.5,
+      "status": "ASSUMED",
+      "ref": "P Step 4.6: no CUSUM statistic above h/2"
+    },
+    "commit_every_s": {
+      "value": 600.0,
+      "status": "ASSUMED",
+      "ref": "accepted learning time between baseline versions"
+    },
+    "sigma_step_limit": {
+      "value": 1.25,
+      "status": "ASSUMED",
+      "ref": "one version may change a channel's sigma by at most this factor either way"
+    },
+    "offset_step_limit_sigma": {
+      "value": 0.5,
+      "status": "ASSUMED",
+      "ref": "one version may move a channel's offset by at most this many sigma (a fault cannot be learned in one step)"
+    },
+    "max_versions": {
+      "value": 50,
+      "status": "ASSUMED",
+      "ref": "baseline versions kept for rollback"
+    }
+  }
+}

@@ -1,0 +1,72 @@
+{
+ "backend/runtime/engine_runtime.py": {
+  "engine_id": 0,
+  "fallback": 17,
+  "random": 0
+ },
+ "backend/server/engine_api.py": {
+  "engine_id": 0,
+  "fallback": 1,
+  "random": 0
+ },
+ "backend/server/engine_service.py": {
+  "engine_id": 2,
+  "fallback": 1,
+  "random": 0
+ },
+ "frontend/src/components/CalculationsPanel.tsx": {
+  "engine_id": 0,
+  "fallback": 3,
+  "random": 0
+ },
+ "frontend/src/components/EngineControls.tsx": {
+  "engine_id": 0,
+  "fallback": 3,
+  "random": 0
+ },
+ "frontend/src/components/MaintenanceDashboardPanel.tsx": {
+  "engine_id": 0,
+  "fallback": 3,
+  "random": 0
+ },
+ "frontend/src/components/MissionReadinessCard.tsx": {
+  "engine_id": 0,
+  "fallback": 1,
+  "random": 0
+ },
+ "frontend/src/components/MissionReplayScrubber.tsx": {
+  "engine_id": 0,
+  "fallback": 2,
+  "random": 0
+ },
+ "frontend/src/components/PropulsionEngineerPanel.tsx": {
+  "engine_id": 0,
+  "fallback": 18,
+  "random": 0
+ },
+ "frontend/src/components/ReadingsPanel.tsx": {
+  "engine_id": 0,
+  "fallback": 1,
+  "random": 0
+ },
+ "frontend/src/components/landing/LandingGCSPreview.tsx": {
+  "engine_id": 0,
+  "fallback": 0,
+  "random": 5
+ },
+ "frontend/src/components/landing/LandingHero3D.tsx": {
+  "engine_id": 10,
+  "fallback": 4,
+  "random": 0
+ },
+ "frontend/src/components/landing/LandingTicker.tsx": {
+  "engine_id": 0,
+  "fallback": 0,
+  "random": 8
+ },
+ "frontend/src/hooks/useEngineRuntime.ts": {
+  "engine_id": 1,
+  "fallback": 0,
+  "random": 0
+ }
+}

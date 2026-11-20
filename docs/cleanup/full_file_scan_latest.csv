@@ -1,0 +1,715 @@
+kind,path,line,detail
+ABS_LOCAL_PATH,archive_tracked/asset_pipeline/build_tb3_digital_twin.py,37,e:\backup-llm\backup-no-llm\3d_engine
+ABS_LOCAL_PATH,archive_tracked/asset_pipeline/generate_clean_pbr_textures.py,18,e:\backup-llm\backup-no-llm\3d_engine
+ABS_LOCAL_PATH,archive_tracked/asset_pipeline/generate_tb3_4k_textures.py,19,e:\backup-llm\backup-no-llm\3d_engine
+ABS_LOCAL_PATH,archive_tracked/asset_pipeline/generate_tb3_integrated_pbr.py,21,e:\backup-llm\backup-no-llm\3d_engine
+ABS_LOCAL_PATH,archive_tracked/asset_pipeline/generate_tb3_textures.py,24,e:\backup-llm\backup-no-llm\3d_engine\3d_models\textures
+ABS_LOCAL_PATH,archive_tracked/asset_pipeline/pd170/pd170_lib.py,165,E:\backup-llm\backup-no-llm\3d_engine\ANUMAAN\Models\engines\tei_pd170_lookdev.blend
+ABS_LOCAL_PATH,archive_tracked/asset_pipeline/pd170/verify_pd170.py,21,E:\backup-llm\backup-no-llm\3d_engine\ANUMAAN
+ABS_LOCAL_PATH,archive_tracked/asset_pipeline/verify_tb3_and_render.py,20,e:\backup-llm\backup-no-llm\3d_engine\3d_models\bayraktar_tb3_digital_twin.blend
+ABS_LOCAL_PATH,archive_tracked/asset_pipeline/verify_tb3_and_render.py,21,e:\backup-llm\backup-no-llm\3d_engine\3d_models\renders
+ABS_LOCAL_PATH,archive_tracked/asset_pipeline/verify_tb3_and_render.py,22,C:\Users\Aayush\.gemini\antigravity-ide\brain\59abf336-b0e2-4242-aa30-d1e91dfcd0a7
+ABS_LOCAL_PATH,archive_tracked/blender_experiments/render_comparison_gallery.py,7,e:\backup-llm\backup-no-llm\3d_engine\3d_models\bayraktar_tb3_digital_twin.blend
+ABS_LOCAL_PATH,archive_tracked/blender_experiments/render_comparison_gallery.py,8,e:\backup-llm\backup-no-llm\3d_engine\3d_models\renders
+ABS_LOCAL_PATH,archive_tracked/blender_experiments/render_comparison_gallery.py,9,C:\Users\Aayush\.gemini\antigravity-ide\brain\59abf336-b0e2-4242-aa30-d1e91dfcd0a7
+ABS_LOCAL_PATH,archive_tracked/blender_experiments/stamp_wireframe_text.py,4,e:\backup-llm\backup-no-llm\3d_engine\3d_models\renders\render_02_wireframe_subdiv0_fdda.png
+ABS_LOCAL_PATH,archive_tracked/blender_experiments/stamp_wireframe_text.py,5,C:\Users\Aayush\.gemini\antigravity-ide\brain\59abf336-b0e2-4242-aa30-d1e91dfcd0a7\render_02_wireframe_subdiv0_fdda.png
+ABS_LOCAL_PATH,archive_tracked/blender_experiments/test_angles_wireframe.py,6,e:\backup-llm\backup-no-llm\3d_engine\3d_models\bayraktar_tb3_digital_twin.blend
+ABS_LOCAL_PATH,archive_tracked/blender_experiments/test_angles_wireframe.py,96,e:\backup-llm\backup-no-llm\3d_engine\3d_models\renders\test_{name}.png
+ABS_LOCAL_PATH,archive_tracked/blender_experiments/test_hero_angle.py,5,e:\backup-llm\backup-no-llm\3d_engine\3d_models\bayraktar_tb3_digital_twin.blend
+ABS_LOCAL_PATH,archive_tracked/blender_experiments/test_hero_angle.py,106,e:\backup-llm\backup-no-llm\3d_engine\3d_models\renders\test_hero_angle_v2.png
+ABS_LOCAL_PATH,archive_tracked/blender_experiments/test_wireframe_fdda.py,6,e:\backup-llm\backup-no-llm\3d_engine\3d_models\bayraktar_tb3_digital_twin.blend
+ABS_LOCAL_PATH,archive_tracked/blender_experiments/test_wireframe_fdda.py,143,e:\backup-llm\backup-no-llm\3d_engine\3d_models\renders\test_wireframe_match_v5.png
+ABS_LOCAL_PATH,archive_tracked/blender_experiments/test_wireframe_perfect.py,6,e:\backup-llm\backup-no-llm\3d_engine\3d_models\bayraktar_tb3_digital_twin.blend
+ABS_LOCAL_PATH,archive_tracked/blender_experiments/test_wireframe_perfect.py,134,e:\backup-llm\backup-no-llm\3d_engine\3d_models\renders\test_wireframe_perfect_v3.png
+ABS_LOCAL_PATH,archive_tracked/uav_harvesters/run_fast_uav_harvester.py,15,E:\backup-llm\backup-no-llm\3d_engine\ANUMAAN\Models_Images
+ABS_LOCAL_PATH,launch_austro_ae300_cad.bat,6,D:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_austro_ae300_cad.bat,6,D:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_austro_ae300_cad.bat,7,E:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_austro_ae300_cad.bat,7,E:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_austro_ae300_showcase.bat,25,D:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_austro_ae300_showcase.bat,25,D:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_austro_ae300_showcase.bat,26,E:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_austro_ae300_showcase.bat,26,E:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_canyon_simulation.bat,18,D:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_canyon_simulation.bat,19,D:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_canyon_simulation.bat,20,E:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_canyon_simulation.bat,21,E:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_mission_graph.bat,24,D:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_mission_graph.bat,25,D:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_mission_graph.bat,26,E:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_mission_graph.bat,27,E:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_rotax_912is_showcase.bat,25,D:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_rotax_912is_showcase.bat,25,D:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_rotax_912is_showcase.bat,26,E:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_rotax_912is_showcase.bat,26,E:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_rotax_914_cad.bat,7,D:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_rotax_914_cad.bat,7,D:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_rotax_914_cad.bat,8,E:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_rotax_914_cad.bat,8,E:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_rotax_914_cad.bat,10,D:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_rotax_914_cad.bat,10,E:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_rotax_914_showcase.bat,25,D:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_rotax_914_showcase.bat,25,D:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_rotax_914_showcase.bat,26,E:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_rotax_914_showcase.bat,26,E:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_rotax_915_cad.bat,6,D:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_rotax_915_cad.bat,6,D:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_rotax_915_cad.bat,7,E:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_rotax_915_cad.bat,7,E:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_rotax_915is_showcase.bat,25,D:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_rotax_915is_showcase.bat,25,D:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_rotax_915is_showcase.bat,26,E:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_rotax_915is_showcase.bat,26,E:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_standalone_app.bat,36,D:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_standalone_app.bat,36,D:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_standalone_app.bat,37,E:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_standalone_app.bat,37,E:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_vrde_jayem_2_2l_cad.bat,6,D:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_vrde_jayem_2_2l_cad.bat,6,D:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_vrde_jayem_2_2l_cad.bat,7,E:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_vrde_jayem_2_2l_cad.bat,7,E:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_vrde_jayem_2_2l_showcase.bat,25,D:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_vrde_jayem_2_2l_showcase.bat,25,D:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_vrde_jayem_2_2l_showcase.bat,26,E:\Blender\blender.exe
+ABS_LOCAL_PATH,launch_vrde_jayem_2_2l_showcase.bat,26,E:\Blender\blender.exe
+ABS_LOCAL_PATH,run_app.py,44,E:\Blender\blender.exe
+ABS_LOCAL_PATH,scripts/audit_aero_dt_coverage.py,9,e:\backup-llm\backup-no-llm\3d_engine\final_touch
+ABS_LOCAL_PATH,scripts/audit_drdo_intent_coverage.py,9,e:\backup-llm\backup-no-llm\3d_engine\final_touch
+ABS_LOCAL_PATH,scripts/audit_fl_coverage.py,4,e:\backup-llm\backup-no-llm\3d_engine\final_touch
+ABS_LOCAL_PATH,scripts/backend_watchdog.ps1,10,C:\Users\Prasad\AppData\Local\Programs\Python\Python312\python.exe
+ABS_LOCAL_PATH,scripts/build_aero_dt_knowledge_base.py,16,e:/backup-llm/backup-no-llm/3d_engine/final_touch/
+ABS_LOCAL_PATH,scripts/build_aero_dt_knowledge_base.py,17,e:/backup-llm/backup-no-llm/3d_engine/final
+ABS_LOCAL_PATH,scripts/build_architecture_knowledge.py,11,e:/backup-llm/backup-no-llm/3d_engine
+ABS_LOCAL_PATH,scripts/build_architecture_knowledge.py,482,e:/backup-llm/backup-no-llm/3d_engine/backend/physics/engine_model.py
+ABS_LOCAL_PATH,scripts/build_architecture_knowledge.py,482,e:/backup-llm/backup-no-llm/3d_engine/backend/physics/thermo_model.py
+ABS_LOCAL_PATH,scripts/build_architecture_knowledge.py,483,e:/backup-llm/backup-no-llm/3d_engine/backend/plant/adapter.py
+ABS_LOCAL_PATH,scripts/build_architecture_knowledge.py,483,e:/backup-llm/backup-no-llm/3d_engine/backend/plant/virtual_engine.py
+ABS_LOCAL_PATH,scripts/build_architecture_knowledge.py,484,e:/backup-llm/backup-no-llm/3d_engine/backend/detect/calibration.py
+ABS_LOCAL_PATH,scripts/build_architecture_knowledge.py,484,e:/backup-llm/backup-no-llm/3d_engine/backend/detect/detector.py
+ABS_LOCAL_PATH,scripts/build_architecture_knowledge.py,484,e:/backup-llm/backup-no-llm/3d_engine/backend/detect/scorers.py
+ABS_LOCAL_PATH,scripts/build_architecture_knowledge.py,485,e:/backup-llm/backup-no-llm/3d_engine/backend/physics/engine_config.py
+ABS_LOCAL_PATH,scripts/build_architecture_knowledge.py,485,e:/backup-llm/backup-no-llm/3d_engine/configs/engines
+ABS_LOCAL_PATH,scripts/build_architecture_knowledge.py,486,e:/backup-llm/backup-no-llm/3d_engine/backend/ml/detection_pipeline.py
+ABS_LOCAL_PATH,scripts/build_architecture_knowledge.py,486,e:/backup-llm/backup-no-llm/3d_engine/backend/ml/fault_classifier.py
+ABS_LOCAL_PATH,scripts/build_architecture_knowledge.py,487,e:/backup-llm/backup-no-llm/3d_engine/backend/agent/diagnostic_agent.py
+ABS_LOCAL_PATH,scripts/build_architecture_knowledge.py,488,e:/backup-llm/backup-no-llm/3d_engine/backend/evaluation/conformal.py
+ABS_LOCAL_PATH,scripts/build_architecture_knowledge.py,488,e:/backup-llm/backup-no-llm/3d_engine/backend/ml/rul_estimator.py
+ABS_LOCAL_PATH,scripts/build_architecture_knowledge.py,489,e:/backup-llm/backup-no-llm/3d_engine/backend/evaluation/damage_model.py
+ABS_LOCAL_PATH,scripts/build_architecture_knowledge.py,490,e:/backup-llm/backup-no-llm/3d_engine/backend/server/engine_api.py
+ABS_LOCAL_PATH,scripts/build_architecture_knowledge.py,490,e:/backup-llm/backup-no-llm/3d_engine/backend/server/main.py
+ABS_LOCAL_PATH,scripts/build_architecture_knowledge.py,491,e:/backup-llm/backup-no-llm/3d_engine/frontend/src
+ABS_LOCAL_PATH,scripts/build_architecture_knowledge.py,492,e:/backup-llm/backup-no-llm/3d_engine/apps/blender_twin
+ABS_LOCAL_PATH,scripts/build_architecture_knowledge.py,493,e:/backup-llm/backup-no-llm/3d_engine/assets/models/terrain.blend
+ABS_LOCAL_PATH,scripts/build_architecture_knowledge.py,493,e:/backup-llm/backup-no-llm/3d_engine/launch_canyon_simulation.bat
+ABS_LOCAL_PATH,scripts/build_architecture_knowledge.py,494,e:/backup-llm/backup-no-llm/3d_engine/backend/agent/copilot.py
+ABS_LOCAL_PATH,scripts/build_architecture_knowledge.py,494,e:/backup-llm/backup-no-llm/3d_engine/backend/knowledge
+ABS_LOCAL_PATH,scripts/build_architecture_knowledge.py,495,e:/backup-llm/backup-no-llm/3d_engine/backend/voice/stt_engine.py
+ABS_LOCAL_PATH,scripts/build_architecture_knowledge.py,495,e:/backup-llm/backup-no-llm/3d_engine/backend/voice/tts_engine.py
+ABS_LOCAL_PATH,scripts/build_architecture_knowledge.py,496,e:/backup-llm/backup-no-llm/3d_engine/apps/mission_graph_viewer
+ABS_LOCAL_PATH,scripts/build_architecture_knowledge.py,496,e:/backup-llm/backup-no-llm/3d_engine/backend/graph
+ABS_LOCAL_PATH,scripts/build_architecture_knowledge.py,497,e:/backup-llm/backup-no-llm/3d_engine/backend/core/cycle_block.py
+ABS_LOCAL_PATH,scripts/build_architecture_knowledge.py,497,e:/backup-llm/backup-no-llm/3d_engine/backend/plant/sensors_hr.py
+ABS_LOCAL_PATH,scripts/build_architecture_knowledge.py,498,e:/backup-llm/backup-no-llm/3d_engine/FedNeMo/v1/fednemo
+ABS_LOCAL_PATH,scripts/build_architecture_knowledge.py,499,e:/backup-llm/backup-no-llm/3d_engine/mission-planning
+ABS_LOCAL_PATH,scripts/build_architecture_knowledge.py,652,e:/backup-llm/backup-no-llm/3d_engine/backend/plant/virtual_engine.py
+ABS_LOCAL_PATH,scripts/build_architecture_knowledge.py,653,e:/backup-llm/backup-no-llm/3d_engine/backend/physics/thermo_model.py
+ABS_LOCAL_PATH,scripts/build_architecture_knowledge.py,654,e:/backup-llm/backup-no-llm/3d_engine/backend/detect/detector.py
+ABS_LOCAL_PATH,scripts/build_architecture_knowledge.py,655,e:/backup-llm/backup-no-llm/3d_engine/backend/detect/detector.py
+ABS_LOCAL_PATH,scripts/build_architecture_knowledge.py,656,e:/backup-llm/backup-no-llm/3d_engine/backend/runtime/hub.py
+ABS_LOCAL_PATH,scripts/build_architecture_knowledge.py,657,e:/backup-llm/backup-no-llm/3d_engine/backend/server/engine_api.py
+ABS_LOCAL_PATH,scripts/build_architecture_knowledge.py,658,e:/backup-llm/backup-no-llm/3d_engine/backend/agent/diagnostic_agent.py
+ABS_LOCAL_PATH,scripts/build_architecture_knowledge.py,659,e:/backup-llm/backup-no-llm/3d_engine/backend/evaluation/conformal.py
+ABS_LOCAL_PATH,scripts/build_architecture_knowledge.py,660,e:/backup-llm/backup-no-llm/3d_engine/backend/evaluation/damage_model.py
+ABS_LOCAL_PATH,scripts/build_architecture_knowledge.py,661,e:/backup-llm/backup-no-llm/3d_engine/apps/blender_twin/standalone_digital_twin_app.py
+ABS_LOCAL_PATH,scripts/build_architecture_knowledge.py,662,e:/backup-llm/backup-no-llm/3d_engine/frontend/src/components
+ABS_LOCAL_PATH,scripts/build_architecture_knowledge.py,663,e:/backup-llm/backup-no-llm/3d_engine/backend/knowledge/retrieval/store.py
+ABS_LOCAL_PATH,scripts/build_architecture_knowledge.py,664,e:/backup-llm/backup-no-llm/3d_engine/backend/voice
+ABS_LOCAL_PATH,scripts/build_architecture_knowledge.py,665,e:/backup-llm/backup-no-llm/3d_engine/backend/graph
+ABS_LOCAL_PATH,scripts/build_architecture_knowledge.py,666,e:/backup-llm/backup-no-llm/3d_engine/FedNeMo/v1/fednemo/federated
+ABS_LOCAL_PATH,scripts/build_drdo_intent_knowledge_base.py,14,e:/backup-llm/backup-no-llm/3d_engine/final_touch/
+ABS_LOCAL_PATH,scripts/build_drdo_intent_knowledge_base.py,15,e:/backup-llm/backup-no-llm/3d_engine/final
+ABS_LOCAL_PATH,scripts/build_fl_knowledge_base.py,10,e:/backup-llm/backup-no-llm/3d_engine
+ABS_LOCAL_PATH,scripts/build_ideal_project_blueprint.py,5,e:/backup-llm/backup-no-llm/3d_engine/final_touch/
+ABS_LOCAL_PATH,scripts/build_ideal_project_blueprint.py,6,e:/backup-llm/backup-no-llm/3d_engine/final
+ABS_LOCAL_PATH,scripts/build_ideal_project_blueprint.py,55,e:/backup-llm/backup-no-llm/3d_engine/final_touch/BLUEPRINT_VOL1_EXECUTIVE_SYSTEM_AND_REQUIREMENTS.md
+ABS_LOCAL_PATH,scripts/build_ideal_project_blueprint.py,56,e:/backup-llm/backup-no-llm/3d_engine/final_touch/BLUEPRINT_VOL2_PHYSICS_ENGINE_AND_DIGITAL_TWIN.md
+ABS_LOCAL_PATH,scripts/build_ideal_project_blueprint.py,57,e:/backup-llm/backup-no-llm/3d_engine/final_touch/BLUEPRINT_VOL3_HEALTH_MONITORING_AND_FAULT_MANAGEMENT.md
+ABS_LOCAL_PATH,scripts/build_ideal_project_blueprint.py,58,e:/backup-llm/backup-no-llm/3d_engine/final_touch/BLUEPRINT_VOL4_PROGNOSTICS_AND_MISSION_RELIABILITY.md
+ABS_LOCAL_PATH,scripts/build_ideal_project_blueprint.py,59,e:/backup-llm/backup-no-llm/3d_engine/final_touch/BLUEPRINT_VOL5_AVIONICS_EDGE_AND_OPERATOR_GCS.md
+ABS_LOCAL_PATH,scripts/build_ideal_project_blueprint.py,60,e:/backup-llm/backup-no-llm/3d_engine/final_touch/BLUEPRINT_VOL6_FLEET_INTELLIGENCE_AND_FEDERATED_LEARNING.md
+ABS_LOCAL_PATH,scripts/build_ideal_project_blueprint.py,61,e:/backup-llm/backup-no-llm/3d_engine/final_touch/BLUEPRINT_VOL7_VERIFICATION_CERTIFICATION_AND_SECURITY.md
+ABS_LOCAL_PATH,scripts/build_ideal_project_blueprint.py,62,e:/backup-llm/backup-no-llm/3d_engine/final_touch/BLUEPRINT_VOL8_IMPLEMENTATION_ROADMAP_AND_GAP_ANALYSIS.md
+ABS_LOCAL_PATH,scripts/dt_builder/vol10_master_portal.py,58,e:/backup-llm/backup-no-llm/3d_engine/final%20touch
+ABS_LOCAL_PATH,scripts/dt_builder/vol10_master_portal.py,58,e:/backup-llm/backup-no-llm/3d_engine/final_touch
+ABS_LOCAL_PATH,scripts/dt_builder/vol10_master_portal.py,62,e:/backup-llm/backup-no-llm/3d_engine/final_touch/PS_DECONSTRUCTION_AND_TRACEABILITY_MATRIX.md
+ABS_LOCAL_PATH,scripts/dt_builder/vol10_master_portal.py,63,e:/backup-llm/backup-no-llm/3d_engine/final_touch/AERO_ENGINE_PHYSICS_THERMODYNAMICS_AND_UAV_SYSTEMS.md
+ABS_LOCAL_PATH,scripts/dt_builder/vol10_master_portal.py,64,e:/backup-llm/backup-no-llm/3d_engine/final_touch/FAILURE_MODES_FMECA_AND_RELIABILITY_ENGINEERING.md
+ABS_LOCAL_PATH,scripts/dt_builder/vol10_master_portal.py,65,e:/backup-llm/backup-no-llm/3d_engine/final_touch/DIGITAL_TWIN_THEORY_STATE_ESTIMATION_AND_SIMULATION.md
+ABS_LOCAL_PATH,scripts/dt_builder/vol10_master_portal.py,66,e:/backup-llm/backup-no-llm/3d_engine/final_touch/AI_ML_PROGNOSTICS_RUL_AND_UNCERTAINTY.md
+ABS_LOCAL_PATH,scripts/dt_builder/vol10_master_portal.py,67,e:/backup-llm/backup-no-llm/3d_engine/final_touch/AVIONICS_HARDWARE_EDGE_AI_AND_SYSTEM_INTERFACES.md
+ABS_LOCAL_PATH,scripts/dt_builder/vol10_master_portal.py,68,e:/backup-llm/backup-no-llm/3d_engine/final_touch/GCS_HMI_MISSION_DECISION_SUPPORT_AND_FLEET_FL.md
+ABS_LOCAL_PATH,scripts/dt_builder/vol10_master_portal.py,69,e:/backup-llm/backup-no-llm/3d_engine/final_touch/DRDO_ECOSYSTEM_CERTIFICATION_AIRWORTHINESS_AND_SUPPLY_CHAIN.md
+ABS_LOCAL_PATH,scripts/dt_builder/vol10_master_portal.py,70,e:/backup-llm/backup-no-llm/3d_engine/final_touch/RED_TEAM_GAPS_BENCHMARKING_AND_EVIDENCE_BASE.md
+ABS_LOCAL_PATH,scripts/dt_builder/vol10_master_portal.py,71,e:/backup-llm/backup-no-llm/3d_engine/final_touch/MASTER_AERO_DIGITAL_TWIN_KNOWLEDGE_BASE.md
+ABS_LOCAL_PATH,scripts/generate_analysis_md.py,4,e:/backup-llm/backup-no-llm/3d_engine
+ABS_LOCAL_PATH,scripts/generate_analysis_md.py,16,e:/backup-llm/backup-no-llm/3d_engine
+ABS_LOCAL_PATH,scripts/generate_analysis_md.py,456,e:/backup-llm/backup-no-llm/3d_engine
+ABS_LOCAL_PATH,scripts/intent_builder/vol7_credibility_gap_analysis.py,68,e:\backup-llm\backup-no-llm\3d_engine
+ABS_LOCAL_PATH,scripts/intent_builder/vol8_master_intent_portal.py,37,e:/backup-llm/backup-no-llm/3d_engine/final%20touch
+ABS_LOCAL_PATH,scripts/intent_builder/vol8_master_intent_portal.py,37,e:/backup-llm/backup-no-llm/3d_engine/final_touch
+ABS_LOCAL_PATH,scripts/intent_builder/vol8_master_intent_portal.py,41,e:/backup-llm/backup-no-llm/3d_engine/final_touch/DRDO_INTENT_PS_DECONSTRUCTION_AND_SEMANTICS.md
+ABS_LOCAL_PATH,scripts/intent_builder/vol8_master_intent_portal.py,42,e:/backup-llm/backup-no-llm/3d_engine/final_touch/DRDO_INTENT_END_TO_END_SYSTEM_RECONSTRUCTION.md
+ABS_LOCAL_PATH,scripts/intent_builder/vol8_master_intent_portal.py,43,e:/backup-llm/backup-no-llm/3d_engine/final_touch/DRDO_INTENT_PHYSICS_AND_AI_HYBRID_COUPLING.md
+ABS_LOCAL_PATH,scripts/intent_builder/vol8_master_intent_portal.py,44,e:/backup-llm/backup-no-llm/3d_engine/final_touch/DRDO_INTENT_HEALTH_MONITORING_AND_PARAM_CORRELATION.md
+ABS_LOCAL_PATH,scripts/intent_builder/vol8_master_intent_portal.py,45,e:/backup-llm/backup-no-llm/3d_engine/final_touch/DRDO_INTENT_MISSION_RELIABILITY_REPLAY_AND_GCS.md
+ABS_LOCAL_PATH,scripts/intent_builder/vol8_master_intent_portal.py,46,e:/backup-llm/backup-no-llm/3d_engine/final_touch/DRDO_INTENT_DEFENCE_GRADE_CERTIFICATION_AND_EVIDENCE.md
+ABS_LOCAL_PATH,scripts/intent_builder/vol8_master_intent_portal.py,47,e:/backup-llm/backup-no-llm/3d_engine/final_touch/DRDO_INTENT_CREDIBILITY_REDTEAM_AND_PROJECT_GAP_ANALYSIS.md
+ABS_LOCAL_PATH,scripts/intent_builder/vol8_master_intent_portal.py,48,e:/backup-llm/backup-no-llm/3d_engine/final_touch/MASTER_DRDO_EXPECTED_SOLUTION_SYNTHESIS.md
+ABS_LOCAL_PATH,scripts/populate_engine_references.py,4,E:\backup-llm\backup-no-llm\3d_engine\ANUMAAN\Models_Images
+ABS_LOCAL_PATH,scripts/populate_engine_references.py,37,E:\backup-llm\backup-no-llm\3d_engine\ANUMAAN\Models\engine-rotax-912is-1.snapshot.15\Rotax
+ABS_LOCAL_PATH,scripts/populate_engine_references.py,44,E:\backup-llm\backup-no-llm\3d_engine\ANUMAAN\Models\engine-rotax-914-1.snapshot.2\Rotax
+ABS_LOCAL_PATH,scripts/render_cad_rotax.py,116,E:\backup-llm\backup-no-llm\3d_engine\ANUMAAN\Models_Images
+ABS_LOCAL_PATH,scripts/render_cad_rotax.py,123,E:\backup-llm\backup-no-llm\3d_engine\ANUMAAN\Models\Rotax_915.FBX
+ABS_LOCAL_PATH,scripts/tools/build_all_proper_blends.py,19,e:\backup-llm\backup-no-llm\3d_engine
+ABS_LOCAL_PATH,scripts/tools/build_master_twin_blend.py,19,e:\backup-llm\backup-no-llm\3d_engine
+ABS_LOCAL_PATH,scripts/tools/build_rotax_914_turbo.py,16,e:\backup-llm\backup-no-llm\3d_engine
+ABS_LOCAL_PATH,scripts/tools/composite_showcase_hud.py,25,e:\backup-llm\backup-no-llm\3d_engine
+ABS_LOCAL_PATH,scripts/tools/create_engine_blend_files.py,16,e:\backup-llm\backup-no-llm\3d_engine
+ABS_LOCAL_PATH,scripts/tools/export_all_engine_glbs.py,10,e:\backup-llm\backup-no-llm\3d_engine
+ABS_LOCAL_PATH,scripts/tools/generate_all_engine_showcases.py,31,e:\backup-llm\backup-no-llm\3d_engine
+ABS_LOCAL_PATH,scripts/tools/generate_all_engine_showcases.py,34,E:\Blender\blender.exe
+ABS_LOCAL_PATH,scripts/tools/import_rotax_914_cad_to_blend.py,16,e:\backup-llm\backup-no-llm\3d_engine
+ABS_LOCAL_PATH,scripts/tools/render_all_engines.py,20,e:\backup-llm\backup-no-llm\3d_engine
+ABS_LOCAL_PATH,scripts/tools/render_austro_all_views.py,6,e:\backup-llm\backup-no-llm\3d_engine\assets\models\engines\austro_ae330.blend
+ABS_LOCAL_PATH,scripts/tools/render_austro_all_views.py,7,e:\backup-llm\backup-no-llm\3d_engine\assets\renders\engines\austro_ae330
+ABS_LOCAL_PATH,scripts/tools/render_rotax_914_showcase.py,36,e:\backup-llm\backup-no-llm\3d_engine
+ABS_LOCAL_PATH,scripts/tools/update_master_twin.py,10,e:\backup-llm\backup-no-llm\3d_engine
+BAT_MISSING_PATH,launch_austro_ae300_cad.bat,22,assets/blender/austro_ae300.blend
+DEAD_DOC_LINK,Datasets/Aviation/README.md,51,../../ANUMAAN/docs/study/02_engine_sensors.md
+DEAD_DOC_LINK,Datasets/Bearing/README.md,5,../../ANUMAAN/docs/study/08_fault_diagnosis.md
+DEAD_DOC_LINK,Datasets/Bearing/README.md,70,../../ANUMAAN/docs/study/12_data_pipeline.md
+DEAD_DOC_LINK,Datasets/Bearing/README.md,108,../../ANUMAAN/docs/study/06_vibration_analysis.md
+DEAD_DOC_LINK,Datasets/CAN_ECU/README.md,41,../../ANUMAAN/docs/study/03_ecu_can_acquisition.md
+DEAD_DOC_LINK,Datasets/Environmental/README.md,5,../../ANUMAAN/docs/study/02_engine_sensors.md
+DEAD_DOC_LINK,Datasets/Environmental/README.md,73,../../ANUMAAN/docs/study/11_mission_simulation.md
+DEAD_DOC_LINK,Datasets/Piston_Engine/README.md,66,../../ANUMAAN/docs/study/14_datasets.md
+DEAD_DOC_LINK,Datasets/README.md,7,../ANUMAAN/docs/study/14_datasets.md
+DEAD_DOC_LINK,Datasets/RUL/README.md,45,../../ANUMAAN/docs/study/19_evaluation.md
+DEAD_DOC_LINK,Datasets/Synthetic/README.md,5,../../ANUMAAN/docs/study/17_simulation_design.md
+DEAD_DOC_LINK,Datasets/Vibration/README.md,64,../../ANUMAAN/docs/study/07_anomaly_detection.md
+DEAD_DOC_LINK,Datasets/Vibration/README.md,81,../../ANUMAAN/docs/study/06_vibration_analysis.md
+DEAD_DOC_LINK,UpdatedReport/01_problem_statement_traceability.md,43,file:///d:/Programming/PS054/backend/physics/thermo_model.py
+DEAD_DOC_LINK,UpdatedReport/01_problem_statement_traceability.md,43,file:///d:/Programming/PS054/backend/server/engine_service.py
+DEAD_DOC_LINK,UpdatedReport/01_problem_statement_traceability.md,44,file:///d:/Programming/PS054/backend/ml/detection_pipeline.py
+DEAD_DOC_LINK,UpdatedReport/01_problem_statement_traceability.md,44,file:///d:/Programming/PS054/backend/server/schemas.py
+DEAD_DOC_LINK,UpdatedReport/01_problem_statement_traceability.md,45,file:///d:/Programming/PS054/backend/server/engine_service.py
+DEAD_DOC_LINK,UpdatedReport/01_problem_statement_traceability.md,46,file:///d:/Programming/PS054/backend/physics/thermo_model.py
+DEAD_DOC_LINK,UpdatedReport/01_problem_statement_traceability.md,47,file:///d:/Programming/PS054/backend/physics/thermo_model.py
+DEAD_DOC_LINK,UpdatedReport/01_problem_statement_traceability.md,48,file:///d:/Programming/PS054/backend/physics/thermo_model.py
+DEAD_DOC_LINK,UpdatedReport/01_problem_statement_traceability.md,49,file:///d:/Programming/PS054/backend/physics/thermo_model.py
+DEAD_DOC_LINK,UpdatedReport/01_problem_statement_traceability.md,50,file:///d:/Programming/PS054/backend/physics/thermo_model.py
+DEAD_DOC_LINK,UpdatedReport/01_problem_statement_traceability.md,51,file:///d:/Programming/PS054/backend/ml/spectral_analyser.py
+DEAD_DOC_LINK,UpdatedReport/01_problem_statement_traceability.md,51,file:///d:/Programming/PS054/backend/telemetry/can_streamer.py
+DEAD_DOC_LINK,UpdatedReport/01_problem_statement_traceability.md,52,file:///d:/Programming/PS054/backend/physics/thermo_model.py
+DEAD_DOC_LINK,UpdatedReport/01_problem_statement_traceability.md,53,file:///d:/Programming/PS054/backend/physics/thermo_model.py
+DEAD_DOC_LINK,UpdatedReport/01_problem_statement_traceability.md,54,file:///d:/Programming/PS054/backend/ml/detection_pipeline.py
+DEAD_DOC_LINK,UpdatedReport/01_problem_statement_traceability.md,55,file:///d:/Programming/PS054/backend/ml/detection_pipeline.py
+DEAD_DOC_LINK,UpdatedReport/01_problem_statement_traceability.md,56,file:///d:/Programming/PS054/backend/ml/detection_pipeline.py
+DEAD_DOC_LINK,UpdatedReport/01_problem_statement_traceability.md,57,file:///d:/Programming/PS054/backend/ml/detection_pipeline.py
+DEAD_DOC_LINK,UpdatedReport/01_problem_statement_traceability.md,58,file:///d:/Programming/PS054/backend/physics/sensor_validator.py
+DEAD_DOC_LINK,UpdatedReport/01_problem_statement_traceability.md,59,file:///d:/Programming/PS054/backend/ml/detection_pipeline.py
+DEAD_DOC_LINK,UpdatedReport/01_problem_statement_traceability.md,60,file:///d:/Programming/PS054/backend/ml/trend_analyser.py
+DEAD_DOC_LINK,UpdatedReport/01_problem_statement_traceability.md,61,file:///d:/Programming/PS054/backend/ml/spectral_analyser.py
+DEAD_DOC_LINK,UpdatedReport/01_problem_statement_traceability.md,62,file:///d:/Programming/PS054/backend/ml/anomaly_detector.py
+DEAD_DOC_LINK,UpdatedReport/01_problem_statement_traceability.md,62,file:///d:/Programming/PS054/backend/ml/models/rotax_autoencoder.json
+DEAD_DOC_LINK,UpdatedReport/01_problem_statement_traceability.md,63,file:///d:/Programming/PS054/backend/ml/trend_analyser.py
+DEAD_DOC_LINK,UpdatedReport/01_problem_statement_traceability.md,64,file:///d:/Programming/PS054/backend/ml/trend_analyser.py
+DEAD_DOC_LINK,UpdatedReport/01_problem_statement_traceability.md,65,file:///d:/Programming/PS054/backend/agent/diagnostic_agent.py
+DEAD_DOC_LINK,UpdatedReport/01_problem_statement_traceability.md,66,file:///d:/Programming/PS054/backend/telemetry/replay_engine.py
+DEAD_DOC_LINK,UpdatedReport/01_problem_statement_traceability.md,66,file:///d:/Programming/PS054/frontend/src/components/MissionReplayScrubber.tsx
+DEAD_DOC_LINK,UpdatedReport/01_problem_statement_traceability.md,67,file:///d:/Programming/PS054/backend/telemetry/can_streamer.py
+DEAD_DOC_LINK,UpdatedReport/01_problem_statement_traceability.md,68,file:///d:/Programming/PS054/backend/physics/thermo_model.py
+DEAD_DOC_LINK,UpdatedReport/01_problem_statement_traceability.md,69,file:///d:/Programming/PS054/backend/telemetry/can_streamer.py
+DEAD_DOC_LINK,UpdatedReport/01_problem_statement_traceability.md,70,file:///d:/Programming/PS054/apps/blender_twin/standalone_digital_twin_app.py
+DEAD_DOC_LINK,UpdatedReport/01_problem_statement_traceability.md,70,file:///d:/Programming/PS054/frontend/src/components/ReadingsPanel.tsx
+DEAD_DOC_LINK,UpdatedReport/01_problem_statement_traceability.md,71,file:///d:/Programming/PS054/apps/blender_twin/standalone_digital_twin_app.py
+DEAD_DOC_LINK,UpdatedReport/01_problem_statement_traceability.md,71,file:///d:/Programming/PS054/frontend/src/components/DiagnosticCard.tsx
+DEAD_DOC_LINK,UpdatedReport/01_problem_statement_traceability.md,72,file:///d:/Programming/PS054/backend/physics/thermo_model.py
+DEAD_DOC_LINK,UpdatedReport/01_problem_statement_traceability.md,72,file:///d:/Programming/PS054/frontend/src/components/CalculationsPanel.tsx
+DEAD_DOC_LINK,UpdatedReport/01_problem_statement_traceability.md,73,file:///d:/Programming/PS054/backend/graph/mission_graph.py
+DEAD_DOC_LINK,UpdatedReport/01_problem_statement_traceability.md,73,file:///d:/Programming/PS054/frontend/src/components/MaintenanceDashboardPanel.tsx
+DEAD_DOC_LINK,UpdatedReport/01_problem_statement_traceability.md,74,file:///d:/Programming/PS054/apps/mission_graph_viewer/standalone_mission_graph_app.py
+DEAD_DOC_LINK,UpdatedReport/01_problem_statement_traceability.md,74,file:///d:/Programming/PS054/backend/reports/mission_bundle.py
+DEAD_DOC_LINK,UpdatedReport/02_complete_code_audit.md,24,file:///d:/Programming/PS054/backend/server/main.py
+DEAD_DOC_LINK,UpdatedReport/02_complete_code_audit.md,25,file:///d:/Programming/PS054/backend/server/main.py
+DEAD_DOC_LINK,UpdatedReport/02_complete_code_audit.md,26,file:///d:/Programming/PS054/backend/server/main.py
+DEAD_DOC_LINK,UpdatedReport/02_complete_code_audit.md,27,file:///d:/Programming/PS054/backend/server/engine_service.py
+DEAD_DOC_LINK,UpdatedReport/02_complete_code_audit.md,28,file:///d:/Programming/PS054/backend/physics/thermo_model.py
+DEAD_DOC_LINK,UpdatedReport/02_complete_code_audit.md,29,file:///d:/Programming/PS054/backend/physics/thermo_model.py
+DEAD_DOC_LINK,UpdatedReport/02_complete_code_audit.md,30,file:///d:/Programming/PS054/backend/physics/sensor_validator.py
+DEAD_DOC_LINK,UpdatedReport/02_complete_code_audit.md,31,file:///d:/Programming/PS054/backend/ml/anomaly_detector.py
+DEAD_DOC_LINK,UpdatedReport/02_complete_code_audit.md,32,file:///d:/Programming/PS054/backend/ml/fault_classifier.py
+DEAD_DOC_LINK,UpdatedReport/02_complete_code_audit.md,33,file:///d:/Programming/PS054/backend/ml/detection_pipeline.py
+DEAD_DOC_LINK,UpdatedReport/02_complete_code_audit.md,34,file:///d:/Programming/PS054/backend/ml/spectral_analyser.py
+DEAD_DOC_LINK,UpdatedReport/02_complete_code_audit.md,35,file:///d:/Programming/PS054/backend/ml/trend_analyser.py
+DEAD_DOC_LINK,UpdatedReport/02_complete_code_audit.md,36,file:///d:/Programming/PS054/backend/ml/trend_analyser.py
+DEAD_DOC_LINK,UpdatedReport/02_complete_code_audit.md,37,file:///d:/Programming/PS054/backend/ml/rul_estimator.py
+DEAD_DOC_LINK,UpdatedReport/02_complete_code_audit.md,38,file:///d:/Programming/PS054/backend/telemetry/can_streamer.py
+DEAD_DOC_LINK,UpdatedReport/02_complete_code_audit.md,39,file:///d:/Programming/PS054/backend/telemetry/rotax_dataset_generator.py
+DEAD_DOC_LINK,UpdatedReport/02_complete_code_audit.md,40,file:///d:/Programming/PS054/backend/telemetry/dataset_fusion_engine.py
+DEAD_DOC_LINK,UpdatedReport/02_complete_code_audit.md,41,file:///d:/Programming/PS054/backend/telemetry/replay_engine.py
+DEAD_DOC_LINK,UpdatedReport/02_complete_code_audit.md,42,file:///d:/Programming/PS054/backend/agent/diagnostic_agent.py
+DEAD_DOC_LINK,UpdatedReport/02_complete_code_audit.md,43,file:///d:/Programming/PS054/backend/agent/copilot.py
+DEAD_DOC_LINK,UpdatedReport/02_complete_code_audit.md,44,file:///d:/Programming/PS054/backend/voice
+DEAD_DOC_LINK,UpdatedReport/02_complete_code_audit.md,45,file:///d:/Programming/PS054/backend/graph/mission_graph.py
+DEAD_DOC_LINK,UpdatedReport/02_complete_code_audit.md,46,file:///d:/Programming/PS054/backend/reports/mission_bundle.py
+DEAD_DOC_LINK,UpdatedReport/02_complete_code_audit.md,47,file:///d:/Programming/PS054/frontend/src
+DEAD_DOC_LINK,UpdatedReport/02_complete_code_audit.md,48,file:///d:/Programming/PS054/web/site
+DEAD_DOC_LINK,UpdatedReport/02_complete_code_audit.md,49,file:///d:/Programming/PS054/apps/blender_twin/standalone_digital_twin_app.py
+DEAD_DOC_LINK,UpdatedReport/02_complete_code_audit.md,50,file:///d:/Programming/PS054/apps/blender_twin/standalone_canyon_flight_app.py
+DEAD_DOC_LINK,UpdatedReport/02_complete_code_audit.md,51,file:///d:/Programming/PS054/apps/mission_graph_viewer/standalone_mission_graph_app.py
+DEAD_DOC_LINK,UpdatedReport/02_complete_code_audit.md,52,file:///d:/Programming/PS054/apps/desktop_gcs/standalone_gui_app.py
+DEAD_DOC_LINK,UpdatedReport/02_complete_code_audit.md,72,file:///d:/Programming/PS054/backend/telemetry/can_streamer.py
+DEAD_DOC_LINK,UpdatedReport/02_complete_code_audit.md,72,file:///d:/Programming/PS054/backend/telemetry/rotax_dataset_generator.py
+DEAD_DOC_LINK,UpdatedReport/02_complete_code_audit.md,86,file:///d:/Programming/PS054/backend/ml/rul_estimator.py
+DEAD_DOC_LINK,UpdatedReport/02_complete_code_audit.md,117,file:///d:/Programming/PS054/backend/ml/detection_pipeline.py
+DEAD_DOC_LINK,UpdatedReport/02_complete_code_audit.md,121,file:///d:/Programming/PS054/tests/test_fun_req_compliance.py
+DEAD_DOC_LINK,UpdatedReport/03_backend_audit.md,68,file:///d:/Programming/PS054/backend/server/engine_service.py
+DEAD_DOC_LINK,UpdatedReport/03_backend_audit.md,97,file:///d:/Programming/PS054/backend/server/main.py
+DEAD_DOC_LINK,UpdatedReport/03_backend_audit.md,118,file:///d:/Programming/PS054/backend/knowledge/retrieval/local_store.py
+DEAD_DOC_LINK,UpdatedReport/03_backend_audit.md,124,file:///d:/Programming/PS054/backend/agent/llm_engine.py
+DEAD_DOC_LINK,UpdatedReport/03_backend_audit.md,127,file:///d:/Programming/PS054/backend/server/main.py
+DEAD_DOC_LINK,UpdatedReport/03_backend_audit.md,130,file:///d:/Programming/PS054/backend/voice/stt_engine.py
+DEAD_DOC_LINK,UpdatedReport/03_backend_audit.md,131,file:///d:/Programming/PS054/backend/voice/tts_engine.py
+DEAD_DOC_LINK,UpdatedReport/03_backend_audit.md,132,file:///d:/Programming/PS054/backend/voice/thinking_stream.py
+DEAD_DOC_LINK,UpdatedReport/04_actual_current_pipeline.md,7,file:///d:/Programming/PS054/backend/server/engine_service.py
+DEAD_DOC_LINK,UpdatedReport/04_actual_current_pipeline.md,8,file:///d:/Programming/PS054/backend/ml/detection_pipeline.py
+DEAD_DOC_LINK,UpdatedReport/06_digital_twin_audit.md,163,file:///d:/Programming/PS054/backend/server/engine_service.py
+DEAD_DOC_LINK,UpdatedReport/06_digital_twin_audit.md,174,file:///d:/Programming/PS054/apps/blender_twin/standalone_digital_twin_app.py
+DEAD_DOC_LINK,UpdatedReport/07_ai_ml_audit.md,116,file:///d:/Programming/PS054/backend/ml/trend_analyser.py
+DEAD_DOC_LINK,UpdatedReport/07_ai_ml_audit.md,126,file:///d:/Programming/PS054/backend/ml/rul_estimator.py
+DEAD_DOC_LINK,UpdatedReport/07_ai_ml_audit.md,156,file:///d:/Programming/PS054/backend/telemetry/rotax_dataset_generator.py
+DEAD_DOC_LINK,UpdatedReport/08_fault_detection_prediction_rul.md,58,file:///d:/Programming/PS054/backend/ml/detection_pipeline.py
+DEAD_DOC_LINK,UpdatedReport/08_fault_detection_prediction_rul.md,59,file:///d:/Programming/PS054/backend/ml/detection_pipeline.py
+DEAD_DOC_LINK,UpdatedReport/08_fault_detection_prediction_rul.md,59,file:///d:/Programming/PS054/backend/telemetry/can_streamer.py
+DEAD_DOC_LINK,UpdatedReport/08_fault_detection_prediction_rul.md,60,file:///d:/Programming/PS054/backend/ml/detection_pipeline.py
+DEAD_DOC_LINK,UpdatedReport/08_fault_detection_prediction_rul.md,60,file:///d:/Programming/PS054/backend/telemetry/can_streamer.py
+DEAD_DOC_LINK,UpdatedReport/08_fault_detection_prediction_rul.md,61,file:///d:/Programming/PS054/backend/ml/detection_pipeline.py
+DEAD_DOC_LINK,UpdatedReport/08_fault_detection_prediction_rul.md,61,file:///d:/Programming/PS054/backend/telemetry/can_streamer.py
+DEAD_DOC_LINK,UpdatedReport/08_fault_detection_prediction_rul.md,62,file:///d:/Programming/PS054/backend/ml/detection_pipeline.py
+DEAD_DOC_LINK,UpdatedReport/08_fault_detection_prediction_rul.md,62,file:///d:/Programming/PS054/backend/telemetry/can_streamer.py
+DEAD_DOC_LINK,UpdatedReport/08_fault_detection_prediction_rul.md,63,file:///d:/Programming/PS054/backend/ml/detection_pipeline.py
+DEAD_DOC_LINK,UpdatedReport/08_fault_detection_prediction_rul.md,63,file:///d:/Programming/PS054/backend/telemetry/can_streamer.py
+DEAD_DOC_LINK,UpdatedReport/08_fault_detection_prediction_rul.md,64,file:///d:/Programming/PS054/backend/ml/detection_pipeline.py
+DEAD_DOC_LINK,UpdatedReport/08_fault_detection_prediction_rul.md,64,file:///d:/Programming/PS054/backend/telemetry/can_streamer.py
+DEAD_DOC_LINK,UpdatedReport/08_fault_detection_prediction_rul.md,65,file:///d:/Programming/PS054/backend/ml/detection_pipeline.py
+DEAD_DOC_LINK,UpdatedReport/08_fault_detection_prediction_rul.md,65,file:///d:/Programming/PS054/backend/telemetry/can_streamer.py
+DEAD_DOC_LINK,UpdatedReport/08_fault_detection_prediction_rul.md,66,file:///d:/Programming/PS054/backend/ml/detection_pipeline.py
+DEAD_DOC_LINK,UpdatedReport/08_fault_detection_prediction_rul.md,66,file:///d:/Programming/PS054/backend/telemetry/can_streamer.py
+DEAD_DOC_LINK,UpdatedReport/08_fault_detection_prediction_rul.md,67,file:///d:/Programming/PS054/backend/physics/sensor_validator.py
+DEAD_DOC_LINK,UpdatedReport/08_fault_detection_prediction_rul.md,68,file:///d:/Programming/PS054/backend/ml/trend_analyser.py
+DEAD_DOC_LINK,UpdatedReport/09_simulation_and_blender_audit.md,51,file:///d:/Programming/PS054/assets/blender/rotax_912_is_sport.blend
+DEAD_DOC_LINK,UpdatedReport/09_simulation_and_blender_audit.md,52,file:///d:/Programming/PS054/assets/models/terrain.blend
+DEAD_DOC_LINK,UpdatedReport/09_simulation_and_blender_audit.md,53,file:///d:/Programming/PS054/assets/blender/bayraktar_tb3_digital_twin.blend
+DEAD_DOC_LINK,UpdatedReport/09_simulation_and_blender_audit.md,54,file:///d:/Programming/PS054/assets/models/Rotax_915.FBX
+DEAD_DOC_LINK,UpdatedReport/09_simulation_and_blender_audit.md,55,file:///d:/Programming/PS054/apps/blender_twin/standalone_digital_twin_app.py
+DEAD_DOC_LINK,UpdatedReport/09_simulation_and_blender_audit.md,56,file:///d:/Programming/PS054/apps/blender_twin/standalone_canyon_flight_app.py
+DEAD_DOC_LINK,UpdatedReport/09_simulation_and_blender_audit.md,57,file:///d:/Programming/PS054/apps/mission_graph_viewer/standalone_mission_graph_app.py
+DEAD_DOC_LINK,UpdatedReport/14_prioritized_action_plan.md,29,file:///d:/Programming/PS054/backend/services/detection_pipeline.py
+DEAD_DOC_LINK,UpdatedReport/14_prioritized_action_plan.md,76,file:///d:/Programming/PS054/backend/ml/rul_estimator.py
+DEAD_DOC_LINK,UpdatedReport/14_prioritized_action_plan.md,76,file:///d:/Programming/PS054/backend/services/engine_service.py
+DEAD_DOC_LINK,UpdatedReport/14_prioritized_action_plan.md,84,file:///d:/Programming/PS054/launch_standalone_app.bat
+DEAD_DOC_LINK,UpdatedReport/14_prioritized_action_plan.md,100,file:///d:/Programming/PS054/backend/physics/thermo_model.py
+DEAD_DOC_LINK,UpdatedReport/14_prioritized_action_plan.md,100,file:///d:/Programming/PS054/backend/server/schemas.py
+DEAD_DOC_LINK,UpdatedReport/14_prioritized_action_plan.md,109,file:///d:/Programming/PS054/backend/server/engine_service.py
+DEAD_DOC_LINK,UpdatedReport/14_prioritized_action_plan.md,109,file:///d:/Programming/PS054/backend/server/schemas.py
+DEAD_DOC_LINK,UpdatedReport/14_prioritized_action_plan.md,122,file:///d:/Programming/PS054/backend/ml/trend_analyser.py
+DEAD_DOC_LINK,UpdatedReport/14_prioritized_action_plan.md,122,file:///d:/Programming/PS054/backend/server/engine_service.py
+DEAD_DOC_LINK,UpdatedReport/14_prioritized_action_plan.md,131,file:///d:/Programming/PS054/backend/telemetry/can/engine_can.dbc
+DEAD_DOC_LINK,UpdatedReport/14_prioritized_action_plan.md,131,file:///d:/Programming/PS054/backend/telemetry/can_streamer.py
+DEAD_DOC_LINK,UpdatedReport/14_prioritized_action_plan.md,138,file:///d:/Programming/PS054/backend/server/engine_service.py
+DEAD_DOC_LINK,UpdatedReport/30_ROADMAP_TO_FINAL_SOLUTION.md,102,file:///d:/Programming/PS054/backend/services/detection_pipeline.py
+DEAD_DOC_LINK,UpdatedReport/30_ROADMAP_TO_FINAL_SOLUTION.md,106,file:///d:/Programming/PS054/backend/ml/rul_estimator.py
+DEAD_DOC_LINK,UpdatedReport/30_ROADMAP_TO_FINAL_SOLUTION.md,106,file:///d:/Programming/PS054/backend/services/state.py
+DEAD_DOC_LINK,UpdatedReport/30_ROADMAP_TO_FINAL_SOLUTION.md,110,file:///d:/Programming/PS054/launch_standalone_app.bat
+DEAD_DOC_LINK,assets/model_images/TEI PD170/360_reference/README.md,8,file:///e:/backup-llm/backup-no-llm/3d_engine/ANUMAAN/Models_Images/TEI%20PD170/360_reference/tei_pd170_360_master_blueprint.jpg
+DEAD_DOC_LINK,assets/model_images/TEI PD170/360_reference/README.md,9,file:///e:/backup-llm/backup-no-llm/3d_engine/ANUMAAN/Models_Images/TEI%20PD170/360_reference/tei_pd170_360_reference_viewer.html
+DEAD_DOC_LINK,assets/model_images/TEI PD170/360_reference/README.md,17,file:///e:/backup-llm/backup-no-llm/3d_engine/ANUMAAN/Models_Images/TEI%20PD170/360_reference/tei_pd170_360_front_ortho.jpg
+DEAD_DOC_LINK,assets/model_images/TEI PD170/360_reference/README.md,18,file:///e:/backup-llm/backup-no-llm/3d_engine/ANUMAAN/Models_Images/TEI%20PD170/360_reference/tei_pd170_360_front_right_hero.jpg
+DEAD_DOC_LINK,assets/model_images/TEI PD170/360_reference/README.md,19,file:///e:/backup-llm/backup-no-llm/3d_engine/ANUMAAN/Models_Images/TEI%20PD170/360_reference/tei_pd170_360_rear_ortho.jpg
+DEAD_DOC_LINK,assets/model_images/TEI PD170/360_reference/README.md,20,file:///e:/backup-llm/backup-no-llm/3d_engine/ANUMAAN/Models_Images/TEI%20PD170/360_reference/tei_pd170_360_left_turbo_hero.jpg
+DEAD_DOC_LINK,assets/model_images/TEI PD170/360_reference/README.md,21,file:///e:/backup-llm/backup-no-llm/3d_engine/ANUMAAN/Models_Images/TEI%20PD170/360_reference/tei_pd170_360_top_ortho.jpg
+DEAD_DOC_LINK,assets/model_images/TEI PD170/360_reference/README.md,22,file:///e:/backup-llm/backup-no-llm/3d_engine/ANUMAAN/Models_Images/TEI%20PD170/360_reference/tei_pd170_360_turnaround_sheet.jpg
+DEAD_DOC_LINK,assets/model_images/TEI PD170/360_reference/README.md,23,file:///e:/backup-llm/backup-no-llm/3d_engine/ANUMAAN/Models_Images/TEI%20PD170/360_reference/tei_pd170_360_rear_top_sheet.jpg
+DEAD_DOC_LINK,assets/model_images/ai-tagert/TEI PD170/README.md,8,file:///e:/backup-llm/backup-no-llm/3d_engine/ANUMAAN/Models_Images/TEI%20PD170/360_reference/tei_pd170_360_master_blueprint.jpg
+DEAD_DOC_LINK,assets/model_images/ai-tagert/TEI PD170/README.md,9,file:///e:/backup-llm/backup-no-llm/3d_engine/ANUMAAN/Models_Images/TEI%20PD170/360_reference/tei_pd170_360_reference_viewer.html
+DEAD_DOC_LINK,assets/model_images/ai-tagert/TEI PD170/README.md,17,file:///e:/backup-llm/backup-no-llm/3d_engine/ANUMAAN/Models_Images/TEI%20PD170/360_reference/tei_pd170_360_front_ortho.jpg
+DEAD_DOC_LINK,assets/model_images/ai-tagert/TEI PD170/README.md,18,file:///e:/backup-llm/backup-no-llm/3d_engine/ANUMAAN/Models_Images/TEI%20PD170/360_reference/tei_pd170_360_front_right_hero.jpg
+DEAD_DOC_LINK,assets/model_images/ai-tagert/TEI PD170/README.md,19,file:///e:/backup-llm/backup-no-llm/3d_engine/ANUMAAN/Models_Images/TEI%20PD170/360_reference/tei_pd170_360_rear_ortho.jpg
+DEAD_DOC_LINK,assets/model_images/ai-tagert/TEI PD170/README.md,20,file:///e:/backup-llm/backup-no-llm/3d_engine/ANUMAAN/Models_Images/TEI%20PD170/360_reference/tei_pd170_360_left_turbo_hero.jpg
+DEAD_DOC_LINK,assets/model_images/ai-tagert/TEI PD170/README.md,21,file:///e:/backup-llm/backup-no-llm/3d_engine/ANUMAAN/Models_Images/TEI%20PD170/360_reference/tei_pd170_360_top_ortho.jpg
+DEAD_DOC_LINK,assets/model_images/ai-tagert/TEI PD170/README.md,22,file:///e:/backup-llm/backup-no-llm/3d_engine/ANUMAAN/Models_Images/TEI%20PD170/360_reference/tei_pd170_360_turnaround_sheet.jpg
+DEAD_DOC_LINK,assets/model_images/ai-tagert/TEI PD170/README.md,23,file:///e:/backup-llm/backup-no-llm/3d_engine/ANUMAAN/Models_Images/TEI%20PD170/360_reference/tei_pd170_360_rear_top_sheet.jpg
+DEAD_DOC_LINK,assets/model_images/ai-tagert/TEI PD170/generated_360/README.md,8,file:///e:/backup-llm/backup-no-llm/3d_engine/ANUMAAN/Models_Images/TEI%20PD170/360_reference/tei_pd170_360_master_blueprint.jpg
+DEAD_DOC_LINK,assets/model_images/ai-tagert/TEI PD170/generated_360/README.md,9,file:///e:/backup-llm/backup-no-llm/3d_engine/ANUMAAN/Models_Images/TEI%20PD170/360_reference/tei_pd170_360_reference_viewer.html
+DEAD_DOC_LINK,assets/model_images/ai-tagert/TEI PD170/generated_360/README.md,17,file:///e:/backup-llm/backup-no-llm/3d_engine/ANUMAAN/Models_Images/TEI%20PD170/360_reference/tei_pd170_360_front_ortho.jpg
+DEAD_DOC_LINK,assets/model_images/ai-tagert/TEI PD170/generated_360/README.md,18,file:///e:/backup-llm/backup-no-llm/3d_engine/ANUMAAN/Models_Images/TEI%20PD170/360_reference/tei_pd170_360_front_right_hero.jpg
+DEAD_DOC_LINK,assets/model_images/ai-tagert/TEI PD170/generated_360/README.md,19,file:///e:/backup-llm/backup-no-llm/3d_engine/ANUMAAN/Models_Images/TEI%20PD170/360_reference/tei_pd170_360_rear_ortho.jpg
+DEAD_DOC_LINK,assets/model_images/ai-tagert/TEI PD170/generated_360/README.md,20,file:///e:/backup-llm/backup-no-llm/3d_engine/ANUMAAN/Models_Images/TEI%20PD170/360_reference/tei_pd170_360_left_turbo_hero.jpg
+DEAD_DOC_LINK,assets/model_images/ai-tagert/TEI PD170/generated_360/README.md,21,file:///e:/backup-llm/backup-no-llm/3d_engine/ANUMAAN/Models_Images/TEI%20PD170/360_reference/tei_pd170_360_top_ortho.jpg
+DEAD_DOC_LINK,assets/model_images/ai-tagert/TEI PD170/generated_360/README.md,22,file:///e:/backup-llm/backup-no-llm/3d_engine/ANUMAAN/Models_Images/TEI%20PD170/360_reference/tei_pd170_360_turnaround_sheet.jpg
+DEAD_DOC_LINK,assets/model_images/ai-tagert/TEI PD170/generated_360/README.md,23,file:///e:/backup-llm/backup-no-llm/3d_engine/ANUMAAN/Models_Images/TEI%20PD170/360_reference/tei_pd170_360_rear_top_sheet.jpg
+DEAD_DOC_LINK,docs/00_official_problem_statement.md,20,../analysis/strategy/01_problem_statement_and_analysis.md
+DEAD_DOC_LINK,docs/00_official_problem_statement.md,166,../analysis/strategy/02_system_architecture_and_boundaries.md
+DEAD_DOC_LINK,docs/00_official_problem_statement.md,167,../analysis/strategy/03_telemetry_physics_and_dataset_strategy.md
+DEAD_DOC_LINK,docs/00_official_problem_statement.md,168,../analysis/strategy/01_problem_statement_and_analysis.md
+DEAD_DOC_LINK,docs/00_official_problem_statement.md,169,../analysis/engineering/05_machine_learning_physics_prognostics.md
+DEAD_DOC_LINK,docs/00_official_problem_statement.md,170,../analysis/strategy/04_rag_and_mission_knowledge_graph.md
+DEAD_DOC_LINK,docs/00_official_problem_statement.md,171,../analysis/engineering/07_frontend_and_gcs_clients.md
+DEAD_DOC_LINK,docs/00_official_problem_statement.md,175,../analysis/engineering/README.md
+DEAD_DOC_LINK,docs/01_problem_statement_breakdown.md,320,../analysis/strategy/01_problem_statement_and_analysis.md
+DEAD_DOC_LINK,docs/03_implemented_features_technical_deep_dive.md,58,../backend/ml/fault_classifier.py
+DEAD_DOC_LINK,docs/COMPETITOR_ARCHITECTURE_BREAKDOWN.md,220,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/telemetry/socketcan_bridge.py
+DEAD_DOC_LINK,docs/COMPETITOR_ARCHITECTURE_BREAKDOWN.md,229,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/telemetry/mavlink_efi.py
+DEAD_DOC_LINK,docs/COMPETITOR_ARCHITECTURE_BREAKDOWN.md,232,file:///e:/backup-llm/backup-no-llm/3d_engine/scripts/test_socketcan_mavlink_bridge.py
+DEAD_DOC_LINK,docs/COMPETITOR_ARCHITECTURE_BREAKDOWN.md,275,file:///e:/backup-llm/backup-no-llm/3d_engine/configs/engines/vrde_jayem_2_2l.json
+DEAD_DOC_LINK,docs/README.md,6,../analysis/README.md
+DEAD_DOC_LINK,docs/gap_plan.md,31,../backend/ml/fault_classifier.py
+DEAD_DOC_LINK,docs/gap_plan.md,58,../backend/telemetry/rotax_dataset_generator.py
+DEAD_DOC_LINK,docs/pitch/02_anumaan_pitch_blueprint.md,69,../../compiled_tb/01_the_problem_and_mission.md
+DEAD_DOC_LINK,final_touch/CORRELATION_MATRIX_AND_MINDMAPS.md,83,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/plant/virtual_engine.py
+DEAD_DOC_LINK,final_touch/CORRELATION_MATRIX_AND_MINDMAPS.md,84,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/physics/thermo_model.py
+DEAD_DOC_LINK,final_touch/CORRELATION_MATRIX_AND_MINDMAPS.md,85,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/detect/detector.py
+DEAD_DOC_LINK,final_touch/CORRELATION_MATRIX_AND_MINDMAPS.md,86,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/detect/detector.py
+DEAD_DOC_LINK,final_touch/CORRELATION_MATRIX_AND_MINDMAPS.md,87,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/runtime/hub.py
+DEAD_DOC_LINK,final_touch/CORRELATION_MATRIX_AND_MINDMAPS.md,88,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/server/engine_api.py
+DEAD_DOC_LINK,final_touch/CORRELATION_MATRIX_AND_MINDMAPS.md,89,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/agent/diagnostic_agent.py
+DEAD_DOC_LINK,final_touch/CORRELATION_MATRIX_AND_MINDMAPS.md,90,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/evaluation/conformal.py
+DEAD_DOC_LINK,final_touch/CORRELATION_MATRIX_AND_MINDMAPS.md,91,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/evaluation/damage_model.py
+DEAD_DOC_LINK,final_touch/CORRELATION_MATRIX_AND_MINDMAPS.md,92,file:///e:/backup-llm/backup-no-llm/3d_engine/apps/blender_twin/standalone_digital_twin_app.py
+DEAD_DOC_LINK,final_touch/CORRELATION_MATRIX_AND_MINDMAPS.md,93,file:///e:/backup-llm/backup-no-llm/3d_engine/frontend/src/components
+DEAD_DOC_LINK,final_touch/CORRELATION_MATRIX_AND_MINDMAPS.md,94,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/knowledge/retrieval/store.py
+DEAD_DOC_LINK,final_touch/CORRELATION_MATRIX_AND_MINDMAPS.md,95,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/voice
+DEAD_DOC_LINK,final_touch/CORRELATION_MATRIX_AND_MINDMAPS.md,96,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/graph
+DEAD_DOC_LINK,final_touch/CORRELATION_MATRIX_AND_MINDMAPS.md,97,file:///e:/backup-llm/backup-no-llm/3d_engine/FedNeMo/v1/fednemo/federated
+DEAD_DOC_LINK,final_touch/IMPLEMENTED_FEATURES_THEORY_AND_MAPPING.md,12,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/physics/engine_model.py
+DEAD_DOC_LINK,final_touch/IMPLEMENTED_FEATURES_THEORY_AND_MAPPING.md,12,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/physics/thermo_model.py
+DEAD_DOC_LINK,final_touch/IMPLEMENTED_FEATURES_THEORY_AND_MAPPING.md,13,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/plant/adapter.py
+DEAD_DOC_LINK,final_touch/IMPLEMENTED_FEATURES_THEORY_AND_MAPPING.md,13,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/plant/virtual_engine.py
+DEAD_DOC_LINK,final_touch/IMPLEMENTED_FEATURES_THEORY_AND_MAPPING.md,14,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/detect/calibration.py
+DEAD_DOC_LINK,final_touch/IMPLEMENTED_FEATURES_THEORY_AND_MAPPING.md,14,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/detect/detector.py
+DEAD_DOC_LINK,final_touch/IMPLEMENTED_FEATURES_THEORY_AND_MAPPING.md,14,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/detect/scorers.py
+DEAD_DOC_LINK,final_touch/IMPLEMENTED_FEATURES_THEORY_AND_MAPPING.md,15,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/physics/engine_config.py
+DEAD_DOC_LINK,final_touch/IMPLEMENTED_FEATURES_THEORY_AND_MAPPING.md,15,file:///e:/backup-llm/backup-no-llm/3d_engine/configs/engines
+DEAD_DOC_LINK,final_touch/IMPLEMENTED_FEATURES_THEORY_AND_MAPPING.md,16,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/ml/detection_pipeline.py
+DEAD_DOC_LINK,final_touch/IMPLEMENTED_FEATURES_THEORY_AND_MAPPING.md,16,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/ml/fault_classifier.py
+DEAD_DOC_LINK,final_touch/IMPLEMENTED_FEATURES_THEORY_AND_MAPPING.md,17,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/agent/diagnostic_agent.py
+DEAD_DOC_LINK,final_touch/IMPLEMENTED_FEATURES_THEORY_AND_MAPPING.md,18,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/evaluation/conformal.py
+DEAD_DOC_LINK,final_touch/IMPLEMENTED_FEATURES_THEORY_AND_MAPPING.md,18,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/ml/rul_estimator.py
+DEAD_DOC_LINK,final_touch/IMPLEMENTED_FEATURES_THEORY_AND_MAPPING.md,19,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/evaluation/damage_model.py
+DEAD_DOC_LINK,final_touch/IMPLEMENTED_FEATURES_THEORY_AND_MAPPING.md,20,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/server/engine_api.py
+DEAD_DOC_LINK,final_touch/IMPLEMENTED_FEATURES_THEORY_AND_MAPPING.md,20,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/server/main.py
+DEAD_DOC_LINK,final_touch/IMPLEMENTED_FEATURES_THEORY_AND_MAPPING.md,21,file:///e:/backup-llm/backup-no-llm/3d_engine/frontend/src
+DEAD_DOC_LINK,final_touch/IMPLEMENTED_FEATURES_THEORY_AND_MAPPING.md,22,file:///e:/backup-llm/backup-no-llm/3d_engine/apps/blender_twin
+DEAD_DOC_LINK,final_touch/IMPLEMENTED_FEATURES_THEORY_AND_MAPPING.md,23,file:///e:/backup-llm/backup-no-llm/3d_engine/assets/models/terrain.blend
+DEAD_DOC_LINK,final_touch/IMPLEMENTED_FEATURES_THEORY_AND_MAPPING.md,23,file:///e:/backup-llm/backup-no-llm/3d_engine/launch_canyon_simulation.bat
+DEAD_DOC_LINK,final_touch/IMPLEMENTED_FEATURES_THEORY_AND_MAPPING.md,24,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/agent/copilot.py
+DEAD_DOC_LINK,final_touch/IMPLEMENTED_FEATURES_THEORY_AND_MAPPING.md,24,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/knowledge
+DEAD_DOC_LINK,final_touch/IMPLEMENTED_FEATURES_THEORY_AND_MAPPING.md,25,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/voice/stt_engine.py
+DEAD_DOC_LINK,final_touch/IMPLEMENTED_FEATURES_THEORY_AND_MAPPING.md,25,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/voice/tts_engine.py
+DEAD_DOC_LINK,final_touch/IMPLEMENTED_FEATURES_THEORY_AND_MAPPING.md,26,file:///e:/backup-llm/backup-no-llm/3d_engine/apps/mission_graph_viewer
+DEAD_DOC_LINK,final_touch/IMPLEMENTED_FEATURES_THEORY_AND_MAPPING.md,26,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/graph
+DEAD_DOC_LINK,final_touch/IMPLEMENTED_FEATURES_THEORY_AND_MAPPING.md,27,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/core/cycle_block.py
+DEAD_DOC_LINK,final_touch/IMPLEMENTED_FEATURES_THEORY_AND_MAPPING.md,27,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/plant/sensors_hr.py
+DEAD_DOC_LINK,final_touch/IMPLEMENTED_FEATURES_THEORY_AND_MAPPING.md,28,file:///e:/backup-llm/backup-no-llm/3d_engine/FedNeMo/v1/fednemo
+DEAD_DOC_LINK,final_touch/IMPLEMENTED_FEATURES_THEORY_AND_MAPPING.md,29,file:///e:/backup-llm/backup-no-llm/3d_engine/mission-planning
+DEAD_DOC_LINK,final_touch/MASTER_AERO_DIGITAL_TWIN_KNOWLEDGE_BASE.md,53,file:///e:/backup-llm/backup-no-llm/3d_engine/final%20touch
+DEAD_DOC_LINK,final_touch/MASTER_AERO_DIGITAL_TWIN_KNOWLEDGE_BASE.md,53,file:///e:/backup-llm/backup-no-llm/3d_engine/final_touch
+DEAD_DOC_LINK,final_touch/MASTER_AERO_DIGITAL_TWIN_KNOWLEDGE_BASE.md,57,file:///e:/backup-llm/backup-no-llm/3d_engine/final_touch/PS_DECONSTRUCTION_AND_TRACEABILITY_MATRIX.md
+DEAD_DOC_LINK,final_touch/MASTER_AERO_DIGITAL_TWIN_KNOWLEDGE_BASE.md,58,file:///e:/backup-llm/backup-no-llm/3d_engine/final_touch/AERO_ENGINE_PHYSICS_THERMODYNAMICS_AND_UAV_SYSTEMS.md
+DEAD_DOC_LINK,final_touch/MASTER_AERO_DIGITAL_TWIN_KNOWLEDGE_BASE.md,59,file:///e:/backup-llm/backup-no-llm/3d_engine/final_touch/FAILURE_MODES_FMECA_AND_RELIABILITY_ENGINEERING.md
+DEAD_DOC_LINK,final_touch/MASTER_AERO_DIGITAL_TWIN_KNOWLEDGE_BASE.md,60,file:///e:/backup-llm/backup-no-llm/3d_engine/final_touch/DIGITAL_TWIN_THEORY_STATE_ESTIMATION_AND_SIMULATION.md
+DEAD_DOC_LINK,final_touch/MASTER_AERO_DIGITAL_TWIN_KNOWLEDGE_BASE.md,61,file:///e:/backup-llm/backup-no-llm/3d_engine/final_touch/AI_ML_PROGNOSTICS_RUL_AND_UNCERTAINTY.md
+DEAD_DOC_LINK,final_touch/MASTER_AERO_DIGITAL_TWIN_KNOWLEDGE_BASE.md,62,file:///e:/backup-llm/backup-no-llm/3d_engine/final_touch/AVIONICS_HARDWARE_EDGE_AI_AND_SYSTEM_INTERFACES.md
+DEAD_DOC_LINK,final_touch/MASTER_AERO_DIGITAL_TWIN_KNOWLEDGE_BASE.md,63,file:///e:/backup-llm/backup-no-llm/3d_engine/final_touch/GCS_HMI_MISSION_DECISION_SUPPORT_AND_FLEET_FL.md
+DEAD_DOC_LINK,final_touch/MASTER_AERO_DIGITAL_TWIN_KNOWLEDGE_BASE.md,64,file:///e:/backup-llm/backup-no-llm/3d_engine/final_touch/DRDO_ECOSYSTEM_CERTIFICATION_AIRWORTHINESS_AND_SUPPLY_CHAIN.md
+DEAD_DOC_LINK,final_touch/MASTER_AERO_DIGITAL_TWIN_KNOWLEDGE_BASE.md,65,file:///e:/backup-llm/backup-no-llm/3d_engine/final_touch/RED_TEAM_GAPS_BENCHMARKING_AND_EVIDENCE_BASE.md
+DEAD_DOC_LINK,final_touch/MASTER_AERO_DIGITAL_TWIN_KNOWLEDGE_BASE.md,66,file:///e:/backup-llm/backup-no-llm/3d_engine/final_touch/MASTER_AERO_DIGITAL_TWIN_KNOWLEDGE_BASE.md
+DEAD_DOC_LINK,final_touch/MASTER_DRDO_EXPECTED_SOLUTION_SYNTHESIS.md,32,file:///e:/backup-llm/backup-no-llm/3d_engine/final%20touch
+DEAD_DOC_LINK,final_touch/MASTER_DRDO_EXPECTED_SOLUTION_SYNTHESIS.md,32,file:///e:/backup-llm/backup-no-llm/3d_engine/final_touch
+DEAD_DOC_LINK,final_touch/MASTER_DRDO_EXPECTED_SOLUTION_SYNTHESIS.md,36,file:///e:/backup-llm/backup-no-llm/3d_engine/final_touch/DRDO_INTENT_PS_DECONSTRUCTION_AND_SEMANTICS.md
+DEAD_DOC_LINK,final_touch/MASTER_DRDO_EXPECTED_SOLUTION_SYNTHESIS.md,37,file:///e:/backup-llm/backup-no-llm/3d_engine/final_touch/DRDO_INTENT_END_TO_END_SYSTEM_RECONSTRUCTION.md
+DEAD_DOC_LINK,final_touch/MASTER_DRDO_EXPECTED_SOLUTION_SYNTHESIS.md,38,file:///e:/backup-llm/backup-no-llm/3d_engine/final_touch/DRDO_INTENT_PHYSICS_AND_AI_HYBRID_COUPLING.md
+DEAD_DOC_LINK,final_touch/MASTER_DRDO_EXPECTED_SOLUTION_SYNTHESIS.md,39,file:///e:/backup-llm/backup-no-llm/3d_engine/final_touch/DRDO_INTENT_HEALTH_MONITORING_AND_PARAM_CORRELATION.md
+DEAD_DOC_LINK,final_touch/MASTER_DRDO_EXPECTED_SOLUTION_SYNTHESIS.md,40,file:///e:/backup-llm/backup-no-llm/3d_engine/final_touch/DRDO_INTENT_MISSION_RELIABILITY_REPLAY_AND_GCS.md
+DEAD_DOC_LINK,final_touch/MASTER_DRDO_EXPECTED_SOLUTION_SYNTHESIS.md,41,file:///e:/backup-llm/backup-no-llm/3d_engine/final_touch/DRDO_INTENT_DEFENCE_GRADE_CERTIFICATION_AND_EVIDENCE.md
+DEAD_DOC_LINK,final_touch/MASTER_DRDO_EXPECTED_SOLUTION_SYNTHESIS.md,42,file:///e:/backup-llm/backup-no-llm/3d_engine/final_touch/DRDO_INTENT_CREDIBILITY_REDTEAM_AND_PROJECT_GAP_ANALYSIS.md
+DEAD_DOC_LINK,final_touch/MASTER_DRDO_EXPECTED_SOLUTION_SYNTHESIS.md,43,file:///e:/backup-llm/backup-no-llm/3d_engine/final_touch/MASTER_DRDO_EXPECTED_SOLUTION_SYNTHESIS.md
+DEAD_DOC_LINK,final_touch/MASTER_IDEAL_PROJECT_BLUEPRINT.md,21,file:///e:/backup-llm/backup-no-llm/3d_engine/final_touch/BLUEPRINT_VOL1_EXECUTIVE_SYSTEM_AND_REQUIREMENTS.md
+DEAD_DOC_LINK,final_touch/MASTER_IDEAL_PROJECT_BLUEPRINT.md,22,file:///e:/backup-llm/backup-no-llm/3d_engine/final_touch/BLUEPRINT_VOL2_PHYSICS_ENGINE_AND_DIGITAL_TWIN.md
+DEAD_DOC_LINK,final_touch/MASTER_IDEAL_PROJECT_BLUEPRINT.md,23,file:///e:/backup-llm/backup-no-llm/3d_engine/final_touch/BLUEPRINT_VOL3_HEALTH_MONITORING_AND_FAULT_MANAGEMENT.md
+DEAD_DOC_LINK,final_touch/MASTER_IDEAL_PROJECT_BLUEPRINT.md,24,file:///e:/backup-llm/backup-no-llm/3d_engine/final_touch/BLUEPRINT_VOL4_PROGNOSTICS_AND_MISSION_RELIABILITY.md
+DEAD_DOC_LINK,final_touch/MASTER_IDEAL_PROJECT_BLUEPRINT.md,25,file:///e:/backup-llm/backup-no-llm/3d_engine/final_touch/BLUEPRINT_VOL5_AVIONICS_EDGE_AND_OPERATOR_GCS.md
+DEAD_DOC_LINK,final_touch/MASTER_IDEAL_PROJECT_BLUEPRINT.md,26,file:///e:/backup-llm/backup-no-llm/3d_engine/final_touch/BLUEPRINT_VOL6_FLEET_INTELLIGENCE_AND_FEDERATED_LEARNING.md
+DEAD_DOC_LINK,final_touch/MASTER_IDEAL_PROJECT_BLUEPRINT.md,27,file:///e:/backup-llm/backup-no-llm/3d_engine/final_touch/BLUEPRINT_VOL7_VERIFICATION_CERTIFICATION_AND_SECURITY.md
+DEAD_DOC_LINK,final_touch/MASTER_IDEAL_PROJECT_BLUEPRINT.md,28,file:///e:/backup-llm/backup-no-llm/3d_engine/final_touch/BLUEPRINT_VOL8_IMPLEMENTATION_ROADMAP_AND_GAP_ANALYSIS.md
+DEAD_DOC_LINK,final_touch/MASTER_INTEGRATED_ARCHITECTURAL_KNOWLEDGE.md,479,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/physics/engine_model.py
+DEAD_DOC_LINK,final_touch/MASTER_INTEGRATED_ARCHITECTURAL_KNOWLEDGE.md,479,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/physics/thermo_model.py
+DEAD_DOC_LINK,final_touch/MASTER_INTEGRATED_ARCHITECTURAL_KNOWLEDGE.md,480,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/plant/adapter.py
+DEAD_DOC_LINK,final_touch/MASTER_INTEGRATED_ARCHITECTURAL_KNOWLEDGE.md,480,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/plant/virtual_engine.py
+DEAD_DOC_LINK,final_touch/MASTER_INTEGRATED_ARCHITECTURAL_KNOWLEDGE.md,481,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/detect/calibration.py
+DEAD_DOC_LINK,final_touch/MASTER_INTEGRATED_ARCHITECTURAL_KNOWLEDGE.md,481,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/detect/detector.py
+DEAD_DOC_LINK,final_touch/MASTER_INTEGRATED_ARCHITECTURAL_KNOWLEDGE.md,481,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/detect/scorers.py
+DEAD_DOC_LINK,final_touch/MASTER_INTEGRATED_ARCHITECTURAL_KNOWLEDGE.md,482,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/physics/engine_config.py
+DEAD_DOC_LINK,final_touch/MASTER_INTEGRATED_ARCHITECTURAL_KNOWLEDGE.md,482,file:///e:/backup-llm/backup-no-llm/3d_engine/configs/engines
+DEAD_DOC_LINK,final_touch/MASTER_INTEGRATED_ARCHITECTURAL_KNOWLEDGE.md,483,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/ml/detection_pipeline.py
+DEAD_DOC_LINK,final_touch/MASTER_INTEGRATED_ARCHITECTURAL_KNOWLEDGE.md,483,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/ml/fault_classifier.py
+DEAD_DOC_LINK,final_touch/MASTER_INTEGRATED_ARCHITECTURAL_KNOWLEDGE.md,484,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/agent/diagnostic_agent.py
+DEAD_DOC_LINK,final_touch/MASTER_INTEGRATED_ARCHITECTURAL_KNOWLEDGE.md,485,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/evaluation/conformal.py
+DEAD_DOC_LINK,final_touch/MASTER_INTEGRATED_ARCHITECTURAL_KNOWLEDGE.md,485,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/ml/rul_estimator.py
+DEAD_DOC_LINK,final_touch/MASTER_INTEGRATED_ARCHITECTURAL_KNOWLEDGE.md,486,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/evaluation/damage_model.py
+DEAD_DOC_LINK,final_touch/MASTER_INTEGRATED_ARCHITECTURAL_KNOWLEDGE.md,487,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/server/engine_api.py
+DEAD_DOC_LINK,final_touch/MASTER_INTEGRATED_ARCHITECTURAL_KNOWLEDGE.md,487,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/server/main.py
+DEAD_DOC_LINK,final_touch/MASTER_INTEGRATED_ARCHITECTURAL_KNOWLEDGE.md,488,file:///e:/backup-llm/backup-no-llm/3d_engine/frontend/src
+DEAD_DOC_LINK,final_touch/MASTER_INTEGRATED_ARCHITECTURAL_KNOWLEDGE.md,489,file:///e:/backup-llm/backup-no-llm/3d_engine/apps/blender_twin
+DEAD_DOC_LINK,final_touch/MASTER_INTEGRATED_ARCHITECTURAL_KNOWLEDGE.md,490,file:///e:/backup-llm/backup-no-llm/3d_engine/assets/models/terrain.blend
+DEAD_DOC_LINK,final_touch/MASTER_INTEGRATED_ARCHITECTURAL_KNOWLEDGE.md,490,file:///e:/backup-llm/backup-no-llm/3d_engine/launch_canyon_simulation.bat
+DEAD_DOC_LINK,final_touch/MASTER_INTEGRATED_ARCHITECTURAL_KNOWLEDGE.md,491,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/agent/copilot.py
+DEAD_DOC_LINK,final_touch/MASTER_INTEGRATED_ARCHITECTURAL_KNOWLEDGE.md,491,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/knowledge
+DEAD_DOC_LINK,final_touch/MASTER_INTEGRATED_ARCHITECTURAL_KNOWLEDGE.md,492,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/voice/stt_engine.py
+DEAD_DOC_LINK,final_touch/MASTER_INTEGRATED_ARCHITECTURAL_KNOWLEDGE.md,492,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/voice/tts_engine.py
+DEAD_DOC_LINK,final_touch/MASTER_INTEGRATED_ARCHITECTURAL_KNOWLEDGE.md,493,file:///e:/backup-llm/backup-no-llm/3d_engine/apps/mission_graph_viewer
+DEAD_DOC_LINK,final_touch/MASTER_INTEGRATED_ARCHITECTURAL_KNOWLEDGE.md,493,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/graph
+DEAD_DOC_LINK,final_touch/MASTER_INTEGRATED_ARCHITECTURAL_KNOWLEDGE.md,494,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/core/cycle_block.py
+DEAD_DOC_LINK,final_touch/MASTER_INTEGRATED_ARCHITECTURAL_KNOWLEDGE.md,494,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/plant/sensors_hr.py
+DEAD_DOC_LINK,final_touch/MASTER_INTEGRATED_ARCHITECTURAL_KNOWLEDGE.md,495,file:///e:/backup-llm/backup-no-llm/3d_engine/FedNeMo/v1/fednemo
+DEAD_DOC_LINK,final_touch/MASTER_INTEGRATED_ARCHITECTURAL_KNOWLEDGE.md,496,file:///e:/backup-llm/backup-no-llm/3d_engine/mission-planning
+DEAD_DOC_LINK,final_touch/MASTER_INTEGRATED_ARCHITECTURAL_KNOWLEDGE.md,648,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/plant/virtual_engine.py
+DEAD_DOC_LINK,final_touch/MASTER_INTEGRATED_ARCHITECTURAL_KNOWLEDGE.md,649,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/physics/thermo_model.py
+DEAD_DOC_LINK,final_touch/MASTER_INTEGRATED_ARCHITECTURAL_KNOWLEDGE.md,650,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/detect/detector.py
+DEAD_DOC_LINK,final_touch/MASTER_INTEGRATED_ARCHITECTURAL_KNOWLEDGE.md,651,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/detect/detector.py
+DEAD_DOC_LINK,final_touch/MASTER_INTEGRATED_ARCHITECTURAL_KNOWLEDGE.md,652,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/runtime/hub.py
+DEAD_DOC_LINK,final_touch/MASTER_INTEGRATED_ARCHITECTURAL_KNOWLEDGE.md,653,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/server/engine_api.py
+DEAD_DOC_LINK,final_touch/MASTER_INTEGRATED_ARCHITECTURAL_KNOWLEDGE.md,654,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/agent/diagnostic_agent.py
+DEAD_DOC_LINK,final_touch/MASTER_INTEGRATED_ARCHITECTURAL_KNOWLEDGE.md,655,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/evaluation/conformal.py
+DEAD_DOC_LINK,final_touch/MASTER_INTEGRATED_ARCHITECTURAL_KNOWLEDGE.md,656,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/evaluation/damage_model.py
+DEAD_DOC_LINK,final_touch/MASTER_INTEGRATED_ARCHITECTURAL_KNOWLEDGE.md,657,file:///e:/backup-llm/backup-no-llm/3d_engine/apps/blender_twin/standalone_digital_twin_app.py
+DEAD_DOC_LINK,final_touch/MASTER_INTEGRATED_ARCHITECTURAL_KNOWLEDGE.md,658,file:///e:/backup-llm/backup-no-llm/3d_engine/frontend/src/components
+DEAD_DOC_LINK,final_touch/MASTER_INTEGRATED_ARCHITECTURAL_KNOWLEDGE.md,659,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/knowledge/retrieval/store.py
+DEAD_DOC_LINK,final_touch/MASTER_INTEGRATED_ARCHITECTURAL_KNOWLEDGE.md,660,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/voice
+DEAD_DOC_LINK,final_touch/MASTER_INTEGRATED_ARCHITECTURAL_KNOWLEDGE.md,661,file:///e:/backup-llm/backup-no-llm/3d_engine/backend/graph
+DEAD_DOC_LINK,final_touch/MASTER_INTEGRATED_ARCHITECTURAL_KNOWLEDGE.md,662,file:///e:/backup-llm/backup-no-llm/3d_engine/FedNeMo/v1/fednemo/federated
+DUPLICATE_TEXT_FILE,apps/threejs_twin/js/vendor/GLTFLoader.js,0,web/site/js/vendor/GLTFLoader.js
+DUPLICATE_TEXT_FILE,apps/threejs_twin/js/vendor/OrbitControls.js,0,web/site/js/vendor/OrbitControls.js
+DUPLICATE_TEXT_FILE,apps/threejs_twin/js/vendor/draco/draco_decoder.js,0,frontend/public/draco/draco_decoder.js == web/site/js/vendor/draco/draco_decoder.js
+DUPLICATE_TEXT_FILE,apps/threejs_twin/js/vendor/draco/draco_wasm_wrapper.js,0,frontend/public/draco/draco_wasm_wrapper.js == web/site/js/vendor/draco/draco_wasm_wrapper.js
+DUPLICATE_TEXT_FILE,apps/threejs_twin/js/vendor/three.min.js,0,web/site/js/vendor/three.min.js
+DUPLICATE_TEXT_FILE,assets/model_images/TEI PD170/360_reference/README.md,0,assets/model_images/ai-tagert/TEI PD170/README.md == assets/model_images/ai-tagert/TEI PD170/generated_360/README.md
+DUPLICATE_TEXT_FILE,assets/model_images/TEI PD170/360_reference/tei_pd170_360_reference_viewer.html,0,assets/model_images/ai-tagert/TEI PD170/generated_360/tei_pd170_360_reference_viewer.html == assets/model_images/ai-tagert/TEI PD170/tei_pd170_360_reference_viewer.html
+DUPLICATE_TEXT_FILE,docs_site/tsconfig.node.json,0,frontend/tsconfig.node.json
+HARDCODED_HOST,apps/blender_twin/standalone_digital_twin_app.py,44,127.0.0.1:8000
+HARDCODED_HOST,apps/blender_twin/standalone_digital_twin_app.py,832,ngrok
+HARDCODED_HOST,apps/blender_twin/standalone_digital_twin_app.py,855,ngrok
+HARDCODED_HOST,apps/blender_twin/standalone_digital_twin_app.py,984,ngrok
+HARDCODED_HOST,apps/blender_twin/standalone_digital_twin_app.py,989,ngrok
+HARDCODED_HOST,apps/blender_twin/standalone_digital_twin_app.py,1075,ngrok
+HARDCODED_HOST,apps/blender_twin/standalone_fault_diagnostic_app.py,32,127.0.0.1:8000
+HARDCODED_HOST,apps/blender_twin/standalone_fault_diagnostic_app.py,324,ngrok
+HARDCODED_HOST,apps/blender_twin/standalone_fault_diagnostic_app.py,374,ngrok
+HARDCODED_HOST,backend/agent/llm_engine.py,62,localhost:11434
+HARDCODED_HOST,backend/server/main.py,163,vercel.app
+HARDCODED_HOST,backend/telemetry/mavlink_efi.py,136,127.0.0.1:14550
+HARDCODED_HOST,backend/telemetry/mavlink_efi.py,142,127.0.0.1:14550
+HARDCODED_HOST,frontend/src/components/ConnectionModal.tsx,39,ngrok
+HARDCODED_HOST,frontend/src/components/ConnectionModal.tsx,103,127.0.0.1:8000
+HARDCODED_HOST,frontend/src/components/ConnectionModal.tsx,156,127.0.0.1:8000
+HARDCODED_HOST,frontend/src/components/ConnectionModal.tsx,163,127.0.0.1:8000
+HARDCODED_HOST,frontend/src/components/ConnectionModal.tsx,185,127.0.0.1:8000
+HARDCODED_HOST,frontend/src/components/ConnectionModal.tsx,187,ngrok
+HARDCODED_HOST,frontend/src/components/DiagnosticCard.tsx,30,127.0.0.1:8000
+HARDCODED_HOST,frontend/src/components/DiagnosticCard.tsx,63,ngrok
+HARDCODED_HOST,frontend/src/components/VoiceCopilot.tsx,204,127.0.0.1:8000
+HARDCODED_HOST,frontend/src/components/VoiceCopilot.tsx,227,ngrok
+HARDCODED_HOST,frontend/src/components/VoiceCopilot.tsx,262,ngrok
+HARDCODED_HOST,frontend/src/components/VoiceCopilot.tsx,387,ngrok
+HARDCODED_HOST,frontend/src/components/VoiceCopilot.tsx,419,ngrok
+HARDCODED_HOST,frontend/src/components/VoiceCopilot.tsx,618,ngrok
+HARDCODED_HOST,frontend/src/components/landing/LandingFooter.tsx,41,vercel.app
+HARDCODED_HOST,frontend/src/components/landing/LandingNav.tsx,4,vercel.app
+HARDCODED_HOST,frontend/src/hooks/useTelemetrySocket.ts,102,onrender.com
+HARDCODED_HOST,frontend/src/hooks/useTelemetrySocket.ts,106,onrender.com
+HARDCODED_HOST,frontend/src/hooks/useTelemetrySocket.ts,108,onrender.com
+HARDCODED_HOST,frontend/src/hooks/useTelemetrySocket.ts,140,ngrok
+HARDCODED_HOST,frontend/src/hooks/useTelemetrySocket.ts,241,ngrok
+HUGE_FILE,apps/threejs_twin/assets/models/draco/rotax_912is.glb,0,81.1 MB
+HUGE_FILE,apps/threejs_twin/assets/models/draco/rotax_915is.glb,0,83.2 MB
+HUGE_FILE,assets/blender/anumaan_master_twin.blend,0,80.1 MB
+HUGE_FILE,assets/blender/rotax_912_is_sport.blend,0,78.5 MB
+HUGE_FILE,assets/blender/rotax_912is_showcase.blend,0,78.5 MB
+HUGE_FILE,assets/blender/rotax_915.blend,0,57.0 MB
+HUGE_FILE,assets/blender/rotax_915is.blend,0,57.0 MB
+HUGE_FILE,assets/blender/rotax_915is_showcase.blend,0,57.0 MB
+HUGE_FILE,assets/models/engine-rotax-912is-1.snapshot.15/Rotax 912iS.rar,0,141.8 MB
+HUGE_FILE,assets/models/engine-rotax-914-1.snapshot.2/914.rar,0,60.4 MB
+HUGE_FILE,assets/models/engine-rotax-914-1.snapshot.2/Rotax 914.stp,0,78.0 MB
+HUGE_FILE,vendor/tools/cloudflared.exe,0,54.9 MB
+RANDOM_IN_PRODUCT_PY,apps/blender_twin/standalone_digital_twin_app.py,779,"self.history_egt = collections.deque([710.0 + random.uniform(-5, 5) for _ in range(40)], maxlen=60)"
+RANDOM_IN_PRODUCT_PY,apps/blender_twin/standalone_digital_twin_app.py,780,"self.history_oil_temp = collections.deque([56.0 + random.uniform(-1, 2) for _ in range(40)], maxlen=60)"
+RANDOM_IN_PRODUCT_PY,apps/blender_twin/standalone_digital_twin_app.py,781,"self.history_oil_press = collections.deque([4.85 + random.uniform(-0.05, 0.05) for _ in range(40)], maxlen=60)"
+RANDOM_IN_PRODUCT_PY,apps/blender_twin/standalone_digital_twin_app.py,782,"self.history_rpm = collections.deque([4670.0 + random.uniform(-15, 15) for _ in range(40)], maxlen=60)"
+RANDOM_IN_PRODUCT_PY,apps/blender_twin/standalone_fault_diagnostic_app.py,273,"self.history_egt = collections.deque([710.0 + random.uniform(-5, 5) for _ in range(40)], maxlen=60)"
+RANDOM_IN_PRODUCT_PY,apps/blender_twin/standalone_fault_diagnostic_app.py,274,"self.history_oil_temp = collections.deque([56.0 + random.uniform(-1, 2) for _ in range(40)], maxlen=60)"
+RANDOM_IN_PRODUCT_PY,apps/blender_twin/standalone_fault_diagnostic_app.py,275,"self.history_oil_press = collections.deque([4.85 + random.uniform(-0.05, 0.05) for _ in range(40)], maxlen=60)"
+RANDOM_IN_PRODUCT_PY,apps/blender_twin/standalone_fault_diagnostic_app.py,276,"self.history_rpm = collections.deque([4670.0 + random.uniform(-15, 15) for _ in range(40)], maxlen=60)"
+RANDOM_IN_PRODUCT_PY,backend/datasets/aces.py,55,"rpm = 5200.0 + np.random.normal(0, 15.0)"
+RANDOM_IN_PRODUCT_PY,backend/datasets/alfa.py,63,"rpm=rpm + np.random.normal(0, 10.0),"
+RANDOM_IN_PRODUCT_PY,backend/datasets/cmapss.py,74,"rpm=8400.0 + deg * 120.0 + np.random.normal(0, 5.0),"
+RANDOM_IN_PRODUCT_PY,backend/datasets/cwru.py,67,"rpm=1797.0 + np.random.normal(0, 1.0),"
+RANDOM_IN_PRODUCT_PY,backend/datasets/default_3500.py,92,"rpm=float(cfg.rated_rpm * 0.85 + np.random.normal(0, 5.0)),"
+RANDOM_IN_PRODUCT_PY,backend/ml/anomaly_detector.py,60,"[random.gauss(0, scale) for _ in range(in_dim)]"
+RANDOM_IN_PRODUCT_PY,backend/ml/trend_analyser.py,500,"b_perturbed = model.b * (1.0 + random.gauss(0, sigma_b_rel))"
+RANDOM_IN_PRODUCT_PY,backend/ml/trend_analyser.py,501,"a_perturbed = model.a * (1.0 + random.gauss(0, sigma_b_rel * 0.3))"
+RANDOM_IN_PRODUCT_PY,backend/telemetry/can_streamer.py,314,") + random.gauss(0.0, 0.05)"
+RANDOM_IN_PRODUCT_PY,backend/telemetry/can_streamer.py,318,"actual_rpm = max(1000.0, self.plant_rpm + random.gauss(0.0, 10.0))"
+RANDOM_IN_PRODUCT_PY,backend/telemetry/can_streamer.py,319,"actual_tps = max(0.0, min(100.0, self.plant_tps + random.gauss(0.0, 0.15)))"
+RANDOM_IN_PRODUCT_PY,backend/telemetry/can_streamer.py,325,"CHT_1=round(self.plant_cht_1 + random.gauss(0.0, 0.18), 2),"
+RANDOM_IN_PRODUCT_PY,backend/telemetry/can_streamer.py,326,"CHT_2=round(self.plant_cht_2 + random.gauss(0.0, 0.18), 2),"
+RANDOM_IN_PRODUCT_PY,backend/telemetry/can_streamer.py,327,"CHT_3=round(self.plant_cht_3 + random.gauss(0.0, 0.18), 2),"
+RANDOM_IN_PRODUCT_PY,backend/telemetry/can_streamer.py,328,"CHT_4=round(self.plant_cht_4 + random.gauss(0.0, 0.18), 2),"
+RANDOM_IN_PRODUCT_PY,backend/telemetry/can_streamer.py,329,"EGT_1=round(self.plant_egt_1 + random.gauss(0.0, 1.2), 2),"
+RANDOM_IN_PRODUCT_PY,backend/telemetry/can_streamer.py,330,"EGT_2=round(self.plant_egt_2 + random.gauss(0.0, 1.2), 2),"
+RANDOM_IN_PRODUCT_PY,backend/telemetry/can_streamer.py,331,"EGT_3=round(self.plant_egt_3 + random.gauss(0.0, 1.2), 2),"
+RANDOM_IN_PRODUCT_PY,backend/telemetry/can_streamer.py,332,"EGT_4=round(self.plant_egt_4 + random.gauss(0.0, 1.2), 2),"
+RANDOM_IN_PRODUCT_PY,backend/telemetry/can_streamer.py,333,"OIL_PRESS=round(self.plant_oil_press + random.gauss(0.0, 0.03), 2),"
+RANDOM_IN_PRODUCT_PY,backend/telemetry/can_streamer.py,334,"OIL_TEMP=round(self.plant_oil_temp + random.gauss(0.0, 0.15), 2),"
+RANDOM_IN_PRODUCT_PY,backend/telemetry/can_streamer.py,335,"FUEL_FLOW=round(self.plant_fuel_flow + random.gauss(0.0, 0.08), 2),"
+RANDOM_IN_PRODUCT_PY,backend/telemetry/can_streamer.py,336,"FUEL_RAIL_P=round(3.0 + random.gauss(0.0, 0.02), 2),"
+RANDOM_IN_PRODUCT_PY,backend/telemetry/can_streamer.py,337,"MAP=round(self.plant_map + random.gauss(0.0, 0.12), 2),"
+RANDOM_IN_PRODUCT_PY,backend/telemetry/can_streamer.py,338,"VIB_GEARBOX_RMS=round(self.plant_vib_rms + random.gauss(0.0, 0.015), 3),"
+RANDOM_IN_PRODUCT_PY,backend/telemetry/can_streamer.py,339,"BUS_VOLTAGE=round(self.plant_bus_voltage + random.gauss(0.0, 0.02), 2),"
+RANDOM_IN_PRODUCT_PY,backend/telemetry/can_streamer.py,340,"BATTERY_CURRENT=round(self.plant_battery_current + random.gauss(0.0, 0.1), 2),"
+RANDOM_IN_PRODUCT_PY,backend/telemetry/can_streamer.py,354,"actual_state.INJ_TIMING_BTDC = round(14.0 + 5.5 * (self.plant_rpm / 5800.0) + 1.5 * tps_norm + random.gauss(0.0, 0.1), 1)"
+RANDOM_IN_PRODUCT_PY,backend/telemetry/can_streamer.py,355,"actual_state.INJ_PULSE_WIDTH_MS = round(2.0 + 4.8 * (actual_state.FUEL_FLOW / 25.0) * (5000.0 / max(1000.0, self.plant_rpm)) + random.gauss(0.0, 0.03), 2)"
+RANDOM_IN_PRODUCT_PY,backend/telemetry/can_streamer.py,356,"actual_state.IGN_TIMING_BTDC = round(18.0 + 6.0 * (1.0 - tps_norm) + 4.0 * (self.plant_rpm / 5800.0) + random.gauss(0.0, 0.1), 1)"
+RANDOM_IN_PRODUCT_PY,backend/telemetry/can_streamer.py,357,"actual_state.LAMBDA_AFR = round(1.0 - 0.12 * (tps_norm ** 2.0) + random.gauss(0.0, 0.01), 2)"
+RANDOM_IN_PRODUCT_PY,backend/telemetry/can_streamer.py,390,"actual_state.ENGINE_RPM = round(max(1200.0, actual_state.ENGINE_RPM - (85.0 * ramp) + random.gauss(0.0, 15.0 * ramp)), 1)"
+RANDOM_IN_PRODUCT_PY,backend/telemetry/can_streamer.py,401,"misfire_flutter = random.uniform(-160.0, 160.0) * ramp"
+RANDOM_IN_PRODUCT_PY,backend/telemetry/can_streamer.py,430,"actual_state.ENGINE_RPM = round(max(1200.0, actual_state.ENGINE_RPM - (70.0 * ramp) + random.gauss(0.0, 10.0 * ramp)), 1)"
+RANDOM_IN_PRODUCT_UI,apps/threejs_twin/js/vendor/draco/draco_wasm_wrapper.js,6,"$jscomp.polyfillIsolated=function(k,n,l,p){var h=k.split(""."");k=1===h.length;p=h[0];p=!k&&p in $jscomp.polyfills?$jscomp.polyfills:$jscomp.global;for(var A=0;A<h.length-1;A++){var f=h[A];if(!(f in p))"
+RANDOM_IN_PRODUCT_UI,apps/threejs_twin/js/vendor/three.min.js,6,"!function(t,e){""object""==typeof exports&&""undefined""!=typeof module?e(exports):""function""==typeof define&&define.amd?define([""exports""],e):e((t=""undefined""!=typeof globalThis?globalThis:t||self).THREE"
+RANDOM_IN_PRODUCT_UI,docs_site/src/components/MermaidDiagram.tsx,54,"const chartId = useRef(`mermaid-${Math.random().toString(36).substring(2, 9)}`);"
+RANDOM_IN_PRODUCT_UI,docs_site/src/components/MermaidDiagram.tsx,72,"const uniqueRenderId = `mmd-${Math.random().toString(36).substring(2, 9)}-${Date.now()}`;"
+RANDOM_IN_PRODUCT_UI,docs_site/src/pages/DocArticlePage.tsx,346,"const codeId = `code-${Math.random().toString(36).substring(2, 7)}`;"
+RANDOM_IN_PRODUCT_UI,frontend/src/components/landing/LandingGCSPreview.tsx,39,const noise = (Math.sin(t * 1.5) * 0.04 + Math.sin(t * 4.2) * 0.02 + (Math.random() - 0.5) * 0.025);
+RANDOM_IN_PRODUCT_UI,frontend/src/components/landing/LandingGCSPreview.tsx,111,"rpm: Math.round(2350 + (Math.random() - 0.5) * 14),"
+RANDOM_IN_PRODUCT_UI,frontend/src/components/landing/LandingGCSPreview.tsx,112,"map: Number((1.95 + (Math.random() - 0.5) * 0.02).toFixed(2)),"
+RANDOM_IN_PRODUCT_UI,frontend/src/components/landing/LandingGCSPreview.tsx,113,"oilTemp: Number((92.4 + (Math.random() - 0.5) * 0.2).toFixed(1)),"
+RANDOM_IN_PRODUCT_UI,frontend/src/components/landing/LandingGCSPreview.tsx,114,"residual: Number((0.03 + (Math.random() - 0.5) * 0.006).toFixed(3)),"
+RANDOM_IN_PRODUCT_UI,frontend/src/components/landing/LandingTicker.tsx,19,"rpm: Math.round(2350 + (Math.random() - 0.5) * 16),"
+RANDOM_IN_PRODUCT_UI,frontend/src/components/landing/LandingTicker.tsx,20,"map: Number((1.95 + (Math.random() - 0.5) * 0.02).toFixed(2)),"
+RANDOM_IN_PRODUCT_UI,frontend/src/components/landing/LandingTicker.tsx,21,"cht3: Number((139.1 + (Math.random() - 0.5) * 0.4).toFixed(1)),"
+RANDOM_IN_PRODUCT_UI,frontend/src/components/landing/LandingTicker.tsx,22,"egt3: Number((684.0 + (Math.random() - 0.5) * 1.2).toFixed(1)),"
+RANDOM_IN_PRODUCT_UI,frontend/src/components/landing/LandingTicker.tsx,23,"oilTemp: Number((92.4 + (Math.random() - 0.5) * 0.2).toFixed(1)),"
+RANDOM_IN_PRODUCT_UI,frontend/src/components/landing/LandingTicker.tsx,24,"oilPress: Number((4.25 + (Math.random() - 0.5) * 0.04).toFixed(2)),"
+RANDOM_IN_PRODUCT_UI,frontend/src/components/landing/LandingTicker.tsx,25,"rail: Math.round(1610 + (Math.random() - 0.5) * 8),"
+RANDOM_IN_PRODUCT_UI,frontend/src/components/landing/LandingTicker.tsx,27,"residual: Number((0.03 + (Math.random() - 0.5) * 0.008).toFixed(3)),"
+SWALLOWED_EXCEPTION,apps/blender_twin/standalone_canyon_flight_app.py,1351,except ...: pass
+SWALLOWED_EXCEPTION,apps/blender_twin/standalone_canyon_flight_app.py,1378,except ...: pass
+SWALLOWED_EXCEPTION,apps/blender_twin/standalone_canyon_flight_app.py,1916,except ...: pass
+SWALLOWED_EXCEPTION,apps/blender_twin/standalone_canyon_flight_app.py,2303,except ...: pass
+SWALLOWED_EXCEPTION,apps/blender_twin/standalone_canyon_flight_app.py,2338,except ...: pass
+SWALLOWED_EXCEPTION,apps/blender_twin/standalone_canyon_flight_app.py,2349,except ...: pass
+SWALLOWED_EXCEPTION,apps/blender_twin/standalone_canyon_flight_app.py,2357,except ...: pass
+SWALLOWED_EXCEPTION,apps/blender_twin/standalone_digital_twin_app.py,865,except ...: pass
+SWALLOWED_EXCEPTION,apps/blender_twin/standalone_digital_twin_app.py,1078,except ...: pass
+SWALLOWED_EXCEPTION,apps/blender_twin/standalone_digital_twin_app.py,1749,except ...: pass
+SWALLOWED_EXCEPTION,apps/blender_twin/standalone_digital_twin_app.py,1756,except ...: pass
+SWALLOWED_EXCEPTION,apps/blender_twin/standalone_digital_twin_app.py,2139,except ...: pass
+SWALLOWED_EXCEPTION,apps/blender_twin/standalone_fault_diagnostic_app.py,416,except ...: pass
+SWALLOWED_EXCEPTION,apps/blender_twin/standalone_fault_diagnostic_app.py,421,except ...: pass
+SWALLOWED_EXCEPTION,apps/blender_twin/standalone_fault_diagnostic_app.py,1453,except ...: pass
+SWALLOWED_EXCEPTION,apps/mission_graph_viewer/standalone_mission_graph_app.py,1079,except ...: pass
+SWALLOWED_EXCEPTION,apps/mission_graph_viewer/standalone_mission_graph_app.py,1125,except ...: pass
+SWALLOWED_EXCEPTION,apps/mission_graph_viewer/standalone_mission_graph_app.py,1133,except ...: pass
+SWALLOWED_EXCEPTION,apps/mission_graph_viewer/standalone_mission_graph_app.py,1141,except ...: pass
+SWALLOWED_EXCEPTION,archive_tracked/asset_pipeline/build_bayraktar_tb3.py,1472,except ...: pass
+SWALLOWED_EXCEPTION,archive_tracked/asset_pipeline/build_bayraktar_tb3.py,1477,except ...: pass
+SWALLOWED_EXCEPTION,archive_tracked/asset_pipeline/build_bayraktar_tb3.py,1499,except ...: pass
+SWALLOWED_EXCEPTION,archive_tracked/asset_pipeline/build_tb3_digital_twin.py,1498,except ...: pass
+SWALLOWED_EXCEPTION,archive_tracked/asset_pipeline/build_tb3_digital_twin.py,1503,except ...: pass
+SWALLOWED_EXCEPTION,archive_tracked/asset_pipeline/build_tb3_digital_twin.py,1525,except ...: pass
+SWALLOWED_EXCEPTION,archive_tracked/asset_pipeline/generate_tb3_textures.py,44,except ...: pass
+SWALLOWED_EXCEPTION,archive_tracked/asset_pipeline/tb3_ui_controller.py,166,except ...: pass
+SWALLOWED_EXCEPTION,archive_tracked/asset_pipeline/tb3_ui_controller.py,171,except ...: pass
+SWALLOWED_EXCEPTION,archive_tracked/asset_pipeline/tb3_ui_controller.py,190,except ...: pass
+SWALLOWED_EXCEPTION,archive_tracked/asset_pipeline/tb3_ui_controller.py,200,except ...: pass
+SWALLOWED_EXCEPTION,archive_tracked/blender_experiments/stamp_wireframe_text.py,20,except ...: pass
+SWALLOWED_EXCEPTION,archive_tracked/uav_harvesters/collect_uav_datasets.py,398,except ...: pass
+SWALLOWED_EXCEPTION,archive_tracked/uav_harvesters/collect_uav_datasets.py,492,except ...: pass
+SWALLOWED_EXCEPTION,archive_tracked/uav_harvesters/harvest_all_uav_categories.py,203,except ...: pass
+SWALLOWED_EXCEPTION,archive_tracked/uav_harvesters/harvest_all_uav_categories.py,323,except ...: pass
+SWALLOWED_EXCEPTION,archive_tracked/uav_harvesters/harvest_all_uavs.py,440,except ...: pass
+SWALLOWED_EXCEPTION,archive_tracked/uav_harvesters/harvest_all_uavs.py,647,except ...: pass
+SWALLOWED_EXCEPTION,archive_tracked/uav_harvesters/harvest_all_uavs_clean.py,203,except ...: pass
+SWALLOWED_EXCEPTION,archive_tracked/uav_harvesters/harvest_all_uavs_clean.py,286,except ...: pass
+SWALLOWED_EXCEPTION,archive_tracked/uav_harvesters/harvest_parallel_uavs.py,238,except ...: pass
+SWALLOWED_EXCEPTION,archive_tracked/uav_harvesters/harvest_parallel_uavs.py,271,except ...: pass
+SWALLOWED_EXCEPTION,archive_tracked/uav_harvesters/harvest_parallel_uavs.py,321,except ...: pass
+SWALLOWED_EXCEPTION,archive_tracked/uav_harvesters/run_fast_uav_harvester.py,432,except ...: pass
+SWALLOWED_EXCEPTION,archive_tracked/uav_harvesters/run_fast_uav_harvester.py,620,except ...: pass
+SWALLOWED_EXCEPTION,archive_tracked/uav_harvesters/run_fast_uav_harvester.py,662,except ...: pass
+SWALLOWED_EXCEPTION,assets/blender/tb3_digital_twin_controller.py,199,except ...: pass
+SWALLOWED_EXCEPTION,assets/blender/tb3_digital_twin_controller.py,206,except ...: pass
+SWALLOWED_EXCEPTION,backend/diagnose/bn.py,60,except ...: pass
+SWALLOWED_EXCEPTION,backend/knowledge/retrieval/reranker.py,45,except ...: pass
+SWALLOWED_EXCEPTION,backend/knowledge/retrieval/reranker.py,68,except ...: pass
+SWALLOWED_EXCEPTION,backend/ml/detection_pipeline.py,312,except ...: pass
+SWALLOWED_EXCEPTION,backend/ml/detection_pipeline.py,554,except ...: pass
+SWALLOWED_EXCEPTION,backend/ml/detection_pipeline.py,756,except ...: pass
+SWALLOWED_EXCEPTION,backend/ml/trend_analyser.py,693,except ...: pass
+SWALLOWED_EXCEPTION,backend/runtime/hub.py,60,except ...: pass
+SWALLOWED_EXCEPTION,backend/server/main.py,611,except ...: pass
+SWALLOWED_EXCEPTION,backend/telemetry/replay_engine.py,127,except ...: pass
+SWALLOWED_EXCEPTION,scripts/generate_analysis_md.py,217,except ...: pass
+SWALLOWED_EXCEPTION,scripts/generate_analysis_md.py,260,except ...: pass
+SWALLOWED_EXCEPTION,scripts/generate_analysis_md.py,339,except ...: pass
+SWALLOWED_EXCEPTION,scripts/generate_analysis_md.py,363,except ...: pass
+SWALLOWED_EXCEPTION,scripts/lib/anumaan_twin_controller.py,211,except ...: pass
+SWALLOWED_EXCEPTION,scripts/tools/build_all_proper_blends.py,191,except ...: pass
+SWALLOWED_EXCEPTION,scripts/tools/create_engine_blend_files.py,107,except ...: pass
+SWALLOWED_EXCEPTION,scripts/tools/create_engine_blend_files.py,143,except ...: pass
+SWALLOWED_EXCEPTION,scripts/tools/create_engine_blend_files.py,179,except ...: pass
+SWALLOWED_EXCEPTION,scripts/tools/generate_all_engine_showcases.py,746,except ...: pass
+SWALLOWED_EXCEPTION,scripts/tools/render_rotax_914_showcase.py,364,except ...: pass
+SWALLOWED_EXCEPTION,vendor/tools/blender_mcp/addon.py,693,except ...: pass
+SWALLOWED_EXCEPTION,vendor/tools/blender_mcp/addon.py,700,except ...: pass
+SWALLOWED_EXCEPTION,vendor/tools/blender_mcp/addon.py,714,except ...: pass
+SWALLOWED_EXCEPTION,vendor/tools/blender_mcp/addon.py,718,except ...: pass
+SWALLOWED_EXCEPTION,vendor/tools/blender_mcp/addon.py,733,except ...: pass
+SWALLOWED_EXCEPTION,vendor/tools/blender_mcp/addon.py,851,except ...: pass
+SWALLOWED_EXCEPTION,vendor/tools/blender_mcp/addon.py,1546,except ...: pass
+SWALLOWED_EXCEPTION,vendor/tools/blender_mcp/addon.py,1550,except ...: pass
+SWALLOWED_EXCEPTION,vendor/tools/blender_mcp/addon.py,1557,except ...: pass
+SWALLOWED_EXCEPTION,vendor/tools/blender_mcp/addon.py,1566,except ...: pass
+SWALLOWED_EXCEPTION,vendor/tools/blender_mcp/addon.py,1571,except ...: pass
+SWALLOWED_EXCEPTION,vendor/tools/blender_mcp/addon.py,1631,except ...: pass
+SWALLOWED_EXCEPTION,vendor/tools/blender_mcp/addon.py,1675,except ...: pass
+SWALLOWED_EXCEPTION,vendor/tools/blender_mcp/addon.py,1702,except ...: pass
+SWALLOWED_EXCEPTION,vendor/tools/blender_mcp/addon.py,1864,except ...: pass
+SWALLOWED_EXCEPTION,vendor/tools/blender_mcp/addon.py,2024,except ...: pass
+SWALLOWED_EXCEPTION,vendor/tools/blender_mcp/addon.py,2069,except ...: pass
+SWALLOWED_EXCEPTION,vendor/tools/blender_mcp/addon.py,2074,except ...: pass
+SWALLOWED_EXCEPTION,vendor/tools/blender_mcp/addon.py,2082,except ...: pass
+SWALLOWED_EXCEPTION,vendor/tools/blender_mcp/addon.py,2130,except ...: pass
+SWALLOWED_EXCEPTION,vendor/tools/blender_mcp/addon.py,2135,except ...: pass
+SWALLOWED_EXCEPTION,vendor/tools/blender_mcp/addon.py,2297,except ...: pass
+SWALLOWED_EXCEPTION,vendor/tools/blender_mcp/addon.py,2302,except ...: pass
+SWALLOWED_EXCEPTION,vendor/tools/blender_mcp/addon.py,2371,except ...: pass
+SWALLOWED_EXCEPTION,vendor/tools/blender_mcp/addon.py,2376,except ...: pass
+TODO_FIXME,apps/threejs_twin/js/vendor/OrbitControls.js,706,// TODO touch
+TODO_FIXME,apps/threejs_twin/js/vendor/OrbitControls.js,722,// TODO touch
+TODO_FIXME,apps/threejs_twin/js/vendor/OrbitControls.js,736,// TODO touch
+TODO_FIXME,web/site/js/vendor/OrbitControls.js,706,// TODO touch
+TODO_FIXME,web/site/js/vendor/OrbitControls.js,722,// TODO touch
+TODO_FIXME,web/site/js/vendor/OrbitControls.js,736,// TODO touch

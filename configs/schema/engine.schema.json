@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "anumaan/configs/schema/engine.schema.json",
+  "title": "ANUMAAN engine configuration (configs/engines/<engine_id>.json)",
+  "description": "Card M0-01. Every number has a provenance entry (DECISIONS D16). Hardware flags drive fault applicability in configs/faults.json.",
+  "type": "object",
+  "required": ["engine_id", "display_name", "manufacturer", "ignition_mode", "induction", "fuel", "cooling", "layout",
+               "rated_power_kw", "rated_rpm", "max_continuous_power_kw", "max_continuous_rpm", "idle_rpm", "gearbox_ratio",
+               "fuel_system", "ignition_circuits", "ecu_lanes", "glow_plugs", "thermostat", "propeller_governor",
+               "operating_limits", "limits", "provenance"],
+  "properties": {
+    "engine_id": {"type": "string", "pattern": "^[a-z0-9_]+$"},
+    "physics": {"type": "object", "description": "per-engine overrides of configs/physics/defaults.json (section -> name -> {value, status, ref})"},
+    "display_name": {"type": "string", "minLength": 3},
+    "manufacturer": {"type": "string"},
+    "platforms": {"type": "array", "items": {"type": "string"}},
+    "ignition_mode": {"enum": ["SPARK_IGNITION", "COMPRESSION_IGNITION"]},
+    "induction": {"enum": ["NATURALLY_ASPIRATED", "TURBOCHARGED"]},
+    "fuel": {"type": "string"},
+    "cooling": {"type": "string"},
+    "fuel_system": {"enum": ["PORT_INJECTION", "CARBURETTOR", "COMMON_RAIL"]},
+    "ignition_circuits": {"type": "integer", "minimum": 0, "maximum": 2},
+    "ecu_lanes": {"type": "integer", "minimum": 0, "maximum": 2},
+    "glow_plugs": {"type": "boolean"},
+    "thermostat": {"type": "boolean"},
+    "propeller_governor": {"type": "boolean"},
+    "layout": {
+      "type": "object",
+      "required": ["count", "firing_order", "bore_mm", "stroke_mm", "displacement_cc"],
+      "properties": {
+        "count": {"type": "integer", "minimum": 1, "maximum": 12},
+        "firing_order": {"type": "array", "items": {"type": "integer", "minimum": 1}},
+        "bore_mm": {"type": "number", "exclusiveMinimum": 0},
+        "stroke_mm": {"type": "number", "exclusiveMinimum": 0},
+        "displacement_cc": {"type": "number", "exclusiveMinimum": 0},
+        "compression_ratio": {"type": "number", "exclusiveMinimum": 1}
+      }
+    },
+    "turbo": {
+      "type": ["object", "null"],
+      "properties": {
+        "max_boost_kpa": {"type": "number", "exclusiveMinimum": 0},
+        "critical_altitude_ft": {"type": "number", "minimum": 0},
+        "critical_altitude_takeoff_ft": {"type": ["number", "null"], "minimum": 0},
+        "map_takeoff_max_kpa": {"type": ["number", "null"]},
+        "map_continuous_max_kpa": {"type": ["number", "null"]},
+        "boost_control": {"enum": ["WASTEGATE", "VGT"]},
+        "tcu_nominal_airbox": {
+          "type": ["object", "null"],
+          "required": ["lever_full_scale_pct", "throttle_pct", "airbox_hpa"],
+          "properties": {
+            "lever_full_scale_pct": {"type": "number", "exclusiveMinimum": 0},
+            "throttle_pct": {"type": "array", "items": {"type": "number"}, "minItems": 2},
+            "airbox_hpa": {"type": "array", "items": {"type": "number", "exclusiveMinimum": 0}, "minItems": 2}
+          }
+        },
+        "intercooled": {"type": "boolean"}
+      }
+    },
+    "rated_power_kw": {"type": "number", "exclusiveMinimum": 0},
+    "rated_rpm": {"type": "number", "exclusiveMinimum": 0},
+    "max_continuous_power_kw": {"type": "number", "exclusiveMinimum": 0},
+    "max_continuous_rpm": {"type": "number", "exclusiveMinimum": 0},
+    "idle_rpm": {"type": "number", "exclusiveMinimum": 0},
+    "gearbox_ratio": {"type": "number", "exclusiveMinimum": 0},
+    "nominal_inj_timing_btdc": {"type": ["number", "null"]},
+    "nominal_ign_timing_btdc": {"type": ["number", "null"]},
+    "rail_pressure_bar": {"type": ["number", "null"], "exclusiveMinimum": 0},
+    "overspeed_rpm": {"type": ["number", "null"]},
+    "max_operating_altitude_ft": {"type": ["number", "null"]},
+    "oil_capacity_l": {"type": ["number", "null"]},
+    "operating_limits": {"type": "object", "additionalProperties": {"type": "number"}},
+    "limits": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["unit", "ref"],
+        "properties": {
+          "unit": {"type": "string"},
+          "ref": {"type": "string", "minLength": 5},
+          "warning_low": {"type": "number"},
+          "warning_high": {"type": "number"},
+          "normal": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 2}
+        }
+      }
+    },
+    "notes": {"type": "object", "additionalProperties": {"type": "string"}},
+    "provenance": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["status", "ref"],
+        "properties": {
+          "status": {"enum": ["PUBLIC", "MANUAL", "ASSUMED", "PLACEHOLDER", "CALIBRATED", "OWNER"]},
+          "ref": {"type": "string", "minLength": 3}
+        }
+      }
+    }
+  }
+}

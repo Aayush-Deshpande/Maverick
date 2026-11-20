@@ -1,0 +1,1459 @@
+ANUMAAN (SIH PS-26054) - COMPLETE ROADMAP, PROBLEM-STATEMENT COVERAGE, FULLY-DYNAMIC RULE, ASSET CLEANUP, UX
+Version 2 (refined). Third document. Follows ANUMAAN_AUDIT_REPORT.txt ("R") and ANUMAAN_COMPONENTS_ADDENDUM.txt ("A").
+Date: 18 Nov 2026. Repository: D:\Programming\PS054, branch main, commit 9b5942e (= origin/main).
+Working tree: only data/graph_db/fleet_graph.json modified (the server writes it at runtime). No project file was changed
+while preparing this document. Version 1 of this file is kept next to it as ANUMAAN_ROADMAP_AND_PS_COVERAGE_v1.txt.
+
+What is new in version 2:
+- Part 0: the "completely dynamic" rule. What it means and every place on main that breaks it today, with file and
+  line. Also the tests that prove the rule holds.
+- Part 1: new findings N5-N9: wrong engine data in configs/engines/*.json, the 3D assets mess (wrong model shipped
+  for the 915, uncompressed files in a folder named "draco", a 5.1 GB .git), hard-coded engine identities in the UI.
+- Part 2: a corrected engine data sheet to copy into the configs, each value with its source.
+- Part 4: every milestone rewritten as ordered steps with exact files (CREATE / CHANGE / REMOVE-FROM-RUNTIME),
+  data contracts, numbers, and acceptance tests with IDs and pass criteria.
+- Part 5: repository and Blender cleanup plan. No .blend file is ever deleted.
+- Part 6: user experience plan researched from aviation alerting rules, alarm management standards and digital-twin
+  interface research. It covers the "make DRDO proud" features, each tied to real data, plus UX acceptance tests.
+- Part 7: one test catalogue (every acceptance test in one list).
+- Parts 8-10: dependencies and week plan, demo script, final checklist. Part 11: sources.
+
+Words used in this file:
+  WORKS = runs on main and is correct. PARTIAL = runs but wrong or incomplete. FAKE = shown but hard-coded or
+  scripted. NOT WIRED = code exists but never runs in the app. MISSING = no code. BROKEN = used to work or is
+  documented as working, fails now.
+  Source tags for data: TCDS = EASA type certificate data sheet; OM = manufacturer operators manual; DRDO = DRDO
+  product page/brochure; OWNER = owner-community report (needs confirmation); ASSUMED = not public, our estimate,
+  must be labelled ASSUMED in config and UI; CALIBRATED = produced by our calibration run (date stored).
+
+
+=====================================================================================================================
+PART 0 - THE "COMPLETELY DYNAMIC" RULE
+=====================================================================================================================
+
+0.1 Definition (all ten must hold)
+D1. Every number shown anywhere comes from one of exactly four places:
+    (a) the physics simulation stepping at runtime;
+    (b) a recording being replayed;
+    (c) a real or virtual data bus (CAN/MAVLink);
+    (d) a configuration value with a source tag (limits, rated power, geometry).
+    Nothing is typed into code as a reading. A constant in code is allowed only as a physical constant (gas constant
+    287.05 J/kg/K, g = 9.80665) or a numerical setting (step size). It needs a named variable and a comment.
+D2. Every reading moves because something upstream moved. If a lever, the environment or a fault changes, every
+    dependent output changes in the physically right direction. No output stays frozen while its inputs change.
+D3. Faults change component parameters, never outputs (R 21.6). The readings then change because the equations run.
+D4. Diagnosis, status, highlights, RUL and maintenance advice are computed only from measured data (the Frame). They
+    never read the injected-fault list, the plant truth, or the command history. "Training mode" may display the
+    commanded fault next to the result, labelled COMMANDED.
+D5. Engines, faults, components, limits, sensors, presets and UI labels are DATA. They live in:
+    configs/engines/*.json, configs/faults.json, configs/components/<engine>.json, configs/sensors/<engine>.json,
+    configs/missions/*.json, configs/ui/*.json.
+    UI menus, 3D profiles, fault lists, gauges and limit lines are built from these at runtime. To add a 6th engine
+    you add a config, a GLB and a component manifest, with zero code changes. To add a fault you add one registry
+    entry pointing at an existing model parameter, again with zero code changes.
+D6. Rates and timing are measured, not printed. The UI shows the actual publish rate and data age from the state
+    message. Today it shows static "20 Hz" labels.
+D7. There is no silent fallback. If a value is missing the UI shows "NO DATA" with the reason; it never shows a
+    default (today: `f.bus_v or 14.1`, `frame.oil_p or 3.5`, offline sine telemetry). If a fault is not applicable
+    the API rejects it with the reason; it never ignores it.
+D8. There is one source of truth per running engine. Every client (React console, 3D viewer, Blender app, phone)
+    reads the same state message stream and sends commands through the same API.
+D9. Time is simulation time. Detection, trends, RUL and replay use sim_time_s, so the 1x/5x/20x/60x time scale
+    changes nothing but speed.
+D10. Everything is deterministic for a given seed and command log, so any sortie can be reproduced exactly, which
+    makes replay and "what-if" forks possible.
+
+0.2 Where main breaks the rule today (verified by reading the code on 9b5942e)
+V1  backend/server/engine_service.py:745-751 writes constants into the 912 payload every tick:
+    - INJ_TIMING_BTDC=18.5, IGN_TIMING_BTDC=22.0, LAMBDA_AFR=14.7, BSFC_G_KWH=270.0, THERMAL_EFFICIENCY=0.31
+    - POWER_KW = rpm*throttle/5400
+    Line 737 has `bus_v or 14.1` and line 759 has `rul_p_lower default 14.2`. Breaks D1, D2, D7.
+V2  engine_service.py:310 and :801 make go_no_go default to "GO". backend/ml/trend_analyser.py:567 and :603 also
+    default the advisory to "GO", and line 21 contains the text "RUL = 14.2 ± 1.1 hrs". Breaks D1, D4.
+V3  backend/runtime/hub.py:47-54 calls the legacy sync_from_tick for rotax_912is on every tick, so two simulators
+    write one engine. Breaks D8.
+V4  backend/runtime/engine_runtime.py:
+    - 480-522: diagnosis is built from self.injected with confidence=0.98 (line 518).
+    - 426-450: reliability damage comes from the injected list.
+    - 415: RUL = 18*(1-3*damage).
+    - 147-154: conformal calibration uses a sine series.
+    - 398: residual = oil_p - 3.5, where 3.5 is a constant.
+    Breaks D1, D4.
+V5  backend/plant/virtual_engine.py:
+    - 299 and 301: the induction and turbo are passed a fixed 5200.0 rpm.
+    - 394: fuel flow = P*BSFC + 1.5.
+    - 399: BUS_VOLTAGE = 14.2.
+    - 170: crank_every_n_steps = 0, so the crank model and all injector faults (routed only to the crank model,
+      lines 248-256) never run.
+    - The _failed flag is never used.
+    - 354: alt_penalty = 22.0*(1-flow).
+    Breaks D1, D2, D3.
+V6  backend/telemetry/can_streamer.py:
+    - faults are output offsets (e.g. line 453 BUS_VOLTAGE -= 1.85*ramp);
+    - line 354 has a formula-based injection timing with random noise;
+    - the -22.0 OAT is hard-coded at lines 140 and 168.
+    Breaks D3.
+V7  backend/server/engine_api.py:166-176 maps fault IDs by list position. Breaks D5.
+V8  Hard-coded engine identities:
+    - apps/threejs_twin/index.html: 49 occurrences. ENGINE_PROFILES (line 716) has only 3 engines, selectEngine
+      returns early for the AE300 and VRDE, and ENGINE_FAULT_TARGETS is at line 881.
+    - apps/blender_twin/standalone_digital_twin_app.py: 25 occurrences, private fault IDs 1-8.
+    - frontend/src/components/landing/LandingHero3D.tsx: 10.
+    - frontend/src/hooks/useEngineRuntime.ts: 1.
+    - backend/server/engine_service.py: string-split IDs such as "".join(["rot","ax_9","12is"]) and f"C{'HT'}_{i}"
+      (lines 227, 232, 452-457, 723-724).
+    Breaks D5.
+V9  Static rate labels: App.tsx:147 and :174, ConnectionModal.tsx:78, EngineRuntimeConsole.tsx:56
+    ("LIVE · 20 Hz SYNCHRONOUS") and Header.tsx:112 ("20 Hz Active"). Breaks D6.
+V10 apps/blender_twin/standalone_digital_twin_app.py:~905-925 produces fake sine telemetry when offline.
+    apps/blender_twin/standalone_canyon_flight_app.py has a throttle-to-speed lookup table and a private CHT model,
+    and _apply_flight_intent sets fault_overheat=True on "dive to cool". Breaks D1, D7, D8.
+V11 The 3D highlight follows the command, not the detection (R item 25). Breaks D4.
+V12 backend/runtime/hub.py:68 hard-codes IDLE_TICK_DIVISOR = 5 and the selected engine is engines[0] for every
+    client. This should be a config value and a per-client choice. Breaks D5, D8.
+
+0.3 How the rule is enforced (tests run in CI; they live in tests/dynamic/)
+T-DYN-1 Static scan. A test parses backend/sim, backend/runtime, backend/server and frontend/src.
+        - It fails on numeric literals assigned to reading fields (fields listed in the state schema).
+        - It fails on `or <number>` fallbacks for readings.
+        - It fails on engine IDs or fault names in code outside configs/ and tests/.
+        - Allowed literals are in tests/dynamic/allowlist.txt, each with a reason.
+T-DYN-2 Frozen-channel test. Run every engine for 120 s of simulated time with throttle sweeping 30->100->30 % and
+        altitude 0->15,000 ft. Every channel declared "load-dependent" in configs/sensors/<engine>.json must change
+        by more than 5 sensor-noise sigmas. Any channel with zero variance fails.
+T-DYN-3 Perturbation test. From a trimmed cruise point, change one input at a time: throttle +10 %, altitude
+        +2,000 ft, OAT +10 C, humidity +40 % RH, airspeed +10 kt, prop rpm setpoint +100. Each output must move in
+        the sign given by the expected-sensitivity table (configs/sensors/<engine>.json "sensitivity" block).
+        Example: OAT up -> NA engine power down, CHT up, oil temperature up.
+T-DYN-4 No-truth-leak test. The detection/diagnosis/status/prognostics modules must not import backend.sim.faults,
+        the plant truth, or the fault manager (import graph check). Running the same recorded Frames twice, once
+        with the active-fault list visible and once with it hidden, must give byte-identical diagnosis, status,
+        highlights and RUL.
+T-DYN-5 Add-an-engine test. CI copies configs/engines/rotax_912is.json to "test_engine_6cyl" with 6 cylinders,
+        different bore/stroke and rated power, plus a placeholder GLB and manifest. Then:
+        - the server starts, calibrates, and lists it;
+        - the UI shows it in every menu (Playwright);
+        - faults filter by applicability;
+        - per-cylinder faults offer cylinders 1-6.
+        No code file changes.
+T-DYN-6 Add-a-fault test. CI adds a registry entry "TEST_COOLING_X" that changes an existing parameter (cooling
+        effectiveness, cylinder 1). It must appear in every fault menu, change CHT_1, be detected and isolated by
+        its signature, and highlight the parts listed in its component entry. No code file changes.
+T-DYN-7 Determinism. Same seed + same command log -> identical Frames (hash compare) on two runs and after a replay.
+T-DYN-8 No-silent-fallback. Kill a sensor channel (S05 dropout): the UI shows NO DATA / VIRTUAL with the reason; the
+        state message never contains a default value for that channel.
+
+
+=====================================================================================================================
+PART 1 - FINDINGS FROM THE RECHECK (N1-N4 from version 1, N5-N9 new)
+=====================================================================================================================
+
+N1. Mission replay is broken on main (runtime-checked).
+    - The replay engine lists 38 recorded missions; only 2 return a frame.
+    - backend/telemetry/replay_engine.py:177 reads ELAPSED_SEC, but the CSV writers save only TIMESTAMP_SEC (wall
+      clock), and many missions have no CSV at all.
+    - The fix exists only on another branch (origin/Prasad).
+    - PS requirement E "Replay of historical mission data" is NOT working on main.
+N2. docs/00_official_problem_statement.md links to 7 documents under ../analysis/. That folder does not exist, so
+    all 7 links are dead. README.md also describes it.
+N3. The PS document's section 7 claims a "27-parameter telemetry pipeline" and "8 canonical fault-scenario ML
+    classifiers". On main the 27-parameter payload is the legacy one, partly constants (V1), and the 8 faults are
+    legacy output offsets (V6).
+N4. These "may utilize" and innovation modules exist but never run in the server:
+    - backend/performance/maps.py
+    - backend/fadec_emulator/
+    - backend/telemetry/socketcan_bridge.py
+    - backend/telemetry/mavlink_efi.py
+    - backend/edge/
+    - backend/federation/
+    - backend/diagnose/explain.py
+    - backend/security/can_ids.py and merkle_log.py
+    - backend/maintenance/work_package.py
+    PropulsionEngineerPanel.tsx says "Thermodynamic performance maps" but shows legacy values.
+N5. Engine data in configs/engines/*.json is wrong or incomplete compared with the certified/published data. The full
+    list is in Part 2. The serious ones:
+    - rotax_914: inj timing 0.0 and rail 0.25 bar. The 914 is CARBURETTED: it has no injection timing and no rail.
+      Injection timing must show "N/A - carburetted", never 0.
+    - rotax_915is: 105.1 kW / 100.7 kW / critical altitude 16,500 ft. TCDS E.121 915 iSc: 104 kW take-off, 99 kW
+      continuous, critical altitude 15,000 ft. "rail 0.35 bar" is wrong for a fuel-injected engine; take the fuel
+      pressure from the 915 OM.
+    - austro_ae300: "critical_altitude_ft 18000" is the maximum OPERATING altitude in TCDS E.200, not a critical
+      altitude. Its limits block uses CHT 120 C / EGT 750 C. The certified limits are: coolant 60-105 C, oil
+      temperature 140 C max, gearbox 120 C, oil pressure 0.9 / 2.5 / 6.5 bar, fuel inlet 4-7 bar, over-speed 4220 rpm.
+    - vrde_jayem_2_2l: critical altitude 20,000 ft. DRDO says the 180 hp take-off power is held "constant up to
+      11,000 ft". The rated rpm is 3800, but a later brochure gives a 3900 rpm maximum. BSFC is 218 g/kWh; the
+      brochures say <210 (early) and 220 (later).
+    - All engines: oil_p_min 0.8 bar as a single number. Rotax: 0.8 bar minimum below 3500 rpm and 2.0-5.0 bar above
+      3500 rpm. AE300: 0.9 bar at idle and 2.5 bar at max continuous. These rpm-dependent rules are missing.
+    - The Rotax EGT limit is 850 C in the configs; the 914 OM gives 950 C. Check the 912 i OM.
+N6. 3D assets are duplicated, mislabelled and one is wrong (md5-verified on 9b5942e):
+    - web/site/assets/models/rotax_915is.glb is byte-identical to the 912 iS GLB, so that site shows a 912 when it
+      says 915.
+    - apps/threejs_twin/assets/models/draco/*.glb are NOT Draco-compressed: 912 = 79 MB, 915 = 81 MB, 914 = 33 MB.
+      The compressed copies are 16.4 / 18.7 / 5.9 MB.
+    - The same compressed GLBs are committed 3-4 times: assets/models/draco, frontend/public/models,
+      docs_site/public/assets/models, web/site/assets/models.
+    - Built copies also sit untracked in frontend/dist and docs_site/dist.
+    - .blend duplicates:
+      - rotax_915.blend == rotax_915is.blend (identical);
+      - bayraktar_tb3_digital_twin.blend exists identically in assets/blender and assets/models;
+      - rotax_914.blend and rotax_914_f.blend are the same size but different content;
+      - vrde_jayem_2_2l.blend is TEI PD170 geometry (R item 26);
+      - the "AE300" model is the AE330.
+    - Untracked Blender backups: assets/blender/rotax_912_is_sport.blend1 (77 MB) and austro_ae330.blend1.
+    - .git is 5.1 GB. .gitattributes sends *.blend to Git LFS, but *.glb, *.fbx and *.exr are committed directly
+      (GLBs up to 81 MB).
+    - web/usavionix/mirror is a 269-file mirror of a third-party site (licence question, and noise).
+N7. Root folder clutter makes the project hard to navigate:
+    - 23 launch_*.bat files;
+    - screenshots (full_ui_check.png, shadow_fix_check.png, ui_fix_check.png);
+    - report_dump/, UpdatedReport/, final_touch/, experiments/, graphify-out/, Datasets/ next to data/;
+    - two summary txt files;
+    - __pycache__ at the root.
+N8. Hard-coded engine identities and rate labels in the UIs (V8, V9). Adding or renaming an engine needs code edits
+    in at least 6 files today.
+N9. The DBC file configs/can/anumaan_fadec.dbc defines only 4 messages: EEC1_ENGINE_SPEED, ET1_ENGINE_TEMP,
+    EFL_P1_ENGINE_FLUID (J1939-style IDs) and ANUMAAN_CYL_TRIMS. That is not enough to carry the monitored parameter
+    set (EGT/CHT per cylinder, fuel flow, bus voltage and currents, timing, rail, lane status, vibration).
+
+
+=====================================================================================================================
+PART 2 - ENGINE DATA SHEET (copy into configs/engines/*.json with the source tag)
+=====================================================================================================================
+
+Rule: every field keeps "provenance": {"status": TCDS|OM|DRDO|OWNER|ASSUMED|CALIBRATED, "ref": "..."}. The UI shows
+the tag in a tooltip on every limit and rated value. If two sources disagree, keep both in "notes" and choose one
+explicitly.
+
+ROTAX 912 iS SPORT (NA gasoline, port fuel injection, dual-lane ECU, air-cooled barrels + liquid-cooled heads,
+dry-sump oil, gear 2.43). SOURCE: official Rotax OM-912 i, Rev. 1, June 2019, pages 2-2 to 2-5 (local copy in
+docs/reference/oem/, DECISIONS D46). These values REPLACE the earlier draft below them.
+  take-off                 73.5 kW @ 5800 rpm (max 5 min)                                  OM p.2-2
+  max continuous           72 kW @ 5500 rpm (912 iS Sport and iSc; plain 912 iS = 69 kW)    OM p.2-2  -> config 69 WRONG
+  idle                     min 1400 rpm                                                     OM p.2-2
+  oil pressure             min 0.8 bar below 3500 rpm; normal 2.0-5.0 bar above 3500 rpm;
+                           max 7 bar (short period, cold start)                             OM p.2-3
+  oil temperature          max 130 C, min 50 C, normal approx. 90-110 C                     OM p.2-3
+  coolant temperature      max 120 C. This is the 912 i head-temperature limit; the OM
+                           gives NO separate CHT limit                                       OM p.2-4  -> config "CHT 135" is not a 912 i limit
+  EGT                      max 950 C                                                        OM p.2-4  -> config 850 WRONG
+  fuel pressure at rail    2.8-3.2 bar; 2.5-3.5 bar allowed for max 3 s after a power change OM p.2-4
+  ambient                  max 60 C manifold temperature in flight; max 50 C ambient at
+                           start; min -20 C oil temperature at start                        OM p.2-4
+  acceleration / attitude  -0.5 g for max 5 s; static roll angle max 40 deg                 OM p.2-3
+  power take-off limits    external alternator max 600 W; hydraulic prop governor max 600 W OM p.2-5
+  Earlier draft (kept for history):
+ROTAX 912 iS / iSc (NA gasoline, port fuel injection, dual-lane ECU, air-cooled barrels + liquid-cooled heads,
+dry-sump oil, gear 2.43)
+  rated_power_kw            73.5 @ 5800 rpm, 5 min (TCDS E.121)                       config 73.5 OK
+  max_continuous_power_kw   72.0 @ 5500 (TCDS E.121, iSc)  vs 69.0 (config, OM 912 iS)  DECIDE the variant; recommend
+                            iSc and 72.0, because the TCDS is the stronger source
+  oil pressure              2.0-5.0 bar above 3500 rpm; 0.8 bar min below 3500; 7.0 bar max cold start (OM)
+  oil temperature           max 130 C, min 50 C for take-off (OM)
+  coolant exit temperature  max 120 C (OM)                                             MISSING in config: add
+  CHT                       max 135 C (OM)                                             config OK
+  EGT                       config 850 C; the 914 OM gives 950 C; check the 912 i OM (docs/reference/) and set
+  fuel pressure             2.9-3.2 bar band, peak 3.5 bar for 3 s after a power change (Rotax notice citing the
+                            912 i OM; see sources)                                     config 3.0 OK as nominal; add band
+  electrical                two internal generators. Gen A feeds the ECU (owner-reported ~16 A at ~14 V); Gen B feeds
+                            the airframe and battery (owner-reported ~30 A). The engine starts on Gen B / Lane B and
+                            the ECU moves to Gen A above ~2500 rpm (OWNER; confirm in the OM/IM before the demo).
+                            Engine+pumps load ~150 W (OWNER, conservative).
+  lanes                     Lane A / Lane B ECU (OM)
+
+ROTAX 914 UL/F (turbo gasoline, CARBURETTED, TCU boost control, no intercooler, gear 2.43)
+  rated 84.5 kW @ 5800 (5 min), max continuous 73.5 kW @ 5500 (OM, in repo)            config OK
+  manifold pressure         take-off max 1350 hPa, continuous max 1200 hPa (OM)        MISSING: add
+  critical altitude         take-off power to 8,000 ft, continuous to 16,000 ft (OM)    config has one value 16,000; make two
+  CHT 135 C, coolant 120 C, oil 50-130 C (normal 90-110 C), oil pressure 2.0-5.0 bar above 3500 rpm, EGT 950 C,
+  external alternator max 1200 W (OM)
+  fuel system               carburettors: set nominal_inj_timing_btdc = null and rail_pressure_bar = null, add
+                            "fuel_pressure_bar" from the OM; the UI shows "N/A - carburetted" for injection timing.
+                            Faults F05-F09 are not applicable; F12 carburettor icing is.
+
+ROTAX 915 iS / iSc (turbo gasoline, fuel injected, dual-lane ECU, intercooler, gear 2.43)
+  rated 104 kW @ 5800 (5 min), max continuous 99 kW @ 5500, critical altitude 15,000 ft (TCDS E.121)
+                            config 105.1 / 100.7 / 16,500: CORRECT IT
+  MAP target ~1520 mbar @ 5800, ~1450 mbar @ 5500 (915 OM excerpt; verify in the full OM)
+  oil pressure as Rotax above; oil temperature keep below 120 C (Rotax guidance)
+  fuel pressure             take it from the 915 iSc OM (the config's 0.35 bar is not a value for an injected engine)
+  Do not mix it up with the 916 iSc (117 kW, critical altitude up to 23,000 ft).
+
+AUSTRO ENGINE AE300 (E4) (turbo-diesel, common rail, Jet-A1/diesel, liquid cooled, gear 1.69, constant-speed prop,
+redundant EECU/FADEC)
+  take-off 123.5 kW @ 3880 rpm (2300 prop rpm); over-speed 4220 rpm (2500 prop rpm) (TCDS E.200)   config OK; add over-speed
+  max continuous            config 114 kW @ 3600: check against TCDS E.200 and the AFM, then set
+  coolant                   min 60 C before full power, max 105 C (TCDS)              REPLACE "cht_max 120"
+  oil temperature           normal 50-135 C, max 140 C (TCDS)                          REPLACE 130
+  gearbox oil temperature   max 120 C (TCDS)                                           ADD
+  oil pressure              min 0.9 bar idle, min 2.5 bar at max continuous, max 6.5 bar (TCDS)      ADD rpm-dependent rule
+  fuel pressure HP-pump inlet 4-7 bar; min fuel temperature -30 C (TCDS)              ADD
+  max operating altitude    18,000 ft (TCDS). This is NOT the critical altitude. Rename the field and set a
+                            critical altitude as ASSUMED until a source is found.
+  rail pressure             config 1800 bar: no public figure found. Keep it ASSUMED.
+  EGT                       not a TCDS limit for this engine. If kept, label it ASSUMED and use it only for
+                            diagnosis, not for status.
+  electrical                Austro Engine 2024 brochure lists a 14 V / 18 A alternator for AE300/AE330. Aircraft
+                            installations differ (some airframes run 28 V buses). Make the bus voltage an
+                            installation parameter, not an engine constant.
+
+VRDE / JAYEM 2.2 L (turbo-diesel CRDI, inline 4, 2178 cc, constant-speed prop, ATF K-50 / Jet-A1 / diesel, FADEC
+with dual redundancy)
+  take-off 180 hp = 134.2 kW, held constant up to 11,000 ft (DRDO)                     config power OK; critical altitude 20,000 -> 11,000
+  max rpm 3900 (later DRDO brochure); config 3800 rated -> set rated 3900 or keep 3800 marked ASSUMED with both refs
+  best-economy BSFC <210 g/kWh (early brochure) / 220 g/kWh (later brochure) -> 215 ASSUMED, both refs in notes
+  dry mass about 195 kg (DRDO brochures)
+  mission use: Rustom-II/TAPAS class MALE UAV; Jayem positions it for 24-30 h missions (AeroDef India 2026)
+                            -> add a 24 h endurance preset for this engine
+  everything else (limits, gear ratio, rail, alternator) is not public: ASSUMED with visible labels.
+
+Electrical defaults for every engine are "installation" parameters in configs/installations/<platform>.json: bus
+voltage 14 V or 28 V, battery capacity, payload electrical load, avionics load. The engine provides alternator
+characteristics only. Then one engine can sit on different UAV platforms, which matches "modular architecture".
+
+
+=====================================================================================================================
+PART 3 - PROBLEM STATEMENT COVERAGE, LINE BY LINE (state on main 9b5942e -> milestone that fixes it)
+=====================================================================================================================
+
+3.1 Background - "the solution should support"
+- Real-time engine state estimation: PARTIAL. The UKF (backend/twin/ukf.py) runs, its output is not shown, and its
+  validity is always INVALID. -> M3
+- Anomaly detection: PARTIAL. It misses 4 faults completely and several partly, and gives 7 false alarms per 300 s.
+  -> M3
+- Degradation tracking: FAKE (V4). -> M4
+- Fault prediction: FAKE/PARTIAL. GO/NO-GO comes from the trend only; there is no time-to-limit. -> M2, M4
+- Mission replay: BROKEN (N1). -> M5
+
+3.2 Description - "integrating"
+- Engine sensor data: PARTIAL. Sensors are simulated; there are no real-source adapters. -> M1, M7
+- Thermodynamic behaviour models: PARTIAL. The power formula is wrong, couplings are missing, and thermo_model.py runs
+  only in the legacy path. -> M1
+- Engine performance maps: NOT WIRED. -> M1 (maps generated from the calibrated plant)
+- Failure/degradation logic: FAKE. Legacy faults are offsets; on the modern path 4 faults do nothing. -> M1, M2
+- AI/ML predictive analytics: PARTIAL. -> M3, M4
+
+3.3 Description - "capable of"
+- Real-time parameter visualization: PARTIAL. 912 values flicker and most outputs are hidden. -> M0, M6
+- Monitoring health indicators: PARTIAL. -> M3, M6
+- Detection of abnormal operating conditions: PARTIAL. -> M2, M3
+- Predicting probable failures before they occur: FAKE. -> M4
+- Degradation trends and RUL: FAKE. -> M4
+- Simulating behaviour under mission profiles and environment: PARTIAL. Turbo engines ignore altitude; there are no
+  mission profiles in the modern console. -> M1, M5
+- Post-flight analysis and replay: BROKEN. -> M5
+
+3.4 "May utilize"
+- CAN/SocketCAN: NOT WIRED. -> M7
+- ECU/FADEC: NOT WIRED. -> M7
+- Edge computing: NOT WIRED. -> M7
+- Cloud/local analytics: WORKS (local FastAPI). -> M8 hardening
+- AI/ML anomaly detection: PARTIAL. -> M3
+- Physics-informed modelling: PARTIAL. -> M1, M3
+- Operator and maintenance HMI: PARTIAL. -> M6
+
+3.5 A - Digital Twin core framework
+- Virtual model synchronized with live data: PARTIAL. -> M3, M6
+- Modular architecture: PARTIAL. Two parallel stacks and 51 unwired modules. -> M0, M8
+- Real-time ingestion: PARTIAL. 20 Hz, simulated only. -> M0, M7
+
+3.6 B - Health monitoring parameters (each must be modelled, measured, monitored and shown)
+- RPM: PARTIAL. -> M1 (torque balance + prop)
+- CHT (+ coolant on liquid-cooled engines): PARTIAL. -> M1
+- EGT: PARTIAL. -> M1
+- Oil pressure and temperature: PARTIAL. -> M1
+- Fuel flow: PARTIAL (V5 +1.5). -> M1
+- Vibration: FAKE. -> M1 + M3
+- Battery/alternator: FAKE (V5 14.2 V). -> M1 + M3 + M6
+- Injection timing: FAKE (V1 18.5). -> M1. On the 914 it is N/A (carburetted).
+- Health indices: PARTIAL. -> M3, M4
+
+3.7 C - Detection targets
+- Misfire: WORKS on the SI engines. -> M1/M3 (vibration evidence, CI equivalent)
+- Injector abnormalities: NOT WORKING (V5 crank model never runs). -> M1
+- Cooling degradation: PARTIAL. -> M1, M3
+- Lubrication issues: PARTIAL; legacy misdiagnoses them as gearbox. -> M1, M3
+- Sensor drift/failure: NOT WORKING. -> M3
+- Combustion instability: MISSING. -> M1, M3
+- Overheating trends: PARTIAL. -> M2, M4
+- Abnormal vibration: FAKE. -> M1, M3
+- Threshold-to-predictive transition: MISSING. -> M3, M4 (show the threshold baseline vs ours)
+
+3.8 D - AI/ML layer
+- Anomaly detection: PARTIAL. -> M3
+- RUL: FAKE. -> M4
+- Trend analysis: PARTIAL. -> M4
+- Maintenance recommendations: PARTIAL. -> M3, M4, M6
+- Adaptive learning: MISSING. -> M4 (+ M7 federated)
+
+3.9 E - Simulation and replay
+- Replay: BROKEN. -> M5
+- Environment: PARTIAL. -> M1, M5
+- High altitude: PARTIAL. -> M1, M5
+- Endurance: MISSING on main. -> M5
+- Hot weather: PARTIAL. -> M1, M5
+- Rapid throttle transitions: PARTIAL. -> M1, M5
+
+3.10 F - Dashboard
+- Health status: FAKE/BROKEN. -> M2, M6
+- Fault alerts: PARTIAL. -> M6
+- Efficiency trends: FAKE (0.31). -> M1, M6
+- Maintenance advisory: PARTIAL. -> M3, M4, M6
+- Mission reports: PARTIAL. -> M5
+- Operator / engineer / maintenance views: PARTIAL. -> M6
+
+3.11 Deliverables
+1. Functional prototype: PARTIAL. -> M0-M6
+2. Architecture design: PARTIAL. -> M8
+3. Engine simulation model: PARTIAL. -> M1
+4. AI/ML anomaly module: PARTIAL. -> M3
+5. Visualization dashboard: PARTIAL. -> M6
+6. Demo on simulated or real datasets: PARTIAL. Adapters are named after public datasets but synthesise data.
+   -> M4, M8
+7. Documentation and deployment roadmap: PARTIAL (N2, N3). -> M8
+
+3.12 Innovation areas
+- Physics-informed AI -> M3
+- Edge AI -> M7
+- Lightweight onboard analytics -> M7
+- Hybrid thermodynamic + data-driven -> M3, M4
+- Federated learning -> M7
+- Explainable AI -> M3
+- Secure telemetry -> M7
+- Autonomous maintenance advisory -> M4, M6
+
+3.13 Technical expectations
+- IC engine fundamentals -> M1 physics document
+- UAV propulsion -> M1, M5
+- Sensor fusion -> M3
+- Embedded systems -> M7
+- CAN communication -> M7
+- AI/ML analytics -> M3, M4 reports
+- Data visualization -> M6
+- Simulation modelling -> M1, M5
+- Reliability engineering -> M4 (FMECA, mission reliability)
+
+
+=====================================================================================================================
+PART 4 - ROADMAP M0-M9 (ordered steps, exact files, contracts, numbers, acceptance tests)
+=====================================================================================================================
+
+How to read the steps:
+- CREATE = new file.
+- CHANGE = edit an existing file.
+- REMOVE-FROM-RUNTIME = stop calling it (the file moves to archive_tracked/ only after its replacement passes its
+  tests; nothing is deleted outright).
+- Every step ends with a test ID from Part 7.
+- Durations assume 4 people (Part 8).
+
+---------------------------------------------------------------------------------------------------------------------
+M0 - FOUNDATION: ONE SIMULATOR, ONE FAULT PATH, ONE STATE STREAM (week 1)
+---------------------------------------------------------------------------------------------------------------------
+Goal: every surface (React console, 3D viewer, Blender app, phone, curl) reads the same state and commands the same
+engine. A fault injected anywhere shows everywhere within two frames.
+
+Step 0.1 Branch decision (day 1, team lead).
+  - List what origin/Prasad has that main lacks: mission executive, the replay ELAPSED_SEC fix, the cockpit.
+  - Bring it in by reviewed pull requests file by file, not a blind merge.
+  - Nothing is force-pushed; main is never reset.
+Step 0.2 CREATE configs/faults.json (the fault registry; the single source for all fault IDs). Fields per entry:
+    id ("F06"), name ("INJECTOR_COKING_CI"), legacy_ids ([3] if it replaces legacy numeric 3), kind (PHYSICAL |
+    SENSOR), scope (ENGINE | CYLINDER | CHANNEL), engines ([...] or "ALL"), applicability_rule (e.g.
+    "fuel_system == COMMON_RAIL"), parameter_effects ([{component, parameter, op: "scale|add|set", at_full_severity}]),
+    default_severity, default_ramp_s, expected_signature ([{channel, direction: +1|-1, min_delta, units}]),
+    detect_window_s, isolation_group, status_at_full_severity (ADVISORY|CAUTION|WARNING), ata_chapter,
+    maintenance_action, description_for_ui.
+  CREATE configs/schema/faults.schema.json (JSON Schema). The server validates at start and refuses to start on an
+  invalid registry (T-CFG-1).
+  Content: F01-F37 and S01-S07 exactly as R section 22 (engines, physics, readings, detect, status, action).
+Step 0.3 CREATE configs/components/<engine_id>.json (5 files) from the addendum (A sections 1-4): component id,
+  GLB node patterns (NOW list), TARGET list after Blender work, cylinder index, subsystem. Every fault's 3D parts
+  are resolved as registry fault -> components (per engine) -> node patterns. Fault IDs never appear in viewer code.
+Step 0.4 CREATE backend/runtime/fault_manager.py with these methods:
+    inject(engine_id, fault_id, cylinder|channel, severity 0..1, ramp_s, source) -> ActiveFault(uuid, t0_sim, ...)
+      validate: known id; engine applicable; cylinder 1..n_cyl when scope=CYLINDER; channel exists when scope=CHANNEL;
+      severity range. On failure raise FaultRejected(reason) -> HTTP 422 {"reason": "..."}; never ignore.
+    clear(engine_id, uuid|None), list(engine_id), history(engine_id)
+    events: every inject/clear is appended to the engine event log with source (console|3d|blender|gcs|voice|api|
+    replay).
+Step 0.5 CREATE backend/server/api_v1.py:
+    GET    /api/v1/engines                         list from configs (id, name, type, cylinders, availability)
+    GET    /api/v1/engines/{id}/config             full config + provenance (for UI limits/tooltips)
+    GET    /api/v1/faults?engine={id}              registry filtered by applicability
+    POST   /api/v1/engines/{id}/faults             body {fault_id, cylinder?, channel?, severity, ramp_s, source}
+    DELETE /api/v1/engines/{id}/faults/{uuid}      and DELETE .../faults for all
+    POST   /api/v1/engines/{id}/levers             {throttle_pct, prop_rpm_set, mixture?, run: START|STOP}
+    POST   /api/v1/engines/{id}/environment        {altitude_ft, isa_dev_c, humidity_pct, dust_mg_m3, airspeed_kt}
+    POST   /api/v1/sim/time_scale                  {scale: 1|5|20|60}
+    WS     /api/v1/ws?engine={id}                  state messages (Step 0.7); the client may switch engine with a
+                                                    {"subscribe": "<id>"} message
+  CHANGE backend/server/engine_api.py. The old /api/control and /ws/telemetry become thin adapters onto the new API
+  for one release, marked deprecated in logs. Legacy numeric fault IDs resolve through registry legacy_ids, never by
+  list position (fixes V7).
+Step 0.6 Single simulator per engine.
+  CHANGE backend/runtime/hub.py:
+    - delete the sync_from_tick call in tick_all (lines 47-54);
+    - remove the global "selected engine = engines[0]";
+    - selection becomes per subscription;
+    - IDLE_TICK_DIVISOR comes from configs/runtime.json (fixes V3, V12).
+  REMOVE-FROM-RUNTIME: EngineStateService's legacy tick loop and TelemetryStreamer (can_streamer.py) as a source of
+  engine values. can_streamer.py stays only if M7 reuses its CAN framing code.
+Step 0.7 State message contract. CREATE backend/server/state_schema.py (pydantic) and generate
+  frontend/src/types/state.ts from it (T-API-2). Fields:
+    schema_version, engine_id, seq, sim_time_s, wall_time_iso, rate_hz_actual, time_scale, source (SIM|REPLAY|CAN),
+    engine_state (OFF|CRANKING|RUNNING|DEGRADED|FAILED), levers{}, environment{},
+    readings{channel: {value|null, unit, quality: OK|SUSPECT|QUARANTINED|VIRTUAL|NO_DATA, age_ms, limits ref}},
+    derived{power_kw, torque_nm, bsfc_g_kwh, thermal_eff, map_kpa, lambda, prop_rpm, energy_balance{}},
+    twin{predicted{}, health_params{name: {value, sigma}}, nis, valid},
+    residuals{channel: z}, detections[{detector, channel|group, statistic, threshold, since_s}],
+    hypotheses[{fault_id, cylinder, posterior, supporting[{channel, z}], contradicting[{channel, z}]}],
+    status{level, reasons[{code, text, channel|fault, value, limit}], latched, acknowledged},
+    alerts[{id, level, text, first_s, last_s, ack, shelved_until}],
+    highlights[{component_id, level, reason}],
+    prognostics{rul_h, rul_lo_h, rul_hi_h, coverage_target, time_to_limit[{channel, s, lo, hi}], mission_reliability},
+    maintenance[{work_order_id, ata, action, due, status}],
+    active_faults[{uuid, fault_id, cylinder, severity, ramp_s, source, t0_s}]   (shown in training mode only, labelled),
+    events_since[{seq, sim_time_s, type, text, source}]
+  highlights come from hypotheses + status (D4), never from active_faults.
+Step 0.8 WebSocket fan-out. CREATE backend/server/broadcaster.py:
+  - each client gets its own asyncio.Queue(maxsize=1); on put when full, drop the old message (latest-only) and count
+    the drop;
+  - a sender task per client wraps send in a timeout (e.g. 2 s), then closes with code 1008;
+  - one socket per client.
+  This follows the per-client bounded-queue pattern in the websockets broadcast guide. It keeps a slow phone from
+  stalling the 20 Hz loop (T-WS-1).
+Step 0.9 Frontend single store. CHANGE frontend/src/hooks/useEngineRuntime.ts:
+  - one socket feeds one zustand store (zustand 4.5 is already a dependency);
+  - remove the second and third sockets and the polling;
+  - every component reads the store;
+  - CHANGE the five static "20 Hz" labels (V9) to show rate_hz_actual and data age.
+Step 0.10 Other clients become API clients.
+  - apps/threejs_twin/index.html: freeze it. Its function moves into the React R3F viewer in M6. Until then, change
+    it only to read /api/v1 and the registry (no ENGINE_PROFILES / ENGINE_FAULT_TARGETS tables).
+  - apps/blender_twin/standalone_digital_twin_app.py: use /api/v1 for faults and the state message for highlights;
+    remove offline sine telemetry, so it shows NO DATA when offline (V10).
+  - The canyon app reads engine state from /api/v1 (M5 replaces its private CHT and speed tables).
+Step 0.11 Runtime files out of Git. CHANGE the fleet-graph writer to var/graph_db/fleet_graph.json and add var/ to
+  .gitignore. This is why data/graph_db/fleet_graph.json shows as modified after every run.
+Acceptance M0: T-M0-1..6, T-WS-1, T-CFG-1, T-DYN-4 (import check part).
+Closes: 3.5 modular/ingestion (part), 3.3 visualization (part); prerequisite for everything else.
+
+---------------------------------------------------------------------------------------------------------------------
+M1 - REAL PHYSICS FOR ALL FIVE ENGINES (weeks 2-3)
+---------------------------------------------------------------------------------------------------------------------
+Goal: one mean-value engine model per engine, calibrated to Part 2 data. Every fault acts on parameters, and every
+monitored PS parameter is computed.
+
+Step 1.1 CREATE backend/sim/ package exactly as R 21.2. Each module is a class with params (from config), state,
+  step(dt, inputs) -> outputs, and no globals or random calls except through the engine's seeded RNG.
+Step 1.2 Config extension. CHANGE configs/engines/*.json:
+  - apply the Part 2 corrections;
+  - add a "physics" block holding every constant the modules use, each with provenance;
+  - add "limits" as banded objects {normal:[lo,hi], caution:[lo,hi], warning:[lo,hi], rpm_rule?, time_limit_s?};
+  - add the "sensors" list (or a separate configs/sensors/<engine>.json) with noise sigma, lag tau, resolution,
+    range, redundancy (lanes) and expected sensitivity signs (used by T-DYN-3).
+Step 1.3 Build order. Each step has a unit test before the next starts:
+   a. atmosphere.py:
+      - ISA (R 21.4), plus ISA deviation;
+      - humidity via the dry-air partial pressure: p_dry = p - RH*p_sat(T), with
+        p_sat = 0.61094*exp(17.625*T_c/(T_c+243.04)) kPa (Magnus form);
+      - air density uses p_dry and the vapour partial pressure.
+      Test: ISA table points within 0.1 %.
+   b. rotor.py + propeller:
+      - J_tot*dω/dt = Q_eng - Q_prop/G - Q_acc;
+      - prop power P = Cp*ρ*n^3*D^5, advance ratio J = V/(n*D), efficiency η = (Ct/Cp)*J (the JSBSim FGPropeller
+        relations);
+      - fixed pitch for the Rotax installations unless the installation says constant-speed; constant-speed for the
+        AE300/VRDE with a PI governor on blade pitch between min/max pitch stops (gains in config).
+      Test: governor holds the setpoint within ±20 rpm after a 20 % power step in <2 s, overshoot <3 %.
+   c. induction.py:
+      - throttle orifice flow (compressible, Cd*A(α)) into the manifold: dMAP/dt = (R*T_m/V_m)*(ṁ_thr - ṁ_cyl),
+        with ṁ_cyl = η_v*(MAP/(R*T_m))*V_d*rpm/120 (speed-density);
+      - air filter Δp = k*ṁ^2;
+      - remove the fixed 5200 rpm (V5); pass the real rpm.
+      Test: MAP time constant for a throttle step 0.05-0.3 s (NA).
+   d. combustion.py:
+      - per cylinder, fuel mass -> indicated work: W_i = m_f*LHV*η_i*quality;
+      - η_i depends on lambda and timing error (efficiency-loss curve vs spark/injection timing);
+      - LHV and stoichiometric AFR come from a fuel table configs/fuels.json (avgas, mogas, Jet-A1, diesel, ATF K-50),
+        each value with its source;
+      - knock margin for SI; smoke limit (λ_min) for CI.
+      - Combustion stability: per-cycle IMEP variation with a COV model that rises when lambda is lean, ignition
+        energy is weak (F04), injection is poor (F06/F07) or the load is low. COV_IMEP is published as a derived
+        channel. Use the literature value of about 5 % as the instability threshold; it is a configurable limit.
+   e. friction: FMEP = a + b*rpm + c*rpm^2 (Chen-Flynn style). Brake power = Σ indicated - friction - accessories.
+   f. CALIBRATE the 912 (procedure R 21.5) -> T-PHY-1..3 for the 912 only. Commit the calibrated constants to the
+      config with status CALIBRATED and the date.
+   g. thermal.py, coolant.py, oil.py, gearbox.py (R 21.4):
+      - oil pressure follows the rpm rule;
+      - Vogel viscosity;
+      - relief valve;
+      - the seizure chain;
+      - gearbox oil temperature (AE300 limit 120 C).
+      Test: T-PHY-6, T-PHY-7.
+   h. electrical.py:
+      - alternator(s) with cut-in and full-output rpm, health and regulator setpoint;
+      - battery with SOC, open-circuit voltage curve and internal resistance;
+      - loads (ECU, pumps, installation payload);
+      - the 912 iS gets two generators (A for ECU, B for airframe) with lane switch-over above about 2500 rpm (OWNER
+        data, labelled);
+      - bus voltage and currents are now computed (V5 fixed).
+      Test: alternator failure -> battery discharge -> bus voltage falls on its curve; low SOC -> lane/ECU warnings.
+   i. vibration.py:
+      - order amplitudes from the cylinder torque spread (0.5 / 1st order for a 4-stroke imbalance);
+      - firing order 2 for 4 cylinders;
+      - prop 1x for imbalance;
+      - gear-mesh order;
+      - turbo synchronous;
+      - mount transmissibility;
+      - RMS mm/s published;
+      - crank_dynamics.py at 1 Hz (crank_every_n_steps = rate_hz) for crank-angle detail.
+      Test: F01 misfire raises the 0.5/1st order by ≥3x within one window.
+   j. turbo.py:
+      - compressor/turbine power balance with wastegate (VGT on the AE300);
+      - TCU/ECU MAP target from the lever;
+      - critical altitude emerges when the wastegate is fully closed;
+      - intercooler effectiveness.
+      Test: T-PHY-4.
+   k. CALIBRATE the 914 and 915 (two critical altitudes on the 914).
+   l. fuel.py:
+      - common rail for the AE300/VRDE: HP pump flow, rail volume, leak, injector flow ∝ sqrt(P_rail)*pulse width,
+        rail pressure control by the ECU;
+      - the SI injectors (912/915) are port injectors at the Part 2 fuel pressure band;
+      - the 914 has carburettor jets with a throat area (icing reduces it);
+      - fuel flow = Σ delivered fuel (V5 "+1.5" removed).
+   m. CALIBRATE the AE300 and VRDE (flat-rated to 11,000 ft for the VRDE).
+   n. ecu.py:
+      - lambda map;
+      - ignition timing map (SI) and start-of-injection map (CI) vs rpm/load, with the configured nominal values as
+        anchor points (so injection timing is a live map output, V1 fixed);
+      - lane A/B logic, limiters (over-speed, over-boost), glow plugs (CI start).
+   o. engine.py:
+      - state machine OFF/CRANKING/RUNNING/DEGRADED/FAILED (R 21.4), using the existing _failed concept;
+      - fixed internal step 0.01-0.05 s, sub-stepped to the publish rate;
+      - sim clock with time scale.
+   p. faults.py:
+      - applies registry parameter_effects with severity and ramp;
+      - ALL injector faults now act on fuel.py (MVEM) AND on the crank model, so they work at 20 Hz without the
+        crank model (V5 fixed);
+      - implement F01-F37 and S01-S07 (sensors.py holds the sensor fault states).
+      Test: T-FLT-1 (signature matrix).
+   q. performance maps: CREATE backend/sim/maps.py. It sweeps the calibrated plant (rpm x MAP, or rpm x fuel demand
+      for CI) and writes power/BSFC/efficiency/EGT maps per engine to var/maps/<engine>.json at startup. The engineer
+      view shows them with the live operating point. backend/performance/maps.py is replaced or wired to this
+      (closes N4 maps).
+Step 1.4 REMOVE-FROM-RUNTIME: backend/plant/virtual_engine.py internals. Keep its PlantSource/Frame interface as a
+  facade over backend/sim/engine.py, so the runtime is untouched. legacy thermo_model.py is removed from runtime.
+Step 1.5 Cross-check (optional, half a day):
+  - make a Python 3.12/3.13 virtual env (published jsbsim wheels support up to 3.13; the local default is 3.14);
+  - pip install jsbsim;
+  - compare power vs altitude and MAP vs throttle trends with the 912 model (gasoline only).
+Step 1.6 CREATE docs/physics/ENGINE_MODEL.txt: equations, constants table with provenance, calibration results
+  table, validation plots (power vs altitude, temperatures at max continuous ISA+15, response times). This is
+  deliverable 3.
+Acceptance M1: T-PHY-1..11, T-FLT-1, T-DYN-2, T-DYN-3, T-DYN-7.
+Closes: 3.2 thermodynamic, maps, failure logic; 3.6 all parameters; 3.9 physics for environment/altitude/hot/
+throttle; deliverable 3; technical expectation "IC engine fundamentals".
+
+---------------------------------------------------------------------------------------------------------------------
+M2 - ENGINE STATUS, LIMITS, ALERTS (week 3, parallel with the end of M1)
+---------------------------------------------------------------------------------------------------------------------
+Step 2.1 CREATE backend/status/evaluator.py. Inputs:
+  - readings with quality;
+  - limits from config (bands, rpm rules, time limits such as 5 min take-off power);
+  - hypotheses with posterior and FMECA severity (backend/reliability/fmeca.py);
+  - prognostics (time-to-limit);
+  - sensor quality;
+  - engine_state.
+Step 2.2 Levels: ENGINE OFF, GO, ADVISORY, CAUTION, NO-GO.
+  Alert colour mapping in the UI (Part 6): NO-GO = warning (red), CAUTION = caution (amber), ADVISORY = advisory
+  (cyan/white), GO = no alert.
+  Rules:
+    - Any WARNING-band reading with quality OK -> NO-GO.
+    - CAUTION band -> CAUTION.
+    - Hypothesis with posterior ≥ 0.7 -> that fault's status_at_full_severity scaled by severity estimate.
+    - Time-to-limit < mission remaining -> CAUTION with reason "will exceed <limit> in <t>".
+    - A single quarantined sensor -> ADVISORY (not NO-GO).
+    - Two quarantined sensors on the same subsystem -> CAUTION.
+    - engine_state FAILED -> NO-GO.
+  Hysteresis:
+    - enter immediately;
+    - exit only after the value is back inside the band by 2 % of the band span for 10 s;
+    - NO-GO latches until acknowledged AND the cause is cleared.
+  Every non-GO level carries ≥1 reason {code, text, channel/fault, value, limit}.
+Step 2.3 REMOVE-FROM-RUNTIME:
+  - go_no_go defaults (engine_service.py:310, :801);
+  - trend_analyser advisory "GO" defaults (567, 603);
+  - prognostics.reset() on SET_FAULT (engine_service.py:889);
+  - the oil residual constant (engine_runtime.py:398).
+Step 2.4 Alerts: alert objects with first/last time, count, acknowledge, shelve (with auto-unshelve), and group
+  by root cause (Part 6, alarm flood handling).
+Acceptance M2: T-STS-1..5.
+Closes: 3.10 health status, alerts; 3.3 abnormal conditions.
+
+---------------------------------------------------------------------------------------------------------------------
+M3 - TWIN, DETECTION, ISOLATION, EXPLANATION (weeks 3-5)
+---------------------------------------------------------------------------------------------------------------------
+Step 3.1 Twin. CHANGE backend/twin/ukf.py so it runs a reduced copy of the M1 model.
+  - States: rpm, MAP, CHT_i, T_coolant, T_oil, p_oil, SOC, turbo speed.
+  - Health parameters are added as random-walk states: η_v, per-cylinder fuel/combustion factor, per-cylinder cooling
+    effectiveness, oil pump health, oil cooler health, alternator health, turbo efficiency, filter coefficient.
+  - Fix the validity flag: valid when the NIS (normalised innovation squared) stays inside its chi-square 99 % band
+    over a 10 s window.
+  - Publish twin.predicted, health_params with sigma, nis, valid.
+Step 3.2 Residuals: r = y - ŷ normalised by the innovation covariance (z-scores).
+Step 3.3 Detectors (backend/detect/):
+  (a) NIS chi-square window test (fast, any fault).
+  (b) Two-sided CUSUM per residual channel: g+_k = max(0, g+_{k-1} + z_k - ν), and likewise for g-.
+      - ν = δ/2, where δ is the smallest shift to detect in sigma units (start δ = 1).
+      - h is chosen so that the nominal average run length to false alarm is ≥ 1 h at 20 Hz (72,000 samples).
+      - h is found empirically from 10 h of nominal simulation per engine and stored as CALIBRATED.
+  (c) Order-domain vibration features: 0.5/1/2 order ratios, prop 1x, gear mesh.
+  (d) Combustion-instability features: COV_IMEP from the crank model and crank-speed fluctuation.
+  (e) A learned novelty detector (the existing reservoir, retrained on M1 data) as a secondary vote only.
+Step 3.4 Sensor FDI (backend/detect/sensor_fdi.py), per channel:
+  - S01 stuck: rolling std over 5 s < 0.1 x nominal noise sigma while the twin predicts a change > 3 sigma.
+  - S05 dropout: null/NaN or age > 3 frames.
+  - S06 out-of-range: outside the physical range in the sensors config.
+  - S02/S03 bias/drift: CUSUM on that channel's residual while channels physically coupled to it stay consistent
+    (single-channel signature means sensor; a multi-channel pattern means process fault).
+  - S04 noise: variance ratio test.
+  - S07 lane disagreement: |A-B| > tolerance for > 1 s.
+  On confirmation: quarantine the channel, the UKF drops it from the update, and the UI shows the virtual sensor ŷ
+  with a ±2σ band labelled VIRTUAL. (This follows Kalman-innovation sensor-fault detection as used in aircraft
+  sensor FDI; see sources.)
+Step 3.5 Isolation (backend/diagnose/):
+  - signature matching: the residual vector vs each applicable registry expected_signature (sign and magnitude,
+    cosine score);
+  - Bayesian update with priors from FMECA failure rates;
+  - per-cylinder isolation from cylinder channels and order phase.
+  - An isolability report lists fault pairs that cannot be told apart with the available sensors. Be honest: e.g.
+    F21 radiator blockage vs F20 coolant loss early on. The UI then shows both hypotheses.
+Step 3.6 Explanation (backend/diagnose/explain.py wired): each hypothesis carries supporting and contradicting
+  residuals with z-scores and a one-line template text built only from evidence. Example: "EGT_3 +62 C (z=7.1),
+  CHT_3 +9 C (z=3.0), 0.5 order x3.4 -> injector coking cylinder 3, p=0.86". No language model writes the evidence.
+Step 3.7 REMOVE-FROM-RUNTIME: engine_runtime.py:480-522 (diagnosis from self.injected) and the confidence 0.98
+  constant.
+Step 3.8 Evaluation harness. CREATE backend/evaluation/run_matrix.py. It runs every engine x applicable fault x
+  severity {0.3, 0.6, 1.0} x ramp {0, 60, 600 s} x 5 seeds, plus 10 h nominal per engine. It writes
+  reports/evaluation/detection_<date>.csv and a summary txt:
+  - detected (yes/no);
+  - delay (s);
+  - top-1/top-3 isolation;
+  - correct cylinder;
+  - false alarm rate per hour;
+  - earlier-than-threshold margin vs backend/evaluation/threshold_baseline.py.
+  This is deliverable 4.
+Acceptance M3: T-DET-1..6, T-DYN-4.
+Closes: 3.1 estimation/anomaly; 3.7 all targets; 3.8 anomaly; physics-informed AI, XAI, hybrid; sensor fusion.
+
+---------------------------------------------------------------------------------------------------------------------
+M4 - PROGNOSTICS, TRENDS, MAINTENANCE, ADAPTIVE LEARNING (weeks 5-6)
+---------------------------------------------------------------------------------------------------------------------
+Step 4.1 Degradation processes in the plant (backend/sim/wear.py). Slow wear laws drive registry faults over
+  operating hours:
+  - bearing wear rate ∝ load x lubrication factor (low oil pressure/high temperature accelerate it);
+  - cooling-fin/radiator fouling ∝ dust exposure;
+  - injector coking ∝ hours at low load (CI);
+  - turbo bearing wear ∝ shaft speed and oil temperature;
+  - battery capacity fade per cycle.
+  With these, run-to-failure trajectories can be generated with known truth.
+Step 4.2 Trends: robust slope (Theil-Sen) on health parameters and on limit-relevant readings over sliding windows
+  (10 min, 1 h, mission). Time-to-limit = (limit - current)/slope, with a confidence interval from the slope
+  interval. It is shown only when the slope is significant.
+Step 4.3 RUL:
+  - train a model (gradient boosting first; a small LSTM optional) from health parameters + operating history to RUL
+    on simulated run-to-failure fleets (≥200 trajectories per engine, different seeds/missions/environments);
+  - split conformal intervals with a calibration set of 10-20 % of trajectories held out BY TRAJECTORY (not by
+    sample);
+  - target 90 % coverage and report empirical coverage. Published work on turbofan and bearing RUL reports 88-92 %
+    against a 90 % target with this method.
+  - Exchangeability does not hold across operating regimes, so calibrate per regime (cruise/climb/hot) or use
+    weighted conformal, and report coverage per regime.
+  - REMOVE-FROM-RUNTIME: sine-series calibration (engine_runtime.py:147-154), RUL formula (415), damage from the
+    injected list (426-450).
+Step 4.4 Mission reliability = P(RUL > remaining mission time), from the conformal distribution. Feeds status (M2)
+  and the planner (M5).
+Step 4.5 Maintenance:
+  - wire backend/maintenance/work_package.py: hypotheses (posterior ≥ 0.7) and time-to-limit/RUL create a work order
+    with ATA chapter, action from the registry, due time, parts;
+  - sign-off flow (open -> in work -> signed off) persisted in var/maintenance.sqlite;
+  - after sign-off, the fault clears and the health parameter reset is recorded.
+Step 4.6 Adaptive learning (per tail):
+  - the baseline mean/variance of each residual is updated with an EWMA only while status = GO for ≥ 30 min, no
+    CUSUM above h/2 and no open work order;
+  - twin nominal parameters are re-estimated the same way;
+  - each update is versioned per tail with rollback;
+  - the UI shows "baseline v7, updated 2 h ago".
+  This is the PS "adaptive learning capability", made safe against learning a fault as normal.
+Step 4.7 Real dataset demo (deliverable 6): run the RUL pipeline on NASA C-MAPSS FD001
+  (data/telemetry/source2_nasa_benchmarks/train_FD001.txt) and report RMSE and coverage. Label it clearly: "turbofan
+  benchmark, used to validate the method, not a piston engine". Fix or rename dataset adapters that synthesise data
+  but carry public dataset names.
+Acceptance M4: T-PRG-1..5.
+Closes: 3.1 degradation/prediction; 3.3 prediction/RUL; 3.8 RUL/trend/maintenance/adaptive; reliability engineering.
+
+---------------------------------------------------------------------------------------------------------------------
+M5 - MISSIONS, ENVIRONMENT, REPLAY, REPORTS, CANYON PLANNING (weeks 5-7)
+---------------------------------------------------------------------------------------------------------------------
+Step 5.1 Mission profiles. CREATE configs/missions/*.json with schema:
+  {name, engine_ids[], platform, phases:[{name, until: {time_s | altitude_ft | waypoint}, throttle_pct |
+  power_target_pct, prop_rpm_set, altitude_ft, airspeed_kt, isa_dev_c, humidity_pct, dust_mg_m3, wind}]}
+  The mission executive from origin/Prasad is rebuilt on the M0 API (levers + environment endpoints), so missions
+  drive the same plant as manual control.
+Step 5.2 The four PS scenarios, one click each:
+  - HIGH ALTITUDE (Ladakh): departure Leh (airfield elevation about 10,700 ft), climb to 25,000 ft. It shows NA power
+    loss with altitude (Gagg-Farrar P/P0 = σ - (1-σ)/7.55 for the 912, as a check), turbo hold to each engine's
+    critical altitude, then decay.
+  - ENDURANCE: 18 h ISR loiter at 20x time scale; 24 h variant for the VRDE (Part 2). Slow wear (Step 4.1) is visible
+    as trends.
+  - HOT WEATHER (Thar): ISA+30 (about +45 C at ground) with dust. It shows density loss, CHT/oil/coolant margins
+    shrinking, and filter loading.
+  - RAPID THROTTLE TRANSITIONS: 20 cycles idle <-> take-off every 20 s. It shows MAP/rpm dynamics, turbo lag, the
+    thermal cycling count, and governor behaviour (AE300/VRDE).
+Step 5.3 Time scale: sub-step the fixed internal step (more steps per wall second); the publish rate stays fixed.
+  Detection, trends and RUL use sim_time_s (D9). Test: T-MIS-2.
+Step 5.4 Recorder. CREATE backend/recording/recorder.py:
+  - each sortie is a folder var/recordings/<sortie_id>/ with meta.json (engine, config hash, seed, mission, software
+    version);
+  - frames.parquet holds every state message (or msgpack chunks);
+  - commands.jsonl holds every command with source;
+  - events.jsonl.
+Step 5.5 Replay. CREATE backend/recording/replay_hub.py:
+  - publishes recorded state messages on the same WS schema with source=REPLAY;
+  - play/pause/seek/speed;
+  - the UI is unchanged (a REPLAY badge is shown).
+  - "Re-run" mode: feed the recorded commands into a fresh plant with the same seed. It must reproduce the frames
+    bit-for-bit (T-DYN-7) and allows a WHAT-IF fork from any time.
+  - Old recordings: a converter sets elapsed = TIMESTAMP_SEC - first TIMESTAMP_SEC. Missions without CSV are marked
+    "metadata only" in the list, not hidden (fixes N1).
+Step 5.6 Mission health report. CREATE backend/reports/sortie_report.py. It writes HTML + PDF per sortie:
+  - summary;
+  - status timeline;
+  - limit exceedances with duration;
+  - alerts;
+  - hypotheses with evidence;
+  - efficiency/BSFC trend;
+  - RUL before/after;
+  - maintenance raised;
+  - config provenance;
+  - software version.
+  It replaces the three legacy report writers.
+Step 5.7 Canyon / terrain mission planning:
+  - CREATE backend/terrain/dem.py. Load Copernicus GLO-30 tiles from the public AWS bucket copernicus-dem-30m
+    (naming Copernicus_DSM_COG_10_N34_00_E077_00_DEM; the existing terrain.blend uses N34 E077 near Leh). Check the
+    tile is present in the bucket listing; some tiles are withheld. Cache under var/dem/.
+  - CREATE backend/planning/planner.py:
+    - A* on a lat/lon grid with altitude layers;
+    - cost = distance + terrain clearance penalty (minimum clearance in config) + climb energy;
+    - feasibility per edge: required climb rate vs available climb rate from excess power = P_available(altitude,
+      health) - P_required, where P_available comes from the M1 performance map scaled by the twin health
+      parameters, and P_required comes from the platform drag polar in configs/installations;
+    - replan when status changes or every N s;
+    - infeasible routes are refused with the reason.
+  - Web waypoint editor in M6.
+  - The Blender canyon app: remove the "dive to cool" bug (fault_overheat=True in _apply_flight_intent), the private
+    CHT model and the throttle-speed table. It becomes a visual client of the planner output and the state stream,
+    or it is retired from the demo.
+Acceptance M5: T-MIS-1..6.
+Closes: 3.9 all; 3.3 mission profiles/post-flight; 3.10 mission reports; UAV propulsion.
+
+---------------------------------------------------------------------------------------------------------------------
+M6 - DASHBOARD AND 3D (weeks 4-7; frontend and Blender in parallel; UX details in Part 6)
+---------------------------------------------------------------------------------------------------------------------
+Step 6.1 Frontend structure (frontend/src):
+  - store/ (zustand state, alerts, selection, role);
+  - api/ (generated types);
+  - views/Operator, views/Engineer, views/Maintenance, views/Fleet, views/Replay, views/Mission;
+  - components/ (StatusBanner, AlertList, Gauge, Trend, HypothesisCard, EnergySankey, Viewer3D, ...).
+  Every list is built from /api/v1 (engines, faults, components, limits).
+Step 6.2 Operator view: status banner (level, top reason, acknowledge), master warning/caution, engine selector
+  (from the API), key gauges with limit bands from config, data age, alert list, mission progress, power margin.
+Step 6.3 Propulsion engineer view:
+  - all channels;
+  - twin vs measured overlay;
+  - residual z-scores;
+  - health parameters with sigma;
+  - performance map with the live operating point;
+  - energy balance (Sankey);
+  - vibration order spectrum;
+  - COV_IMEP;
+  - efficiency/BSFC trends.
+Step 6.4 Maintenance view: hypotheses with evidence, RUL with band, time-to-limit list, work orders with sign-off,
+  component history, mission reports.
+Step 6.5 3D viewer. CREATE frontend/src/components/Viewer3D/ with React Three Fiber:
+  - loads the GLB named in configs/components/<engine>.json;
+  - DRACOLoader/meshopt decoder;
+  - the highlight set is state.highlights resolved through the component manifest;
+  - multiple simultaneous highlights coloured by level (red/amber/cyan, same as alerts);
+  - cylinder-specific parts;
+  - camera focus on the highest-level highlight;
+  - click a part -> its readings, faults and maintenance history;
+  - outline via react-postprocessing Selection/Outline (autoClear false, per A section 7).
+  apps/threejs_twin/index.html is retired once this passes T-3D-1..4 (moved to archive_tracked/, not deleted).
+Step 6.6 Model pipeline (Part 5.4): Blender -> headless export -> validate node names -> glTF-Transform optimize ->
+  ONE output folder consumed by every web app.
+Step 6.7 Blender model work list: as in A section 5. In short:
+  - split the 915 "Main engine" merged mesh;
+  - rename the 320 "Turbo_Wastegate" nodes on the 914;
+  - add cylinder-indexed parts on all engines;
+  - make the VRDE model a VRDE (not the TEI PD170) or label it "representative geometry";
+  - same for AE300 vs AE330.
+Step 6.8 Responsive and accessible:
+  - minimum font 12 px (163 instances of 9-10 px today);
+  - WCAG AA contrast 4.5:1;
+  - breakpoints 360 / 768 / 1280 px;
+  - keyboard navigation;
+  - phone layout for the maintenance view.
+Acceptance M6: T-UI-1..8, T-3D-1..5, T-UX-1..5.
+Closes: 3.3 visualization; 3.10 all; deliverable 5; data visualization.
+
+---------------------------------------------------------------------------------------------------------------------
+M7 - CAN / FADEC / EDGE / SECURITY / FEDERATED (weeks 6-8)
+---------------------------------------------------------------------------------------------------------------------
+Step 7.1 DBC: CHANGE configs/can/anumaan_fadec.dbc. Extend it from 4 messages to the full channel set: per-cylinder
+  EGT/CHT, MAP, fuel flow, rail/fuel pressure, timing, lambda, bus voltage/currents, lane status, vibration orders,
+  sequence counter. Keep the J1939-style IDs for the standard parameters.
+Step 7.2 Bus:
+  - python-can virtual interface on Windows (interface "virtual"), SocketCAN vcan0 on Linux;
+  - encode/decode with cantools db.encode_message / db.decode_message;
+  - candump + "cantools decode" for live inspection in the demo.
+Step 7.3 FADEC emulator (backend/fadec_emulator/) publishes from backend/sim/ecu.py at native periods (10-100 ms per
+  message, from the DBC). CREATE backend/sources/can_source.py, which builds Frames from the bus. The engine source
+  is chosen in configs/runtime.json: DIRECT | CAN | MAVLINK | REPLAY.
+Step 7.4 Security:
+  - CAN IDS (backend/security/can_ids.py): unknown ID, period deviation per ID, payload range, sequence counter gap;
+  - optional message authentication (truncated CMAC per frame, SecOC-style) on the virtual bus;
+  - Merkle-chained telemetry log per sortie (backend/security/merkle_log.py), root hash in the sortie report.
+Step 7.5 Edge node (backend/edge/), a separate process on the "aircraft side":
+  - full-rate features -> 1 Hz summaries + event-triggered raw snippets;
+  - measure bytes/s, CPU % and memory, and show them on screen.
+Step 7.6 Federated (optional): 5 simulated tails train per-tail detectors; FedAvg in backend/federation/ aggregates
+  without sharing raw frames. Report detection before/after.
+Acceptance M7: T-CAN-1..4.
+Closes: 3.4 all; edge AI, lightweight onboard, secure telemetry, federated; embedded systems, CAN communication.
+
+---------------------------------------------------------------------------------------------------------------------
+M8 - PRODUCTION READINESS, CLEANUP, DOCUMENTATION, DEPLOYMENT (weeks 7-9)
+---------------------------------------------------------------------------------------------------------------------
+Step 8.1 R section 24:
+  - /api/v1 versioned API;
+  - generated TypeScript types;
+  - structured JSON logs with engine_id/seq;
+  - Prometheus-style metrics (tick time, drops, clients);
+  - /health and /ready endpoints;
+  - command token;
+  - CORS list;
+  - Dockerfile + docker compose;
+  - one simulation owner process.
+Step 8.2 Config validation: JSON Schemas for engines, faults, components, sensors, missions and installations. The
+  server refuses to start on invalid config and prints the path and reason (T-CFG-1).
+Step 8.3 Cleanup per Part 5: repository layout, duplicate code (A Part 2 / dup_scan results), unused modules either
+  wired or moved to archive_tracked/ with a note, environment pinning (requirements with versions; Python 3.12 or
+  3.13 for jsbsim compatibility).
+Step 8.4 Docs rewritten to match main, all as plain text or the docs_site:
+  - architecture (deliverable 2);
+  - engine model (deliverable 3);
+  - ML evaluation (deliverable 4);
+  - datasets and provenance (deliverable 6);
+  - deployment roadmap for GCS / test rig / fleet (deliverable 7);
+  - fault catalogue generated from configs/faults.json;
+  - fix N2 (create docs/analysis/ or change the links) and N3 (claims);
+  - README.
+Step 8.5 CI: lint, type-check, unit tests, T-DYN suite, T-PHY suite, a short T-FLT subset, Playwright smoke, link
+  checker for docs.
+Acceptance M8: T-OPS-1..4.
+Closes: 3.5 modular; deliverables 2, 6, 7.
+
+---------------------------------------------------------------------------------------------------------------------
+M9 - FINAL VERIFICATION AND REHEARSAL (week 9)
+---------------------------------------------------------------------------------------------------------------------
+- Run the whole Part 7 catalogue.
+- Run the demo script (Part 9) three times on the demo laptop and network, plus once on the deployed server.
+- Record a backup video.
+- Freeze main with a tag.
+Accept: every Part 3 row is WORKS; every Part 10 box ticked with its test ID; the demo passes without intervention.
+
+
+=====================================================================================================================
+PART 5 - REPOSITORY AND BLENDER CLEANUP (NO .blend FILE IS EVER DELETED)
+=====================================================================================================================
+
+5.1 Rules
+R1. No .blend file is deleted, ever. Duplicates and old versions are MOVED to assets/blender/_archive/ with an entry in
+    assets/blender/_archive/ARCHIVE_REGISTER.csv: original path, new path, md5, size, date moved, reason, who.
+R2. Moves use "git mv" so history follows the file. Blender backups (*.blend1) are untracked today. Move them to a
+    local gitignored folder assets/blender/_archive/blend1_backups/ (DECISIONS D42), then add *.blend1 to .gitignore.
+R3. One MASTER .blend per real engine, the only file anyone edits for that engine. Variants (showcase, lookdev,
+    LOD) live next to it in a variants/ folder and link geometry from the master (Blender library linking), so they
+    stop drifting.
+R4. Git LFS with locking for .blend:
+    - git lfs track --lockable "*.blend";
+    - lock before editing (git lfs lock <file>), unlock after the push;
+    - a push touching a file locked by someone else is rejected.
+    This prevents two people overwriting each other's binary work (.blend files cannot be merged).
+R5. Add "*.glb", "*.fbx" and "*.exr" to Git LFS for NEW commits. Do not rewrite history to move the old ones (that
+    needs a force push, which we never do). The 5.1 GB .git stays as it is; it stops growing as fast.
+R6. GLB files are BUILD OUTPUTS from the master .blend through the pipeline (5.4). Only one copy is committed
+    (assets/web/engines/). Every app reads that one copy (via its build config or a copy step at build time). Before
+    any duplicate GLB copy is removed from Git, the team confirms with md5 that it is byte-identical to the
+    canonical copy.
+R7. An asset register (assets/ASSET_REGISTER.csv) is the single truth for the team. Columns: engine_id, real engine
+    name, master .blend path, md5, Blender version used, geometry status (REAL | REPRESENTATIVE | PLACEHOLDER),
+    node count, component manifest path, exported GLB path, last export date, owner.
+
+5.2 Target layout
+  assets/
+    blender/
+      engines/rotax_912is/rotax_912is.blend           MASTER
+      engines/rotax_912is/variants/rotax_912is_showcase.blend
+      engines/rotax_914/rotax_914.blend               MASTER (choose between rotax_914.blend and rotax_914_f.blend,
+                                                       see 5.3; the other goes to variants/ or _archive/)
+      engines/rotax_914/variants/rotax_914_showcase.blend
+      engines/rotax_915is/rotax_915is.blend           MASTER
+      engines/rotax_915is/variants/rotax_915is_showcase.blend
+      engines/rotax_915is/import/Rotax_915.FBX        source import, kept
+      engines/austro_ae300/austro_ae300.blend         MASTER (today the AE330 geometry: label REPRESENTATIVE)
+      engines/austro_ae300/variants/ (showcase, lod1)
+      engines/vrde_jayem_2_2l/vrde_jayem_2_2l.blend   MASTER (TEI PD170 geometry: label REPRESENTATIVE)
+      engines/vrde_jayem_2_2l/variants/vrde_jayem_2_2l_showcase.blend
+      reference/tei_pd170/ (tei_pd170.blend, _lod1, _lookdev)   reference geometry, not an engine we model
+      airframes/bayraktar_tb3/bayraktar_tb3.blend (+ digital_twin variant)
+      terrain/terrain_N34E077.blend
+      scenes/anumaan_master_twin.blend                 multi-engine scene
+      _archive/  ARCHIVE_REGISTER.csv + exact duplicates
+    manifests/engines/<engine_id>.json                (already exists; one per engine)
+    web/engines/<engine_id>.glb                       optimized GLBs, the ONLY copies in Git
+    web/airframes/, web/terrain/
+    ASSET_REGISTER.csv
+  tools/blender/export_engine.py, tools/blender/validate_nodes.py, tools/assets/optimize.ps1 (and .sh)
+
+5.3 Exact moves for today's files (md5-verified on 9b5942e)
+  assets/blender/rotax_912_is_sport.blend  -> engines/rotax_912is/rotax_912is.blend (MASTER candidate; confirm
+                                               against anumaan_master_twin.blend with blend_inspect.py)
+  assets/blender/rotax_912is_showcase.blend -> engines/rotax_912is/variants/
+  assets/blender/rotax_914.blend, rotax_914_f.blend (same size, different content)
+                                            -> inspect both (object list, modified date in git log). The one with
+                                               the component names from A section 2 becomes MASTER; the other goes
+                                               to variants/ as rotax_914_f.blend
+  assets/blender/rotax_914_showcase.blend   -> engines/rotax_914/variants/
+  assets/blender/rotax_915is.blend          -> engines/rotax_915is/rotax_915is.blend (MASTER)
+  assets/blender/rotax_915.blend            -> _archive/ (byte-identical to rotax_915is.blend; register the md5)
+  assets/blender/rotax_915is_showcase.blend -> engines/rotax_915is/variants/
+  assets/models/Rotax_915.FBX               -> engines/rotax_915is/import/
+  assets/models/engines/austro_ae330.blend  -> engines/austro_ae300/austro_ae300.blend (MASTER, REPRESENTATIVE)
+  assets/models/engines/austro_ae330_lod1.blend, assets/blender/austro_ae300_showcase.blend
+                                            -> engines/austro_ae300/variants/
+  assets/blender/vrde_jayem_2_2l.blend      -> engines/vrde_jayem_2_2l/ (MASTER, REPRESENTATIVE)
+  assets/blender/vrde_jayem_2_2l_showcase.blend -> engines/vrde_jayem_2_2l/variants/
+  assets/models/engines/tei_pd170*.blend (3) -> reference/tei_pd170/
+  assets/blender/bayraktar_tb3_digital_twin.blend -> airframes/bayraktar_tb3/variants/
+  assets/models/bayraktar_tb3_digital_twin.blend  -> _archive/ (byte-identical to the one above)
+  assets/models/airframes/bayraktar_tb3.blend     -> airframes/bayraktar_tb3/
+  assets/models/terrain.blend               -> terrain/terrain_N34E077.blend
+  assets/blender/anumaan_master_twin.blend  -> scenes/
+  untracked *.blend1 (rotax_912_is_sport.blend1 77 MB, austro_ae330.blend1) -> outside-repo backup folder
+  After each move, run tools/blender/validate_nodes.py (from the session's blend_inspect.py) to prove the file opens
+  and its object count is unchanged.
+  Every launcher .bat, Python app and manifest that references an old path is updated in the same pull request.
+  Search with: git grep -n "assets/blender\|assets/models" before and after the move.
+
+5.4 One export pipeline (replaces hand exports and copies)
+  1. blender -b <master>.blend --python tools/blender/export_engine.py -- --engine <id> --out build/raw/<id>.glb
+     Export with "Custom Properties" on, so component_id/cylinder tags travel as glTF extras.
+  2. python tools/blender/validate_nodes.py build/raw/<id>.glb assets/manifests/engines/<id>.json
+     It fails if any manifest node pattern matches nothing, or any fault component has no node (T-3D-1).
+  3. gltf-transform optimize build/raw/<id>.glb assets/web/engines/<id>.glb --compress draco (or meshopt)
+     --texture-compress ktx2 (needs KTX-Software 4.4+) or webp.
+     Do NOT join or flatten mapped nodes. Check the exact flags with "gltf-transform optimize --help" for the
+     installed version, and re-run validate_nodes.py on the output to prove the node names survived.
+  4. Record the md5, node count and size in ASSET_REGISTER.csv.
+  5. frontend, docs_site and web/site read assets/web/ (Vite publicDir or a copy step at build). No hand copies.
+  Fixes N6: the wrong 915 on web/site disappears because every app gets the same file; the "draco" folder holding
+  uncompressed files disappears; three copies become one.
+
+5.5 Root folder cleanup (moves only; deletions only of generated caches like __pycache__ and dist/)
+  - 23 launch_*.bat -> scripts/launchers/ plus ONE launcher at the root (start_anumaan.bat with a menu).
+    Engine-specific launchers become one script taking the engine id (dynamic rule D5).
+  - full_ui_check.png, shadow_fix_check.png, ui_fix_check.png -> docs/screenshots/
+  - ANUMAAN_Abstract_Summary.txt, ANUMAAN_Idea_Description.txt -> docs/submission/
+  - report_dump/, UpdatedReport/, final_touch/, ppt/ -> docs/submission/archive/ (review first, nothing removed)
+  - experiments/ stays but gets a README.txt saying "not used by the app".
+  - Datasets/ vs data/: one data root (data/), with data/README.txt listing every dataset with source and licence.
+  - graphify-out/ -> add to .gitignore if generated.
+  - web/usavionix/mirror (third-party site mirror, 269 files) -> check the licence. If not ours, move it out of the
+    repo to a local folder; it is not needed by the app.
+  - Add a root STRUCTURE.txt: one line per top-level folder saying what it is and who owns it.
+
+5.6 Acceptance: T-REPO-1..4 (Part 7).
+
+
+=====================================================================================================================
+PART 6 - USER EXPERIENCE THAT MAKES THE JUDGES (AND DRDO) REMEMBER IT
+=====================================================================================================================
+
+6.1 Principles from aviation and safety-critical standards (apply them; judges from DRDO/ADE will recognise them)
+U1. Alert colours as on certified flight decks (14 CFR 25.1322, AC 25.1322-1, MIL-STD-411F is similar):
+    - red = warning (NO-GO), amber/yellow = caution;
+    - advisory = any colour other than red, amber, yellow or green (we use cyan);
+    - red and amber are used for NOTHING else in the UI: no decorative red buttons, no amber accents.
+    Action: audit the Tailwind theme and components; recolour every non-alert red/amber.
+U2. Two-sense alerting for warnings and cautions: visual + aural.
+    - One unique master-warning tone and one master-caution tone (as AC 25.1322-1 recommends).
+    - The existing VoiceCopilot speaks the top reason ("Caution. Oil pressure low, engine two.").
+    - Master warning/caution buttons acknowledge and silence.
+U3. Alarm management (ISA-18.2 / EEMUA 191 benchmarks):
+    - in nominal flight the target is about 1 new alert per 10 minutes on average; more than 10 per 10 minutes is a
+      flood;
+    - every alert must have an operator action, otherwise it is not an alert (it goes to the event log);
+    - group child alerts under the root-cause hypothesis (one fault, one alert, details inside);
+    - shelving with automatic un-shelve;
+    - measure it: T-UX-3 counts alerts per 10 minutes in all four PS scenarios.
+U4. Ecological Interface Design (EID): show the engine as purpose -> functions -> processes -> parts, the same
+    hierarchy an engineer thinks in:
+    - Purpose: can the aircraft complete the mission? (mission reliability, power margin, fuel/time margin)
+    - Functions: produce power, reject heat, lubricate, supply fuel, supply electrical power. Each gets a margin bar.
+    - Processes: the energy flows and pressures.
+    - Parts: the 3D model.
+    Clicking moves down the hierarchy. Research applying EID to digital twins and anomaly monitoring supports this.
+U5. Predictions are actions. Every predictive alert says what will happen, when (with confidence), what to do, and
+    which ATA reference applies. Example: "Oil cooler blockage likely (p=0.82). Oil temperature reaches 130 C in
+    48 min (35-70). Reduce power to 75 % or land within 40 min. ATA 79."
+U6. Honesty is visible:
+    - every value has a provenance tooltip (TCDS / OM / DRDO / ASSUMED / CALIBRATED);
+    - every screen shows its data source badge (SIM / REPLAY / CAN) and data age;
+    - ASSUMED values are styled differently (dotted underline).
+    DRDO evaluators value knowing which numbers are certified and which are estimates.
+
+6.2 Signature features (each one is fed by real computed data, none is decoration)
+X1. LIVE ENERGY FLOW: a Sankey diagram of fuel energy -> brake power, exhaust, coolant, oil, radiation, computed from
+    the M1 energy balance each second. A fault visibly changes the flows (radiator blockage: coolant share rises).
+    It proves the physics runs at runtime.
+X2. GLASS ENGINE 3D:
+    - X-ray mode with a live temperature heat-map on cylinder heads/exhaust from CHT/EGT per cylinder;
+    - oil-flow animation speed ∝ oil flow;
+    - propeller speed ∝ prop rpm (capped to avoid strobe effects);
+    - exhaust glow ∝ EGT;
+    - highlighted parts pulse in the alert colour;
+    - camera flies to the faulty part, with a callout carrying a mini trend of the supporting evidence.
+X3. TWIN GHOST: a translucent "expected" engine (twin prediction) over the real one. Parts glow by residual size, so
+    the user sees WHERE the real engine departs from the model.
+X4. TIME MACHINE:
+    - one timeline for live and replay;
+    - drag back to the moment of first detection;
+    - "what-if" fork: from any past moment, re-run the deterministic plant with a different throttle or a fault
+      cleared, and compare side by side (D10 makes this possible).
+X5. "CAN I MAKE IT HOME?" REACHABILITY MAP: on the Ladakh DEM, the area reachable with current engine health, fuel
+    and terrain clearance, shrinking live as health degrades. The planner's replanned route is drawn and the
+    infeasible route is marked with its reason.
+X6. FLEET WALL: all five engines (or N tails) as tiles with status, top reason, RUL band and sparkline. One click
+    opens the deep dive. This matches the PS operator/maintenance roles.
+X7. VOICE AND COMMAND PALETTE:
+    - voice ("inject misfire cylinder two on Austro", "why caution?", "replay last ten minutes") and Ctrl+K palette
+      commands map 1:1 onto /api/v1 calls;
+    - answers to "why" are built only from hypotheses and evidence (no invented text).
+X8. ONE-CLICK SORTIE REPORT: a PDF with the DRDO/ADE-style sections (summary, exceedances, diagnosis evidence,
+    maintenance raised, RUL, provenance, Merkle root hash).
+X9. PHONE AS SECOND SCREEN: scan a QR code shown on the laptop to join the same session in the maintenance view. A
+    fault injected from the phone lights up the laptop's 3D view, which proves D8 live to judges.
+X10. INDIAN CONTEXT: Ladakh and Thar presets on real Copernicus terrain, the indigenous VRDE engine as a first-class
+    citizen (labelled ASSUMED where data is not public), and an optional English/Hindi label switch from
+    configs/ui/labels_<lang>.json (dynamic rule D5).
+
+6.3 Interaction and performance budgets
+- First useful screen < 2 s on the demo laptop.
+- GLB visible < 5 s on 50 Mbit/s (lazy-load, progress bar, low-LOD first).
+- 3D at 60 fps desktop, ≥ 30 fps phone.
+- Input-to-effect (lever moved -> gauge moves) < 150 ms on LAN.
+- Fault inject -> highlight on another device < 300 ms on LAN.
+- No layout shift when alerts arrive (reserved alert area).
+- Dark theme by default with a light theme. NVG-friendly night mode (dim, low blue) as an optional extra.
+
+6.4 UX acceptance (T-UX tests in Part 7)
+- 10-second test: a person who has never seen the app identifies the faulty engine, the faulty part and the
+  recommended action within 10 s in ≥ 4 of 5 trials.
+- SUS (System Usability Scale) questionnaire with 5 testers from outside the team: mean ≥ 80.
+- Alert rate per scenario within U3.
+- Contrast and font checks pass (automated axe-core in Playwright).
+- Every interactive element is reachable by keyboard.
+
+
+=====================================================================================================================
+PART 7 - TEST CATALOGUE (every acceptance test; location tests/<group>/; all run in CI unless marked MANUAL)
+=====================================================================================================================
+
+Config and API
+T-CFG-1  Invalid engine/fault/component/sensor/mission config -> server refuses to start with path + reason.
+T-API-1  Every /api/v1 endpoint has an OpenAPI schema; unknown fault -> 422; inapplicable fault -> 422 with reason.
+T-API-2  The generated TypeScript types match the pydantic schema (CI fails on drift).
+T-WS-1   With 20 clients, one deliberately slow: the hub tick time stays < 10 ms p99; the slow client gets
+         latest-only frames; there is no memory growth over 30 min.
+
+M0 foundation
+T-M0-1   Two clients, 1,000 frames during an active fault: frames with the same seq are identical; no channel
+         returns to its pre-fault value while the fault is active (beyond 3 sigma noise).
+T-M0-2   Inject from each surface (React, 3D viewer, Blender app, curl, voice): every other surface shows it within
+         2 frames + network latency.
+T-M0-3   Clear from a different surface than the one that injected: cleared everywhere.
+T-M0-4   STOP: rpm reaches 0 within the configured spin-down time; START: cranking -> running.
+T-M0-5   No legacy simulator writes engine values (the runtime import graph has no can_streamer/sync_from_tick).
+T-M0-6   data/ is clean after a 10 min run (git status shows nothing under data/).
+
+Dynamic rule
+T-DYN-1..8 as in Part 0.3.
+
+Physics (per engine)
+T-PHY-1  Take-off power at SL ISA, rated rpm: within ±2 % of the Part 2 value.
+T-PHY-2  Max continuous within ±3 %.
+T-PHY-3  No operating point exceeds 105 % of rated power. Grid: altitude 0-25,000 ft step 1,000; ISA-30..+35 C step
+         5; throttle 0-100 step 5.
+T-PHY-4  Turbo engines: at their critical altitude, power ≥ 97 % of SL; above it, power decreases monotonically.
+         914 checked at both 8,000 and 16,000 ft; VRDE flat to 11,000 ft.
+T-PHY-5  912 power ratio vs altitude within ±5 % of Gagg-Farrar σ - (1-σ)/7.55 up to 15,000 ft.
+T-PHY-6  At max continuous, ISA+15, cruise airspeed: every temperature in its normal band with ≥ 5 % margin to the
+         caution band.
+T-PHY-7  Oil pressure obeys each engine's rpm rule across idle -> take-off; the relief valve caps it.
+T-PHY-8  BSFC emerges (not configured) at cruise: SI 260-330 g/kWh, CI 200-240 g/kWh; VRDE best point within 5 % of
+         215.
+T-PHY-9  Dynamics:
+         - NA MAP step time constant 0.05-0.3 s;
+         - turbo spool 0.5-2 s;
+         - governor settle < 2 s with < 3 % overshoot;
+         - CHT time constant minutes, not seconds.
+T-PHY-10 Energy closure: fuel energy = brake + exhaust + coolant + oil + radiation within 2 % at steady state.
+T-PHY-11 Performance: one engine step ≤ 2 ms; five engines at 20 Hz ≤ 25 % of one core.
+
+Faults
+T-FLT-1  Signature matrix: every (engine, applicable fault) at severity 1 moves every expected_signature channel by
+         ≥ min_delta within detect_window_s, in the right direction. A fault that moves nothing FAILS the build.
+         This is "no fault is ever ignored".
+T-FLT-2  Faults change only parameters: a static check that backend/sim/faults.py writes only component parameters.
+T-FLT-3  Inapplicable combinations are rejected (e.g. F12 on the AE300, F06 on the 912).
+T-FLT-4  Severity 0 = no change; clear restores the nominal parameters (temperatures relax with their time
+         constants).
+
+Status
+T-STS-1  Every fault at severity 1: status ≥ the registry level within detect_window + 1 tick.
+T-STS-2  1 h nominal per engine: zero non-GO frames.
+T-STS-3  Every non-GO frame has ≥ 1 reason.
+T-STS-4  Single sensor fault -> ADVISORY, not NO-GO.
+T-STS-5  Hysteresis and latch behave as in Step 2.2 (scripted crossing/return sequence).
+
+Detection
+T-DET-1  Detection rate: 100 % at severity 1.0 and ≥ 90 % at severity 0.6, every applicable fault, every engine.
+T-DET-2  Isolation: top-3 ≥ 95 % at severity 1.0; correct cylinder ≥ 95 % for per-cylinder faults; isolability
+         exceptions listed in the report.
+T-DET-3  False alarm rate < 1 per hour per engine (target < 0.1) over 10 h nominal including the 4 PS scenarios.
+T-DET-4  Sensor faults S01-S07 classified as SENSOR faults (≥ 95 %), channel quarantined, virtual sensor shown.
+T-DET-5  Earlier than the threshold baseline: median detection-time advantage reported per fault (must be > 0 for
+         ramped faults).
+T-DET-6  UKF valid flag true ≥ 99 % of nominal time.
+
+Prognostics
+T-PRG-1  Ramped slow faults (cooling, oil cooler, bearing wear) show time-to-limit before the limit is reached, and
+         the true crossing time lies inside the interval ≥ 80 % of runs.
+T-PRG-2  RUL conformal band empirical coverage within 85-95 % for a 90 % target, per engine and per regime.
+T-PRG-3  Adaptive baseline never updates while any CUSUM > h/2 or status ≠ GO (scripted test).
+T-PRG-4  Work order created from a confirmed hypothesis; sign-off closes it and is persisted across restart.
+T-PRG-5  C-MAPSS FD001 run produces RMSE and coverage in the report, labelled as a turbofan benchmark.
+
+Missions and replay
+T-MIS-1  Each PS scenario runs from one click and shows its effect (altitude loss above critical altitude; Thar
+         margins shrink; rapid-throttle cycle count rises; endurance trends appear).
+T-MIS-2  Time scale 20x gives the same detections/status/RUL vs sim time as 1x (within one tick).
+T-MIS-3  Replay of a new sortie: identical status/hypotheses/highlights timeline.
+T-MIS-4  Old recordings: every one either replays or is listed as "metadata only"; none crash.
+T-MIS-5  Sortie report generated for every sortie; it contains every section in Step 5.6.
+T-MIS-6  Planner refuses an infeasible canyon route with a reason and replans when a fault cuts available power.
+
+UI / 3D / UX (Playwright unless MANUAL)
+T-UI-1   Every engine, fault, limit and label in the UI comes from the API (with the T-DYN-5 engine visible).
+T-UI-2   Status banner, alert list, acknowledge, shelve work; master warning/caution tones play (audio mocked).
+T-UI-3   Data age turns amber above 500 ms and red above 2 s; NO DATA shown on disconnect.
+T-UI-4   Role views show the content listed in Steps 6.2-6.4.
+T-UI-5   Layout works at 360, 768 and 1280 px with no horizontal scroll.
+T-UI-6   Minimum 12 px font; axe-core finds no contrast violations.
+T-UI-7   Replay badge and REPLAY source visible during replay; controls disabled appropriately.
+T-UI-8   Red/amber appear only on alert elements (screenshot colour scan of nominal screens).
+T-3D-1   For every engine x fault, the viewer's highlighted node set equals the set resolved from the manifest
+         (the viewer exposes its highlighted node names in a test hook).
+T-3D-2   Highlights are driven by state.highlights only (inject with training mode off: highlight appears only after
+         detection).
+T-3D-3   Multiple simultaneous faults highlight with the right colours; cylinder parts are correct.
+T-3D-4   Load time and fps budgets (6.3) on the demo laptop and one mid-range phone (MANUAL with recorded numbers).
+T-3D-5   Same highlight on the laptop, the phone and the Blender app for the same fault (MANUAL, video recorded).
+T-UX-1   10-second test (MANUAL, 5 people).
+T-UX-2   SUS ≥ 80 (MANUAL, 5 people).
+T-UX-3   Alert rate per 10 minutes within U3 in the four scenarios (automated count).
+T-UX-4   Every alert has an action text (registry check).
+T-UX-5   Keyboard-only walkthrough of the demo script (MANUAL).
+
+CAN / security / edge
+T-CAN-1  Source DIRECT vs CAN: identical detections/status (allowing quantisation from the DBC scaling).
+T-CAN-2  Spoofed frame (unknown ID, wrong period, out-of-range payload, sequence gap) detected and logged.
+T-CAN-3  Merkle root in the sortie report verifies; a tampered frame breaks verification.
+T-CAN-4  Edge mode: bandwidth reduction factor measured and shown; no loss in T-DET-1 at severity 1.
+
+Operations
+T-OPS-1  docker compose up starts everything; /health and /ready are green.
+T-OPS-2  CI pipeline green on main.
+T-OPS-3  Docs link checker: zero dead links (fixes N2); no claim without a code path (manual review checklist).
+T-OPS-4  Command endpoints require the token when exposed beyond localhost.
+
+Repository and assets
+T-REPO-1 Every .blend present before cleanup is present after it (md5 list compared; moved, not lost).
+T-REPO-2 Every GLB in assets/web passes validate_nodes.py against its manifest.
+T-REPO-3 Exactly one committed copy of each engine GLB; every app loads it (smoke test per app).
+T-REPO-4 git grep finds no reference to an old asset path.
+
+
+=====================================================================================================================
+PART 8 - DEPENDENCIES, WHO DOES WHAT, WEEK PLAN, RISKS
+=====================================================================================================================
+
+Dependency chain:
+  M0 -> M1 -> (M2, M3) -> M4
+  M0 -> M6: the frontend starts on the state schema in week 1; Blender cleanup/export pipeline starts on day 1.
+  M1 + M3 + M4 -> M5 planner feasibility and reports.
+  M1 -> M7 (ECU frames).
+  Everything -> M8 -> M9.
+
+People:
+  P1 backend/physics:      M0 backend (0.2-0.8, 0.11), M1, M2
+  P2 ML/evaluation:        M3, M4, evaluation reports, datasets, C-MAPSS
+  P3 frontend/UX:          M0 frontend (0.9), M6 views, Part 6 features, Playwright tests, M5 mission UI
+  P4 3D/Blender/integration: Part 5 cleanup + export pipeline, Blender work list, R3F viewer, M7, M5 terrain/planner
+
+Week plan (9 weeks):
+  W1 M0 (all four).                         Gate: T-M0-*, T-WS-1, T-CFG-1 green.
+  W2 M1 a-f (912 calibrated) | P3: store + views skeleton | P4: Part 5 moves + pipeline | P2: evaluation harness.
+  W3 M1 g-p, M2 | P4: Blender splits.       Gate: T-PHY-1..4 for 912/914/915.
+  W4 M1 diesels + maps | M3 start | M6 3D viewer.   Gate: T-PHY all engines, T-FLT-1.
+  W5 M3 | M4 start | M5 recorder/replay.     Gate: T-DET-1..4.
+  W6 M4 | M5 scenarios/planner | M6 features X1-X6 | M7 start.   Gate: T-PRG-1..2, T-MIS-1..4.
+  W7 M5 report/planner | M6 polish | M7.     Gate: T-UI-*, T-3D-1..3, T-CAN-1..2.
+  W8 M8 docs/CI/docker | UX tests with outsiders.   Gate: T-OPS-*, T-UX-*.
+  W9 M9 rehearsal, video, freeze.
+
+Risks and mitigations:
+- Physics calibration slips -> 912 and AE300 first (best data), the others follow. Keep the demo on calibrated
+  engines and show the rest as "calibration in progress" (honest).
+- Missing public data (VRDE, parts of AE300/915) -> ASSUMED labels; the provenance tooltip explains.
+- Blender splitting is slow -> NOW component lists + location markers (A section 5) keep highlights correct before
+  the models are finished.
+- jsbsim does not install on Python 3.14 -> use a 3.12/3.13 venv only for the cross-check.
+- Copernicus tile missing from the bucket -> check the listing first; fall back to the DEM already inside
+  terrain.blend (exported heightmap).
+- Hosting memory with five engines -> demo on the laptop + tunnel; the server runs idle engines at a reduced rate
+  (config).
+- Time pressure -> minimum honest demo = M0, M1 (912 + AE300 calibrated, injector wiring, coupling), M2, M3 core
+  (evidence-only diagnosis, sensor FDI), M5 replay fix + one scenario, M6 core (status, alerts, same highlights
+  everywhere, all five engines in 3D), X1 energy flow, X9 phone second screen.
+
+
+=====================================================================================================================
+PART 9 - DEMO SCRIPT (about 12 minutes; each step names the PS item it proves)
+=====================================================================================================================
+ 1. Architecture slide (deliverable 2), then the live Fleet Wall: five engines calibrated and GO; provenance
+    tooltips shown once (A core framework; honesty).
+ 2. Rotax 912 iS, Engineer view:
+    - live channels with limits and data age; injection timing from the ECU map; bus voltage and alternator current;
+    - twin vs measured overlay;
+    - energy-flow Sankey (B all parameters; A synchronized model; physics running live).
+ 3. HIGH ALTITUDE preset: NA power falls with altitude while the 915 holds power to 15,000 ft. Then HOT WEATHER
+    Thar: margins shrink and the efficiency trend moves (E high altitude, hot weather).
+ 4. RAPID THROTTLE preset: MAP/rpm dynamics, turbo lag, thermal cycle counter (E rapid transitions).
+ 5. Phone (QR join): inject F01 misfire cylinder 2 on the 912 from the phone. The laptop 3D flies to cylinder 2
+    (highlight after detection), the hypothesis shows its evidence, CAUTION with tone and voice (C misfire, F alerts,
+    D8 live).
+ 6. Inject S03 drift on CHT_3: classified as a SENSOR fault, quarantined, VIRTUAL value shown, ADVISORY only (C
+    sensor drift, sensor fusion).
+ 7. Austro AE300 from the console: F06 injector coking cylinder 3. Injector_3 + fuel line highlight, EGT_3 rises,
+    correct diagnosis with p and evidence (C injector abnormality).
+ 8. F23 oil pressure loss with a slow ramp: time-to-limit appears before the limit (prediction), then NO-GO at the
+    limit with a reason, a work order is created, and maintenance signs it off on the phone (C lubrication, D RUL/
+    trend/maintenance, F advisory).
+ 9. ENDURANCE 18 h at 20x on the VRDE with F25 oil cooler blockage slow: the RUL band narrows and mission
+    reliability falls. "Can I make it home?" shrinks; the planner replans the Ladakh canyon route (D, E endurance,
+    mission reliability).
+10. Threshold baseline vs ours on the same faults: detection-time advantage table (C predictive vs threshold).
+11. Time machine: scrub back to first detection; what-if fork with lower throttle; then open the sortie report PDF
+    with the Merkle root (E replay, F mission reports, secure telemetry).
+12. Switch the source to the virtual CAN bus: identical results; candump decode on screen; spoofed frame -> intrusion
+    alert (may-utilize CAN/FADEC, secure telemetry, edge bandwidth numbers).
+13. Close: evaluation tables (deliverables 3, 4, 6), add-an-engine shown live by dropping in a config (fully
+    dynamic), deployment roadmap (deliverable 7).
+
+
+=====================================================================================================================
+PART 10 - FINAL CHECKLIST (tick only with the passing test ID written next to it)
+=====================================================================================================================
+Dynamic:      [ ] D1-D10 (T-DYN-1..8)
+Background:   [ ] state estimation  [ ] anomaly detection  [ ] degradation tracking  [ ] fault prediction  [ ] replay
+Integrates:   [ ] sensor data  [ ] thermodynamic models  [ ] performance maps  [ ] failure/degradation logic  [ ] AI/ML
+Capable of:   [ ] real-time visualization  [ ] health indicators  [ ] abnormal conditions  [ ] failure prediction
+              [ ] degradation trends + RUL  [ ] mission/environment simulation  [ ] post-flight analysis + replay
+May utilize:  [ ] CAN/SocketCAN  [ ] ECU/FADEC  [ ] edge  [ ] server analytics  [ ] AI/ML anomaly  [ ] physics-informed
+              [ ] operator + maintenance HMI
+A Core:       [ ] synced virtual model  [ ] modular architecture  [ ] real-time ingestion
+B Monitor:    [ ] RPM  [ ] CHT (+coolant)  [ ] EGT  [ ] oil pressure  [ ] oil temperature  [ ] fuel flow  [ ] vibration
+              [ ] battery/alternator  [ ] injection timing (N/A on 914, shown as such)  [ ] health indices
+C Detect:     [ ] misfire  [ ] injector  [ ] cooling  [ ] lubrication  [ ] sensor drift/failure  [ ] combustion
+              instability  [ ] overheating trends  [ ] abnormal vibration  [ ] predictive vs threshold evidence
+D AI/ML:      [ ] anomaly detection  [ ] RUL  [ ] trend analysis  [ ] maintenance recommendations  [ ] adaptive learning
+E Sim/replay: [ ] replay  [ ] environment  [ ] high altitude  [ ] endurance  [ ] hot weather  [ ] rapid throttle
+F Dashboard:  [ ] health status  [ ] fault alerts  [ ] efficiency trends  [ ] maintenance advisory  [ ] mission reports
+              [ ] operator / propulsion engineer / maintenance views
+Deliverables: [ ] 1 prototype  [ ] 2 architecture  [ ] 3 simulation model  [ ] 4 anomaly module  [ ] 5 dashboard
+              [ ] 6 dataset demo  [ ] 7 docs + deployment roadmap
+Innovation:   [ ] physics-informed AI  [ ] edge AI  [ ] lightweight onboard  [ ] hybrid models  [ ] federated
+              [ ] explainable AI  [ ] secure telemetry  [ ] autonomous maintenance advisory
+Team goals:   [ ] same faults and highlights from every surface  [ ] all five engines in 3D  [ ] correct part per
+              fault per engine  [ ] canyon planning tied to engine health  [ ] repo/Blender cleanup with zero .blend
+              lost (T-REPO-1)  [ ] UX tests passed (T-UX-1..5)
+
+
+=====================================================================================================================
+PART 11 - SOURCES (new in version 2; earlier sources are in R and A)
+=====================================================================================================================
+Engines
+- Rotax 912 iS generator/lane operation (owner community, needs OM confirmation):
+  https://www.rotax-owner.com/en/912is-technical-questions/11220-basic-description-of-generator-and-lane-system-operation
+- Rotax 912 i fuel pressure band / limits notice: https://lzs-zveza.si/wp-content/uploads/SB-912-079R1.pdf
+- Rotax 914 / 912 operators manual pages: https://www.manualslib.com/manual/1140797/Rotax-Om-912.html?page=28
+- EASA TCDS E.121 and E.200 (already saved and extracted in the earlier session; see R section 20)
+- Austro Engine company brochure 2024 (alternator data):
+  https://diamondaircraft.com/fileadmin/diamondaircraft/documents/press-kit/Austro_Engine_Company_Brochure_2024_SCREEN.pdf
+- Austro E4 series factsheet: https://diamondaircraft.com/fileadmin/diamondaircraft/products/austro-engine/AE_E4_Series_Factsheet_screen.pdf
+- DRDO 180 hp UAV diesel engine: https://drdo.gov.in/drdo/en/offerings/products/180-hp-diesel-engine-uav
+- VRDE engine brochure summary: https://vajra-mushti.blogspot.com/2025/11/drdo-vrde-diesel-engine-for-male-uav.html
+- Jayem 180 hp engine at AeroDef India 2026: https://idrw.org/jayem-automotives-unveils-indigenous-180hp-male-uav-engine-at-aerodef-india-2026-to-replace-imported-powerplants/
+Physics and estimation
+- JSBSim FGPropeller (Ct/Cp tables, J, constant-speed mode): https://jsbsim-team.github.io/jsbsim/classJSBSim_1_1FGPropeller.html
+  and https://wiki.flightgear.org/JSBSim_Thrusters
+- Mean value engine model references: https://www.fs.isy.liu.se/Publications/MSc/99_EX_2081_JB_JB.pdf ,
+  https://skoge.folk.ntnu.no/prost/proceedings/ifac2008/data/papers/2601.pdf
+- Kalman innovation sensor fault detection (aircraft): https://research.itu.edu.tr/en/publications/aircraft-sensor-fault-diagnosis-based-on-kalman-filter-innovation/ ,
+  NASA engine sensor FDI with Kalman filter banks: https://ntrs.nasa.gov/citations/20050215692
+- Conformal prediction for RUL: https://arxiv.org/pdf/2212.14612 ; https://www.mdpi.com/1424-8220/26/7/2249 ;
+  https://www.papers.phmsociety.org/index.php/ijphm/article/download/4724/2824 ;
+  https://papers.phmsociety.org/index.php/phme/article/download/4902/2943
+Software
+- python-can + cantools DBC encode/decode: https://pypi.org/project/cantools/ ;
+  https://www.csselectronics.com/pages/python-can-usb-serial-api-stream
+- WebSocket broadcast with per-client queues: https://websockets.readthedocs.io/en/14.2/topics/broadcast.html
+- Copernicus DEM GLO-30 on AWS: https://registry.opendata.aws/copernicus-dem/ ; https://copernicus-dem-30m.s3.amazonaws.com/readme.html
+- glTF-Transform CLI: https://www.npmjs.com/package/@gltf-transform/cli
+- Git LFS file locking: https://confluence.atlassian.com/bitbucketserver/working-with-git-lfs-files-970595880.html ;
+  Blender + Git: https://www.anchorpoint.app/blog/git-with-blender
+User experience and alerting
+- 14 CFR 25.1322 flightcrew alerting: https://www.law.cornell.edu/cfr/text/14/25.1322
+- FAA AC 25.1322-1: https://www.faa.gov/documentLibrary/media/Advisory_Circular/AC_25.1322-1.pdf
+- MIL-STD-411F alert colours: https://aircraftandairframestructuralcompone.emilspec.com/MIL-STD-411/page18.html
+- Alarm management benchmarks (ISA-18.2/EEMUA 191): https://d1-live.emerson.com/documents/automation/article-alarm-management-by-numbers-deltav-en-38292.pdf ;
+  https://www.icheme.org/media/16019/icheme-alarm-management-practical-guide-06_05_2021.pdf
+- Ecological interface design for digital twins: https://nottingham-repository.worktribe.com/OutputFile/31154817 ;
+  https://arxiv.org/html/2311.06993v2
+- UAV ground control station human factors: https://www.icas.org/icas_archive/ICAS2018/data/papers/ICAS2018_0419_paper.pdf
+Values marked OWNER or ASSUMED in this file must be confirmed against the manufacturer documents before the final
+demo, or shown with their label.

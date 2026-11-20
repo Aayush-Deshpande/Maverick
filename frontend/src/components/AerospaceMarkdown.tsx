@@ -72,14 +72,14 @@ export const AerospaceMarkdown: React.FC<AerospaceMarkdownProps> = ({
           ) : (
             <Sparkles className="w-3.5 h-3.5 text-ai-accent" />
           )}
-          <span className="text-[11px] font-medium text-slate-300">
+          <span className="text-xs font-medium text-slate-300">
             {title || (isDiagnosticAdvisory ? 'Diagnostic Advisory' : isManualRetrieval ? 'Technical Manual Excerpt' : 'Mission Intelligence Synthesis')}
           </span>
         </div>
 
         <button
           onClick={handleCopy}
-          className="flex items-center gap-1 px-2 py-1 rounded-sm hover:bg-white/5 text-[11px] text-slate-400 hover:text-slate-200 transition-colors font-mono"
+          className="flex items-center gap-1 px-2 py-1 rounded-sm hover:bg-white/5 text-xs text-slate-400 hover:text-slate-200 transition-colors font-mono"
           title="Copy to clipboard"
         >
           {copied ? (
@@ -119,28 +119,28 @@ export const AerospaceMarkdown: React.FC<AerospaceMarkdownProps> = ({
               const str = String(children);
               if (str.includes('CRITICAL')) {
                 return (
-                  <span className="px-1.5 py-0.5 rounded bg-critical-dim border border-critical-muted text-critical font-medium text-[10px] mx-1 inline-flex items-center gap-1">
+                  <span className="px-1.5 py-0.5 rounded bg-critical-dim border border-critical-muted text-critical font-medium text-xs mx-1 inline-flex items-center gap-1">
                     <AlertTriangle className="w-2.5 h-2.5" /> {children}
                   </span>
                 );
               }
               if (str.includes('MAJOR') || str.includes('CAUTION') || str.includes('WARNING')) {
                 return (
-                  <span className="px-1.5 py-0.5 rounded bg-warning-dim border border-warning-muted text-warning font-medium text-[10px] mx-1 inline-flex items-center gap-1">
+                  <span className="px-1.5 py-0.5 rounded bg-warning-dim border border-warning-muted text-warning font-medium text-xs mx-1 inline-flex items-center gap-1">
                     <AlertTriangle className="w-2.5 h-2.5" /> {children}
                   </span>
                 );
               }
               if (str.includes('NOMINAL') || str.includes('GO')) {
                 return (
-                  <span className="px-1.5 py-0.5 rounded bg-success-dim border border-success-muted text-success font-medium text-[10px] mx-1 inline-flex items-center gap-1">
+                  <span className="px-1.5 py-0.5 rounded bg-success-dim border border-success-muted text-success font-medium text-xs mx-1 inline-flex items-center gap-1">
                     <CheckCircle2 className="w-2.5 h-2.5" /> {children}
                   </span>
                 );
               }
               if (str.startsWith('[DIAGNOSTIC ADVISORY') || str.startsWith('[MANUAL RETRIEVAL') || str.startsWith('[TECHNICAL MANUAL DIRECTIVE')) {
                 return (
-                  <span className="block my-1 px-2.5 py-1.5 rounded-sm bg-white/[0.04] border border-surface-border-strong text-slate-200 font-medium text-[11px] tracking-wide uppercase font-mono">
+                  <span className="block my-1 px-2.5 py-1.5 rounded-sm bg-white/[0.04] border border-surface-border-strong text-slate-200 font-medium text-xs tracking-wide uppercase font-mono">
                     {children}
                   </span>
                 );
@@ -153,7 +153,7 @@ export const AerospaceMarkdown: React.FC<AerospaceMarkdownProps> = ({
               </div>
             ),
             th: ({ children }) => (
-              <th className="px-2.5 py-1.5 bg-white/[0.03] text-slate-300 font-semibold text-left text-[11px] font-mono">
+              <th className="px-2.5 py-1.5 bg-white/[0.03] text-slate-300 font-semibold text-left text-xs font-mono">
                 {children}
               </th>
             ),
@@ -166,13 +166,13 @@ export const AerospaceMarkdown: React.FC<AerospaceMarkdownProps> = ({
               const isInline = !className;
               if (isInline) {
                 return (
-                  <code className="bg-white/5 text-slate-200 border border-surface-border px-1.5 py-0.5 rounded-sm font-mono text-[11px]" {...props}>
+                  <code className="bg-white/5 text-slate-200 border border-surface-border px-1.5 py-0.5 rounded-sm font-mono text-xs" {...props}>
                     {children}
                   </code>
                 );
               }
               return (
-                <div className="relative my-2 rounded-sm bg-black/20 border border-surface-border p-2.5 overflow-x-auto font-mono text-[11px] text-slate-300">
+                <div className="relative my-2 rounded-sm bg-black/20 border border-surface-border p-2.5 overflow-x-auto font-mono text-xs text-slate-300">
                   <code {...props}>{children}</code>
                 </div>
               );
@@ -190,14 +190,14 @@ export const AerospaceMarkdown: React.FC<AerospaceMarkdownProps> = ({
 
       {citations && citations.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-surface-border">
-          <span className="text-[10px] text-slate-500 font-medium flex items-center gap-1">
+          <span className="text-xs text-slate-500 font-medium flex items-center gap-1">
             <FileText className="w-3 h-3" />
             Citations:
           </span>
           {citations.map((c, idx) => (
             <span
               key={idx}
-              className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 border border-surface-border text-slate-400"
+              className="text-xs px-2 py-0.5 rounded-full bg-white/5 border border-surface-border text-slate-400"
             >
               {c}
             </span>

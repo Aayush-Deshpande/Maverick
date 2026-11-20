@@ -12,6 +12,7 @@ fastapi>=0.100.0
 uvicorn[standard]>=0.22.0
 websockets>=11.0
 pydantic>=2.0.0
+jsonschema>=4.23  # config validation (configs/schema/*.schema.json, card M0-01/M0-02)
 python-dotenv>=1.0.0
 httpx>=0.24.0
 pypdf>=4.0.0

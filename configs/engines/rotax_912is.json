@@ -27,7 +27,7 @@
   "turbo": null,
   "rated_power_kw": 73.5,
   "rated_rpm": 5800.0,
-  "max_continuous_power_kw": 69.0,
+  "max_continuous_power_kw": 72.0,
   "max_continuous_rpm": 5500.0,
   "idle_rpm": 1400.0,
   "gearbox_ratio": 2.4286,
@@ -60,23 +60,23 @@
     },
     "rated_power_kw": {
       "status": "MANUAL",
-      "ref": "Rotax 912 iS Operator's Manual (docs/reference/)"
+      "ref": "BRP-Rotax OM-912 i Ed.2 Rev.1 (2019-06-01) p.2-2: take-off 73.5 kW at 5800 rpm (max 5 min)"
     },
     "rated_rpm": {
       "status": "MANUAL",
-      "ref": "Rotax 912 iS Operator's Manual (docs/reference/)"
+      "ref": "BRP-Rotax OM-912 i Ed.2 Rev.1 (2019-06-01) p.2-2"
     },
     "max_continuous_power_kw": {
       "status": "MANUAL",
-      "ref": "Rotax 912 iS Operator's Manual (docs/reference/)"
+      "ref": "BRP-Rotax OM-912 i Ed.2 Rev.1 (2019-06-01) p.2-2: 72 kW at 5500 rpm for 912 iS Sport / iSc (69 kW is the plain 912 iS); also EASA TCDS E.121 issue 17 (2023-12-18)"
     },
     "max_continuous_rpm": {
       "status": "MANUAL",
-      "ref": "Rotax 912 iS Operator's Manual (docs/reference/)"
+      "ref": "BRP-Rotax OM-912 i Ed.2 Rev.1 (2019-06-01) p.2-2"
     },
     "idle_rpm": {
       "status": "MANUAL",
-      "ref": "Rotax 912 iS Operator's Manual (docs/reference/)"
+      "ref": "BRP-Rotax OM-912 i Ed.2 Rev.1 (2019-06-01) p.2-2: idle speed min. 1400 rpm"
     },
     "gearbox_ratio": {
       "status": "MANUAL",
@@ -108,29 +108,148 @@
     },
     "rail_pressure_bar": {
       "status": "MANUAL",
-      "ref": "Rotax 912 iS Operator's Manual (docs/reference/)"
+      "ref": "BRP-Rotax OM-912 i Ed.2 Rev.1 (2019-06-01) p.2-4: fuel pressure at rail 2.8-3.2 bar (nominal = mid band); also EASA TCDS E.121 issue 17 (2023-12-18) p.23"
     },
     "operating_limits.cht_max_c": {
-      "status": "ASSUMED",
-      "ref": "legacy literal from backend/ml/detection_pipeline.py (135/850) and the plant hard-failure threshold (0.8 bar); typical of the Rotax operator manuals but NOT re-verified against docs/reference (verification row V-limits)"
+      "status": "PUBLIC",
+      "ref": "EASA TCDS E.121 issue 17 (2023-12-18) p.22 gives CHT 135 C for the 912 S series only; OM-912 i lists COOLANT 120 C as the head limit. Kept for the legacy limit checker until the banded limits replace it (M2-01)"
     },
     "operating_limits.egt_max_c": {
-      "status": "ASSUMED",
-      "ref": "legacy literal from backend/ml/detection_pipeline.py (135/850) and the plant hard-failure threshold (0.8 bar); typical of the Rotax operator manuals but NOT re-verified against docs/reference (verification row V-limits)"
+      "status": "MANUAL",
+      "ref": "BRP-Rotax OM-912 i Ed.2 Rev.1 (2019-06-01) p.2-4: exhaust gas temperature max 950 C (was 850, unsourced)"
     },
     "operating_limits.oil_p_min_bar": {
-      "status": "ASSUMED",
-      "ref": "legacy literal from backend/ml/detection_pipeline.py (135/850) and the plant hard-failure threshold (0.8 bar); typical of the Rotax operator manuals but NOT re-verified against docs/reference (verification row V-limits)"
+      "status": "MANUAL",
+      "ref": "BRP-Rotax OM-912 i Ed.2 Rev.1 (2019-06-01) p.2-3: min 0.8 bar below 3500 rpm; normal 2.0-5.0 bar above 3500 rpm"
     },
     "operating_limits.oil_t_max_c": {
-      "status": "ASSUMED",
-      "ref": "legacy literal from backend/ml/detection_pipeline.py (135/850) and the plant hard-failure threshold (0.8 bar); typical of the Rotax operator manuals but NOT re-verified against docs/reference (verification row V-limits)"
+      "status": "MANUAL",
+      "ref": "BRP-Rotax OM-912 i Ed.2 Rev.1 (2019-06-01) p.2-3; EASA TCDS E.121 issue 17 (2023-12-18) p.22"
+    },
+    "oil_capacity_l": {
+      "status": "PUBLIC",
+      "ref": "EASA TCDS E.121 issue 17 (2023-12-18) p.24: oil capacity 3.0 l at max mark, 2.5 l at min mark"
+    },
+    "operating_limits.coolant_t_max_c": {
+      "status": "MANUAL",
+      "ref": "BRP-Rotax OM-912 i Ed.2 Rev.1 (2019-06-01) p.2-4; EASA TCDS E.121 issue 17 (2023-12-18) p.22"
+    },
+    "operating_limits.oil_p_max_bar": {
+      "status": "MANUAL",
+      "ref": "BRP-Rotax OM-912 i Ed.2 Rev.1 (2019-06-01) p.2-3: max 7 bar, short period at cold start"
     }
   },
   "operating_limits": {
     "cht_max_c": 135.0,
-    "egt_max_c": 850.0,
+    "egt_max_c": 950.0,
     "oil_p_min_bar": 0.8,
-    "oil_t_max_c": 130.0
+    "oil_t_max_c": 130.0,
+    "coolant_t_max_c": 120.0,
+    "oil_p_max_bar": 7.0
+  },
+  "oil_capacity_l": 3.0,
+  "fuel_system": "PORT_INJECTION",
+  "ignition_circuits": 2,
+  "ecu_lanes": 2,
+  "glow_plugs": false,
+  "thermostat": false,
+  "propeller_governor": false,
+  "limits": {
+    "oil_p": {
+      "unit": "bar",
+      "warning_low": 0.8,
+      "normal": [
+        2.0,
+        5.0
+      ],
+      "warning_high": 7.0,
+      "rpm_rule": {
+        "above_rpm": 3500,
+        "normal": [
+          2.0,
+          5.0
+        ],
+        "below_min": 0.8
+      },
+      "ref": "BRP-Rotax OM-912 i Ed.2 Rev.1 (2019-06-01) p.2-3"
+    },
+    "oil_t": {
+      "unit": "C",
+      "warning_low": 50.0,
+      "normal": [
+        90.0,
+        110.0
+      ],
+      "warning_high": 130.0,
+      "ref": "BRP-Rotax OM-912 i Ed.2 Rev.1 (2019-06-01) p.2-3"
+    },
+    "coolant_t": {
+      "unit": "C",
+      "warning_high": 120.0,
+      "ref": "BRP-Rotax OM-912 i Ed.2 Rev.1 (2019-06-01) p.2-4"
+    },
+    "egt": {
+      "unit": "C",
+      "warning_high": 950.0,
+      "per_cylinder": true,
+      "ref": "BRP-Rotax OM-912 i Ed.2 Rev.1 (2019-06-01) p.2-4"
+    },
+    "fuel_p": {
+      "unit": "bar",
+      "warning_low": 2.8,
+      "normal": [
+        2.8,
+        3.2
+      ],
+      "warning_high": 3.2,
+      "transient": {
+        "range": [
+          2.5,
+          3.5
+        ],
+        "max_s": 3,
+        "only_after_power_change": true
+      },
+      "ref": "BRP-Rotax OM-912 i Ed.2 Rev.1 (2019-06-01) p.2-4; EASA TCDS E.121 issue 17 (2023-12-18) p.23"
+    },
+    "rpm": {
+      "unit": "rpm",
+      "normal": [
+        1400.0,
+        5500.0
+      ],
+      "time_limited": {
+        "max": 5800.0,
+        "max_s": 300
+      },
+      "ref": "BRP-Rotax OM-912 i Ed.2 Rev.1 (2019-06-01) p.2-2"
+    },
+    "manifold_t": {
+      "unit": "C",
+      "warning_high": 60.0,
+      "ref": "BRP-Rotax OM-912 i Ed.2 Rev.1 (2019-06-01) p.2-4: max 60 C manifold temperature in flight"
+    }
+  },
+  "notes": {
+    "variant": "Modelled engine is the 912 iS Sport (D47); its max continuous rating equals the 912 iSc (72 kW)."
+  },
+  "physics": {
+    "ecu": {
+      "lambda_power": {
+        "value": 0.865,
+        "status": "CALIBRATED",
+        "ref": "POWER mode (>= 97 % throttle): WOT 5500/5800 rpm points give 0.859/0.867; OM-912 i Rev. 1 (June 2019) p. 5-5 Fig. 4 'Fuel consumption over manifold pressure' (974 hPa, AVGAS 0.72 kg/l, fuels.json), fitted on the backend/sim speed-density air model with volumetric efficiency 0.95 (ASSUMED), 20 Nov 2026"
+      },
+      "lambda_eco": {
+        "value": 1.18,
+        "status": "CALIBRATED",
+        "ref": "ECO mode: median of 27 points (4000/5000/5500 rpm x 500-900 mbar) = 1.18, spread 1.12-1.35 (leaner at 4000 rpm: the model's constant volumetric efficiency, see PROGRESS M1-14b); OM-912 i Rev. 1 (June 2019) p. 5-5 Fig. 4 'Fuel consumption over manifold pressure' (974 hPa, AVGAS 0.72 kg/l, fuels.json), fitted on the backend/sim speed-density air model with volumetric efficiency 0.95 (ASSUMED), 20 Nov 2026"
+      },
+      "eco_below_throttle_pct": {
+        "value": 97.0,
+        "status": "MANUAL",
+        "ref": "OM-912 i Rev. 1 p. 5-5 NOTE: switchover between ECO and POWER is about 97 % of throttle position"
+      }
+    }
   }
 }

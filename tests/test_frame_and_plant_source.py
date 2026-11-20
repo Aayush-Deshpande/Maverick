@@ -59,7 +59,7 @@ def test_injected_fault_appears_in_truth_only_never_in_frame():
     src = PlantSource("rotax_914", seed=3)
     src.inject_fault("MISFIRE", cylinder=3, severity=0.8, ramp_sec=1.0)
     frame, truth = src.step(5.0)
-    assert [f.mode for f in truth.active_faults] == ["MISFIRE"]
+    assert [f.mode for f in truth.active_faults] == ["F01"]          # registry id (D9); legacy name resolves
     assert truth.active_faults[0].location == 3
     blob = repr(dataclasses.asdict(frame)).lower()
     assert "misfire" not in blob
@@ -85,6 +85,9 @@ def test_a_cooling_fault_moves_plant_readings_without_leaking_the_label():
     healthy = PlantSource("rotax_914", seed=5)
     faulty = PlantSource("rotax_914", seed=5)
     faulty.inject_fault("COOLING_DEGRADATION", severity=0.95, ramp_sec=10.0)
-    h = [f.cht[0] for f, _ in healthy.run(120, dt_sec=5.0)][-1]
-    x = [f.cht[0] for f, _ in faulty.run(120, dt_sec=5.0)][-1]
+    # M1-14 port: hot day, full power, sea level - where cooling limits CHT. On a cold day at altitude the
+    # liquid-cooled heads hide an air-cooling loss (see PROGRESS M1-14). Threshold unchanged.
+    hot = dict(dt_sec=5.0, altitude_ft=0.0, oat_c=30.0, throttle_pct=100.0)
+    h = [f.cht[0] for f, _ in healthy.run(120, **hot)][-1]
+    x = [f.cht[0] for f, _ in faulty.run(120, **hot)][-1]
     assert x > h + 5.0, f"cooling degradation should raise CHT (healthy {h:.1f}, faulty {x:.1f})"

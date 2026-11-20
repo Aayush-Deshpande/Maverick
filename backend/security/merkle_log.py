@@ -23,6 +23,22 @@ class FlightLogEntry:
     entry_hash: str
 
 
+GENESIS = "0" * 64
+
+
+def merkle_root(leaf_hashes: List[str]) -> str:
+    """Binary SHA-256 Merkle tree over hex leaf hashes (odd level: last hash paired with itself)."""
+    if not leaf_hashes:
+        return GENESIS
+    hashes = list(leaf_hashes)
+    while len(hashes) > 1:
+        if len(hashes) % 2 != 0:
+            hashes.append(hashes[-1])
+        hashes = [hashlib.sha256((hashes[i] + hashes[i + 1]).encode("utf-8")).hexdigest()
+                  for i in range(0, len(hashes), 2)]
+    return hashes[0]
+
+
 class MerkleFlightLog:
     """Tamper-evident flight recorder with hash chaining and Merkle root sealing."""
 
@@ -53,20 +69,7 @@ class MerkleFlightLog:
     def compute_merkle_root(self, start_idx: int = 0, end_idx: Optional[int] = None) -> str:
         """Compute Merkle root hash over a range of log entries."""
         subset = self.entries[start_idx : (end_idx or len(self.entries))]
-        if not subset:
-            return self.GENESIS_HASH
-
-        hashes = [e.entry_hash for e in subset]
-        while len(hashes) > 1:
-            if len(hashes) % 2 != 0:
-                hashes.append(hashes[-1])
-            new_level = []
-            for i in range(0, len(hashes), 2):
-                combined = hashes[i] + hashes[i + 1]
-                h = hashlib.sha256(combined.encode("utf-8")).hexdigest()
-                new_level.append(h)
-            hashes = new_level
-        return hashes[0]
+        return merkle_root([e.entry_hash for e in subset])
 
     def verify_integrity(self) -> Tuple[bool, Optional[int]]:
         """Verify the continuous hash chain. Returns (is_valid, first_corrupted_index)."""

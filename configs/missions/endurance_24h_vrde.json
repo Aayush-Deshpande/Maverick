@@ -1,0 +1,57 @@
+{
+ "schema_version": "mission/1",
+ "id": "endurance_24h_vrde",
+ "title": "Endurance - 24 h ISR loiter (VRDE)",
+ "ps_item": "E endurance",
+ "engines": [
+  "vrde_jayem_2_2l"
+ ],
+ "provenance": {
+  "status": "PUBLIC",
+  "ref": "Jayem positions the 180 hp engine for 24-30 h missions (AeroDef India 2026, P Part 2)"
+ },
+ "phases": [
+  {
+   "name": "TAKEOFF",
+   "duration_s": 120,
+   "throttle_pct": 100,
+   "altitude_ft": 1500,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "CLIMB",
+   "duration_s": 1200,
+   "throttle_pct": 85,
+   "altitude_ft": 15000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "TRANSIT_OUT",
+   "duration_s": 3600,
+   "throttle_pct": 70,
+   "altitude_ft": 15000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "LOITER",
+   "duration_s": 75600,
+   "throttle_pct": 60,
+   "altitude_ft": 15000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "TRANSIT_BACK",
+   "duration_s": 3600,
+   "throttle_pct": 70,
+   "altitude_ft": 12000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "DESCENT_LAND",
+   "duration_s": 1200,
+   "throttle_pct": 35,
+   "altitude_ft": 1500,
+   "isa_dev_c": 0
+  }
+ ]
+}

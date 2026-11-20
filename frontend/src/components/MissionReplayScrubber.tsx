@@ -60,12 +60,12 @@ export const MissionReplayScrubber: React.FC<MissionReplayScrubberProps> = ({ se
           <History className="w-4 h-4 text-accent" />
           <div>
             <h2 className="text-xs font-semibold text-white">Historical Mission Replay</h2>
-            <p className="text-[11px] text-slate-500">Scrub any recorded sortie — gauges and event markers sync to the exact timestamp.</p>
+            <p className="text-xs text-slate-500">Scrub any recorded sortie — gauges and event markers sync to the exact timestamp.</p>
           </div>
         </div>
 
         <select
-          className="bg-surface-card border border-surface-border text-[11px] text-slate-300 px-2 py-1.5 font-mono"
+          className="bg-surface-card border border-surface-border text-xs text-slate-300 px-2 py-1.5 font-mono"
           value={replay.selectedMissionId ?? ''}
           onChange={(e) => e.target.value && replay.selectMission(e.target.value)}
         >
@@ -91,7 +91,7 @@ export const MissionReplayScrubber: React.FC<MissionReplayScrubberProps> = ({ se
       )}
 
       {!replay.manifest ? (
-        <div className="text-[11px] text-slate-500 border border-surface-border bg-surface-card px-3 py-3">
+        <div className="text-xs text-slate-500 border border-surface-border bg-surface-card px-3 py-3">
           No sortie selected. Pick one above to load its telemetry and fault timeline.
         </div>
       ) : (
@@ -124,7 +124,7 @@ export const MissionReplayScrubber: React.FC<MissionReplayScrubberProps> = ({ se
               onChange={handleScrub}
               className="w-full accent-accent"
             />
-            <div className="flex justify-between text-[10px] font-mono text-slate-500">
+            <div className="flex justify-between text-xs font-mono text-slate-500">
               <span>{fmtClock(replay.currentTimeSec)}</span>
               <span>{fmtClock(total)}</span>
             </div>
@@ -134,20 +134,20 @@ export const MissionReplayScrubber: React.FC<MissionReplayScrubberProps> = ({ se
           <div className="flex items-center justify-center gap-2 flex-wrap">
             <button
               onClick={replay.stepBack}
-              className="px-2.5 py-1.5 border border-surface-border bg-surface-card text-slate-300 hover:text-white flex items-center gap-1 text-[11px]"
+              className="px-2.5 py-1.5 border border-surface-border bg-surface-card text-slate-300 hover:text-white flex items-center gap-1 text-xs"
             >
               <Rewind className="w-3.5 h-3.5" /> -10s
             </button>
             <button
               onClick={replay.togglePlay}
-              className="px-3 py-1.5 border border-accent bg-accent-dim text-accent hover:bg-accent/20 flex items-center gap-1.5 text-[11px] font-medium"
+              className="px-3 py-1.5 border border-accent bg-accent-dim text-accent hover:bg-accent/20 flex items-center gap-1.5 text-xs font-medium"
             >
               {replay.isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
               {replay.isPlaying ? 'Pause' : 'Play'}
             </button>
             <button
               onClick={replay.stepForward}
-              className="px-2.5 py-1.5 border border-surface-border bg-surface-card text-slate-300 hover:text-white flex items-center gap-1 text-[11px]"
+              className="px-2.5 py-1.5 border border-surface-border bg-surface-card text-slate-300 hover:text-white flex items-center gap-1 text-xs"
             >
               +10s <FastForward className="w-3.5 h-3.5" />
             </button>
@@ -156,7 +156,7 @@ export const MissionReplayScrubber: React.FC<MissionReplayScrubberProps> = ({ se
                 <button
                   key={s}
                   onClick={() => replay.setSpeed(s)}
-                  className={`px-2 py-1.5 border text-[11px] font-mono ${
+                  className={`px-2 py-1.5 border text-xs font-mono ${
                     replay.speed === s
                       ? 'border-accent bg-accent-dim text-accent'
                       : 'border-surface-border bg-surface-card text-slate-400 hover:text-white'
@@ -176,10 +176,10 @@ export const MissionReplayScrubber: React.FC<MissionReplayScrubberProps> = ({ se
                 const val = typeof raw === 'number' ? raw.toFixed(digits ?? 1) : '--';
                 return (
                   <div key={key} className="surface-panel p-2.5 text-center">
-                    <div className="text-[9px] uppercase tracking-wide text-slate-500">{label}</div>
+                    <div className="text-xs uppercase tracking-wide text-slate-500">{label}</div>
                     <div className="text-sm font-mono font-semibold text-white">
                       {val}
-                      {unit && <span className="text-[10px] text-slate-500 ml-0.5">{unit}</span>}
+                      {unit && <span className="text-xs text-slate-500 ml-0.5">{unit}</span>}
                     </div>
                   </div>
                 );
@@ -198,10 +198,10 @@ export const MissionReplayScrubber: React.FC<MissionReplayScrubberProps> = ({ se
                 {SEVERITY_ICON[marker.severity] || <Info className="w-3.5 h-3.5 text-slate-500" />}
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-mono text-slate-500">T+{fmtClock(marker.mission_elapsed_sec)}</span>
-                    <span className="text-[11px] font-medium text-slate-200 truncate">{marker.title}</span>
+                    <span className="text-xs font-mono text-slate-500">T+{fmtClock(marker.mission_elapsed_sec)}</span>
+                    <span className="text-xs font-medium text-slate-200 truncate">{marker.title}</span>
                   </div>
-                  <p className="text-[10px] text-slate-500 truncate">{marker.detail}</p>
+                  <p className="text-xs text-slate-500 truncate">{marker.detail}</p>
                 </div>
               </button>
             ))}

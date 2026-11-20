@@ -14,6 +14,71 @@
     "cyl": 0,
     "model": 0
   },
+  "backend/detect/adaptive.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/detect/autoencoder.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/detect/cusum.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/detect/reference.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/detect/sensor_fdi.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/diagnose/directive.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/diagnose/isolator.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/evaluation/cmapss.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/faults/manager.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/faults/registry.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/maintenance/work_orders.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/mission/executive.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/mission/glide.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
   "backend/ml/anomaly_detector.py": {
     "brand": 1,
     "cyl": 0,
@@ -44,17 +109,197 @@
     "cyl": 48,
     "model": 5
   },
+  "backend/planning/performance.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/planning/planner.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/prognose/rul_model.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/prognose/rul_service.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/prognose/trends.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/recording/recorder.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/recording/replay.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/reports/sortie_report.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/runtime/hub.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/server/api_v1.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
   "backend/server/engine_service.py": {
     "brand": 8,
     "cyl": 16,
     "model": 3
+  },
+  "backend/server/legacy_adapter.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
   },
   "backend/server/schemas.py": {
     "brand": 2,
     "cyl": 8,
     "model": 2
   },
+  "backend/server/security.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/server/state_builder.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/server/state_schema.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/sim/__init__.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/sim/atmosphere.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/sim/clock.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/sim/combustion.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/sim/electrical.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/sim/engine.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/sim/faults.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/sim/fuel.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/sim/induction.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/sim/maps.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/sim/params.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/sim/plant.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/sim/rotor.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/sim/sensors.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/sim/signature.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/sim/source.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/sim/thermal.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/sim/turbo.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/sim/vibration.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/sim/wear.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
   "backend/sources/plant_source.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/status/alerts.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/status/evaluator.py": {
     "brand": 0,
     "cyl": 0,
     "model": 0
@@ -63,6 +308,26 @@
     "brand": 4,
     "cyl": 64,
     "model": 1
+  },
+  "backend/terrain/dem.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/terrain/fetch.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/twin/sim_ukf.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/twin/virtual_sensors.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
   },
   "frontend/src/components/CalculationsPanel.tsx": {
     "brand": 0,

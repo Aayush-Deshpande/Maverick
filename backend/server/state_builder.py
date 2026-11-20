@@ -1,0 +1,235 @@
+"""Build the versioned StateMessage (backend/server/state_schema.py) from one runtime tick (card M0-05).
+
+Only measured or computed values are copied; anything the runtime does not produce yet stays null / empty (D7).
+Status stays UNKNOWN until the status evaluator exists (card M2-01): the old always-"GO" logic is not carried over.
+Highlights from diagnosis come in M3; until then active faults carry their resolved components for the training-mode
+INJECTED outline only (D5).
+"""
+from __future__ import annotations
+
+import datetime as _dt
+import json
+import math
+from functools import lru_cache
+from pathlib import Path
+from typing import Any, Dict, Iterable, List, Optional
+
+from backend.faults.registry import FaultRejected
+from backend.core.frame import Q_FROZEN, Q_INTERPOLATED, Q_LANE_DISAGREE, Q_OUT_OF_RANGE, Q_SHIELDED, Q_STALE
+from backend.server.state_schema import (ActiveFaultOut, AlertOut, EventOut, Highlight, Hypothesis, Reading, Reason, StateMessage,
+                                         Status)
+
+ROOT = Path(__file__).resolve().parents[2]
+
+# Units of the canonical Frame channels (the Frame contract in backend/core/frame.py, not engine data).
+FRAME_UNITS = {
+    "rpm": "rpm", "prop_rpm": "rpm", "throttle": "%", "map_kpa": "kPa", "coolant_t": "C", "oil_p": "bar",
+    "oil_t": "C", "fuel_flow": "kg/h", "fuel_t": "C", "rail_p": "bar", "bus_v": "V", "bus_i": "A", "batt_i": "A",
+    "alt": "ft", "oat": "C", "tas": "kt", "cht": "C", "egt": "C",
+}
+SCALARS = ("rpm", "prop_rpm", "map_kpa", "coolant_t", "oil_p", "oil_t", "fuel_flow", "fuel_t", "rail_p",
+           "bus_v", "bus_i", "batt_i")
+
+
+def _quality(bits: Optional[int]) -> str:
+    if not bits:
+        return "OK"
+    if bits & Q_INTERPOLATED:                   # the twin's estimate stands in for a quarantined sensor
+        return "VIRTUAL"
+    if bits & Q_SHIELDED:
+        return "QUARANTINED"
+    if bits & (Q_FROZEN | Q_OUT_OF_RANGE | Q_LANE_DISAGREE | Q_STALE):
+        return "SUSPECT"
+    return "OK"
+
+
+@lru_cache(maxsize=16)
+def component_nodes(engine_id: str) -> Dict[str, List[str]]:
+    path = ROOT / "configs" / "components" / f"{engine_id}.json"
+    if not path.exists():
+        return {}
+    data = json.loads(path.read_text(encoding="utf-8"))
+    return {c["component_id"]: c["nodes"] for c in data["components"]}
+
+
+def resolve_fault_components(fault_raw: Dict[str, Any], engine_id: str, cylinder: Optional[int],
+                             channel: Optional[str]) -> tuple[list[str], Optional[str]]:
+    """Component ids for one active fault on one engine, plus the marker text when parts are missing."""
+    entry = (fault_raw.get("components") or {}).get(engine_id)
+    if not entry:
+        return [], None
+    if "by_channel" in entry:
+        table = entry["by_channel"]
+        cyl = None
+        generic = channel
+        if channel and channel.endswith("]") and "[" in channel:          # egt[3] -> egt[{cyl}], cyl 3
+            base, _, idx = channel[:-1].partition("[")
+            cyl, generic = idx, f"{base}[{{cyl}}]"
+        comps = table.get(channel) or table.get(generic) or table.get("*") or []
+        ids = [i.replace("{cyl}", cyl) if cyl else i for i in comps]
+        return ids, entry.get("marker_for") if entry.get("marker") else None
+    ids = [i.replace("{cyl}", str(cylinder)) for i in entry.get("now", [])] if cylinder else \
+        [i for i in entry.get("now", []) if "{cyl}" not in i]
+    marker = entry.get("marker_for")
+    if marker and cylinder:
+        marker = marker.replace("{cyl}", str(cylinder))
+    return ids, marker if entry.get("marker") else None
+
+
+@lru_cache(maxsize=1)
+def _highlight_thresholds() -> tuple[float, float]:
+    """Entry = the status evaluator's rule (a hypothesis this confident sets status, so it also lights its parts);
+    exit = the lower hysteresis level (configs/status.json)."""
+    c = json.loads((ROOT / "configs" / "status.json").read_text(encoding="utf-8"))
+    return float(c["hypothesis_posterior_min"]["value"]), float(c["highlight_exit_posterior"]["value"])
+
+
+def _detected_highlights(engine_id: str, hypotheses: Iterable[Dict[str, Any]], status_level: Optional[str],
+                         registry: Any, nodes: Dict[str, List[str]],
+                         hold: Optional[set] = None) -> List[Highlight]:
+    """D5: highlights from diagnosis + status, never from the injected list. Process faults take the current status
+    colour (an alert level), sensor faults the SENSOR style."""
+    out: List[Highlight] = []
+    if registry is None:
+        return out
+    level = status_level if status_level in ("NO-GO", "CAUTION", "ADVISORY") else "ADVISORY"
+    enter, leave = _highlight_thresholds()
+    held = hold if hold is not None else set()
+    still: set = set()
+    for h in hypotheses:
+        fid, post = h.get("fault_id"), h.get("posterior")
+        if not fid or post is None:
+            continue
+        key = (fid, h.get("cylinder"), h.get("channel"))
+        if post < (leave if key in held else enter):
+            continue
+        still.add(key)
+        try:
+            raw = registry.get(fid).raw
+        except FaultRejected:                             # not a registry fault (e.g. an UNKNOWN anomaly): no parts
+            continue
+        comp_ids, marker = resolve_fault_components(raw, engine_id, h.get("cylinder"), h.get("channel"))
+        for cid in comp_ids:
+            out.append(Highlight(component_id=cid, nodes=nodes.get(cid, []),
+                                 level="SENSOR" if h.get("kind") == "SENSOR" else level,
+                                 reason=f"{fid} {h.get('name', '')} detected, p={post:.2f}", marker_for=marker))
+    held.clear()
+    held.update(still)                                    # the caller keeps this set per engine between messages
+    return out
+
+
+def _status(st: Optional[Dict[str, Any]]) -> Status:
+    if not st:
+        return Status(level="UNKNOWN")
+    return Status(level=st["level"], latched=st.get("latched", False),
+                  reasons=[Reason(**{k: r.get(k) for k in ("code", "text", "channel", "fault_id", "value", "limit")})
+                           for r in st.get("reasons", [])])
+
+
+def _residuals(det: Any) -> Dict[str, float]:
+    """Unclipped model-informed residual z per detector channel (measured vs the engine model, in noise sigmas)."""
+    if det is None or getattr(det, "z_raw", None) is None or not getattr(det, "channel_names", None):
+        return {}
+    return {n: round(float(z), 3) for n, z in zip(det.channel_names, det.z_raw) if math.isfinite(float(z))}
+
+
+KJ_PER_KWH_S = 3600.0                         # seconds per hour (kg/h -> kg/s), named for the unit change
+
+
+@lru_cache(maxsize=None)
+def _lhv_j_kg(engine_id: str) -> Optional[float]:
+    from backend.physics.engine_config import load_engine_config
+    from backend.sim.combustion import load_fuel
+    try:
+        return load_fuel(load_engine_config(engine_id).fuel)["lhv_mj_kg"] * 1e6
+    except (KeyError, FileNotFoundError):
+        return None
+
+
+def _derived(f: Any, engine_id: str) -> Dict[str, Optional[float]]:
+    """Efficiency figures an engine monitor can compute without a torque sensor: the twin's indicated-power estimate
+    with the MEASURED fuel flow (P Part 3.10 "efficiency trends"). Indicated, not brake: no friction model is assumed
+    here. Missing input -> null (NO DATA), never a default."""
+    p_ind = (f.virtual_sensors or {}).get("P_ind_kw")
+    ff = f.fuel_flow                                                    # kg/h
+    lhv = _lhv_j_kg(engine_id)
+    ok = p_ind is not None and ff is not None and p_ind > 0 and ff > 0
+    return {"power_ind_kw_est": float(p_ind) if p_ind is not None else None,
+            "bsfc_ind_g_kwh_est": ff * 1000.0 / p_ind if ok else None,
+            "thermal_eff_ind_est": p_ind * 1000.0 / (ff / KJ_PER_KWH_S * lhv) if ok and lhv else None}
+
+
+def build_state(tick: Any, seq: int, *, registry: Any = None, active_faults: Iterable[Any] = (),
+                fault_events: Iterable[Any] = (), rate_hz_actual: Optional[float] = None, time_scale: float = 1.0,
+                levers: Optional[Dict[str, Optional[float]]] = None, training_mode: bool = False,
+                maintenance: Iterable[Dict[str, Any]] = (), highlight_hold: Optional[set] = None) -> StateMessage:
+    f = tick.frame
+    engine_id = tick.engine_id
+    readings: Dict[str, Reading] = {}
+    for name in SCALARS:
+        v = getattr(f, name, None)
+        if v is not None:
+            readings[name] = Reading(value=float(v), unit=FRAME_UNITS[name], quality=_quality(f.quality.get(name)))
+    for prefix, series in (("cht", f.cht), ("egt", f.egt)):
+        for i, v in enumerate(series, start=1):
+            key = f"{prefix}[{i}]"
+            readings[key] = Reading(value=None if v is None else float(v), unit=FRAME_UNITS[prefix],
+                                    quality=_quality(f.quality.get(f"{prefix}_{i}")))
+
+    nodes = component_nodes(engine_id)
+    faults_out: List[ActiveFaultOut] = []
+    highlights: List[Highlight] = []
+    for af in active_faults:
+        raw = registry.get(af.fault_id).raw if registry is not None else {}
+        comp_ids, marker = resolve_fault_components(raw, engine_id, af.cylinder, af.channel)
+        faults_out.append(ActiveFaultOut(uuid=af.uuid, fault_id=af.fault_id, name=af.name, kind=af.kind,
+                                         cylinder=af.cylinder, channel=af.channel, severity=af.severity,
+                                         ramp_s=af.ramp_s, source=af.source, t0_s=af.t0_s, simulated=af.simulated,
+                                         components=comp_ids, marker_for=marker))
+        if training_mode:  # D5: the commanded fault is shown only in training mode, labelled INJECTED
+            for cid in comp_ids:
+                highlights.append(Highlight(component_id=cid, nodes=nodes.get(cid, []), level="INJECTED",
+                                            reason=f"{af.fault_id} {af.name} (injected, training mode)",
+                                            marker_for=marker))
+
+    hyps = getattr(tick, "hypotheses", None) or []
+    highlights += _detected_highlights(engine_id, hyps, (getattr(tick, "status", None) or {}).get("level"),
+                                       registry, nodes, highlight_hold)
+
+    events = [EventOut(seq=e.seq, t_s=e.t_s, type=e.type, text=e.text, source=e.source) for e in fault_events]
+    for e in getattr(tick, "events", []) or []:
+        events.append(EventOut(seq=int(e.get("seq", 0)), t_s=float(e.get("t_sim", e.get("t", 0.0))),
+                               type=str(e.get("kind", e.get("type", "EVENT"))), text=str(e.get("title", "")),
+                               source="runtime"))
+
+    det = tick.detection
+    return StateMessage(
+        engine_id=engine_id, seq=seq, sim_time_s=float(f.t),
+        wall_time_iso=_dt.datetime.now(_dt.timezone.utc).isoformat(timespec="milliseconds"),
+        rate_hz_actual=rate_hz_actual, time_scale=time_scale,
+        source="REPLAY" if f.source == "REPLAY" else "CAN" if f.source == "CAN" else "MAVLINK" if f.source == "MAVLINK" else "SIM",
+        levers=levers or {"throttle": f.throttle},
+        environment={"altitude_ft": f.alt, "oat_c": f.oat, "tas_kt": f.tas},
+        readings=readings,
+        twin=tick.ukf, residuals=_residuals(det),
+        detections=None if det is None else {"confirmed": bool(det.confirmed), "raw_alarm": bool(det.raw_alarm),
+                                             "top_channels": [list(x) if isinstance(x, tuple) else x for x in det.top_channels],
+                                             "scores": {k: float(v) for k, v in det.scores.items()},
+                                             "ratios": {k: float(v) for k, v in det.ratios.items()},
+                                             "candidate": tick.heavy,           # tier-1 readout scores (not probabilities)
+                                             "drift": det.drift,                 # M3-02 CUSUM slow-drift channel
+                                             "novelty": det.novelty},            # M3-04 autoencoder + EVT channel
+        hypotheses=[Hypothesis(**h) for h in getattr(tick, "hypotheses", None) or []],   # M3-05 isolator
+        status=_status(getattr(tick, "status", None)),
+        alerts=[AlertOut(**a) for a in (getattr(tick, "status", None) or {}).get("alerts", [])],
+        master=(getattr(tick, "status", None) or {}).get("master", {}),
+        engine_state=f.engine_state,
+        highlights=highlights,
+        prognostics=tick.prognostics, reliability=tick.reliability,
+        maintenance=list(maintenance),                                      # M4-05 open work orders
+        mission=getattr(tick, "mission", None),                             # M5-01 mission progress
+        active_faults=faults_out, events_since=events,
+        vibration_orders={k: float(v) for k, v in (f.vibration_orders or {}).items()},
+        virtual_sensors={k: float(v) for k, v in (f.virtual_sensors or {}).items() if v is not None},
+        derived=_derived(f, engine_id),
+    )

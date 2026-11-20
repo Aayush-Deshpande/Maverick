@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "description": "Propeller + drivetrain installation data per propeller type (card M1-03, P Part 4 Step 1.3b). An engine uses CONSTANT_SPEED when configs/engines/<id>.json propeller_governor is true, else FIXED_PITCH. Everything here is installation data, not engine data. cp_scale is NOT configured: it is calibrated at start-up so the propeller absorbs the engine's take-off power at its rated propeller speed (CALIBRATED).",
+  "types": {
+    "FIXED_PITCH": {
+      "diameter_m": {"value": 1.73, "status": "ASSUMED", "ref": "typical 68 in propeller on Rotax 912/914/915 class installations"},
+      "j_zero_thrust": {"value": 1.0, "status": "ASSUMED", "ref": "advance ratio where Cp reaches zero; generic fixed-pitch curve (JSBSim FGPropeller form)"},
+      "rotating_inertia_kg_m2": {"value": 0.35, "status": "ASSUMED", "ref": "crank + gearbox + propeller reflected to the crankshaft"},
+      "design_tas_kt": {"value": 90.0, "status": "ASSUMED", "ref": "MALE UAV cruise speed used for the calibration point"}
+    },
+    "CONSTANT_SPEED": {
+      "diameter_m": {"value": 1.9, "status": "ASSUMED", "ref": "typical 3-blade constant-speed propeller on AE300 class installations"},
+      "j_zero_thrust": {"value": 1.4, "status": "ASSUMED", "ref": "generic constant-speed curve at reference pitch"},
+      "rotating_inertia_kg_m2": {"value": 0.6, "status": "ASSUMED", "ref": "crank + gearbox + propeller reflected to the crankshaft"},
+      "design_tas_kt": {"value": 90.0, "status": "ASSUMED", "ref": "MALE UAV cruise speed used for the calibration point"},
+      "pitch_reference": {"value": 0.6, "status": "ASSUMED", "ref": "pitch (0..1) that absorbs take-off power at rated rpm, leaving governor authority both ways"},
+      "pitch_min": {"value": 0.1, "status": "ASSUMED", "ref": "fine pitch stop"},
+      "pitch_max": {"value": 1.0, "status": "ASSUMED", "ref": "coarse pitch stop"},
+      "governor_kp": {"value": 2.0, "status": "CALIBRATED", "ref": "tuned for T-PHY-9 (settle < 2 s, overshoot < 3 %), tests/sim/test_rotor.py"},
+      "governor_ki": {"value": 6.0, "status": "CALIBRATED", "ref": "tuned for T-PHY-9 (settle < 2 s, overshoot < 3 %), tests/sim/test_rotor.py"}
+    }
+  }
+}

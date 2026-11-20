@@ -72,7 +72,7 @@ Airfields with positive arrival altitude margin ($\Delta z_{\text{margin}, i} > 
 
 ## Monte Carlo Mission Reliability Solver
 
-To evaluate whether the planned flight profile can be completed safely, ANUMAAN executes a 10-phase Monte Carlo hazard integration over $N = 1,000$ iterations:
+To evaluate whether the rest of the planned mission can be completed, ANUMAAN runs a forward Monte Carlo over the remaining phases (4,000 trials per evaluation in service). It is vectorised: each component's failure time is drawn by inverting its piecewise cumulative hazard. The per-component hazard is:
 
 $$\lambda_c(d_c, s_p) = \lambda_{0, c} \cdot \left(\frac{1}{1 - d_c}\right)^{\gamma_c} \cdot s_p$$
 
@@ -83,13 +83,19 @@ $$s_p = \left(P_{\text{frac}}\right)^{2.2} \times \left(1 + 0.35 \max\left(0, \f
 Confidence bounds are calculated using the Wilson score interval:
 $$w = \frac{\hat{p} + \frac{z^2}{2N} \pm z \sqrt{\frac{\hat{p}(1-\hat{p})}{N} + \frac{z^2}{4N^2}}}{1 + \frac{z^2}{N}}, \quad \hat{p} = \frac{K}{N}$$
 
+**Predicted limit crossings are abort causes too.** Each time-to-limit prediction from the trend tracker ([Remaining Useful Life](14-remaining-useful-life.md)) becomes a lognormal crossing time: its median is the prediction and its 95 % range is the predicted interval. A crossing that falls inside the mission aborts that trial, and the result names the cause and the phase it falls in.
+
+**Measured.** Over the 18 h ISR profile, 20,000 trials take about 9 ms. A healthy engine gives 0.99685 [0.99597, 0.99754], and the closed-form value 0.99625 lies inside that interval. A predicted oil-temperature crossing in about two hours drives the result to 0, with the aborts placed in the transit phase. The component base hazard rates are placeholders until fleet reliability data replaces them, and the published result says so.
+
 ```mermaid
 flowchart TB
-    PROFILE["Mission Profile: 10 Phases, Stress Factors s_p"]
+    PROFILE["Remaining Mission Phases, Stress Factors s_p"]
     DAMAGE["Component Damage Fractions d_c"]
     HAZARD["Per-Component Hazard Model lambda_c(d_c, s_p)"]
 
-    PROFILE --> MC["Monte Carlo Solver: N = 1000 Trials"]
+    TTL["Time-to-Limit Crossings (lognormal)"]
+    TTL --> MC
+    PROFILE --> MC["Monte Carlo Solver: N = 4000 Trials"]
     DAMAGE --> HAZARD
     HAZARD --> MC
     MC --> DRAW["Draw Time-to-Failure per Component per Trial"]

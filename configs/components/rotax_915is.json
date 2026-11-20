@@ -1,0 +1,105 @@
+{
+  "engine_id": "rotax_915is",
+  "glb": "assets/web/engines/rotax_915is.glb",
+  "mesh_nodes": 15,
+  "representative_geometry": null,
+  "generated_by": "scripts/assets/build_component_manifests.py (card M0-03; patterns from addendum section 3)",
+  "components": [
+    {
+      "component_id": "main_engine_MERGED",
+      "subsystem": "core",
+      "cylinder": null,
+      "nodes": [
+        "Main engine"
+      ],
+      "note": "almost the whole engine in one object; split in Phase 7"
+    },
+    {
+      "component_id": "air_baffles",
+      "subsystem": "cooling",
+      "cylinder": null,
+      "nodes": [
+        "Air baffles"
+      ],
+      "note": "cooling baffles, NOT the air filter"
+    },
+    {
+      "component_id": "intercooler",
+      "subsystem": "turbo",
+      "cylinder": null,
+      "nodes": [
+        "Intercooler"
+      ]
+    },
+    {
+      "component_id": "oil_tank",
+      "subsystem": "lubrication",
+      "cylinder": null,
+      "nodes": [
+        "Oil tank"
+      ]
+    },
+    {
+      "component_id": "overboost_valve",
+      "subsystem": "turbo",
+      "cylinder": null,
+      "nodes": [
+        "Overboost valve"
+      ]
+    },
+    {
+      "component_id": "magneto_valve_block",
+      "subsystem": "turbo",
+      "cylinder": null,
+      "nodes": [
+        "Magnetovalve"
+      ]
+    },
+    {
+      "component_id": "ecu",
+      "subsystem": "control",
+      "cylinder": null,
+      "nodes": [
+        "ECU"
+      ]
+    },
+    {
+      "component_id": "fusebox",
+      "subsystem": "electrical",
+      "cylinder": null,
+      "nodes": [
+        "Fusebox"
+      ]
+    },
+    {
+      "component_id": "gearbox",
+      "subsystem": "drivetrain",
+      "cylinder": null,
+      "nodes": [
+        "Tranny"
+      ]
+    },
+    {
+      "component_id": "ambient_sensor",
+      "subsystem": "sensors",
+      "cylinder": null,
+      "nodes": [
+        "Ambient sensor"
+      ]
+    },
+    {
+      "component_id": "unnamed_cad_parts",
+      "subsystem": "unknown",
+      "cylinder": null,
+      "nodes": [
+        "5608_@OIS@_5081",
+        "6270_@OIS@_5818",
+        "6289_@OIS@_5818",
+        "7767_@OIS@_7310",
+        "7786_@OIS@_7310"
+      ],
+      "note": "CAD-id objects; identify in Phase 7"
+    }
+  ],
+  "unassigned_nodes": []
+}

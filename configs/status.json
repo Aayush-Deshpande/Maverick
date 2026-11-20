@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "description": "Engine status evaluator rules (card M2-01, P Part 4 Step 2.2, DECISIONS D4). Limits themselves live in configs/engines/<id>.json 'limits'; this file holds only the evaluator's rule constants and the channel -> subsystem map.",
+  "levels": [
+    "ENGINE_OFF",
+    "GO",
+    "ADVISORY",
+    "CAUTION",
+    "NO-GO"
+  ],
+  "exit_margin_fraction_of_band": {
+    "value": 0.02,
+    "status": "ASSUMED",
+    "ref": "P Step 2.2 hysteresis: exit only after the value is back inside the band by 2 % of the band span"
+  },
+  "exit_hold_s": {
+    "value": 10.0,
+    "status": "ASSUMED",
+    "ref": "P Step 2.2 hysteresis: ... for 10 s (simulated seconds, D8)"
+  },
+  "highlight_exit_posterior": {
+    "value": 0.5,
+    "status": "ASSUMED",
+    "ref": "3D highlight hysteresis: a part lit at hypothesis_posterior_min stays lit until the posterior falls below this, so a posterior hovering at the entry threshold does not blink the part (UX, P Part 6 U3)"
+  },
+  "hypothesis_posterior_min": {
+    "value": 0.7,
+    "status": "ASSUMED",
+    "ref": "P Step 2.2: a hypothesis with posterior >= 0.7 sets that fault's status_at_full_severity"
+  },
+  "subsystems": {
+    "ref": "channel -> subsystem, for 'two quarantined sensors on the same subsystem -> CAUTION' (P Step 2.2)",
+    "map": {
+      "cht": "cylinder_heads",
+      "egt": "exhaust",
+      "coolant_t": "cooling",
+      "oil_p": "lubrication",
+      "oil_t": "lubrication",
+      "gearbox_t": "gearbox",
+      "fuel_flow": "fuel",
+      "fuel_p": "fuel",
+      "rail_p": "fuel",
+      "fuel_t": "fuel",
+      "map_kpa": "induction",
+      "rpm": "speed",
+      "prop_rpm": "speed",
+      "bus_v": "electrical",
+      "bus_i": "electrical",
+      "batt_i": "electrical",
+      "vibration": "vibration"
+    }
+  },
+  "max_shelve_s": {
+    "value": 1800.0,
+    "status": "ASSUMED",
+    "ref": "longest shelve before automatic un-shelve (U3 / ISA-18.2 shelving with a time limit); NO-GO alerts cannot be shelved"
+  },
+  "alert_actions": {
+    "ref": "operator action per reason code (U3: every alert has an action, else it is an event). Fault-specific actions come from the registry mitigation via the hypothesis (M3).",
+    "ENGINE_FAILED": "Engine not running: follow the engine-failure / restart checklist; select a landing site.",
+    "LIMIT_WARNING_HIGH": "Above the operating limit: reduce power now and land as soon as practicable.",
+    "LIMIT_WARNING_LOW": "Below the operating limit: reduce power now and land as soon as practicable.",
+    "LIMIT_CAUTION_HIGH": "Outside the normal range: reduce power or increase cooling airflow and watch the trend.",
+    "LIMIT_CAUTION_LOW": "Outside the normal range: check the trend and the related readings; adjust power.",
+    "TIME_LIMIT": "Time-limited power exceeded: reduce to maximum continuous power.",
+    "TIME_TO_LIMIT": "Predicted to reach a limit before the mission ends: plan to reduce power or return early.",
+    "SENSORS_QUARANTINED": "Several sensors of one subsystem are not trusted: cross-check, treat the subsystem as unmonitored.",
+    "SENSOR_QUARANTINED": "Sensor not trusted: use the related readings; schedule a sensor check.",
+    "HYPOTHESIS": "Suspected fault: see the diagnosis for the recommended action.",
+    "LATCHED": "A NO-GO occurred: review the cause and acknowledge before the next flight."
+  },
+  "hypothesis_grading": {
+    "value": {
+      "no_go_at_severity": 1.5,
+      "advisory_below_severity": 0.5
+    },
+    "status": "ASSUMED",
+    "ref": "D60 (Prasad 20 Nov: 'directly NO-GO can be extreme'; audit R 22 e.g. F23 'CAUTION at band edge, NO-GO below minimum'; P Step 2.2 'scaled by severity estimate'). A confident diagnosis alone gives one level below the registry's full-severity level; it reaches the full level when the isolator's severity estimate (1 = the calibrated full-severity signature) is at least no_go_at_severity, and a CAUTION-level fault drops to ADVISORY below advisory_below_severity. Limits (warning band), engine FAILED and registry immediate_no_go faults are NO-GO at once, unchanged."
+  }
+}

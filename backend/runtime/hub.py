@@ -3,13 +3,29 @@ and the primary stream (R1, D29).  Deterministic: same seeds + same tick count =
 
 from __future__ import annotations
 
+import json
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
-from typing import Any, Dict, List, Optional
+from pathlib import Path
+from typing import Any, Dict, Iterable, List, Optional, Set
 
 from backend.physics.engine_config import available_engines
 from backend.runtime.engine_runtime import EngineRuntime, Tick
+
+RUNTIME_CONFIG = Path(__file__).resolve().parents[2] / "configs" / "runtime.json"
+
+
+def load_runtime_settings(path: Path = RUNTIME_CONFIG) -> Dict[str, Any]:
+    """Runtime settings from configs/runtime.json (card M0-07). A missing or invalid file is an error, not a default."""
+    data = json.loads(path.read_text(encoding="utf-8"))
+    divisor = data.get("idle_tick_divisor")
+    if not isinstance(divisor, int) or divisor < 1:
+        raise ValueError(f"{path}: idle_tick_divisor must be an integer >= 1, got {divisor!r}")
+    rate = data.get("tick_rate_hz")
+    if not isinstance(rate, (int, float)) or rate <= 0:
+        raise ValueError(f"{path}: tick_rate_hz must be a number > 0, got {rate!r}")
+    return data
 
 
 class RuntimeHub:
@@ -18,6 +34,11 @@ class RuntimeHub:
         self.runtimes: Dict[str, EngineRuntime] = {
             e: EngineRuntime(e, seed=seed + i, warmup_ticks=warmup_ticks) for i, e in enumerate(self.engines)}
         self.selected: str = self.engines[0]
+        # engines some client is subscribed to (set by the /ws/v1 broadcaster); they tick at full rate
+        self.active: Set[str] = set()
+        settings = load_runtime_settings()
+        self.idle_tick_divisor: int = settings["idle_tick_divisor"]
+        self.tick_rate_hz: float = float(settings["tick_rate_hz"])
         self._thread: Optional[threading.Thread] = None
         self._stop = threading.Event()
         self.latest: Dict[str, Tick] = {}
@@ -38,42 +59,37 @@ class RuntimeHub:
         if warm_heavy:
             threading.Thread(target=self.runtimes[engine_id].ensure_heavy, daemon=True).start()
 
+    def set_active(self, engines: Iterable[str]) -> None:
+        """Engines with at least one subscriber. Unknown ids are ignored (the API validates them)."""
+        self.active = {e for e in engines if e in self.runtimes}
+
     def tick_all(self, force_all: bool = True) -> Dict[str, Tick]:
-        """Tick every ready engine. When force_all is False (the steady-state background
-        loop), only the selected engine ticks every call; idle engines tick at roughly
-        IDLE_TICK_DIVISOR-th the rate, since nothing is reading their live stream and
-        running all five full physics+DSP stacks at 20 Hz forever is the main standing
-        memory/CPU cost on a constrained host (Render free tier OOMs on it)."""
+        """Tick every ready engine. When force_all is False (the steady-state background loop), the selected
+        engine and every engine with a subscriber tick every call; engines nobody watches tick every
+        idle_tick_divisor-th call (configs/runtime.json) to save CPU/memory on small hosts.
+        This hub is the only simulator: nothing here writes into the legacy EngineStateService (M0-07, T-M0-5)."""
         out = {}
+        idle_turn = self.tick_count % self.idle_tick_divisor == 0
         for e, r in self.runtimes.items():
             if not r.ready:
                 continue
             is_selected = e == self.selected
-            if force_all or is_selected or (self.tick_count % self.IDLE_TICK_DIVISOR == 0):
-                t = r.tick(heavy=is_selected)
-                out[e] = t
-                if e == "rotax_912is":
-                    try:
-                        from backend.server.engine_service import EngineStateService
-                        if EngineStateService._instance is not None:
-                            EngineStateService._instance.sync_from_tick(t)
-                    except Exception:
-                        pass
+            if force_all or is_selected or e in self.active or idle_turn:
+                out[e] = r.tick(heavy=is_selected)
             elif e in self.latest:
                 out[e] = self.latest[e]
         self.latest = out
         self.tick_count += 1
         return out
 
-    IDLE_TICK_DIVISOR = 5  # idle engines advance at rate_hz / this, selected engine stays at rate_hz
-
-    def start(self, rate_hz: float = 20.0) -> None:
+    def start(self, rate_hz: Optional[float] = None) -> None:
         if self._thread and self._thread.is_alive():
             return
         self._stop.clear()
+        rate = rate_hz if rate_hz is not None else self.tick_rate_hz
 
         def loop():
-            period = 1.0 / rate_hz
+            period = 1.0 / rate
             while not self._stop.is_set():
                 t0 = time.perf_counter()
                 self.tick_all(force_all=False)

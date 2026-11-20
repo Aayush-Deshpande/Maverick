@@ -74,7 +74,7 @@ def test_monte_carlo_seeded_determinism_and_agreement_with_analytic():
     r1 = MissionReliabilityEngine(seed=1).simulate(ISR_18H_PROFILE, n_trials=4000)
     r2 = MissionReliabilityEngine(seed=1).simulate(ISR_18H_PROFILE, n_trials=4000)
     assert r1 == r2
-    assert r1["reliability"] == pytest.approx(0.9955, abs=1e-4)
+    assert r1["reliability"] == pytest.approx(0.996, abs=1e-4)   # re-pinned 20 Nov (Prasad Q11): vectorised sampler
     assert r1["ci_lower"] <= r1["reliability"] <= r1["ci_upper"]
     assert abs(r1["reliability"] - 0.99625) < 0.01
     assert r1["n_trials"] == 4000

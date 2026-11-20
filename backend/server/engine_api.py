@@ -17,10 +17,12 @@ from __future__ import annotations
 
 import asyncio
 import threading
-from typing import Optional
+from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
+from pydantic import BaseModel, Field
+
+from backend.server.security import command_guard
 
 from backend.runtime import EngineRuntime, RuntimeHub
 
@@ -38,7 +40,7 @@ def get_hub() -> RuntimeHub:
             def boot():
                 _hub.calibrate_all()
                 _hub.select(_hub.selected)
-                _hub.start(rate_hz=20.0)
+                _hub.start()
 
             threading.Thread(target=boot, daemon=True, name="hub-boot").start()
         return _hub
@@ -60,14 +62,14 @@ class FaultBody(BaseModel):
     fault_id: Optional[int] = None
     mode: Optional[str] = None
     cylinder: Optional[int] = None
-    severity: float = 0.8
-    ramp_sec: float = 60.0
+    severity: Optional[float] = None      # registry default when omitted
+    ramp_sec: Optional[float] = None
 
 
 class LeverBody(BaseModel):
-    throttle_pct: Optional[float] = None
-    altitude_ft: Optional[float] = None
-    oat_c: Optional[float] = None
+    throttle_pct: Optional[float] = Field(default=None, ge=0, le=100)      # same ranges as /api/v1 levers
+    altitude_ft: Optional[float] = Field(default=None, ge=-1000, le=40000)
+    oat_c: Optional[float] = Field(default=None, ge=-60, le=60)
 
 
 @router.get("/api/engines")
@@ -76,7 +78,7 @@ def list_engines():
 
 
 @router.post("/api/engines/select")
-def select_engine(body: SelectBody):
+def select_engine(body: SelectBody, cmd: Dict[str, Any] = Depends(command_guard)):
     hub = get_hub()
     try:
         hub.select(body.engine_id)
@@ -130,9 +132,9 @@ def engine_history(engine_id: str, n: int = 600, channels: Optional[str] = None,
             "ratios": (t.detection.ratios if t.detection else None),
             "raw_alarm": (t.detection.raw_alarm if t.detection else None),
             "confirmed": (t.detection.confirmed if t.detection else None),
-            "rul": ((t.prognostics or {}).get("rul") or {}).get("rul_point"),
-            "rul_lower": ((t.prognostics or {}).get("rul") or {}).get("rul_p_lower"),
-            "rul_upper": ((t.prognostics or {}).get("rul") or {}).get("rul_p_upper"),
+            "rul": ((t.prognostics or {}).get("rul") or {}).get("rul_h"),
+            "rul_lower": ((t.prognostics or {}).get("rul") or {}).get("rul_lower_h"),
+            "rul_upper": ((t.prognostics or {}).get("rul") or {}).get("rul_upper_h"),
             "damage": ((t.prognostics or {}).get("damage") or {}).get("damage_total"),
             "mission_reliability": (t.reliability or {}).get("mission_reliability"),
         })
@@ -174,51 +176,59 @@ def engine_schema(engine_id: str):
 
 
 @router.post("/api/engines/{engine_id}/faults")
-def inject_fault(engine_id: str, body: FaultBody):
-    rt = _rt(engine_id)
-    
+def inject_fault(engine_id: str, body: FaultBody, cmd: Dict[str, Any] = Depends(command_guard)):
+    """DEPRECATED (use POST /api/v1/engines/{id}/faults). Goes through the ONE fault manager (M0-10), so the fault
+    shows on every client. Numeric ids resolve only through registry legacy_ids (audit #18: never list position);
+    'mode' resolves through registry plant_mode_legacy. Anything else -> 422 with the reason."""
+    from backend.faults.registry import FaultRejected
+    from backend.physics.engine_config import load_engine_config
+    from backend.server.api_v1 import REGISTRY, services
+    cmd.update(source="legacy")
+    _rt(engine_id)
+    manager = services().channel(engine_id).manager
     if body.action == "CLEAR_FAULT" or body.fault_id == 0:
-        rt.clear_faults()
-        return {"cleared": True}
-        
-    mode = body.mode
-    cyl = body.cylinder
-    if not mode and body.fault_id is not None and body.fault_id > 0:
-        # Map numeric fault_id (1-8) to available profile faults
-        from backend.runtime.registry import thermal_visible_faults
-        available = thermal_visible_faults(rt.cfg)
-        if 1 <= body.fault_id <= len(available):
-            mode = available[body.fault_id - 1]
-            if mode == "MISFIRE" and cyl is None:
-                cyl = 1
-        else:
-            mode = "MISFIRE"
-            cyl = 1
-            
-    if not mode:
-        raise HTTPException(422, "Either 'mode' or 'fault_id' must be specified.")
-        
+        return {"cleared": [f.to_dict() for f in manager.clear(source="legacy")]}
     try:
-        return rt.inject_fault(mode, cyl, body.severity, body.ramp_sec)
-    except ValueError as e:
-        raise HTTPException(422, str(e))
+        if body.fault_id is not None:
+            spec = REGISTRY.by_legacy_id(body.fault_id)
+            cylinder = body.cylinder if body.cylinder is not None else spec.raw.get("legacy_cylinder")
+        elif body.mode:
+            cfg = load_engine_config(engine_id)
+            matches = [f for f in REGISTRY.applicable(cfg) if f.raw.get("plant_mode_legacy") == body.mode]
+            if not matches:
+                raise FaultRejected(f"mode {body.mode!r} has no registry fault applicable to {engine_id}")
+            spec, cylinder = matches[0], body.cylinder
+            from backend.runtime.registry import FAULT_REGISTRY
+            legacy = FAULT_REGISTRY.get(body.mode)
+            if spec.scope == "CYLINDER" and cylinder is None and legacy is not None and not legacy.per_cylinder:
+                # an engine-wide legacy mode (e.g. COOLING_DEGRADATION from the 3D twin) keeps its meaning: every
+                # cylinder, as EngineRuntime.inject_fault does
+                faults = [manager.inject(spec.id, cylinder=c, severity=body.severity, ramp_s=body.ramp_sec,
+                                         source="legacy") for c in range(1, cfg.cylinder_count + 1)]
+                return {"status": "SUCCESS", "fault": faults[0].to_dict(), "faults": [x.to_dict() for x in faults]}
+        else:
+            raise HTTPException(422, "Either 'mode' or 'fault_id' must be specified.")
+        channel = None
+        if spec.scope == "CHANNEL":                  # old sensor modes meant the CHT sensor of the chosen cylinder
+            channel = f"cht[{cylinder if cylinder is not None else 1}]"
+            cylinder = None
+        f = manager.inject(spec.id, cylinder=cylinder, channel=channel, severity=body.severity, ramp_s=body.ramp_sec,
+                           source="legacy")
+    except FaultRejected as exc:
+        raise HTTPException(422, str(exc)) from None
+    return {"status": "SUCCESS", "fault": f.to_dict()}
 
 
 @router.delete("/api/engines/{engine_id}/faults")
-def clear_faults(engine_id: str):
-    _rt(engine_id).clear_faults()
-    return {"cleared": True}
-
-
-@router.post("/api/engines/{engine_id}/reset")
-def reset_sortie(engine_id: str):
-    """Clear operator scenarios and start a fresh sortie (fatigue, UKF, reliability)."""
-    _rt(engine_id).reset_sortie()
-    return {"reset": True}
+def clear_faults(engine_id: str, cmd: Dict[str, Any] = Depends(command_guard)):
+    from backend.server.api_v1 import services
+    cmd.update(source="legacy")
+    _rt(engine_id)
+    return {"cleared": [f.to_dict() for f in services().channel(engine_id).manager.clear(source="legacy")]}
 
 
 @router.post("/api/engines/{engine_id}/levers")
-def set_levers(engine_id: str, body: LeverBody):
+def set_levers(engine_id: str, body: LeverBody, cmd: Dict[str, Any] = Depends(command_guard)):
     return _rt(engine_id).set_levers(**body.model_dump(exclude_none=True))
 
 

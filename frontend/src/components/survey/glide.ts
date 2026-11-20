@@ -1,4 +1,4 @@
-import type { EngineFrame } from '../../hooks/useEngineRuntime';
+import type { EngineFrame } from './frame';
 import { AIRFIELDS, SHEET, toXY } from './geo.js';
 
 const FT_PER_NM = 6076.12;

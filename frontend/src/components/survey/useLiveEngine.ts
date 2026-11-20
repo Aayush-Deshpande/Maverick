@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { EngineFrame } from '../../hooks/useEngineRuntime';
+import { toSurveyFrame, type EngineFrame } from './frame';
 
 /** Light polling of one engine's state for the landing (no WebSocket, ~0.4 req/s, paused when hidden). */
 export function useLiveEngine(serverUrl: string, engineId = 'rotax_912is', intervalMs = 2500) {
@@ -14,7 +14,7 @@ export function useLiveEngine(serverUrl: string, engineId = 'rotax_912is', inter
         try {
           const response = await fetch(`${serverUrl}/api/engines/${encodeURIComponent(engineId)}/state`, { cache: 'no-store' });
           if (!response.ok) throw new Error(String(response.status));
-          const data = (await response.json()) as EngineFrame;
+          const data = toSurveyFrame(await response.json());
           if (active) { setFrame(data); setStatus('live'); }
         } catch { if (active) setStatus((s) => (s === 'live' ? 'live' : 'offline')); }
       }

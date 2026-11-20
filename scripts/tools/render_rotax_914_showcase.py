@@ -34,8 +34,8 @@ from pathlib import Path
 # Paths
 # ──────────────────────────────────────────────────────────────────────
 REPO_ROOT = Path(r"e:\backup-llm\backup-no-llm\3d_engine")
-SOURCE_BLEND = REPO_ROOT / "assets" / "blender" / "rotax_914.blend"
-OUT_BLEND = REPO_ROOT / "assets" / "blender" / "rotax_914_showcase.blend"
+SOURCE_BLEND = REPO_ROOT / "assets" / "blender" / "engines" / "rotax_914" / "rotax_914.blend"
+OUT_BLEND = REPO_ROOT / "assets" / "blender" / "engines" / "rotax_914" / "variants" / "rotax_914_showcase.blend"
 
 RENDER_BASE = REPO_ROOT / "assets" / "renders" / "engines" / "rotax_914"
 FRAMES_DIR = RENDER_BASE / "cinematic_showcase"

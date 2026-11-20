@@ -9,38 +9,51 @@ Implements ingest(frame, truth): processing a live tick and ingesting a replayed
 
 from __future__ import annotations
 
-import math
+import json
 import re
 import threading
 import time
 from collections import deque
 from dataclasses import dataclass, field
+from pathlib import Path
+from types import SimpleNamespace
 from typing import Any, Deque, Dict, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 
-from backend.core.frame import Frame, TruthRecord, Q_SHIELDED
+from backend.core.frame import Frame, TruthRecord, Q_INTERPOLATED, Q_SHIELDED
 from backend.detect import DetectionResult, Reservoir, ResidualDetector
 from backend.physics.engine_config import EngineConfig, load_engine_config
 from backend.runtime.levers import Levers
 from backend.runtime.registry import FAULT_REGISTRY, faults_for, thermal_visible_faults
 from backend.runtime.sensor_levers import SensorLevers
 from backend.sources import PlantSource
+from backend.sim.source import registry as sim_registry
 
-from backend.physics.sensor_validator import SensorSanityValidator, SanityReport
+from backend.detect.sensor_fdi import SensorFDI
 from backend.dsp.order_tracker import OrderTracker
-from backend.twin.ukf import ThermofluidUKF
+from backend.twin.sim_ukf import SimThermalUKF
 from backend.twin.virtual_sensors import VirtualSensorSynthesizer
 from backend.twin.validity import TwinValidityMonitor
 from backend.evaluation.damage_accumulation import DamageAccumulator
-from backend.evaluation.conformal import SplitConformalRUL
+from backend.detect.adaptive import AdaptiveBaseline
+from backend.prognose.rul_service import RULService
+from backend.prognose.trends import TrendTracker
+from backend.status.evaluator import frame_readings
 from backend.mission.reliability import (
     MissionReliabilityEngine, ISR_18H_PROFILE, DEFAULT_COMPONENTS, components_for_fault,
 )
 from backend.mission.glide import UAVGlidePolar
-from backend.agent.diagnostic_agent import DiagnosticAgent
+from backend.diagnose.directive import directive, status_hypotheses
+from backend.diagnose.isolator import BayesianIsolator
+from backend.mission.executive import MissionExecutive, applies, load_mission
+from backend.recording.recorder import SortieRecorder
+from backend.status.alerts import AlertManager
+from backend.status.evaluator import StatusEvaluator
 
 DT = 1.0                      # simulated seconds per tick (calibrated at this cadence)
+MC_TRIALS = 4000                 # mission-reliability Monte Carlo trials per evaluation (numerical setting)
+UKF_EVERY = 5                  # observer update every 5 ticks (its own dt is the real elapsed time)
 WARMUP_TICKS = 900            # ground run-up used to calibrate this tail
 EVENT_LOG_LEN = 200           # retained transitions per engine, served by /events
 _WARM_SCHEDULE = [
@@ -66,6 +79,10 @@ class Tick:
     reliability: Optional[Dict[str, Any]] = None
     glide: Optional[Dict[str, Any]] = None
     diagnosis: Optional[Dict[str, Any]] = None
+    # M3-05 ranked isolation hypotheses (IsolationHypothesis.to_dict), published while an alarm is active
+    hypotheses: List[Dict[str, Any]] = field(default_factory=list)
+    mission: Optional[Dict[str, Any]] = None          # M5-01 mission progress (None = manual flight)
+    status: Optional[Dict[str, Any]] = None           # backend/status evaluator (M2-01)
     # Transitions raised on this tick only (usually empty). The client appends them
     # to its timeline; /events backfills after a reconnect.
     events: List[Dict[str, Any]] = field(default_factory=list)
@@ -100,8 +117,18 @@ EVENT_LEVELS = ("INFORMATION", "ADVISORY", "WARNING", "CRITICAL")
 
 class EngineRuntime:
     def __init__(self, engine_config_id: str, seed: int = 0, tail_id: Optional[str] = None,
-                 warmup_ticks: int = WARMUP_TICKS, buffer_len: int = 3600) -> None:
+                 warmup_ticks: int = WARMUP_TICKS, buffer_len: int = 3600, data_source: Optional[str] = None) -> None:
         self.engine_id = engine_config_id
+        # configs/runtime.json data_source: DIRECT = frames straight from the plant; CAN = every frame is encoded to the
+        # v2 DBC, sent on a python-can bus, intrusion-checked and decoded before the twin sees it (M7-02, T-CAN-1)
+        rt_cfg = json.loads((Path(__file__).resolve().parents[2] / "configs" / "runtime.json").read_text(encoding="utf-8"))
+        self.data_source = data_source or rt_cfg["data_source"]
+        self._restart_settle_s = float(rt_cfg["restart_settle_s"])
+        self._settle_until = float("-inf")
+        self.can_link = None
+        if self.data_source == "CAN":
+            from backend.sources.can_link import CanLink
+            self.can_link = CanLink(channel=f"anumaan-{engine_config_id}-{seed}", interface=rt_cfg["can_interface"])
         self.cfg: EngineConfig = load_engine_config(engine_config_id)
         self.seed = seed
         self.tail_id = tail_id or f"TAIL-{engine_config_id}-{seed}"
@@ -131,34 +158,39 @@ class EngineRuntime:
         self.heavy_ready = False
 
         # Scientific, DSP, and State Estimation Modules
-        self.sanity_validator = SensorSanityValidator()
+        self.sensor_fdi = SensorFDI(engine_config_id)     # M3-03 sensor validation (replaces the legacy validator)
         self.order_tracker = OrderTracker(self.cfg, seed=seed)
-        self.ukf = ThermofluidUKF(self.cfg, dt=DT)
+        self.ukf = SimThermalUKF(self.cfg)
+        # observer cadence: every UKF_EVERY ticks, phase-shifted per engine so five engines never update together
+        self._ukf_phase = sum(map(ord, engine_config_id)) % UKF_EVERY
         self.virtual_synthesizer = VirtualSensorSynthesizer(self.cfg)
         sigma_map = {f"cht_{i+1}": 4.5 for i in range(self.cfg.cylinder_count)}
         sigma_map["oil_t"] = 3.5
-        sigma_map["oil_p"] = 0.35
-        self.validity_monitor = TwinValidityMonitor(
-            channels=[f"cht_{i+1}" for i in range(self.cfg.cylinder_count)] + ["oil_t", "oil_p"],
+        self.validity_monitor = TwinValidityMonitor(              # oil pressure: no twin model, so no residual
+            channels=[f"cht_{i+1}" for i in range(self.cfg.cylinder_count)] + ["oil_t"],
             expected_sigma=sigma_map,
         )
         self.damage_accumulator = DamageAccumulator(name=f"{self.engine_id}_cyl1_head")
-        self.conformal_rul = SplitConformalRUL()
-        preds = [float(x) for x in np.linspace(18.0, 1.0, 25)]
-        truths = [p + float(0.25 * math.sin(i)) for i, p in enumerate(preds)]
-        scales = [0.4 + 0.03 * i for i in range(25)]
-        self.conformal_rul.calibrate(
-            predictions=preds,
-            truths=truths,
-            scales=scales
-        )
+        self.trends: Optional[TrendTracker] = None        # M4-02, built on the detector's channels at calibration
+        self.adaptive: Optional[AdaptiveBaseline] = None   # M4-06 guarded per-tail baseline learning
+        self.rul = RULService(engine_config_id)              # M4-03 fleet-trained conformal RUL (or UNAVAILABLE)
 
         components = DEFAULT_COMPONENTS()
         if not self.cfg.is_turbocharged:
             components = [c for c in components if c.name != "turbocharger"]
         self.reliability_engine = MissionReliabilityEngine(components=components, seed=seed)
         self.glide_polar = UAVGlidePolar()
-        self.agent = DiagnosticAgent()
+        from backend.planning.performance import planning_config
+        _start = planning_config()["start_position"]                 # simulation start position (config, PUBLIC)
+        self.position: Dict[str, float] = {"lat": float(_start["lat"]), "lon": float(_start["lon"])}
+        self.isolator: Optional[BayesianIsolator] = None          # built on the detector's channels at calibration
+        self._cached_hypotheses: List[Dict[str, Any]] = []
+        self.work_orders: Optional[Any] = None             # shared WorkOrderStore, attached by the API services (M4-05)
+        self.mission: Optional[MissionExecutive] = None     # M5-01: drives the levers when a mission runs
+        self.recorder: Optional[SortieRecorder] = None       # M5-04 sortie recording
+        self.ticks_since_calibration = 0
+        self.status_evaluator = StatusEvaluator(self.cfg)
+        self.alert_manager = AlertManager()
 
         self._tick_count = 0
         self._cached_orders: Optional[Dict[str, float]] = None
@@ -177,15 +209,21 @@ class EngineRuntime:
     def calibrate(self) -> None:
         """Nominal ground run-up on THIS tail, then fit calibration + conformal thresholds."""
         rng = np.random.default_rng(self.seed + 12345)
-        op, frames = _WARM_SCHEDULE[0], []
+        op, frames, order = _WARM_SCHEDULE[0], [], []
         for i in range(self._warmup_ticks + 24):
-            if i % 30 == 0:
-                op = _WARM_SCHEDULE[int(rng.integers(len(_WARM_SCHEDULE)))]
+            if i % 30 == 0:                      # every schedule point once per cycle (shuffled): envelope coverage
+                if not order:
+                    order = list(rng.permutation(len(_WARM_SCHEDULE)))
+                op = _WARM_SCHEDULE[int(order.pop())]
             f, _ = self.source.step(DT, throttle_pct=op[0], altitude_ft=op[1], oat_c=op[2])
             if i >= 24:
                 frames.append(f)
         with self._lock:
             self.detector = ResidualDetector.calibrate(frames, alpha=0.01)
+            self.isolator = BayesianIsolator(self.engine_id, self.detector.cal.channel_names())
+            self.ticks_since_calibration = 0
+            self.trends = TrendTracker(self.cfg.limits or {}, self.detector.cal.channel_names(), self.detector.cal.sigma)
+            self.adaptive = AdaptiveBaseline(self.detector.cal, self.tail_id)
             self.levers = Levers()
             self.ready = True
 
@@ -197,14 +235,20 @@ class EngineRuntime:
             if self.heavy_ready:
                 return
             cal = self.detector.cal
-            faults = thermal_visible_faults(self.cfg)
+            faults = []
+            for mode in thermal_visible_faults(self.cfg):       # legacy library names -> registry faults
+                try:
+                    self.source._resolve(mode)
+                    faults.append(mode)
+                except ValueError:
+                    pass
             seqs, labs = [], []
 
             def collect(fault: Optional[str], seed_off: int):
                 src = PlantSource(self.engine_id, seed=self.seed)
                 rng = np.random.default_rng(self.seed * 31 + seed_off)
                 if fault:
-                    cyl = int(rng.integers(1, src.n_cylinders + 1)) if FAULT_REGISTRY[fault].per_cylinder else None
+                    cyl = int(rng.integers(1, src.n_cylinders + 1)) if src._resolve(fault).scope == "CYLINDER" else None
                     src.inject_fault(fault, cylinder=cyl, severity=0.9, ramp_sec=120.0)
                 op, U = _WARM_SCHEDULE[0], []
                 for i in range(260):
@@ -240,6 +284,8 @@ class EngineRuntime:
             oat_c = kw.get("oat_c", kw.get("oat"))
             snap = kw.get("snap", False)
             climb_rate_fps = kw.get("climb_rate_fps")
+            if kw.get("lat") is not None and kw.get("lon") is not None:      # aircraft position (operator/mission)
+                self.position = {"lat": float(kw["lat"]), "lon": float(kw["lon"])}
             self.levers.set_targets(
                 throttle_pct=throttle_pct,
                 altitude_ft=altitude_ft,
@@ -249,62 +295,91 @@ class EngineRuntime:
             )
             self.manual_origin = True
             return {"throttle_target": self.levers.throttle_target,
-                    "altitude_target": self.levers.altitude_target, "oat_target": self.levers.oat_target}
+                    "altitude_target": self.levers.altitude_target, "oat_target": self.levers.oat_target,
+                    "position": dict(self.position)}
 
     def inject_fault(self, mode: str, cylinder: Optional[int] = None, severity: float = 0.8,
                      ramp_sec: float = 60.0, origin: str = "MANUAL") -> Dict[str, Any]:
-        if mode == "COOLING_LOSS":
-            mode = "COOLING_DEGRADATION"
-        spec = FAULT_REGISTRY.get(mode)
-        if spec is None or not spec.applies_to(self.cfg):
-            raise ValueError(f"{mode!r} is not a valid fault for {self.engine_id}")
-        if spec.per_cylinder:
-            if cylinder is None or not 1 <= cylinder <= self.cfg.cylinder_count:
-                raise ValueError(f"{mode} needs cylinder 1..{self.cfg.cylinder_count}")
-        else:
+        """Registry id (F01..S07) or a registry plant_mode_legacy name, validated against configs/faults.json.
+        A legacy name given without a cylinder keeps its legacy meaning: every cylinder (registry ids need one)."""
+        spec = self.source._resolve(mode)
+        channel = None
+        legacy = FAULT_REGISTRY.get(mode)                    # old library: was this mode engine-wide?
+        all_cylinders = (spec.scope == "CYLINDER" and cylinder is None and legacy is not None
+                         and not legacy.per_cylinder)
+        if spec.scope == "CHANNEL":
+            channel = f"cht[{cylinder}]" if cylinder is not None else None
             cylinder = None
+        elif spec.scope != "CYLINDER":
+            cylinder = None
+        sim_registry().validate_request(self.cfg, spec.id, cylinder=1 if all_cylinders else cylinder,
+                                        channel=channel, severity=severity, ramp_s=ramp_sec)
+        fault = SimpleNamespace(fault_id=spec.id, cylinder=cylinder, channel=channel, severity=float(severity),
+                                ramp_s=float(ramp_sec), t0_s=self.source.now())
+        self.apply_fault(fault, origin=origin)
+        return {"mode": spec.id, "cylinder": cylinder, "channel": channel, "severity": severity,
+                "ramp_sec": ramp_sec, "origin": origin, "t": fault.t0_s}
+
+    def apply_fault(self, fault: Any, origin: str = "MANUAL") -> bool:
+        """Hand one registry fault (fault_id, cylinder, channel, severity, ramp_s, t0_s) to the plant."""
         with self._lock:
-            self.source.inject_fault(mode, cylinder=cylinder, severity=severity, ramp_sec=ramp_sec)
+            ok = self.source.apply(fault)
             if origin == "MANUAL":
                 self.manual_origin = True
-            rec = {"mode": mode, "cylinder": cylinder, "severity": severity, "ramp_sec": ramp_sec,
-                   "origin": origin, "t": self.source.plant._elapsed_sec}
-            self.injected.append(rec)
-            return rec
+            self.injected.append({"mode": fault.fault_id, "cylinder": fault.cylinder, "channel": fault.channel,
+                                  "severity": fault.severity, "ramp_sec": fault.ramp_s, "origin": origin,
+                                  "t": fault.t0_s})
+            return ok
+
+    def engine_command(self, command: str) -> Dict[str, Any]:
+        with self._lock:
+            {"START": self.source.start, "STOP": self.source.stop, "RESET": self.source.reset}[command]()
+            self.manual_origin = True
+            if command in ("START", "RESET"):          # the start-up transient is not a fault: settle, then diagnose
+                self._reset_inference()
+                self._settle_until = self.source.now() + self._restart_settle_s
+            return {"command": command, "engine_state": self.source.plant.state}
 
     def clear_faults(self) -> None:
         with self._lock:
             self.source.clear_faults()
             self.sensor_levers.clear()
             self.injected.clear()
-            self.sanity_validator.reset()
-            self.validity_monitor.reset()
-            self._cached_validity = None
-            self._cached_diagnosis = None
-            self._cached_prognostics = None
-            if self.detector:
-                self.detector.gate.reset()
+            self._reset_inference()
 
-    def reset_sortie(self) -> None:
-        """Start a fresh sortie: clear faults and restart fatigue, UKF and reliability state.
-
-        The demo runtime runs unattended at 20x time scale, so damage accumulated over days of
-        uptime would otherwise leave every visitor looking at a consumed-life engine.
-        """
+    def complete_repair(self, fault_id: Optional[str]) -> int:
+        """A signed-off work order: the simulated repair removes that fault from the plant (a time-to-limit order
+        without a fault id repairs nothing) and the inference state restarts from the repaired engine.
+        Returns the number of plant faults removed. Operator command path, not inference."""
         with self._lock:
-            self.clear_faults()
-            self.damage_accumulator = DamageAccumulator(name=f"{self.engine_id}_cyl1_head")
-            self.ukf = ThermofluidUKF(self.cfg, dt=DT)
-            self._dmg_finalise_counter = 0
-            self._cached_ukf = None
-            self._cached_reliability = None
-            self._cached_glide = None
-            self._sortie_start_t = None
+            before = len(self.source.faults)
+            if fault_id:
+                self.source.faults[:] = [f for f in self.source.faults if f.fault_id != fault_id]
+                self.injected[:] = [f for f in self.injected if f.get("mode") != fault_id]
+            self._reset_inference()
+            return before - len(self.source.faults)
+
+    def _reset_inference(self) -> None:
+        """Restart detection, isolation, trends and caches (after clearing or repairing faults); caller holds the lock."""
+        self.sensor_fdi.reset()
+        self.validity_monitor.reset()
+        self._cached_validity = None
+        self._cached_diagnosis = None
+        self._cached_hypotheses = []
+        if self.isolator is not None:
+            self.isolator.reset()
+        self._cached_prognostics = None
+        if self.trends is not None:
+            self.trends.reset()
+        if self.detector:
+            self.detector.gate.reset()
+            if self.detector.cusum is not None:
+                self.detector.cusum.reset()
 
     def set_sensor_fault(self, kind: str, channel: str, **kwargs) -> None:
         """Inject sensor-level fault (R7): bias, drift, stuck, noise, dropout, spoof."""
         with self._lock:
-            self.sanity_validator.quarantine(channel)
+            self.sensor_fdi.quarantine(channel)
             if kind == "bias":
                 self.sensor_levers.inject_bias(channel, kwargs.get("offset", 0.0))
             elif kind == "drift":
@@ -330,44 +405,47 @@ class EngineRuntime:
                 truth = TruthRecord(t=frame.t, origin="REPLAY")
 
             # 1. Sensor Sanity Validation & Residual Shielding (R7)
-            sanity_rep = self.sanity_validator.validate(frame, dt_sec=DT)
-            sanity_dict = sanity_rep.to_dict()
-            _quarantined_lower = [ch.lower() for ch in sanity_rep.failed_channels]
-            if not sanity_rep.all_sensors_valid:
-                for ch in sanity_rep.failed_channels:
-                    frame.quality[ch] = (frame.quality.get(ch, 0) | Q_SHIELDED)
-                    frame.quality[ch.lower()] = (frame.quality.get(ch.lower(), 0) | Q_SHIELDED)
+            fdi = self.sensor_fdi.validate(frame)
+            sanity_dict = fdi.to_dict()
+            _quarantined_lower = list(fdi.quarantined)
+            for ch in fdi.quarantined:
+                frame.quality[ch] = frame.quality.get(ch, 0) | Q_SHIELDED
             for k, v in getattr(frame, "quality", {}).items():
                 if (v & Q_SHIELDED) != 0 and k.lower() not in _quarantined_lower:
                     _quarantined_lower.append(k.lower())
 
             # 2. Vibration Order Tracking (DSP) - 10 Hz cadence
-            if (self._tick_count % 2 == 1) or (self._cached_orders is None):
-                rpm_val = float(frame.rpm or 5000.0)
-                thr_val = float(frame.throttle or 70.0)
-                self._cached_orders = self.order_tracker.track(rpm=rpm_val, throttle_pct=thr_val)
-            frame.vibration_orders = self._cached_orders
-            rpm_val = float(frame.rpm or 5000.0)
-            thr_val = float(frame.throttle or 70.0)
+            if frame.rpm is not None and frame.throttle is not None and (
+                    (self._tick_count % 2 == 1) or (self._cached_orders is None)):
+                self._cached_orders = self.order_tracker.track(rpm=float(frame.rpm), throttle_pct=float(frame.throttle))
+            # measured orders (the plant's accelerometer, faults included) win; the tracker only adds the extra
+            # keys legacy consumers read until the DSP stage is rebuilt on measured data (M3)
+            frame.vibration_orders = {**(self._cached_orders or {}), **(frame.vibration_orders or {})}
 
-            # 3. State Observer (Thermofluid UKF) - 4 Hz cadence
-            if (self._tick_count % 5 == 1) or (self._cached_ukf is None):
-                ff_val = float(frame.fuel_flow or 18.0)
-                oat_val = float(frame.oat or 15.0)
-                self.ukf.predict(rpm_val, thr_val, ff_val, oat_val)
-                meas_z = np.array(frame.cht + [float(frame.oil_t or 85.0)], dtype=np.float64)
-                # Shield quarantined sensors from UKF to prevent state corruption
-                for i in range(min(len(frame.cht), self.cfg.cylinder_count)):
-                    ch_name = f"cht_{i+1}"
-                    if ch_name in _quarantined_lower or (frame.quality.get(ch_name, 0) & Q_SHIELDED != 0):
-                        meas_z[i] = float(self.ukf.x[i])
-                if "oil_t" in _quarantined_lower or (frame.quality.get("oil_t", 0) & Q_SHIELDED != 0):
-                    meas_z[self.cfg.cylinder_count] = float(self.ukf.x[self.cfg.cylinder_count + 1])
-                ukf_nis = self.ukf.update(meas_z)
+            # 3. State observer (M3-01: UKF on the M1 thermal model, measured inputs only)
+            if self.ukf.ready(frame) and ((self._tick_count % UKF_EVERY == self._ukf_phase)
+                                          or (self._cached_ukf is None)):
+                shielded = {c for c in _quarantined_lower} | {
+                    k.lower() for k, v in (frame.quality or {}).items() if v & Q_SHIELDED}
+                ukf_nis = self.ukf.step(frame, skip={c.replace("oil_temp", "oil_t") for c in shielded})
                 ukf_params = self.ukf.get_parameter_estimates(frame.t)
                 self._cached_ukf = (ukf_nis, ukf_params)
-            else:
+            elif self._cached_ukf is not None:
                 ukf_nis, ukf_params = self._cached_ukf
+            else:
+                ukf_nis, ukf_params = 0.0, []                  # no measured inputs yet: no twin estimate
+
+            # quarantined temperature sensors: publish the observer's estimate instead, marked VIRTUAL (M3-03)
+            if self.ukf.initialised:
+                est = self.ukf.estimates()
+                for ch in _quarantined_lower:
+                    if ch not in est:
+                        continue
+                    if ch.startswith("cht_"):
+                        frame.cht[int(ch[4:]) - 1] = est[ch]
+                    else:
+                        setattr(frame, ch, est[ch])
+                    frame.quality[ch] = frame.quality.get(ch, 0) | Q_SHIELDED | Q_INTERPOLATED
 
             ukf_dict = {
                 "nis": round(ukf_nis, 4),
@@ -379,11 +457,7 @@ class EngineRuntime:
             }
 
             # 4. Virtual Sensor Synthesis
-            eta_cool_vals = [p.mean for p in ukf_params if p.name == "eta_cool"]
-            eta_cool_m = float(np.mean(eta_cool_vals)) if eta_cool_vals else 1.0
-            rad_vals = [p.mean for p in ukf_params if p.name == "eta_radiator"]
-            eta_rad_m = float(rad_vals[0]) if rad_vals else 1.0
-            virt = self.virtual_synthesizer.synthesize(frame, eta_cool_mean=eta_cool_m, eta_rad=eta_rad_m)
+            virt = self.virtual_synthesizer.synthesize(frame)
             frame.virtual_sensors = virt
 
             # 5. Anomaly Detection (ResidualDetector)
@@ -394,6 +468,12 @@ class EngineRuntime:
                 if top_chans and all(c in _quarantined_lower for c in top_chans):
                     det.raw_alarm = False
                     det.confirmed = False
+            settling = frame.t < self._settle_until             # start-up transient after START/RESET
+            if det is not None and self.isolator is not None and det.z_raw is not None and not settling:
+                self.isolator.update(det.z_raw)
+            if det is not None and self.trends is not None:
+                self.trends.update(frame.t, det.z_raw, frame_readings(frame))
+            self.rul.update(frame.t, None if det is None else det.z_raw, bool(frame.rpm and frame.rpm > 0))
 
             hv = None
             if heavy and self.reservoir is not None and self.detector is not None:
@@ -402,151 +482,105 @@ class EngineRuntime:
                 hv = {"label": str(label), "classes": [str(c) for c in self.reservoir.classes_],
                       "scores": [round(float(s), 3) for s in scores]}
 
-            # 6-9. Analytical Layers (Validity, Damage/RUL, Reliability, Glide Polar, Diagnosis) - Continuous 20 Hz
-            step_analytical = True
+            # 6-9. Analytical layers (validity, damage/RUL, reliability, glide, diagnosis): on the observer's staggered
+            # cadence - validity is judged from the observer's residuals, and the rest changes over minutes
+            step_analytical = (self._tick_count % UKF_EVERY == self._ukf_phase) or self._cached_validity is None
 
             if step_analytical:
                 # 6. Twin Validity & 3-Way Attribution
                 res_dict = {}
                 for i in range(min(len(frame.cht), self.cfg.cylinder_count)):
-                    res_dict[f"cht_{i+1}"] = frame.cht[i] - float(self.ukf.x[i])
-                res_dict["oil_t"] = float(frame.oil_t or 85.0) - float(self.ukf.x[self.cfg.cylinder_count + 1])
-                res_dict["oil_p"] = float(frame.oil_p or 3.5) - 3.5
-                self.validity_monitor.update(res_dict, operating_point={"throttle": thr_val, "rpm": rpm_val, "alt": float(frame.alt or 20000.0)})
+                    if frame.cht[i] is not None:
+                        res_dict[f"cht_{i+1}"] = frame.cht[i] - float(self.ukf.x[i])
+                if frame.oil_t is not None:
+                    res_dict["oil_t"] = float(frame.oil_t) - float(self.ukf.x[self.cfg.cylinder_count + 1])
+                self.validity_monitor.update(res_dict, operating_point={"throttle": frame.throttle, "rpm": frame.rpm,
+                                                                        "alt": frame.alt})
                 verdict = self.validity_monitor.assess(
                     fault_suspected=bool(det and det.confirmed),
                     sensor_quarantined=_quarantined_lower
                 )
                 self._cached_validity = verdict.as_dict()
 
+                # 6b. Isolation (M3-05): Bayesian posterior over registry faults and sensor offsets while any
+                # detection channel is alarming; evidence only, never the injected list (M3-07, T-DYN-4)
+                alarm = bool(det and (det.confirmed or (det.drift or {}).get("alarm") or (det.novelty or {}).get("alarm")))
+                if alarm and self.isolator is not None and not settling:
+                    hyps = self.isolator.posterior(self.detector.cal.sensor_coupling(frame))
+                    self._cached_hypotheses = [h.to_dict() for h in hyps]
+                else:
+                    self._cached_hypotheses = []
+                reported = self._ecu_reported(frame)               # 6c. ECU self-test reports (D62)
+                if reported:
+                    ids = {r["fault_id"] for r in reported}
+                    self._cached_hypotheses = reported + [h for h in self._cached_hypotheses if h.get("fault_id") not in ids]
+
                 # 7. Fatigue Damage Accumulation & Conformal RUL Intervals
-                head_t = float(frame.cht[0]) if frame.cht else 115.0
-                # Sortie rollover: one 18 h ISR sortie of simulated time, or consumed life, with
-                # no operator scenario active -> start a new sortie's fatigue ledger.
-                if getattr(self, "_sortie_start_t", None) is None:
-                    self._sortie_start_t = frame.t
-                if not self.injected and (
-                    frame.t - self._sortie_start_t >= 18 * 3600.0
-                    or self.damage_accumulator.current_state().total >= 0.1
-                ):
-                    self.damage_accumulator = DamageAccumulator(name=f"{self.engine_id}_cyl1_head")
-                    self._dmg_finalise_counter = 0
-                    self._sortie_start_t = frame.t
-                self.damage_accumulator.update(frame.t, head_t)
+                head_t = float(frame.cht[0]) if frame.cht and frame.cht[0] is not None else None
+                if head_t is not None:
+                    self.damage_accumulator.update(frame.t, head_t)
                 self._dmg_finalise_counter += 1
                 if self._dmg_finalise_counter >= 100:
                     self.damage_accumulator.finalise()
                     self._dmg_finalise_counter = 0
                 dmg_state = self.damage_accumulator.current_state()
-                # Dynamic RUL: responds directly to accumulated fatigue and thermal degradation
-                pred_rul = max(0.5, 18.0 * (1.0 - min(0.95, dmg_state.total * 3.0)))
-                conf_int = self.conformal_rul.interval(pred_rul, alpha=0.05, scale=max(0.5, 2.0 * dmg_state.total))
+                # Time-to-limit from residual trends (M4-02); RUL from the fleet-trained conformal model (M4-03)
                 self._cached_prognostics = {
                     "damage": dmg_state.as_dict(),
-                    "rul": conf_int.as_dict(),
+                    "time_to_limit": self.trends.time_to_limit() if self.trends is not None else [],
+                    "rul": self.rul.latest,
                 }
 
                 # 8. Mission Reliability & Glide Polar Reachability
                 _n_cyl = self.cfg.cylinder_count
                 _cyl_dmg = {f"cylinder_head_{i+1}": dmg_state.total for i in range(_n_cyl)}
-                active_cyl = 1
-                active_inj = self.injected or (
-                    [{"mode": getattr(f, "mode", ""), "cylinder": getattr(f, "location", 1), "severity": getattr(f, "severity", 1.0)}
-                     for f in getattr(truth, "active_faults", [])]
-                )
-                if active_inj:
-                    active_cyl = active_inj[-1].get("cylinder") or 1
-                elif det and det.top_channels:
-                    active_cyl = _first_cylinder_index(det.top_channels) or 1
-                excess_temp = max(0.0, head_t - 110.0)
-                sev_factor = 1.0 + (excess_temp / 10.0) ** 2.0
-                _cyl_dmg[f"cylinder_head_{active_cyl}"] = min(0.85, dmg_state.total * 15.0 * sev_factor)
-
-                # Attribute the active fault to the components it actually degrades.
-                # Previously only cylinder-head damage reached the reliability engine, so
-                # `limiting_component` was fixed by base hazard rate and never moved when
-                # a fault was confirmed -- a misfire left the fuel pump as the limiter.
-                for _inj in active_inj:
-                    _mode = str(_inj.get("mode", ""))
-                    _sev = float(_inj.get("severity") or 0.0)
-                    _cyl = _inj.get("cylinder") or active_cyl
-                    for _comp in components_for_fault(_mode, _cyl):
-                        # Severity is a 0..1 command; cap well below certain failure so a
-                        # commanded fault degrades reliability without asserting a loss.
-                        _dmg = min(0.90, max(0.05, _sev) * 0.75 + dmg_state.total)
+                # Attribute damage to the components of the ISOLATED faults (posterior x estimated severity), so the
+                # limiting component follows the evidence. The injected-fault list is never read (M3-07).
+                for h in self._cached_hypotheses:
+                    if h["kind"] != "PROCESS":
+                        continue
+                    weight = h["posterior"] * min(1.0, max(0.0, h.get("severity") or 0.0))
+                    for _comp in components_for_fault(h["name"], h.get("cylinder")):
+                        _dmg = min(0.90, weight * 0.75 + dmg_state.total)
                         _cyl_dmg[_comp] = max(_cyl_dmg.get(_comp, 0.0), _dmg)
                 self.reliability_engine.set_damage(_cyl_dmg)
-                rel_result = self.reliability_engine.analytic_reliability(profile=ISR_18H_PROFILE)
-                glide_assessment = self.glide_polar.assess_glide(
-                    alt_ft=float(frame.alt or 20000.0),
-                    feathered=True,
-                    uav_lat=34.2,
-                    uav_lon=77.3
-                )
+                profile = (self.mission.remaining_profile(frame.t) if self.mission is not None else None) or ISR_18H_PROFILE
+                rel_result = self.reliability_engine.analytic_reliability(profile=profile)
+                # forward Monte Carlo over the planned profile with component hazards and the twin's time-to-limit
+                # crossings (M4-04, I-09); the analytic per-component survival stays as the ranking for the UI
+                mc = self.reliability_engine.simulate_with_limits(
+                    profile, n_trials=MC_TRIALS,
+                    limit_crossings=(self._cached_prognostics or {}).get("time_to_limit", []) + self._rul_crossing())
                 self._cached_reliability = {
-                    "mission_reliability": round(rel_result["reliability"], 4),
-                    "limiting_component": rel_result["limiting_component"],
-                    "limiting_component_survival": round(rel_result["limiting_component_survival"] or 1.0, 4),
-                    "mission_hours": rel_result["mission_hours"],
-                    # Full ranking so the UI can show which components are actually
-                    # driving the number rather than only naming the worst one.
+                    "mission_reliability": mc["reliability"],
+                    "ci_lower": mc["ci_lower"], "ci_upper": mc["ci_upper"], "n_trials": mc["n_trials"],
+                    "method": "Monte Carlo (component hazards + time-to-limit crossings)",
+                    "limiting_component": mc["limiting_component"],
+                    "failure_attribution": mc["failure_attribution"],
+                    "failure_phase_distribution": mc["failure_phase_distribution"],
+                    "median_abort_hours": mc["median_abort_hours"],
+                    "mission_hours": mc["mission_hours"],
+                    "mission_profile": profile.name,
+                    "hazard_source": "PLACEHOLDER component rates (backend/mission/reliability.py DEFAULT_COMPONENTS)",
                     "per_component_survival": {
                         name: round(value, 5)
-                        for name, value in sorted(
-                            rel_result["per_component_survival"].items(),
-                            key=lambda kv: kv[1],
-                        )
+                        for name, value in sorted(rel_result["per_component_survival"].items(), key=lambda kv: kv[1])
                     },
-                    "damaged_components": sorted(
-                        name for name, frac in _cyl_dmg.items() if frac > 0.01
-                    ),
+                    "damaged_components": sorted(name for name, frac in _cyl_dmg.items() if frac > 0.01),
                 }
-                self._cached_glide = glide_assessment.as_dict()
+                if frame.alt is not None:                  # engine-out glide from the current position (M5-09)
+                    self._cached_glide = self.glide_polar.assess_glide(
+                        alt_ft=float(frame.alt), uav_lat=self.position["lat"], uav_lon=self.position["lon"]).as_dict()
 
-                # 9. FMECA Diagnostic Directive & XAI Reasoning
-                if det and det.confirmed:
-                    fault_id = 1
-                    cyl_num = 1
-                    if active_inj:
-                        last_inj = active_inj[-1]
-                        mode = last_inj.get("mode", "")
-                        cyl_num = last_inj.get("cylinder") or 1
-                        if "COOLING" in mode:
-                            fault_id = 1
-                        elif "INJECTOR" in mode:
-                            fault_id = 2
-                        elif "MISFIRE" in mode:
-                            fault_id = 3
-                        elif "OIL_PRESSURE" in mode:
-                            fault_id = 4
-                        elif "VIBRATION" in mode or "GEARBOX" in mode:
-                            fault_id = 5
-                        elif "ALTERNATOR" in mode:
-                            fault_id = 7
-                        elif "MAP" in mode or "TURBO" in mode:
-                            fault_id = 8
-                    elif det.top_channels:
-                        top_name = det.top_channels[0][0].lower()
-                        if "cht" in top_name:
-                            fault_id = 1
-                        elif "egt" in top_name:
-                            fault_id = 2
-                        elif "oil_p" in top_name or "oil_t" in top_name:
-                            fault_id = 4
-                        elif "rpm" in top_name:
-                            fault_id = 3
-                        # The leading channel names the subsystem but not always the
-                        # cylinder: a misfire drives rpm/oil_p hardest while the cylinder
-                        # identity sits in a lower-ranked cht_N/egt_N. Scan the whole
-                        # ranked list for the first per-cylinder channel instead of
-                        # defaulting to cylinder 1 and mislabelling the directive.
-                        cyl_num = _first_cylinder_index(det.top_channels) or 1
+                # 9. Deterministic directive from the registry for the leading hypothesis (M3-06/I-07)
+                self._cached_diagnosis = directive(self._cached_hypotheses)
 
-                    dir_obj = self.agent.diagnose(fault_id, confidence=0.98, cylinder=cyl_num)
-                    self._cached_diagnosis = dir_obj.to_dict()
-                else:
-                    dir_obj = self.agent.diagnose(0, confidence=0.99)
-                    self._cached_diagnosis = dir_obj.to_dict()
+                # 10. Work orders from evidence: confident hypotheses and near time-to-limit trends (M4-05)
+                if self.work_orders is not None:
+                    self.work_orders.open_from_hypotheses(self.engine_id, self.tail_id, self._cached_hypotheses, frame.t)
+                    self.work_orders.open_from_time_to_limit(self.engine_id, self.tail_id,
+                                                             (self._cached_prognostics or {}).get("time_to_limit", []),
+                                                             frame.t)
 
             validity_dict = self._cached_validity
             prognostics_dict = self._cached_prognostics
@@ -558,6 +592,17 @@ class EngineRuntime:
                 frame, det, sanity_dict, validity_dict, diagnosis_dict
             )
 
+            verdict = self.status_evaluator.evaluate(frame.t, frame, engine_state=frame.engine_state,
+                                                     quarantined=_quarantined_lower,
+                                                     hypotheses=status_hypotheses(self._cached_hypotheses),
+                                                     time_to_limit=self._ttl_for_status(frame.t))
+            alerts = [a.to_dict() for a in self.alert_manager.update(frame.t, verdict)]
+            if self.adaptive is not None:                  # M4-06: learn only while provably nominal
+                open_orders = len(self.work_orders.open_orders(self.engine_id)) if self.work_orders is not None else 0
+                self.adaptive.update(frame.t, verdict.level, det, open_orders)
+                if prognostics_dict is not None:
+                    prognostics_dict = {**prognostics_dict, "baseline": self.adaptive.status()}
+            status = {**verdict.to_dict(), "alerts": alerts, "master": self.alert_manager.master()}
             t = Tick(
                 engine_id=self.engine_id,
                 frame=frame,
@@ -571,16 +616,68 @@ class EngineRuntime:
                 reliability=reliability_dict,
                 glide=glide_dict,
                 diagnosis=diagnosis_dict,
+                hypotheses=list(self._cached_hypotheses),
+                mission=None if self.mission is None else self.mission.progress(frame.t),
+                status=status,
                 events=tick_events,
             )
             self.buffer.append(t)
             return t
 
+    def _rul_crossing(self) -> List[Dict[str, Any]]:
+        """The fleet RUL interval as an end-of-life crossing for the mission Monte Carlo (M4-04)."""
+        r = self.rul.latest
+        if r.get("status") != "OK":
+            return []
+        return [{"channel": "end_of_life", "time_to_limit_s": r["rul_h"] * 3600.0,
+                 "low_s": max(r["rul_lower_h"], 1e-3) * 3600.0, "high_s": r["rul_upper_h"] * 3600.0}]
+
+    def _ttl_for_status(self, t: float) -> List[Dict[str, Any]]:
+        """Time-to-limit items with the remaining mission time (status CAUTION when a limit falls inside it)."""
+        if self.mission is None or self.mission.state != "RUNNING":
+            return []
+        rem = self.mission.remaining_s(t)
+        return [{**p, "mission_remaining_s": rem} for p in (self._cached_prognostics or {}).get("time_to_limit", [])]
+
+    def start_mission(self, mission_id: str) -> Dict[str, Any]:
+        m = load_mission(mission_id)
+        if not applies(m, self.engine_id):
+            raise ValueError(f"mission {mission_id} is not defined for {self.engine_id}")
+        with self._lock:
+            self.mission = MissionExecutive(m, t0=self.source.now())
+            return self.mission.progress(self.source.now())
+
+    def abort_mission(self) -> Optional[Dict[str, Any]]:
+        with self._lock:
+            if self.mission is None:
+                return None
+            self.mission.abort()
+            return self.mission.progress(self.source.now())
+
+    def _ecu_reported(self, frame: Frame) -> List[Dict[str, Any]]:
+        """Faults the ECU reports itself (D62): fewer healthy lanes than the engine has -> the registry's ecu_reported
+        LANE fault, as direct evidence (a fault code), independent of the residual detector."""
+        lanes = int(getattr(self.cfg, "ecu_lanes", 0) or 0)
+        if frame.ecu_lanes_ok is None or not lanes or frame.ecu_lanes_ok >= lanes:
+            return []
+        if not hasattr(self, "_ecu_report_post"):
+            iso_cfg = json.loads((Path(__file__).resolve().parents[2] / "configs" / "diagnose" / "isolation.json")
+                                 .read_text(encoding="utf-8"))
+            self._ecu_report_post = float(iso_cfg["ecu_report_posterior"]["value"])
+        return [{"fault_id": f.id, "name": f.name, "kind": "PROCESS", "cylinder": None, "channel": None,
+                 "posterior": self._ecu_report_post, "severity": None, "group": "ECU self-test report",
+                 "supporting": [], "contradicting": []}
+                for f in sim_registry().applicable(self.cfg) if f.raw.get("ecu_reported") == "LANE"]
+
     def tick(self, heavy: bool = False) -> Tick:
         with self._lock:
+            if self.mission is not None:
+                self.mission.step(self.source.now(), self)
             self.levers.advance(DT)
             raw_frame, truth = self.source.step(DT, throttle_pct=self.levers.throttle_pct,
                                                 altitude_ft=self.levers.altitude_ft, oat_c=self.levers.oat_c)
+            if self.can_link is not None:
+                raw_frame = self.can_link.roundtrip(raw_frame)
 
             # Apply sensor layer manipulations (R7)
             frame = self.sensor_levers.apply(raw_frame, DT)
@@ -593,7 +690,35 @@ class EngineRuntime:
             if self.sensor_levers.has_active_faults:
                 truth.active_faults.extend(self.sensor_levers.active_fault_truths(frame.t))
 
-            return self.ingest(frame, truth, heavy=heavy)
+            if self.recorder is not None:
+                self.recorder.add_frame(frame)             # the measured frame, before inference touches it
+            t = self.ingest(frame, truth, heavy=heavy)
+            self.ticks_since_calibration += 1
+            if self.recorder is not None:
+                self.recorder.add_tick(t)
+            return t
+
+    def start_recording(self, root: Optional[Any] = None) -> Dict[str, Any]:
+        """Record from now. Re-analysis is exact only when this starts right after calibration
+        (meta.ticks_since_calibration == 0); otherwise it is reported as not comparable."""
+        with self._lock:
+            if self.recorder is not None:
+                return self.recorder.meta
+            m = self.mission
+            self.recorder = SortieRecorder(self.engine_id, self.tail_id, self.seed, self._warmup_ticks,
+                                           self.source.now(), None if m is None else m.mission["id"], root=root)
+            self.recorder.meta.update(ticks_since_calibration=self.ticks_since_calibration,
+                                      mission_t0=None if m is None else m.t0)
+            self.recorder._write_meta()
+            return self.recorder.meta
+
+    def stop_recording(self) -> Optional[Dict[str, Any]]:
+        with self._lock:
+            if self.recorder is None:
+                return None
+            meta = self.recorder.stop(self.source.now())
+            self.recorder = None
+            return meta
 
     # ---- presentation ------------------------------------------------------------------------
     def profile(self) -> Dict[str, Any]:
@@ -604,8 +729,11 @@ class EngineRuntime:
                 # These are operator commands, not plant truth; returning them lets a UI restore
                 # its commanded-fault badge after a reconnect without exposing TruthRecord.
                 "commanded_faults": list(self.injected),
+                # only the old modes that resolve to a registry fault applicable to this engine (no Misfire button on
+                # a diesel, no air-cooling button on a fully liquid-cooled engine)
                 "faults": [{"mode": s.mode, "per_cylinder": s.per_cylinder, "scalar_visible": s.scalar_visible,
-                            "layer": s.layer, "description": s.description} for s in faults_for(c)]}
+                            "layer": s.layer, "description": s.description} for s in faults_for(c)
+                           if s.mode in {f.raw.get("plant_mode_legacy") for f in sim_registry().applicable(c)}]}
 
     # ------------------------------------------------------------------
     # Event log

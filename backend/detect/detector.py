@@ -7,6 +7,11 @@ scores -> per-scorer conformal threshold -> alarm if ANY scorer exceeds its thre
 PersistenceGate (k of the last n frames) -> confirmed alarm.  Evidence = the top |z| channels, so every
 alarm is explainable without a model.
 
+Two side channels never feed the alarm above: the two-sided CUSUM slow-drift channel (M3-02) and the
+autoencoder novelty channel with an EVT threshold (M3-04, backend/detect/autoencoder.py), which has its own
+persistence gate. On a nominal hour the novelty channel still fires on the diesels (PROGRESS M3-04), so it is
+reported as evidence only until the M3-08 evaluation harness shows it adds detection without false alarms.
+
 Thresholds are split-conformal quantiles of scores on held-out NOMINAL calibration frames: for a
 per-scorer target false-alarm rate ``alpha`` the raw false-alarm rate on exchangeable nominal frames is
 <= alpha (finite-sample quantile ceil((n+1)(1-alpha))/n).  This is a guarantee about nominal frames of the
@@ -18,12 +23,14 @@ from __future__ import annotations
 import math
 from collections import deque
 from dataclasses import dataclass, field
-from typing import Deque, Dict, List, Sequence
+from typing import Deque, Dict, List, Optional, Sequence
 
 import numpy as np
 
 from backend.core.frame import Frame
-from backend.detect.calibration import TailCalibration
+from backend.detect.autoencoder import AutoencoderScorer
+from backend.detect.calibration import Z_CLIP, TailCalibration
+from backend.detect.cusum import TwoSidedCusum, load_detect_config
 from backend.detect.scorers import FlyBloomScorer, MaxAbsZ, Mahalanobis
 
 
@@ -36,6 +43,13 @@ class DetectionResult:
     confirmed: bool
     top_channels: List[tuple]          # [(channel, z)] largest |z| first
     evidence_class: str = "SIMULATION"  # set by the caller's source; PLANT frames -> SIMULATION
+    # M3-02 slow-drift channel (two-sided CUSUM), kept apart from the per-frame alarm: {stat, ratio, alarm, top}
+    drift: Optional[Dict[str, object]] = None
+    # M3-04 autoencoder novelty channel (EVT threshold, own persistence gate): {score, ratio, raw, alarm}
+    novelty: Optional[Dict[str, object]] = None
+    # unclipped residual z-vector in calibration channel order (input of the M3-05 isolator)
+    z_raw: Optional[np.ndarray] = None
+    channel_names: Optional[List[str]] = None   # names of z_raw entries (published as the state message residuals)
 
     @property
     def score(self) -> float:
@@ -73,8 +87,12 @@ class PersistenceGate:
 
 class ResidualDetector:
     def __init__(self, calibration: TailCalibration, scorers: Sequence, thresholds: Dict[str, float],
-                 alpha: float, gate: PersistenceGate | None = None) -> None:
+                 alpha: float, gate: PersistenceGate | None = None, cusum: TwoSidedCusum | None = None,
+                 novelty: AutoencoderScorer | None = None) -> None:
         self.cal = calibration
+        self.cusum = cusum                       # M3-02: slow-drift accumulator (None on old saved detectors)
+        self.novelty = novelty                   # M3-04: autoencoder novelty scorer (None on old saved detectors)
+        self.novelty_gate = PersistenceGate(gate.k, gate.n) if gate is not None else PersistenceGate()
         self.scorers = {s.name: s for s in scorers}
         self.thresholds = dict(thresholds)
         self.alpha = alpha
@@ -94,22 +112,42 @@ class ResidualDetector:
                              f"for alpha={alpha}; got {len(frames)} total")
         cal = TailCalibration.fit(frames[:cut])
         Ztr = np.vstack([cal.features(cal.z(f)) for f in frames[:cut]])
-        Zho = np.vstack([cal.features(cal.z(f)) for f in frames[cut:]])
+        raw_ho = np.vstack([cal.z(f) for f in frames[cut:]])           # once, in time order (stateful reference)
+        Zho = np.vstack([cal.features(z) for z in raw_ho])
         scorers = [FlyBloomScorer(Ztr.shape[1]).fit(Ztr), Mahalanobis().fit(Ztr), MaxAbsZ().fit(Ztr)]
         thr = {s.name: conformal_threshold(s.score(Zho), alpha) for s in scorers}
-        return cls(cal, scorers, thr, alpha, gate)
+        dc = load_detect_config()
+        cusum = TwoSidedCusum(len(cal.channel_names()), dc["cusum_k_sigma"]["value"])
+        thr[cusum.name] = max(conformal_threshold(cusum.run(raw_ho), alpha), 1e-6)
+        ae = AutoencoderScorer(dc["autoencoder"]).fit(Ztr)
+        thr[ae.name] = ae.evt_threshold(ae.score(Zho), float(dc["autoencoder"]["evt_alpha"]["value"]))
+        if gate is None:
+            gate = PersistenceGate(int(dc["persistence_k"]["value"]), int(dc["persistence_n"]["value"]))
+        return cls(cal, scorers, thr, alpha, gate, cusum, ae)
 
     # ---- inference -----------------------------------------------------------------------
     def score(self, frame: Frame, top_k: int = 3, shielded_channels: Sequence[str] | None = None) -> DetectionResult:
-        z = self.cal.z(frame, shielded_channels=shielded_channels)
+        z_raw = self.cal.z(frame, shielded_channels=shielded_channels, clip=False)   # stateful reference: once per frame
+        z = np.clip(z_raw, -Z_CLIP, Z_CLIP)
         feat = self.cal.features(z)[None, :]
         scores = {n: float(s.score(feat)[0]) for n, s in self.scorers.items()}
         ratios = {n: scores[n] / max(self.thresholds[n], 1e-12) for n in scores}
         raw = any(r > 1.0 for r in ratios.values())
         names = self.cal.channel_names()
         order = np.argsort(-np.abs(z))[:top_k]
+        drift = None
+        if self.cusum is not None:
+            stat = self.cusum.update(z)
+            ratio = stat / max(self.thresholds[self.cusum.name], 1e-12)
+            drift = {"stat": stat, "ratio": ratio, "alarm": ratio > 1.0, "top": self.cusum.top(names)}
+        novelty = None
+        if self.novelty is not None:
+            s = float(self.novelty.score(feat)[0])
+            ratio = s / max(self.thresholds[self.novelty.name], 1e-12)
+            novelty = {"score": s, "ratio": ratio, "raw": ratio > 1.0, "alarm": self.novelty_gate.update(ratio > 1.0)}
         return DetectionResult(frame.t, scores, ratios, raw, self.gate.update(raw),
-                               [(names[i], float(z[i])) for i in order])
+                               [(names[i], float(z[i])) for i in order], drift=drift, novelty=novelty, z_raw=z_raw,
+                               channel_names=list(names))
 
 
 def conformal_threshold(nominal_scores: np.ndarray, alpha: float) -> float:

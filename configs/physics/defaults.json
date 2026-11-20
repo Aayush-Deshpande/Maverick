@@ -1,0 +1,706 @@
+{
+  "schema_version": 1,
+  "description": "Generic mean-value-engine constants (cards M1-04 onward, R 21.4, P Part 4 Step 1.3). An engine overrides any value with a 'physics' block in configs/engines/<id>.json (same shape). Every value carries provenance; ASSUMED values are generic textbook/installation estimates, never engine ratings or limits (those live in configs/engines). CALIBRATED values are produced at start-up by backend/sim calibration.",
+  "induction": {
+    "manifold_volume_per_displacement": {
+      "value": 1.5,
+      "status": "ASSUMED",
+      "ref": "plenum + runners ~1.5x swept volume (MVEM literature, Hendricks & Sorenson SAE 900616)"
+    },
+    "volumetric_efficiency": {
+      "value": 0.95,
+      "status": "ASSUMED",
+      "ref": "tuned intake of a high-revving aero piston engine at rated speed; together with friction it gives an indicated efficiency in the 0.30-0.42 SI range after calibration (tests/sim/test_engine_power.py)"
+    },
+    "throttle_cd": {
+      "value": 0.8,
+      "status": "ASSUMED",
+      "ref": "butterfly discharge coefficient (Heywood, Internal Combustion Engine Fundamentals, ch. 7)"
+    },
+    "wot_map_ratio": {
+      "value": 0.97,
+      "status": "ASSUMED",
+      "ref": "MAP / upstream pressure at wide-open throttle and rated rpm; sets the throttle area (CALIBRATED from it)"
+    },
+    "idle_area_fraction": {
+      "value": 0.03,
+      "status": "ASSUMED",
+      "ref": "closed-throttle leakage + idle bypass as a fraction of full area"
+    },
+    "filter_dp_kpa_at_rated_flow": {
+      "value": 1.0,
+      "status": "ASSUMED",
+      "ref": "clean air filter pressure drop at rated airflow; dp = k * mdot^2"
+    }
+  },
+  "combustion": {
+    "lean_loss_coeff": {
+      "value": 0.6,
+      "status": "ASSUMED",
+      "ref": "SI fuel-conversion efficiency falls ~ k (lambda-1.1)^2 beyond the lean optimum (Heywood fig. 15-8 shape)"
+    },
+    "si_best_lambda": {
+      "value": 1.1,
+      "status": "ASSUMED",
+      "ref": "SI efficiency optimum slightly lean of stoichiometric (Heywood ch. 15)"
+    },
+    "si_lean_misfire_lambda": {
+      "value": 1.45,
+      "status": "ASSUMED",
+      "ref": "SI lean misfire limit ~1.4-1.5 (Heywood ch. 9)"
+    },
+    "timing_loss_per_deg2": {
+      "value": 0.0004,
+      "status": "ASSUMED",
+      "ref": "MBT curve: ~4 % torque loss at 10 deg from MBT (Heywood fig. 9-3)"
+    },
+    "ci_smoke_lambda_min": {
+      "value": 1.3,
+      "status": "ASSUMED",
+      "ref": "CI smoke limit lambda ~1.2-1.4 at full load (Heywood ch. 10)"
+    },
+    "cov_base_pct": {
+      "value": 1.5,
+      "status": "ASSUMED",
+      "ref": "stable combustion COV_IMEP 1-2 % (Heywood ch. 9.4)"
+    },
+    "cov_instability_limit_pct": {
+      "value": 5.0,
+      "status": "ASSUMED",
+      "ref": "drivability/instability threshold ~5 % COV_IMEP (Heywood ch. 9.4; P Part 4 Step 1.3d)"
+    },
+    "knock_ref_map_kpa": {
+      "value": 101.3,
+      "status": "ASSUMED",
+      "ref": "knock index reference: SL WOT, normal charge temperature"
+    },
+    "knock_ref_charge_c": {
+      "value": 40.0,
+      "status": "ASSUMED",
+      "ref": "knock index reference charge temperature"
+    },
+    "knock_advance_sensitivity_per_deg": {
+      "value": 0.04,
+      "status": "ASSUMED",
+      "ref": "knock tendency rise per degree of over-advance (exponential index form)"
+    }
+  },
+  "friction": {
+    "fmep_a_kpa": {
+      "value": 60.0,
+      "status": "ASSUMED",
+      "ref": "FMEP = a + b (N/1000) + c (N/1000)^2 kPa (Chen-Flynn form). Heywood eq. 13.15 automotive values (97/15/5, incl. pumping) give ~23 kW at 5800 rpm on a 1.35 L engine (mechanical efficiency 0.76); reduced to ~0.82 mechanical efficiency at rated, typical of aero engines at WOT"
+    },
+    "fmep_b_kpa_per_krpm": {
+      "value": 12.0,
+      "status": "ASSUMED",
+      "ref": "see fmep_a_kpa"
+    },
+    "fmep_c_kpa_per_krpm2": {
+      "value": 3.5,
+      "status": "ASSUMED",
+      "ref": "see fmep_a_kpa"
+    }
+  },
+  "thermal": {
+    "wall_heat_fraction": {
+      "value": 0.22,
+      "status": "ASSUMED",
+      "ref": "share of fuel energy to the combustion-chamber walls (Heywood ch. 12: 15-35 %)"
+    },
+    "head_to_coolant_fraction": {
+      "value": 0.7,
+      "status": "ASSUMED",
+      "ref": "share of wall heat leaving through the coolant (liquid-cooled heads); the rest via barrel fins to cooling air"
+    },
+    "oil_fuel_heat_fraction": {
+      "value": 0.04,
+      "status": "ASSUMED",
+      "ref": "share of fuel energy rejected to the oil (piston cooling, Heywood ch. 12)"
+    },
+    "oil_friction_heat_fraction": {
+      "value": 0.5,
+      "status": "ASSUMED",
+      "ref": "share of friction power ending up in the oil"
+    },
+    "gear_efficiency": {
+      "value": 0.975,
+      "status": "ASSUMED",
+      "ref": "single-stage reduction gearbox efficiency"
+    },
+    "exhaust_cp_j_kgk": {
+      "value": 1150.0,
+      "status": "ASSUMED",
+      "ref": "exhaust gas specific heat at 800-900 C"
+    },
+    "calibration_isa_dev_c": {
+      "value": 15.0,
+      "status": "ASSUMED",
+      "ref": "R 21.5 step 4: cooling calibrated at max continuous, ISA+15, design airspeed"
+    },
+    "target_coolant_c": {
+      "value": 90.0,
+      "status": "ASSUMED",
+      "ref": "normal coolant operating temperature at max continuous (inside every engine's limits)"
+    },
+    "target_head_minus_coolant_c": {
+      "value": 15.0,
+      "status": "ASSUMED",
+      "ref": "head runs above coolant exit temperature"
+    },
+    "target_oil_c": {
+      "value": 100.0,
+      "status": "ASSUMED",
+      "ref": "normal oil temperature (inside the 90-110 C normal band where the OM gives one)"
+    },
+    "target_gearbox_c": {
+      "value": 85.0,
+      "status": "ASSUMED",
+      "ref": "gearbox oil temperature at max continuous"
+    },
+    "tau_head_s": {
+      "value": 60.0,
+      "status": "ASSUMED",
+      "ref": "cylinder head thermal time constant (minutes-scale CHT response, T-PHY-9)"
+    },
+    "tau_coolant_s": {
+      "value": 180.0,
+      "status": "ASSUMED",
+      "ref": "coolant loop time constant"
+    },
+    "tau_oil_s": {
+      "value": 300.0,
+      "status": "ASSUMED",
+      "ref": "oil system time constant"
+    },
+    "tau_gearbox_s": {
+      "value": 600.0,
+      "status": "ASSUMED",
+      "ref": "gearbox time constant"
+    },
+    "tau_egt_s": {
+      "value": 3.0,
+      "status": "ASSUMED",
+      "ref": "EGT sensor/gas time constant (audit section 2)"
+    },
+    "cooling_flow_exponent": {
+      "value": 0.8,
+      "status": "ASSUMED",
+      "ref": "convective conductance ~ (rho V)^0.8 (Dittus-Boelter / Colburn)"
+    },
+    "oil_thermostat_open_c": {
+      "value": 90.0,
+      "status": "ASSUMED",
+      "ref": "installation oil-cooler thermostat starts opening (Rotax installations commonly fit one); 90 C keeps cold-cruise oil inside the OM-912 i normal band 90-110 C"
+    },
+    "oil_thermostat_full_c": {
+      "value": 98.0,
+      "status": "ASSUMED",
+      "ref": "oil-cooler thermostat fully open (below the 100 C calibration target, so calibration is unaffected)"
+    },
+    "coolant_thermostat_open_c": {
+      "value": 75.0,
+      "status": "ASSUMED",
+      "ref": "coolant thermostat / radiator bypass starts opening"
+    },
+    "coolant_thermostat_full_c": {
+      "value": 88.0,
+      "status": "ASSUMED",
+      "ref": "coolant thermostat fully open (below the 90 C calibration target)"
+    },
+    "thermostat_min_open": {
+      "value": 0.1,
+      "status": "ASSUMED",
+      "ref": "bypass leakage when closed"
+    }
+  },
+  "oil": {
+    "vogel_a_mpas": {
+      "value": 0.1366,
+      "status": "ASSUMED",
+      "ref": "Vogel mu = a exp(b/(T + c)), T in C; SAE 30-class constants (Seeton 2006 fit form)"
+    },
+    "vogel_b": {
+      "value": 797.8,
+      "status": "ASSUMED",
+      "ref": "Vogel constant"
+    },
+    "vogel_c": {
+      "value": 95.6,
+      "status": "ASSUMED",
+      "ref": "Vogel constant (T + c)"
+    },
+    "relief_bar": {
+      "value": 4.8,
+      "status": "ASSUMED",
+      "ref": "regulated oil pressure just inside the top of the 2-5 bar normal band (R 21.5 step 5). Was 5.0 = exactly the band top, so a healthy engine at high rpm (governed 915 at rated rpm, any engine at take-off) read CAUTION on sensor noise alone; 4.8 leaves about 6 sigma of the 0.03 bar sender noise (20 Nov 2026)"
+    },
+    "calibration_rpm_fraction": {
+      "value": 0.6,
+      "status": "ASSUMED",
+      "ref": "pump calibrated at 60 % of rated rpm with hot oil"
+    },
+    "calibration_pressure_bar": {
+      "value": 2.8,
+      "status": "ASSUMED",
+      "ref": "oil pressure at the calibration point (inside the normal band)"
+    },
+    "cooler_flow_exponent": {
+      "value": 0.5,
+      "status": "ASSUMED",
+      "ref": "oil-cooler heat rejection ~ (oil flow fraction)^0.5 (heat-exchanger effectiveness falls with flow; pump flow = pump_health). D59"
+    },
+    "low_pressure_friction_gain": {
+      "value": 3.0,
+      "status": "ASSUMED",
+      "ref": "boundary lubrication: bearing friction x (1 + gain * deficit^2) once oil pressure leaves the normal band (lower edge from configs/engines operating_limits; D59); seizure still uses the minimum (seizure chain, R 21.4)"
+    }
+  },
+  "vibration": {
+    "firing_order_mm_s_at_rated": {
+      "value": 0.45,
+      "status": "ASSUMED",
+      "ref": "firing-order velocity at rated torque on the gearbox sensor (legacy nominal VIB_GEARBOX_RMS ~0.48 mm/s)"
+    },
+    "manufacturing_spread": {
+      "value": 0.02,
+      "status": "ASSUMED",
+      "ref": "cylinder-to-cylinder torque spread of a healthy engine (sets the 0.5/1st order floor)"
+    },
+    "prop_1x_mm_s": {
+      "value": 0.15,
+      "status": "ASSUMED",
+      "ref": "residual propeller 1x after dynamic balancing"
+    },
+    "gear_mesh_mm_s_at_rated": {
+      "value": 0.08,
+      "status": "ASSUMED",
+      "ref": "gear-mesh order of a healthy reduction gearbox at rated torque"
+    },
+    "prop_imbalance_gain": {
+      "value": 8.0,
+      "status": "ASSUMED",
+      "ref": "F28: prop 1x multiplier at full severity"
+    },
+    "gear_damage_gain": {
+      "value": 10.0,
+      "status": "ASSUMED",
+      "ref": "F27: gear-mesh multiplier at full severity"
+    },
+    "mount_gain": {
+      "value": 2.5,
+      "status": "ASSUMED",
+      "ref": "F29: transmissibility multiplier of all orders at full severity"
+    },
+    "bearing_1x_mm_s": {
+      "value": 1.2,
+      "status": "ASSUMED",
+      "ref": "1X vibration added per unit of main-bearing looseness (clearance growth / nominal; F26 full severity = 0.5 -> +0.6 mm/s). Order of magnitude from ISO 10816 class boundaries for small machines (~0.7-1.8 mm/s steps); D59"
+    },
+    "low_order_gain": {
+      "value": 10.0,
+      "status": "ASSUMED",
+      "ref": "soft engine mounts put rigid-body modes near the 0.5/1st order at cruise rpm, so low orders reach the sensor strongly amplified relative to the firing order (raised from 4 after T-FLT-1: a misfire on Rotax-class engines is felt as a strong low-order shake)"
+    }
+  },
+  "turbo": {
+    "compressor_efficiency": {
+      "value": 0.72,
+      "status": "ASSUMED",
+      "ref": "small automotive/aero turbocharger compressor isentropic efficiency"
+    },
+    "intercooler_effectiveness": {
+      "value": 0.7,
+      "status": "ASSUMED",
+      "ref": "air-to-air intercooler effectiveness (only when configs/engines turbo.intercooled)"
+    },
+    "charge_path_heat_rejection": {
+      "value": 0.35,
+      "status": "CALIBRATED",
+      "ref": "2026-11-20 (D58): share of the compressor temperature rise lost before the cylinders on a non-intercooled turbo (outlet duct and airbox walls in the cowling flow + fuel evaporation in the 914's blow-through carburettors, ~15-25 K alone). Smallest round value that reproduces the Rotax 914 OM take-off power held to 8,000 ft (0.977 of SL; 0.30 gives 0.971). Not used by intercooled engines"
+    },
+    "no_boost_pressure_ratio": {
+      "value": 1.03,
+      "status": "ASSUMED",
+      "ref": "pressure ratio left when the wastegate is stuck open (F15): the compressor windmills"
+    },
+    "bearing_pr_loss": {
+      "value": 0.25,
+      "status": "ASSUMED",
+      "ref": "F17: share of the available pressure ratio margin lost at full bearing wear"
+    },
+    "bearing_lag_gain": {
+      "value": 2.0,
+      "status": "ASSUMED",
+      "ref": "F17: spool time constant multiplier at full bearing wear"
+    }
+  },
+  "fuel": {
+    "ci_supply_pressure_bar": {
+      "value": 5.5,
+      "status": "ASSUMED",
+      "ref": "common-rail engines: low-pressure supply at the HP pump inlet; middle of the EASA TCDS E.200 (AE300) 4-7 bar band (D63)"
+    },
+    "ci_hp_pump_min_inlet_bar": {
+      "value": 4.0,
+      "status": "ASSUMED",
+      "ref": "below this inlet pressure the HP pump can no longer hold rail pressure: TCDS E.200 minimum inlet pressure 4 bar (D63)"
+    },
+    "rail_time_constant_s": {
+      "value": 0.3,
+      "status": "ASSUMED",
+      "ref": "common-rail pressure response to the pump/regulator (R 21.4 rail dynamics)"
+    },
+    "pulse_width_max_factor": {
+      "value": 1.3,
+      "status": "ASSUMED",
+      "ref": "ECU can stretch injection pulse width to 130 % of nominal to compensate low rail pressure (F09)"
+    },
+    "si_fuel_pressure_bar": {
+      "value": 3.0,
+      "status": "ASSUMED",
+      "ref": "port-injection fuel pressure nominal (912 i OM band 2.8-3.2 bar; 915 assumed same family)"
+    },
+    "carb_fuel_pressure_bar": {
+      "value": 0.3,
+      "status": "ASSUMED",
+      "ref": "carburettor float-chamber supply pressure (Rotax 914 class)"
+    },
+    "ci_supply_pressure_bar": {
+      "value": 5.5,
+      "status": "ASSUMED",
+      "ref": "diesel low-pressure supply at the HP pump inlet (AE300 TCDS band 4-7 bar)"
+    }
+  },
+  "ecu": {
+    "lane_loss_ignition_energy": {
+      "value": 0.5,
+      "status": "ASSUMED",
+      "ref": "SI dual ignition: one circuit lost halves ignition energy (slower burn) (R 22 F04)"
+    },
+    "lane_loss_timing_error_deg": {
+      "value": 7.0,
+      "status": "ASSUMED",
+      "ref": "single-plug burn is slower: effective phasing error after a lane loss"
+    },
+    "overspeed_fuel_cut_margin": {
+      "value": 0.03,
+      "status": "ASSUMED",
+      "ref": "fuel cut above overspeed (or rated) rpm x (1 + margin)"
+    },
+    "knock_retard_deg_per_index": {
+      "value": 10.0,
+      "status": "ASSUMED",
+      "ref": "knock control retards ignition 10 deg per unit of knock index above 1 (F03 shows as timing retard)"
+    },
+    "torque_lag_na_s": {
+      "value": 0.1,
+      "status": "ASSUMED",
+      "ref": "torque response of a naturally aspirated engine (fuel transport + manifold)"
+    }
+  },
+  "state_machine": {
+    "starter_torque_nm": {
+      "value": 25.0,
+      "status": "ASSUMED",
+      "ref": "starter torque at the crankshaft while cranking"
+    },
+    "run_rpm_fraction_of_idle": {
+      "value": 0.7,
+      "status": "ASSUMED",
+      "ref": "engine counts as running above this fraction of idle rpm"
+    },
+    "glow_preheat_s": {
+      "value": 5.0,
+      "status": "ASSUMED",
+      "ref": "CI cold start: glow plugs must preheat this long below 20 C coolant before fuel is admitted"
+    },
+    "seize_time_s": {
+      "value": 20.0,
+      "status": "ASSUMED",
+      "ref": "seizure after oil pressure stays below its minimum for this long at load (R 21.4 t_seize)"
+    },
+    "overheat_margin": {
+      "value": 0.08,
+      "status": "ASSUMED",
+      "ref": "overheat failure above warning limit x (1 + margin)"
+    },
+    "overheat_time_s": {
+      "value": 60.0,
+      "status": "ASSUMED",
+      "ref": "... sustained for this long (R 21.4 t_overheat)"
+    },
+    "fuel_starvation_fraction": {
+      "value": 0.3,
+      "status": "ASSUMED",
+      "ref": "fuel delivery below this share of demand = starvation"
+    }
+  },
+  "fault_effects": {
+    "burn_duration_deg_per_unit": {
+      "value": 20.0,
+      "status": "ASSUMED",
+      "ref": "a burn 100 % longer acts like ~20 deg of combustion phasing error (F06 slower burn)"
+    },
+    "cycle_variation_quality_loss": {
+      "value": 0.02,
+      "status": "ASSUMED",
+      "ref": "mean work lost per unit of extra cycle-to-cycle variation (F02: mostly variance, little mean)"
+    },
+    "injector_leak_rail_loss": {
+      "value": 0.5,
+      "status": "ASSUMED",
+      "ref": "rail pressure share lost per unit of leak-off (F07 on common rail)"
+    },
+    "exhaust_leak_egt_drop": {
+      "value": 0.3,
+      "status": "ASSUMED",
+      "ref": "EGT reading drop at full leak (air ingress upstream of the probe, F31)"
+    },
+    "exhaust_leak_boost_loss": {
+      "value": 0.05,
+      "status": "ASSUMED",
+      "ref": "boost share lost per cylinder exhaust leak on turbo engines (F31)"
+    },
+    "gear_damage_loss_gain": {
+      "value": 2.0,
+      "status": "ASSUMED",
+      "ref": "gear losses multiply by 1 + gain x damage (F27 heats the gearbox)"
+    },
+    "bearing_clearance_exponent": {
+      "value": 1.5,
+      "status": "ASSUMED",
+      "ref": "oil pressure falls ~ clearance^-1.5 (bearing leakage, F26)"
+    },
+    "oil_starvation_fraction": {
+      "value": 0.5,
+      "status": "ASSUMED",
+      "ref": "below this share of oil capacity the pump starts to starve (F24)"
+    },
+    "knock_vibration_mm_s_per_index": {
+      "value": 1.5,
+      "status": "ASSUMED",
+      "ref": "high-frequency knock vibration per unit of knock index above 1 (F03)"
+    },
+    "turbo_sync_mm_s": {
+      "value": 0.05,
+      "status": "ASSUMED",
+      "ref": "turbo-synchronous vibration of a healthy turbo"
+    },
+    "turbo_sync_bearing_gain": {
+      "value": 15.0,
+      "status": "ASSUMED",
+      "ref": "turbo-synchronous vibration multiplier at full bearing wear (F17)"
+    },
+    "glow_cold_quality": {
+      "value": 0.3,
+      "status": "ASSUMED",
+      "ref": "combustion quality of a cylinder with a failed glow plug while the coolant is below glow_warm_c (F35)"
+    },
+    "glow_warm_c": {
+      "value": 40.0,
+      "status": "ASSUMED",
+      "ref": "coolant temperature above which a failed glow plug no longer matters"
+    },
+    "cycle_variation_vibration_mm_s": {
+      "value": 0.2,
+      "status": "ASSUMED",
+      "ref": "0.5X added per unit of extra cycle-to-cycle variation (F02: irregular torque pulses)"
+    },
+    "turbo_bearing_oil_heat_w": {
+      "value": 1500.0,
+      "status": "ASSUMED",
+      "ref": "extra heat into the oil at full turbo bearing wear (F17)"
+    },
+    "knock_wall_heat_gain": {
+      "value": 0.3,
+      "status": "ASSUMED",
+      "ref": "wall heat fraction rises 30 % per unit of knock index above 1 (knock scrubs the thermal boundary layer, F03)"
+    }
+  },
+  "sensors": {
+    "noise_temperature_c": {
+      "value": 0.8,
+      "status": "ASSUMED",
+      "ref": "thermocouple / RTD noise (1 sigma) for CHT, EGT, oil, coolant, gearbox, charge temperatures"
+    },
+    "noise_pressure_rel": {
+      "value": 0.005,
+      "status": "ASSUMED",
+      "ref": "pressure transducer noise as a share of reading (oil, fuel, MAP)"
+    },
+    "noise_rpm": {
+      "value": 5.0,
+      "status": "ASSUMED",
+      "ref": "speed pickup noise (rpm, 1 sigma)"
+    },
+    "noise_flow_rel": {
+      "value": 0.01,
+      "status": "ASSUMED",
+      "ref": "fuel-flow meter noise as a share of reading"
+    },
+    "noise_electrical_rel": {
+      "value": 0.003,
+      "status": "ASSUMED",
+      "ref": "voltage / current measurement noise as a share of reading"
+    },
+    "noise_gain_s04": {
+      "value": 10.0,
+      "status": "ASSUMED",
+      "ref": "S04: noise multiplier at full severity"
+    },
+    "bias_rel_s02": {
+      "value": 0.08,
+      "status": "ASSUMED",
+      "ref": "S02: bias at full severity as a share of the channel's normal value"
+    },
+    "drift_rel_per_min_s03": {
+      "value": 0.02,
+      "status": "ASSUMED",
+      "ref": "S03: drift rate at full severity, share of normal value per minute (R 22: demo-visible, 1-3 C/min on CHT)"
+    },
+    "lane_split_rel_s07": {
+      "value": 0.06,
+      "status": "ASSUMED",
+      "ref": "S07: lane B disagreement at full severity"
+    },
+    "out_of_range_factor_s06": {
+      "value": 3.0,
+      "status": "ASSUMED",
+      "ref": "S06: short/open circuit reads this multiple of the normal value"
+    },
+    "noise_vibration_rel": {
+      "value": 0.02,
+      "status": "ASSUMED",
+      "ref": "accelerometer order-amplitude noise as a share of reading (1 sigma)"
+    },
+    "noise_vibration_floor_mm_s": {
+      "value": 0.02,
+      "status": "ASSUMED",
+      "ref": "accelerometer channel noise floor (1 sigma, mm/s) independent of amplitude"
+    },
+    "noise_pressure_floor_bar": {
+      "value": 0.03,
+      "status": "ASSUMED",
+      "ref": "oil / fuel / rail pressure transducer noise floor (1 sigma, bar), independent of the reading"
+    }
+  },
+  "build_variation": {
+    "volumetric_efficiency": {
+      "value": 0.02,
+      "status": "ASSUMED",
+      "ref": "volumetric efficiency: build-to-build manufacturing spread (1 sigma, relative), sampled once per tail seed; carried over from the retired backend/plant/virtual_engine.py EngineVariation (D31: N calibrations, not N detectors)"
+    },
+    "friction": {
+      "value": 0.06,
+      "status": "ASSUMED",
+      "ref": "friction mean effective pressure: build-to-build manufacturing spread (1 sigma, relative), sampled once per tail seed; carried over from the retired backend/plant/virtual_engine.py EngineVariation (D31: N calibrations, not N detectors)"
+    },
+    "head_cooling": {
+      "value": 0.045,
+      "status": "ASSUMED",
+      "ref": "per-cylinder head heat-transfer conductances (to coolant and to air): build-to-build manufacturing spread (1 sigma, relative), sampled once per tail seed; carried over from the retired backend/plant/virtual_engine.py EngineVariation (D31: N calibrations, not N detectors)"
+    },
+    "injector_trim": {
+      "value": 0.018,
+      "status": "ASSUMED",
+      "ref": "per-cylinder injector / jet flow: build-to-build manufacturing spread (1 sigma, relative), sampled once per tail seed; carried over from the retired backend/plant/virtual_engine.py EngineVariation (D31: N calibrations, not N detectors)"
+    },
+    "compressor_efficiency": {
+      "value": 0.035,
+      "status": "ASSUMED",
+      "ref": "turbo compressor efficiency: build-to-build manufacturing spread (1 sigma, relative), sampled once per tail seed; carried over from the retired backend/plant/virtual_engine.py EngineVariation (D31: N calibrations, not N detectors)"
+    }
+  },
+  "maps": {
+    "rpm_fraction_min": {
+      "value": 0.4,
+      "status": "ASSUMED",
+      "ref": "lowest map rpm as a share of rated rpm (performance-map grid, P 1.3q)"
+    },
+    "rpm_points": {
+      "value": 13,
+      "status": "ASSUMED",
+      "ref": "rpm grid points from the minimum to rated rpm"
+    },
+    "load_step_pct": {
+      "value": 10.0,
+      "status": "ASSUMED",
+      "ref": "throttle (spark ignition) or power-lever (diesel) step of the map grid"
+    }
+  },
+  "virtual_sensors": {
+    "compression_polytropic_n": {
+      "value": 1.32,
+      "status": "ASSUMED",
+      "ref": "polytropic exponent of compression (Heywood ch. 9: 1.3-1.35)"
+    },
+    "combustion_gamma": {
+      "value": 1.3,
+      "status": "ASSUMED",
+      "ref": "ratio of specific heats of the burning charge, constant-volume pressure rise"
+    },
+    "peak_pressure_fraction": {
+      "value": 0.45,
+      "status": "ASSUMED",
+      "ref": "share of the ideal constant-volume pressure rise reached at the real peak (finite burn, heat loss, peak after TDC)"
+    },
+    "bearing_diameter_mm": {
+      "value": 48.0,
+      "status": "ASSUMED",
+      "ref": "big-end journal diameter (geometry ASSUMED: not in P Part 2 or R 20; output labelled VIRTUAL)"
+    },
+    "bearing_length_mm": {
+      "value": 18.0,
+      "status": "ASSUMED",
+      "ref": "big-end journal bearing length (ASSUMED geometry)"
+    },
+    "bearing_radial_clearance_um": {
+      "value": 25.0,
+      "status": "ASSUMED",
+      "ref": "journal radial clearance (ASSUMED geometry)"
+    },
+    "bearing_load_share": {
+      "value": 1.0,
+      "status": "ASSUMED",
+      "ref": "share of the peak gas force carried by one big-end bearing"
+    },
+    "manifold_heat_loss_fraction": {
+      "value": 0.06,
+      "status": "ASSUMED",
+      "ref": "share of (port EGT - ambient) lost in the exhaust manifold before the turbine (short uninsulated manifold)"
+    }
+  },
+  "twin": {
+    "init_temp_var": {
+      "value": 25.0,
+      "status": "ASSUMED",
+      "ref": "initial temperature variance (C^2) of the observer"
+    },
+    "init_param_var": {
+      "value": 0.01,
+      "status": "ASSUMED",
+      "ref": "initial variance of each health parameter (1 = as calibrated)"
+    },
+    "q_temp_per_s": {
+      "value": 0.05,
+      "status": "ASSUMED",
+      "ref": "process noise on temperatures per second (C^2/s): model mismatch incl. unknown build spread"
+    },
+    "q_param_per_s": {
+      "value": 2e-06,
+      "status": "ASSUMED",
+      "ref": "random-walk rate of a health parameter per second (slow degradation)"
+    },
+    "r_model_temp": {
+      "value": 1.0,
+      "status": "ASSUMED",
+      "ref": "extra measurement variance (C^2) for the model's representation error"
+    },
+    "max_step_s": {
+      "value": 5.0,
+      "status": "ASSUMED",
+      "ref": "largest internal thermal step inside one observer prediction (s); stable because the fastest observed balance (heads) has a 60 s time constant"
+    }
+  }
+}

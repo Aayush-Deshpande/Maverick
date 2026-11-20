@@ -1,0 +1,60 @@
+VERSION "anumaan_engine_v2"
+
+NS_ :
+
+BS_:
+
+BU_: FADEC ANUMAAN_TWIN GCS
+
+BO_ 2566852608 ANU_SPEED: 8 FADEC
+ SG_ EngineSpeed : 0|16@1+ (0.25,0) [0|8000] "rpm" ANUMAAN_TWIN
+ SG_ PropSpeed : 16|16@1+ (0.25,0) [0|4000] "rpm" ANUMAAN_TWIN
+ SG_ ManifoldPressure : 32|16@1+ (0.01,0) [0|400] "kPa" ANUMAAN_TWIN
+ SG_ Throttle : 48|8@1+ (0.5,0) [0|115] "%" ANUMAAN_TWIN
+ SG_ Counter : 56|4@1+ (1,0) [0|15] "" ANUMAAN_TWIN
+
+BO_ 2566852609 ANU_CHT: 8 FADEC
+ SG_ Cht1 : 0|14@1+ (0.1,-40) [-40|300] "degC" ANUMAAN_TWIN
+ SG_ Cht2 : 14|14@1+ (0.1,-40) [-40|300] "degC" ANUMAAN_TWIN
+ SG_ Cht3 : 28|14@1+ (0.1,-40) [-40|300] "degC" ANUMAAN_TWIN
+ SG_ Cht4 : 42|14@1+ (0.1,-40) [-40|300] "degC" ANUMAAN_TWIN
+ SG_ Counter : 56|4@1+ (1,0) [0|15] "" ANUMAAN_TWIN
+
+BO_ 2566852610 ANU_EGT: 8 FADEC
+ SG_ Egt1 : 0|14@1+ (0.1,-40) [-40|1200] "degC" ANUMAAN_TWIN
+ SG_ Egt2 : 14|14@1+ (0.1,-40) [-40|1200] "degC" ANUMAAN_TWIN
+ SG_ Egt3 : 28|14@1+ (0.1,-40) [-40|1200] "degC" ANUMAAN_TWIN
+ SG_ Egt4 : 42|14@1+ (0.1,-40) [-40|1200] "degC" ANUMAAN_TWIN
+ SG_ Counter : 56|4@1+ (1,0) [0|15] "" ANUMAAN_TWIN
+
+BO_ 2566852611 ANU_FLUID: 8 FADEC
+ SG_ OilPressure : 0|12@1+ (0.01,0) [0|15] "bar" ANUMAAN_TWIN
+ SG_ OilTemperature : 12|12@1+ (0.1,-40) [-40|200] "degC" ANUMAAN_TWIN
+ SG_ CoolantTemperature : 24|12@1+ (0.1,-40) [-40|200] "degC" ANUMAAN_TWIN
+ SG_ FuelFlow : 36|16@1+ (0.01,0) [0|200] "kg/h" ANUMAAN_TWIN
+ SG_ Counter : 56|4@1+ (1,0) [0|15] "" ANUMAAN_TWIN
+
+BO_ 2566852612 ANU_FUEL_ELEC: 8 FADEC
+ SG_ FuelPressure : 0|12@1+ (0.01,0) [0|20] "bar" ANUMAAN_TWIN
+ SG_ RailPressure : 12|16@1+ (0.05,0) [0|2500] "bar" ANUMAAN_TWIN
+ SG_ BusVoltage : 28|12@1+ (0.01,0) [0|40] "V" ANUMAAN_TWIN
+ SG_ BusCurrent : 40|8@1+ (0.5,0) [0|127] "A" ANUMAAN_TWIN
+ SG_ BatteryCurrent : 48|8@1- (0.5,0) [-64|63] "A" ANUMAAN_TWIN
+ SG_ Counter : 56|4@1+ (1,0) [0|15] "" ANUMAAN_TWIN
+
+BO_ 2566852613 ANU_VIB_STATUS: 8 FADEC
+ SG_ VibHalfOrder : 0|12@1+ (0.005,0) [0|20] "mm/s" ANUMAAN_TWIN
+ SG_ VibFirstOrder : 12|12@1+ (0.005,0) [0|20] "mm/s" ANUMAAN_TWIN
+ SG_ VibFiringOrder : 24|12@1+ (0.005,0) [0|20] "mm/s" ANUMAAN_TWIN
+ SG_ GearboxTemperature : 36|12@1+ (0.1,-40) [-40|200] "degC" ANUMAAN_TWIN
+ SG_ Counter : 56|4@1+ (1,0) [0|15] "" ANUMAAN_TWIN
+
+CM_ "ANUMAAN engine telemetry v2 (card M7-01): every monitored channel, one message set per published frame. 29-bit proprietary J1939-range ids 0x18FF1000-0x18FF1005. The all-ones raw value of every signal means NOT AVAILABLE (J1939 convention), so a missing reading arrives as null, never as a number. Counter = 4-bit rolling sequence per message for the intrusion detector. Signal ranges are physical plausibility limits (wider than any operating limit); a value outside them is flagged by the intrusion detector.";
+BA_DEF_ BO_ "GenMsgCycleTime" INT 0 65535;
+BA_DEF_DEF_ "GenMsgCycleTime" 1000;
+BA_ "GenMsgCycleTime" BO_ 2566852608 1000;
+BA_ "GenMsgCycleTime" BO_ 2566852609 1000;
+BA_ "GenMsgCycleTime" BO_ 2566852610 1000;
+BA_ "GenMsgCycleTime" BO_ 2566852611 1000;
+BA_ "GenMsgCycleTime" BO_ 2566852612 1000;
+BA_ "GenMsgCycleTime" BO_ 2566852613 1000;
