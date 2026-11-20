@@ -74,7 +74,7 @@ export default function TwinStage(p: Props) {
   const label = 'text-[11px] uppercase tracking-[0.18em] font-mono text-slate-400';
   const key = 'inline-flex h-6 min-w-6 items-center justify-center rounded-[3px] border border-surface-border-strong bg-surface-card px-1.5 font-mono text-[11px] text-slate-200 shadow-[0_1px_0_rgba(0,0,0,0.25)]';
   return (
-    <div className="relative h-[calc(100vh-11rem)] min-h-[480px] overflow-hidden rounded-sm border border-surface-border bg-[#e8e7df]">
+    <div className="relative left-1/2 w-[calc(100vw-2.5rem)] -translate-x-1/2 h-[calc(100vh-11rem)] min-h-[480px] overflow-hidden rounded-sm border border-surface-border bg-[#e8e7df]">
       <Suspense fallback={<div className="p-6 text-xs font-mono text-slate-400">Loading 3D view…</div>}>
         <EngineViewer3D engineId={p.engineId} highlights={p.state?.highlights} api={p.api} injected={injected} fill focusSignal={focus} bare />
       </Suspense>
