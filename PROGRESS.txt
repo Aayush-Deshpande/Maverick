@@ -7,7 +7,7 @@ RESUME HERE  (last updated 20 Nov 2026, overnight autonomous session)
 =====================================================================================================================
 Phase:        PHASE 1 (M0) cards done (M0-01..M0-12; M0-10 reduced, see its entry). NEXT: CHECKPOINT PHASE 1 (manual
               look by Prasad), then Phase 2 in demo-first order: M1-01 sim package + clock, M1-02 atmosphere, ...
-Card:         M4-02 done (trends/time-to-limit); M3-08 matrix run pending (reports/evaluation); M4-06 done; NEXT M4-01 wear + fleet, M4-03 RUL, M4-04 Monte Carlo reliability. Prasad away until ~08:45 20 Nov with full
+Card:         M4-02 done (trends/time-to-limit); M3-08 matrix run pending (reports/evaluation); M4-02/04/05/06/07 done; NEXT M4-01 wear + fleet and M4-03 RUL on it, then M5 missions/replay. Prasad away until ~08:45 20 Nov with full
               permission (installs to D:, any package/model/dataset): KEEP BUILDING card after card, never wait.
 Branch:       Beta (pushed by Prasad up to ae82c70; later commits local). main untouched (9b5942e).
 Last commit:  M3-04 on Beta (see git log -1).
@@ -854,3 +854,16 @@ backend/evaluation/cmapss.py on data/telemetry/source2_nasa_benchmarks/train_FD0
   the repo: units split 60/20/20, seeds 0-2), RUL cap 125, rolling mean/slope 15 cycles. Result (PUBLIC_PROXY,
   turbofan): RMSE 16.8 (all cycles), 3.5 (last cycle), coverage 94.4 % (95 % target), width 89 cycles.
   -> reports/evaluation/cmapss_fd001_<date>.json; docs_site page 15. Test: tests/prognose/test_cmapss.py.
+
+=== 20 Nov 2026  M4-04 Monte Carlo mission reliability (I-09)
+backend/mission/reliability.py MissionReliabilityEngine.simulate_with_limits: vectorised (numpy) inverse transform of
+  each component's piecewise cumulative hazard over the profile phases + the twin's time-to-limit crossings as
+  lognormal abort times (median = prediction, [low, high] = 95 % range). 20k trials in ~9 ms; healthy 0.99685
+  [0.99597, 0.99754] vs closed form 0.99625. Runtime publishes it (CI, attribution, abort phase, median abort
+  time, hazard source PLACEHOLDER) instead of the analytic number; per-component analytic ranking kept for the UI.
+  The original pure-Python simulate() is unchanged because tests/test_char_mission.py pins its exact random draw
+  (0.9955): QUESTION for Prasad - may the characterisation value be re-pinned so simulate() can use the vectorised
+  path (same statistics, different random stream)?
+Removed fallbacks: 'limiting_component_survival or 1.0', glide 'frame.alt or 20000.0' (glide skipped when altitude
+  is missing; the fixed lat/lon stay until the M5 mission executive supplies the position).
+Tests: tests/mission/test_monte_carlo_reliability.py.

@@ -49,6 +49,7 @@ from backend.status.alerts import AlertManager
 from backend.status.evaluator import StatusEvaluator
 
 DT = 1.0                      # simulated seconds per tick (calibrated at this cadence)
+MC_TRIALS = 4000                 # mission-reliability Monte Carlo trials per evaluation (numerical setting)
 UKF_EVERY = 5                  # observer update every 5 ticks (its own dt is the real elapsed time)
 WARMUP_TICKS = 900            # ground run-up used to calibrate this tail
 EVENT_LOG_LEN = 200           # retained transitions per engine, served by /events
@@ -519,31 +520,31 @@ class EngineRuntime:
                         _cyl_dmg[_comp] = max(_cyl_dmg.get(_comp, 0.0), _dmg)
                 self.reliability_engine.set_damage(_cyl_dmg)
                 rel_result = self.reliability_engine.analytic_reliability(profile=ISR_18H_PROFILE)
-                glide_assessment = self.glide_polar.assess_glide(
-                    alt_ft=float(frame.alt or 20000.0),
-                    feathered=True,
-                    uav_lat=34.2,
-                    uav_lon=77.3
-                )
+                # forward Monte Carlo over the planned profile with component hazards and the twin's time-to-limit
+                # crossings (M4-04, I-09); the analytic per-component survival stays as the ranking for the UI
+                mc = self.reliability_engine.simulate_with_limits(
+                    ISR_18H_PROFILE, n_trials=MC_TRIALS,
+                    limit_crossings=(self._cached_prognostics or {}).get("time_to_limit", []))
                 self._cached_reliability = {
-                    "mission_reliability": round(rel_result["reliability"], 4),
-                    "limiting_component": rel_result["limiting_component"],
-                    "limiting_component_survival": round(rel_result["limiting_component_survival"] or 1.0, 4),
-                    "mission_hours": rel_result["mission_hours"],
-                    # Full ranking so the UI can show which components are actually
-                    # driving the number rather than only naming the worst one.
+                    "mission_reliability": mc["reliability"],
+                    "ci_lower": mc["ci_lower"], "ci_upper": mc["ci_upper"], "n_trials": mc["n_trials"],
+                    "method": "Monte Carlo (component hazards + time-to-limit crossings)",
+                    "limiting_component": mc["limiting_component"],
+                    "failure_attribution": mc["failure_attribution"],
+                    "failure_phase_distribution": mc["failure_phase_distribution"],
+                    "median_abort_hours": mc["median_abort_hours"],
+                    "mission_hours": mc["mission_hours"],
+                    "mission_profile": ISR_18H_PROFILE.name,
+                    "hazard_source": "PLACEHOLDER component rates (backend/mission/reliability.py DEFAULT_COMPONENTS)",
                     "per_component_survival": {
                         name: round(value, 5)
-                        for name, value in sorted(
-                            rel_result["per_component_survival"].items(),
-                            key=lambda kv: kv[1],
-                        )
+                        for name, value in sorted(rel_result["per_component_survival"].items(), key=lambda kv: kv[1])
                     },
-                    "damaged_components": sorted(
-                        name for name, frac in _cyl_dmg.items() if frac > 0.01
-                    ),
+                    "damaged_components": sorted(name for name, frac in _cyl_dmg.items() if frac > 0.01),
                 }
-                self._cached_glide = glide_assessment.as_dict()
+                if frame.alt is not None:                  # position from the mission executive arrives in M5
+                    self._cached_glide = self.glide_polar.assess_glide(
+                        alt_ft=float(frame.alt), feathered=True, uav_lat=34.2, uav_lon=77.3).as_dict()
 
                 # 9. Deterministic directive from the registry for the leading hypothesis (M3-06/I-07)
                 self._cached_diagnosis = directive(self._cached_hypotheses)

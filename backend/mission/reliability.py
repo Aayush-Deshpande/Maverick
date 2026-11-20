@@ -38,6 +38,8 @@ import random
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple
 
+import numpy as np
+
 __all__ = [
     "MissionPhase",
     "MissionProfile",
@@ -75,6 +77,9 @@ FAULT_COMPONENT_IMPACT: Dict[str, Tuple[str, ...]] = {
     "SENSOR_STUCK": ("ecu_lane_a",),
     "SENSOR_BIAS_DRIFT": ("ecu_lane_a",),
 }
+
+
+Z95 = 1.96                                       # two-sided 95 % normal quantile
 
 
 def components_for_fault(mode: str, cylinder: Optional[int] = None) -> Tuple[str, ...]:
@@ -244,6 +249,7 @@ class MissionReliabilityEngine:
                  seed: Optional[int] = None) -> None:
         self.components = components if components is not None else DEFAULT_COMPONENTS()
         self._rng = random.Random(seed)
+        self._np_rng = np.random.default_rng(seed)
 
     def set_damage(self, damage: Dict[str, float]) -> None:
         """Apply current damage fractions, e.g. from the F36 accumulator."""
@@ -351,6 +357,74 @@ class MissionReliabilityEngine:
             "failure_phase_distribution": {k: v for k, v in failure_phase_counts.items() if v > 0},
             "median_abort_hours": (round(sorted(abort_times)[len(abort_times) // 2], 2)
                                    if abort_times else None),
+        }
+
+    def simulate_with_limits(self, profile: MissionProfile, n_trials: int = 20000, critical_only: bool = True,
+                             limit_crossings: Optional[List[dict]] = None) -> dict:
+        """Sample mission outcomes; returns R with a Wilson interval (card M4-04, idea text I-09).
+
+        Per trial, each component's time-to-failure is drawn against the phase-varying hazard by inverse transform
+        of its piecewise-linear cumulative hazard (vectorised over trials). limit_crossings are the twin's
+        time-to-limit predictions ({channel, time_to_limit_s, low_s, high_s}): each is a lognormal crossing time
+        whose median is the prediction and whose [low, high] is its 95 % range; a crossing inside the mission
+        forces an abort too. The earliest abort cause and the phase it falls in are recorded, which is what turns
+        "risky sortie" into "risky during the 12.5 h loiter".
+        """
+        comps = [c for c in self.components if (c.mission_critical or not critical_only)]
+        dur = np.array([p.duration_hours for p in profile.phases])
+        ends = np.cumsum(dur)
+        starts = ends - dur
+        names = [c.name for c in comps]
+        times = []
+        for c in comps:
+            h = np.array([c.hazard(p.stress_factor) for p in profile.phases])
+            cum_end = np.cumsum(h * dur)
+            cum_start = cum_end - h * dur
+            target = self._np_rng.exponential(1.0, n_trials)
+            k = np.searchsorted(cum_end, target, side="left")
+            t = np.full(n_trials, np.inf)
+            inside = k < len(dur)
+            kk = k[inside]
+            hk = h[kk]
+            t[inside] = starts[kk] + np.where(hk > 0, (target[inside] - cum_start[kk]) / np.where(hk > 0, hk, 1.0), 0.0)
+            times.append(t)
+        for lc in limit_crossings or []:
+            med = max(float(lc["time_to_limit_s"]), 1e-3) / 3600.0
+            lo = max(float(lc.get("low_s") or lc["time_to_limit_s"]), 1e-3) / 3600.0
+            hi = max(float(lc.get("high_s") or lc["time_to_limit_s"]), 1e-3) / 3600.0
+            sig = max((math.log(max(hi, lo)) - math.log(lo)) / (2 * Z95), 1e-6)    # [low, high] = 95 % range
+            times.append(np.exp(self._np_rng.normal(math.log(med), sig, n_trials)))
+            names.append(f"limit:{lc['channel']}")
+        T = np.vstack(times) if times else np.full((1, n_trials), np.inf)
+        first = T.min(0)
+        who = T.argmin(0)
+        failed = first <= profile.total_hours
+        successes = int(n_trials - failed.sum())
+        counts: Dict[str, int] = {}
+        for w in who[failed]:
+            counts[names[w]] = counts.get(names[w], 0) + 1
+        phase_idx = np.searchsorted(ends, first[failed], side="left")
+        phases: Dict[str, int] = {}
+        for k in phase_idx:
+            nm = profile.phases[min(int(k), len(profile.phases) - 1)].name
+            phases[nm] = phases.get(nm, 0) + 1
+        r = successes / n_trials
+        lo, hi = _wilson_interval(successes, n_trials)
+        ranked = sorted(counts.items(), key=lambda kv: -kv[1])
+        limiting = ranked[0][0] if ranked else None
+        n_fail = max(n_trials - successes, 1)
+        aborts = np.sort(first[failed])
+        return {
+            "reliability": round(r, 5),
+            "ci_lower": round(lo, 5),
+            "ci_upper": round(hi, 5),
+            "n_trials": n_trials,
+            "mission_hours": round(profile.total_hours, 2),
+            "limiting_component": limiting,
+            "limiting_component_share": round(ranked[0][1] / n_fail, 4) if limiting else None,
+            "failure_attribution": dict(ranked),
+            "failure_phase_distribution": phases,
+            "median_abort_hours": round(float(aborts[len(aborts) // 2]), 2) if len(aborts) else None,
         }
 
     # -- decision support ---------------------------------------------------
