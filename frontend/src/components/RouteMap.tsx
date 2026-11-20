@@ -33,23 +33,24 @@ export default function RouteMap({ route = [], footprint, airfields, aircraft }:
   const barKm = fits.length ? fits[0] : BAR_STEPS_KM[BAR_STEPS_KM.length - 1];
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-xl border border-surface-border rounded-sm bg-black/20"
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-xl border border-surface-border rounded-sm bg-black/20 text-slate-200"
       role="img" aria-label="Route, glide footprint and airfields, plan view">
       {footprint && footprint.length > 2 && (
-        <polygon points={line(footprint)} fill="rgba(226,232,240,0.07)" stroke="#64748b" strokeDasharray="4 3" strokeWidth={1} />
+        <polygon points={line(footprint)} fill="currentColor" fillOpacity={0.06} stroke="currentColor" strokeOpacity={0.6} strokeDasharray="4 3" strokeWidth={1} />
       )}
-      {route.length > 1 && <polyline points={line(route)} fill="none" stroke="#e2e8f0" strokeWidth={1.5} />}
-      {route.map((p, i) => <circle key={i} cx={px(p)} cy={py(p)} r={2} fill="#e2e8f0" />)}
+      {route.length > 1 && <polyline points={line(route)} fill="none" stroke="currentColor" strokeWidth={2} />}
+      {route.map((p, i) => <circle key={i} cx={px(p)} cy={py(p)} r={2} fill="currentColor" />)}
       {airfields.map((a) => (
         <g key={a.id}>
-          <rect x={px(a) - 3} y={py(a) - 3} width={6} height={6} fill="none" stroke="#94a3b8" />
-          <text x={px(a) + 6} y={py(a) + 4} fontSize={12} fill="#cbd5e1">{a.id}{a.status ? ` · ${a.status}` : ''}</text>
+          <rect x={px(a) - 3} y={py(a) - 3} width={6} height={6} fill="none" stroke="currentColor" />
+          <text x={px(a) > W / 2 ? px(a) - 6 : px(a) + 6} y={py(a) + 4} fontSize={12} fill="currentColor"
+            textAnchor={px(a) > W / 2 ? 'end' : 'start'}>{a.id}{a.status ? ` · ${a.status}` : ''}</text>
         </g>
       ))}
-      {aircraft && <path d={`M ${px(aircraft)} ${py(aircraft) - 6} l 5 10 l -10 0 z`} fill="#f8fafc" />}
-      <line x1={PAD} y1={H - 8} x2={PAD + (barKm / kmPerUnit) * s} y2={H - 8} stroke="#94a3b8" />
-      <text x={PAD} y={H - 12} fontSize={12} fill="#94a3b8">{barKm} km</text>
-      <text x={W - PAD} y={PAD - 8} fontSize={12} fill="#94a3b8" textAnchor="end">N ↑</text>
+      {aircraft && <path d={`M ${px(aircraft)} ${py(aircraft) - 6} l 5 10 l -10 0 z`} fill="currentColor" />}
+      <line x1={PAD} y1={H - 8} x2={PAD + (barKm / kmPerUnit) * s} y2={H - 8} stroke="currentColor" />
+      <text x={PAD} y={H - 12} fontSize={12} fill="currentColor">{barKm} km</text>
+      <text x={W - PAD} y={PAD - 8} fontSize={12} fill="currentColor" textAnchor="end">N ↑</text>
     </svg>
   );
 }

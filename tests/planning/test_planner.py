@@ -89,3 +89,13 @@ def test_real_leh_tile_when_present():
     assert abs(leh_m - 3256.0) < 40.0
     plan = Planner(tile).plan(ENGINE, (34.1359, 77.5465, 10700.0), (34.65, 77.375), power_factor=1.0)
     assert plan.feasible and plan.min_clearance_ft >= 1000.0
+
+
+def test_tile_name_round_trips_through_load_tile():
+    """The planner cache in the API reloads tiles by tile.name: it must be the tile id, not the file name."""
+    try:
+        tile = load_tile(tile_name(34.13, 77.54))
+    except TerrainUnavailable:
+        pytest.skip("Copernicus tile not in var/dem (external data, D33)")
+    assert tile.name == tile_name(34.13, 77.54)
+    assert load_tile(tile.name).name == tile.name

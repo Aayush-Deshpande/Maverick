@@ -1020,3 +1020,16 @@ Regression found and fixed: commits 80493d5 / 1f4f39e (RouteMap, AltitudeProfile
   without fallbacks; tests/dynamic 15 passed. Lesson: run tests/dynamic for every frontend change.
 Tests: tests/dynamic + tests/api + truth-leak + recording 59 passed (after the fix); vitest 16 passed.
 
+=== 20 Nov 2026 Browser check of the v1 console (backend + vite + Playwright) -> two fixes (AI: Claude Code)
+Seen working with live data: Operator view (GO banner, 914 RUL 874 h band 190-1558 h, mission reliability),
+  Engineer view (residuals, twin params, virtual sensors incl. TIT, vibration orders, channels), Mission view (route
+  Leh->Thoise 62.9 km, min clearance 1108 ft, measured power factor; glide table; plan view; profile).
+Bug 1 (since M5-08): DemTile.name was the FILE name (.tif); the API planner cache reloads by name and load_tile
+  appends .tif -> every real-tile route request gave 500 (tests injected a planner for the synthetic tile, so it
+  never showed). Fix: name = tile id (path.stem). Regression test tests/planning/test_planner.py::
+  test_tile_name_round_trips_through_load_tile (fails before, passes after; skips without the tile).
+Bug 2: SVG plan view / profile used white strokes, invisible on the light theme -> currentColor + theme text class;
+  right-half airfield labels anchor leftward. EngineerPanel: darker residual bars, TIT label.
+Open (noted, not fixed): data age shows a small negative value (-60..-170 ms) = server wall clock vs browser clock
+  on the same PC; dataAgeMs should use receive time or clamp at 0 with a skew note (M0-09 store).
+

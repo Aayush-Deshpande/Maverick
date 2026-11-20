@@ -32,7 +32,7 @@ class DemTile:
             tie = page.tags["ModelTiepointTag"].value
             scale = page.tags["ModelPixelScaleTag"].value
             self.z = page.asarray().astype(np.float64)
-        self.name = path.name
+        self.name = path.stem                                  # tile id (load_tile appends .tif)
         self.lon0, self.lat0 = float(tie[3]), float(tie[4])       # north-west corner post
         self.dlon, self.dlat = float(scale[0]), float(scale[1])
         self.rows, self.cols = self.z.shape

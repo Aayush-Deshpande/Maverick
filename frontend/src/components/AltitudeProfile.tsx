@@ -26,13 +26,13 @@ export default function AltitudeProfile({ waypoints }: { waypoints: Wp[] }) {
   const path = (key: 'altitude_ft' | 'terrain_ft') => waypoints.map((w, i) => `${x(i).toFixed(1)},${y(w[key]).toFixed(1)}`).join(' ');
   const ground = `${PAD},${H - PAD} ${path('terrain_ft')} ${W - PAD},${H - PAD}`;
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-xl border border-surface-border rounded-sm bg-black/20"
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-xl border border-surface-border rounded-sm bg-black/20 text-slate-200"
       role="img" aria-label="Altitude profile of the planned route">
-      <polygon points={ground} fill="rgba(148,163,184,0.25)" stroke="#64748b" />
-      <polyline points={path('altitude_ft')} fill="none" stroke="#e2e8f0" strokeWidth={1.5} />
-      <text x={4} y={y(hi) + 4} fontSize={12} fill="#94a3b8">{Math.round(hi)} ft</text>
-      <text x={4} y={y(lo) + 4} fontSize={12} fill="#94a3b8">{Math.round(lo)} ft</text>
-      <text x={W - PAD} y={H - 8} fontSize={12} fill="#94a3b8" textAnchor="end">{total.toFixed(1)} km</text>
+      <polygon points={ground} fill="currentColor" fillOpacity={0.15} stroke="currentColor" strokeOpacity={0.5} />
+      <polyline points={path('altitude_ft')} fill="none" stroke="currentColor" strokeWidth={2} />
+      <text x={4} y={y(hi) + 4} fontSize={12} fill="currentColor">{Math.round(hi)} ft</text>
+      <text x={4} y={y(lo) + 4} fontSize={12} fill="currentColor">{Math.round(lo)} ft</text>
+      <text x={W - PAD} y={H - 8} fontSize={12} fill="currentColor" textAnchor="end">{total.toFixed(1)} km</text>
     </svg>
   );
 }

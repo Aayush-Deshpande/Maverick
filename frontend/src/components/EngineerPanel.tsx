@@ -16,6 +16,7 @@ const VIRTUAL_LABELS: Record<string, [string, string]> = {
   P_max_bar: ['Peak cylinder pressure', 'bar'],
   h_min_um: ['Min. bearing oil film', 'µm'],
   P_ind_kw: ['Indicated power', 'kW'],
+  TIT_degC: ['Turbine inlet temperature', '°C'],
 };
 
 /** Propulsion engineer view (M6-03): measured-vs-model residuals in noise sigmas, the twin's health-parameter
@@ -36,7 +37,7 @@ export default function EngineerPanel({ residuals, twin, virtualSensors, vibrati
               <span className="truncate text-slate-400" title={ch}>{ch}</span>
               <span className="relative h-1.5 bg-surface border border-surface-border rounded-full overflow-hidden">
                 <span className="absolute top-0 bottom-0 left-1/2 w-px bg-slate-500" />
-                <span className="absolute top-0 bottom-0 bg-slate-300"
+                <span className="absolute top-0 bottom-0 bg-slate-500"
                   style={z >= 0 ? { left: '50%', width: `${Math.min(50, (z / Z_FULL) * 50)}%` } : { right: '50%', width: `${Math.min(50, (-z / Z_FULL) * 50)}%` }} />
               </span>
               <span className="text-right tabular-nums text-slate-200">{num(z, 1)}</span>
