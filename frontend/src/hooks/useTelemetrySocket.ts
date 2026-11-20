@@ -108,9 +108,9 @@ export function useTelemetrySocket(options?: UseTelemetrySocketOptions) {
         const proto = window.location.protocol === 'https:' ? 'https:' : 'http:';
         return `${proto}//${window.location.hostname}`;
       }
-      return 'https://anumaan-backend-5ru5.onrender.com';
+      return 'https://maverick-vnrg.onrender.com';
     }
-    return 'https://anumaan-backend-5ru5.onrender.com';
+    return 'https://maverick-vnrg.onrender.com';
   });
 
   const [state, setState] = useState<UnifiedTelemetryState>(DEFAULT_STATE);
