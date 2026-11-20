@@ -29,4 +29,14 @@ describe('StatusBanner', () => {
     expect(html).toContain('×2');
     expect((html.match(/Shelve 10 min/g) ?? []).length).toBe(1);
   });
+
+  it('says a channel reason in plain words with rounded value, limit and unit', () => {
+    const html = renderToStaticMarkup(
+      <StatusBanner engineId="e" simTimeS={1} api={api} onNotice={() => {}} alerts={[]} units={{ oil_p: 'bar' }}
+        status={{ level: 'NO-GO', reasons: [{ code: 'LIMIT_WARNING_LOW', text: 'oil_p 1.8 bar below warning 2.4997920701959395 bar',
+          channel: 'oil_p', value: 1.81002, limit: 2.4997920701959395 }] } as any} />);
+    expect(html).toContain('Oil p 1.81 bar, below the warning limit of 2.50 bar');   // humanized without the labels file
+    expect(html).not.toContain('2.4997920701959395');
+  });
 });
+

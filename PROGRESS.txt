@@ -1126,3 +1126,16 @@ Changed: configs/ui/labels_en.json (new: channel and component display names, pl
 Next: frontend uses the labels (status sentence, channel/part names everywhere), Operator view reorder (health
   first, simulation tools last), training toggle (D56), then D55 diesel calibration, then Phase 7 scripts (D53).
 
+=== 20 Nov 2026 M6-06 (part): plain-language console + training mode (D56) (AI: Claude Code)
+Changed: frontend utils/labels.tsx (+test; fetch + context, exact -> {n} pattern -> humanized fallback),
+  StatusBanner (status title + plain sentence from configs/ui/labels_en.json; channel reasons rebuilt from the
+  structured fields: "Oil pressure 1.60 bar, below the caution limit of 2.00 bar"), EngineRuntimeConsole (Operator
+  view reordered: status -> fleet -> key tiles -> 3D + prognosis -> simulation tools last; tile "Fault detector:
+  No anomaly / Checking an anomaly / Fault confirmed"; time-to-limit, weakest part and channel grid use names;
+  baseline line only for engineer/maintenance; Training mode toggle per viewer), EngineerPanel and 3D legend use
+  names, viewer draws INJECTED parts from active_faults when training mode is on. backend/status/evaluator.py
+  reason text rounds limits (was 2.4997920701959395).
+Browser (912, F23 injected, training off): banner "No-go" + sentence + plain reasons; 3D lights exactly the 4
+  Oil_Tank nodes from the diagnosis (data-highlighted-nodes hook).
+Tests: vitest 25, tests/status 15, tests/dynamic 15.
+

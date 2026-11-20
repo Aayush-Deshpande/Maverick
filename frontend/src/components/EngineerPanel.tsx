@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { NO_DATA, num } from '../utils/format';
+import { channelLabel, useLabels } from '../utils/labels';
 
 type TwinParam = { name: string; location: string; mean: number; ci: [number, number]; healthy: boolean };
 type Props = {
@@ -23,6 +24,7 @@ const VIRTUAL_LABELS: Record<string, [string, string]> = {
  *  estimates with their intervals, virtual sensors (model estimates, labelled VIRTUAL) and vibration orders. */
 export default function EngineerPanel({ residuals, twin, virtualSensors, vibration }: Props) {
   const [all, setAll] = useState(false);
+  const labels = useLabels();
   const res = Object.entries(residuals ?? {}).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
   const shown = all ? res : res.slice(0, TOP_N);
   const params = twin?.params ?? [];
@@ -33,8 +35,8 @@ export default function EngineerPanel({ residuals, twin, virtualSensors, vibrati
         <div>
           <div className="text-slate-300">Residuals, measured minus engine model (σ)</div>
           {shown.length ? <ul className="mt-2 space-y-1.5">{shown.map(([ch, z]) => (
-            <li key={ch} className="grid grid-cols-[7rem_1fr_3.5rem] items-center gap-2">
-              <span className="truncate text-slate-400" title={ch}>{ch}</span>
+            <li key={ch} className="grid grid-cols-[minmax(7rem,14rem)_1fr_3.5rem] items-center gap-2">
+              <span className="truncate text-slate-400" title={ch}>{channelLabel(labels, ch)}</span>
               <span className="relative h-1.5 bg-surface border border-surface-border rounded-full overflow-hidden">
                 <span className="absolute top-0 bottom-0 left-1/2 w-px bg-slate-500" />
                 <span className="absolute top-0 bottom-0 bg-slate-500"

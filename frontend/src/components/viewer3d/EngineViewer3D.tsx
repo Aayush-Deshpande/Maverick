@@ -5,11 +5,14 @@ import { Color, Mesh, PMREMGenerator, type Material, type MeshStandardMaterial, 
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import type { Highlight } from '../../api/state';
 import { LEVEL_COLOUR, highlightMap, type HighlightLevel } from './highlights';
+import { componentLabel, useLabels } from '../../utils/labels';
 
-type Manifest = { model_url: string; representative_geometry: string | null };
+type Manifest = { model_url: string; representative_geometry: string | null; components: Array<{ component_id: string; nodes: string[] }> };
+export type InjectedPart = { component_id: string; reason: string };
 type Props = {
   engineId: string | null;
   highlights: Highlight[] | undefined;
+  injected?: InjectedPart[];                               // training mode only (D56): drawn as INJECTED
   api: (path: string, method: string, body?: unknown) => Promise<any>;
 };
 
@@ -87,10 +90,17 @@ class ModelBoundary extends Component<{ children: ReactNode; resetKey: string },
 /** 3D engine view (M6-05): loads the engine's web model named by the component manifest and lights exactly the
  *  nodes listed in state.highlights, in the colour of their level. Highlights come from diagnosis + status (D5);
  *  the viewer has no fault tables of its own. */
-export default function EngineViewer3D({ engineId, highlights, api }: Props) {
+export default function EngineViewer3D({ engineId, highlights: detected, injected, api }: Props) {
   const [manifest, setManifest] = useState<Manifest | null>(null);
   const [error, setError] = useState('');
   const [lit, setLit] = useState<string[]>([]);
+  const labels = useLabels();
+  const highlights = useMemo<Highlight[]>(() => {
+    const nodesOf = new Map((manifest?.components ?? []).map((c) => [c.component_id, c.nodes]));
+    const training = (injected ?? []).map((p) => ({ component_id: p.component_id, level: 'INJECTED' as const,
+      nodes: nodesOf.get(p.component_id) ?? [], reason: p.reason }));
+    return [...(detected ?? []), ...training];
+  }, [detected, injected, manifest]);
   const levels = useMemo(() => highlightMap(highlights), [highlights]);
 
   useEffect(() => {
@@ -128,7 +138,7 @@ export default function EngineViewer3D({ engineId, highlights, api }: Props) {
         {(highlights ?? []).map((h, i) => (
           <li key={`${h.component_id}-${i}`} className="flex items-center gap-2 text-slate-300">
             <span className="inline-block w-2.5 h-2.5 rounded-sm" style={{ background: LEVEL_COLOUR[h.level as HighlightLevel] }} />
-            <span>{h.level}</span><span>{h.component_id}</span><span className="text-slate-500">{h.reason}</span>
+            <span>{h.level === 'INJECTED' ? 'INJECTED (training)' : h.level}</span><span>{componentLabel(labels, h.component_id)}</span><span className="text-slate-500">{h.reason}</span>
             {h.marker_for && <span className="text-slate-500">· part not in the model: {h.marker_for}</span>}
           </li>
         ))}

@@ -159,10 +159,10 @@ class StatusEvaluator:
         tl = lim.get("time_limited")
         self._band[name] = (wl, wh, tuple(normal) if normal else None)
         if wh is not None and v > wh:
-            return [(Reason("LIMIT_WARNING_HIGH", "NO-GO", f"{name} {v:.1f} {unit} above warning {wh} {unit}",
+            return [(Reason("LIMIT_WARNING_HIGH", "NO-GO", f"{name} {v:.1f} {unit} above warning {wh:.4g} {unit}",
                            channel=name, value=v, limit=wh), None, wh)]
         if wl is not None and v < wl:
-            return [(Reason("LIMIT_WARNING_LOW", "NO-GO", f"{name} {v:.1f} {unit} below warning {wl} {unit}",
+            return [(Reason("LIMIT_WARNING_LOW", "NO-GO", f"{name} {v:.1f} {unit} below warning {wl:.4g} {unit}",
                            channel=name, value=v, limit=wl), wl, None)]
         if tl is not None:
             base = (normal[1] if normal else None) or lim.get("normal_max")
@@ -179,15 +179,15 @@ class StatusEvaluator:
             self._over_since.pop(name, None)
         nm = lim.get("normal_max")
         if nm is not None and v > nm and tl is None:
-            return [(Reason("LIMIT_CAUTION_HIGH", "CAUTION", f"{name} {v:.1f} {unit} above normal {nm} {unit}",
+            return [(Reason("LIMIT_CAUTION_HIGH", "CAUTION", f"{name} {v:.1f} {unit} above normal {nm:.4g} {unit}",
                            channel=name, value=v, limit=nm), None, nm)]
         if normal:
             lo, hi = normal
             if v > hi:
-                return [(Reason("LIMIT_CAUTION_HIGH", "CAUTION", f"{name} {v:.1f} {unit} above normal {hi} {unit}",
+                return [(Reason("LIMIT_CAUTION_HIGH", "CAUTION", f"{name} {v:.1f} {unit} above normal {hi:.4g} {unit}",
                                channel=name, value=v, limit=hi), lo, hi)]
             if v < lo:
-                return [(Reason("LIMIT_CAUTION_LOW", "CAUTION", f"{name} {v:.1f} {unit} below normal {lo} {unit}",
+                return [(Reason("LIMIT_CAUTION_LOW", "CAUTION", f"{name} {v:.1f} {unit} below normal {lo:.4g} {unit}",
                                channel=name, value=v, limit=lo), lo, hi)]
         return []
 

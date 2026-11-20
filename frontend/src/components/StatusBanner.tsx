@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import type { AlertOut, Status } from '../api/state';
+import type { AlertOut, Reason1, Status } from '../api/state';
 import { playAlertTone, toneFor } from '../utils/alertTone';
+import { channelLabel, useLabels } from '../utils/labels';
 import { NO_DATA, num } from '../utils/format';
 
 type Props = {
@@ -8,6 +9,7 @@ type Props = {
   status: Status | null | undefined;
   alerts: AlertOut[];
   simTimeS: number | null | undefined;
+  units?: Record<string, string>;                         // channel -> unit, from the readings
   api: (path: string, method: string, body?: unknown) => Promise<any>;
   onNotice: (text: string) => void;
 };
@@ -23,7 +25,19 @@ const LEVEL_STYLE: Record<string, string> = {
 
 /** Engine status banner and alert list (M6-02): level, every reason with its value and limit, latch and
  *  acknowledge, and per-alert acknowledge / shelve. Everything comes from the state message. */
-export default function StatusBanner({ engineId, status, alerts, simTimeS, api, onNotice }: Props) {
+/** One reason in plain words: the channel's name, its reading and the limit it crossed. */
+function reasonText(r: Reason1, label: (id: string) => string, unit: (id: string) => string): string {
+  if (r.value == null || r.limit == null) return r.text;
+  if (!r.channel) return `${r.text} (${num(r.value, 2)} vs limit ${num(r.limit, 2)})`;
+  const side = /LOW/.test(r.code) ? 'below' : /HIGH/.test(r.code) ? 'above' : 'outside';
+  const band = /WARNING/.test(r.code) ? 'warning' : /CAUTION/.test(r.code) ? 'caution' : 'normal';
+  const u = unit(r.channel);
+  return `${label(r.channel)} ${num(r.value, 2)} ${u}, ${side} the ${band} limit of ${num(r.limit, 2)} ${u}`.replace(/\s+,/g, ',').trim();
+}
+
+export default function StatusBanner({ engineId, status, alerts, simTimeS, units, api, onNotice }: Props) {
+  const labels = useLabels();
+  const say = labels.status[status?.level ?? 'UNKNOWN'];
   const level = status?.level ?? 'UNKNOWN';
   const [muted, setMuted] = useState(false);
   const prev = useRef<string | undefined>(undefined);
@@ -45,7 +59,8 @@ export default function StatusBanner({ engineId, status, alerts, simTimeS, api, 
   return (
     <section aria-label="Engine status" aria-live="polite" className={`rounded-sm border p-4 ${style}`}>
       <div className="flex flex-wrap items-center gap-3">
-        <span className="text-xl font-semibold font-mono tracking-tight">{level === 'UNKNOWN' ? NO_DATA : level.replace('_', ' ')}</span>
+        <span className="text-xl font-semibold tracking-tight">{say?.title ?? (level === 'UNKNOWN' ? NO_DATA : level.replace('_', ' '))}</span>
+        {say && level !== 'UNKNOWN' && <span className="text-xs font-mono opacity-70">{level.replace('_', ' ')}</span>}
         <button type="button" aria-pressed={muted} onClick={() => setMuted(!muted)}
           className="rounded-sm border border-current px-2 py-0.5 text-xs font-mono opacity-70 hover:opacity-100">{muted ? 'Tones off' : 'Tones on'}</button>
         {status?.latched && <span className="text-xs font-mono">LATCHED{status.acknowledged ? ' · acknowledged, waiting for the cause to clear' : ''}</span>}
@@ -54,13 +69,11 @@ export default function StatusBanner({ engineId, status, alerts, simTimeS, api, 
             className="ml-auto rounded-sm border border-current px-3 py-1 text-xs font-mono hover:bg-white/5">Acknowledge</button>
         )}
       </div>
+      {say && <p className="mt-1 text-sm">{say.text}</p>}
       {(status?.reasons ?? []).length > 0 && (
         <ul className="mt-2 space-y-0.5 text-xs font-mono">
           {status!.reasons!.map((r, i) => (
-            <li key={`${r.code}-${i}`}>
-              {r.text}
-              {r.value != null && r.limit != null && <span className="opacity-70"> ({num(r.value, 2)} vs limit {num(r.limit, 2)})</span>}
-            </li>
+            <li key={`${r.code}-${i}`}>{reasonText(r, (id) => channelLabel(labels, id), (id) => units?.[id] ?? '')}</li>
           ))}
         </ul>
       )}

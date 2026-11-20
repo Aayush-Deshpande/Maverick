@@ -3,6 +3,7 @@ import { Activity, AlertTriangle, Check, ChevronDown, CircleHelp, Radio, RotateC
 import { useEngineRuntime, useNow } from '../hooks/useEngineRuntime';
 import { dataAgeMs } from '../store/engineStore';
 import { NO_DATA, num } from '../utils/format';
+import { LabelsContext, channelLabel, componentLabel, useFetchLabels } from '../utils/labels';
 import RoutePlannerPanel from './RoutePlannerPanel';
 import StatusBanner from './StatusBanner';
 import EngineerPanel from './EngineerPanel';
@@ -27,7 +28,8 @@ const VIEWS: Array<{ id: View; label: string }> = [
   { id: 'OPERATOR', label: 'Operator' }, { id: 'ENGINEER', label: 'Propulsion engineer' },
   { id: 'MAINTENANCE', label: 'Maintenance' }, { id: 'MISSION', label: 'Mission' }, { id: 'ALL', label: 'All panels' },
 ];
-const VIEW_KEY = 'anumaan.console.view';                  // per-viewer convenience only (role is never sent to the server)
+const VIEW_KEY = 'anumaan.console.view';
+const TRAINING_KEY = 'anumaan.console.training';       // D56: off by default, per viewer                  // per-viewer convenience only (role is never sent to the server)
 const loadView = (): View => {
   try { const v = localStorage.getItem(VIEW_KEY); return VIEWS.some((x) => x.id === v) ? (v as View) : 'OPERATOR'; }
   catch { return 'OPERATOR'; }
@@ -37,6 +39,7 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
   const runtime = useEngineRuntime(serverUrl);
   const now = useNow(500);
   const { state, profile, faults } = runtime;
+  const labels = useFetchLabels(runtime.api);
   const [faultId, setFaultId] = useState('');
   const [cylinder, setCylinder] = useState(1);
   const [severity, setSeverity] = useState<number | null>(null);
@@ -49,6 +52,8 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
   const [view, setViewState] = useState<View>(loadView);
   const setView = (v: View) => { setViewState(v); try { localStorage.setItem(VIEW_KEY, v); } catch { /* storage blocked: keep in memory */ } };
   const show = (...views: View[]) => view === 'ALL' || views.includes(view);
+  const [training, setTrainingState] = useState<boolean>(() => { try { return localStorage.getItem(TRAINING_KEY) === '1'; } catch { return false; } });
+  const setTraining = (on: boolean) => { setTrainingState(on); try { localStorage.setItem(TRAINING_KEY, on ? '1' : '0'); } catch { /* memory only */ } };
 
   const readings = useMemo(() => Object.entries(state?.readings ?? {}).sort(([a], [b]) => a.localeCompare(b)), [state]);
   const det = (state?.detections ?? null) as Detections | null;
@@ -110,7 +115,7 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
     ? `LIVE · ${state?.rate_hz_actual != null ? `${num(state.rate_hz_actual, 1)} Hz` : 'rate —'} · age ${age != null ? `${Math.round(age)} ms` : NO_DATA}`
     : runtime.connection;
 
-  return <div className="space-y-4">
+  return <LabelsContext.Provider value={labels}><div className="space-y-4">
     <section className="surface-panel p-4 sm:p-5">
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
         <div>
@@ -137,10 +142,13 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
       <nav aria-label="Console view" className="mt-3 flex flex-wrap gap-1 text-xs font-mono">
         {VIEWS.map((v) => <button key={v.id} type="button" aria-pressed={view === v.id} onClick={() => setView(v.id)}
           className={`px-3 py-1.5 rounded-sm border ${view === v.id ? 'border-surface-border-strong bg-white/10 text-white' : 'border-surface-border text-slate-400 hover:bg-white/5'}`}>{v.label}</button>)}
+        <button type="button" aria-pressed={training} onClick={() => setTraining(!training)} title="Training mode also draws the injected fault on the 3D engine"
+          className={`ml-auto px-3 py-1.5 rounded-sm border ${training ? 'border-surface-border-strong bg-white/10 text-white' : 'border-surface-border text-slate-400 hover:bg-white/5'}`}>Training mode: {training ? 'on' : 'off'}</button>
       </nav>
     </section>
 
     <StatusBanner engineId={runtime.engineId ?? null} status={state?.status} alerts={state?.alerts ?? []} simTimeS={state?.sim_time_s}
+      units={Object.fromEntries(Object.entries(state?.readings ?? {}).map(([k, r]) => [k, r.unit]))}
       api={runtime.api} onNotice={(t) => { setNotice(t); setTimeout(() => setNotice(''), 3500); }} />
 
     {show('OPERATOR') && <section aria-label="Fleet overview" className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-2">
@@ -161,9 +169,42 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
         ['Engine speed', `${num(state?.readings?.rpm?.value, 0)} RPM`, 'CRANK SPEED'],
         ['Cylinder head', `${num(maxOf(readings.filter(([k]) => k.startsWith('cht[')).map(([, r]) => r.value)))} °C`, `MAX OF ${profile?.cylinders ?? '—'} CYLINDERS`],
         ['Exhaust gas', `${num(maxOf(readings.filter(([k]) => k.startsWith('egt[')).map(([, r]) => r.value)))} °C`, 'MAX CYLINDER'],
-        ['Detector state', !det ? 'Waiting' : det.confirmed ? 'Confirmed' : det.raw_alarm ? 'Review' : 'Nominal', det?.confirmed ? 'PERSISTENCE GATE' : 'TIER 0 · RESIDUALS'],
+        ['Fault detector', !det ? 'Starting up' : det.confirmed ? 'Fault confirmed' : det.raw_alarm ? 'Checking an anomaly' : 'No anomaly', 'READINGS VS ENGINE MODEL'],
       ].map(([label, value, caption], index) => <div key={label} className={`surface-panel p-4 rounded-sm ${index === 3 && det?.confirmed ? 'surface-panel-critical' : ''}`}><div className="text-xs uppercase tracking-wider font-mono text-slate-400">{label}</div><div className="mt-2 text-xl sm:text-2xl font-mono font-semibold tabular-nums text-white">{value}</div><div className="mt-1 text-xs font-mono text-slate-500">{caption}</div></div>)}
     </div>}
+
+    {show('OPERATOR', 'MAINTENANCE') && <Suspense fallback={<div className="surface-panel p-4 text-xs font-mono text-slate-400">Loading 3D view…</div>}>
+      <EngineViewer3D engineId={runtime.engineId ?? null} highlights={state?.highlights} api={runtime.api}
+        injected={training ? activeFaults.flatMap((f) => (f.components ?? []).map((c) => ({ component_id: c, reason: `${f.fault_id} ${title(f.name)} (injected)` }))) : []} />
+    </Suspense>}
+
+    {show('OPERATOR', 'MAINTENANCE') && <section className="surface-panel p-4 sm:p-5 rounded-sm">
+      <h3 className="text-sm font-semibold text-white tracking-tight">Prognosis and maintenance</h3>
+      <div className="mt-3 grid grid-cols-1 lg:grid-cols-3 gap-3 text-xs font-mono">
+        <div className="rounded-sm border border-surface-border p-3">
+          <div className="text-slate-300">Time to limit</div>
+          {ttl.length ? ttl.map((x) => <div key={x.channel} className="mt-1 text-slate-400">{channelLabel(labels, x.channel)} reaches its limit ({num(x.limit, 1)}) in about {num(x.time_to_limit_s / 60, 0)} min <span className="text-slate-500">({num(x.low_s / 60, 0)}–{num(x.high_s / 60, 0)} min)</span></div>) : <div className="mt-1 text-slate-500">No significant trend toward a limit</div>}
+          {baseline && show('ENGINEER', 'MAINTENANCE') && <div className="mt-2 text-slate-500">Normal-behaviour baseline v{baseline.version} · {baseline.learning ? 'learning' : `paused: ${baseline.reason}`}</div>}
+          <div className="mt-3 text-slate-300">Remaining useful life</div>
+          {rul?.status === 'OK'
+            ? <><div className="mt-1 text-white tabular-nums">{num(rul.rul_h, 0)} h <span className="text-slate-500">({num(rul.rul_lower_h, 0)}–{num(rul.rul_upper_h, 0)} h, {rul.coverage_target == null ? NO_DATA : num(rul.coverage_target * 100, 0)} % band)</span></div>
+                <div className="text-slate-500">{rul.trained_on}</div></>
+            : <div className="mt-1 text-slate-500">{rul?.reason ?? NO_DATA}</div>}
+        </div>
+        <div className="rounded-sm border border-surface-border p-3">
+          <div className="text-slate-300">Mission reliability</div>
+          {rel ? <><div className="mt-1 text-lg text-white tabular-nums">{num(rel.mission_reliability * 100, 2)}%</div>
+            <div className="text-slate-500">95 % CI {num(rel.ci_lower * 100, 2)}–{num(rel.ci_upper * 100, 2)} % · {rel.mission_profile}</div>
+            {rel.limiting_component && <div className="text-slate-400">Weakest part: {componentLabel(labels, rel.limiting_component)}</div>}</> : <div className="mt-1 text-slate-500">{NO_DATA}</div>}
+        </div>
+        <div className="rounded-sm border border-surface-border p-3">
+          <div className="text-slate-300">Work orders</div>
+          {orders.length ? orders.map((w) => <div key={w.id} className="mt-2"><div className="text-slate-200">{w.title}</div><div className="text-slate-500">{w.ata_chapter ? `ATA ${w.ata_chapter} · ` : ''}{w.status}</div><div className="text-slate-400">{w.action}</div>
+            <div className="mt-1 flex gap-2">{w.status === 'OPEN' && <button onClick={() => void run(() => runtime.api(`/api/v1/work_orders/${encodeURIComponent(w.id)}/transition`, 'POST', { to: 'IN_WORK', by: 'console' }), 'Work order in work')} className="rounded-sm border border-surface-border px-2 py-1 hover:bg-white/5">In work</button>}
+              <button onClick={() => void run(() => runtime.api(`/api/v1/work_orders/${encodeURIComponent(w.id)}/transition`, 'POST', { to: 'SIGNED_OFF', by: 'console operator' }), 'Signed off - repair applied')} className="rounded-sm border border-surface-border px-2 py-1 hover:bg-white/5">Sign off</button></div></div>) : <div className="mt-1 text-slate-500">No open work order</div>}
+        </div>
+      </div>
+    </section>}
 
     <div className={`grid grid-cols-1 gap-4 ${show('ENGINEER', 'MAINTENANCE') && show('OPERATOR', 'MISSION') ? 'xl:grid-cols-[1.2fr_0.8fr]' : ''}`}>
       {show('ENGINEER', 'MAINTENANCE') && <section className="surface-panel p-4 sm:p-5 rounded-sm">
@@ -223,37 +264,6 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
       </section>}
     </div>
 
-    {show('OPERATOR', 'MAINTENANCE') && <Suspense fallback={<div className="surface-panel p-4 text-xs font-mono text-slate-400">Loading 3D view…</div>}>
-      <EngineViewer3D engineId={runtime.engineId ?? null} highlights={state?.highlights} api={runtime.api} />
-    </Suspense>}
-
-    {show('OPERATOR', 'MAINTENANCE') && <section className="surface-panel p-4 sm:p-5 rounded-sm">
-      <h3 className="text-sm font-semibold text-white tracking-tight">Prognosis and maintenance</h3>
-      <div className="mt-3 grid grid-cols-1 lg:grid-cols-3 gap-3 text-xs font-mono">
-        <div className="rounded-sm border border-surface-border p-3">
-          <div className="text-slate-300">Time to limit</div>
-          {ttl.length ? ttl.map((x) => <div key={x.channel} className="mt-1 text-slate-400">{x.channel} → {x.limit} in {num(x.time_to_limit_s / 60, 0)} min <span className="text-slate-500">({num(x.low_s / 60, 0)}–{num(x.high_s / 60, 0)})</span></div>) : <div className="mt-1 text-slate-500">No significant trend toward a limit</div>}
-          {baseline && <div className="mt-2 text-slate-500">Baseline v{baseline.version} · {baseline.learning ? 'learning' : `held: ${baseline.reason}`}</div>}
-          <div className="mt-3 text-slate-300">Remaining useful life</div>
-          {rul?.status === 'OK'
-            ? <><div className="mt-1 text-white tabular-nums">{num(rul.rul_h, 0)} h <span className="text-slate-500">({num(rul.rul_lower_h, 0)}–{num(rul.rul_upper_h, 0)} h, {rul.coverage_target == null ? NO_DATA : num(rul.coverage_target * 100, 0)} % band)</span></div>
-                <div className="text-slate-500">{rul.trained_on}</div></>
-            : <div className="mt-1 text-slate-500">{rul?.reason ?? NO_DATA}</div>}
-        </div>
-        <div className="rounded-sm border border-surface-border p-3">
-          <div className="text-slate-300">Mission reliability</div>
-          {rel ? <><div className="mt-1 text-lg text-white tabular-nums">{num(rel.mission_reliability * 100, 2)}%</div>
-            <div className="text-slate-500">95 % CI {num(rel.ci_lower * 100, 2)}–{num(rel.ci_upper * 100, 2)} % · {rel.mission_profile}</div>
-            {rel.limiting_component && <div className="text-slate-400">Limiting: {rel.limiting_component}</div>}</> : <div className="mt-1 text-slate-500">{NO_DATA}</div>}
-        </div>
-        <div className="rounded-sm border border-surface-border p-3">
-          <div className="text-slate-300">Work orders</div>
-          {orders.length ? orders.map((w) => <div key={w.id} className="mt-2"><div className="text-slate-200">{w.title}</div><div className="text-slate-500">{w.ata_chapter ? `ATA ${w.ata_chapter} · ` : ''}{w.status}</div><div className="text-slate-400">{w.action}</div>
-            <div className="mt-1 flex gap-2">{w.status === 'OPEN' && <button onClick={() => void run(() => runtime.api(`/api/v1/work_orders/${encodeURIComponent(w.id)}/transition`, 'POST', { to: 'IN_WORK', by: 'console' }), 'Work order in work')} className="rounded-sm border border-surface-border px-2 py-1 hover:bg-white/5">In work</button>}
-              <button onClick={() => void run(() => runtime.api(`/api/v1/work_orders/${encodeURIComponent(w.id)}/transition`, 'POST', { to: 'SIGNED_OFF', by: 'console operator' }), 'Signed off - repair applied')} className="rounded-sm border border-surface-border px-2 py-1 hover:bg-white/5">Sign off</button></div></div>) : <div className="mt-1 text-slate-500">No open work order</div>}
-        </div>
-      </div>
-    </section>}
 
     {show('MISSION') && <RoutePlannerPanel engineId={runtime.engineId ?? null} api={runtime.api} />}
 
@@ -262,8 +272,8 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
 
     {show('ENGINEER') && <section className="surface-panel p-4 sm:p-5 rounded-sm">
       <div className="flex items-center justify-between gap-3"><div><h3 className="font-semibold text-white">Live engine channels</h3><p className="text-xs text-slate-500 mt-1">From the v1 state message · {state?.evidence_class ?? 'SIMULATION'} evidence</p></div><Radio className="w-4 h-4 text-slate-500" /></div>
-      {readings.length ? <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2">{readings.map(([name, r]) => <div key={name} className="rounded border border-white/[0.06] bg-black/10 px-3 py-2"><div className="truncate text-xs text-slate-500" title={name}>{name.replace(/_/g, ' ')}{r.quality !== 'OK' ? ` · ${r.quality}` : ''}</div><div className="mt-1 text-sm font-medium tabular-nums text-slate-200">{num(r.value, 2)}<span className="ml-1 text-xs text-slate-500">{r.unit}</span></div></div>)}</div> : <div className="mt-4 text-sm text-slate-500">Waiting for calibrated engine frames…</div>}
+      {readings.length ? <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2">{readings.map(([name, r]) => <div key={name} className="rounded border border-white/[0.06] bg-black/10 px-3 py-2"><div className="truncate text-xs text-slate-500" title={name}>{channelLabel(labels, name)}{r.quality !== 'OK' ? ` · ${r.quality}` : ''}</div><div className="mt-1 text-sm font-medium tabular-nums text-slate-200">{num(r.value, 2)}<span className="ml-1 text-xs text-slate-500">{r.unit}</span></div></div>)}</div> : <div className="mt-4 text-sm text-slate-500">Waiting for calibrated engine frames…</div>}
     </section>}
     <div className="flex items-start gap-2 px-1 text-xs leading-relaxed text-slate-600"><CircleHelp className="w-3.5 h-3.5 shrink-0 mt-0.5" /><span>This console runs virtual plant data (SIMULATION evidence). Detection, isolation and status read only the measured channels; injected scenarios are shown for training only.</span></div>
-  </div>;
+  </div></LabelsContext.Provider>;
 }
