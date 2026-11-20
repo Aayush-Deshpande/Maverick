@@ -19,7 +19,7 @@ import uuid
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Literal, Optional, Set
 
-from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Depends, HTTPException, Query, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, ConfigDict, Field
 
 from backend.faults.manager import FaultManager, RuntimeAdapter
@@ -28,6 +28,8 @@ from backend.faults.registry import FaultRejected, load_fault_registry
 from backend.physics.engine_config import load_engine_config
 from backend.maintenance.work_orders import WorkOrderStore
 from backend.mission.executive import list_missions
+from backend.recording.recorder import list_recordings, read_states, recordings_dir
+from backend.recording.replay import compare
 from backend.server.security import COMMAND_LOG, command_guard
 from backend.server.state_builder import build_state
 
@@ -96,6 +98,9 @@ class Services:
                           rate_hz_actual=None if ch.rate_hz is None else round(ch.rate_hz, 2), levers=levers,
                           maintenance=self.work_orders.open_orders(engine_id))
         ch.last_message = msg.model_dump_json()
+        rec = getattr(self.hub.runtimes.get(engine_id), "recorder", None)
+        if rec is not None:
+            rec.add_state(ch.last_message)                       # M5-04: what the operator saw, for replay
         return ch.last_message
 
 
@@ -136,6 +141,11 @@ class AlertCommand(BaseModel):
     model_config = ConfigDict(extra="forbid")
     alert_id: Optional[str] = Field(default=None, max_length=200, description="omit to acknowledge every alert")
     duration_s: Optional[float] = Field(default=None, gt=0, le=86400)
+
+
+class RecordingCommand(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    action: Literal["START", "STOP"]
 
 
 class MissionCommand(BaseModel):
@@ -272,6 +282,38 @@ def v1_alert_ack(engine_id: str, body: AlertCommand, cmd: Dict[str, Any] = Depen
     if any(a.level == "NO-GO" for a in rt.alert_manager.alerts.values()) or body.alert_id is None:
         rt.status_evaluator.acknowledge()                     # acknowledging the warning also releases the latch
     return {"engine_id": engine_id, "acknowledged": ids}
+
+
+@router.post("/api/v1/engines/{engine_id}/recording")
+def v1_recording(engine_id: str, body: RecordingCommand, cmd: Dict[str, Any] = Depends(command_guard)) -> Dict[str, Any]:
+    services().channel(engine_id)
+    rt = services().hub.runtimes[engine_id]
+    return {"engine_id": engine_id, "recording": rt.start_recording() if body.action == "START" else rt.stop_recording()}
+
+
+@router.get("/api/v1/recordings")
+def v1_recordings() -> Dict[str, Any]:
+    return {"recordings": list_recordings()}
+
+
+def _sortie_dir(sortie_id: str):
+    d = recordings_dir() / sortie_id
+    if not sortie_id.replace("-", "").replace("_", "").isalnum() or not (d / "meta.json").exists():
+        raise HTTPException(404, {"code": "NO_SUCH_RECORDING", "message": f"no recording {sortie_id!r}"})
+    return d
+
+
+@router.get("/api/v1/recordings/{sortie_id}/states")
+def v1_recording_states(sortie_id: str, offset: int = Query(0, ge=0), limit: int = Query(200, ge=1, le=2000)) -> Dict[str, Any]:
+    """Replay: the recorded state messages, page by page, flagged as replay (the UI shows a REPLAY badge)."""
+    return {"sortie_id": sortie_id, "source": "REPLAY", "offset": offset,
+            "states": read_states(_sortie_dir(sortie_id), offset, limit)}
+
+
+@router.post("/api/v1/recordings/{sortie_id}/reanalyse")
+def v1_recording_reanalyse(sortie_id: str, cmd: Dict[str, Any] = Depends(command_guard)) -> Dict[str, Any]:
+    d = _sortie_dir(sortie_id)
+    return compare(d, json.loads((d / "meta.json").read_text(encoding="utf-8")))
 
 
 @router.get("/api/v1/missions")

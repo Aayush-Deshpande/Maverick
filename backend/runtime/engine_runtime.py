@@ -46,6 +46,7 @@ from backend.mission.glide import UAVGlidePolar
 from backend.diagnose.directive import directive, status_hypotheses
 from backend.diagnose.isolator import BayesianIsolator
 from backend.mission.executive import MissionExecutive, applies, load_mission
+from backend.recording.recorder import SortieRecorder
 from backend.status.alerts import AlertManager
 from backend.status.evaluator import StatusEvaluator
 
@@ -178,6 +179,8 @@ class EngineRuntime:
         self._cached_hypotheses: List[Dict[str, Any]] = []
         self.work_orders: Optional[Any] = None             # shared WorkOrderStore, attached by the API services (M4-05)
         self.mission: Optional[MissionExecutive] = None     # M5-01: drives the levers when a mission runs
+        self.recorder: Optional[SortieRecorder] = None       # M5-04 sortie recording
+        self.ticks_since_calibration = 0
         self.status_evaluator = StatusEvaluator(self.cfg)
         self.alert_manager = AlertManager()
 
@@ -210,6 +213,7 @@ class EngineRuntime:
         with self._lock:
             self.detector = ResidualDetector.calibrate(frames, alpha=0.01)
             self.isolator = BayesianIsolator(self.engine_id, self.detector.cal.channel_names())
+            self.ticks_since_calibration = 0
             self.trends = TrendTracker(self.cfg.limits or {}, self.detector.cal.channel_names(), self.detector.cal.sigma)
             self.adaptive = AdaptiveBaseline(self.detector.cal, self.tail_id)
             self.levers = Levers()
@@ -643,7 +647,35 @@ class EngineRuntime:
             if self.sensor_levers.has_active_faults:
                 truth.active_faults.extend(self.sensor_levers.active_fault_truths(frame.t))
 
-            return self.ingest(frame, truth, heavy=heavy)
+            if self.recorder is not None:
+                self.recorder.add_frame(frame)             # the measured frame, before inference touches it
+            t = self.ingest(frame, truth, heavy=heavy)
+            self.ticks_since_calibration += 1
+            if self.recorder is not None:
+                self.recorder.add_tick(t)
+            return t
+
+    def start_recording(self, root: Optional[Any] = None) -> Dict[str, Any]:
+        """Record from now. Re-analysis is exact only when this starts right after calibration
+        (meta.ticks_since_calibration == 0); otherwise it is reported as not comparable."""
+        with self._lock:
+            if self.recorder is not None:
+                return self.recorder.meta
+            m = self.mission
+            self.recorder = SortieRecorder(self.engine_id, self.tail_id, self.seed, self._warmup_ticks,
+                                           self.source.now(), None if m is None else m.mission["id"], root=root)
+            self.recorder.meta.update(ticks_since_calibration=self.ticks_since_calibration,
+                                      mission_t0=None if m is None else m.t0)
+            self.recorder._write_meta()
+            return self.recorder.meta
+
+    def stop_recording(self) -> Optional[Dict[str, Any]]:
+        with self._lock:
+            if self.recorder is None:
+                return None
+            meta = self.recorder.stop(self.source.now())
+            self.recorder = None
+            return meta
 
     # ---- presentation ------------------------------------------------------------------------
     def profile(self) -> Dict[str, Any]:

@@ -7,7 +7,7 @@ RESUME HERE  (last updated 20 Nov 2026, overnight autonomous session)
 =====================================================================================================================
 Phase:        PHASE 1 (M0) cards done (M0-01..M0-12; M0-10 reduced, see its entry). NEXT: CHECKPOINT PHASE 1 (manual
               look by Prasad), then Phase 2 in demo-first order: M1-01 sim package + clock, M1-02 atmosphere, ...
-Card:         M4-02 done (trends/time-to-limit); M3-08 matrix run pending (reports/evaluation); M3-08 report + M5-01/02 missions done; NEXT M5-04/05 recorder + replay, M5-06 sortie report; open: M4-01/03 fleet RUL. Prasad away until ~08:45 20 Nov with full
+Card:         M4-02 done (trends/time-to-limit); M3-08 matrix run pending (reports/evaluation); M3-08 report + M5-01/02 missions done; M5-04/05 done; NEXT M5-06 sortie report, then M6 views; open: M4-01/03 fleet RUL, T-DET-1/2 channels. Prasad away until ~08:45 20 Nov with full
               permission (installs to D:, any package/model/dataset): KEEP BUILDING card after card, never wait.
 Branch:       Beta (pushed by Prasad up to ae82c70; later commits local). main untouched (9b5942e).
 Last commit:  M3-04 on Beta (see git log -1).
@@ -887,3 +887,14 @@ M5-01/02: configs/missions/ (mission/1: high_altitude_leh, hot_weather_thar, rap
   (125.9 kPa) and decays above (94.7); Thar ISA+30 hotter on CHT/coolant/oil/EGT; rapid throttle 39 transitions.
 QUESTION (new): the 915 iS fixed-pitch installation overspeeds at high lever above ~12 kft (ECU fuel cut). Real 915
   UAV installations usually have a constant-speed prop; may I set propeller_governor true for the 915 (config change)?
+
+=== 20 Nov 2026  M5-04/05 sortie recorder, replay, re-analysis (T-MIS-3)
+backend/recording/recorder.py: var/recordings/<sortie>/ meta.json (engine, tail, seed, warm-up, mission + t0, config
+  hash, ticks_since_calibration), frames.jsonl.gz (measured Frames before inference), timeline.jsonl (status level,
+  reason codes, confirmed, top-3 hypotheses per tick), states.jsonl.gz (published state messages, written by the
+  API services). backend/recording/replay.py: rebuild the tail from seed, ingest the recorded Frames with NO truth,
+  compare timelines; a recording that did not start right after calibration is reported 'not comparable'.
+  API: POST /api/v1/engines/{id}/recording {START|STOP}, GET /api/v1/recordings, GET /api/v1/recordings/{id}/states
+  (paged, source REPLAY), POST /api/v1/recordings/{id}/reanalyse. backend/recording added to the no-truth-leak scan.
+Result: a 240-tick Thar sortie with F23 injected re-analyses to an IDENTICAL decision timeline from the measurements
+  alone (tests/recording/test_replay.py). Old-recording converter (N1) still open.

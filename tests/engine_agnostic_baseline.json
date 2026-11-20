@@ -69,6 +69,11 @@
     "cyl": 0,
     "model": 0
   },
+  "backend/mission/executive.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
   "backend/ml/anomaly_detector.py": {
     "brand": 1,
     "cyl": 0,
@@ -105,6 +110,16 @@
     "model": 0
   },
   "backend/prognose/trends.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/recording/recorder.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/recording/replay.py": {
     "brand": 0,
     "cyl": 0,
     "model": 0
