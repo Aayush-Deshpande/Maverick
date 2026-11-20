@@ -7,8 +7,8 @@ For every engine and every applicable PHYSICAL fault, inject through one of the 
   gcs      POST /api/control SET_FAULT {legacy id}        (Tactical GCS, Rotax 912 legacy ids)
 then advance the simulation (1 s per tick) through ramp + detection window, building the SAME state message every
 client receives, and record: shown in active_faults, status left GO, fault in the top-3 hypotheses, and whether the
-3D highlight equals the registry components for that engine when it is the top hypothesis. Between faults: clear,
-acknowledge, cool down. Evidence class SIMULATION. Output: docs/verification/inject_anywhere_<date>.csv + summary.
+3D highlight equals the registry components for that engine when it is the top hypothesis. Every round starts on freshly
+calibrated engines (no aftermath of the previous fault). Evidence class SIMULATION. Output: docs/verification/inject_anywhere_<date>.csv + summary.
 
 Run: python scripts/verify/inject_anywhere.py [engine_id ...]   (about 20-40 min for all five engines)
 """
@@ -29,23 +29,28 @@ from fastapi.testclient import TestClient                       # noqa: E402
 import backend.server.api_v1 as api_v1                          # noqa: E402
 import backend.server.engine_api as legacy_api                  # noqa: E402
 from backend.runtime.hub import RuntimeHub                      # noqa: E402
+from backend.server.legacy_adapter import legacy_command         # noqa: E402
+from backend.server.schemas import ControlCommand                # noqa: E402
 
 RAMP_S = 30                     # short ramp so the check exercises detection, not patience
-COOL_S = 300                    # simulated cool-down between faults
 TOP_K = 3
 
 
-def main(engines: list[str]) -> int:
+def fresh_hub(engines: list[str]) -> RuntimeHub:
+    """Every round starts from healthy, calibrated engines: a previous fault's aftermath (a drained battery, a hot
+    engine, a latched status) must not be judged as the next fault."""
     hub = RuntimeHub(engines or None, seed=0, warmup_ticks=600)
     hub.calibrate_all()
     legacy_api._hub = hub
     api_v1._services = api_v1.Services(hub)
+    return hub
+
+
+def main(engines: list[str]) -> int:
+    hub = fresh_hub(engines)
     app = FastAPI()
     app.include_router(legacy_api.router)
     app.include_router(api_v1.router)
-    from backend.server.legacy_adapter import legacy_command
-    from backend.server.schemas import ControlCommand
-
     @app.post("/api/control")                                   # the Tactical GCS route, as backend/server/main.py
     def control(cmd: ControlCommand):
         return legacy_command(cmd)
@@ -57,7 +62,10 @@ def main(engines: list[str]) -> int:
     twin_modes = {p["engine_id"]: {f["mode"] for f in p["faults"]} for p in client.get("/api/engines").json()["engines"]}
     gcs_engine = "rotax_912is"                                   # /api/control drives the legacy 912 only
     rows, surface_turn = [], 0
-    for _ in range(max(len(q) for q in queue.values())):
+    for round_no in range(max(len(q) for q in queue.values())):
+        if round_no:
+            hub = fresh_hub(engines)
+            svc = api_v1.services()
         live = {}
         for e in hub.engines:
             if not queue[e]:
@@ -117,11 +125,6 @@ def main(engines: list[str]) -> int:
             print(f"{e:16s} {row['fault']} via {row['surface']:7s} accepted={row['accepted']} active={row['shown_active']} "
                   f"not-GO={row['status_left_go']} top3={row['detected_top3']} ({row['detect_s']}s) top1={row['top1']} "
                   f"highlight={'OK' if row['highlight_ok'] else row['lit_parts'] or '-'}", flush=True)
-        for _ in range(COOL_S):
-            hub.tick_all()
-        for e in live:
-            client.post(f"/api/v1/engines/{e}/status/acknowledge", json={})
-            svc.build_message(e)
     out = ROOT / "docs" / "verification" / f"inject_anywhere_{dt.date.today():%Y-%m-%d}.csv"
     out.parent.mkdir(parents=True, exist_ok=True)
     with out.open("w", newline="", encoding="utf-8") as fh:
