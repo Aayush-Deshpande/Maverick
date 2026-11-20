@@ -1,0 +1,293 @@
+{
+ "schema_version": "mission/1",
+ "id": "rapid_throttle",
+ "title": "Rapid throttle transitions - 20 idle/take-off cycles",
+ "ps_item": "E rapid throttle transitions",
+ "engines": "ALL",
+ "provenance": {
+  "status": "ASSUMED",
+  "ref": "P Part 4 Step 5.2: 20 cycles idle <-> take-off every 20 s"
+ },
+ "phases": [
+  {
+   "name": "CYCLE_1_IDLE",
+   "duration_s": 20,
+   "throttle_pct": 20,
+   "altitude_ft": 3000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "CYCLE_1_TAKEOFF",
+   "duration_s": 20,
+   "throttle_pct": 100,
+   "altitude_ft": 3000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "CYCLE_2_IDLE",
+   "duration_s": 20,
+   "throttle_pct": 20,
+   "altitude_ft": 3000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "CYCLE_2_TAKEOFF",
+   "duration_s": 20,
+   "throttle_pct": 100,
+   "altitude_ft": 3000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "CYCLE_3_IDLE",
+   "duration_s": 20,
+   "throttle_pct": 20,
+   "altitude_ft": 3000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "CYCLE_3_TAKEOFF",
+   "duration_s": 20,
+   "throttle_pct": 100,
+   "altitude_ft": 3000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "CYCLE_4_IDLE",
+   "duration_s": 20,
+   "throttle_pct": 20,
+   "altitude_ft": 3000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "CYCLE_4_TAKEOFF",
+   "duration_s": 20,
+   "throttle_pct": 100,
+   "altitude_ft": 3000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "CYCLE_5_IDLE",
+   "duration_s": 20,
+   "throttle_pct": 20,
+   "altitude_ft": 3000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "CYCLE_5_TAKEOFF",
+   "duration_s": 20,
+   "throttle_pct": 100,
+   "altitude_ft": 3000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "CYCLE_6_IDLE",
+   "duration_s": 20,
+   "throttle_pct": 20,
+   "altitude_ft": 3000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "CYCLE_6_TAKEOFF",
+   "duration_s": 20,
+   "throttle_pct": 100,
+   "altitude_ft": 3000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "CYCLE_7_IDLE",
+   "duration_s": 20,
+   "throttle_pct": 20,
+   "altitude_ft": 3000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "CYCLE_7_TAKEOFF",
+   "duration_s": 20,
+   "throttle_pct": 100,
+   "altitude_ft": 3000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "CYCLE_8_IDLE",
+   "duration_s": 20,
+   "throttle_pct": 20,
+   "altitude_ft": 3000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "CYCLE_8_TAKEOFF",
+   "duration_s": 20,
+   "throttle_pct": 100,
+   "altitude_ft": 3000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "CYCLE_9_IDLE",
+   "duration_s": 20,
+   "throttle_pct": 20,
+   "altitude_ft": 3000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "CYCLE_9_TAKEOFF",
+   "duration_s": 20,
+   "throttle_pct": 100,
+   "altitude_ft": 3000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "CYCLE_10_IDLE",
+   "duration_s": 20,
+   "throttle_pct": 20,
+   "altitude_ft": 3000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "CYCLE_10_TAKEOFF",
+   "duration_s": 20,
+   "throttle_pct": 100,
+   "altitude_ft": 3000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "CYCLE_11_IDLE",
+   "duration_s": 20,
+   "throttle_pct": 20,
+   "altitude_ft": 3000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "CYCLE_11_TAKEOFF",
+   "duration_s": 20,
+   "throttle_pct": 100,
+   "altitude_ft": 3000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "CYCLE_12_IDLE",
+   "duration_s": 20,
+   "throttle_pct": 20,
+   "altitude_ft": 3000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "CYCLE_12_TAKEOFF",
+   "duration_s": 20,
+   "throttle_pct": 100,
+   "altitude_ft": 3000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "CYCLE_13_IDLE",
+   "duration_s": 20,
+   "throttle_pct": 20,
+   "altitude_ft": 3000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "CYCLE_13_TAKEOFF",
+   "duration_s": 20,
+   "throttle_pct": 100,
+   "altitude_ft": 3000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "CYCLE_14_IDLE",
+   "duration_s": 20,
+   "throttle_pct": 20,
+   "altitude_ft": 3000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "CYCLE_14_TAKEOFF",
+   "duration_s": 20,
+   "throttle_pct": 100,
+   "altitude_ft": 3000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "CYCLE_15_IDLE",
+   "duration_s": 20,
+   "throttle_pct": 20,
+   "altitude_ft": 3000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "CYCLE_15_TAKEOFF",
+   "duration_s": 20,
+   "throttle_pct": 100,
+   "altitude_ft": 3000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "CYCLE_16_IDLE",
+   "duration_s": 20,
+   "throttle_pct": 20,
+   "altitude_ft": 3000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "CYCLE_16_TAKEOFF",
+   "duration_s": 20,
+   "throttle_pct": 100,
+   "altitude_ft": 3000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "CYCLE_17_IDLE",
+   "duration_s": 20,
+   "throttle_pct": 20,
+   "altitude_ft": 3000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "CYCLE_17_TAKEOFF",
+   "duration_s": 20,
+   "throttle_pct": 100,
+   "altitude_ft": 3000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "CYCLE_18_IDLE",
+   "duration_s": 20,
+   "throttle_pct": 20,
+   "altitude_ft": 3000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "CYCLE_18_TAKEOFF",
+   "duration_s": 20,
+   "throttle_pct": 100,
+   "altitude_ft": 3000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "CYCLE_19_IDLE",
+   "duration_s": 20,
+   "throttle_pct": 20,
+   "altitude_ft": 3000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "CYCLE_19_TAKEOFF",
+   "duration_s": 20,
+   "throttle_pct": 100,
+   "altitude_ft": 3000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "CYCLE_20_IDLE",
+   "duration_s": 20,
+   "throttle_pct": 20,
+   "altitude_ft": 3000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "CYCLE_20_TAKEOFF",
+   "duration_s": 20,
+   "throttle_pct": 100,
+   "altitude_ft": 3000,
+   "isa_dev_c": 0
+  }
+ ]
+}

@@ -8,8 +8,8 @@ hours, the threshold-only baseline and an independent plant variant. Evidence cl
   run for the registry's ramp + detect window + MARGIN_S. Recorded: first confirmed detection (ours), first
   CAUTION/NO-GO (baseline), per-frame score after the ramp (ROC positives, negatives = nominal frames of the same
   tail), and the isolator's top-1 / top-3 / ambiguity-group hit.
-- Independent plant: the same detector against a plant whose sensor noise is VARIANT_NOISE x the calibrated value
-  (the detector was not tuned on it) - nominal false alarms and detection are re-measured.
+- Independent plant: a plant variant whose sensors are VARIANT_NOISE x noisier than the datasheet values the
+  method was developed on, calibrated on itself like any new tail - nominal false alarms are re-measured.
 Run: python -m backend.evaluation.run_matrix [engine_id ...]  -> reports/evaluation/detection_<date>.csv + summary.md
 Reads plant truth only to label runs (failure, injected fault): this is an offline evaluator, not inference.
 """
@@ -58,15 +58,8 @@ def _legs(seed: int, hours: float):
         yield (rng.uniform(*ENVELOPE["throttle"]), alt, ISA_SL_C - ISA_LAPSE_C_PER_FT * alt + rng.uniform(*ENVELOPE["isa_dev_c"]))
 
 
-def _variant(src) -> None:
-    src.sensors.ph = {k: (v * VARIANT_NOISE if k.startswith("noise_") and isinstance(v, float) else v)
-                      for k, v in src.sensors.ph.items()}
-
-
 def nominal(engine: str, seed: int, hours: float = NOMINAL_HOURS, variant: bool = False) -> Dict:
-    src, det = calibrated(engine, seed)
-    if variant:
-        _variant(src)
+    src, det = calibrated(engine, seed, VARIANT_NOISE if variant else 1.0)
     ev = StatusEvaluator(src.cfg)
     ep = base_ep = 0
     prev = base_prev = False

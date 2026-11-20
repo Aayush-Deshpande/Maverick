@@ -45,6 +45,7 @@ from backend.mission.reliability import (
 from backend.mission.glide import UAVGlidePolar
 from backend.diagnose.directive import directive, status_hypotheses
 from backend.diagnose.isolator import BayesianIsolator
+from backend.mission.executive import MissionExecutive, applies, load_mission
 from backend.status.alerts import AlertManager
 from backend.status.evaluator import StatusEvaluator
 
@@ -78,6 +79,7 @@ class Tick:
     diagnosis: Optional[Dict[str, Any]] = None
     # M3-05 ranked isolation hypotheses (IsolationHypothesis.to_dict), published while an alarm is active
     hypotheses: List[Dict[str, Any]] = field(default_factory=list)
+    mission: Optional[Dict[str, Any]] = None          # M5-01 mission progress (None = manual flight)
     status: Optional[Dict[str, Any]] = None           # backend/status evaluator (M2-01)
     # Transitions raised on this tick only (usually empty). The client appends them
     # to its timeline; /events backfills after a reconnect.
@@ -175,6 +177,7 @@ class EngineRuntime:
         self.isolator: Optional[BayesianIsolator] = None          # built on the detector's channels at calibration
         self._cached_hypotheses: List[Dict[str, Any]] = []
         self.work_orders: Optional[Any] = None             # shared WorkOrderStore, attached by the API services (M4-05)
+        self.mission: Optional[MissionExecutive] = None     # M5-01: drives the levers when a mission runs
         self.status_evaluator = StatusEvaluator(self.cfg)
         self.alert_manager = AlertManager()
 
@@ -519,11 +522,12 @@ class EngineRuntime:
                         _dmg = min(0.90, weight * 0.75 + dmg_state.total)
                         _cyl_dmg[_comp] = max(_cyl_dmg.get(_comp, 0.0), _dmg)
                 self.reliability_engine.set_damage(_cyl_dmg)
-                rel_result = self.reliability_engine.analytic_reliability(profile=ISR_18H_PROFILE)
+                profile = (self.mission.remaining_profile(frame.t) if self.mission is not None else None) or ISR_18H_PROFILE
+                rel_result = self.reliability_engine.analytic_reliability(profile=profile)
                 # forward Monte Carlo over the planned profile with component hazards and the twin's time-to-limit
                 # crossings (M4-04, I-09); the analytic per-component survival stays as the ranking for the UI
                 mc = self.reliability_engine.simulate_with_limits(
-                    ISR_18H_PROFILE, n_trials=MC_TRIALS,
+                    profile, n_trials=MC_TRIALS,
                     limit_crossings=(self._cached_prognostics or {}).get("time_to_limit", []))
                 self._cached_reliability = {
                     "mission_reliability": mc["reliability"],
@@ -534,7 +538,7 @@ class EngineRuntime:
                     "failure_phase_distribution": mc["failure_phase_distribution"],
                     "median_abort_hours": mc["median_abort_hours"],
                     "mission_hours": mc["mission_hours"],
-                    "mission_profile": ISR_18H_PROFILE.name,
+                    "mission_profile": profile.name,
                     "hazard_source": "PLACEHOLDER component rates (backend/mission/reliability.py DEFAULT_COMPONENTS)",
                     "per_component_survival": {
                         name: round(value, 5)
@@ -568,7 +572,8 @@ class EngineRuntime:
 
             verdict = self.status_evaluator.evaluate(frame.t, frame, engine_state=frame.engine_state,
                                                      quarantined=_quarantined_lower,
-                                                     hypotheses=status_hypotheses(self._cached_hypotheses))
+                                                     hypotheses=status_hypotheses(self._cached_hypotheses),
+                                                     time_to_limit=self._ttl_for_status(frame.t))
             alerts = [a.to_dict() for a in self.alert_manager.update(frame.t, verdict)]
             if self.adaptive is not None:                  # M4-06: learn only while provably nominal
                 open_orders = len(self.work_orders.open_orders(self.engine_id)) if self.work_orders is not None else 0
@@ -590,14 +595,39 @@ class EngineRuntime:
                 glide=glide_dict,
                 diagnosis=diagnosis_dict,
                 hypotheses=list(self._cached_hypotheses),
+                mission=None if self.mission is None else self.mission.progress(frame.t),
                 status=status,
                 events=tick_events,
             )
             self.buffer.append(t)
             return t
 
+    def _ttl_for_status(self, t: float) -> List[Dict[str, Any]]:
+        """Time-to-limit items with the remaining mission time (status CAUTION when a limit falls inside it)."""
+        if self.mission is None or self.mission.state != "RUNNING":
+            return []
+        rem = self.mission.remaining_s(t)
+        return [{**p, "mission_remaining_s": rem} for p in (self._cached_prognostics or {}).get("time_to_limit", [])]
+
+    def start_mission(self, mission_id: str) -> Dict[str, Any]:
+        m = load_mission(mission_id)
+        if not applies(m, self.engine_id):
+            raise ValueError(f"mission {mission_id} is not defined for {self.engine_id}")
+        with self._lock:
+            self.mission = MissionExecutive(m, t0=self.source.now())
+            return self.mission.progress(self.source.now())
+
+    def abort_mission(self) -> Optional[Dict[str, Any]]:
+        with self._lock:
+            if self.mission is None:
+                return None
+            self.mission.abort()
+            return self.mission.progress(self.source.now())
+
     def tick(self, heavy: bool = False) -> Tick:
         with self._lock:
+            if self.mission is not None:
+                self.mission.step(self.source.now(), self)
             self.levers.advance(DT)
             raw_frame, truth = self.source.step(DT, throttle_pct=self.levers.throttle_pct,
                                                 altitude_ft=self.levers.altitude_ft, oat_c=self.levers.oat_c)

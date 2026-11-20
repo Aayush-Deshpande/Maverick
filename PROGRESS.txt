@@ -7,7 +7,7 @@ RESUME HERE  (last updated 20 Nov 2026, overnight autonomous session)
 =====================================================================================================================
 Phase:        PHASE 1 (M0) cards done (M0-01..M0-12; M0-10 reduced, see its entry). NEXT: CHECKPOINT PHASE 1 (manual
               look by Prasad), then Phase 2 in demo-first order: M1-01 sim package + clock, M1-02 atmosphere, ...
-Card:         M4-02 done (trends/time-to-limit); M3-08 matrix run pending (reports/evaluation); M4-02/04/05/06/07 done; NEXT M4-01 wear + fleet and M4-03 RUL on it, then M5 missions/replay. Prasad away until ~08:45 20 Nov with full
+Card:         M4-02 done (trends/time-to-limit); M3-08 matrix run pending (reports/evaluation); M3-08 report + M5-01/02 missions done; NEXT M5-04/05 recorder + replay, M5-06 sortie report; open: M4-01/03 fleet RUL. Prasad away until ~08:45 20 Nov with full
               permission (installs to D:, any package/model/dataset): KEEP BUILDING card after card, never wait.
 Branch:       Beta (pushed by Prasad up to ae82c70; later commits local). main untouched (9b5942e).
 Last commit:  M3-04 on Beta (see git log -1).
@@ -867,3 +867,23 @@ backend/mission/reliability.py MissionReliabilityEngine.simulate_with_limits: ve
 Removed fallbacks: 'limiting_component_survival or 1.0', glide 'frame.alt or 20000.0' (glide skipped when altitude
   is missing; the fixed lat/lon stay until the M5 mission executive supplies the position).
 Tests: tests/mission/test_monte_carlo_reliability.py.
+
+=== 20 Nov 2026  M3-08 evaluation run + M5-01/02 mission executive and PS presets
+M3-08 (reports/evaluation/detection|nominal|summary_2026-11-20): 5 engines x applicable faults x sev {0.5, 1.0} x
+  test tails {1001, 1002}; 2 h random-leg nominal per tail; limits-only baseline = status evaluator; variant plant
+  = sensors x1.5 noisier, calibrated on itself (first run wrongly raised noise AFTER calibration; fixed in
+  backend/evaluation/tail.calibrated(sensor_noise_scale)). FA/FH ours: AE300 0.25, 912 0, 914 0.25, 915 16 (rev
+  limiter regime), VRDE 0; variant plant 0.25/0/0/6.5/0. Detected in window 31-70 % of cases (T-DET-1 NOT met: many
+  registry faults have no trace in the scored channels - vibration, electrical, oil quantity; weak cooling faults),
+  earlier than limits-only in almost every detected case; median AUC 0.89-1.00; top-3 isolation 48-72 %.
+  docs_site page 11 results table filled. T-DET-1/2 open: add vibration-order and electrical channels to the
+  residual, and per-cylinder/order features (next detection card).
+M5-01/02: configs/missions/ (mission/1: high_altitude_leh, hot_weather_thar, rapid_throttle, endurance_18h,
+  endurance_24h_vrde; provenance per file), backend/mission/executive.py drives EngineRuntime.set_levers on the sim
+  clock (OAT from ISA deviation at the CURRENT altitude), scheduled faults via inject_fault origin SCRIPTED,
+  remaining profile -> Monte Carlo reliability, remaining time -> status TIME_TO_LIMIT CAUTION. API GET
+  /api/v1/missions, POST /api/v1/engines/{id}/mission {START|ABORT}; state.mission (schema + types regenerated).
+  T-MIS-1 tests/mission/test_mission_presets.py: 912 MAP falls >25 % at FL200-250; 915 holds climb MAP 12.5-15 kft
+  (125.9 kPa) and decays above (94.7); Thar ISA+30 hotter on CHT/coolant/oil/EGT; rapid throttle 39 transitions.
+QUESTION (new): the 915 iS fixed-pitch installation overspeeds at high lever above ~12 kft (ECU fuel cut). Real 915
+  UAV installations usually have a constant-speed prop; may I set propeller_governor true for the 915 (config change)?

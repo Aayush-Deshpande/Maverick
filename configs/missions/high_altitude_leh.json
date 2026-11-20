@@ -1,0 +1,48 @@
+{
+ "schema_version": "mission/1",
+ "id": "high_altitude_leh",
+ "title": "High altitude - Leh to 25,000 ft",
+ "ps_item": "E high-altitude operation",
+ "engines": "ALL",
+ "provenance": {
+  "status": "PUBLIC",
+  "ref": "Leh (VILH) airfield elevation about 10,700 ft (AIP India); climb target from P Part 4 Step 5.2"
+ },
+ "phases": [
+  {
+   "name": "TAKEOFF_LEH",
+   "duration_s": 120,
+   "throttle_pct": 100,
+   "altitude_ft": 10700,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "CLIMB_1",
+   "duration_s": 900,
+   "throttle_pct": 90,
+   "altitude_ft": 18000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "CLIMB_2",
+   "duration_s": 900,
+   "throttle_pct": 90,
+   "altitude_ft": 25000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "CRUISE_FL250",
+   "duration_s": 1800,
+   "throttle_pct": 75,
+   "altitude_ft": 25000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "DESCENT",
+   "duration_s": 900,
+   "throttle_pct": 40,
+   "altitude_ft": 11000,
+   "isa_dev_c": 0
+  }
+ ]
+}

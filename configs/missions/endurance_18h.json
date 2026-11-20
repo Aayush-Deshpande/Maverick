@@ -1,0 +1,55 @@
+{
+ "schema_version": "mission/1",
+ "id": "endurance_18h",
+ "title": "Endurance - 18 h ISR loiter",
+ "ps_item": "E endurance",
+ "engines": "ALL",
+ "provenance": {
+  "status": "ASSUMED",
+  "ref": "P Part 4 Step 5.2 (18 h; a 24 h variant for the VRDE is endurance_24h_vrde)"
+ },
+ "phases": [
+  {
+   "name": "TAKEOFF",
+   "duration_s": 120,
+   "throttle_pct": 100,
+   "altitude_ft": 1500,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "CLIMB",
+   "duration_s": 1200,
+   "throttle_pct": 85,
+   "altitude_ft": 15000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "TRANSIT_OUT",
+   "duration_s": 3600,
+   "throttle_pct": 70,
+   "altitude_ft": 15000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "LOITER",
+   "duration_s": 54000,
+   "throttle_pct": 60,
+   "altitude_ft": 15000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "TRANSIT_BACK",
+   "duration_s": 3600,
+   "throttle_pct": 70,
+   "altitude_ft": 12000,
+   "isa_dev_c": 0
+  },
+  {
+   "name": "DESCENT_LAND",
+   "duration_s": 1200,
+   "throttle_pct": 35,
+   "altitude_ft": 1500,
+   "isa_dev_c": 0
+  }
+ ]
+}

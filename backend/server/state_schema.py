@@ -140,6 +140,7 @@ class StateMessage(_M):
     prognostics: Optional[Dict[str, Any]] = None
     reliability: Optional[Dict[str, Any]] = None
     maintenance: List[Dict[str, Any]] = []
+    mission: Optional[Dict[str, Any]] = Field(None, description="mission executive progress (M5); null = manual flight")
     active_faults: List[ActiveFaultOut] = []
     events_since: List[EventOut] = []
     vibration_orders: Dict[str, float] = {}

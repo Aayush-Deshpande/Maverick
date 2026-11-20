@@ -146,6 +146,7 @@ def build_state(tick: Any, seq: int, *, registry: Any = None, active_faults: Ite
         highlights=highlights,
         prognostics=tick.prognostics, reliability=tick.reliability,
         maintenance=list(maintenance),                                      # M4-05 open work orders
+        mission=getattr(tick, "mission", None),                             # M5-01 mission progress
         active_faults=faults_out, events_since=events,
         vibration_orders={k: float(v) for k, v in (f.vibration_orders or {}).items()},
         virtual_sensors={k: float(v) for k, v in (f.virtual_sensors or {}).items() if v is not None},

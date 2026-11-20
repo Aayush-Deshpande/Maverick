@@ -1,155 +1,93 @@
 # Fault Diagnosis and Isolation
 
-Bio-Inspired Sparse Novelty Coding answers whether the current engine state is unusual. It does not, and is not designed to, isolate which specific subsystem or component produced that departure. Fault isolation is an inferential problem requiring structured causal reasoning: ANUMAAN solves it through a **Bayesian Belief Network** evaluated against an aerothermal FMECA failure taxonomy, supervised by an **Extreme Value Theory (EVT) anomaly detector**, and paired with a **deterministic ATA-chapter diagnostic agent** that generates certified maintenance directives.
+Detection says *something is wrong*. Isolation says *what, where, how badly, and how sure we are*. ANUMAAN isolates faults with a Bayesian comparison of every candidate explanation against the physics-informed residual (see [Residual Analysis](08-residual-analysis.md)). It then turns the leading explanation into a directive taken word for word from the fault registry.
 
 ---
 
-## The 10-Stage Fault Management Pipeline
+## 1. Candidate explanations
 
-When sensor telemetry or physics residuals diverge, ANUMAAN executes a deterministic 10-stage protocol:
+For one engine, the isolator compares:
 
-```mermaid
-flowchart TD
-    S1["Stage 1: Normal Operation<br/>Physics residuals r*(t) conform to Gaussian white noise"] --> S2["Stage 2: Deviation Inception<br/>Latent reconstruction error s(t) crosses EVT threshold z_q"]
-    S2 --> S3["Stage 3: Anomaly Triggered<br/>Anomaly score logged; temporal persistence timer engaged"]
-    S3 --> S4["Stage 4: Fault Confirmation (Persistence)<br/>Condition persists for >= 3.0 seconds (150 cycles @ 50 Hz)<br/>Eliminates electromagnetic noise and transient spikes"]
-    S4 --> S5["Stage 5: Parity Space Fault Isolation<br/>Parity check (V_p C_s = 0) validates sensors;<br/>Confirms mechanical engine fault rather than probe failure"]
-    S5 --> S6["Stage 6: FMECA Multi-Class Classification<br/>Bayesian Network maps residual signature to failure mode"]
-    S6 --> S7["Stage 7: Severity Grading<br/>AMBER (Advisory / Tactical Derate) vs. RED (Critical / Abort)"]
-    S7 --> S8["Stage 8: Degradation Trajectory Estimation<br/>Wiener drift parameter beta(t) updated"]
-    S8 --> S9["Stage 9: Conformal RUL Prediction<br/>Outputs 95% confidence bounds [RUL_low, RUL_high]"]
-    S9 --> S10["Stage 10: Tactical Mission Mitigation<br/>Dynamic flight envelope derated; Glide polar reachability cone projected;<br/>Pilot presented with 1-click divert advisory"]
-```
+| Hypothesis | What it predicts in the residual vector $\bar z$ |
+|---|---|
+| **Nominal** | Nothing: $\bar z \sim \mathcal N(0, vI)$ |
+| **Engine fault** $f$ at location $\ell$ (each applicable registry fault F01–F37; each cylinder for cylinder faults) | Its signature scaled by an unknown severity: $\bar z \sim \mathcal N(s\,m_{f,\ell}, vI)$, $s \sim \mathcal U[0, S]$ |
+| **Sensor offset** on channel $c$ (bias or slow drift, S02/S03) | Only that sender moves: $\bar z \sim \mathcal N(b\,e_c, vI)$, $b \sim \mathcal U[-B, B]$ |
 
----
+$\bar z$ is an exponential average of the per-frame residual over about ten frames.
 
-## Anomaly Detection: Deep VAE + Extreme Value Theory (EVT)
+**Signatures** $m_{f,\ell}$ are measured, not written by hand. For each engine and fault, a training tail is calibrated, the fault is injected at half severity at three cruise points on two tails, and the settled residual is averaged and stored per unit severity. A cylinder fault is measured on one cylinder; for the others the cylinder channels are swapped. A run in which the engine fails stops averaging at the failure, so the signature describes the developing fault, not the wreck. The signatures are stored as CALIBRATED configuration (`configs/diagnose/signatures/`).
 
-Traditional fixed thresholding ($3\sigma$) produces unacceptable false alarms under dynamic flight maneuvers. ANUMAAN implements a **Deep Variational Autoencoder (VAE) + Extreme Value Theory (EVT) Peaks-Over-Threshold (POT)** anomaly detection engine:
-
-```mermaid
-flowchart LR
-    Res["Normalized Residuals r*(t)"] --> Enc["VAE Encoder q_phi(z|r)"]
-    Enc --> Latent["Latent Space z ~ N(mu, sigma^2)"]
-    Latent --> Dec["VAE Decoder p_theta(r|z)"]
-    Dec --> Recon["Reconstructed Residual r_hat"]
-    Res --> Diff["Reconstruction Metric: s(t) = ||r* - r_hat||^2"]
-    Recon --> Diff
-    Diff --> EVT["EVT POT Engine (Generalized Pareto Distribution)<br/>Calculates Dynamic Threshold z_q for False Alarm Rate alpha <= 10^-4"]
-```
-
-### Extreme Value Theory POT Mathematical Formulation
-Reconstruction errors $s(t) = \sum_{j=1}^7 w_j (r_j^*(t) - \hat{r}_j^*(t))^2$ are evaluated against an extreme value threshold. According to the Pickands-Balkema-de Haan theorem, exceedances $y = (s - u)$ over an initial threshold $u$ converge asymptotically to the **Generalized Pareto Distribution (GPD)**:
-
-$$G_{\xi, \sigma}(y) = 1 - \left( 1 + \frac{\xi \cdot y}{\sigma} \right)^{-\frac{1}{\xi}}, \quad y > 0$$
-
-Where $\xi$ is the shape parameter and $\sigma$ is the scale parameter, fitted via Maximum Likelihood Estimation (MLE). For a specified operational False Alarm Rate $\alpha = 10^{-4}$ (corresponding to $\le 1$ false alarm per $2.77\text{ flight hours}$ at $10\text{ Hz}$), the exact anomaly threshold $z_q$ is calculated dynamically:
-
-$$z_q = u + \frac{\sigma}{\xi} \cdot \left[ \left( \frac{N_{\text{total}}}{N_u} \cdot \alpha \right)^{-\xi} - 1 \right]$$
-
-This provides mathematically bounded false-alarm rates without ad-hoc heuristic tuning.
+**Sensor offsets on model inputs.** Engine speed and oil temperature are also *inputs* of the nominal model. A biased oil-temperature sender therefore shifts the predicted oil pressure too, and that coupled pattern is computed for each frame by finite difference. A genuinely hotter oil does not shift the oil-pressure residual, and this is what separates the two.
 
 ---
 
-## Subsystem Composite Health Indices (ISO 13374 / OSA-CBM)
+## 2. Posterior
 
-Following ISO 13374 standards, condition monitoring telemetry is synthesized into normalized subsystem health indices $HI \in [0.0, 1.0]$:
+Each hypothesis is scored by its marginal likelihood, with the unknown severity integrated out in closed form:
 
-```mermaid
-flowchart TB
-    EngHI["Overall Engine Health Index (HI_eng)"]
-    EngHI --> Comb["Combustion HI (HI_comb)<br/>EGT spread, Pmax variance, BSFC"]
-    EngHI --> Lub["Lubrication HI (HI_lub)<br/>P_oil, Film thickness h_min, T_oil"]
-    EngHI --> Therm["Thermal HI (HI_therm)<br/>Max CHT, Radiator heat rejection"]
-    EngHI --> Turbo["Turbocharger HI (HI_turbo)<br/>Boost MAP vs wastegate duty"]
-    EngHI --> Mech["Mechanical HI (HI_mech)<br/>Crankcase blowby, RMS vibration"]
-```
+$$p(\bar z \mid f,\ell) = \frac{1}{S}\int_0^S \mathcal N(\bar z;\, s\,m, vI)\,ds
+= \frac{1}{S}\,\sqrt{\tfrac{2\pi}{a}}\;e^{-\frac12\left(c-\frac{b^2}{a}\right)}\left[\Phi\!\big(\sqrt a(S-\hat s)\big)-\Phi\!\big(-\sqrt a\,\hat s\big)\right]$$
 
-### Mathematical Formulations:
-1. **Combustion Health Index ($HI_{\text{comb}}$):**
-   $$HI_{\text{comb}}(t) = \exp\left( -w_1 \cdot \frac{|\Delta EGT_{\text{cyl}}^{\text{spread}}|}{\Delta EGT_{\text{limit}}} - w_2 \cdot \left(\frac{BSFC(t) - BSFC_{\text{nominal}}}{BSFC_{\text{nominal}}}\right)^2 \right)$$
+where $a = \|m\|^2/v$, $b = \bar z\cdot m/v$, $c=\|\bar z\|^2/v$ and $\hat s=b/a$ is the most likely severity. The bracket is the *Occam factor*: a hypothesis that could explain almost anything pays for that flexibility.
 
-2. **Lubrication Health Index ($HI_{\text{lub}}$):**
-   $$HI_{\text{lub}}(t) = \min\left( 1.0, \; \max\left( 0.0, \; \frac{P_{\text{oil}}(t) - P_{\text{oil,critical}}}{P_{\text{oil,nominal}} - P_{\text{oil,critical}}} \right) \right) \cdot \Phi\left( \frac{h_{\min}(t) - h_{\text{crit}}}{\sigma_h} \right)$$
+$$P(f,\ell \mid \bar z) \propto P(f)\; p(\bar z \mid f,\ell)$$
 
-3. **Overall Engine Health Index ($HI_{\text{eng}}$):**
-   $$HI_{\text{eng}}(t) = \min\Big( HI_{\text{comb}}, HI_{\text{lub}}, HI_{\text{therm}}, HI_{\text{turbo}}, HI_{\text{mech}} \Big)^{0.4} \cdot \left( \prod_{k=1}^5 HI_k \right)^{\frac{0.6}{5}}$$
+**Priors** come from the FMECA occurrence rating of the fault's failure mode (MIL-STD-1629A-style table, `docs/reliability/fmeca.json`). Each registry fault is mapped to one of the FMECA modes. While an alarm is active, "nominal" keeps a prior advantage, because alarms can be false and the model must earn its call.
 
-*(The blended minimum-geometric product guarantees that severe failure of a single critical subsystem immediately drops overall engine health while avoiding numerical cliffing).*
+**Ambiguity groups.** Two faults whose signatures point the same way (cosine ≥ 0.95) cannot be told apart by the available channels. They are reported as one group with their individual posteriors instead of a forced pick. Examples are a coolant leak vs a blocked radiator (both raise every head temperature) and an oil-pressure loss vs an oil-pressure sender offset (only one channel moves).
+
+Each published hypothesis carries its posterior, cylinder or channel, estimated severity, ambiguity group, and the channels that **support** it ($z_i m_i > 0$) or **contradict** it (the signature expects a clear move that is absent).
 
 ---
 
-## Aerothermal & Mechanical FMECA Classification Matrix
+## 3. From hypothesis to action
 
-ANUMAAN's Bayesian network reasons over ten core Failure Mode, Effects, and Criticality Analysis (FMECA) modes derived per MIL-STD-1629A:
+The leading hypothesis is turned into a directive from the fault registry only (no generated text):
 
-| Subsystem | Failure Mode | Primary Sensor Trigger | Diagnostic Residual Signature | Prognostic Horizon | Criticality (MIL-STD-1629A) |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **Ignition / Comb** | **01: Total Single-Cylinder Misfire** | Missing tooth pulse / RPM dip | Sudden EGT drop ($> 200^\circ\text{C}$ in 2 s); $0.5X$ vibration surge; $\Delta \omega(\theta) < 0$ at $180^\circ$ window | $< 30\text{ s}$ | **Category I (Catastrophic)** |
-| **Combustion** | **02: Detonation / Knock** | High-frequency block acoustic | High-frequency accelerometry (5 to 8 kHz); rapid CHT derivative ($\frac{dT}{dt} > 2^\circ\text{C/s}$) | $< 5\text{ s}$ | **Category I (Catastrophic)** |
-| **Fuel Delivery** | **03: Injector Micro-Clogging** | Rail pressure ripple | Divergent EGT rise on affected cylinder (lean peak $\lambda \approx 1.05$); CHT elevation; torque deficit $> 18\%$ | $15 \text{ to } 60\text{ min}$ | **Category II (Critical)** |
-| **Fuel Delivery** | **04: Injector Solenoid Lag** | Injection timing register | Asymmetric EGT transients during acceleration; crank-angle current lag | $5 \text{ to } 30\text{ min}$ | **Category II (Critical)** |
-| **Cooling** | **05: Coolant Pump Cavitation** | Radiator $\Delta T < 8^\circ\text{C}$ | All CHTs trending upward ($> 135^\circ\text{C}$); coolant pressure drop across pump; $\Delta T_{\text{rad}}$ collapse | $10 \text{ to } 25\text{ min}$ | **Category I (Catastrophic)** |
-| **Cooling** | **06: Radiator Matrix Fouling** | Gradual CHT creep vs IAS | Convective thermal model residual tracking; slow thermal creep at loiter | $2 \text{ to } 10\text{ h}$ | **Category III (Marginal)** |
-| **Lubrication** | **07: Journal Bearing Spalling** | $1X, 2X$ order vibration spike | Spectral kurtosis surge; decaying oil pressure at cruise; oil temperature creep; $h_{\min} < 0.8\ \mu\text{m}$ | $1 \text{ to } 5\text{ h}$ | **Category I (Catastrophic)** |
-| **Lubrication** | **08: Relief Valve Jam Open** | $P_{\text{oil}} < 1.5\text{ bar}$ | Instantaneous oil pressure plunge across all RPMs; $T_{\text{oil}}$ rising rapidly | $< 60\text{ s}$ | **Category I (Catastrophic)** |
-| **Sensor Subsystem** | **09: Thermocouple Oxidation Drift** | Inconel probe bias | Parity residual $\Vert \mathbf{r}_p \Vert \gg 0$; individual EGT divergence while engine torque and peer CHTs remain flat | $10 \text{ to } 50\text{ h}$ | **Category IV (Minor)** |
-| **Mechanical** | **10: Piston Slap / Skirt Wear** | $1.5 \text{ to } 3\text{ kHz}$ acoustic impact | Angular synchronous vibration averaging at TDC expansion onset; high-frequency impact bursts | $50 \text{ to } 100\text{ h}$ | **Category III (Marginal)** |
+- **root cause:** the registry's physics explanation, with the cylinder filled in;
+- **in-flight mitigation** and **maintenance action**, each with its source;
+- the **ATA chapter**;
+- the **status level** the registry assigns at full severity. The status evaluator uses it: an engine fault raises its registry level, while a sensor offset raises ADVISORY, because the engine itself is not implicated;
+- **alternatives** in the same ambiguity group or with a comparable posterior.
 
-![Live Fault Injection and Bayesian Diagnosis](/assets/playwright/04_live_fault_injected.png)
-*Figure 1: Real-time fault injection triggering persistence-confirmed residual alarms and exact Bayesian fault ranking.*
+The mission-reliability estimate attributes damage to the components of the isolated faults, weighted by posterior × estimated severity. Nothing downstream reads which fault was injected in the simulator.
 
 ---
 
-## Physical Verification of Core Failure Dynamics
+## 4. Results (evidence class: SIMULATION)
 
-### 1. Combustion Misfire Dynamics
-When Cylinder $k$ misfires:
-- **Thermodynamic Loss:** Fuel chemical energy $\dot{m}_f Q_{\text{LHV}}$ is not converted into expansion work. Indicated work drops from $+350\text{ J}$ to $-40\text{ J}$ (net negative pumping work).
-- **Thermal Collapse:** Cold intake charge enters the exhaust runner, causing an immediate plunge in exhaust temperature:
-  $$\left. \frac{d T_{\text{egt}, k}}{dt} \right|_{\text{misfire}} \approx -\frac{T_{\text{egt}, k} - T_{\text{charge}}}{\tau_{\text{probe}}} \approx -150^\circ\text{C/s to } -250^\circ\text{C/s}$$
-- **Rotational Deceleration:** Zero expansion torque momentarily slows down the crankshaft. By sampling crank-angle pulses via a 60-2 Hall-effect sensor, the digital twin detects angular velocity drops during specific cylinder expansion windows:
-  $$\Delta \omega_k = \omega(\theta_{\text{TDC}, k} + 90^\circ) - \omega(\theta_{\text{TDC}, k}) < 0$$
-  This isolates the failing cylinder within a single four-stroke engine cycle ($22.2\text{ ms}$ at 5,400 RPM).
+Test tails use seeds 1001 and 1002; signature tails use seeds 11 and 12. Faults are injected at a cruise point (70 % lever, 8,000 ft) after the tail has settled. The registry's ramp plus its detection window plus 120 s is then observed.
 
-### 2. Lubrication Breakdown & Journal Seizure Cascade
-Hydrodynamic journal bearings require an unbroken fluid wedge:
-- **Minimum Film Thickness:** $h_{\min} = c \cdot (1 - \epsilon)$, where $c \approx 35\ \mu\text{m}$ is radial clearance and $\epsilon \in [0, 1)$ is eccentricity ratio.
-- **The Thermal Failure Cascade:**
-  1. Excessive thermal load thins lubricant: dynamic viscosity $\mu$ drops below $4\text{ mPa}\cdot\text{s}$.
-  2. Sommerfeld number $S \to 0$, forcing eccentricity $\epsilon \to 1.0$.
-  3. Minimum film thickness $h_{\min}$ falls below combined composite surface roughness ($R_q \approx 0.8\ \mu\text{m}$), triggering metal-to-metal asperity contact.
-  4. Friction coefficient surges from hydrodynamic levels ($\mu_f \approx 0.005$) to dry boundary friction ($\mu_f \approx 0.15$), representing a 30-fold thermal dissipation spike.
-  5. Localized flash temperatures exceed $350^\circ\text{C}$, melting the Babbitt overlay, welding the connecting rod to the crank journal, and causing catastrophic crankshaft seizure within seconds.
+| Engine | False alarms per flight hour (ours / engine-manual limits only) | Faults detected in the window (ours / limits only) | Median detection time | Median ROC AUC | Isolation top-1 / top-3 |
+|---|---|---|---|---|---|
+| Austro AE300 | 0.25 / 0.00 | 69 / 4 of 124 | 30 s | 0.94 | 58 % / 64 % |
+| Rotax 912 iS | 0.00 / 1.00 | 31 / 9 of 100 | 127 s | 0.96 | 51 % / 58 % |
+| Rotax 914 | 0.25 / 0.00 | 54 / 12 of 104 | 17 s | 0.95 | 57 % / 72 % |
+| Rotax 915 iS | 16.0* / 2.25 | 70 / 87 of 120 | 23 s | 0.89 | 43 % / 48 % |
+| VRDE 2.2 L | 0.00 / 0.00 | 67 / 0 of 124 | 32 s | 1.00 | 60 % / 66 % |
 
----
+Each engine was tested with all applicable registry faults at severities 0.5 and 1.0 on two test tails. The nominal rows are 2 hours of random legs per tail, covering lever settings of 45–95 %, altitudes of 1,000–18,000 ft and ISA ±15 °C. On an independently built plant variant (sensors 1.5× noisier than the datasheet values, calibrated on itself), the false-alarm rates were 0.25 / 0 / 0 / 6.5 / 0 per hour.
 
-## Explainable AI (XAI) Diagnostic Attribution
+Where a fault was detected, our detection came earlier than the limits-only baseline in almost every case (for example AE300 69 of 69, VRDE 67 of 67, 914 50 of 54).
 
-For every classified fault, the system outputs SHAP (Shapley Additive Explanations) feature attributions. When `TURBO_WASTEGATE_STUCK_OPEN` is signaled to the propulsion engineer, the console displays:
-- $+44\%$ attribution from `MAP_Deficit_vs_Target`
-- $+28\%$ attribution from `Elevated_EGT_Post_Turbine`
-- $+19\%$ attribution from `Zero_Wastegate_PWM_Response`
-- $+9\%$ attribution from `Barometric_Altitude_Lapse`
+\* The 915 iS figures are dominated by its fixed-pitch overspeed. At high lever settings above about 12,000 ft the engine runs into its ECU rev limiter, an abnormal state that both the limits-only baseline and our detector flag. Its other numbers are not comparable with the other engines until a constant-speed or governed installation is modelled for it.
 
-This gives propulsion engineers physical, audit-ready justification for the diagnosis rather than an unexplainable confidence score.
+The full per-fault table (detection time, limits-only detection time, ROC AUC of the detector score against nominal frames, isolation rank) is generated by `python -m backend.evaluation.run_matrix` into `reports/evaluation/`.
 
----
+**What the numbers mean.** Some registry faults leave no trace in the channels the residual covers today:
+- oil quantity (F24) has no sensor;
+- vibration-borne faults (propeller imbalance F28, mount F29, gearbox F27) show in the vibration orders, which are not yet residual channels;
+- an electrical fault with a healthy alternator (F34) is masked on the bus voltage.
 
-## Deterministic ATA-Chapter Diagnostic Directives
-
-Once a fault hypothesis is ranked, the deterministic diagnostic agent converts the finding into an airworthiness-compliant directive organized by standard ATA chapters:
-- **ATA 72-00 (Engine General):** Thermal overload: Derate throttle to 4,600 RPM, enrich fuel trim $+12\%$, initiate cooling descent by $3,000\text{ ft}$.
-- **ATA 73-10 (Engine Fuel & Control):** Injector imbalance: Verify fuel rail pressure, command FADEC Lane B backup schedule, engage auxiliary boost pump.
-- **ATA 74-00 (Ignition):** Misfire detection: Isolate failing cylinder via crank phase, switch ignition circuit to secondary coil pack.
-- **ATA 79-00 (Engine Oil):** Critical lubrication loss: Immediate audio warning, feather propeller or reduce power to minimum glide setting, declare emergency divert.
+The table reports them as missed rather than hiding them.
 
 ---
 
 ## Related Systems
 
+- [Residual Analysis](08-residual-analysis.md)
 - [The AI and ML Architecture](09-ai-ml-architecture.md)
 - [Bio-Inspired Sparse Novelty Coding](10-bio-inspired-sparse-novelty-coding.md)
 - [Vibration Analysis and Order Tracking](12-vibration-analysis.md)
-- [Degradation Modeling and Wear Kinetics](13-degradation-modeling.md)
-- [Remaining Useful Life Estimation](14-remaining-useful-life.md)
+- [Mission Reliability Enhancement](17-mission-reliability.md)

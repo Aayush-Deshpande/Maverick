@@ -27,6 +27,7 @@ from backend.sim.maps import maps_for
 from backend.faults.registry import FaultRejected, load_fault_registry
 from backend.physics.engine_config import load_engine_config
 from backend.maintenance.work_orders import WorkOrderStore
+from backend.mission.executive import list_missions
 from backend.server.security import COMMAND_LOG, command_guard
 from backend.server.state_builder import build_state
 
@@ -135,6 +136,12 @@ class AlertCommand(BaseModel):
     model_config = ConfigDict(extra="forbid")
     alert_id: Optional[str] = Field(default=None, max_length=200, description="omit to acknowledge every alert")
     duration_s: Optional[float] = Field(default=None, gt=0, le=86400)
+
+
+class MissionCommand(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    action: Literal["START", "ABORT"]
+    mission_id: Optional[str] = Field(default=None, min_length=1, max_length=80, pattern=r"^[a-z0-9_]+$")
 
 
 class WorkOrderCommand(BaseModel):
@@ -265,6 +272,27 @@ def v1_alert_ack(engine_id: str, body: AlertCommand, cmd: Dict[str, Any] = Depen
     if any(a.level == "NO-GO" for a in rt.alert_manager.alerts.values()) or body.alert_id is None:
         rt.status_evaluator.acknowledge()                     # acknowledging the warning also releases the latch
     return {"engine_id": engine_id, "acknowledged": ids}
+
+
+@router.get("/api/v1/missions")
+def v1_missions() -> Dict[str, Any]:
+    return {"missions": list_missions()}
+
+
+@router.post("/api/v1/engines/{engine_id}/mission")
+def v1_mission(engine_id: str, body: MissionCommand, cmd: Dict[str, Any] = Depends(command_guard)) -> Dict[str, Any]:
+    services().channel(engine_id)
+    rt = services().hub.runtimes[engine_id]
+    if body.action == "ABORT":
+        return {"engine_id": engine_id, "mission": rt.abort_mission()}
+    if not body.mission_id:
+        raise HTTPException(422, {"code": "MISSION_REJECTED", "message": "START needs mission_id"})
+    try:
+        return {"engine_id": engine_id, "mission": rt.start_mission(body.mission_id)}
+    except KeyError:
+        raise HTTPException(404, {"code": "NO_SUCH_MISSION", "message": f"no mission {body.mission_id!r}"}) from None
+    except ValueError as e:
+        raise HTTPException(422, {"code": "MISSION_REJECTED", "message": str(e)}) from None
 
 
 @router.get("/api/v1/engines/{engine_id}/work_orders")

@@ -78,6 +78,12 @@ export type Hypotheses = Hypothesis[];
 export type Maintenance = {
   [k: string]: unknown;
 }[];
+/**
+ * mission executive progress (M5); null = manual flight
+ */
+export type Mission = {
+  [k: string]: unknown;
+} | null;
 export type Prognostics = {
   [k: string]: unknown;
 } | null;
@@ -130,6 +136,7 @@ export interface StateMessage {
   levers?: Levers;
   maintenance?: Maintenance;
   master?: Master;
+  mission?: Mission;
   prognostics?: Prognostics;
   rate_hz_actual?: RateHzActual;
   readings?: Readings;

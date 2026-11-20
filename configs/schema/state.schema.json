@@ -747,6 +747,20 @@
       "title": "Master",
       "type": "object"
     },
+    "mission": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "mission executive progress (M5); null = manual flight",
+      "title": "Mission"
+    },
     "prognostics": {
       "anyOf": [
         {
