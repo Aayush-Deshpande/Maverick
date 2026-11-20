@@ -15,7 +15,8 @@ type Props = {
   highlights: Highlight[] | undefined;
   injected?: InjectedPart[];                               // training mode only (D56): drawn as INJECTED
   api: (path: string, method: string, body?: unknown) => Promise<any>;
-  tall?: boolean;                                          // the 3D twin view gives the engine most of the screen
+  fill?: boolean;                                          // 3D twin view: the engine fills its container
+  focusSignal?: number;                                    // increments -> fly to the faulty part (keyboard F)
 };
 
 const DRACO_PATH = '/draco/';                             // decoder files shipped in frontend/public/draco
@@ -117,7 +118,7 @@ class ModelBoundary extends Component<{ children: ReactNode; resetKey: string },
 /** 3D engine view (M6-05): loads the engine's web model named by the component manifest and lights exactly the
  *  nodes listed in state.highlights, in the colour of their level. Highlights come from diagnosis + status (D5);
  *  the viewer has no fault tables of its own. */
-export default function EngineViewer3D({ engineId, highlights: detected, injected, api, tall }: Props) {
+export default function EngineViewer3D({ engineId, highlights: detected, injected, api, fill, focusSignal = 0 }: Props) {
   const [manifest, setManifest] = useState<Manifest | null>(null);
   const [error, setError] = useState('');
   const [lit, setLit] = useState<string[]>([]);
@@ -140,7 +141,7 @@ export default function EngineViewer3D({ engineId, highlights: detected, injecte
 
   const missing = (highlights ?? []).filter((h) => !h.nodes?.length);
   return (
-    <section className="surface-panel p-4 sm:p-5 rounded-sm" data-highlighted-nodes={lit.join(',')}>
+    <section className={`surface-panel p-4 sm:p-5 rounded-sm ${fill ? 'h-full flex flex-col' : ''}`} data-highlighted-nodes={lit.join(',')}>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h3 className="text-sm font-semibold text-white tracking-tight">3D engine</h3>
         <div className="flex items-center gap-3">
@@ -149,7 +150,7 @@ export default function EngineViewer3D({ engineId, highlights: detected, injecte
             className="rounded-sm border border-surface-border px-2 py-1 text-xs text-slate-200 hover:border-surface-border-strong">Focus fault</button>}
         </div>
       </div>
-      <div className={`mt-3 rounded-sm border border-surface-border bg-black/20 ${tall ? 'h-[min(75vh,760px)]' : 'h-[min(60vh,420px)]'}`}>
+      <div className={`mt-3 rounded-sm border border-surface-border bg-black/20 ${fill ? 'flex-1 min-h-0' : 'h-[min(60vh,420px)]'}`}>
         {error ? <div className="p-4 text-xs font-mono text-slate-300">{error}</div>
           : !manifest ? <div className="p-4 text-xs font-mono text-slate-400">Loading component manifest…</div>
           : <ModelBoundary resetKey={manifest.model_url}>
@@ -158,7 +159,7 @@ export default function EngineViewer3D({ engineId, highlights: detected, injecte
                 <directionalLight position={[3, 4, 3]} intensity={1.4} />
                 <Suspense fallback={null}>
                   <Bounds fit clip observe margin={1.2}>
-                    <Model url={manifest.model_url} levels={levels} onLit={setLit} focusRequest={focusRequest} />
+                    <Model url={manifest.model_url} levels={levels} onLit={setLit} focusRequest={focusRequest + focusSignal} />
                   </Bounds>
                 </Suspense>
                 <OrbitControls makeDefault enableDamping />

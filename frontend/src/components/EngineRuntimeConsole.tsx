@@ -9,6 +9,7 @@ import RoutePlannerPanel from './RoutePlannerPanel';
 import StatusBanner from './StatusBanner';
 import EngineerPanel from './EngineerPanel';
 import CopilotPanel from './CopilotPanel';
+import TwinStage from './TwinStage';
 
 const EngineViewer3D = lazy(() => import('./viewer3d/EngineViewer3D'));
 
@@ -138,6 +139,10 @@ export function EngineRuntimeConsole({ serverUrl, initialView }: { serverUrl: st
     ? `LIVE · ${state?.rate_hz_actual != null ? `${num(state.rate_hz_actual, 1)} Hz` : 'rate —'} · age ${age != null ? `${Math.round(age)} ms` : NO_DATA}`
     : runtime.connection;
 
+  if (view === 'TWIN') return <LabelsContext.Provider value={labels}>
+    <TwinStage engineId={runtime.engineId ?? null} engines={runtime.engines ?? []} onSelectEngine={runtime.selectEngine} state={state}
+      faults={faults} cylinders={profile?.cylinders ?? 4} api={runtime.api} command={runtime.command} training={training} onTraining={setTraining} />
+  </LabelsContext.Provider>;
   return <LabelsContext.Provider value={labels}><div className="space-y-4">
     {demo && <section className="surface-panel p-4 border-accent/60" aria-live="polite">
       <div className="flex items-start justify-between gap-3">
@@ -207,7 +212,7 @@ export function EngineRuntimeConsole({ serverUrl, initialView }: { serverUrl: st
     {show('OPERATOR', 'MAINTENANCE', 'TWIN') && <Suspense fallback={<div className="surface-panel p-4 text-xs font-mono text-slate-400">Loading 3D view…</div>}>
       <EngineViewer3D engineId={runtime.engineId ?? null} highlights={state?.highlights} api={runtime.api}
         injected={training ? activeFaults.flatMap((f) => (f.components ?? []).map((c) => ({ component_id: c, reason: `${f.fault_id} ${title(f.name)} (injected)` }))) : []}
-        tall={view === 'TWIN'} />
+        />
     </Suspense>}
 
     {show('OPERATOR', 'MAINTENANCE') && <section className="surface-panel p-4 sm:p-5 rounded-sm">
