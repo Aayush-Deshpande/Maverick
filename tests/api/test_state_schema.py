@@ -70,3 +70,19 @@ def test_component_resolution_per_cylinder_and_marker():
     assert ids == ["main_engine_MERGED"] and marker == "cylinder 4"
     ids, marker = resolve_fault_components(reg.get("S03").raw, "vrde_jayem_2_2l", None, "egt[2]")
     assert ids == ["sensor_egt_2"]
+
+
+def test_residuals_carry_the_detector_z_vector_by_channel():
+    """M6-03: the engineer view shows measured-vs-model residuals; the message carries every detector channel."""
+    from backend.runtime.hub import RuntimeHub
+    hub = RuntimeHub(engines=["rotax_912is"])
+    hub.calibrate_all(parallel=False)
+    for _ in range(5):
+        hub.tick_all()
+    tick = hub.latest["rotax_912is"]
+    msg = build_state(tick, seq=1)
+    det = tick.detection
+    assert det is not None and msg.residuals
+    assert list(msg.residuals) == det.channel_names
+    top_name, top_z = det.top_channels[0]
+    assert msg.residuals[top_name] == pytest.approx(top_z, abs=1e-3) or abs(msg.residuals[top_name]) >= abs(top_z)

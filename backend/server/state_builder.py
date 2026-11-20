@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import datetime as _dt
 import json
+import math
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
@@ -82,6 +83,13 @@ def _status(st: Optional[Dict[str, Any]]) -> Status:
                            for r in st.get("reasons", [])])
 
 
+def _residuals(det: Any) -> Dict[str, float]:
+    """Unclipped model-informed residual z per detector channel (measured vs the engine model, in noise sigmas)."""
+    if det is None or getattr(det, "z_raw", None) is None or not getattr(det, "channel_names", None):
+        return {}
+    return {n: round(float(z), 3) for n, z in zip(det.channel_names, det.z_raw) if math.isfinite(float(z))}
+
+
 def build_state(tick: Any, seq: int, *, registry: Any = None, active_faults: Iterable[Any] = (),
                 fault_events: Iterable[Any] = (), rate_hz_actual: Optional[float] = None, time_scale: float = 1.0,
                 levers: Optional[Dict[str, Optional[float]]] = None, training_mode: bool = False,
@@ -130,7 +138,7 @@ def build_state(tick: Any, seq: int, *, registry: Any = None, active_faults: Ite
         levers=levers or {"throttle": f.throttle},
         environment={"altitude_ft": f.alt, "oat_c": f.oat, "tas_kt": f.tas},
         readings=readings,
-        twin=tick.ukf, residuals={},
+        twin=tick.ukf, residuals=_residuals(det),
         detections=None if det is None else {"confirmed": bool(det.confirmed), "raw_alarm": bool(det.raw_alarm),
                                              "top_channels": [list(x) if isinstance(x, tuple) else x for x in det.top_channels],
                                              "scores": {k: float(v) for k, v in det.scores.items()},

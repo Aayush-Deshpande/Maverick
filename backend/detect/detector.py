@@ -49,6 +49,7 @@ class DetectionResult:
     novelty: Optional[Dict[str, object]] = None
     # unclipped residual z-vector in calibration channel order (input of the M3-05 isolator)
     z_raw: Optional[np.ndarray] = None
+    channel_names: Optional[List[str]] = None   # names of z_raw entries (published as the state message residuals)
 
     @property
     def score(self) -> float:
@@ -145,7 +146,8 @@ class ResidualDetector:
             ratio = s / max(self.thresholds[self.novelty.name], 1e-12)
             novelty = {"score": s, "ratio": ratio, "raw": ratio > 1.0, "alarm": self.novelty_gate.update(ratio > 1.0)}
         return DetectionResult(frame.t, scores, ratios, raw, self.gate.update(raw),
-                               [(names[i], float(z[i])) for i in order], drift=drift, novelty=novelty, z_raw=z_raw)
+                               [(names[i], float(z[i])) for i in order], drift=drift, novelty=novelty, z_raw=z_raw,
+                               channel_names=list(names))
 
 
 def conformal_threshold(nominal_scores: np.ndarray, alpha: float) -> float:

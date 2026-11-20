@@ -28,7 +28,9 @@ export default function RouteMap({ route = [], footprint, airfields, aircraft }:
   const py = (p: LatLon) => H - PAD - (p.lat - y0) * s - ((H - 2 * PAD) - (y1 - y0) * s) / 2;
   const line = (ps: LatLon[]) => ps.map((p) => `${px(p).toFixed(1)},${py(p).toFixed(1)}`).join(' ');
   const kmPerUnit = 111.32;                               // km per degree of latitude (scale bar)
-  const barKm = [5, 10, 20, 50, 100].find((k) => (k / kmPerUnit) * s > 60) ?? 100;
+  const BAR_STEPS_KM = [5, 10, 20, 50, 100];
+  const fits = BAR_STEPS_KM.filter((k) => (k / kmPerUnit) * s > 60);  // shortest bar wider than 60 px
+  const barKm = fits.length ? fits[0] : BAR_STEPS_KM[BAR_STEPS_KM.length - 1];
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-xl border border-surface-border rounded-sm bg-black/20"

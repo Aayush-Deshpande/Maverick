@@ -15,7 +15,8 @@ export default function AltitudeProfile({ waypoints }: { waypoints: Wp[] }) {
   if (waypoints.length < 2) return null;
   const d = [0];
   for (let i = 1; i < waypoints.length; i += 1) d.push(d[i - 1] + km(waypoints[i - 1], waypoints[i]));
-  const total = d[d.length - 1] || 1;
+  const total = d[d.length - 1];
+  if (!(total > 0)) return null;                          // all waypoints at one point: no profile to draw
   const vals = waypoints.flatMap((w) => [w.altitude_ft, w.terrain_ft]);
   const lo = Math.min(...vals);
   const hi = Math.max(...vals);

@@ -5,6 +5,7 @@ import { dataAgeMs } from '../store/engineStore';
 import { NO_DATA, num } from '../utils/format';
 import RoutePlannerPanel from './RoutePlannerPanel';
 import StatusBanner from './StatusBanner';
+import EngineerPanel from './EngineerPanel';
 
 const title = (value: string) => value.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c: string) => c.toUpperCase());
 type Detections = { confirmed?: boolean; raw_alarm?: boolean; top_channels?: Array<string | [string, number]>;
@@ -249,6 +250,9 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
     </section>}
 
     {show('MISSION') && <RoutePlannerPanel engineId={runtime.engineId ?? null} api={runtime.api} />}
+
+    {show('ENGINEER') && <EngineerPanel residuals={state?.residuals} twin={state?.twin as any}
+      virtualSensors={state?.virtual_sensors} vibration={state?.vibration_orders} />}
 
     {show('ENGINEER') && <section className="surface-panel p-4 sm:p-5 rounded-sm">
       <div className="flex items-center justify-between gap-3"><div><h3 className="font-semibold text-white">Live engine channels</h3><p className="text-xs text-slate-500 mt-1">From the v1 state message · {state?.evidence_class ?? 'SIMULATION'} evidence</p></div><Radio className="w-4 h-4 text-slate-500" /></div>
