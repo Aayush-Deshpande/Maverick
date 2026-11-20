@@ -26,6 +26,10 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
   const [severity, setSeverity] = useState<number | null>(null);
   const [levers, setLevers] = useState<{ throttle_pct: number; altitude_ft: number; oat_c: number } | null>(null);
   const [notice, setNotice] = useState('');
+  const [missions, setMissions] = useState<Array<{ id: string; title: string; engines: string | string[] }>>([]);
+  const [missionId, setMissionId] = useState('');
+  const [recording, setRecording] = useState(false);
+  const [lastSortie, setLastSortie] = useState('');
 
   const readings = useMemo(() => Object.entries(state?.readings ?? {}).sort(([a], [b]) => a.localeCompare(b)), [state]);
   const det = (state?.detections ?? null) as Detections | null;
@@ -37,6 +41,19 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
   const live = runtime.connection === 'LIVE';
 
   useEffect(() => { setFaultId(''); setLevers(null); }, [runtime.engineId]);
+  useEffect(() => {
+    fetch(`${serverUrl}/api/v1/missions`, { cache: 'no-store' }).then((r) => r.json())
+      .then((d) => setMissions(d.missions ?? [])).catch(() => setMissions([]));
+  }, [serverUrl]);
+  const availableMissions = missions.filter((m) => m.engines === 'ALL' || (Array.isArray(m.engines) && m.engines.includes(runtime.engineId ?? '')));
+  const mission = state?.mission as { title?: string; phase?: string; state?: string; elapsed_s?: number; total_s?: number; remaining_s?: number } | null | undefined;
+  const missionCommand = (action: 'START' | 'ABORT') => void run(() => runtime.command('/mission', 'POST',
+    action === 'START' ? { action, mission_id: missionId } : { action }), action === 'START' ? 'Mission started' : 'Mission aborted');
+  const recordingCommand = () => void run(async () => {
+    const res = await runtime.command('/recording', 'POST', { action: recording ? 'STOP' : 'START' }) as { recording?: { sortie_id?: string } };
+    if (recording && res?.recording?.sortie_id) setLastSortie(res.recording.sortie_id);
+    setRecording(!recording);
+  }, recording ? 'Recording stopped' : 'Recording started');
   useEffect(() => { if (fault) setSeverity(fault.default_severity); }, [fault]);
   // sliders start from the SERVER's lever targets, never from local defaults (audit section 9)
   useEffect(() => {
@@ -146,6 +163,19 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
           {!levers && <div className="text-xs font-mono text-slate-500">Waiting for the server's lever targets…</div>}
           {levers && leverFields.map((field) => <label key={field.key} className="block"><span className="flex justify-between text-xs font-mono text-slate-400"><span>{field.label}</span><span className="tabular-nums text-slate-200 font-semibold">{Math.round(levers[field.key])}{field.unit}</span></span><input className="mt-2 w-full" type="range" min={field.min} max={field.max} value={levers[field.key]} onChange={(e) => setLevers({ ...levers, [field.key]: Number(e.target.value) })} onPointerUp={applyLevers} onKeyUp={(e) => { if (e.key.startsWith('Arrow')) applyLevers(); }} /></label>)}
           {levers && <button onClick={applyLevers} className="w-full rounded-sm border border-surface-border bg-surface-card px-3 py-2 text-xs font-mono text-slate-200 hover:bg-white/5 transition-colors">Apply flight conditions</button>}
+        </div>
+        <div className="mt-5 border-t border-surface-border pt-4">
+          <div className="text-xs font-medium font-mono text-slate-200 uppercase tracking-wider">Mission and recording</div>
+          <div className="mt-2 flex gap-2">
+            <select value={missionId} onChange={(e) => setMissionId(e.target.value)} className="min-w-0 flex-1 rounded-sm border border-surface-border bg-surface-card px-2.5 py-2 text-xs font-mono text-slate-200"><option value="">Choose mission…</option>{availableMissions.map((m) => <option key={m.id} value={m.id}>{m.title}</option>)}</select>
+            <button disabled={!missionId || !live} onClick={() => missionCommand('START')} className="rounded-sm border border-surface-border px-3 text-xs font-mono text-slate-200 disabled:opacity-40 hover:bg-white/5">Fly</button>
+            <button disabled={!mission || mission.state !== 'RUNNING'} onClick={() => missionCommand('ABORT')} className="rounded-sm border border-surface-border px-3 text-xs font-mono text-slate-200 disabled:opacity-40 hover:bg-white/5">Abort</button>
+          </div>
+          {mission && <div className="mt-2 text-xs font-mono text-slate-400">{mission.title} · {mission.state} · {mission.phase} · {mission.elapsed_s == null ? NO_DATA : num(mission.elapsed_s / 60, 0)} / {mission.total_s == null ? NO_DATA : num(mission.total_s / 60, 0)} min</div>}
+          <div className="mt-2 flex items-center gap-2">
+            <button disabled={!live} onClick={recordingCommand} className="rounded-sm border border-surface-border px-3 py-1.5 text-xs font-mono text-slate-200 disabled:opacity-40 hover:bg-white/5">{recording ? 'Stop recording' : 'Record sortie'}</button>
+            {lastSortie && <a className="text-xs font-mono text-accent hover:underline" href={`${serverUrl}/api/v1/recordings/${encodeURIComponent(lastSortie)}/report`} target="_blank" rel="noreferrer">Sortie report</a>}
+          </div>
         </div>
         <div className="mt-5 border-t border-surface-border pt-4">
           <div className="text-xs font-medium font-mono text-slate-200 uppercase tracking-wider">Inject a fault valid for this engine</div>
