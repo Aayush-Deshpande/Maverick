@@ -357,6 +357,20 @@ def v1_recording_states(sortie_id: str, offset: int = Query(0, ge=0), limit: int
             "states": read_states(_sortie_dir(sortie_id), offset, limit)}
 
 
+@router.get("/api/v1/engines/{engine_id}/can")
+def v1_engine_can(engine_id: str) -> Dict[str, Any]:
+    """M7-02/04: is this engine's telemetry crossing the CAN bus (configs/runtime.json data_source), how much has
+    been sent, and what the intrusion detector flagged (newest last)."""
+    services().channel(engine_id)
+    rt = services().hub.runtimes[engine_id]
+    link = getattr(rt, "can_link", None)
+    if link is None:
+        return {"engine_id": engine_id, "data_source": rt.data_source, "bus": None}
+    return {"engine_id": engine_id, "data_source": rt.data_source,
+            "bus": {"messages_per_frame": len(link.db.messages), "bytes_sent": link.bytes_sent,
+                    "alerts": [vars(a) for a in link.alerts[-20:]], "alert_count": len(link.alerts)}}
+
+
 @router.get("/api/v1/recordings/{sortie_id}/verify")
 def v1_recording_verify(sortie_id: str) -> Dict[str, Any]:
     """M7-04 / T-CAN-3: recompute the Merkle root of the recorded frames and compare it with the sealed root."""

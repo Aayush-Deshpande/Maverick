@@ -159,3 +159,9 @@ def test_state_carries_estimated_efficiency_from_measured_fuel_flow(client):
     assert 0.25 < d["thermal_eff_ind_est"] < 0.45                    # 60 kW from 15 kg/h of avgas at 43.5 MJ/kg
     gone = _derived(SimpleNamespace(virtual_sensors={}, fuel_flow=15.0), "rotax_912is")
     assert gone == {"power_ind_kw_est": None, "bsfc_ind_g_kwh_est": None, "thermal_eff_ind_est": None}
+
+
+def test_can_status_reports_the_data_source(client):
+    body = client.get("/api/v1/engines/rotax_912is/can").json()
+    assert body["data_source"] in ("DIRECT", "CAN")
+    assert (body["bus"] is None) == (body["data_source"] == "DIRECT")
