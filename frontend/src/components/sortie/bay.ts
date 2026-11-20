@@ -13,6 +13,12 @@ export interface ComponentMap {
   engines: Record<string, { subsystems: Record<string, string[]>; faults: Record<string, { pipeline: string[][] }> }>;
 }
 export interface BayLabel { key: string; x: number; y: number; on: boolean; count: number }
+/** Where the engine is measured, and which of the detector's channels each point feeds. */
+export interface BaySensor { key: string; channels: string; x: number; y: number; on: boolean; hot: boolean }
+export interface BayFrame { labels: BayLabel[]; sensors: BaySensor[]; split: number }
+const SENSORS: Array<[string, string]> = [
+  ['oil', 'oil_p · oil_t'], ['exhaust', 'egt 1–4'], ['cooling', 'cht 1–4'], ['fuel', 'fuel_flow'], ['control', 'map · rpm'],
+];
 
 const SUBSYSTEM_NAMES: Record<string, string> = {
   oil: 'Oil system', fuel: 'Fuel', ignition: 'Ignition harness', cooling: 'Cooling', exhaust: 'Exhaust',
@@ -129,6 +135,49 @@ export class EngineBay {
       const shown = !after ? u > 0.06 + i * 0.045 : key === 'oil';
       return { key, count, x: (v.x * 0.5 + 0.5) * w + w * 0.24 * split, y: (-v.y * 0.5 + 0.5) * h, on: shown && v.z < 1 };
     });
+  }
+
+  /**
+   * The film's two bay shots.
+   *  reveal: the whole engine in its own materials, subsystems naming themselves, then the measurement points
+   *  signal: the fault begins in the oil system; the rest goes to X-ray; the camera closes on the oil sensor
+   */
+  film(stage: 'reveal' | 'signal', k: number, sev: number, real: number, w: number, h: number): BayFrame {
+    this.camera.aspect = w / h; this.camera.updateProjectionMatrix();
+    const signal = stage === 'signal';
+    this.setHighlight(signal && k > 0.18);
+    this.faultMat.emissiveIntensity = (0.6 + 0.9 * Math.min(1, sev * 6)) * (0.75 + 0.25 * Math.sin(real * 6));
+    const focus = signal ? sstep(0.05, 0.4, k) : 0;
+    const push = signal ? sstep(0.8, 1, k) : 0;          // into the sensor, then the film dissolves to the data
+    const target = this.center.clone().lerp(this.faultCenter, focus);
+    const ang = (signal ? 2.05 + 0.25 * k : 0.55 + 1.5 * k) + real * 0.01;
+    const elev = signal ? 0.3 - 0.1 * push : 0.36;
+    const dist = this.radius * ((signal ? 1.75 - 0.55 * focus : 2.5 - 0.25 * k) * (1 - 0.82 * push));
+    this.camera.position.set(
+      target.x + dist * Math.cos(elev) * Math.cos(ang),
+      target.y + dist * Math.sin(elev),
+      target.z + dist * Math.cos(elev) * Math.sin(ang),
+    );
+    this.camera.lookAt(target);
+    // beside the Blender render of the same fault: the engine moves to the right half
+    const split = signal ? sstep(0.42, 0.5, k) * (1 - sstep(0.74, 0.8, k)) : 0;
+    if (split > 0) this.camera.setViewOffset(w, h, -w * 0.24 * split, 0, w, h); else this.camera.clearViewOffset();
+    this.renderer.render(this.scene, this.camera);
+    if (split > 0) this.camera.clearViewOffset();
+    const v = new THREE.Vector3();
+    const project = (c: THREE.Vector3) => { v.copy(c).project(this.camera); return { x: (v.x * 0.5 + 0.5) * w + w * 0.24 * split, y: (-v.y * 0.5 + 0.5) * h, front: v.z < 1 }; };
+    const labels = this.anchors.map(({ key, center, count }, i) => {
+      const p = project(center);
+      const shown = signal ? key === 'oil' && k > 0.18 && k < 0.8 : k > 0.1 + i * 0.06 && k < 0.66;
+      return { key, count, x: p.x, y: p.y, on: shown && p.front };
+    });
+    const sensors = SENSORS.map(([key, channels]) => {
+      const a = this.anchors.find((x) => x.key === key);
+      const p = a ? project(a.center) : { x: -99, y: -99, front: false };
+      const shown = signal ? key === 'oil' && k > 0.55 : k > 0.66;
+      return { key, channels, x: p.x, y: p.y, on: shown && p.front && !!a, hot: signal && key === 'oil' };
+    });
+    return { labels, sensors, split };
   }
 
   dispose() {

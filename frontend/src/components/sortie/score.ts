@@ -23,17 +23,19 @@ const OSTINATO = [62, 57, 62, 65, 62, 57, 64, 65];
 
 interface Cue { chords: Chord[]; bar: number; organ: number; strings: number; ostinato: number; density: 1 | 2; bpm: number; register: 'soft' | 'full' | 'bright' }
 const CUES: Record<ChapterId, Cue> = {
-  open:     { chords: ['Dm'], bar: 8, organ: 0.5, strings: 0, ostinato: 0, density: 1, bpm: 90, register: 'soft' },
-  twin:     { chords: ['Dm', 'Bb'], bar: 3.5, organ: 0.55, strings: 0.3, ostinato: 0, density: 1, bpm: 90, register: 'soft' },
-  inside:   { chords: ['Dm', 'Dsus'], bar: 6.5, organ: 0.3, strings: 0.25, ostinato: 0, density: 1, bpm: 90, register: 'soft' },
-  pipeline: { chords: ['Dm', 'F', 'C', 'Bb'], bar: 3.75, organ: 0.45, strings: 0.3, ostinato: 0.5, density: 1, bpm: 96, register: 'soft' },
-  drift:    { chords: ['Dm', 'Bb', 'Gm', 'A'], bar: 1.75, organ: 0.5, strings: 0.45, ostinato: 0.65, density: 2, bpm: 96, register: 'soft' },
-  detect:   { chords: ['A'], bar: 6, organ: 0.55, strings: 0.55, ostinato: 0.8, density: 2, bpm: 108, register: 'full' },
-  memory:   { chords: ['Dm9'], bar: 11, organ: 0.35, strings: 0.3, ostinato: 0, density: 1, bpm: 90, register: 'soft' },
-  unseen:   { chords: ['Dm', 'Gm'], bar: 7.5, organ: 0.35, strings: 0.4, ostinato: 0.35, density: 1, bpm: 84, register: 'soft' },
-  decide:   { chords: ['Dm', 'Bb'], bar: 4, organ: 0.4, strings: 0.35, ostinato: 0, density: 1, bpm: 90, register: 'soft' },
-  glide:    { chords: ['Dm', 'Bb', 'F', 'C'], bar: 2.25, organ: 0.75, strings: 0.65, ostinato: 0.4, density: 1, bpm: 80, register: 'full' },
+  cold:     { chords: ['Dm'], bar: 14, organ: 0, strings: 0, ostinato: 0, density: 1, bpm: 90, register: 'soft' },
+  problem:  { chords: ['Dm'], bar: 10, organ: 0.5, strings: 0, ostinato: 0, density: 1, bpm: 90, register: 'soft' },
+  twin:     { chords: ['Dm', 'Bb'], bar: 4, organ: 0.55, strings: 0.3, ostinato: 0, density: 1, bpm: 90, register: 'soft' },
+  approach: { chords: ['Dsus'], bar: 8, organ: 0.4, strings: 0.35, ostinato: 0, density: 1, bpm: 90, register: 'soft' },
+  inside:   { chords: ['Dm', 'F'], bar: 6, organ: 0.32, strings: 0.28, ostinato: 0, density: 1, bpm: 90, register: 'soft' },
+  signal:   { chords: ['Dm', 'Dsus'], bar: 5, organ: 0.3, strings: 0.4, ostinato: 0, density: 1, bpm: 90, register: 'soft' },
+  pipeline: { chords: ['Dm', 'F', 'C', 'Bb'], bar: 3.5, organ: 0.45, strings: 0.35, ostinato: 0.55, density: 1, bpm: 96, register: 'soft' },
+  detect:   { chords: ['A'], bar: 6, organ: 0.55, strings: 0.55, ostinato: 0.8, density: 2, bpm: 104, register: 'full' },
+  memory:   { chords: ['Dm9'], bar: 7, organ: 0.35, strings: 0.3, ostinato: 0, density: 1, bpm: 90, register: 'soft' },
+  decide:   { chords: ['Dm', 'Bb'], bar: 3.5, organ: 0.4, strings: 0.35, ostinato: 0, density: 1, bpm: 90, register: 'soft' },
+  divert:   { chords: ['Dm', 'Bb', 'F', 'C'], bar: 2.25, organ: 0.75, strings: 0.65, ostinato: 0.4, density: 1, bpm: 80, register: 'full' },
   land:     { chords: ['Dm', 'Bb', 'F', 'C'], bar: 2.5, organ: 0.6, strings: 0.55, ostinato: 0, density: 1, bpm: 80, register: 'full' },
+  beyond:   { chords: ['Dm', 'Gm'], bar: 7.5, organ: 0.35, strings: 0.4, ostinato: 0.3, density: 1, bpm: 84, register: 'soft' },
 };
 
 export interface ScoreState {
@@ -185,15 +187,15 @@ export class Score {
     // memory voices and the rub are continuous layers
     set(this.memBus.gain, live && id === 'memory' && s.memory ? 0.05 : 0, 0.8);
     if (s.memory) this.memVoices.forEach((v, i) => set(v.g.gain, Math.min(1, Math.abs(s.memory![(i * 23) % s.memory!.length])), 0.12));
-    const rubOn = live && id === 'unseen' && !!s.unseen && !s.unseen.abnormal && s.unseen.forestTop < 0.99;
+    const rubOn = live && id === 'beyond' && !!s.unseen && !s.unseen.abnormal && s.unseen.forestTop < 0.99;
     set(this.rub.gain, rubOn ? 0.6 : 0, rubOn ? 1.2 : 0.4);
-    if (id === 'unseen' && s.unseen?.abnormal && !this.flagged && live) {
+    if (id === 'beyond' && s.unseen?.abnormal && !this.flagged && live) {
       // the open tier speaks: a bright open fifth
       this.flagged = true;
       [62, 69, 74, 81].forEach((m) => this.organ(m, now + 0.02, 3.5, 0.8, 'bright'));
       this.bell(86, now + 0.05, 1, 0.3);
     }
-    if (id !== 'unseen') this.flagged = false;
+    if (id !== 'beyond') this.flagged = false;
 
     // events whose story time falls inside the look-ahead window
     const ahead = 0.25;

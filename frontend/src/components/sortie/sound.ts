@@ -37,6 +37,8 @@ export interface SoundState {
   stage: number | null;
   /** Never seen: the open tier's verdict and the forest's confidence */
   unseen: { abnormal: boolean; forestTop: number } | null;
+  /** the flash-forward: the engine is dead and the music stops; only wind */
+  flash: boolean;
 }
 
 export class SortieSound {
@@ -344,19 +346,20 @@ export class SortieSound {
     set(this.eng.pan.pan, bay ? 0 : Math.max(-0.9, Math.min(0.9, listener.pan * 0.8)), 0.08);
 
     const running = playing && t < TOTAL + 0.5;
-    const loud = running ? (bay ? 0.55 : 0.12 + 0.5 * near) * (1 - 0.7 * idle) : 0.03;
+    const dead = s.flash;
+    const loud = running && !dead ? (bay ? 0.55 : 0.12 + 0.5 * near) * (1 - 0.7 * idle) : 0;
     set(this.eng.g.gain, 0.2 * loud, 0.2);
     set(this.eng.lp.frequency, bay ? 340 : 380 + 2400 * near * near, 0.25);
-    set(this.prop.g.gain, (bay ? 0.03 : 0.07 * (0.3 + near)) * (running ? 1 - 0.85 * idle : 0), 0.2);
-    set(this.valve.g.gain, running ? (bay ? 0.05 : 0.012 * near) : 0, 0.2);
+    set(this.prop.g.gain, (bay ? 0.03 : 0.07 * (0.3 + near)) * (running && !dead ? 1 - 0.85 * idle : 0), dead ? 0.03 : 0.2);
+    set(this.valve.g.gain, running && !dead ? (bay ? 0.05 : 0.012 * near) : 0, 0.2);
     set(this.bayRing.gain, bay && running ? 0.012 : 0, 0.3);
 
-    const high = id === 'open' ? 1 - 0.6 * k : id === 'glide' ? 0.9 : id === 'land' ? 0.5 * (1 - idle) : 0.45;
+    const high = dead ? 1.6 : id === 'cold' ? 0.25 + 0.75 * k : id === 'decide' || id === 'divert' ? 0.9 : id === 'land' ? 0.5 * (1 - idle) : 0.45;
     const windLevel = running ? (bay ? 0.015 : 0.09 * high) : 0.02;
     set(this.windL.gain, windLevel, 0.5); set(this.windR.gain, windLevel, 0.5);
 
     // into the detector's head: the outside goes dull
-    const mind = id === 'detect' || id === 'memory';
+    const mind = id === 'pipeline' || (id === 'detect' && t < T_CONFIRM) || id === 'memory' || id === 'beyond';
     set(this.airLP.frequency, mind ? 300 : bay ? 1200 : 18000, mind ? 0.6 : 0.3);
     set(this.reverbSend.gain, mind ? 0.45 : bay ? 0.35 : 0.2, 0.6);
 
@@ -369,9 +372,9 @@ export class SortieSound {
       this.nextTick = now + Math.max(0.3125, 1.25 - 0.94 * z); // a 1.25 s pulse, tightening with the strongest scorer
     }
     if (!ticking) this.nextTick = Math.max(this.nextTick, now);
-    set(this.sub.gain, running && (id === 'drift' || id === 'detect') && t < T_CONFIRM ? 0.05 + 0.1 * clamp01(worst) : 0, 1.2);
+    set(this.sub.gain, running && (id === 'signal' || id === 'pipeline' || id === 'detect') && t < T_CONFIRM ? 0.05 + 0.1 * clamp01(worst) : 0, 1.2);
 
-    const rising = running && (id === 'drift' || (id === 'detect' && t < T_CONFIRM)) ? 0.02 + 0.11 * clamp01(worst / 1.5) : 0;
+    const rising = running && (id === 'pipeline' || (id === 'detect' && t < T_CONFIRM)) ? 0.02 + 0.11 * clamp01(worst / 1.5) : 0;
     set(this.riserBus.gain, rising, rising ? 0.6 : 0.05);
     this.riserPhase = (this.riserPhase + (running ? dt / 7 : 0)) % 1;
     this.riser.forEach((v, i) => {
@@ -392,9 +395,9 @@ export class SortieSound {
     if (s.memory) this.voices.forEach((v, i) => set(v.g.gain, Math.min(1, Math.abs(s.memory![i * 17 % s.memory!.length])) * 0.5, 0.15));
 
     // the glide swell
-    const sw = running && (id === 'glide' || id === 'land') ? (id === 'glide' ? 0.1 + 0.16 * k : 0.26 * (1 - clamp01((t - T_TOUCH - 1) / 5))) : 0;
-    set(this.swell.gain, sw * 0.25, id === 'glide' ? 1.4 : 0.8); // a pad under the score's organ
-    this.score.update({ t, ci, playing: running, stage: s.stage, newWinners, unseen: s.unseen, memory: s.memory, duck: bay ? 1 : 0 });
+    const sw = running && (id === 'divert' || id === 'land') ? (id === 'divert' ? 0.1 + 0.16 * k : 0.26 * (1 - clamp01((t - T_TOUCH - 1) / 5))) : 0;
+    set(this.swell.gain, sw * 0.25, id === 'divert' ? 1.4 : 0.8); // a pad under the score's organ
+    this.score.update({ t, ci, playing: running && !dead, stage: s.stage, newWinners, unseen: s.unseen, memory: s.memory, duck: bay ? 1 : 0 });
 
     // roll-out rumble, dying with speed
     const roll = t >= T_TOUCH && t < T_TOUCH + 4.6 ? 1 - (t - T_TOUCH) / 4.6 : 0;

@@ -1,6 +1,6 @@
 // Everything the film shows at a story time, assembled from the signal (story.ts) and the detector that
 // reads it (detector.ts). The alarm is latched at the gate's confirmation, as an operator's alarm is.
-import { T_TOUCH, gauges, smooth, startOf } from './story';
+import { T_DECIDE, T_TOUCH, gauges, smooth } from './story';
 import { T_CONFIRM, T_CROSS, tier0, type ScorerName } from './detector';
 
 export { T_CONFIRM, T_CROSS };
@@ -40,15 +40,10 @@ export function readout(t: number): Readout {
 /** Cross-cut to the ground station as the gate fires (real console recording). */
 export const INSERT = { at: T_CONFIRM - 0.05, dur: 3.0, src: '/survey/insert-confirm.mp4' };
 
-/** Radio traffic, captioned in the letterbox. Every line restates what is on screen. */
+/** Radio: used once, for the decision (the only voice in the film), and for the wheels. */
 export const RADIO: Array<{ at: number; who: string; line: string }> = [
-  { at: startOf('twin') + 1.5, who: 'Leh ground control', line: 'Twin locked on. All channels nominal.' },
-  { at: startOf('inside') + 6.0, who: 'Leh ground control', line: 'Injecting scenario: oil pressure loss, severity zero point eight.' },
-  { at: startOf('drift') + 2.5, who: 'ANUMAAN', line: 'Oil pressure trending below expected. Inside limits. Watching.' },
-  { at: T_CONFIRM + 0.6, who: 'ANUMAAN', line: 'Oil pressure loss confirmed. Three of five frames. ATA 79.' },
-  { at: startOf('decide') + 2.5, who: 'Leh ground control', line: 'Copy. Two point four hours remaining. Nearest field?' },
-  { at: startOf('glide') + 3.5, who: 'ANUMAAN', line: 'Thoise in glide reach, sixteen hundred feet margin. Leh short.' },
-  { at: startOf('land') + 0.8, who: 'Leh ground control', line: 'Diverting to Thoise.' },
+  { at: T_DECIDE + 10.0, who: 'ANUMAAN', line: 'Thoise in glide reach, sixteen hundred feet margin. Recommend divert Thoise.' },
+  { at: T_DECIDE + 12.2, who: 'Leh ground control', line: 'Copy. Diverting to Thoise.' },
   { at: T_TOUCH + 1.6, who: 'Thoise tower', line: 'Wheels down.' },
 ];
 export const RADIO_HOLD = 3.6;

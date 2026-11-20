@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ArrowDown, ArrowUpRight, Box, ChevronLeft, ChevronRight, Pause, Play, RotateCcw, Volume2, VolumeX } from 'lucide-react';
-import { CHAPTERS, DIRECTIVE, GLIDE, INJECTION, OIL, STARTS, TOTAL, T_INJECT, chapterAt, oilExpected, oilMeasured, startOf } from './story';
+import { CHAPTERS, DIRECTIVE, GLIDE, INJECTION, MOVEMENTS, OIL, STARTS, TOTAL, T_ASSESS, T_INJECT, chapterAt, gauges, oilExpected, oilMeasured, startOf } from './story';
 import { INSERT, RADIO, RADIO_HOLD, T_CONFIRM, readout, type Readout } from './timeline';
 import { NOMINAL_RAW, SCORERS, tier0 } from './detector';
 import { reservoir, startReservoir } from './brain';
@@ -28,9 +28,10 @@ interface Props {
 
 type Phase = 'gate' | 'insert' | 'play';
 
-const BAY_IN = 0.17, BAY_OUT = 0.93, BAY_INJECT = 0.434;
 const BAY_KEYS = ['oil', 'fuel', 'ignition', 'cooling', 'exhaust', 'gearbox', 'electrical', 'control'];
 const ENGINE_LINEUP: Array<[string, string]> = [['rotax_912is', 'Rotax 912 iS'], ['rotax_914', 'Rotax 914 F'], ['rotax_915is', 'Rotax 915 iS'], ['austro_ae300', 'Austro AE300'], ['vrde_jayem_2_2l', 'VRDE–Jayem 2.2L']];
+/** The order the assessment resolves the airfields: furthest first, the one that works last. */
+const FIELD_ORDER = ['VIKG', 'VILH', 'VI82'];
 const SCORER_LABEL = { fly_bloom: 'Fly Bloom', mahalanobis: 'Mahalanobis', max_abs_z: 'max |z|' } as const;
 
 const fmt = (v: number, d = 0) => v.toLocaleString('en-IN', { maximumFractionDigits: d, minimumFractionDigits: d });
@@ -107,6 +108,7 @@ export function SortieFilm({ onRunDemo, onOpenConsole, onOpenTwin, evidenceHref,
   const [bayInfo, setBayInfo] = useState<{ ready: boolean; meshes: number }>({ ready: false, meshes: 0 });
   const [muted, setMuted] = useState(true);
   const [opening, setOpening] = useState(0);
+  const [flash, setFlash] = useState(false);
   const [forceBegin, setForceBegin] = useState(false);
   // the loading dialog: polled while it is on screen
   const [load, setLoad] = useState(() => ({ ...preloader.summary(), tasks: preloader.tasks.map((t) => ({ ...t })), ready: preloader.ready, failed: preloader.anyFailed }));
@@ -143,7 +145,7 @@ export function SortieFilm({ onRunDemo, onOpenConsole, onOpenTwin, evidenceHref,
     const el = host.current, section = root.current, mind = mindRef.current;
     if (!el || !section || !mind) return;
     let raf = 0, disposed = false, last = performance.now(), lastUi = 0, lastGateFrame = 0;
-    let lastCi = -1, lastRadio = -1, wasActive = true;
+    let lastCi = -1, lastRadio = -1, wasActive = true, lastFlash = false;
     const io = new IntersectionObserver(([e]) => { clock.current.visible = e.intersectionRatio > 0.25; }, { threshold: [0, 0.25, 0.5] });
     io.observe(section);
     const onVis = () => sound.current?.setActive(!document.hidden && clock.current.visible);
@@ -233,25 +235,60 @@ export function SortieFilm({ onRunDemo, onOpenConsole, onOpenTwin, evidenceHref,
         const W = section.clientWidth, H = section.clientHeight;
         g.clearRect(0, 0, W, H);
         const R = region(W, H, lb);
-        const aDetect = id === 'detect' ? sstep(0, 0.1, k) * (1 - sstep(0.94, 1, k)) : 0;
+        const aDetect = id === 'detect' && c.t < T_CONFIRM ? sstep(0, 0.1, k) : 0;
         const aMemory = id === 'memory' ? sstep(0, 0.08, k) * (1 - sstep(0.94, 1, k)) : 0;
         drawDetect(g, R, c.t, aDetect);
         drawMemory(g, R, c.t, startOf('memory'), res, aMemory);
         const fade = (x: number) => sstep(0, 0.07, x) * (1 - sstep(0.95, 1, x));
         drawPipeline(g, R, c.t, k, res, id === 'pipeline' ? fade(k) : 0);
-        const unseen: UnseenState | null = drawUnseen(g, R, k, res, id === 'unseen' ? fade(k) : 0);
+        const unseen: UnseenState | null = drawUnseen(g, R, k, res, id === 'beyond' ? fade(k) : 0);
+        // the engine is measured: points on the real geometry, their lines gathering into one bundle
+        if (screen.bay) {
+          const bx = W * (screen.bay.split > 0 ? 0.97 : 0.9), by = H * 0.52;
+          screen.bay.sensors.forEach((sn) => {
+            if (!sn.on) return;
+            g.strokeStyle = sn.hot ? 'rgba(255, 140, 70, 0.75)' : 'rgba(88, 230, 242, 0.45)'; g.lineWidth = sn.hot ? 1.6 : 1;
+            g.beginPath(); g.moveTo(sn.x, sn.y); g.bezierCurveTo(sn.x + (bx - sn.x) * 0.5, sn.y, bx - 40, by, bx, by); g.stroke();
+            g.fillStyle = sn.hot ? 'rgba(255, 140, 70, 1)' : 'rgba(88, 230, 242, 1)';
+            g.beginPath(); g.arc(sn.x, sn.y, 4, 0, Math.PI * 2); g.fill();
+            g.font = '600 11px "JetBrains Mono", monospace'; g.textAlign = 'left';
+            g.fillStyle = 'rgba(238, 246, 243, 0.85)'; g.fillText(sn.channels, sn.x + 9, sn.y - 8);
+          });
+        }
+        // the assessment: lines from the aircraft to each field, resolving one at a time
+        if (id === 'decide' && screen.aircraft.on) {
+          FIELD_ORDER.forEach((fid, n) => {
+            const at = T_ASSESS + 1.4 + n * 1.3;
+            if (c.t < at - 0.9) return;
+            const f = screen.fields.find((x) => x.id === fid); const spec = GLIDE.fields.find((x) => x.id === fid);
+            if (!f || !spec || !f.on) return;
+            const done = c.t >= at, grow = Math.min(1, (c.t - (at - 0.9)) / 0.9);
+            g.setLineDash(done ? [] : [6, 6]);
+            g.strokeStyle = done ? (spec.reach ? 'rgba(88, 230, 242, 0.95)' : 'rgba(255, 79, 139, 0.85)') : 'rgba(238, 246, 243, 0.5)';
+            g.lineWidth = done && spec.reach ? 2 : 1.2;
+            g.beginPath(); g.moveTo(screen.aircraft.x, screen.aircraft.y);
+            g.lineTo(screen.aircraft.x + (f.x - screen.aircraft.x) * grow, screen.aircraft.y + (f.y - screen.aircraft.y) * grow); g.stroke();
+            g.setLineDash([]);
+          });
+        }
         sound.current?.update({
           t: c.t, r: rd, ci: i, playing: running, dt, listener: w.listener, bay: !!screen.bay,
           winners: id === 'detect' ? d0.winners : null,
           stage: id === 'pipeline' ? pipelineReach(k) : null,
           unseen,
           memory: id === 'memory' && res ? res.act.subarray(memF * res.show, (memF + 1) * res.show) : null,
+          flash: screen.flash,
         });
+        if (screen.flash !== lastFlash) { lastFlash = screen.flash; setFlash(screen.flash); }
 
         // the dissolve into and out of the engine bay
         if (flashRef.current) {
           const bump = (x: number, at: number, w2: number) => Math.max(0, 1 - Math.abs(x - at) / w2);
-          flashRef.current.style.opacity = id === 'inside' ? String(Math.max(bump(k, BAY_IN, 0.035), bump(k, BAY_OUT, 0.035)) * 0.92) : '0';
+          void bump;
+          // dissolves through light: into the engine, and out of it into the data
+          const op = id === 'approach' ? sstep(0.86, 0.98, k) : id === 'inside' ? 1 - sstep(0, 0.07, k)
+            : id === 'signal' ? sstep(0.88, 0.99, k) : id === 'pipeline' ? 1 - sstep(0, 0.06, k) : 0;
+          flashRef.current.style.opacity = String(op * 0.95);
         }
         const box = boxRef.current;
         if (box) {
@@ -266,7 +303,7 @@ export function SortieFilm({ onRunDemo, onOpenConsole, onOpenTwin, evidenceHref,
         }
         for (const key of BAY_KEYS) {
           const el2 = bayRefs.current[key]; if (!el2) continue;
-          const lab = screen.bay?.find((b) => b.key === key);
+          const lab = screen.bay?.labels.find((b) => b.key === key);
           el2.dataset.on = String(!!lab?.on);
           if (lab) el2.style.transform = `translate(${lab.x}px, ${lab.y}px)`;
         }
@@ -359,22 +396,32 @@ export function SortieFilm({ onRunDemo, onOpenConsole, onOpenTwin, evidenceHref,
 
   const ch = CHAPTERS[ci];
   const id = ch.id;
-  const u = id === 'inside' ? (progress - BAY_IN) / (BAY_OUT - BAY_IN) : -1;
-  const inBay = u >= 0 && u < 1;
-  const injected = inBay && u >= BAY_INJECT;
-  const split = inBay && u >= 0.7;
-  const showInstruments = id === 'twin' || id === 'drift';
-  const worst = Math.max(...SCORERS.map((s) => r.ratios[s]));
-  const tracking = id === 'drift' && worst >= 0.6 && !r.confirmed;
-  const locked = id === 'decide' && r.confirmed;
-  const showFields = id === 'glide' || id === 'land';
+  const inBay = (id === 'inside' || id === 'signal') && bayInfo.ready;
+  const signalHot = id === 'signal' && progress > 0.18;
+  const split = id === 'signal' && progress > 0.46 && progress < 0.78;
+  const showInstruments = id === 'twin' || (id === 'signal' && progress < 0.44);
+  const afterConfirm = r.t >= T_CONFIRM;
+  const locked = (id === 'detect' && afterConfirm) || (id === 'decide' && progress < 0.33);
+  const resolved = (fid: string) => r.t >= T_ASSESS + 1.4 + FIELD_ORDER.indexOf(fid) * 1.3;
+  const showFieldMark = (fid: string) => (id === 'decide' && resolved(fid)) || id === 'divert' || id === 'land';
+  const showGlide = (id === 'decide' && resolved('VI82')) || id === 'divert';
   const gated = phase === 'gate';
-  const mindOn = id === 'detect' || id === 'memory' || id === 'pipeline' || id === 'unseen';
+  const mindOn = id === 'pipeline' || (id === 'detect' && !afterConfirm) || id === 'memory' || id === 'beyond';
   const line = radio >= 0 ? RADIO[radio] : null;
+  const movement = ch.movement;
+  const mStart = STARTS[CHAPTERS.findIndex((c) => c.movement === movement)];
+  const mEnd = (() => { const last = CHAPTERS.map((c, i) => [c, i] as const).filter(([c]) => c.movement === movement).pop()!; return STARTS[last[1]] + last[0].dur; })();
+  const mProgress = Math.min(1, Math.max(0, (r.t - mStart) / (mEnd - mStart)));
+  const oilAtConfirm = gauges(T_CONFIRM).oilP;
+  const copy = id === 'detect' && afterConfirm
+    ? { title: `Confirmed ${(T_CONFIRM - T_INJECT).toFixed(1)} s after onset.`, body: `Oil pressure is still ${fmt(oilAtConfirm, 2)} bar; the fixed limit is ${OIL.limit}. The gauge never left the green.` }
+    : { title: ch.title, body: ch.body };
+  const showCopy = !!copy.title && !flash && !(id === 'cold' && progress < 0.42) && !(id === 'signal' && split);
+  const needle = -120 + 240 * Math.min(1, Math.max(0, r.oilP / 6)); // 0..6 bar across 240 degrees
   const confirmAfter = (T_CONFIRM - T_INJECT).toFixed(1);
 
   return (
-    <section ref={root} className={`so-film is-${id}${status === 'nogl' ? ' is-nogl' : ''}${ci >= CHAPTERS.findIndex((x) => x.id === 'glide') ? ' is-imax' : ''}${gated ? ' is-gated' : ''}${ended ? ' is-ended' : ''}${mindOn ? ' is-mind' : ''}${inBay ? ' is-bay' : ''}`} aria-labelledby="so-title" aria-roledescription="film">
+    <section ref={root} className={`so-film is-${id}${status === 'nogl' ? ' is-nogl' : ''}${ci >= CHAPTERS.findIndex((x) => x.id === 'decide') ? ' is-imax' : ''}${flash ? ' is-flash' : ''}${gated ? ' is-gated' : ''}${ended ? ' is-ended' : ''}${mindOn ? ' is-mind' : ''}${inBay ? ' is-bay' : ''}`} aria-labelledby="so-title" aria-roledescription="film">
       <div className="so-stage" ref={host} aria-hidden />
       <div className="so-shade" aria-hidden />
       <canvas ref={mindRef} className="so-mind" aria-hidden />
@@ -383,13 +430,13 @@ export function SortieFilm({ onRunDemo, onOpenConsole, onOpenTwin, evidenceHref,
 
       <h1 id="so-title" className="so-sr">ANUMAAN: a real-time digital twin that catches an engine fault early, names it, and brings the aircraft home</h1>
 
-      <div ref={boxRef} className={`so-box${locked ? ' is-locked' : tracking ? ' is-tracking' : ''}`} aria-hidden>
+      <div ref={boxRef} className={`so-box${locked ? ' is-locked' : ''}`} aria-hidden>
         <i /><i /><i /><i />
         <span className="so-box-tag">{locked ? `Fault confirmed · ${DIRECTIVE.fault}` : 'Residual rising'}</span>
       </div>
 
       {GLIDE.fields.map((f) => (
-        <div key={f.id} ref={(n) => { markRefs.current[f.id] = n; }} className={`so-mark${f.reach ? ' is-reach' : ''}${showFields ? ' is-shown' : ''}`} aria-hidden>
+        <div key={f.id} ref={(n) => { markRefs.current[f.id] = n; }} className={`so-mark${f.reach ? ' is-reach' : ''}${showFieldMark(f.id) ? ' is-shown' : ''}`} aria-hidden>
           <svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 2 L22 12 L12 22 L2 12 Z" /><path d="M12 7v10M7 12h10" /></svg>
           <span><strong>{f.name}</strong>{f.reach ? `in reach · +${fmt(f.marginFt)} ft` : `${fmt(-f.marginFt)} ft short`}</span>
         </div>
@@ -397,35 +444,57 @@ export function SortieFilm({ onRunDemo, onOpenConsole, onOpenTwin, evidenceHref,
 
       {/* engine bay: subsystem callouts on the real geometry */}
       {BAY_KEYS.map((key) => (
-        <div key={key} ref={(n) => { bayRefs.current[key] = n; }} className={`so-callout${key === 'oil' && injected ? ' is-fault' : ''}`} aria-hidden>
+        <div key={key} ref={(n) => { bayRefs.current[key] = n; }} className={`so-callout${key === 'oil' && signalHot ? ' is-fault' : ''}`} aria-hidden>
           <i /><span>{subsystemName(key)}</span>
         </div>
       ))}
-      <div className={`so-baytag${inBay ? ' is-shown' : ''}`} aria-hidden={!inBay}>
+      <div className={`so-baytag${inBay && id === 'inside' ? ' is-shown' : ''}`} aria-hidden={!(inBay && id === 'inside')}>
         <strong>Rotax 912 iS</strong>
         <span>{bayInfo.ready ? `${bayInfo.meshes} named components` : '109 named components'} · from assets/blender/rotax_912_is_sport.blend</span>
       </div>
-      <div className={`so-inject${injected ? ' is-shown' : ''}`} aria-hidden={!injected}>
-        <p className="so-inject-line"><b>{INJECTION.method}</b> {INJECTION.path}</p>
-        <p className="so-inject-body">{INJECTION.body}</p>
-        <p className="so-inject-map">component_map.json · OIL_PRESSURE_LOSS → Oil_Tank · read by oil_p, oil_t</p>
-      </div>
-      <figure className={`so-blender${split || (inBay && !bayInfo.ready) ? ' is-shown' : ''}`} aria-hidden={!split}>
-        <img src={injected || !inBay ? '/survey/blender/rotax_912is_oil_pressure_loss.webp' : '/survey/blender/rotax_912is_nominal.webp'} alt="" width={1200} height={675} loading="lazy" decoding="async" />
-        <figcaption><b>Blender</b> · the diagnostic app's materials, driven by the same map</figcaption>
+      <figure className={`so-blender${split ? ' is-shown' : ''}`} aria-hidden={!split}>
+        <img src="/survey/blender/rotax_912is_oil_pressure_loss.webp" alt="" width={1200} height={675} loading="lazy" decoding="async" />
+        <figcaption><b>Blender</b> · the same fault, the same component map, the diagnostic app's own materials</figcaption>
       </figure>
-      <p className={`so-webtag${split && bayInfo.ready ? ' is-shown' : ''}`} aria-hidden><b>Web</b> · live three.js render of /models/rotax_912is.glb · tests/test_component_map.py</p>
+      <p className={`so-webtag${split ? ' is-shown' : ''}`} aria-hidden><b>Web</b> · live render of /models/rotax_912is.glb</p>
+      {(id === 'inside' || id === 'signal') && !bayInfo.ready && (
+        <figure className="so-blender is-shown"><img src="/survey/blender/rotax_912is_nominal.webp" alt="" width={1200} height={675} /><figcaption><b>Blender</b> · Rotax 912 iS, 109 named components</figcaption></figure>
+      )}
+
+      {/* the old way: a gauge that is still green */}
+      <figure className={`so-gauge${id === 'problem' && progress > 0.18 && !flash ? ' is-shown' : ''}`} aria-hidden>
+        <svg viewBox="0 0 200 200" width="200" height="200">
+          <circle cx="100" cy="100" r="92" fill="rgba(6,12,14,0.78)" stroke="rgba(238,246,243,0.35)" strokeWidth="2" />
+          <path d="M 35.6 137.2 A 74 74 0 0 1 38.2 59.1" fill="none" stroke="#ff4f8b" strokeWidth="8" />
+          <path d="M 38.2 59.1 A 74 74 0 0 1 164.4 137.2" fill="none" stroke="#3fbf7f" strokeWidth="8" />
+          {[0, 1, 2, 3, 4, 5, 6].map((v) => { const a2 = ((-120 + v * 40) - 90) * Math.PI / 180; return <g key={v}><line x1={100 + 64 * Math.cos(a2)} y1={100 + 64 * Math.sin(a2)} x2={100 + 56 * Math.cos(a2)} y2={100 + 56 * Math.sin(a2)} stroke="rgba(238,246,243,0.8)" strokeWidth="2" /><text x={100 + 44 * Math.cos(a2)} y={104 + 44 * Math.sin(a2)} fill="rgba(238,246,243,0.75)" fontSize="12" textAnchor="middle" fontFamily="JetBrains Mono, monospace">{v}</text></g>; })}
+          <line x1="100" y1="100" x2={100 + 70 * Math.cos((needle - 90) * Math.PI / 180)} y2={100 + 70 * Math.sin((needle - 90) * Math.PI / 180)} stroke="#f4f6f5" strokeWidth="3" strokeLinecap="round" />
+          <circle cx="100" cy="100" r="6" fill="#f4f6f5" />
+          <text x="100" y="150" fill="rgba(238,246,243,0.7)" fontSize="11" textAnchor="middle" fontFamily="Sofia Sans Condensed, sans-serif" letterSpacing="2">OIL PRESS · BAR</text>
+        </svg>
+      </figure>
+      <p className={`so-flashcap${flash ? ' is-shown' : ''}`} aria-hidden>What a late warning looks like.</p>
+
+      {/* the decision, in the system's own words (backend/mission/prescriptive.py) */}
+      <aside className={`so-options${id === 'decide' ? ' is-shown' : ''}`} aria-label="Decision support">
+        <p className="so-opt-head">ATA 79 · {DIRECTIVE.fault} · RUL {fmt(r.rul, 1)} h ({fmt(r.rulLo, 1)}–{fmt(r.rulHi, 1)})</p>
+        <ol>
+          <li className={progress > 0.06 ? 'is-in' : undefined}><b>Continue as planned</b><span>18 h reliability {fmt(r.missionRel * 100, 0)}%</span></li>
+          <li className={progress > 0.15 ? 'is-in' : undefined}><b>Derate to 85%</b><span>damage rate −40% · still not achievable</span></li>
+          <li className={`${progress > 0.24 ? 'is-in' : ''}${resolved('VI82') ? ' is-pick' : ''}`}><b>{resolved('VI82') ? 'Divert Thoise' : 'Divert'}</b><span>{resolved('VI82') ? 'in glide reach · +1,600 ft' : 'assessing reach…'}</span></li>
+        </ol>
+      </aside>
 
       <figure className={`so-engines${id === 'pipeline' ? ' is-shown' : ''}`} aria-hidden={id !== 'pipeline'}>
         <ul>{ENGINE_LINEUP.map(([eid, name]) => <li key={eid}><img src={`/survey/posters/${eid}.webp`} alt="" width={1200} height={900} loading="lazy" decoding="async" /><small>{name}</small></li>)}</ul>
         <figcaption>One pipeline, five engine profiles, calibrated per aircraft. E17 (simulation): Mahalanobis AUROC 0.973 on an engine it had never seen.</figcaption>
       </figure>
 
-      <div className="so-copy" key={`${ch.id}-${opening}`}>
-        {id === 'open' && <p className="so-word"><span>ANUMAAN</span><span lang="hi">अनुमान</span></p>}
-        <h2>{ch.title}</h2>
-        <p>{ch.body}</p>
-      </div>
+      {showCopy && (
+        <div className={`so-copy is-${id}`} key={`${ch.id}-${opening}-${afterConfirm && id === 'detect' ? 'c' : ''}`}>
+          {id === 'cold' ? <><p className="so-place">{copy.body}</p><h2 className="so-one">{copy.title}</h2></> : <><h2>{copy.title}</h2><p>{copy.body}</p></>}
+        </div>
+      )}
 
       <aside className={`so-inst${showInstruments ? ' is-shown' : ''}`} aria-label="Engine telemetry, Rotax 912 iS">
         <header><strong>Rotax 912 iS</strong><span className={r.confirmed ? 'is-alarm' : r.raw ? 'is-warn' : undefined}>Twin {r.confirmed ? 'alarm' : r.raw ? 'deviation' : 'nominal'}</span></header>
@@ -448,13 +517,7 @@ export function SortieFilm({ onRunDemo, onOpenConsole, onOpenTwin, evidenceHref,
         <p className="so-sanity is-shown">Computed live in this browser by the ported tier-0 detector</p>
       </aside>
 
-      <aside className={`so-decide${id === 'decide' ? ' is-shown' : ''}`} aria-label="Decision support">
-        <div className="so-dec-row is-wide"><span>Maintenance directive</span><strong>{DIRECTIVE.ata} · {DIRECTIVE.fault}</strong><p>{DIRECTIVE.action}. Named by the reservoir readout; confirmed by the gate {confirmAfter} s after injection.</p></div>
-        <div className="so-dec-row"><span>Remaining useful life</span><strong>{fmt(r.rul, 1)} h</strong><p>{fmt(r.rulLo, 1)}–{fmt(r.rulHi, 1)} h, conformal interval</p></div>
-        <div className="so-dec-row"><span>This sortie</span><strong>{fmt(r.missionRel * 100, 0)}%</strong><p>odds of completing the 18 h ISR profile</p></div>
-      </aside>
-
-      <aside className={`so-glide${showFields ? ' is-shown' : ''}`} aria-label="Engine-out glide">
+      <aside className={`so-glide${showGlide ? ' is-shown' : ''}`} aria-label="Engine-out glide">
         <header><strong>Engine-out glide</strong><span>L/D {GLIDE.ld} · from {fmt(GLIDE.altFt)} ft</span></header>
         <ul>{GLIDE.fields.map((f) => <li key={f.id} className={f.reach ? 'is-reach' : undefined}><span>{f.name}<small>{f.id} · {f.nm} nm</small></span><span>{f.reach ? `+${fmt(f.marginFt)} ft` : `${fmt(-f.marginFt)} ft short`}</span></li>)}</ul>
         <p>Altitude now <output>{fmt(Math.round(r.altFt / 10) * 10)} ft</output></p>
@@ -464,7 +527,7 @@ export function SortieFilm({ onRunDemo, onOpenConsole, onOpenTwin, evidenceHref,
       <div className="so-grain" aria-hidden />
 
       <div className="so-top">
-        <p className="so-note" aria-hidden>{status === 'loading' ? 'Loading the airframe…' : 'Simulated sortie · detector and reservoir computed live · schematic terrain'}</p>
+        <p className="so-note" aria-hidden>{status === 'loading' ? 'Loading the airframe…' : 'A dramatised simulated sortie · everything inside the machine computed live'}</p>
         <p className="so-radio" aria-live="polite">{line && <span key={radio}><b>{line.who}</b>{line.line}</span>}</p>
         <p className="so-clock" aria-hidden><span>Sortie 26054</span><span ref={clockRef}>{missionClock(previewAt ?? 0)}</span></p>
       </div>
@@ -473,18 +536,18 @@ export function SortieFilm({ onRunDemo, onOpenConsole, onOpenTwin, evidenceHref,
         <button type="button" className="so-icon" onClick={toggle} aria-label={ended ? 'Replay the film' : playing ? 'Pause the film' : 'Play the film'}>
           {ended ? <RotateCcw size={16} /> : playing ? <Pause size={16} /> : <Play size={16} />}
         </button>
-        <button type="button" className="so-icon" onClick={() => goTo(ci - 1)} disabled={ci === 0} aria-label="Previous chapter"><ChevronLeft size={18} /></button>
-        <ol className="so-rail">
-          {CHAPTERS.map((c, i) => (
-            <li key={c.id}>
-              <button type="button" onClick={() => goTo(i)} aria-current={i === ci ? 'step' : undefined} className={i < ci ? 'is-done' : i === ci ? 'is-now' : undefined}>
-                <span className="so-rail-fill" style={i === ci ? { transform: `scaleX(${Math.min(1, progress)})` } : undefined} />
-                <span className="so-rail-label">{c.rail}</span>
+        <button type="button" className="so-icon" onClick={() => goTo(CHAPTERS.findIndex((c) => c.movement === Math.max(0, movement - (r.t - mStart > 2 ? 0 : 1))))} disabled={ci === 0} aria-label="Previous movement"><ChevronLeft size={18} /></button>
+        <ol className="so-rail" style={{ gridTemplateColumns: `repeat(${MOVEMENTS.length}, minmax(0, 1fr))` }}>
+          {MOVEMENTS.map((m, mi) => (
+            <li key={m}>
+              <button type="button" onClick={() => goTo(CHAPTERS.findIndex((c) => c.movement === mi))} aria-current={mi === movement ? 'step' : undefined} className={mi < movement ? 'is-done' : mi === movement ? 'is-now' : undefined}>
+                <span className="so-rail-fill" style={mi === movement ? { transform: `scaleX(${mProgress})` } : undefined} />
+                <span className="so-rail-label">{m}</span>
               </button>
             </li>
           ))}
         </ol>
-        <button type="button" className="so-icon" onClick={() => goTo(ci + 1)} disabled={ci === CHAPTERS.length - 1} aria-label="Next chapter"><ChevronRight size={18} /></button>
+        <button type="button" className="so-icon" onClick={() => goTo(CHAPTERS.findIndex((c) => c.movement === movement + 1))} disabled={movement >= MOVEMENTS.length - 1} aria-label="Next movement"><ChevronRight size={18} /></button>
         <button type="button" className="so-icon" onClick={toggleSound} aria-label={muted ? 'Turn sound on' : 'Turn sound off'} aria-pressed={!muted}>
           {muted ? <VolumeX size={16} /> : <Volume2 size={16} />}
         </button>
@@ -503,6 +566,7 @@ export function SortieFilm({ onRunDemo, onOpenConsole, onOpenTwin, evidenceHref,
           <p className="so-final-hi"><span lang="hi">अनुमान</span> · inference</p>
           <ul className="so-final-facts">
             <li><b>Computed, not animated.</b> The detector you watched was the backend's tier-0 algorithm running in this browser: it confirmed the fault {confirmAfter} s after injection, and its gate held back {NOMINAL_RAW} raw false alarm{NOMINAL_RAW === 1 ? '' : 's'} before the fault existed.</li>
+            <li><b>How it was tested.</b> The fault in this film, like every fault in the console, was injected into the plant model through the console's own API: <code>{INJECTION.method} {INJECTION.path}</code>.</li>
             <li><b>In the runtime</b> (simulation, five engines × three tails, experiment E20): every scalar-visible fault detected, zero confirmed false alarms in 300 nominal ticks, oil-pressure loss confirmed 7–10 s after injection.</li>
           </ul>
           <div className="so-final-actions">
@@ -524,7 +588,7 @@ export function SortieFilm({ onRunDemo, onOpenConsole, onOpenTwin, evidenceHref,
           {armed && (canBegin ? (
             <div className="so-gate-inner" key="ready">
               <p id="so-gate-title" className="so-gate-title">What we built, running</p>
-              <p className="so-gate-lede">Two minutes through the real system: the CAD, one frame through every stage of the pipeline, our detector and reservoir computed live in your browser, a fault no model was trained for, and the airframe brought home.</p>
+              <p className="so-gate-lede">Two and a half minutes. One aircraft, one engine, one fault: caught while every gauge was green, traced through the real system, and brought home. Everything inside the machine is computed live in your browser.</p>
               {load.failed && <p className="so-gate-warn">Some assets did not load; the film will use stills where it has to.</p>}
               <div className="so-gate-actions">
                 <button ref={gateBtn} type="button" className="so-btn so-btn-light" onClick={() => begin(true)}><Volume2 size={17} aria-hidden /> Begin with sound</button>

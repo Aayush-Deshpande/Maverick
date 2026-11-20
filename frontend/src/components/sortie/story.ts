@@ -3,72 +3,78 @@
 // The fault is the guided demo's oil-pressure loss on the Rotax 912 iS. The detector and the reservoir that
 // read this stream are computed live in the browser (detector.ts, reservoir.worker.ts).
 
-export type ChapterId = 'open' | 'twin' | 'inside' | 'pipeline' | 'drift' | 'detect' | 'memory' | 'unseen' | 'decide' | 'glide' | 'land';
+export type ChapterId = 'cold' | 'problem' | 'twin' | 'approach' | 'inside' | 'signal' | 'pipeline' | 'detect' | 'memory' | 'decide' | 'divert' | 'land' | 'beyond';
 
 export interface Chapter {
   id: ChapterId;
-  rail: string;
+  /** the movement this shot belongs to (the rail groups by movement) */
+  movement: number;
   title: string;
   body: string;
   /** Story seconds this chapter plays for. */
   dur: number;
 }
 
+/** The five movements of the film, plus the cold open (docs/demo/FILM_TREATMENT.md). */
+export const MOVEMENTS = ['One engine', 'The problem', 'The twin', 'The signal', 'The decision', 'Beyond'];
+
 export const CHAPTERS: Chapter[] = [
+  { id: 'cold', movement: 0, dur: 14, title: 'One engine.', body: 'Ladakh · 18,000 ft · hour six of eighteen' },
   {
-    id: 'open', rail: 'Sortie', dur: 8,
-    title: 'Eighteen hours over Ladakh. One engine.',
-    body: 'A MALE UAV on an ISR sortie flies a single aero piston engine through valleys where the nearest runway can be a ridge away.',
+    id: 'problem', movement: 1, dur: 20,
+    title: 'A redline speaks last.',
+    body: 'A gauge that is still green is not an engine that is well. By the time the needle moves, the airframe is already committed.',
   },
   {
-    id: 'twin', rail: 'Twin', dur: 7,
-    title: 'A physics twin of this exact engine flies with it.',
-    body: 'A thermofluid model predicts every channel at this altitude, throttle and outside air. An unscented Kalman filter keeps its parameters honest. Measured and expected agree.',
+    id: 'twin', movement: 2, dur: 8,
+    title: 'A second engine flies alongside, in software.',
+    body: 'A physics model of this exact engine predicts every channel at this altitude, throttle and outside air.',
+  },
+  { id: 'approach', movement: 2, dur: 8, title: '', body: '' },
+  {
+    id: 'inside', movement: 2, dur: 12,
+    title: 'One hundred and nine parts.',
+    body: 'The twin is this engine, part by part: the named components of the Blender assembly, and every place the engine is measured.',
   },
   {
-    id: 'inside', rail: 'Inside', dur: 13,
-    title: 'Not one model. One hundred and nine parts.',
-    body: 'The twin is built from the full Blender assembly, every component named. A fault is injected into the plant through the same API the console uses, and the component it lives in lights up.',
-  },
-  {
-    id: 'pipeline', rail: 'One frame', dur: 15,
-    title: 'One frame. Twelve stages. Fifty milliseconds.',
-    body: 'Follow a single telemetry frame through the real pipeline: ingest, sensor sanity, the physics twin, calibration, three scorers, the gate, the reservoir, diagnosis, prognosis, the mission, and a hash that seals it into the sortie record.',
-  },
-  {
-    id: 'drift', rail: 'Drift', dur: 7,
+    id: 'signal', movement: 3, dur: 10,
     title: 'Oil pressure slips. Nothing is red yet.',
-    body: 'The reading is still far inside its limit, so a redline stays silent. The gap from what the twin expects is already growing.',
+    body: 'The fault begins inside the oil system. Every gauge is still in the green; the gap from what the twin expects is not.',
   },
   {
-    id: 'detect', rail: 'Detect', dur: 12,
+    id: 'pipeline', movement: 3, dur: 14,
+    title: 'One frame. Twelve stages. Fifty milliseconds.',
+    body: 'Follow one frame of telemetry out of the engine and through the real pipeline, to the hash that seals it into the sortie record.',
+  },
+  {
+    id: 'detect', movement: 3, dur: 12,
     title: 'Thirteen numbers, read the way a fly reads a smell.',
-    body: 'Calibrated residuals expand into 260 sparse units and only the strongest 13 fire. Three scorers, each with a split-conformal threshold, and three of the last five frames must agree before the crew is paged.',
+    body: 'Calibrated residuals expand into 260 sparse units and only the strongest 13 fire. Three scorers with split-conformal thresholds; three of the last five frames must agree.',
   },
   {
-    id: 'memory', rail: 'Memory', dur: 11,
+    id: 'memory', movement: 3, dur: 7,
     title: 'It reads the path, not the snapshot.',
-    body: 'A 500-node recurrent reservoir carries a fading memory of every frame before this one. A readout trained on this engine’s simulated fault library names the fault from how the drift developed.',
+    body: 'A 500-node reservoir carries a fading memory of every frame before this one, and names the fault from how the drift developed.',
   },
   {
-    id: 'unseen', rail: 'Never seen', dur: 15,
-    title: 'A forest can only name what it was taught.',
-    body: 'A random forest and the reservoir, trained here on the fault library, meet a fault that is not in it, and must answer with a name they know. The one-class tier, trained on nominal flight alone, says what is true: abnormal, and like nothing it was told about. Fly Bloom’s part is its memory: built without a single fault label, merged across a fleet without moving any telemetry.',
-  },
-  {
-    id: 'decide', rail: 'Decide', dur: 8,
+    id: 'decide', movement: 4, dur: 14,
     title: 'Detection is half the job.',
-    body: 'The finding becomes an ATA-chapter maintenance directive, a remaining-life estimate with a conformal interval, and the odds of finishing this sortie.',
+    body: 'The twin turns the finding into options, each with what it costs. Then it checks where the aircraft can still glide.',
   },
   {
-    id: 'glide', rail: 'Glide', dur: 9,
-    title: 'Where can it still land?',
-    body: 'From the current altitude and glide ratio, the twin draws the engine-out footprint and checks every airfield in the sector.',
+    id: 'divert', movement: 4, dur: 9,
+    title: 'ANUMAAN advises. The crew decides.',
+    body: 'The route is drawn from the glide reach. The aircraft leaves its valley, and power comes back to spare the engine.',
   },
   {
-    id: 'land', rail: 'Recover', dur: 13,
+    id: 'land', movement: 4, dur: 13,
     title: 'The airframe comes home.',
-    body: 'The crew turns for Thoise with margin to spare. The engine arrives at the hangar with its work order already written.',
+    body: 'The engine arrives at the hangar with its work order already written.',
+  },
+  {
+    id: 'beyond', movement: 5, dur: 15,
+    title: 'A forest can only name what it was taught.',
+    body: 'And if it had been something no one had ever seen? The one-class tier, trained on normal flight alone, says abnormal. Every flight makes the fleet sharper, and no telemetry leaves the aircraft.',
   },
 ];
 
@@ -82,12 +88,20 @@ export const smooth = (x: number) => { const k = clamp01(x); return k * k * (3 -
 
 /* ------------------------------------------------------------------ the fault and the sensor stream */
 
-/** The moment the fault is injected into the plant (inside the Inside chapter, on screen). */
-export const T_INJECT = startOf('inside') + 6.5;
+/** The moment the fault begins (in the oil system, on screen in the engine bay). */
+export const T_INJECT = startOf('signal') + 1.0;
 /** Seconds the fault takes to develop (the console's ramp_sec, compressed to story time). */
-const RAMP = 108;
-export const T_GLIDE = startOf('glide');
+const RAMP = 85;
+/** The decision: options, then the glide assessment sweeps out from the aircraft. */
+export const T_DECIDE = startOf('decide');
+export const T_ASSESS = T_DECIDE + 5.0;
+/** The crew accepts the divert: the aircraft turns off its valley and power comes back. */
+export const T_TURN = startOf('divert') + 0.6;
+/** Kept for modules that key the derate and descent to it. */
+export const T_GLIDE = T_TURN;
 export const T_TOUCH = startOf('land') + 7.0;
+/** The flash-forward: two silent seconds of what a late warning looks like. */
+export const FLASH = { from: startOf('problem') + 10.5, to: startOf('problem') + 12.8 };
 /** One detector frame per this many story seconds (the runtime ticks once per simulated second). */
 export const FRAME = 0.5;
 

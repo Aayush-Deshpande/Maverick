@@ -176,8 +176,11 @@ export function drawMemory(g: CanvasRenderingContext2D, R: Region, t: number, st
     const [nx, ny] = map(res.path[named * 2], res.path[named * 2 + 1]);
     g.strokeStyle = `rgba(${ROSE},1)`; g.lineWidth = 1.5; g.beginPath(); g.arc(nx, ny, 9, 0, Math.PI * 2); g.stroke();
     const label = `named ${(named * FRAME - T_INJECT).toFixed(1)} s after injection`;
-    const roomLeft = nx - 13 - g.measureText(label).width > px + 4;
-    text(g, label, roomLeft ? nx - 13 : nx + 13, ny + 22, `600 11px ${MONO}`, `rgba(${ROSE},1)`, roomLeft ? 'right' : 'left');
+    g.font = `600 11px ${MONO}`;
+    // above the marker, centred on it and kept inside the panel, clear of the class poles beside it
+    const lw = g.measureText(label).width;
+    const lx = Math.min(px + pw - 8 - lw, Math.max(px + 8, nx - lw / 2));
+    text(g, label, lx, ny - 16, `600 11px ${MONO}`, `rgba(${ROSE},1)`, 'left');
   }
   text(g, replay < 1 ? `replaying memory · ${(tNow - T_INJECT).toFixed(1)} s after injection` : 'live', px, py + ph + 16,
     `500 10.5px ${MONO}`, `rgba(${INK},0.55)`);

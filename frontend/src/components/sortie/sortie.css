@@ -483,3 +483,62 @@ html.so-locked, html.so-locked body { overflow: hidden; }
 .so-engines figcaption { margin-top: 10px; font-family: var(--f-data); font-size: 11.5px; color: var(--so-mute); }
 .so-rail-label { font-size: 12px; }
 @media (max-width: 760px) { .so-engines { display: none; } }
+
+/* ---------- the treatment: gauge, flash-forward, options, cold open ---------- */
+.so-gauge {
+  position: absolute; z-index: 3; margin: 0; right: calc(var(--pad) + 4vw); top: 50%;
+  transform: translateY(-50%) scale(0.94); opacity: 0; visibility: hidden;
+  filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.55));
+  transition: opacity 700ms var(--so-ease), transform 900ms var(--so-ease), visibility 0s 700ms;
+}
+.so-gauge.is-shown { opacity: 1; visibility: visible; transform: translateY(-50%); transition: opacity 700ms var(--so-ease), transform 900ms var(--so-ease), visibility 0s; }
+.so-gauge svg { width: clamp(150px, 16vw, 220px); height: auto; }
+.so-gauge line:last-of-type { transition: none; }
+
+.so-film.is-flash canvas { filter: grayscale(1) contrast(1.15) brightness(0.78); }
+.so-film.is-flash .so-top, .so-film.is-flash .so-controls { opacity: 0.15; transition: opacity 200ms; }
+.so-flashcap {
+  position: absolute; z-index: 4; left: 50%; bottom: 22%; margin: 0; transform: translateX(-50%);
+  font-family: var(--f-note); font-style: italic; font-size: clamp(1.1rem, 1.8vw, 1.5rem); color: var(--so-ink);
+  opacity: 0; transition: opacity 300ms; text-align: center; white-space: nowrap; pointer-events: none;
+}
+.so-flashcap.is-shown { opacity: 0.92; }
+
+.so-options {
+  position: absolute; z-index: 3; left: var(--pad); top: calc(max(var(--lb, 0px), 40px) + 14px);
+  width: min(400px, 36vw); padding: 16px 18px 12px;
+  background: var(--so-panel); border: 1px solid var(--so-line); border-radius: 4px;
+  backdrop-filter: blur(10px) saturate(130%);
+  opacity: 0; visibility: hidden; transform: translateX(-14px);
+  transition: opacity 500ms var(--so-ease), transform 700ms var(--so-ease), visibility 0s 500ms;
+}
+.so-options.is-shown { opacity: 1; visibility: visible; transform: none; transition: opacity 500ms var(--so-ease), transform 700ms var(--so-ease), visibility 0s; }
+.so-opt-head { margin: 0 0 10px; font-family: var(--f-data); font-size: 11.5px; color: var(--so-amber); letter-spacing: 0.02em; }
+.so-options ol { list-style: none; margin: 0; padding: 0; counter-reset: opt; }
+.so-options li {
+  counter-increment: opt; display: grid; grid-template-columns: 22px 1fr; column-gap: 8px; padding: 9px 0;
+  border-top: 1px solid var(--so-line); opacity: 0; transform: translateY(6px);
+  transition: opacity 500ms var(--so-ease), transform 600ms var(--so-ease), color 400ms;
+}
+.so-options li::before { content: counter(opt); grid-row: span 2; font-family: var(--f-data); font-size: 12px; color: var(--so-mute); padding-top: 3px; }
+.so-options li.is-in { opacity: 0.62; transform: none; }
+.so-options li.is-pick { opacity: 1; }
+.so-options li b { font-family: var(--f-label); font-weight: 800; font-size: 17px; color: var(--so-ink); }
+.so-options li span { font-family: var(--f-data); font-size: 12px; color: var(--so-soft); }
+.so-options li.is-pick b, .so-options li.is-pick::before { color: var(--so-cyan); }
+
+.so-copy.is-cold { bottom: auto; top: 50%; left: 50%; transform: translate(-50%, -50%); width: min(760px, 86vw); text-align: center; }
+.so-copy.is-cold .so-one { font-size: clamp(2rem, 3.6vw, 3.4rem); }
+.so-place {
+  margin: 0 auto 16px !important; max-width: none !important; font-family: var(--f-data); font-size: 12.5px !important;
+  letter-spacing: 0.18em; text-transform: uppercase; color: var(--so-cyan) !important;
+}
+.so-film:has(.so-options.is-shown) .so-copy { left: auto; right: var(--pad); text-align: right; }
+.so-film:has(.so-options.is-shown) .so-copy p { margin-left: auto; }
+
+@media (max-width: 720px) {
+  .so-gauge { right: 16px; top: 30%; }
+  .so-options { left: 16px; right: 16px; width: auto; }
+  .so-flashcap { white-space: normal; width: calc(100% - 32px); }
+  .so-film:has(.so-options.is-shown) .so-copy { display: none; }
+}

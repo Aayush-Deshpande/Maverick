@@ -5,9 +5,9 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
-import { CHAPTERS, STARTS, TOTAL, T_TOUCH, T_GLIDE } from './story';
+import { CHAPTERS, STARTS, TOTAL, T_TOUCH, T_GLIDE, T_TURN, T_ASSESS, T_DECIDE, FLASH, startOf } from './story';
 import { T_CONFIRM, readout } from './timeline';
-import { EngineBay, type BayLabel, type ComponentMap } from './bay';
+import { EngineBay, type BayFrame, type ComponentMap } from './bay';
 import { preloader } from './preload';
 
 /* ------------------------------------------------------------------ noise */
@@ -55,12 +55,8 @@ const loopPts = [
 const path = new THREE.CatmullRomCurve3(loopPts, true, 'centripetal');
 const L = path.getLength();
 const S0 = 0.04 * L;
-const S_GLIDE = S0 + SPEED * T_GLIDE;
-const S_APPROACH = S0 + SPEED * (T_GLIDE + 1.5);
-const S_TOUCH = S_GLIDE + SPEED * (T_TOUCH - T_GLIDE);
-const S_RUNWAY = S_TOUCH - 60; // threshold sits just short of the touchdown point
-const S_LEH = S_GLIDE + 0.47 * L;
-
+const S_TURN = S0 + SPEED * T_TURN;       // where the aircraft leaves the valley it was following
+const S_LEH = S_TURN + 0.47 * L;           // Leh lies further along that valley: out of glide reach
 const wrap = (s: number) => ((s % L) + L) % L;
 const circ = (a: number, b: number) => { const d = Math.abs(wrap(a) - wrap(b)); return Math.min(d, L - d); };
 const sstep = (a: number, b: number, x: number) => { const k = Math.min(1, Math.max(0, (x - a) / (b - a))); return k * k * (3 - 2 * k); };
@@ -72,15 +68,44 @@ function rawFloor(s: number) {
 /** Valley floor height along the path, flattened around each airfield. */
 function floorAt(s: number) {
   let f = rawFloor(s);
-  for (const sa of [S_RUNWAY + 130, S_LEH]) {
+  for (const sa of [S_LEH]) {
     const w = sstep(620, 260, circ(s, sa));
     f = f + (rawFloor(sa) - f) * w;
   }
   return f;
 }
 
+/* ---- the divert: a banked turn out of the valley into a side basin, then the final approach to Thoise.
+   Built from where the aircraft actually is at the decision, so the turn starts tangent to its track. */
+const UP = new THREE.Vector3(0, 1, 0);
+const TURN_P = path.getPointAt(wrap(S_TURN) / L).setY(0);
+const TURN_T = path.getTangentAt(wrap(S_TURN) / L).setY(0).normalize();
+const TURN_N = (() => { const n = new THREE.Vector3().crossVectors(TURN_T, UP).normalize(); return n.dot(TURN_P) < 0 ? n.negate() : n; })();
+const turnCurve = new THREE.CatmullRomCurve3([
+  TURN_P.clone(),
+  TURN_P.clone().addScaledVector(TURN_T, 240),
+  TURN_P.clone().addScaledVector(TURN_T, 450).addScaledVector(TURN_N, 160),
+  TURN_P.clone().addScaledVector(TURN_T, 540).addScaledVector(TURN_N, 420),
+], false, 'centripetal');
+const L_TURN = turnCurve.getLength();
+const FINAL_DIR = turnCurve.getTangentAt(1).setY(0).normalize();
+const FINAL_P = turnCurve.getPointAt(1).setY(0);
+/** Branch distance to touchdown: the timeline fixes it, the final straight absorbs it. */
+const D_TOUCH = SPEED * (T_TOUCH - T_TURN);
+const D_THRESHOLD = D_TOUCH - 60;
+const RUNWAY_LEN = 340;
+function branchXZ(d: number, out = new THREE.Vector3()) {
+  if (d <= L_TURN) return out.copy(turnCurve.getPointAt(Math.max(0, d) / L_TURN)).setY(0);
+  return out.copy(FINAL_P).addScaledVector(FINAL_DIR, d - L_TURN);
+}
+function branchFloor(d: number) {
+  const f0 = floorAt(S_TURN), fr = f0 - 22; // the basin sits a little lower than the valley floor
+  return f0 + (fr - f0) * sstep(0, D_THRESHOLD, d);
+}
+const THOISE_CENTRE = branchXZ(D_THRESHOLD + RUNWAY_LEN / 2);
+
 /** Runway centres in plan view: the ground is kept flat around them so nothing pokes through the strip. */
-const RUNWAYS_XZ = [S_RUNWAY + 170, S_LEH].map((s) => { const p = path.getPointAt(wrap(s) / L); return [p.x, p.z]; });
+const RUNWAYS_XZ = [[THOISE_CENTRE.x, THOISE_CENTRE.z], ...[S_LEH].map((s) => { const p = path.getPointAt(wrap(s) / L); return [p.x, p.z]; })];
 
 const KARGIL = new THREE.Vector3(-4300, 0, 3100);
 const KARGIL_FLOOR = 60;
@@ -96,6 +121,10 @@ const dfFloor = new Float32Array(DF_N * DF_N);
     const s = (i / n) * L;
     const p = path.getPointAt(i / n);
     samples.push({ x: p.x, z: p.z, f: floorAt(s) });
+  }
+  for (let d = 0; d <= D_THRESHOLD + RUNWAY_LEN + 260; d += 12) {
+    const p = branchXZ(d);
+    samples.push({ x: p.x, z: p.z, f: branchFloor(d) });
   }
   for (let j = 0; j < DF_N; j++) for (let i = 0; i < DF_N; i++) {
     const x = (i / (DF_N - 1) - 0.5) * EXTENT, z = (j / (DF_N - 1) - 0.5) * EXTENT;
@@ -128,16 +157,21 @@ export function terrainHeight(x: number, z: number) {
 
 export interface Pose { pos: THREE.Vector3; fwd: THREE.Vector3; bank: number }
 
-function sAt(t: number) {
-  if (t <= T_TOUCH) return S0 + SPEED * t;
+function sAt(t: number) { return S0 + SPEED * Math.min(t, T_TURN); }
+/** Distance along the divert branch (0 before the turn), with a braking roll-out after touchdown. */
+function routeDist(t: number) {
+  if (t <= T_TURN) return 0;
+  if (t <= T_TOUCH) return SPEED * (t - T_TURN);
   const k = Math.min(1, (t - T_TOUCH) / ROLL);
-  return S_TOUCH + SPEED * ROLL * (k - (k * k) / 2);
+  return D_TOUCH + SPEED * ROLL * (k - (k * k) / 2);
 }
+/** Floor under the aircraft. */
+function groundAt(t: number) { return t < T_TURN ? floorAt(sAt(t)) : branchFloor(routeDist(t)); }
 /* ---- the approach and landing, built so nothing is discontinuous:
    a gentle push-over onto the glide slope, a linear glide, then a flare whose sink rate reaches zero
    exactly at touchdown (slope-matched to the glide); main wheels first with the nose up, one damped
    suspension compression, the nose lowered onto its wheel, and a braking roll-out. */
-const T_APPROACH = T_GLIDE + 1.5;
+const T_APPROACH = T_GLIDE + 1.5; // descent begins as the turn starts and power comes back
 const FLARE_K = 0.86;      // fraction of the approach flown on the glide slope
 const PUSHOVER = 0.12;     // fraction of the glide slope spent easing into it
 const T_FLARE = T_APPROACH + (T_TOUCH - T_APPROACH) * FLARE_K;
@@ -164,33 +198,40 @@ function altAt(t: number, s: number) {
   const ground = GEAR + RUNWAY_SURFACE;
   if (t >= T_TOUCH) return ground + suspension(t - T_TOUCH);
   const k = (t - T_APPROACH) / (T_TOUCH - T_APPROACH);
-  const h0 = CRUISE + 26 * Math.sin(S_APPROACH * 0.0035) + 10 * Math.sin(S_APPROACH * 0.011) - ground;
+  const sa = S_TURN + SPEED * 1.5;
+  const h0 = CRUISE + 26 * Math.sin(sa * 0.0035) + 10 * Math.sin(sa * 0.011) - ground;
   const c = 1 - PUSHOVER / 2;
   const hf = h0 / (1 + (2 * FLARE_K * c) / (1 - FLARE_K)); // flare entry height that matches the glide slope
   const h = k < FLARE_K ? h0 - (h0 - hf) * pushover(k / FLARE_K) : hf * (1 - (k - FLARE_K) / (1 - FLARE_K)) ** 2;
   return ground + h;
 }
 function pointAt(t: number, out = new THREE.Vector3()) {
-  const s = sAt(t);
-  path.getPointAt(wrap(s) / L, out);
-  out.y = floorAt(s) + altAt(t, s);
+  if (t < T_TURN) {
+    const s = sAt(t);
+    path.getPointAt(wrap(s) / L, out);
+    out.y = floorAt(s) + altAt(t, s);
+    return out;
+  }
+  const d = routeDist(t);
+  branchXZ(d, out);
+  out.y = branchFloor(d) + altAt(t, S_TURN + d);
   return out;
 }
 const _a = new THREE.Vector3(), _b = new THREE.Vector3();
 function heading(t: number) {
-  path.getTangentAt(wrap(sAt(t)) / L, _a);
-  return Math.atan2(_a.x, _a.z);
+  const p = pointAt(t - 0.05), q = pointAt(t + 0.05);
+  return Math.atan2(q.x - p.x, q.z - p.z);
 }
 export function pose(t: number): Pose {
   const pos = pointAt(t);
   pointAt(t - 0.15, _a); pointAt(t + 0.15, _b);
   const fwd = _b.clone().sub(_a);
-  if (fwd.lengthSq() < 1e-6) { path.getTangentAt(wrap(sAt(t)) / L, fwd); }
+  if (fwd.lengthSq() < 1e-6) { if (t < T_TURN) path.getTangentAt(wrap(sAt(t)) / L, fwd); else fwd.copy(FINAL_DIR); }
   fwd.normalize();
   let dh = heading(t + 0.5) - heading(t - 0.5);
   if (dh > Math.PI) dh -= Math.PI * 2; if (dh < -Math.PI) dh += Math.PI * 2;
   const moving = t < T_TOUCH ? 1 : 0;
-  const bank = Math.max(-0.55, Math.min(0.55, -dh * 1.5)) * moving;
+  const bank = Math.max(-0.48, Math.min(0.48, -dh * 1.5)) * moving; // a calculated turn: about 25 degrees of bank at most
   return { pos, fwd, bank };
 }
 
@@ -265,10 +306,14 @@ const CYAN = new THREE.Color('#58e6f2');
 const FOG_D = 0.000155;
 
 export interface ScreenField { id: string; x: number; y: number; on: boolean }
-export interface Screen { box: { x: number; y: number; w: number; h: number; on: boolean }; fields: ScreenField[]; bay: BayLabel[] | null }
+export interface Screen {
+  box: { x: number; y: number; w: number; h: number; on: boolean };
+  fields: ScreenField[];
+  bay: BayFrame | null;
+  aircraft: { x: number; y: number; on: boolean };
+  flash: boolean;
+}
 
-/** The Inside chapter's shape: push in, the bay, pull out (fractions of the chapter). */
-export const BAY_IN = 0.17, BAY_OUT = 0.93;
 
 function glowTexture() {
   const c = document.createElement('canvas'); c.width = c.height = 64;
@@ -302,6 +347,15 @@ export class SortieWorld {
   private ringCenter = new THREE.Vector2();
   private ringR = 1;
   private tailPts: THREE.Vector3[] = [];
+  private bodyMats: THREE.Material[] = [];
+  private xray = 0;
+  private prop = new THREE.Group();
+  private propLocal = new THREE.Vector3();
+  private propDisc: THREE.Mesh | null = null;
+  private propBlades: THREE.Group | null = null;
+  private flashBase: { p: THREE.Vector3; fwd: THREE.Vector3 } | null = null;
+  private wasFlash = false;
+  private glidePathCount = 0;
   bay: EngineBay | null = null;
   /** Where the aircraft is for the listener: pan, distance, closing speed (for Doppler). */
   listener = { pan: 0, dist: 100, closing: 0 };
@@ -355,10 +409,8 @@ export class SortieWorld {
     (this.scene as THREE.Scene & { environmentIntensity?: number }).environmentIntensity = 0.45;
 
     // airfields
-    const runwayAt = (s: number, len: number, id: string) => {
-      const c = new THREE.Vector3(); path.getPointAt(wrap(s + len / 2) / L, c); c.y = floorAt(s) + 0.6;
-      const tan = new THREE.Vector3(); path.getTangentAt(wrap(s + len / 2) / L, tan); tan.y = 0; tan.normalize();
-      const g = new THREE.Group(); g.position.copy(c); g.rotation.y = Math.atan2(tan.x, tan.z);
+    const runwayAt = (c: THREE.Vector3, dir: THREE.Vector3, len: number, id: string) => {
+      const g = new THREE.Group(); g.position.copy(c); g.rotation.y = Math.atan2(dir.x, dir.z);
       const strip = new THREE.Mesh(new THREE.PlaneGeometry(26, len), new THREE.MeshBasicMaterial({ color: 0x1b2224 }));
       strip.rotation.x = -Math.PI / 2; g.add(strip);
       const lights: number[] = [];
@@ -369,12 +421,18 @@ export class SortieWorld {
       this.scene.add(g);
       this.fieldPos.push({ id, p: c.clone().add(new THREE.Vector3(0, 6, 0)) });
     };
-    runwayAt(S_RUNWAY, 340, 'VI82');
-    runwayAt(S_LEH - 170, 340, 'VILH');
+    // Thoise: at the end of the divert branch, aligned with the final approach
+    runwayAt(THOISE_CENTRE.clone().setY(branchFloor(D_THRESHOLD + RUNWAY_LEN / 2) + RUNWAY_SURFACE), FINAL_DIR, RUNWAY_LEN, 'VI82');
+    // Leh: further along the valley the aircraft was following
+    {
+      const c = path.getPointAt(wrap(S_LEH) / L); c.y = floorAt(S_LEH) + RUNWAY_SURFACE;
+      const tan = path.getTangentAt(wrap(S_LEH) / L).setY(0).normalize();
+      runwayAt(c, tan, RUNWAY_LEN, 'VILH');
+    }
     const kg = KARGIL.clone(); kg.y = KARGIL_FLOOR + 6; this.fieldPos.push({ id: 'VIKG', p: kg });
 
     // glide footprint, centred where the decision is made
-    const at = pointAt(T_GLIDE);
+    const at = pointAt(T_ASSESS);
     this.ringCenter.set(at.x, at.z);
     const dT = Math.hypot(this.fieldPos[0].p.x - at.x, this.fieldPos[0].p.z - at.z);
     const dL = Math.hypot(this.fieldPos[1].p.x - at.x, this.fieldPos[1].p.z - at.z);
@@ -382,8 +440,9 @@ export class SortieWorld {
 
     // glide path: where the aircraft will actually go, dashed
     const gp: THREE.Vector3[] = [];
-    for (let t = T_GLIDE; t <= T_TOUCH + ROLL; t += 0.1) gp.push(pointAt(t).add(new THREE.Vector3(0, -1, 0)));
+    for (let t = T_TURN; t <= T_TOUCH + ROLL; t += 0.1) gp.push(pointAt(t).add(new THREE.Vector3(0, -1, 0)));
     const gpg = new THREE.BufferGeometry().setFromPoints(gp);
+    this.glidePathCount = gp.length;
     this.glidePath = new THREE.Line(gpg, new THREE.LineDashedMaterial({ color: 0xe9fbff, dashSize: 14, gapSize: 10, transparent: true, opacity: 0, depthWrite: false, fog: false }));
     this.glidePath.computeLineDistances();
     this.scene.add(this.glidePath);
@@ -436,7 +495,7 @@ export class SortieWorld {
     inner.scale.setScalar(scale);
     this.carrier.add(inner);
     const len = size.z * scale;
-    this.engineLocal.set(0, 0.6, -len * 0.47);
+    this.engineLocal.set(0, 0.6, -len * 0.42);
     this.glow.position.copy(this.engineLocal);
     this.carrier.updateMatrixWorld(true);
     // a sparse sample of the real hull, so the target box hugs the airframe from any angle
@@ -448,12 +507,41 @@ export class SortieWorld {
       const pa = m.geometry.attributes.position as THREE.BufferAttribute;
       const step = Math.max(1, Math.floor(pa.count / 60));
       for (let i = 0; i < pa.count; i += step) { v.fromBufferAttribute(pa, i).applyMatrix4(m.matrixWorld).applyMatrix4(inv); this.hull.push(v.clone()); }
+      // the airframe's own materials, made able to turn to X-ray on the approach to the nacelle
+      const mats = Array.isArray(m.material) ? m.material : [m.material];
+      mats.forEach((mt) => { if (mt && !this.bodyMats.includes(mt)) this.bodyMats.push(mt); });
     });
 
     // wheels: the lowest hull point near mid-fuselage is the main gear; the tail is checked separately
     const mid = this.hull.filter((q) => Math.abs(q.z) < len * 0.25);
     if (mid.length) GEAR = -Math.min(...mid.map((q) => q.y)) + 0.05;
     this.tailPts = this.hull.filter((q) => q.z < -len * 0.3);
+
+    // the pusher propeller: a blurred disc while the engine runs, two still blades when it does not
+    const tail = this.hull.filter((q) => q.z < -len * 0.45);
+    const propZ = Math.min(...this.hull.map((q) => q.z)) - 0.25;
+    const propY = tail.length ? tail.reduce((s2, q) => s2 + q.y, 0) / tail.length : 0;
+    this.propLocal.set(0, propY, propZ);
+    this.prop.position.copy(this.propLocal);
+    const discTex = (() => {
+      const c = document.createElement('canvas'); c.width = c.height = 256;
+      const g = c.getContext('2d')!;
+      const grad = g.createRadialGradient(128, 128, 14, 128, 128, 128);
+      grad.addColorStop(0, 'rgba(40,44,46,0.0)'); grad.addColorStop(0.2, 'rgba(60,64,66,0.55)'); grad.addColorStop(0.92, 'rgba(70,74,76,0.35)'); grad.addColorStop(1, 'rgba(70,74,76,0)');
+      g.fillStyle = grad; g.fillRect(0, 0, 256, 256);
+      for (let i = 0; i < 2; i++) { g.save(); g.translate(128, 128); g.rotate(i * Math.PI); g.fillStyle = 'rgba(25,28,30,0.35)'; g.beginPath(); g.moveTo(0, 0); g.arc(0, 0, 124, -0.35, 0.35); g.fill(); g.restore(); }
+      const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+    })();
+    this.propDisc = new THREE.Mesh(new THREE.CircleGeometry(3.4, 48), new THREE.MeshBasicMaterial({ map: discTex, transparent: true, depthWrite: false, side: THREE.DoubleSide }));
+    this.prop.add(this.propDisc);
+    const bladeMat = new THREE.MeshStandardMaterial({ color: 0x2a2e30, roughness: 0.5, metalness: 0.3 });
+    this.propBlades = new THREE.Group();
+    for (const r0 of [0, Math.PI]) {
+      const b0 = new THREE.Mesh(new THREE.BoxGeometry(0.42, 3.2, 0.1), bladeMat);
+      b0.position.set(0, 1.6, 0); const piv = new THREE.Group(); piv.rotation.z = r0 + 0.5; piv.add(b0); this.propBlades.add(piv);
+    }
+    this.prop.add(this.propBlades);
+    this.carrier.add(this.prop);
 
     // the twin: same airframe, drawn as a holographic shell
     const twin = inner.clone(true);
@@ -489,8 +577,30 @@ export class SortieWorld {
   /** Cut: the camera jumps instead of easing (used when the viewer skips between chapters). */
   cut() { this.hasCam = false; }
 
+  private flashing(t: number) { return t >= FLASH.from && t < FLASH.to; }
+
+  /** The flash-forward: the same aircraft, engine dead, gliding over a ridge with nothing below but rock. */
+  private flashPose(t: number) {
+    if (!this.flashBase) {
+      const base = pointAt(FLASH.from);
+      const tan = path.getTangentAt(wrap(sAt(FLASH.from)) / L).setY(0).normalize();
+      const right = new THREE.Vector3().crossVectors(tan, UP).normalize();
+      let best = base.clone(), bestH = -Infinity;
+      for (let d = 420; d <= 1100; d += 40) for (const sd of [1, -1]) {
+        const p = base.clone().addScaledVector(right, d * sd);
+        const hgt = terrainHeight(p.x, p.z);
+        if (hgt > bestH) { bestH = hgt; best = p; }
+      }
+      this.flashBase = { p: best.setY(bestH + 70), fwd: tan };
+    }
+    const u = (t - FLASH.from) / (FLASH.to - FLASH.from);
+    const pos = this.flashBase.p.clone().addScaledVector(this.flashBase.fwd, 70 * u * (FLASH.to - FLASH.from)).add(new THREE.Vector3(0, -9 * u, 0));
+    return { pos, fwd: this.flashBase.fwd.clone().add(new THREE.Vector3(0, -0.08, 0)).normalize(), bank: 0.06 };
+  }
+
   private placeAircraft(t: number) {
-    const { pos, fwd, bank } = pose(t);
+    const fl = this.flashing(t);
+    const { pos, fwd, bank } = fl ? this.flashPose(t) : pose(t);
     const up = new THREE.Vector3(0, 1, 0);
     const left = new THREE.Vector3().crossVectors(up, fwd).normalize();
     const realUp = new THREE.Vector3().crossVectors(fwd, left).normalize();
@@ -498,14 +608,14 @@ export class SortieWorld {
     this.carrier.position.copy(pos);
     this.carrier.quaternion.setFromRotationMatrix(m);
     this.carrier.rotateZ(bank);
-    this.carrier.rotateX(-pitchAt(t)); // nose up on approach, in the flare and until the nose wheel is down
+    if (!fl) this.carrier.rotateX(-pitchAt(t)); // nose up on approach, in the flare and until the nose wheel is down
     // with the nose up near the ground, keep the tail (and its ventral fin) off the runway
-    if (t > T_FLARE - 1 && this.tailPts.length) {
+    if (!fl && t > T_FLARE - 1 && this.tailPts.length) {
       this.carrier.updateMatrixWorld(true);
       const v = new THREE.Vector3();
       let low = Infinity;
       for (const q of this.tailPts) low = Math.min(low, v.copy(q).applyMatrix4(this.carrier.matrixWorld).y);
-      const runway = floorAt(sAt(t)) + RUNWAY_SURFACE + 0.15; // the strip under the aircraft
+      const runway = groundAt(t) + RUNWAY_SURFACE + 0.15; // the strip under the aircraft
       if (low < runway) this.carrier.position.y += runway - low;
     }
     return { pos, fwd, left };
@@ -519,105 +629,152 @@ export class SortieWorld {
     const ci = (() => { let i = 0; while (i < STARTS.length - 1 && t >= STARTS[i + 1]) i++; return i; })();
     const k = Math.min(1, Math.max(0, (t - STARTS[ci]) / CHAPTERS[ci].dur));
     const e = sstep(0, 1, k);
+    const prop = this.carrier.localToWorld(this.propLocal.clone());
+    const engine = this.carrier.localToWorld(this.engineLocal.clone());
+    // the decision's high map view: the whole footprint, the aircraft and every field in it
+    const mapView = () => {
+      const tf = this.fieldPos[0].p;
+      const c = new THREE.Vector3(this.ringCenter.x, pos.y, this.ringCenter.y);
+      const toField = new THREE.Vector3(tf.x - c.x, 0, tf.z - c.z).normalize();
+      return {
+        cam: c.clone().addScaledVector(toField, -this.ringR * 0.9).add(new THREE.Vector3(0, this.ringR * 1.05, 0)),
+        look: c.clone().addScaledVector(toField, this.ringR * 0.22),
+      };
+    };
     let cam: THREE.Vector3, look: THREE.Vector3;
+    if (this.flashing(t)) {
+      // the flash-forward: low and behind, the dead aircraft against the sky over bare rock
+      const fp = this.flashPose(t);
+      const fr = new THREE.Vector3().crossVectors(fp.fwd, Y).normalize();
+      cam = fp.pos.clone().addScaledVector(fp.fwd, -62).addScaledVector(fr, -26).add(new THREE.Vector3(0, -10, 0));
+      look = fp.pos.clone().addScaledVector(fp.fwd, 25).add(new THREE.Vector3(0, 4, 0));
+      return { cam, look };
+    }
     switch (CHAPTERS[ci].id) {
-      case 'open': {
-        // establishing: high behind, looking down the valley as it winds away; settle into the chase
-        // above the ridgelines, looking out over the range, then dropping into the valley behind the aircraft
-        const d = sstep(0.45, 1, k);
-        const back = pointAt(Math.max(0, t - 4 + 3 * d));
-        const ahead = pointAt(t + 16 - 14 * d);
-        cam = back.add(new THREE.Vector3(0, 980 - 960 * d, 0)).addScaledVector(right, -60 + 80 * d);
-        look = ahead.add(new THREE.Vector3(0, 640 - 638 * d, 0));
+      case 'cold': {
+        // the hub, then one unbroken pull-back: aircraft, valley, range
+        const pull = sstep(0.1, 0.95, k);
+        const d = 7 * Math.pow(200, pull);
+        const dir = fwd.clone().negate().addScaledVector(right, 0.42).addScaledVector(Y, 0.1 + 0.55 * pull).normalize();
+        cam = prop.clone().addScaledVector(dir, d);
+        look = prop.clone().lerp(at(260, 0, 30), 0.55 * pull);
         break;
       }
+      case 'problem':
+        cam = at(-74 + 18 * e, 28 - 10 * e, 18 - 4 * e);
+        look = at(40, 0, 4);
+        break;
       case 'twin':
-        cam = at(-52 + 6 * e, 20 - 8 * e, 11);
+        cam = at(-56 + 6 * e, 22 - 6 * e, 12);
         look = at(28, 0, 2);
         break;
-      case 'inside': {
-        // push into the engine bay at the tail, then (after the bay) pull back out to the chase
-        const engine = this.carrier.localToWorld(this.engineLocal.clone());
-        const close = engine.clone().addScaledVector(fwd, -11).addScaledVector(right, 5).add(new THREE.Vector3(0, 2.5, 0));
-        const chase = at(-52, 20, 11);
-        const r = k < 0.5 ? sstep(0, BAY_IN, k) : 1 - sstep(BAY_OUT, 1, k);
-        cam = chase.lerp(close, r);
-        look = at(28, 0, 2).lerp(engine, r);
+      case 'approach': {
+        // along the fuselage to the nacelle, closing until the lens is inside the cowling
+        const r1 = sstep(0, 0.42, k), r2 = sstep(0.42, 0.96, k);
+        const chase = at(-50, 16, 12);
+        const side = at(4, 12, 4.5);
+        const into = engine.clone().addScaledVector(right, 2.2).add(new THREE.Vector3(0, 1.0, 0)).addScaledVector(fwd, 0.6);
+        cam = chase.lerp(side, r1).lerp(into, r2);
+        look = at(6, 0, 0.5).lerp(engine, Math.max(0.4 * r1, r2));
         break;
       }
-      case 'drift':
-        cam = at(-34 + 8 * e, -36 + 4 * e, 6 + 2 * e);
-        look = at(-4, 0, 1);
+      case 'inside':
+      case 'signal':
+        cam = engine.clone().addScaledVector(right, 2).add(new THREE.Vector3(0, 1, 0));
+        look = engine.clone();
         break;
       case 'pipeline':
-      case 'detect':
-        // the world steps back while the detector reads it: a slow, high chase
+      case 'memory':
         cam = at(-120 + 20 * e, 46 - 12 * e, 40 - 8 * e);
         look = at(90, 0, 0);
         break;
-      case 'unseen':
-      case 'memory':
-        cam = at(-96 + 30 * e, -60 + 20 * e, 30);
-        look = at(60, 0, 2);
+      case 'detect':
+        if (t < T_CONFIRM) { cam = at(-110 + 14 * e, 40 - 8 * e, 34); look = at(90, 0, 0); }
+        else { const e2 = sstep(T_CONFIRM, T_CONFIRM + 5, t); cam = at(62 - 12 * e2, 28 - 4 * e2, 7); look = at(0, 0, 0); }
         break;
       case 'decide': {
-        const a = 0.9 + 1.5 * e;
-        cam = at(Math.cos(a) * 58, Math.sin(a) * 58, 14 + 6 * e);
-        look = at(0, 0, 0);
+        // close on the aircraft while the options arrive, then up until the terrain becomes a map
+        const a = 0.9 + 0.9 * sstep(0, 0.35, k);
+        const close = at(Math.cos(a) * 60, Math.sin(a) * 60, 14);
+        const mv = mapView();
+        const r = sstep(0.33, 0.62, k);
+        cam = close.lerp(mv.cam, r);
+        look = pos.clone().lerp(mv.look, r);
         break;
       }
-      case 'glide': {
-        // rise until the whole footprint is in frame: the aircraft, the ring, and every field inside it
-        const tf = this.fieldPos[0].p;
-        const c = new THREE.Vector3(this.ringCenter.x, pos.y, this.ringCenter.y);
-        const toField = new THREE.Vector3(tf.x - c.x, 0, tf.z - c.z).normalize();
-        const hi = c.clone().addScaledVector(toField, -this.ringR * 0.95).add(new THREE.Vector3(0, this.ringR * 1.05, 0));
-        const lo = at(-52, 20, 11);
-        const r = sstep(0, 0.5, k);
-        cam = lo.lerp(hi, r);
-        look = pos.clone().lerp(c.clone().addScaledVector(toField, this.ringR * 0.25), r);
+      case 'divert': {
+        // down from the map into a three-quarter chase as the aircraft banks onto the new heading
+        const mv = mapView();
+        const r = sstep(0.0, 0.55, k);
+        cam = mv.cam.clone().lerp(at(-66, -30, 20), r);
+        look = mv.look.clone().lerp(at(70, 0, 0), r);
         break;
       }
-      default: { // land
-        const tf = this.fieldPos[0].p;
+      case 'beyond': {
         const end = new THREE.Vector3(); pointAt(TOTAL, end);
+        const a = 0.6 + real * 0.03;
+        cam = end.clone().add(new THREE.Vector3(Math.cos(a) * (90 + 260 * e), 22 + 420 * e, Math.sin(a) * (90 + 260 * e)));
+        look = end.clone();
+        break;
+      }
+      default: { // land: one continuous shot, approach to roll-out, stopping beside the runway
+        const tf = this.fieldPos[0].p;
+        const end = new THREE.Vector3(); pointAt(T_TOUCH + ROLL, end);
         const chase = at(-60, 16, 15);
         const hold = end.clone().addScaledVector(right, 70).addScaledVector(fwd, 55).add(new THREE.Vector3(0, 16, 0));
         const r = sstep(0.45, 0.85, k);
         cam = chase.lerp(hold, r);
         look = pos.clone().lerp(tf, 0.15 * (1 - r));
-        if (k >= 1) { const a = real * 0.06; cam = end.clone().add(new THREE.Vector3(Math.cos(a) * 80, 18, Math.sin(a) * 80)); look = end.clone(); }
         break;
       }
     }
     // never put the lens inside a mountain
     const floor = terrainHeight(cam.x, cam.z) + 12;
-    if (cam.y < floor) cam.y = floor;
+    if (cam.y < floor && CHAPTERS[ci].id !== 'approach' && CHAPTERS[ci].id !== 'cold') cam.y = floor;
     return { cam, look };
   }
 
   /** Render one frame at story time t. `real` is wall-clock seconds for idle motion. */
   frame(t: number, real: number, dt: number): Screen {
+    const fl = this.flashing(t);
+    if (fl !== this.wasFlash) { this.wasFlash = fl; this.hasCam = false; } // the flash-forward is a cut, in and out
     const { pos, fwd } = this.placeAircraft(t);
     const r = readout(t);
+    const ci = CHAPTERS.findIndex((_c, i) => t >= STARTS[i] && (i === STARTS.length - 1 || t < STARTS[i + 1]));
+    const id = CHAPTERS[ci].id;
+    const kc = (t - STARTS[ci]) / CHAPTERS[ci].dur;
 
-    // twin: slides in during its chapter, locks onto the aircraft, fades once the crew has its answer
-    const tIn = STARTS[1];
-    const show = sstep(tIn + 0.2, tIn + 2.2, t) * (1 - sstep(T_GLIDE + 1, T_GLIDE + 4, t));
+    // the propeller: running (blurred disc) everywhere except the flash-forward, slower once power comes back
+    if (this.propDisc && this.propBlades) {
+      this.propDisc.visible = !fl; this.propBlades.visible = fl;
+      if (!fl) this.propDisc.rotation.z = real * (t > T_GLIDE ? 9 : 14);
+    }
+
+    // the twin: slides in, locks on, glows as the camera approaches the nacelle, fades once the crew has its answer
+    const tIn = startOf('twin');
+    const show = fl ? 0 : sstep(tIn + 0.2, tIn + 2.2, t) * (1 - sstep(T_DECIDE, T_DECIDE + 3, t));
     const dock = 1 - sstep(tIn + 0.8, tIn + 4.2, t);
+    const nacelle = id === 'approach' ? sstep(0.25, 0.7, kc) : 0;
     this.ghost.position.copy(this.carrier.position);
     this.ghost.quaternion.copy(this.carrier.quaternion);
     this.ghost.translateX(18 * dock); this.ghost.translateY(6 * dock);
-    for (const m of this.ghostMats) { m.uniforms.uA.value = show * (0.85 - 0.25 * r.sev); m.uniforms.uTime.value = real; m.uniforms.uCol.value = CYAN; }
+    for (const m of this.ghostMats) { m.uniforms.uA.value = show * (0.85 - 0.25 * r.sev + 0.9 * nacelle); m.uniforms.uTime.value = real; m.uniforms.uCol.value = CYAN; }
     this.ghost.visible = show > 0.001 && this.loaded;
+    // the skin turns to X-ray as the lens nears the engine
+    const xr = id === 'approach' ? sstep(0.35, 0.78, kc) : 0;
+    if (Math.abs(xr - this.xray) > 1e-3) {
+      this.xray = xr;
+      for (const mt of this.bodyMats) { mt.transparent = xr > 0.001; mt.opacity = 1 - 0.85 * xr; mt.depthWrite = xr < 0.5; mt.needsUpdate = true; }
+    }
 
-    // engine glow: amber while drifting, alarm magenta once confirmed
+    // engine glow: amber while drifting, alarm rose once confirmed
     const pulse = 0.6 + 0.4 * Math.sin(real * (r.confirmed ? 9 : 5));
     const gm = this.glow.material as THREE.SpriteMaterial;
-    gm.opacity = Math.min(1, r.sev * 1.8) * pulse * (t < T_TOUCH + ROLL ? 1 : 0.4);
+    gm.opacity = fl ? 0 : Math.min(1, r.sev * 1.8) * pulse * (t < T_TOUCH + ROLL ? 1 : 0.4);
     gm.color.set(r.confirmed ? 0xff3d7f : 0xffb347);
 
     // trail
+    this.trail.visible = !fl;
     const N = this.trailAlpha.length / 2;
     const p = new THREE.Vector3(), q = new THREE.Vector3(), side = new THREE.Vector3();
     for (let i = 0; i < N; i++) {
@@ -632,37 +789,34 @@ export class SortieWorld {
     (this.trail.geometry.attributes.position as THREE.BufferAttribute).needsUpdate = true;
     (this.trail.geometry.attributes.alpha as THREE.BufferAttribute).needsUpdate = true;
 
-    // glide footprint and path
-    const g = sstep(T_GLIDE + 0.6, T_GLIDE + 3.2, t);
+    // the assessment: the footprint sweeps out like a radar return; then the new route draws itself
+    const g = sstep(T_ASSESS, T_ASSESS + 2.6, t);
     this.terrainMat.uniforms.uRing.value.set(this.ringCenter.x, this.ringCenter.y, this.ringR * g);
     this.terrainMat.uniforms.uRingA.value = g > 0 ? Math.min(1, g * 1.5) * (1 - 0.6 * sstep(T_TOUCH, T_TOUCH + 3, t)) : 0;
     this.terrainMat.uniforms.uTime.value = real;
-    (this.glidePath.material as THREE.LineDashedMaterial).opacity = sstep(T_GLIDE + 2.4, T_GLIDE + 4, t) * 0.9 * (1 - sstep(T_TOUCH - 1, T_TOUCH, t));
+    const routeShown = sstep(T_DECIDE + 11.2, T_TURN + 1.2, t);
+    this.glidePath.geometry.setDrawRange(0, Math.floor(this.glidePathCount * routeShown));
+    (this.glidePath.material as THREE.LineDashedMaterial).opacity = routeShown > 0 ? 0.9 * (1 - sstep(T_TOUCH - 1, T_TOUCH, t)) : 0;
 
     // camera: eases between shots, snaps on a cut
     const { cam, look } = this.rig(t, real, pos, fwd);
     if (!this.hasCam) { this.camPos.copy(cam); this.camLook.copy(look); this.hasCam = true; }
-    const kk = 1 - Math.exp(-dt * 2.6);
+    const kk = 1 - Math.exp(-dt * (id === 'approach' || id === 'cold' ? 6 : 2.6));
     this.camPos.lerp(cam, kk); this.camLook.lerp(look, Math.min(1, kk * 1.6));
     this.camera.position.copy(this.camPos);
     this.camera.lookAt(this.camLook);
-    // a handheld breath on every shot, and a jolt when the gate fires and when the wheels hit
+    // a handheld breath on every shot, and a jolt when the film cuts back from the ground station to the lock
     const hit = (at: number, len: number) => (t >= at && t < at + len ? Math.pow(1 - (t - at) / len, 2) : 0);
-    const kick = 0.6 * hit(T_CONFIRM, 0.8); // the clock is held during the ground cross-cut, so this is the cut back
-    const breath = 0.12;
-    const n = (f: number, s: number) => Math.sin(real * f + s) * 0.6 + Math.sin(real * f * 2.3 + s * 1.7) * 0.4;
+    const kick = 0.6 * hit(T_CONFIRM, 0.8);
+    const breath = id === 'cold' || id === 'approach' ? 0.04 : 0.12;
+    const n = (f: number, s2: number) => Math.sin(real * f + s2) * 0.6 + Math.sin(real * f * 2.3 + s2 * 1.7) * 0.4;
     const reach = this.camPos.distanceTo(this.camLook) * 0.006;
     this.camera.translateX(n(1.3, 1) * reach * breath + n(37, 2) * reach * kick * 1.6);
     this.camera.translateY(n(1.1, 3) * reach * breath + n(41, 4) * reach * kick * 1.6);
     this.camera.rotateZ(n(0.7, 5) * 0.004 + n(29, 6) * 0.012 * kick);
-    const ci = CHAPTERS.findIndex((_c, i) => t >= STARTS[i] && (i === STARTS.length - 1 || t < STARTS[i + 1]));
-    const kc = (t - STARTS[ci]) / CHAPTERS[ci].dur;
-    let bay: BayLabel[] | null = null;
-    if (CHAPTERS[ci].id === 'inside' && kc >= BAY_IN && kc < BAY_OUT && this.bay?.loaded) {
-      const u = (kc - BAY_IN) / (BAY_OUT - BAY_IN);
-      const inject = 0.434; // the injection, 6.5 s into the 13 s chapter
-      const split = sstep(0.68, 0.76, u) * (1 - sstep(0.96, 1, u));
-      bay = this.bay.frame(u, inject, split, real, this.host.clientWidth, this.host.clientHeight);
+    let bay: BayFrame | null = null;
+    if ((id === 'inside' || id === 'signal') && this.bay?.loaded) {
+      bay = this.bay.film(id === 'inside' ? 'reveal' : 'signal', kc, r.sev, real, this.host.clientWidth, this.host.clientHeight);
     } else {
       this.renderer.render(this.scene, this.camera);
     }
@@ -687,16 +841,18 @@ export class SortieWorld {
       const x = (c.x * 0.5 + 0.5) * w, y = (-c.y * 0.5 + 0.5) * h;
       minX = Math.min(minX, x); maxX = Math.max(maxX, x); minY = Math.min(minY, y); maxY = Math.max(maxY, y);
     }
-    const fields = this.fieldPos.map(({ id, p: fp }) => {
+    c.copy(this.carrier.position).project(this.camera);
+    const aircraft = { x: (c.x * 0.5 + 0.5) * w, y: (-c.y * 0.5 + 0.5) * h, on: c.z < 1 && !bay };
+    const fields = this.fieldPos.map(({ id: fid, p: fp }) => {
       c.copy(fp).project(this.camera);
-      return { id, x: (c.x * 0.5 + 0.5) * w, y: (-c.y * 0.5 + 0.5) * h, on: c.z < 1 && Math.abs(c.x) < 1.1 && Math.abs(c.y) < 1.1 };
+      return { id: fid, x: (c.x * 0.5 + 0.5) * w, y: (-c.y * 0.5 + 0.5) * h, on: c.z < 1 && Math.abs(c.x) < 1.1 && Math.abs(c.y) < 1.1 };
     });
     // keep the box (and its tag) inside the frame; drop it when the aircraft fills the screen
     const m = 12;
     minX = Math.max(m, minX); minY = Math.max(m, minY); maxX = Math.min(w - m, maxX); maxY = Math.min(h - 40, maxY);
     if (maxX - minX > w * 0.7 || maxX <= minX || maxY <= minY) on = false;
-    if (bay) on = false;
-    return { box: { x: minX, y: minY, w: maxX - minX, h: maxY - minY, on }, fields, bay };
+    if (bay || fl) on = false;
+    return { box: { x: minX, y: minY, w: maxX - minX, h: maxY - minY, on }, fields, bay, aircraft, flash: fl };
   }
 
   dispose() {
