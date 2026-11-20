@@ -22,8 +22,9 @@ type Props = {
 
 const DRACO_PATH = '/draco/';                             // decoder files shipped in frontend/public/draco
 const EMISSIVE_INTENSITY = 0.9;
+const PULSE_PEAK = 2.2;                                  // peak glow of a highlighted part while it pulses
 const PULSE_HZ = 1.2;                                    // highlighted parts breathe at this rate (P Part 6 X2)
-const PULSE_MIN = 0.35;                                  // ...between this share of full glow and full glow
+const PULSE_MIN = 0.1;                                   // ...between this share of the peak glow and the peak
 const FOCUS_CONTEXT = 0.15;                              // fly-to frame: part size x this margin, so its place on the engine stays visible
 
 /** Image-based lighting from the shared procedural studio (utils/engineMaterials; no HDR download). */
@@ -83,7 +84,7 @@ function Model({ url, levels, onLit, focusRequest }: { url: string; levels: Map<
   useEffect(() => { const r = applyHighlights(root, levels); glowing.current = r.glowing; onLit(r.lit); }, [root, levels, onLit]);
   useFrame(({ clock }) => {                                // pulse: the eye finds the faulty part at once
     const k = PULSE_MIN + (1 - PULSE_MIN) * (0.5 + 0.5 * Math.sin(clock.elapsedTime * 2 * Math.PI * PULSE_HZ));
-    for (const m of glowing.current) m.emissiveIntensity = EMISSIVE_INTENSITY * k;
+    for (const m of glowing.current) m.emissiveIntensity = PULSE_PEAK * k;
   });
   // fly to the highest-level parts when that set changes (not every message) or on request. A new engine model
   // frames the whole engine; highlights clearing leaves the camera where it is (no jumping back and forth while a
@@ -159,7 +160,7 @@ export default function EngineViewer3D({ engineId, highlights: detected, injecte
                 <RoomEnv />
                 <directionalLight position={[3, 4, 3]} intensity={1.4} />
                 <Suspense fallback={null}>
-                  <Bounds fit clip observe margin={1.2}>
+                  <Bounds fit clip margin={1.2}>
                     <Model url={manifest.model_url} levels={levels} onLit={setLit} focusRequest={focusRequest + focusSignal} />
                   </Bounds>
                 </Suspense>

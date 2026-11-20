@@ -9,7 +9,6 @@ import RoutePlannerPanel from './RoutePlannerPanel';
 import StatusBanner from './StatusBanner';
 import EngineerPanel from './EngineerPanel';
 import CopilotPanel from './CopilotPanel';
-import TwinStage from './TwinStage';
 
 const EngineViewer3D = lazy(() => import('./viewer3d/EngineViewer3D'));
 
@@ -26,11 +25,10 @@ const maxOf = (values: Array<number | null | undefined>) => {
   return v.length ? Math.max(...v) : null;
 };
 
-type View = 'ALL' | 'OPERATOR' | 'ENGINEER' | 'MAINTENANCE' | 'MISSION' | 'TWIN';
+type View = 'ALL' | 'OPERATOR' | 'ENGINEER' | 'MAINTENANCE' | 'MISSION';
 const VIEWS: Array<{ id: View; label: string }> = [
   { id: 'OPERATOR', label: 'Operator' }, { id: 'ENGINEER', label: 'Propulsion engineer' },
-  { id: 'MAINTENANCE', label: 'Maintenance' }, { id: 'MISSION', label: 'Mission' }, { id: 'TWIN', label: '3D twin' },
-  { id: 'ALL', label: 'All panels' },
+  { id: 'MAINTENANCE', label: 'Maintenance' }, { id: 'MISSION', label: 'Mission' }, { id: 'ALL', label: 'All panels' },
 ];
 const VIEW_KEY = 'anumaan.console.view';
 const TRAINING_KEY = 'anumaan.console.training';       // D56: off by default, per viewer                  // per-viewer convenience only (role is never sent to the server)
@@ -41,7 +39,7 @@ const loadView = (): View => {
 
 type DemoScenario = { engine_id: string; view: View; training: boolean; inject: { fault_id: string; severity?: number; cylinder?: number }; headline: string; steps: string[] };
 
-export function EngineRuntimeConsole({ serverUrl, initialView }: { serverUrl: string; initialView?: View }) {
+export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
   const runtime = useEngineRuntime(serverUrl);
   const now = useNow(500);
   const { state, profile, faults } = runtime;
@@ -55,7 +53,7 @@ export function EngineRuntimeConsole({ serverUrl, initialView }: { serverUrl: st
   const [missionId, setMissionId] = useState('');
   const [recording, setRecording] = useState(false);
   const [lastSortie, setLastSortie] = useState('');
-  const [view, setViewState] = useState<View>(() => initialView ?? loadView());
+  const [view, setViewState] = useState<View>(loadView);
   const setView = (v: View) => { setViewState(v); try { localStorage.setItem(VIEW_KEY, v); } catch { /* storage blocked: keep in memory */ } };
   const show = (...views: View[]) => view === 'ALL' || views.includes(view);
   const [training, setTrainingState] = useState<boolean>(() => { try { return localStorage.getItem(TRAINING_KEY) === '1'; } catch { return false; } });
@@ -139,10 +137,6 @@ export function EngineRuntimeConsole({ serverUrl, initialView }: { serverUrl: st
     ? `LIVE · ${state?.rate_hz_actual != null ? `${num(state.rate_hz_actual, 1)} Hz` : 'rate —'} · age ${age != null ? `${Math.round(age)} ms` : NO_DATA}`
     : runtime.connection;
 
-  if (view === 'TWIN') return <LabelsContext.Provider value={labels}>
-    <TwinStage engineId={runtime.engineId ?? null} engines={runtime.engines ?? []} onSelectEngine={runtime.selectEngine} state={state}
-      faults={faults} cylinders={profile?.cylinders ?? null} api={runtime.api} command={runtime.command} training={training} onTraining={setTraining} onExit={() => setView('OPERATOR')} />
-  </LabelsContext.Provider>;
   return <LabelsContext.Provider value={labels}><div className="space-y-4">
     {demo && <section className="surface-panel p-4 border-accent/60" aria-live="polite">
       <div className="flex items-start justify-between gap-3">
@@ -209,7 +203,7 @@ export function EngineRuntimeConsole({ serverUrl, initialView }: { serverUrl: st
       ].map(([label, value, caption], index) => <div key={label} className={`surface-panel p-4 rounded-sm ${index === 3 && det?.confirmed ? 'surface-panel-critical' : ''}`}><div className="text-xs uppercase tracking-wider font-mono text-slate-400">{label}</div><div className="mt-2 text-xl sm:text-2xl font-mono font-semibold tabular-nums text-white">{value}</div><div className="mt-1 text-xs font-mono text-slate-500">{caption}</div></div>)}
     </div>}
 
-    {show('OPERATOR', 'MAINTENANCE', 'TWIN') && <Suspense fallback={<div className="surface-panel p-4 text-xs font-mono text-slate-400">Loading 3D view…</div>}>
+    {show('OPERATOR', 'MAINTENANCE') && <Suspense fallback={<div className="surface-panel p-4 text-xs font-mono text-slate-400">Loading 3D view…</div>}>
       <EngineViewer3D engineId={runtime.engineId ?? null} highlights={state?.highlights} api={runtime.api}
         injected={training ? activeFaults.flatMap((f) => (f.components ?? []).map((c) => ({ component_id: c, reason: `${f.fault_id} ${title(f.name)} (injected)` }))) : []}
         />
@@ -267,7 +261,7 @@ export function EngineRuntimeConsole({ serverUrl, initialView }: { serverUrl: st
         {det?.candidate && <div className="mt-4 rounded-sm border border-accent/40 bg-accent/5 p-3"><div className="flex items-center justify-between"><div className="text-xs font-medium font-mono text-accent">Selected-engine reservoir · tier 1 <span className="font-normal opacity-70">(readout scores, not probabilities)</span></div><span className="text-xs font-mono text-accent font-semibold">Candidate: {title(det.candidate.label)}</span></div><div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2">{det.candidate.classes.map((label, i) => <div key={label} className="rounded-sm bg-black/30 border border-surface-border p-2"><div className="truncate text-xs font-mono text-slate-400">{title(label)}</div><div className="mt-1 text-xs font-mono font-medium text-white tabular-nums">{num(det.candidate?.scores[i], 3)}</div></div>)}</div></div>}
       </section>}
 
-      {show('OPERATOR', 'MISSION', 'TWIN') && <section className="surface-panel p-4 sm:p-5 rounded-sm">
+      {show('OPERATOR', 'MISSION') && <section className="surface-panel p-4 sm:p-5 rounded-sm">
         <div className="flex items-start justify-between"><div><h3 className="text-sm font-semibold text-white tracking-tight">Scenario controls</h3><p className="text-xs font-mono text-slate-400 mt-1">Commands change simulated plant conditions; every client sees the result.</p></div><SlidersHorizontal className="w-4 h-4 text-accent" /></div>
         <div className="mt-4 space-y-3">
           {!levers && <div className="text-xs font-mono text-slate-500">Waiting for the server's lever targets…</div>}

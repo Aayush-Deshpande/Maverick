@@ -16,6 +16,7 @@ const VoiceCopilot = lazy(() => import('./components/VoiceCopilot').then((m) => 
 const MissionReplayScrubber = lazy(() => import('./components/MissionReplayScrubber').then((m) => ({ default: m.MissionReplayScrubber })));
 const PropulsionEngineerPanel = lazy(() => import('./components/PropulsionEngineerPanel').then((m) => ({ default: m.PropulsionEngineerPanel })));
 const MaintenanceDashboardPanel = lazy(() => import('./components/MaintenanceDashboardPanel').then((m) => ({ default: m.MaintenanceDashboardPanel })));
+const TwinWorkspace = lazy(() => import('./components/TwinWorkspace'));
 const EngineRuntimeConsole = lazy(() => import('./components/EngineRuntimeConsole').then((m) => ({ default: m.EngineRuntimeConsole })));
 const ConnectionModal = lazy(() => import('./components/ConnectionModal').then((m) => ({ default: m.ConnectionModal })));
 
@@ -147,10 +148,10 @@ export function App() {
         {workspace === 'runtime' ? (
           <EngineRuntimeConsole serverUrl={serverUrl} />
         ) : workspace === 'twin' ? (
-          // The 3D twin is the console's 3D-first view: same store, same fault API, highlights from state.highlights
-          // and the component manifests, so console, twin and GCS always agree. The old apps/threejs_twin page
+          // The 3D twin tab is only the engine (keyboard-driven): same store, same fault API, highlights from
+          // state.highlights and the component manifests, so console, twin and GCS always agree. The old apps/threejs_twin page
           // (own fault-to-part table, three engines) stays reachable at {serverUrl}/app until it is archived (D10).
-          <EngineRuntimeConsole serverUrl={serverUrl} initialView="TWIN" key="twin" />
+          <TwinWorkspace serverUrl={serverUrl} />
         ) : (
           <>
             {workspace === 'legacy' && !isConnected && (

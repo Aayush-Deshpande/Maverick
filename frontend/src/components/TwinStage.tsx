@@ -14,7 +14,6 @@ type Props = {
   command: (path: string, method: string, body?: unknown) => Promise<any>;
   training: boolean;
   onTraining: (on: boolean) => void;
-  onExit: () => void;
 };
 
 const PAGE = 9;                                    // keys 1-9 pick a fault on the current page
@@ -62,7 +61,6 @@ export default function TwinStage(p: Props) {
       else if (k === 'c') { const n = p.cylinders; if (n) setCyl((c) => (c % n) + 1); }
       else if (k === 'f') setFocus((n) => n + 1);
       else if (k === 't') p.onTraining(!p.training);
-      else if (k === 'escape') p.onExit();
       else return;
       e.preventDefault();
     };
@@ -72,41 +70,40 @@ export default function TwinStage(p: Props) {
 
   const highlights = (p.state?.highlights ?? []) as Array<{ component_id: string; level: string; reason: string }>;
   return (
-    <div className="fixed inset-0 z-50 bg-[#e8e7df]">
-      <Suspense fallback={<div className="p-6 text-xs font-mono text-slate-400">Loading 3D view…</div>}>
+    <div className="relative left-1/2 w-screen -translate-x-1/2 h-[calc(100vh-8.5rem)] min-h-[480px] overflow-hidden bg-[radial-gradient(ellipse_at_center,#3a4250_0%,#161a20_70%)]">
+      <Suspense fallback={<div className="p-6 text-xs font-mono text-white/55">Loading 3D view…</div>}>
         <EngineViewer3D engineId={p.engineId} highlights={p.state?.highlights} api={p.api} injected={injected} fill focusSignal={focus} bare />
       </Suspense>
 
-      {/* top right: engine and exit */}
-      <div className="absolute right-4 top-4 flex items-center gap-2">
+      {/* top right: engine */}
+      <div className="absolute right-6 top-6 flex items-center gap-2">
         <select value={p.engineId ?? ''} onChange={(e) => p.onSelectEngine(e.target.value)} aria-label="Engine"
-          className="rounded-sm border border-surface-border bg-surface/90 px-3 py-2 text-sm text-white backdrop-blur-sm">
+          className="rounded-xl border border-white/15 bg-white/10 text-white shadow-2xl backdrop-blur-xl px-4 py-2 text-sm [&>option]:text-black">
           {p.engines.map((e) => <option key={e.engine_id} value={e.engine_id}>{e.display_name ?? e.engine_id}</option>)}
         </select>
-        <button type="button" onClick={p.onExit} className="rounded-sm border border-surface-border bg-surface/90 px-3 py-2 text-sm text-white">Exit (Esc)</button>
       </div>
 
       {/* left: faults on the keyboard */}
-      <aside className="absolute left-4 top-4 w-[min(300px,calc(100%-2rem))] rounded-sm border border-surface-border bg-surface/85 p-3 text-xs backdrop-blur-sm"
+      <aside className="absolute left-6 top-6 w-[min(320px,calc(100%-3rem))] rounded-2xl border border-white/15 bg-white/10 text-white shadow-2xl backdrop-blur-xl p-4 text-xs"
         aria-label="Keyboard fault controls">
         <div className="font-semibold text-white">Inject a fault</div>
         <ol className="mt-2 space-y-0.5 font-mono">
-          {shown.map((f, i) => <li key={f.id} className="flex gap-2 text-slate-200">
-            <span className="w-4 text-slate-400">{i + 1}</span><span className="truncate">{title(f.name)}{f.scope === 'CYLINDER' ? ` (cyl ${cyl})` : ''}</span>
+          {shown.map((f, i) => <li key={f.id} className="flex gap-2 text-white/90">
+            <span className="w-4 text-white/55">{i + 1}</span><span className="truncate">{title(f.name)}{f.scope === 'CYLINDER' ? ` (cyl ${cyl})` : ''}</span>
           </li>)}
         </ol>
-        <div className="mt-2 border-t border-surface-border pt-2 font-mono text-slate-400">
+        <div className="mt-2 border-t border-white/15 pt-2 font-mono text-white/55">
           1-9 inject · 0 clear all · Q/E page {page + 1}/{pages} · C cylinder {cyl} · F focus · T training {p.training ? 'on' : 'off'}
         </div>
       </aside>
 
       {/* bottom: what is going on */}
-      <div className="absolute inset-x-4 bottom-4 rounded-sm border border-surface-border bg-surface/85 px-4 py-3 text-sm backdrop-blur-sm" aria-live="polite">
-        <span className={`font-semibold ${status ? LEVEL_TEXT[status] ?? 'text-white' : 'text-slate-400'}`}>{status ?? 'NO DATA'}</span>
-        {reason && status !== 'GO' && <span className="ml-2 text-slate-200">{reason}</span>}
-        {active.length > 0 && <span className="ml-3 text-slate-400">Injected: {active.map((f) => `${f.fault_id}${f.cylinder ? ` cyl ${f.cylinder}` : ''}`).join(', ')}</span>}
-        {highlights.length > 0 && <div className="mt-1 text-xs text-slate-300">{highlights.map((h) => `${h.level} · ${h.component_id.replace(/_/g, ' ')} · ${h.reason}`).join('   |   ')}</div>}
-        {notice && <div className="mt-1 text-xs text-slate-200">{notice}</div>}
+      <div className="absolute inset-x-6 bottom-6 rounded-2xl border border-white/15 bg-white/10 text-white shadow-2xl backdrop-blur-xl px-5 py-3 text-sm" aria-live="polite">
+        <span className={`font-semibold ${status ? LEVEL_TEXT[status] ?? 'text-white' : 'text-white/55'}`}>{status ?? 'NO DATA'}</span>
+        {reason && status !== 'GO' && <span className="ml-2 text-white/90">{reason}</span>}
+        {active.length > 0 && <span className="ml-3 text-white/55">Injected: {active.map((f) => `${f.fault_id}${f.cylinder ? ` cyl ${f.cylinder}` : ''}`).join(', ')}</span>}
+        {highlights.length > 0 && <div className="mt-1 text-xs text-white/75">{highlights.map((h) => `${h.level} · ${h.component_id.replace(/_/g, ' ')} · ${h.reason}`).join('   |   ')}</div>}
+        {notice && <div className="mt-1 text-xs text-white/90">{notice}</div>}
       </div>
     </div>
   );
