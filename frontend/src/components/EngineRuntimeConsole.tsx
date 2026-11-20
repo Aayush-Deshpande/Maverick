@@ -4,6 +4,7 @@ import { useEngineRuntime, useNow } from '../hooks/useEngineRuntime';
 import { dataAgeMs } from '../store/engineStore';
 import { NO_DATA, num } from '../utils/format';
 import RoutePlannerPanel from './RoutePlannerPanel';
+import StatusBanner from './StatusBanner';
 
 const title = (value: string) => value.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c: string) => c.toUpperCase());
 type Detections = { confirmed?: boolean; raw_alarm?: boolean; top_channels?: Array<string | [string, number]>;
@@ -16,6 +17,17 @@ const newRequestId = () => (globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-
 const maxOf = (values: Array<number | null | undefined>) => {
   const v = values.filter((x): x is number => typeof x === 'number' && Number.isFinite(x));
   return v.length ? Math.max(...v) : null;
+};
+
+type View = 'ALL' | 'OPERATOR' | 'ENGINEER' | 'MAINTENANCE' | 'MISSION';
+const VIEWS: Array<{ id: View; label: string }> = [
+  { id: 'OPERATOR', label: 'Operator' }, { id: 'ENGINEER', label: 'Propulsion engineer' },
+  { id: 'MAINTENANCE', label: 'Maintenance' }, { id: 'MISSION', label: 'Mission' }, { id: 'ALL', label: 'All panels' },
+];
+const VIEW_KEY = 'anumaan.console.view';                  // per-viewer convenience only (role is never sent to the server)
+const loadView = (): View => {
+  try { const v = localStorage.getItem(VIEW_KEY); return VIEWS.some((x) => x.id === v) ? (v as View) : 'OPERATOR'; }
+  catch { return 'OPERATOR'; }
 };
 
 export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
@@ -31,6 +43,9 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
   const [missionId, setMissionId] = useState('');
   const [recording, setRecording] = useState(false);
   const [lastSortie, setLastSortie] = useState('');
+  const [view, setViewState] = useState<View>(loadView);
+  const setView = (v: View) => { setViewState(v); try { localStorage.setItem(VIEW_KEY, v); } catch { /* storage blocked: keep in memory */ } };
+  const show = (...views: View[]) => view === 'ALL' || views.includes(view);
 
   const readings = useMemo(() => Object.entries(state?.readings ?? {}).sort(([a], [b]) => a.localeCompare(b)), [state]);
   const det = (state?.detections ?? null) as Detections | null;
@@ -116,9 +131,16 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
         {notice && <span className="ml-auto text-accent font-medium">{notice}</span>}
       </div>
       {runtime.error && <div className="mt-3 rounded-sm border border-surface-border bg-white/[0.03] p-3 text-xs font-mono text-slate-200">{runtime.error}. Check the backend connection in Settings.</div>}
+      <nav aria-label="Console view" className="mt-3 flex flex-wrap gap-1 text-xs font-mono">
+        {VIEWS.map((v) => <button key={v.id} type="button" aria-pressed={view === v.id} onClick={() => setView(v.id)}
+          className={`px-3 py-1.5 rounded-sm border ${view === v.id ? 'border-surface-border-strong bg-white/10 text-white' : 'border-surface-border text-slate-400 hover:bg-white/5'}`}>{v.label}</button>)}
+      </nav>
     </section>
 
-    <section aria-label="Fleet overview" className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-2">
+    <StatusBanner engineId={runtime.engineId ?? null} status={state?.status} alerts={state?.alerts ?? []} simTimeS={state?.sim_time_s}
+      api={runtime.api} onNotice={(t) => { setNotice(t); setTimeout(() => setNotice(''), 3500); }} />
+
+    {show('OPERATOR') && <section aria-label="Fleet overview" className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-2">
       {runtime.engines.map((engine) => {
         const s = runtime.fleet[engine.engine_id]?.state;
         const d = (s?.detections ?? null) as Detections | null;
@@ -129,19 +151,19 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
           <div className="mt-1 text-xs uppercase tracking-wider font-mono text-slate-500">{runtime.engineId === engine.engine_id ? '● Selected' : d?.confirmed ? 'Confirmed anomaly' : d?.raw_alarm ? 'Raw anomaly' : s ? 'Monitoring' : 'Preparing'}</div>
         </button>;
       })}
-    </section>
+    </section>}
 
-    <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
+    {show('OPERATOR', 'ENGINEER') && <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
       {[
         ['Engine speed', `${num(state?.readings?.rpm?.value, 0)} RPM`, 'CRANK SPEED'],
         ['Cylinder head', `${num(maxOf(readings.filter(([k]) => k.startsWith('cht[')).map(([, r]) => r.value)))} °C`, `MAX OF ${profile?.cylinders ?? '—'} CYLINDERS`],
         ['Exhaust gas', `${num(maxOf(readings.filter(([k]) => k.startsWith('egt[')).map(([, r]) => r.value)))} °C`, 'MAX CYLINDER'],
         ['Detector state', !det ? 'Waiting' : det.confirmed ? 'Confirmed' : det.raw_alarm ? 'Review' : 'Nominal', det?.confirmed ? 'PERSISTENCE GATE' : 'TIER 0 · RESIDUALS'],
       ].map(([label, value, caption], index) => <div key={label} className={`surface-panel p-4 rounded-sm ${index === 3 && det?.confirmed ? 'surface-panel-critical' : ''}`}><div className="text-xs uppercase tracking-wider font-mono text-slate-400">{label}</div><div className="mt-2 text-xl sm:text-2xl font-mono font-semibold tabular-nums text-white">{value}</div><div className="mt-1 text-xs font-mono text-slate-500">{caption}</div></div>)}
-    </div>
+    </div>}
 
-    <div className="grid grid-cols-1 xl:grid-cols-[1.2fr_0.8fr] gap-4">
-      <section className="surface-panel p-4 sm:p-5 rounded-sm">
+    <div className={`grid grid-cols-1 gap-4 ${show('ENGINEER', 'MAINTENANCE') && show('OPERATOR', 'MISSION') ? 'xl:grid-cols-[1.2fr_0.8fr]' : ''}`}>
+      {show('ENGINEER', 'MAINTENANCE') && <section className="surface-panel p-4 sm:p-5 rounded-sm">
         <div className="flex items-start justify-between"><div><h3 className="text-sm font-semibold text-white tracking-tight">Detector evidence</h3><p className="text-xs font-mono text-slate-400 mt-1">Live tier-0 score relative to threshold. Value &gt; 1.0 indicates raw anomaly.</p></div><Activity className="w-4 h-4 text-accent" /></div>
         {detectorEntries.length ? <div className="mt-5 space-y-4">{detectorEntries.map(([name, ratio]) => <div key={name}><div className="flex justify-between text-xs font-mono"><span className="text-slate-300">{title(name)}</span><span className={ratio >= 1 ? 'text-warning tabular-nums font-semibold' : 'text-slate-400 tabular-nums'}>{num(ratio, 2)}× threshold</span></div><div className="mt-2 h-1.5 rounded-full bg-surface overflow-hidden border border-surface-border"><div className={`h-full rounded-full ${ratio >= 1 ? 'bg-warning' : 'bg-accent'}`} style={{ width: `${Math.min(100, Math.max(2, ratio * 35))}%` }} /></div></div>)}</div> : <div className="mt-6 rounded-sm bg-white/[0.03] p-4 text-xs font-mono text-slate-400">{profile?.ready ? 'Waiting for first scored frame…' : 'Calibration is preparing the residual baseline.'}</div>}
         {det && <div className={`mt-5 flex gap-2 rounded-sm border p-3 text-xs font-mono ${det.confirmed ? 'border-critical/60 bg-critical-dim text-critical' : det.raw_alarm ? 'border-warning/60 bg-warning-dim text-warning' : 'border-surface-border text-slate-300'}`}>
@@ -162,9 +184,9 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
           })}</div>
         </div>}
         {det?.candidate && <div className="mt-4 rounded-sm border border-accent/40 bg-accent/5 p-3"><div className="flex items-center justify-between"><div className="text-xs font-medium font-mono text-accent">Selected-engine reservoir · tier 1 <span className="font-normal opacity-70">(readout scores, not probabilities)</span></div><span className="text-xs font-mono text-accent font-semibold">Candidate: {title(det.candidate.label)}</span></div><div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2">{det.candidate.classes.map((label, i) => <div key={label} className="rounded-sm bg-black/30 border border-surface-border p-2"><div className="truncate text-xs font-mono text-slate-400">{title(label)}</div><div className="mt-1 text-xs font-mono font-medium text-white tabular-nums">{num(det.candidate?.scores[i], 3)}</div></div>)}</div></div>}
-      </section>
+      </section>}
 
-      <section className="surface-panel p-4 sm:p-5 rounded-sm">
+      {show('OPERATOR', 'MISSION') && <section className="surface-panel p-4 sm:p-5 rounded-sm">
         <div className="flex items-start justify-between"><div><h3 className="text-sm font-semibold text-white tracking-tight">Scenario controls</h3><p className="text-xs font-mono text-slate-400 mt-1">Commands change simulated plant conditions; every client sees the result.</p></div><SlidersHorizontal className="w-4 h-4 text-accent" /></div>
         <div className="mt-4 space-y-3">
           {!levers && <div className="text-xs font-mono text-slate-500">Waiting for the server's lever targets…</div>}
@@ -195,10 +217,10 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
           <button disabled={!fault || !live} onClick={inject} className="mt-2 w-full rounded-sm bg-accent text-white px-3 py-2 text-xs font-mono font-medium disabled:opacity-40 hover:bg-accent/90 transition-colors shadow-sm"><Zap className="inline w-3.5 h-3.5 mr-1.5" />Inject scenario</button>
           {activeFaults.length > 0 && <div className="mt-3 rounded-sm border border-surface-border bg-white/[0.03] p-2.5"><div className="flex items-center justify-between text-xs font-mono text-slate-200"><span>Injected scenarios (training display)</span><button title="Clear injected faults" onClick={() => void run(() => runtime.command('/faults?source=console', 'DELETE'), 'Injected scenarios cleared')} className="flex items-center gap-1 text-slate-200 hover:underline"><RotateCcw className="w-3 h-3" /> Clear all</button></div><div className="mt-1 text-xs font-mono text-slate-300">{activeFaults.map((f) => `${f.fault_id} ${title(f.name)}${f.cylinder ? ` · cyl ${f.cylinder}` : ''} · ${f.source}${f.simulated ? '' : ' · not yet simulated'}`).join('  /  ')}</div></div>}
         </div>
-      </section>
+      </section>}
     </div>
 
-    <section className="surface-panel p-4 sm:p-5 rounded-sm">
+    {show('OPERATOR', 'MAINTENANCE') && <section className="surface-panel p-4 sm:p-5 rounded-sm">
       <h3 className="text-sm font-semibold text-white tracking-tight">Prognosis and maintenance</h3>
       <div className="mt-3 grid grid-cols-1 lg:grid-cols-3 gap-3 text-xs font-mono">
         <div className="rounded-sm border border-surface-border p-3">
@@ -224,14 +246,14 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
               <button onClick={() => void run(() => runtime.api(`/api/v1/work_orders/${encodeURIComponent(w.id)}/transition`, 'POST', { to: 'SIGNED_OFF', by: 'console operator' }), 'Signed off - repair applied')} className="rounded-sm border border-surface-border px-2 py-1 hover:bg-white/5">Sign off</button></div></div>) : <div className="mt-1 text-slate-500">No open work order</div>}
         </div>
       </div>
-    </section>
+    </section>}
 
-    <RoutePlannerPanel engineId={runtime.engineId ?? null} api={runtime.api} />
+    {show('MISSION') && <RoutePlannerPanel engineId={runtime.engineId ?? null} api={runtime.api} />}
 
-    <section className="surface-panel p-4 sm:p-5 rounded-sm">
+    {show('ENGINEER') && <section className="surface-panel p-4 sm:p-5 rounded-sm">
       <div className="flex items-center justify-between gap-3"><div><h3 className="font-semibold text-white">Live engine channels</h3><p className="text-xs text-slate-500 mt-1">From the v1 state message · {state?.evidence_class ?? 'SIMULATION'} evidence</p></div><Radio className="w-4 h-4 text-slate-500" /></div>
       {readings.length ? <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2">{readings.map(([name, r]) => <div key={name} className="rounded border border-white/[0.06] bg-black/10 px-3 py-2"><div className="truncate text-xs text-slate-500" title={name}>{name.replace(/_/g, ' ')}{r.quality !== 'OK' ? ` · ${r.quality}` : ''}</div><div className="mt-1 text-sm font-medium tabular-nums text-slate-200">{num(r.value, 2)}<span className="ml-1 text-xs text-slate-500">{r.unit}</span></div></div>)}</div> : <div className="mt-4 text-sm text-slate-500">Waiting for calibrated engine frames…</div>}
-    </section>
+    </section>}
     <div className="flex items-start gap-2 px-1 text-xs leading-relaxed text-slate-600"><CircleHelp className="w-3.5 h-3.5 shrink-0 mt-0.5" /><span>This console runs virtual plant data (SIMULATION evidence). Detection, isolation and status read only the measured channels; injected scenarios are shown for training only.</span></div>
   </div>;
 }
