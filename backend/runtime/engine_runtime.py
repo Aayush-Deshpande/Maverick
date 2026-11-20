@@ -168,6 +168,9 @@ class EngineRuntime:
             components = [c for c in components if c.name != "turbocharger"]
         self.reliability_engine = MissionReliabilityEngine(components=components, seed=seed)
         self.glide_polar = UAVGlidePolar()
+        from backend.planning.performance import planning_config
+        _start = planning_config()["start_position"]                 # simulation start position (config, PUBLIC)
+        self.position: Dict[str, float] = {"lat": float(_start["lat"]), "lon": float(_start["lon"])}
         self.isolator: Optional[BayesianIsolator] = None          # built on the detector's channels at calibration
         self._cached_hypotheses: List[Dict[str, Any]] = []
         self.work_orders: Optional[Any] = None             # shared WorkOrderStore, attached by the API services (M4-05)
@@ -269,6 +272,8 @@ class EngineRuntime:
             oat_c = kw.get("oat_c", kw.get("oat"))
             snap = kw.get("snap", False)
             climb_rate_fps = kw.get("climb_rate_fps")
+            if kw.get("lat") is not None and kw.get("lon") is not None:      # aircraft position (operator/mission)
+                self.position = {"lat": float(kw["lat"]), "lon": float(kw["lon"])}
             self.levers.set_targets(
                 throttle_pct=throttle_pct,
                 altitude_ft=altitude_ft,
@@ -278,7 +283,8 @@ class EngineRuntime:
             )
             self.manual_origin = True
             return {"throttle_target": self.levers.throttle_target,
-                    "altitude_target": self.levers.altitude_target, "oat_target": self.levers.oat_target}
+                    "altitude_target": self.levers.altitude_target, "oat_target": self.levers.oat_target,
+                    "position": dict(self.position)}
 
     def inject_fault(self, mode: str, cylinder: Optional[int] = None, severity: float = 0.8,
                      ramp_sec: float = 60.0, origin: str = "MANUAL") -> Dict[str, Any]:
@@ -542,9 +548,9 @@ class EngineRuntime:
                     },
                     "damaged_components": sorted(name for name, frac in _cyl_dmg.items() if frac > 0.01),
                 }
-                if frame.alt is not None:                  # position from the mission executive arrives in M5
+                if frame.alt is not None:                  # engine-out glide from the current position (M5-09)
                     self._cached_glide = self.glide_polar.assess_glide(
-                        alt_ft=float(frame.alt), feathered=True, uav_lat=34.2, uav_lon=77.3).as_dict()
+                        alt_ft=float(frame.alt), uav_lat=self.position["lat"], uav_lon=self.position["lon"]).as_dict()
 
                 # 9. Deterministic directive from the registry for the leading hypothesis (M3-06/I-07)
                 self._cached_diagnosis = directive(self._cached_hypotheses)

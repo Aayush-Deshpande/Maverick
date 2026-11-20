@@ -17,7 +17,7 @@ import threading
 import time
 import uuid
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Literal, Optional, Set
+from typing import Any, Dict, List, Literal, Optional, Set, Tuple
 
 from fastapi import APIRouter, Depends, HTTPException, Query, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
@@ -137,6 +137,8 @@ class LeverRequest(BaseModel):
     throttle_pct: Optional[float] = Field(default=None, ge=0, le=100)
     altitude_ft: Optional[float] = Field(default=None, ge=-1000, le=40000)
     oat_c: Optional[float] = Field(default=None, ge=-60, le=60)
+    lat: Optional[float] = Field(default=None, ge=-90, le=90)        # aircraft position (glide, divert); both or none
+    lon: Optional[float] = Field(default=None, ge=-180, le=180)
 
 
 class AlertCommand(BaseModel):
@@ -182,6 +184,24 @@ class RouteRequest(BaseModel):
     goal: GeoPoint
     isa_dev_c: float = Field(default=0.0, ge=-40.0, le=40.0)
     power_factor: Optional[float] = Field(default=None, ge=0.0, le=1.0)   # None: from the engine's measured frame
+
+
+class GlideRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    position: GeoPoint
+    headwind_kt: float = Field(default=0.0, ge=-100.0, le=100.0)
+    isa_dev_c: float = Field(default=0.0, ge=-40.0, le=40.0)
+    footprint: bool = True
+
+
+class DivertRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    engine_id: str
+    position: GeoPoint
+    airfield_id: str = Field(min_length=1, max_length=16)
+    headwind_kt: float = Field(default=0.0, ge=-100.0, le=100.0)
+    isa_dev_c: float = Field(default=0.0, ge=-40.0, le=40.0)
+    power_factor: Optional[float] = Field(default=None, ge=0.0, le=1.0)
 
 
 def _reject(exc: FaultRejected) -> HTTPException:
@@ -271,6 +291,10 @@ def v1_levers(engine_id: str, body: LeverRequest, cmd: Dict[str, Any] = Depends(
         kw["altitude_ft"] = body.altitude_ft
     if body.oat_c is not None:
         kw["oat_c"] = body.oat_c
+    if (body.lat is None) != (body.lon is None):
+        raise HTTPException(422, {"code": "LEVER_REJECTED", "message": "lat and lon must be given together"})
+    if body.lat is not None:
+        kw.update(lat=body.lat, lon=body.lon)
     return {"engine_id": engine_id, "targets": rt.set_levers(**kw)}
 
 
@@ -434,30 +458,92 @@ def v1_terrain_elevation(lat: float = Query(ge=-90.0, le=90.0), lon: float = Que
             "source": "Copernicus GLO-30 DSM"}
 
 
+@router.get("/api/v1/planning/airfields")
+def v1_airfields() -> Dict[str, Any]:
+    """Airfield presets for the route planner (configs/planning.json; public reference points, not for navigation)."""
+    from backend.planning.performance import planning_config
+    af = planning_config()["airfields"]
+    return {"airfields": af["value"], "status": af["status"], "ref": af["ref"]}
+
+
 @router.post("/api/v1/planning/route")
 def v1_plan_route(body: RouteRequest) -> Dict[str, Any]:
     """Terrain route with engine-health feasibility (M5-08, T-MIS-6). Read-only: it commands nothing.
     Without power_factor the engine's latest MEASURED frame sets it (nominal model MAP/rpm ratio); an engine with no
     running frame gives 409 instead of an assumed healthy engine."""
+    return _plan_route(body.engine_id, body.start, (body.goal.lat, body.goal.lon), body.power_factor, body.isa_dev_c)
+
+
+def _power_factor(engine_id: str, given: Optional[float]) -> Tuple[float, Dict[str, Any]]:
     from backend.planning.performance import power_factor_for_frame
-    services().channel(body.engine_id)
+    if given is not None:
+        return given, {"kind": "OPERATOR"}
+    tick = services().hub.latest.get(engine_id)
+    frame = None if tick is None else tick.frame
+    pf, ratios = (None, {}) if frame is None or not frame.rpm else power_factor_for_frame(engine_id, frame)
+    if pf is None:
+        raise HTTPException(409, {"code": "NO_POWER_EVIDENCE", "message": f"{engine_id} has no running "
+                                  "measured frame to estimate available power; pass power_factor explicitly"})
+    return pf, {"kind": "MEASURED", "ratios": {k: round(v, 4) for k, v in ratios.items()}, "sim_time_s": frame.t}
+
+
+def _plan_route(engine_id: str, start: GeoPoint, goal: Tuple[float, float], power_factor: Optional[float],
+                isa_dev_c: float) -> Dict[str, Any]:
+    services().channel(engine_id)
     tile = _terrain_tile()
-    if body.power_factor is not None:
-        pf, source = body.power_factor, {"kind": "OPERATOR"}
-    else:
-        tick = services().hub.latest.get(body.engine_id)
-        frame = None if tick is None else tick.frame
-        pf, ratios = (None, {}) if frame is None or not frame.rpm else power_factor_for_frame(body.engine_id, frame)
-        if pf is None:
-            raise HTTPException(409, {"code": "NO_POWER_EVIDENCE", "message": f"{body.engine_id} has no running "
-                                      "measured frame to estimate available power; pass power_factor explicitly"})
-        source = {"kind": "MEASURED", "ratios": {k: round(v, 4) for k, v in ratios.items()}, "sim_time_s": frame.t}
-    start_alt = body.start.altitude_ft
-    if start_alt is None:
+    pf, source = _power_factor(engine_id, power_factor)
+    if start.altitude_ft is None:
         raise HTTPException(422, {"code": "ROUTE_REJECTED", "message": "start.altitude_ft is required"})
-    plan = _planner(tile.name).plan(body.engine_id, (body.start.lat, body.start.lon, start_alt),
-                                    (body.goal.lat, body.goal.lon), pf, body.isa_dev_c)
+    plan = _planner(tile.name).plan(engine_id, (start.lat, start.lon, start.altitude_ft), goal, pf, isa_dev_c)
     return {**plan.as_dict(), "power_factor_source": source, "terrain": tile.name, "evidence_class": "SIMULATION"}
+
+
+def _optional_tile():
+    """Terrain for glide checks: None (reported as such) when the tile is not downloaded, never a flat assumption."""
+    try:
+        return _terrain_tile()
+    except HTTPException:
+        return None
+
+
+@router.post("/api/v1/planning/glide")
+def v1_plan_glide(body: GlideRequest) -> Dict[str, Any]:
+    """Engine-out glide from a position (M5-09, I-10): airfields ranked by arrival margin, each glide path checked
+    against the DEM, and the terrain-limited reachability footprint. Independent of engine health (engine out)."""
+    from backend.mission.glide import UAVGlidePolar
+    if body.position.altitude_ft is None:
+        raise HTTPException(422, {"code": "GLIDE_REJECTED", "message": "position.altitude_ft is required"})
+    tile = _optional_tile()
+    ga = UAVGlidePolar().assess_glide(body.position.altitude_ft, body.position.lat, body.position.lon,
+                                      headwind_kt=body.headwind_kt, isa_dev_c=body.isa_dev_c, terrain=tile,
+                                      footprint=body.footprint)
+    return {**ga.as_dict(), "terrain": None if tile is None else tile.name}
+
+
+@router.post("/api/v1/planning/divert")
+def v1_plan_divert(body: DivertRequest) -> Dict[str, Any]:
+    """Divert to one airfield (M5-09): the engine-out glide check to it, and a powered terrain route to it with the
+    engine's present power factor. Either part reports why it is unavailable instead of failing the whole request."""
+    from backend.mission.glide import UAVGlidePolar, configured_airfields
+    services().channel(body.engine_id)
+    fields = {a.id: a for a in configured_airfields()}
+    if body.airfield_id not in fields:
+        raise HTTPException(422, {"code": "UNKNOWN_AIRFIELD", "message": f"{body.airfield_id} is not configured"})
+    if body.position.altitude_ft is None:
+        raise HTTPException(422, {"code": "DIVERT_REJECTED", "message": "position.altitude_ft is required"})
+    af = fields[body.airfield_id]
+    tile = _optional_tile()
+    glide = UAVGlidePolar().assess_glide(body.position.altitude_ft, body.position.lat, body.position.lon,
+                                         headwind_kt=body.headwind_kt, isa_dev_c=body.isa_dev_c,
+                                         airfields=[af], terrain=tile).airfields[0].as_dict()
+    try:
+        powered: Dict[str, Any] = _plan_route(body.engine_id, body.position, (af.lat, af.lon), body.power_factor,
+                                              body.isa_dev_c)
+    except HTTPException as e:
+        powered = {"available": False, **(e.detail if isinstance(e.detail, dict) else {"message": str(e.detail)})}
+    return {"airfield": {"id": af.id, "name": af.name, "lat": af.lat, "lon": af.lon, "elevation_ft": af.elevation_ft,
+                         "ref": af.ref},
+            "glide": glide, "powered_route": powered, "evidence_class": "SIMULATION"}
 
 
 _PLANNERS: Dict[str, Any] = {}

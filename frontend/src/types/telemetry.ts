@@ -82,10 +82,11 @@ export interface ReachableAirfield {
   airfield_id: string;
   name: string;
   distance_km: number;
-  distance_nm: number;
   alt_required_ft: number;
   alt_margin_ft: number;
   glide_time_min: number;
+  terrain_checked: boolean;
+  min_terrain_clearance_ft: number | null;
   is_reachable: boolean;
   status: string;
 }
@@ -93,15 +94,15 @@ export interface ReachableAirfield {
 export interface GlideAssessment {
   altitude_ft: number;
   propeller_feathered: boolean;
-  ld_ratio: number;
-  best_glide_tas_kt: number;
+  glide_ratio: number;
+  speed_best_glide_kt: number;
   sink_rate_fpm: number;
-  glide_range_nm: number;
+  still_air_range_km: number;
   time_aloft_min: number;
   headwind_kt: number;
   reachable_count: number;
   recommended_diversion?: ReachableAirfield | null;
-  airfields: ReachableAirfield[];
+  reachable_airfields: ReachableAirfield[];
 }
 
 export interface TwinValidity {

@@ -3,6 +3,7 @@ import { Activity, AlertTriangle, Check, ChevronDown, CircleHelp, Radio, RotateC
 import { useEngineRuntime, useNow } from '../hooks/useEngineRuntime';
 import { dataAgeMs } from '../store/engineStore';
 import { NO_DATA, num } from '../utils/format';
+import RoutePlannerPanel from './RoutePlannerPanel';
 
 const title = (value: string) => value.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c: string) => c.toUpperCase());
 type Detections = { confirmed?: boolean; raw_alarm?: boolean; top_channels?: Array<string | [string, number]>;
@@ -36,7 +37,8 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
   const detectorEntries = Object.entries(det?.ratios ?? {}).sort((a, b) => b[1] - a[1]);
   const activeFaults = state?.active_faults ?? [];
   const hypotheses = state?.hypotheses ?? [];
-  const prog = (state?.prognostics ?? null) as { time_to_limit?: Array<{ channel: string; limit: number; time_to_limit_s: number; low_s: number; high_s: number }>; baseline?: { version: number; learning: boolean; reason: string } } | null;
+  const prog = (state?.prognostics ?? null) as { time_to_limit?: Array<{ channel: string; limit: number; time_to_limit_s: number; low_s: number; high_s: number }>; baseline?: { version: number; learning: boolean; reason: string }; rul?: { status: string; reason?: string; rul_h?: number; rul_lower_h?: number; rul_upper_h?: number; coverage_target?: number; trained_on?: string } } | null;
+  const rul = prog?.rul ?? null;
   const ttl = prog?.time_to_limit ?? [];
   const baseline = prog?.baseline ?? null;
   const rel = (state?.reliability ?? null) as { mission_reliability: number; ci_lower: number; ci_upper: number; mission_profile: string; limiting_component?: string } | null;
@@ -203,6 +205,11 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
           <div className="text-slate-300">Time to limit</div>
           {ttl.length ? ttl.map((x) => <div key={x.channel} className="mt-1 text-slate-400">{x.channel} → {x.limit} in {num(x.time_to_limit_s / 60, 0)} min <span className="text-slate-500">({num(x.low_s / 60, 0)}–{num(x.high_s / 60, 0)})</span></div>) : <div className="mt-1 text-slate-500">No significant trend toward a limit</div>}
           {baseline && <div className="mt-2 text-slate-500">Baseline v{baseline.version} · {baseline.learning ? 'learning' : `held: ${baseline.reason}`}</div>}
+          <div className="mt-3 text-slate-300">Remaining useful life</div>
+          {rul?.status === 'OK'
+            ? <><div className="mt-1 text-white tabular-nums">{num(rul.rul_h, 0)} h <span className="text-slate-500">({num(rul.rul_lower_h, 0)}–{num(rul.rul_upper_h, 0)} h, {rul.coverage_target == null ? NO_DATA : num(rul.coverage_target * 100, 0)} % band)</span></div>
+                <div className="text-slate-500">{rul.trained_on}</div></>
+            : <div className="mt-1 text-slate-500">{rul?.reason ?? NO_DATA}</div>}
         </div>
         <div className="rounded-sm border border-surface-border p-3">
           <div className="text-slate-300">Mission reliability</div>
@@ -218,6 +225,8 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
         </div>
       </div>
     </section>
+
+    <RoutePlannerPanel engineId={runtime.engineId ?? null} api={runtime.api} />
 
     <section className="surface-panel p-4 sm:p-5 rounded-sm">
       <div className="flex items-center justify-between gap-3"><div><h3 className="font-semibold text-white">Live engine channels</h3><p className="text-xs text-slate-500 mt-1">From the v1 state message · {state?.evidence_class ?? 'SIMULATION'} evidence</p></div><Radio className="w-4 h-4 text-slate-500" /></div>

@@ -70,3 +70,44 @@ def test_terrain_unavailable_is_503_not_flat(client, monkeypatch):
     monkeypatch.setattr(api_v1, "_terrain_tile", missing)
     assert client.get("/api/v1/terrain/elevation", params={"lat": 34.9, "lon": 77.1}).status_code == 503
     assert issubclass(TerrainUnavailable, RuntimeError)
+
+
+def test_airfield_presets_carry_sources(client):
+    body = client.get("/api/v1/planning/airfields").json()
+    assert body["status"] == "PUBLIC" and body["airfields"]
+    assert all(a["ref"] and -90 <= a["lat"] <= 90 for a in body["airfields"])
+
+
+def _glide_body(**kw):
+    body = {"position": {"lat": NORTH[0], "lon": NORTH[1], "altitude_ft": 20000.0}}
+    body.update(kw)
+    return body
+
+
+def test_glide_endpoint_ranks_configured_airfields(client):
+    r = client.post("/api/v1/planning/glide", json=_glide_body())
+    assert r.status_code == 200, r.text
+    g = r.json()
+    assert g["evidence_class"] == "SIMULATION" and g["terrain"] == "synthetic" and g["footprint"]
+    assert len(g["reachable_airfields"]) >= 3
+    assert all(not a["terrain_checked"] for a in g["reachable_airfields"])   # Ladakh fields are off the synthetic tile
+    assert client.post("/api/v1/planning/glide", json={"position": {"lat": 35.0, "lon": 77.0}}).status_code == 422
+    assert client.post("/api/v1/planning/glide", json=_glide_body(headwind_kt=500)).status_code == 422
+
+
+def test_divert_reports_glide_and_powered_route_parts(client):
+    r = client.post("/api/v1/planning/divert", json={"engine_id": ENGINE, "airfield_id": "VILH", "power_factor": 1.0,
+                                                    "position": {"lat": NORTH[0], "lon": NORTH[1], "altitude_ft": 20000.0}})
+    assert r.status_code == 200, r.text
+    d = r.json()
+    assert d["airfield"]["id"] == "VILH" and d["airfield"]["ref"]
+    assert d["glide"]["airfield_id"] == "VILH"
+    assert d["powered_route"]["feasible"] is False and "outside" in d["powered_route"]["reason"]   # Leh is off this tile
+    bad = {"engine_id": ENGINE, "airfield_id": "NOPE", "position": {"lat": 35.0, "lon": 77.0, "altitude_ft": 9000.0}}
+    assert client.post("/api/v1/planning/divert", json=bad).status_code == 422
+
+
+def test_position_lever_moves_the_runtime_glide(client):
+    assert client.post(f"/api/v1/engines/{ENGINE}/levers", json={"lat": 34.5}).status_code == 422
+    r = client.post(f"/api/v1/engines/{ENGINE}/levers", json={"lat": 34.6, "lon": 77.4})
+    assert r.status_code == 200 and r.json()["targets"]["position"] == {"lat": 34.6, "lon": 77.4}

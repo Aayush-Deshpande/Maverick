@@ -163,12 +163,12 @@ export const MissionReadinessCard: React.FC<MissionReadinessCardProps> = ({ stat
               <h3 className="text-[11px] font-semibold uppercase tracking-wide text-slate-300">Emergency Glide Reachability &amp; Diversion Bases</h3>
             </div>
             <span className="text-[10px] font-mono text-accent">
-              L/D {fmt(a.glide_assessment.ld_ratio)}:1 | Range {fmt(a.glide_assessment.glide_range_nm * 1.852)} km | V_glide {fmt(a.glide_assessment.best_glide_tas_kt, 0)} kt
+              L/D {fmt(a.glide_assessment.glide_ratio)}:1 | Range {fmt(a.glide_assessment.still_air_range_km)} km | V_glide {fmt(a.glide_assessment.speed_best_glide_kt, 0)} kt
             </span>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-            {(a.glide_assessment.airfields ?? []).map((af) => (
+            {(a.glide_assessment.reachable_airfields ?? []).map((af) => (
               <div
                 key={af.airfield_id}
                 className={`p-2 rounded border text-xs flex flex-col justify-between ${

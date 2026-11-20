@@ -136,10 +136,79 @@ The AE300 boost leak is a known limitation. At that operating point the governed
 
 ---
 
-## 7. Not yet built
+## 7. Engine-out glide and divert
 
-- The glide-reachability map driven by the aircraft's real position, and one-click divert through the planner.
-- A map view of the route in the console.
+If the engine stops, the question is which airfields the aircraft can still glide to. ANUMAAN answers it from the
+aircraft's position over the same Copernicus terrain the route planner uses.
+
+**Glide polar.** The glide uses the planner's airframe (`configs/planning.json`), so both answers describe one
+aircraft:
+
+- best lift-to-drag ratio (L/D)max = 1 / (2 sqrt(CD0 k)), flown at CL = sqrt(CD0 / k);
+- no feathering propeller is configured, so a stopped engine is taken to windmill, and windmilling scales L/D by an
+  ASSUMED factor of 0.724;
+- best-glide true airspeed comes from the air density at the current altitude.
+
+With the ASSUMED airframe this gives L/D 13.5 and a best-glide speed of 78 kt TAS at 16,000 ft and 89 kt at
+24,000 ft.
+
+**Reachability of each airfield.** The altitude needed is the airfield elevation, plus a 1,500 ft pattern height,
+plus the height lost over the great-circle distance at the glide's ground speed (a head- or tailwind changes the
+ground speed). On top of that the straight glide line is sampled every 250 m against the DEM, and it must stay at
+least 500 ft above the terrain everywhere. That gives four outcomes:
+
+| Status | Meaning |
+|---|---|
+| REACHABLE_CONFIDENT | Arrival margin of 2,000 ft or more, and the path clears the terrain |
+| MARGINAL | Positive margin below 2,000 ft, and the path clears the terrain |
+| BLOCKED_BY_TERRAIN | Enough height in total, but a ridge on the way is in the glide line |
+| UNREACHABLE | Not enough height even over flat ground |
+
+A path that leaves the loaded terrain tile is reported as "terrain not checked". It is never assumed clear.
+
+**Footprint.** On each of 36 bearings the glide is walked outward until it comes within the clearance of the terrain.
+The result is the area the aircraft can still reach over real ground, the "can I make it home?" picture.
+
+**Measured on the Leh tile (SIMULATION).** Engine out over the range at 34.40 N, 77.45 E:
+
+| Altitude | Thoise (29 km) | Leh (31 km) | Footprint range (min / median / max) |
+|---|---|---|---|
+| 16,000 ft | UNREACHABLE | UNREACHABLE | 0 km (below the surrounding terrain) |
+| 20,000 ft | BLOCKED_BY_TERRAIN, margin +1,428 ft | BLOCKED_BY_TERRAIN, margin +358 ft | 1.5 / 4.8 / 29 km |
+| 24,000 ft | REACHABLE_CONFIDENT, 1,192 ft above terrain | REACHABLE_CONFIDENT, 2,471 ft above terrain | 16 / 33 / 51 km |
+
+The 20,000 ft row is the reason for the terrain check. A distance-only calculation would call both airfields
+reachable, but the ridges between them and the aircraft are in the glide line.
+
+**Divert.** `POST /api/v1/planning/divert` returns two answers for one airfield:
+
+- the engine-out glide check;
+- a powered terrain route there, using the engine's present power factor (measured, or entered by the operator).
+
+Each part reports its own reason when it is not available, for example an airfield outside the terrain tile or an
+engine with no running frame.
+
+**Airfields and position.**
+
+- The airfield list (Leh VILH, Thoise VI57, Kargil VI65, Srinagar VISR, and Jaisalmer VIJR for the Thar preset) lives in `configs/planning.json`, each entry with its
+  public source. These are demonstration presets, not for navigation.
+- The earlier hard-coded list is gone. It had invented runway lengths and filed Kargil under the code VIKG, which
+  belongs to Kishangarh.
+- The simulation starts at the Leh reference point. The operator or a mission moves the aircraft with `lat`/`lon` on
+  `POST /api/v1/engines/{id}/levers`, and the per-tick glide summary in the state message follows that position.
+
+**API.** `POST /api/v1/planning/glide` takes `{position: {lat, lon, altitude_ft}, headwind_kt, isa_dev_c, footprint}`.
+`POST /api/v1/planning/divert` takes `{engine_id, airfield_id, position, power_factor?}`. Both are read-only.
+In the console, the *Terrain route check* panel has a glide check that ranks the airfields, with a Divert button on
+each row.
+
+Tests: `tests/planning/test_glide.py` builds a synthetic ridge. The airfield beyond it is reachable from 25,000 ft,
+and from 20,000 ft it is BLOCKED_BY_TERRAIN although the arrival margin is positive. The footprint stops before the
+ridge. Off-tile paths are reported unchecked. `tests/planning/test_planning_api.py` covers the endpoints.
+
+## 8. Not yet built
+
+- A map view of the route and the glide footprint in the console.
 - Wind and no-fly zones in the route cost.
 - A converter for the recordings made by the earlier prototype.
 

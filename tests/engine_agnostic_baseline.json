@@ -74,6 +74,11 @@
     "cyl": 0,
     "model": 0
   },
+  "backend/mission/glide.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
   "backend/ml/anomaly_detector.py": {
     "brand": 1,
     "cyl": 0,
