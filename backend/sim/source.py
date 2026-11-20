@@ -40,6 +40,8 @@ def true_channels(o: PlantOutputs, ci: bool) -> Dict[str, Optional[float]]:
                                       "fuel_flow": o.fuel_kg_h, "bus_v": o.bus_v, "batt_i": o.battery_a,
                                       "alt_i": o.alternator_a, "gearbox_t": o.gearbox_c, "charge_t": o.charge_t_c}
     ch["rail_p" if ci else "fuel_p"] = o.fuel_bar
+    if ci and o.supply_bar is not None:
+        ch["fuel_p"] = o.supply_bar                    # CI: the low-pressure inlet sensor next to the rail sensor (D63)
     for i, (c, e) in enumerate(zip(o.cht, o.egt), start=1):
         ch[f"cht[{i}]"], ch[f"egt[{i}]"] = c, e
     return ch

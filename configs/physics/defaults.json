@@ -336,6 +336,16 @@
     }
   },
   "fuel": {
+    "ci_supply_pressure_bar": {
+      "value": 5.5,
+      "status": "ASSUMED",
+      "ref": "common-rail engines: low-pressure supply at the HP pump inlet; middle of the EASA TCDS E.200 (AE300) 4-7 bar band (D63)"
+    },
+    "ci_hp_pump_min_inlet_bar": {
+      "value": 4.0,
+      "status": "ASSUMED",
+      "ref": "below this inlet pressure the HP pump can no longer hold rail pressure: TCDS E.200 minimum inlet pressure 4 bar (D63)"
+    },
     "rail_time_constant_s": {
       "value": 0.3,
       "status": "ASSUMED",

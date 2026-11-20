@@ -9,9 +9,7 @@ austro_ae300,F07,INJECTOR_STUCK_OPEN,rail_p,-1,50.0,-135.0,True
 austro_ae300,F08,INJECTOR_STUCK_CLOSED,egt[{cyl}],-1,100.0,-513.041,True
 austro_ae300,F08,INJECTOR_STUCK_CLOSED,vibration_orders.0.5X,1,1.0,0.834,False
 austro_ae300,F09,RAIL_PRESSURE_DECAY,rail_p,-1,100.0,-720.0,True
-austro_ae300,F09,RAIL_PRESSURE_DECAY,egt[*],1,15.0,0.0,False
-austro_ae300,F10,FUEL_SUPPLY_LOW_PRESSURE,fuel_p,-1,0.3,-900.0,True
-austro_ae300,F10,FUEL_SUPPLY_LOW_PRESSURE,power_kw,-1,2.0,-8.462,True
+austro_ae300,F10,FUEL_SUPPLY_LOW_PRESSURE,fuel_p,-1,0.3,-2.75,True
 austro_ae300,F11,INJECTION_TIMING_DRIFT,egt[*],1,20.0,7.849,False
 austro_ae300,F11,INJECTION_TIMING_DRIFT,fuel_flow,1,0.2,0.0,False
 austro_ae300,F13,AIR_FILTER_BLOCKAGE,map_kpa,-1,3.0,-19.495,True
@@ -56,9 +54,6 @@ rotax_912is,F02,COMBUSTION_INSTABILITY,cov_imep,1,2.0,5.911,True
 rotax_912is,F02,COMBUSTION_INSTABILITY,vibration_orders.0.5X,1,0.5,0.628,True
 rotax_912is,F03,DETONATION_KNOCK,cht[*],1,5.0,3.553,False
 rotax_912is,F03,DETONATION_KNOCK,vibration_orders.knock,1,0.5,1.732,True
-rotax_912is,F04,IGNITION_LANE_FAILURE,rpm,-1,50.0,-28.465,False
-rotax_912is,F04,IGNITION_LANE_FAILURE,egt[*],1,15.0,17.544,True
-rotax_912is,F04,IGNITION_LANE_FAILURE,lane_status,1,1.0,1.0,True
 rotax_912is,F05,INJECTOR_CLOG_SI,egt[{cyl}],1,30.0,0.0,False
 rotax_912is,F05,INJECTOR_CLOG_SI,cht[{cyl}],1,5.0,0.0,False
 rotax_912is,F05,INJECTOR_CLOG_SI,fuel_flow,-1,0.2,-1.817,True
@@ -104,7 +99,6 @@ rotax_914,F03,DETONATION_KNOCK,cht[*],1,5.0,8.518,True
 rotax_914,F03,DETONATION_KNOCK,vibration_orders.knock,1,0.5,3.574,True
 rotax_914,F04,IGNITION_LANE_FAILURE,rpm,-1,50.0,-65.317,True
 rotax_914,F04,IGNITION_LANE_FAILURE,egt[*],1,15.0,41.591,True
-rotax_914,F04,IGNITION_LANE_FAILURE,lane_status,1,1.0,1.0,True
 rotax_914,F10,FUEL_SUPPLY_LOW_PRESSURE,fuel_p,-1,0.3,-0.15,False
 rotax_914,F10,FUEL_SUPPLY_LOW_PRESSURE,power_kw,-1,2.0,0.0,False
 rotax_914,F12,CARBURETTOR_ICING,map_kpa,-1,3.0,-21.121,True
@@ -147,9 +141,6 @@ rotax_915is,F02,COMBUSTION_INSTABILITY,cov_imep,1,2.0,4.5,True
 rotax_915is,F02,COMBUSTION_INSTABILITY,vibration_orders.0.5X,1,0.5,0.633,True
 rotax_915is,F03,DETONATION_KNOCK,cht[*],1,5.0,9.867,True
 rotax_915is,F03,DETONATION_KNOCK,vibration_orders.knock,1,0.5,3.573,True
-rotax_915is,F04,IGNITION_LANE_FAILURE,rpm,-1,50.0,-17.831,False
-rotax_915is,F04,IGNITION_LANE_FAILURE,egt[*],1,15.0,41.901,True
-rotax_915is,F04,IGNITION_LANE_FAILURE,lane_status,1,1.0,1.0,True
 rotax_915is,F05,INJECTOR_CLOG_SI,egt[{cyl}],1,30.0,1.301,False
 rotax_915is,F05,INJECTOR_CLOG_SI,cht[{cyl}],1,5.0,0.0,False
 rotax_915is,F05,INJECTOR_CLOG_SI,fuel_flow,-1,0.2,-2.164,True
@@ -204,9 +195,7 @@ vrde_jayem_2_2l,F07,INJECTOR_STUCK_OPEN,rail_p,-1,50.0,-138.75,True
 vrde_jayem_2_2l,F08,INJECTOR_STUCK_CLOSED,egt[{cyl}],-1,100.0,-466.335,True
 vrde_jayem_2_2l,F08,INJECTOR_STUCK_CLOSED,vibration_orders.0.5X,1,1.0,0.827,False
 vrde_jayem_2_2l,F09,RAIL_PRESSURE_DECAY,rail_p,-1,100.0,-740.0,True
-vrde_jayem_2_2l,F09,RAIL_PRESSURE_DECAY,egt[*],1,15.0,0.0,False
-vrde_jayem_2_2l,F10,FUEL_SUPPLY_LOW_PRESSURE,fuel_p,-1,0.3,-925.0,True
-vrde_jayem_2_2l,F10,FUEL_SUPPLY_LOW_PRESSURE,power_kw,-1,2.0,-9.16,True
+vrde_jayem_2_2l,F10,FUEL_SUPPLY_LOW_PRESSURE,fuel_p,-1,0.3,-2.75,True
 vrde_jayem_2_2l,F11,INJECTION_TIMING_DRIFT,egt[*],1,20.0,8.516,False
 vrde_jayem_2_2l,F11,INJECTION_TIMING_DRIFT,fuel_flow,1,0.2,0.0,False
 vrde_jayem_2_2l,F13,AIR_FILTER_BLOCKAGE,map_kpa,-1,3.0,-17.062,True

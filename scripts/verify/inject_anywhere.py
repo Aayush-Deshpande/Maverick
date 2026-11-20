@@ -10,7 +10,8 @@ client receives, and record: shown in active_faults, status left GO, fault in th
 3D highlight equals the registry components for that engine when it is the top hypothesis. Every round starts on freshly
 calibrated engines (no aftermath of the previous fault). Evidence class SIMULATION. Output: docs/verification/inject_anywhere_<date>.csv + summary.
 
-Run: python scripts/verify/inject_anywhere.py [engine_id ...]   (about 20-40 min for all five engines)
+Run: python scripts/verify/inject_anywhere.py [engine_id ...]   (about 40 min for all five engines in one process;
+     one process per engine in parallel, then --merge, is about 4x faster)
 """
 from __future__ import annotations
 
@@ -125,7 +126,8 @@ def main(engines: list[str]) -> int:
             print(f"{e:16s} {row['fault']} via {row['surface']:7s} accepted={row['accepted']} active={row['shown_active']} "
                   f"not-GO={row['status_left_go']} top3={row['detected_top3']} ({row['detect_s']}s) top1={row['top1']} "
                   f"highlight={'OK' if row['highlight_ok'] else row['lit_parts'] or '-'}", flush=True)
-    out = ROOT / "docs" / "verification" / f"inject_anywhere_{dt.date.today():%Y-%m-%d}.csv"
+    part = f"_{'-'.join(engines)}" if engines else ""      # one file per engine when run in parallel processes
+    out = ROOT / "docs" / "verification" / f"inject_anywhere_{dt.date.today():%Y-%m-%d}{part}.csv"
     out.parent.mkdir(parents=True, exist_ok=True)
     with out.open("w", newline="", encoding="utf-8") as fh:
         w = csv.DictWriter(fh, fieldnames=list(rows[0]))
@@ -140,5 +142,26 @@ def main(engines: list[str]) -> int:
     return 0
 
 
+def merge() -> int:
+    """Combine today's per-engine CSVs (parallel runs) into the one dated table, and print the summary."""
+    folder = ROOT / "docs" / "verification"
+    day = f"inject_anywhere_{dt.date.today():%Y-%m-%d}"
+    parts = sorted(folder.glob(f"{day}_*.csv"))
+    rows = [r for p in parts for r in csv.DictReader(p.open(encoding="utf-8"))]
+    out = folder / f"{day}.csv"
+    with out.open("w", newline="", encoding="utf-8") as fh:
+        w = csv.DictWriter(fh, fieldnames=list(rows[0]))
+        w.writeheader()
+        w.writerows(rows)
+    for p in parts:
+        p.unlink()                                                # generated parts, folded into the dated table
+    yes = lambda k: sum(1 for r in rows if r[k] == "True")        # noqa: E731
+    with_parts = [r for r in rows if r["expected_parts"]]
+    print(f"{len(rows)} engine-fault checks (SIMULATION): accepted {yes('accepted')}, shown live {yes('shown_active')}, "
+          f"left GO {yes('status_left_go')}, top-3 {yes('detected_top3')}, highlight exact "
+          f"{sum(1 for r in with_parts if r['highlight_ok'] == 'True')}/{len(with_parts)} -> {out}")
+    return 0
+
+
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(merge() if sys.argv[1:] == ["--merge"] else main(sys.argv[1:]))

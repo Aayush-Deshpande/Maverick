@@ -23,7 +23,7 @@ def channel_value(o: Any, channel: str, cylinder: Optional[int]) -> Optional[flo
         if channel == f"{prefix}[*]":
             return sum(series) / len(series)
     simple = {"rpm": o.rpm, "prop_rpm": o.prop_rpm, "map_kpa": o.map_kpa, "coolant_t": o.coolant_c, "oil_t": o.oil_c,
-              "oil_p": o.oil_bar, "gearbox_t": o.gearbox_c, "fuel_flow": o.fuel_kg_h, "fuel_p": o.fuel_bar,
+              "oil_p": o.oil_bar, "gearbox_t": o.gearbox_c, "fuel_flow": o.fuel_kg_h, "fuel_p": o.supply_bar if o.supply_bar is not None else o.fuel_bar,
               "rail_p": o.fuel_bar, "power_kw": o.power_kw, "bus_v": o.bus_v, "batt_i": o.battery_a,
               "cov_imep": o.cov_imep_pct, "charge_t": o.charge_t_c, "turbo_rpm": o.turbo_rpm,
               "lane_status": float(o.lanes_failed), "oil_qty": o.oil_qty_l, "soc": o.soc}

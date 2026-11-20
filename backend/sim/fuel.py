@@ -24,6 +24,9 @@ class FuelSystem:
     pw_max_factor: float
     rail_tau_s: float
     pressure_bar: float = 0.0
+    supply_nominal_bar: Optional[float] = None    # CI: low-pressure supply at the HP pump inlet (D63)
+    supply_min_bar: Optional[float] = None        # CI: inlet pressure the HP pump needs to hold the rail
+    supply_bar: Optional[float] = None
 
     @classmethod
     def for_engine(cls, cfg: Any) -> "FuelSystem":
@@ -36,15 +39,20 @@ class FuelSystem:
             nominal = ph["carb_fuel_pressure_bar"]
         else:
             nominal = ph["si_fuel_pressure_bar"]
+        ci = kind == "COMMON_RAIL"
         return cls(kind=kind, nominal_bar=nominal, pw_max_factor=ph["pulse_width_max_factor"],
-                   rail_tau_s=ph["rail_time_constant_s"], pressure_bar=nominal)
+                   rail_tau_s=ph["rail_time_constant_s"], pressure_bar=nominal,
+                   supply_nominal_bar=ph["ci_supply_pressure_bar"] if ci else None,
+                   supply_min_bar=ph["ci_hp_pump_min_inlet_bar"] if ci else None,
+                   supply_bar=ph["ci_supply_pressure_bar"] if ci else None)
 
     def steady_pressure(self, health: Optional[Dict[str, Any]] = None) -> float:
         hl = health or {}
-        p = self.nominal_bar * hl.get("supply_health", 1.0)
         if self.kind == "COMMON_RAIL":
-            p *= hl.get("rail_health", 1.0)
-        return p
+            # the HP pump holds the rail while its inlet stays above its minimum; below it the rail sags with it (D63)
+            inlet = self.supply_nominal_bar * hl.get("supply_health", 1.0)
+            return self.nominal_bar * hl.get("rail_health", 1.0) * min(1.0, inlet / self.supply_min_bar)
+        return self.nominal_bar * hl.get("supply_health", 1.0)
 
     def delivery_factor(self, pressure_bar: float) -> float:
         """Share of the commanded fuel that reaches the cylinders at this pressure."""
@@ -63,5 +71,7 @@ class FuelSystem:
 
     def step(self, dt: float, health: Optional[Dict[str, Any]] = None) -> float:
         target = self.steady_pressure(health)
+        if self.supply_nominal_bar is not None:
+            self.supply_bar = self.supply_nominal_bar * (health or {}).get("supply_health", 1.0)
         self.pressure_bar = target + (self.pressure_bar - target) * math.exp(-dt / self.rail_tau_s)
         return self.pressure_bar

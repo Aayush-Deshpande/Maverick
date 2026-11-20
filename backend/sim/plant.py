@@ -73,6 +73,7 @@ class PlantOutputs:
     altitude_ft: float
     oat_c: float
     tas_kt: float
+    supply_bar: Optional[float] = None   # CI: low-pressure supply at the HP pump inlet (D63); None for SI/carburettor
 
 
 def knock_controlled_point(core: MeanValueEngine, ecu: Dict[str, Any], throttle_pct: float, rpm: float,
@@ -247,7 +248,8 @@ class SimEngine:
             boost_pr=(op.map_pa / atm.pressure_pa) if self.core.turbo else None, vibration=vib,
             lanes_failed=int(hl.get("lanes_failed", 0)), oil_qty_l=hl.get("oil_qty_l", self.cfg.oil_capacity_l),
             turbo_rpm=turbo_rpm,
-            altitude_ft=lv.altitude_ft, oat_c=atm.temperature_k - 273.15, tas_kt=tas)
+            altitude_ft=lv.altitude_ft, oat_c=atm.temperature_k - 273.15, tas_kt=tas,
+            supply_bar=self.core.fuel.supply_bar)
 
     # -- state machine -------------------------------------------------------------------------------------
     def _crank_fuel_ok(self, dt: float, hl: Dict[str, Any]) -> bool:

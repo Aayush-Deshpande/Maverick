@@ -777,12 +777,6 @@
           "direction": -1,
           "min_delta": 100,
           "unit": "bar"
-        },
-        {
-          "channel": "egt[*]",
-          "direction": 1,
-          "min_delta": 15,
-          "unit": "C"
         }
       ],
       "detect_window_s": 60,
@@ -854,7 +848,15 @@
           "channel": "power_kw",
           "direction": -1,
           "min_delta": 2,
-          "unit": "kW"
+          "unit": "kW",
+          "applies_when": [
+            {
+              "field": "ignition_mode",
+              "in": [
+                "SPARK_IGNITION"
+              ]
+            }
+          ]
         }
       ],
       "detect_window_s": 60,
