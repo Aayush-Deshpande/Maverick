@@ -1070,3 +1070,15 @@ Next: python -m backend.evaluation.run_matrix (all engines; the relief change to
   docs_site page 11 results table (915 row + footnote).
 Questions for Prasad: (Q16) oil relief 4.8 bar ASSUMED - is there a Rotax figure for the regulated pressure?
 
+=== 20 Nov 2026 M6-05 prerequisite: detection-driven 3D highlights in the state message (D5, T-3D-2) (AI: Claude Code)
+Gap found: state.highlights carried ONLY the INJECTED outline (training mode); nothing lit parts from diagnosis, so
+  every viewer could only show commanded faults.
+Changed: backend/server/state_builder.py _detected_highlights: a hypothesis with posterior >= status.json
+  hypothesis_posterior_min (0.7, the same rule that sets status) resolves to its registry components for this
+  engine (cylinder / channel aware) -> Highlight(level = current status NO-GO/CAUTION/ADVISORY, or SENSOR for sensor
+  hypotheses, reason "<id> <name> detected, p=..."); ids outside the registry light nothing. Never reads
+  active_faults (truth-leak scan still green).
+Tests: tests/api/test_state_schema.py +4 (detected NO-GO lights oil_tank with nodes and no INJECTED; posterior 0.3
+  lights nothing; sensor hypothesis -> SENSOR; unknown id -> nothing, message still builds). api + truth-leak +
+  dynamic 61 passed.
+

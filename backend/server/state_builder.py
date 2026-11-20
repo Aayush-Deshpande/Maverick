@@ -14,6 +14,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
 
+from backend.faults.registry import FaultRejected
 from backend.core.frame import Q_FROZEN, Q_INTERPOLATED, Q_LANE_DISAGREE, Q_OUT_OF_RANGE, Q_SHIELDED, Q_STALE
 from backend.server.state_schema import (ActiveFaultOut, AlertOut, EventOut, Highlight, Hypothesis, Reading, Reason, StateMessage,
                                          Status)
@@ -75,6 +76,37 @@ def resolve_fault_components(fault_raw: Dict[str, Any], engine_id: str, cylinder
     return ids, marker if entry.get("marker") else None
 
 
+@lru_cache(maxsize=1)
+def _highlight_posterior_min() -> float:
+    """Same rule as the status evaluator: a hypothesis this confident sets status, so it also lights its parts."""
+    return float(json.loads((ROOT / "configs" / "status.json").read_text(encoding="utf-8"))
+                 ["hypothesis_posterior_min"]["value"])
+
+
+def _detected_highlights(engine_id: str, hypotheses: Iterable[Dict[str, Any]], status_level: Optional[str],
+                         registry: Any, nodes: Dict[str, List[str]]) -> List[Highlight]:
+    """D5: highlights from diagnosis + status, never from the injected list. Process faults take the current status
+    colour (an alert level), sensor faults the SENSOR style."""
+    out: List[Highlight] = []
+    if registry is None:
+        return out
+    level = status_level if status_level in ("NO-GO", "CAUTION", "ADVISORY") else "ADVISORY"
+    for h in hypotheses:
+        fid, post = h.get("fault_id"), h.get("posterior")
+        if not fid or post is None or post < _highlight_posterior_min():
+            continue
+        try:
+            raw = registry.get(fid).raw
+        except FaultRejected:                             # not a registry fault (e.g. an UNKNOWN anomaly): no parts
+            continue
+        comp_ids, marker = resolve_fault_components(raw, engine_id, h.get("cylinder"), h.get("channel"))
+        for cid in comp_ids:
+            out.append(Highlight(component_id=cid, nodes=nodes.get(cid, []),
+                                 level="SENSOR" if h.get("kind") == "SENSOR" else level,
+                                 reason=f"{fid} {h.get('name', '')} detected, p={post:.2f}", marker_for=marker))
+    return out
+
+
 def _status(st: Optional[Dict[str, Any]]) -> Status:
     if not st:
         return Status(level="UNKNOWN")
@@ -122,6 +154,10 @@ def build_state(tick: Any, seq: int, *, registry: Any = None, active_faults: Ite
                 highlights.append(Highlight(component_id=cid, nodes=nodes.get(cid, []), level="INJECTED",
                                             reason=f"{af.fault_id} {af.name} (injected, training mode)",
                                             marker_for=marker))
+
+    hyps = getattr(tick, "hypotheses", None) or []
+    highlights += _detected_highlights(engine_id, hyps, (getattr(tick, "status", None) or {}).get("level"),
+                                       registry, nodes)
 
     events = [EventOut(seq=e.seq, t_s=e.t_s, type=e.type, text=e.text, source=e.source) for e in fault_events]
     for e in getattr(tick, "events", []) or []:

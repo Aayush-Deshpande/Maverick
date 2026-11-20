@@ -86,3 +86,40 @@ def test_residuals_carry_the_detector_z_vector_by_channel():
     assert list(msg.residuals) == det.channel_names
     top_name, top_z = det.top_channels[0]
     assert msg.residuals[top_name] == pytest.approx(top_z, abs=1e-3) or abs(msg.residuals[top_name]) >= abs(top_z)
+
+
+def _tick_with(runtime, hypotheses, status_level):
+    tick = runtime.tick()
+    tick.hypotheses = hypotheses
+    tick.status = {"level": status_level, "reasons": [{"code": "X", "text": "x"}]}
+    return tick
+
+
+def test_detected_fault_highlights_its_parts_without_training_mode(runtime_912):
+    """D5 / T-3D-2: the 3D highlight comes from diagnosis + status. A confident hypothesis lights its registry
+    components in the status colour; the injected list plays no part (no active_faults passed)."""
+    reg = load_fault_registry()
+    hyp = [{"fault_id": "F23", "name": "OIL_PRESSURE_LOSS", "kind": "PROCESS", "posterior": 0.9}]
+    msg = build_state(_tick_with(runtime_912, hyp, "NO-GO"), seq=3, registry=reg)
+    hl = [h for h in msg.highlights if h.component_id == "oil_tank"]
+    assert hl and hl[0].level == "NO-GO" and hl[0].nodes and "F23" in hl[0].reason
+    assert all(h.level != "INJECTED" for h in msg.highlights)
+
+
+def test_unconfident_hypotheses_light_nothing(runtime_912):
+    reg = load_fault_registry()
+    hyp = [{"fault_id": "F23", "name": "OIL_PRESSURE_LOSS", "kind": "PROCESS", "posterior": 0.3}]
+    assert build_state(_tick_with(runtime_912, hyp, "CAUTION"), seq=4, registry=reg).highlights == []
+
+
+def test_sensor_hypothesis_highlights_in_the_sensor_style(runtime_912):
+    reg = load_fault_registry()
+    hyp = [{"fault_id": "S02", "name": "SENSOR_BIAS", "kind": "SENSOR", "channel": "oil_p", "posterior": 0.95}]
+    msg = build_state(_tick_with(runtime_912, hyp, "ADVISORY"), seq=5, registry=reg)
+    assert msg.highlights and all(h.level == "SENSOR" for h in msg.highlights)
+
+
+def test_hypothesis_outside_the_registry_lights_nothing_and_does_not_break_the_message(runtime_912):
+    hyp = [{"fault_id": "UNKNOWN_ANOMALY", "name": "UNKNOWN", "kind": "PROCESS", "posterior": 0.95}]
+    msg = build_state(_tick_with(runtime_912, hyp, "CAUTION"), seq=6, registry=load_fault_registry())
+    assert msg.highlights == []
