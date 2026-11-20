@@ -58,8 +58,25 @@ export function createStage(THREE: Three, RoomEnvironment: new () => THREE_NS.Sc
   return { renderer, scene, camera, env };
 }
 
+const BAKED_WHITE_EMISSIVE = 0.35;   // same rule as LandingHero3D and the console viewer: near-white baked emissive
+                                     // without an emissive texture blows out the AE300/VRDE exports
+
+/** Turn off near-white baked emissive that has no emissive texture (it renders the AE300/VRDE solid white). */
+export function neutraliseBakedEmissive(root: THREE_NS.Object3D) {
+  root.traverse((object) => {
+    const mesh = object as THREE_NS.Mesh;
+    if (!mesh.isMesh) return;
+    for (const material of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
+      const m = material as THREE_NS.MeshStandardMaterial;
+      if (m.emissive && !m.emissiveMap && m.emissive.r > BAKED_WHITE_EMISSIVE && m.emissive.g > BAKED_WHITE_EMISSIVE
+          && m.emissive.b > BAKED_WHITE_EMISSIVE) m.emissive.setHex(0x000000);
+    }
+  });
+}
+
 /** Centre and scale a model to a unit stage, and return a camera "home" for a given aspect. */
 export function frameModel(THREE: Three, root: THREE_NS.Object3D) {
+  neutraliseBakedEmissive(root);
   const box = new THREE.Box3().setFromObject(root);
   const center = box.getCenter(new THREE.Vector3());
   const size = box.getSize(new THREE.Vector3());

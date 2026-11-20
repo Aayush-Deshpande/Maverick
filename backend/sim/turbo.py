@@ -35,6 +35,7 @@ class Turbo:
     no_boost_pr: float
     bearing_pr_loss: float
     bearing_lag_gain: float
+    path_cooling: float = 0.0           # non-intercooled charge path: duct/airbox wall loss + carburettor evaporation
     pr_a: float = 2.0
     pr_b: float = 0.0
     takeoff_pr_limit: Optional[float] = None    # TCU take-off pressure-ratio cap (documented lower take-off alt)
@@ -53,7 +54,7 @@ class Turbo:
         map_target = (t.map_takeoff_max_kpa or t.max_boost_kpa) * 1000.0
         return cls(target_pa=map_target / wot_map_ratio, lag_s=float(t.lag_time_constant_sec),
                    intercooled=bool(t.intercooled), eta_c=ph["compressor_efficiency"],
-                   ic_eff=ph["intercooler_effectiveness"], no_boost_pr=ph["no_boost_pressure_ratio"],
+                   ic_eff=ph["intercooler_effectiveness"], path_cooling=ph["charge_path_heat_rejection"], no_boost_pr=ph["no_boost_pressure_ratio"],
                    bearing_pr_loss=ph["bearing_pr_loss"], bearing_lag_gain=ph["bearing_lag_gain"],
                    schedule=t.tcu_nominal_airbox)
 
@@ -125,7 +126,7 @@ class Turbo:
         pr = max(p_charge / atm.pressure_pa, 1.0)
         t2 = atm.temperature_k * (1.0 + (pr ** ((GAMMA_AIR - 1) / GAMMA_AIR) - 1.0) / self.eta_c)
         if not self.intercooled:
-            return t2
+            return t2 - self.path_cooling * (t2 - atm.temperature_k)
         eff = self.ic_eff * (1.0 - ic_fouling)
         return t2 - eff * (t2 - atm.temperature_k)
 

@@ -304,6 +304,11 @@
       "status": "ASSUMED",
       "ref": "air-to-air intercooler effectiveness (only when configs/engines turbo.intercooled)"
     },
+    "charge_path_heat_rejection": {
+      "value": 0.35,
+      "status": "CALIBRATED",
+      "ref": "2026-11-20 (D58): share of the compressor temperature rise lost before the cylinders on a non-intercooled turbo (outlet duct and airbox walls in the cowling flow + fuel evaporation in the 914's blow-through carburettors, ~15-25 K alone). Smallest round value that reproduces the Rotax 914 OM take-off power held to 8,000 ft (0.977 of SL; 0.30 gives 0.971). Not used by intercooled engines"
+    },
     "no_boost_pressure_ratio": {
       "value": 1.03,
       "status": "ASSUMED",

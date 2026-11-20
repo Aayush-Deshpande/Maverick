@@ -16,6 +16,7 @@ Branch:       Beta (local commits not pushed). main untouched (local main = orig
 Last commit:  see git log -1.
 State:        tests/dynamic 15 passed, vitest 25, tsc OK; landing loads with no console errors. Full suite last
               698 passed (+ known ratchet; timing test flaky only under load).
+Latest:       D58 (914 charge-path cooling, cold-day density criterion); survey inset AE300 no longer renders white.
 Next step:    1) Not imported from main on purpose: backend/runtime, engine_api, detect/calibration changes,
                  apps/threejs_twin, main's EngineRuntimeConsole demo (Beta's v1 console kept; wire the landing's
                  "Run the demo" (demoIntent) into Beta's console via a configs/ui demo scenario), web/review,

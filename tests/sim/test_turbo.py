@@ -44,11 +44,16 @@ def test_t_phy_3_never_above_105_percent_of_rated_isa_to_hot(eng):
     _t_phy_3(eng, (0, 15, 35))
 
 
-@pytest.mark.xfail(strict=True, reason="T-PHY-3 cold-day question for Prasad: at ISA-30 a MAP-limited engine makes "
-                   "~105-112 % of rated power (dense air at the same MAP; also true for the NA 912 at WOT). Either the "
-                   "criterion excludes cold days or the model needs a documented cold-day power limit.")
-def test_t_phy_3_never_above_105_percent_of_rated_cold_day(eng):
-    _t_phy_3(eng, (-30,))
+def test_t_phy_3_cold_day_gain_is_only_air_density(eng):
+    """D58: on a cold day a MAP-limited engine really makes more power (denser air at the same MAP; manufacturers
+    correct for density altitude rather than cap it). The rule: never above 105 % of rated scaled by the ISA/actual
+    temperature ratio, i.e. no gain beyond what the air density explains."""
+    rated = eng.cfg.rated_power_kw * 1000
+    for alt in range(0, 25001, 5000):
+        isa, cold = Atmosphere.at(alt), Atmosphere.at(alt, isa_dev_c=-30)
+        for thr in (40, 70, 100):
+            limit = 1.05 * rated * isa.temperature_k / cold.temperature_k
+            assert eng.steady_point(thr, eng.cfg.rated_rpm, cold).brake_w <= limit
 
 
 def _t_phy_4(eng):
@@ -66,9 +71,6 @@ def test_t_phy_4_intercooled_turbo_holds_power_to_critical_altitude(engine_id):
     _t_phy_4(MeanValueEngine(load_engine_config(engine_id)))
 
 
-@pytest.mark.xfail(strict=True, reason="T-PHY-4 gap (question for Prasad): without an intercooler the model loses "
-                   "~6 % take-off power at the documented 8,000 ft (compressor discharge 345 K vs 326 K at SL); the OM "
-                   "says power holds. Needs a confirmed compressor efficiency or the effect the model lacks.")
 @pytest.mark.parametrize("engine_id", [e for e in TURBO_SI if not load_engine_config(e).turbo.intercooled])
 def test_t_phy_4_non_intercooled_turbo_holds_power_to_critical_altitude(engine_id):
     _t_phy_4(MeanValueEngine(load_engine_config(engine_id)))
