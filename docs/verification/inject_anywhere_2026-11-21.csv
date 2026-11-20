@@ -4,142 +4,140 @@ rotax_912is,F01,twin,True,,True,True,True,8,F01,wiring_harness,wiring_harness,Tr
 rotax_914,F01,console,True,,True,True,True,10,F01,cylinder_bank_unverified,cylinder_bank_unverified,True,60.0
 rotax_915is,F01,twin,True,,True,True,True,6,F01,main_engine_MERGED,main_engine_MERGED,True,60.0
 vrde_jayem_2_2l,F02,console,True,,True,True,True,14,F02,fuel_line_hp_2 injector_2,fuel_line_hp_2 injector_2,True,150.0
-austro_ae300,F06,twin,True,,True,True,True,13,F06,fuel_line_2 injector_2,fuel_line_2 injector_2,True,120.0
-rotax_912is,F02,console,True,,True,True,True,7,F01,wiring_harness,,False,150.0
-rotax_914,F02,console,True,,True,True,True,9,F01,cylinder_bank_unverified,cylinder_bank_unverified,True,150.0
-rotax_915is,F02,console,True,,True,True,True,10,F05,main_engine_MERGED,,False,150.0
-vrde_jayem_2_2l,F06,twin,True,,True,True,True,13,F06,fuel_line_hp_2 injector_2,fuel_line_hp_2 injector_2,True,120.0
-austro_ae300,F07,console,True,,True,True,True,7,F07,common_rail injector_2,common_rail injector_2,True,50.0
-rotax_912is,F03,console,True,,True,True,True,26,F03,crankcase_cylinders_base,crankcase_cylinders_base,True,90.0
-rotax_914,F03,console,True,,True,True,True,13,F03,cylinder_bank_unverified,cylinder_bank_unverified,True,90.0
-rotax_915is,F03,console,True,,True,True,True,14,F10,main_engine_MERGED,main_engine_MERGED,True,90.0
-vrde_jayem_2_2l,F07,console,True,,True,True,True,7,F07,fuel_return injector_2,fuel_return injector_2,True,50.0
-austro_ae300,F08,twin,True,,True,True,True,6,F08,injector_2,injector_2,True,60.0
-rotax_912is,F04,console,True,,True,True,False,,F30,ecu wiring_harness,,False,40.0
+austro_ae300,F06,twin,True,,True,True,True,14,F06,fuel_line_2 injector_2,fuel_line_2 injector_2,True,120.0
+rotax_912is,F02,console,True,,True,True,True,13,F01,wiring_harness,wiring_harness,True,150.0
+rotax_914,F02,console,True,,True,True,True,10,F01,cylinder_bank_unverified,cylinder_bank_unverified,True,150.0
+rotax_915is,F02,console,True,,True,True,True,6,F01,main_engine_MERGED,main_engine_MERGED,True,150.0
+vrde_jayem_2_2l,F06,twin,True,,True,True,True,9,F06,fuel_line_hp_2 injector_2,fuel_line_hp_2 injector_2,True,120.0
+austro_ae300,F07,console,True,,True,True,True,9,F07,common_rail injector_2,common_rail injector_2,True,50.0
+rotax_912is,F03,console,True,,True,True,True,23,F03,crankcase_cylinders_base,crankcase_cylinders_base,True,90.0
+rotax_914,F03,console,True,,True,True,True,15,F03,cylinder_bank_unverified,cylinder_bank_unverified,True,90.0
+rotax_915is,F03,console,True,,True,True,True,21,F10,main_engine_MERGED,main_engine_MERGED,True,90.0
+vrde_jayem_2_2l,F07,console,True,,True,True,True,9,F07,fuel_return injector_2,fuel_return injector_2,True,50.0
+austro_ae300,F08,twin,True,,True,True,True,9,F08,injector_2,injector_2,True,60.0
+rotax_912is,F05,console,True,,True,True,True,13,F01,fuel_pump,fuel_pump,True,90.0
 rotax_914,F04,console,True,,True,True,False,,S02,,,False,40.0
-rotax_915is,F04,console,True,,True,True,False,,F11,ecu fusebox,,False,40.0
-vrde_jayem_2_2l,F08,twin,True,,True,True,True,11,F08,injector_2,injector_2,True,60.0
-austro_ae300,F09,console,True,,True,False,True,20,F34,common_rail hp_fuel_pump rail_pressure_valve sensor_fuel_rail_press,,False,90.0
-rotax_912is,F05,gcs,False,"{""detail"":[{""type"":""missing"",""loc"":[""query"",""cmd""],""msg"":""Field required"",""input"":null}]}",False,False,False,,F34,fuel_pump,,False,90.0
-rotax_914,F10,console,True,,True,True,True,6,F10,,,False,90.0
-rotax_915is,F05,console,True,,True,True,True,7,F01,main_engine_MERGED,main_engine_MERGED,True,90.0
-vrde_jayem_2_2l,F09,console,True,,True,False,True,0,F34,common_rail hp_fuel_pump rail_pressure_sensor rail_relief_valve,,False,90.0
-austro_ae300,F10,console,True,,True,True,False,,F16,aux_fuel_pump fuel_metering_unit sensor_fuel_low_press,,False,90.0
+rotax_915is,F05,console,True,,True,True,True,6,F01,main_engine_MERGED,main_engine_MERGED,True,90.0
+vrde_jayem_2_2l,F08,twin,True,,True,True,True,9,F08,injector_2,injector_2,True,60.0
+austro_ae300,F09,console,True,,True,False,False,,,common_rail hp_fuel_pump rail_pressure_valve sensor_fuel_rail_press,,False,90.0
 rotax_912is,F07,console,True,,True,True,True,8,F07,fuel_pump,fuel_pump,True,50.0
-rotax_914,F12,console,True,,True,True,True,5,F15,intake_manifold,,False,150.0
-rotax_915is,F07,console,True,,True,True,True,16,F07,main_engine_MERGED,main_engine_MERGED,True,50.0
+rotax_914,F10,console,True,,True,True,True,10,F10,,,False,90.0
+rotax_915is,F07,console,True,,True,True,True,26,F07,main_engine_MERGED,main_engine_MERGED,True,50.0
+vrde_jayem_2_2l,F09,console,True,,True,False,False,,,common_rail hp_fuel_pump rail_pressure_sensor rail_relief_valve,,False,90.0
+austro_ae300,F10,console,True,,True,True,False,,F11,aux_fuel_pump fuel_metering_unit sensor_fuel_low_press,,False,90.0
+rotax_912is,F10,console,True,,True,True,True,8,S02,fuel_pump,fuel_pump,True,90.0
+rotax_914,F12,console,True,,True,True,False,,F15,intake_manifold,,False,150.0
+rotax_915is,F10,console,True,,True,True,True,11,F10,,,False,90.0
 vrde_jayem_2_2l,F10,console,True,,True,True,False,,F11,fuel_filter,,False,90.0
-austro_ae300,F11,console,True,,True,True,True,18,F11,ecu_lane_a ecu_lane_b sensor_cam sensor_crank,ecu_lane_a ecu_lane_b sensor_cam sensor_crank,True,150.0
-rotax_912is,F10,console,True,,True,True,True,7,S02,fuel_pump,fuel_pump,True,90.0
-rotax_914,F13,console,True,,True,True,True,9,F12,intake_manifold,intake_manifold,True,330.0
-rotax_915is,F10,console,True,,True,True,True,15,F10,,,False,90.0
-vrde_jayem_2_2l,F11,console,True,,True,True,True,18,F11,sensor_crank_1 sensor_crank_2 wiring_harness,sensor_crank_1 sensor_crank_2 wiring_harness,True,150.0
-austro_ae300,F13,twin,True,,True,True,True,12,F13,air_filter,air_filter,True,330.0
-rotax_912is,F11,console,True,,True,True,True,66,F11,ecu,ecu,True,150.0
-rotax_914,F14,twin,True,,True,False,True,0,F34,intake_manifold turbo_compressor,,False,150.0
-rotax_915is,F11,console,True,,True,True,True,29,F11,ecu,ecu,True,150.0
-vrde_jayem_2_2l,F13,twin,True,,True,True,True,7,F13,intake_manifold,intake_manifold,True,330.0
-austro_ae300,F14,console,True,,True,False,True,0,F34,boost_pipes intercooler,,False,150.0
-rotax_912is,F13,twin,True,,True,True,True,10,F13,,,False,330.0
-rotax_914,F15,console,True,,True,True,True,17,F15,turbo_turbine,turbo_turbine,True,90.0
-rotax_915is,F13,twin,True,,True,True,True,8,F15,,,False,330.0
-vrde_jayem_2_2l,F14,console,True,,True,True,True,31,F13,intercooler turbo_ducts,,False,150.0
-austro_ae300,F15,twin,True,,True,True,True,20,F15,turbocharger,turbocharger,True,90.0
-rotax_912is,F19,twin,True,,True,True,True,64,F19,cooling_air_baffle,cooling_air_baffle,True,630.0
-rotax_914,F16,console,True,,True,True,True,16,F16,turbo_turbine,turbo_turbine,True,60.0
-rotax_915is,F14,console,True,,True,False,True,62,S02,intercooler,,False,150.0
-vrde_jayem_2_2l,F15,twin,True,,True,True,True,15,F15,wastegate,wastegate,True,90.0
+austro_ae300,F11,console,True,,True,True,True,29,F11,ecu_lane_a ecu_lane_b sensor_cam sensor_crank,ecu_lane_a ecu_lane_b sensor_cam sensor_crank,True,150.0
+rotax_912is,F11,gcs,True,,True,True,True,28,F11,ecu,ecu,True,150.0
+rotax_914,F13,console,True,,True,True,True,20,F12,intake_manifold,,False,330.0
+rotax_915is,F11,console,True,,True,True,True,36,F11,ecu,ecu,True,150.0
+vrde_jayem_2_2l,F11,console,True,,True,True,True,24,F11,sensor_crank_1 sensor_crank_2 wiring_harness,sensor_crank_1 sensor_crank_2 wiring_harness,True,150.0
+austro_ae300,F13,twin,True,,True,True,True,14,F13,air_filter,air_filter,True,330.0
+rotax_912is,F13,console,True,,True,True,True,18,F13,,,False,330.0
+rotax_914,F14,twin,True,,True,False,True,45,F14,intake_manifold turbo_compressor,,False,150.0
+rotax_915is,F13,console,True,,True,True,True,26,F13,,,False,330.0
+vrde_jayem_2_2l,F13,twin,True,,True,True,True,9,F13,intake_manifold,intake_manifold,True,330.0
+austro_ae300,F14,console,True,,True,False,False,,,boost_pipes intercooler,,False,150.0
+rotax_912is,F19,gcs,True,,True,True,True,78,F19,cooling_air_baffle,cooling_air_baffle,True,630.0
+rotax_914,F15,console,True,,True,True,True,20,F15,turbo_turbine,turbo_turbine,True,90.0
+rotax_915is,F14,twin,True,,True,False,True,116,F14,intercooler,,False,150.0
+vrde_jayem_2_2l,F14,console,True,,True,True,True,29,F13,intercooler turbo_ducts,,False,150.0
+austro_ae300,F15,twin,True,,True,True,True,19,F15,turbocharger,turbocharger,True,90.0
+rotax_912is,F20,console,True,,True,True,True,33,F20,coolant_hoses,coolant_hoses,True,330.0
+rotax_914,F16,console,True,,True,True,True,20,F16,turbo_turbine,turbo_turbine,True,60.0
+rotax_915is,F15,console,True,,True,True,True,21,F15,magneto_valve_block overboost_valve,magneto_valve_block overboost_valve,True,90.0
+vrde_jayem_2_2l,F15,twin,True,,True,True,True,19,F15,wastegate,wastegate,True,90.0
 austro_ae300,F16,console,True,,True,True,True,19,F16,turbocharger,turbocharger,True,60.0
-rotax_912is,F20,console,True,,True,True,True,28,F20,coolant_hoses,coolant_hoses,True,330.0
-rotax_914,F17,console,True,,True,True,True,20,F17,turbo_compressor turbo_turbine,turbo_compressor turbo_turbine,True,630.0
-rotax_915is,F15,twin,True,,True,True,True,16,F15,magneto_valve_block overboost_valve,magneto_valve_block overboost_valve,True,90.0
-vrde_jayem_2_2l,F16,console,True,,True,True,True,29,F16,wastegate,wastegate,True,60.0
-austro_ae300,F17,twin,True,,True,True,True,8,F17,turbo_oil_lines turbocharger,turbo_oil_lines turbocharger,True,630.0
-rotax_912is,F21,console,True,,True,True,True,0,F21,,,False,630.0
-rotax_914,F19,twin,True,,True,True,True,4,F19,cylinder_bank_unverified,cylinder_bank_unverified,True,630.0
-rotax_915is,F16,console,True,,True,True,True,20,F16,magneto_valve_block overboost_valve,magneto_valve_block overboost_valve,True,60.0
-vrde_jayem_2_2l,F17,twin,True,,True,True,True,8,F17,turbo_hp turbo_lp turbo_oil_drain turbo_oil_feed,turbo_hp turbo_lp turbo_oil_drain turbo_oil_feed,True,630.0
-austro_ae300,F18,console,True,,True,True,True,12,F18,intercooler sensor_charge_air_temp,intercooler sensor_charge_air_temp,True,630.0
-rotax_912is,F23,twin,True,,True,True,True,6,F23,oil_tank,oil_tank,True,90.0
-rotax_914,F20,console,True,,True,True,True,23,F20,coolant_lines,coolant_lines,True,330.0
-rotax_915is,F17,twin,True,,True,True,True,34,F17,,,False,630.0
-vrde_jayem_2_2l,F18,console,True,,True,True,True,12,F18,intercooler sensor_charge_air_temp,intercooler sensor_charge_air_temp,True,630.0
-austro_ae300,F20,console,True,,True,True,True,41,F20,coolant_hoses sensor_coolant_temp water_pump,coolant_hoses sensor_coolant_temp water_pump,True,330.0
-rotax_912is,F24,console,True,,True,True,False,,S02,oil_tank,,False,930.0
-rotax_914,F21,console,True,,True,True,True,32,F21,,,False,630.0
-rotax_915is,F18,console,True,,True,True,True,88,F18,intercooler,intercooler,True,630.0
-vrde_jayem_2_2l,F20,console,True,,True,True,True,41,F20,coolant_hoses sensor_coolant_temp water_pump,coolant_hoses sensor_coolant_temp water_pump,True,330.0
-austro_ae300,F21,console,True,,True,True,True,15,F21,,,False,630.0
-rotax_912is,F25,console,True,,True,True,False,,S02,,,False,930.0
-rotax_914,F23,console,True,,True,True,True,26,F23,crankcase,crankcase,True,90.0
-rotax_915is,F19,twin,True,,True,True,True,47,F19,air_baffles,air_baffles,True,630.0
-vrde_jayem_2_2l,F21,console,True,,True,True,True,30,F21,,,False,630.0
-austro_ae300,F22,console,True,,True,True,True,84,F22,,,False,630.0
-rotax_912is,F26,console,True,,True,True,False,,S02,crankcase_cylinders_base,,False,3630.0
-rotax_914,F24,console,True,,True,True,True,230,F14,crankcase,,False,930.0
-rotax_915is,F20,console,True,,True,True,True,21,F20,,,False,330.0
-vrde_jayem_2_2l,F22,console,True,,True,True,True,94,F22,thermostat,thermostat,True,630.0
-austro_ae300,F23,console,True,,True,True,True,13,F23,oil_filter oil_sump sensor_oil_press,oil_filter oil_sump sensor_oil_press,True,90.0
-rotax_912is,F27,gcs,False,"{""detail"":[{""type"":""missing"",""loc"":[""query"",""cmd""],""msg"":""Field required"",""input"":null}]}",False,True,False,,S02,gearbox,,False,330.0
-rotax_914,F25,console,True,,True,True,True,39,S02,,,False,930.0
-rotax_915is,F21,console,True,,True,True,False,,F32,,,False,630.0
-vrde_jayem_2_2l,F23,console,True,,True,True,True,13,F23,oil_filter oil_sump sensor_oil_press,oil_filter oil_sump sensor_oil_press,True,90.0
-austro_ae300,F24,console,True,,True,False,True,0,F34,crankcase_breather oil_sump,,False,930.0
-rotax_912is,F28,console,True,,True,True,False,,S02,,,False,90.0
-rotax_914,F26,console,True,,True,True,False,,S02,crankcase,,False,3630.0
-rotax_915is,F23,console,True,,True,True,False,,F32,oil_tank,,False,90.0
-vrde_jayem_2_2l,F24,console,True,,True,True,True,0,F34,crankcase_breather oil_sump,,False,930.0
-austro_ae300,F25,console,True,,True,True,True,51,F25,oil_cooler sensor_oil_temp,oil_cooler sensor_oil_temp,True,930.0
-rotax_912is,F29,console,True,,True,True,False,,S02,engine_mount,,False,630.0
-rotax_914,F27,console,True,,True,True,False,,S02,gearbox,,False,330.0
-rotax_915is,F24,console,True,,True,True,False,,F32,oil_tank,,False,930.0
-vrde_jayem_2_2l,F25,console,True,,True,True,True,36,F25,oil_cooler sensor_oil_temp,oil_cooler sensor_oil_temp,True,930.0
-austro_ae300,F26,console,True,,True,True,True,15,F26,engine_block oil_filter,engine_block oil_filter,True,3630.0
-rotax_912is,F30,console,True,,True,True,False,,S02,crankcase_cylinders_base,,False,630.0
-rotax_914,F28,console,True,,True,True,False,,S02,prop_flange,,False,90.0
-rotax_915is,F25,console,True,,True,True,False,,F32,,,False,930.0
-vrde_jayem_2_2l,F26,console,True,,True,True,True,15,F26,engine_block oil_filter,engine_block oil_filter,True,3630.0
+rotax_912is,F21,console,True,,True,True,True,43,F21,,,False,630.0
+rotax_914,F17,console,True,,True,True,True,15,F17,turbo_compressor turbo_turbine,turbo_compressor turbo_turbine,True,630.0
+rotax_915is,F16,console,True,,True,True,True,21,F16,magneto_valve_block overboost_valve,magneto_valve_block overboost_valve,True,60.0
+vrde_jayem_2_2l,F16,console,True,,True,True,True,19,F16,wastegate,wastegate,True,60.0
+austro_ae300,F17,twin,True,,True,True,True,14,F17,turbo_oil_lines turbocharger,turbo_oil_lines turbocharger,True,630.0
+rotax_912is,F23,gcs,True,,True,True,True,8,F23,oil_tank,oil_tank,True,90.0
+rotax_914,F19,twin,True,,True,True,True,45,F19,cylinder_bank_unverified,cylinder_bank_unverified,True,630.0
+rotax_915is,F17,console,True,,True,True,True,16,F17,,,False,630.0
+vrde_jayem_2_2l,F17,twin,True,,True,True,True,9,F17,turbo_hp turbo_lp turbo_oil_drain turbo_oil_feed,turbo_hp turbo_lp turbo_oil_drain turbo_oil_feed,True,630.0
+austro_ae300,F18,console,True,,True,True,True,19,F18,intercooler sensor_charge_air_temp,intercooler sensor_charge_air_temp,True,630.0
+rotax_912is,F24,console,True,,True,False,False,,,oil_tank,,False,930.0
+rotax_914,F20,console,True,,True,True,True,35,F20,coolant_lines,coolant_lines,True,330.0
+rotax_915is,F18,console,True,,True,True,True,66,F18,intercooler,intercooler,True,630.0
+vrde_jayem_2_2l,F18,console,True,,True,True,True,14,F18,intercooler sensor_charge_air_temp,intercooler sensor_charge_air_temp,True,630.0
+austro_ae300,F20,console,True,,True,True,True,44,F20,coolant_hoses sensor_coolant_temp water_pump,coolant_hoses sensor_coolant_temp water_pump,True,330.0
+rotax_912is,F25,console,True,,True,True,True,33,S02,,,False,930.0
+rotax_914,F21,console,True,,True,True,True,35,F21,,,False,630.0
+rotax_915is,F19,console,True,,True,True,True,86,F19,air_baffles,air_baffles,True,630.0
+vrde_jayem_2_2l,F20,console,True,,True,True,True,34,F20,coolant_hoses sensor_coolant_temp water_pump,coolant_hoses sensor_coolant_temp water_pump,True,330.0
+austro_ae300,F21,console,True,,True,True,True,54,F21,,,False,630.0
+rotax_912is,F26,console,True,,True,True,True,8,F26,crankcase_cylinders_base,crankcase_cylinders_base,True,3630.0
+rotax_914,F23,console,True,,True,True,True,10,F23,crankcase,crankcase,True,90.0
+rotax_915is,F20,console,True,,True,True,True,41,F20,,,False,330.0
+vrde_jayem_2_2l,F21,console,True,,True,True,True,44,F21,,,False,630.0
+austro_ae300,F22,console,True,,True,True,True,44,F22,,,False,630.0
+rotax_912is,F27,console,True,,True,True,True,13,F27,gearbox,gearbox,True,330.0
+rotax_914,F24,console,True,,True,False,True,45,F14,crankcase,,False,930.0
+rotax_915is,F21,console,True,,True,True,True,41,F21,,,False,630.0
+vrde_jayem_2_2l,F22,console,True,,True,True,True,39,F22,thermostat,thermostat,True,630.0
+austro_ae300,F23,console,True,,True,True,True,9,F23,oil_filter oil_sump sensor_oil_press,oil_filter oil_sump sensor_oil_press,True,90.0
+rotax_912is,F28,console,True,,True,True,True,8,F28,,,False,90.0
+rotax_914,F25,console,True,,True,True,True,35,S02,,,False,930.0
+rotax_915is,F23,twin,True,,True,True,True,6,F23,oil_tank,oil_tank,True,90.0
+vrde_jayem_2_2l,F23,console,True,,True,True,True,9,F23,oil_filter oil_sump sensor_oil_press,oil_filter oil_sump sensor_oil_press,True,90.0
+austro_ae300,F24,console,True,,True,False,True,219,F34,crankcase_breather oil_sump,,False,930.0
+rotax_912is,F29,console,True,,True,True,True,13,F29,engine_mount,engine_mount,True,630.0
+rotax_914,F26,console,True,,True,True,True,10,F26,crankcase,crankcase,True,3630.0
+rotax_915is,F24,console,True,,True,False,True,116,F34,oil_tank,,False,930.0
+vrde_jayem_2_2l,F24,console,True,,True,False,True,309,F34,crankcase_breather oil_sump,,False,930.0
+austro_ae300,F25,console,True,,True,True,True,49,F25,oil_cooler sensor_oil_temp,oil_cooler sensor_oil_temp,True,930.0
+rotax_912is,F30,console,True,,True,True,True,13,F05,crankcase_cylinders_base,crankcase_cylinders_base,True,630.0
+rotax_914,F27,console,True,,True,True,True,15,F27,gearbox,gearbox,True,330.0
+rotax_915is,F25,console,True,,True,True,True,51,F32,,,False,930.0
+vrde_jayem_2_2l,F25,console,True,,True,True,True,34,F25,oil_cooler sensor_oil_temp,oil_cooler sensor_oil_temp,True,930.0
+austro_ae300,F26,console,True,,True,True,True,9,F26,engine_block oil_filter,engine_block oil_filter,True,3630.0
+rotax_912is,F31,console,True,,True,True,True,8,F31,exhaust,exhaust,True,150.0
+rotax_914,F28,console,True,,True,True,True,10,F28,prop_flange,prop_flange,True,90.0
+rotax_915is,F26,console,True,,True,True,True,6,F32,main_engine_MERGED,main_engine_MERGED,True,3630.0
+vrde_jayem_2_2l,F26,console,True,,True,True,True,4,F26,engine_block oil_filter,engine_block oil_filter,True,3630.0
 austro_ae300,F27,console,True,,True,True,True,14,F27,gearbox sensor_gearbox_press sensor_gearbox_temp,gearbox sensor_gearbox_press sensor_gearbox_temp,True,330.0
-rotax_912is,F31,gcs,False,"{""detail"":[{""type"":""missing"",""loc"":[""query"",""cmd""],""msg"":""Field required"",""input"":null}]}",False,True,False,,S02,exhaust,,False,150.0
-rotax_914,F29,console,True,,True,True,False,,S02,,,False,630.0
-rotax_915is,F26,console,True,,True,True,False,,F32,main_engine_MERGED,,False,3630.0
+rotax_912is,F32,gcs,True,,True,True,False,,S02,alternator,,False,150.0
+rotax_914,F29,console,True,,True,True,True,10,F29,,,False,630.0
+rotax_915is,F27,console,True,,True,True,True,16,F27,gearbox,gearbox,True,330.0
 vrde_jayem_2_2l,F27,console,True,,True,True,True,14,F27,gearbox sensor_gearbox_vibration,gearbox sensor_gearbox_vibration,True,330.0
-austro_ae300,F28,console,True,,True,True,False,,S02,prop_flange,,False,90.0
-rotax_912is,F32,console,True,,True,True,False,,S02,alternator,,False,150.0
-rotax_914,F30,console,True,,True,True,False,,S02,cylinder_bank_unverified,,False,630.0
-rotax_915is,F27,console,True,,True,True,False,,F32,gearbox,,False,330.0
-vrde_jayem_2_2l,F28,console,True,,True,True,True,73,F28,prop_flange,prop_flange,True,90.0
-austro_ae300,F29,console,True,,True,True,True,42,F29,engine_mount,engine_mount,True,630.0
-rotax_912is,F33,console,True,,True,True,False,,S02,alternator wiring_harness,,False,60.0
-rotax_914,F31,console,True,,True,True,False,,S02,exhaust,,False,150.0
-rotax_915is,F28,console,True,,True,True,False,,F32,,,False,90.0
-vrde_jayem_2_2l,F29,console,True,,True,True,True,37,F29,engine_mount,engine_mount,True,630.0
-austro_ae300,F30,console,True,,True,True,True,21,F08,cylinder_head,,False,630.0
-rotax_912is,F34,console,True,,True,True,False,,S02,starter starter_relay,,False,630.0
-rotax_914,F32,console,True,,True,True,False,,S02,,,False,150.0
-rotax_915is,F29,console,True,,True,True,False,,F32,,,False,630.0
-vrde_jayem_2_2l,F30,console,True,,True,True,True,21,F08,cylinder_head,,False,630.0
-austro_ae300,F31,console,True,,True,True,True,10,F31,exhaust sensor_egt_2,exhaust sensor_egt_2,True,150.0
-rotax_912is,F36,console,True,,True,True,False,,S02,ecu,,False,40.0
-rotax_914,F33,console,True,,True,True,False,,S02,,,False,60.0
-rotax_915is,F30,console,True,,True,True,False,,F32,main_engine_MERGED,,False,630.0
-vrde_jayem_2_2l,F31,console,True,,True,True,True,5,F31,exhaust sensor_egt_2,exhaust sensor_egt_2,True,150.0
+austro_ae300,F28,console,True,,True,True,True,9,F28,prop_flange,prop_flange,True,90.0
+rotax_912is,F33,console,True,,True,True,True,8,F33,alternator wiring_harness,alternator wiring_harness,True,60.0
+rotax_914,F30,console,True,,True,True,True,10,F01,cylinder_bank_unverified,cylinder_bank_unverified,True,630.0
+rotax_915is,F28,console,True,,True,True,True,11,F28,,,False,90.0
+vrde_jayem_2_2l,F28,console,True,,True,True,True,4,F28,prop_flange,prop_flange,True,90.0
+austro_ae300,F29,console,True,,True,True,True,14,F29,engine_mount,engine_mount,True,630.0
+rotax_912is,F34,console,True,,True,False,False,,,starter starter_relay,,False,630.0
+rotax_914,F31,console,True,,True,True,True,10,F31,exhaust,exhaust,True,150.0
+rotax_915is,F29,console,True,,True,True,True,16,F29,,,False,630.0
+vrde_jayem_2_2l,F29,console,True,,True,True,True,9,F29,engine_mount,engine_mount,True,630.0
+austro_ae300,F30,console,True,,True,True,True,19,F08,cylinder_head,cylinder_head,True,630.0
+rotax_912is,F36,console,True,,True,True,True,18,F36,ecu,crankcase_cylinders_base ecu,True,40.0
+rotax_914,F32,console,True,,True,True,True,20,S02,,,False,150.0
+rotax_915is,F30,console,True,,True,True,True,16,F01,main_engine_MERGED,main_engine_MERGED,True,630.0
+vrde_jayem_2_2l,F30,console,True,,True,True,True,19,F08,cylinder_head,cylinder_head,True,630.0
+austro_ae300,F31,console,True,,True,True,True,9,F31,exhaust sensor_egt_2,exhaust sensor_egt_2,True,150.0
+rotax_914,F33,console,True,,True,True,True,10,F33,,,False,60.0
+rotax_915is,F31,console,True,,True,True,True,6,F31,,,False,150.0
+vrde_jayem_2_2l,F31,console,True,,True,True,True,9,F31,exhaust sensor_egt_2,exhaust sensor_egt_2,True,150.0
 austro_ae300,F32,console,True,,True,True,True,19,S02,alternator belt_drive,alternator belt_drive,True,150.0
-rotax_914,F34,console,True,,True,True,False,,S02,starter,,False,630.0
-rotax_915is,F31,console,True,,True,True,False,,F32,,,False,150.0
-vrde_jayem_2_2l,F32,console,True,,True,True,True,14,S02,alternator_1 alternator_wiring belt_drive,alternator_1 alternator_wiring belt_drive,True,150.0
-austro_ae300,F33,console,True,,True,True,True,8,F33,alternator wiring_harness,alternator wiring_harness,True,60.0
-rotax_915is,F32,console,True,,True,True,True,0,F32,,,False,150.0
-vrde_jayem_2_2l,F33,console,True,,True,True,True,8,F33,alternator_wiring wiring_harness,alternator_wiring wiring_harness,True,60.0
-austro_ae300,F34,console,True,,True,False,False,,,starter,,False,630.0
-rotax_915is,F33,console,True,,True,True,False,,F32,fusebox,,False,60.0
-vrde_jayem_2_2l,F34,console,True,,True,False,True,0,F34,starter,,False,630.0
+rotax_914,F34,console,True,,True,False,True,45,F14,starter,,False,630.0
+rotax_915is,F32,console,True,,True,True,True,21,S02,,,False,150.0
+vrde_jayem_2_2l,F32,console,True,,True,True,True,19,S02,alternator_1 alternator_wiring belt_drive,alternator_1 alternator_wiring belt_drive,True,150.0
+austro_ae300,F33,console,True,,True,True,True,9,F33,alternator wiring_harness,alternator wiring_harness,True,60.0
+rotax_915is,F33,console,True,,True,True,True,11,F33,fusebox,fusebox,True,60.0
+vrde_jayem_2_2l,F33,console,True,,True,True,True,9,F33,alternator_wiring wiring_harness,alternator_wiring wiring_harness,True,60.0
+austro_ae300,F34,console,True,,True,False,True,214,F14,starter,,False,630.0
+rotax_915is,F34,console,True,,True,False,True,116,F14,,,False,630.0
+vrde_jayem_2_2l,F34,console,True,,True,False,True,309,F34,starter,,False,630.0
 austro_ae300,F35,console,True,,True,False,False,,,glow_control_unit glow_plugs,,False,150.0
-rotax_915is,F34,console,True,,True,True,False,,F32,,,False,630.0
-vrde_jayem_2_2l,F35,console,True,,True,False,False,,F34,glow_plug_2,,False,150.0
-austro_ae300,F36,console,True,,True,False,False,,,ecu_lane_a,,False,40.0
-rotax_915is,F36,console,True,,True,True,False,,F32,ecu fusebox,,False,40.0
-vrde_jayem_2_2l,F36,console,True,,True,False,False,,F34,ecu_lane_a,,False,40.0
+rotax_915is,F36,console,True,,True,True,True,16,F36,ecu fusebox,ecu fusebox,True,40.0
+vrde_jayem_2_2l,F35,console,True,,True,False,False,,,glow_plug_2,,False,150.0
+austro_ae300,F36,console,True,,True,True,True,19,F36,ecu_lane_a,ecu_lane_a,True,40.0
+rotax_915is,F37,console,True,,True,False,False,,,gearbox,,False,90.0
+vrde_jayem_2_2l,F36,console,True,,True,True,True,19,F36,ecu_lane_a,ecu_lane_a,True,40.0
 austro_ae300,F37,console,True,,True,False,False,,,prop_governor,,False,90.0
-rotax_915is,F37,console,True,,True,True,False,,F32,gearbox,,False,90.0
-vrde_jayem_2_2l,F37,console,True,,True,False,False,,F34,prop_governor,,False,90.0
+vrde_jayem_2_2l,F37,console,True,,True,False,False,,,prop_governor,,False,90.0
