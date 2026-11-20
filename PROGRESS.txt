@@ -1114,3 +1114,15 @@ Changed: configs/runtime.json default_engine_id "rotax_912is" (+note), GET /api/
 Tests: tests/api/test_api_v1.py +1 (11 passed); tsc OK. Browser: console opens on rotax_912is.
 Also: landing hero and the legacy 3D window already start on the 912.
 
+=== 20 Nov 2026 Prasad's answers -> DECISIONS D53-D56; M6-06 started: UI labels config + endpoint (AI: Claude Code)
+D53 Phase 7: AI scripts headless to *_work.blend + before/after renders; Prasad approves visually before a master
+  is replaced. D54 M5-10 canyon app: separate Blender-only thing, DO NOT TOUCH (supersedes the card). D55 diesel
+  lambda/boost derived from published BSFC, CALIBRATED (closes Q6c). D56 console TRAINING MODE toggle (off by
+  default) shows INJECTED highlights in 3D.
+Prasad also: "UI/UX should be very intuitive" (memory feedback-intuitive-ux) and "default engine is the Rotax 912 iS
+  Sport for everyone" (done, ff11982).
+Changed: configs/ui/labels_en.json (new: channel and component display names, plain status title + sentence per
+  level; P Part 6 X10), GET /api/v1/ui/labels?lang= (404 unknown language, 422 bad code), tests/api +1 (12 passed).
+Next: frontend uses the labels (status sentence, channel/part names everywhere), Operator view reorder (health
+  first, simulation tools last), training toggle (D56), then D55 diesel calibration, then Phase 7 scripts (D53).
+

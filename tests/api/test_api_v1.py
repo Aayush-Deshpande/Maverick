@@ -124,3 +124,12 @@ def test_engine_list_names_the_configured_default_engine(client):
     body = client.get("/api/v1/engines").json()
     assert body["default_engine_id"] == want
     assert want in [e["engine_id"] for e in body["engines"]]
+
+
+def test_ui_labels_are_served_from_config(client):
+    """M6-06: human names for channels, parts and status come from configs/ui/labels_<lang>.json."""
+    body = client.get("/api/v1/ui/labels").json()
+    assert body["channels"]["oil_p"] == "Oil pressure"
+    assert set(body["status"]) >= {"GO", "ADVISORY", "CAUTION", "NO-GO", "ENGINE_OFF", "UNKNOWN"}
+    assert client.get("/api/v1/ui/labels", params={"lang": "xx"}).status_code == 404
+    assert client.get("/api/v1/ui/labels", params={"lang": "../runtime"}).status_code == 422

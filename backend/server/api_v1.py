@@ -562,6 +562,15 @@ def _planner(tile_name: str) -> Any:
     return _PLANNERS[tile_name]
 
 
+@router.get("/api/v1/ui/labels")
+def v1_ui_labels(lang: str = Query(default="en", pattern="^[a-z]{2}$")) -> Dict[str, Any]:
+    """Display names for the console (M6-06, P Part 6 X10): channels, components and plain status sentences."""
+    path = ROOT / "configs" / "ui" / f"labels_{lang}.json"
+    if not path.exists():
+        raise HTTPException(404, {"code": "NO_LABELS", "message": f"no label file for language {lang!r}"})
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
 @router.get("/api/v1/engines/{engine_id}/components")
 def v1_components(engine_id: str) -> Dict[str, Any]:
     """Component manifest for 3D viewers (M6-05): the web model URL and each component's exact GLB node names
