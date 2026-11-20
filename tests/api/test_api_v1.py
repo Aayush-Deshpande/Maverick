@@ -102,3 +102,14 @@ def test_fleet_client_keeps_the_latest_message_of_every_engine():
     for engine in ("austro_ae300", "rotax_914", "rotax_912is"):
         c.offer(f"m-{engine}", engine)
     assert sorted(c.take()) == ["m-austro_ae300", "m-rotax_912is", "m-rotax_914"] and c.dropped == 0
+
+
+def test_component_manifest_endpoint_serves_the_web_model_and_exact_nodes(client):
+    """M6-05: the viewer gets the GLB and the component -> node map from the API, never from code."""
+    r = client.get("/api/v1/engines/rotax_912is/components")
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["model_url"] == "/models/rotax_912is.glb"
+    oil = next(c for c in body["components"] if c["component_id"] == "oil_tank")
+    assert oil["nodes"] and all(n.startswith("Oil_Tank_") for n in oil["nodes"])
+    assert client.get("/api/v1/engines/nope/components").status_code == 404

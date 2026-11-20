@@ -77,24 +77,33 @@ def resolve_fault_components(fault_raw: Dict[str, Any], engine_id: str, cylinder
 
 
 @lru_cache(maxsize=1)
-def _highlight_posterior_min() -> float:
-    """Same rule as the status evaluator: a hypothesis this confident sets status, so it also lights its parts."""
-    return float(json.loads((ROOT / "configs" / "status.json").read_text(encoding="utf-8"))
-                 ["hypothesis_posterior_min"]["value"])
+def _highlight_thresholds() -> tuple[float, float]:
+    """Entry = the status evaluator's rule (a hypothesis this confident sets status, so it also lights its parts);
+    exit = the lower hysteresis level (configs/status.json)."""
+    c = json.loads((ROOT / "configs" / "status.json").read_text(encoding="utf-8"))
+    return float(c["hypothesis_posterior_min"]["value"]), float(c["highlight_exit_posterior"]["value"])
 
 
 def _detected_highlights(engine_id: str, hypotheses: Iterable[Dict[str, Any]], status_level: Optional[str],
-                         registry: Any, nodes: Dict[str, List[str]]) -> List[Highlight]:
+                         registry: Any, nodes: Dict[str, List[str]],
+                         hold: Optional[set] = None) -> List[Highlight]:
     """D5: highlights from diagnosis + status, never from the injected list. Process faults take the current status
     colour (an alert level), sensor faults the SENSOR style."""
     out: List[Highlight] = []
     if registry is None:
         return out
     level = status_level if status_level in ("NO-GO", "CAUTION", "ADVISORY") else "ADVISORY"
+    enter, leave = _highlight_thresholds()
+    held = hold if hold is not None else set()
+    still: set = set()
     for h in hypotheses:
         fid, post = h.get("fault_id"), h.get("posterior")
-        if not fid or post is None or post < _highlight_posterior_min():
+        if not fid or post is None:
             continue
+        key = (fid, h.get("cylinder"), h.get("channel"))
+        if post < (leave if key in held else enter):
+            continue
+        still.add(key)
         try:
             raw = registry.get(fid).raw
         except FaultRejected:                             # not a registry fault (e.g. an UNKNOWN anomaly): no parts
@@ -104,6 +113,8 @@ def _detected_highlights(engine_id: str, hypotheses: Iterable[Dict[str, Any]], s
             out.append(Highlight(component_id=cid, nodes=nodes.get(cid, []),
                                  level="SENSOR" if h.get("kind") == "SENSOR" else level,
                                  reason=f"{fid} {h.get('name', '')} detected, p={post:.2f}", marker_for=marker))
+    held.clear()
+    held.update(still)                                    # the caller keeps this set per engine between messages
     return out
 
 
@@ -125,7 +136,7 @@ def _residuals(det: Any) -> Dict[str, float]:
 def build_state(tick: Any, seq: int, *, registry: Any = None, active_faults: Iterable[Any] = (),
                 fault_events: Iterable[Any] = (), rate_hz_actual: Optional[float] = None, time_scale: float = 1.0,
                 levers: Optional[Dict[str, Optional[float]]] = None, training_mode: bool = False,
-                maintenance: Iterable[Dict[str, Any]] = ()) -> StateMessage:
+                maintenance: Iterable[Dict[str, Any]] = (), highlight_hold: Optional[set] = None) -> StateMessage:
     f = tick.frame
     engine_id = tick.engine_id
     readings: Dict[str, Reading] = {}
@@ -157,7 +168,7 @@ def build_state(tick: Any, seq: int, *, registry: Any = None, active_faults: Ite
 
     hyps = getattr(tick, "hypotheses", None) or []
     highlights += _detected_highlights(engine_id, hyps, (getattr(tick, "status", None) or {}).get("level"),
-                                       registry, nodes)
+                                       registry, nodes, highlight_hold)
 
     events = [EventOut(seq=e.seq, t_s=e.t_s, type=e.type, text=e.text, source=e.source) for e in fault_events]
     for e in getattr(tick, "events", []) or []:

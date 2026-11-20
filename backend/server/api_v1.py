@@ -17,6 +17,7 @@ import threading
 import time
 import uuid
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional, Set, Tuple
 
 from fastapi import APIRouter, Depends, HTTPException, Query, WebSocket, WebSocketDisconnect
@@ -35,6 +36,7 @@ from backend.reports.sortie_report import write_report
 from backend.server.security import COMMAND_LOG, command_guard
 from backend.server.state_builder import build_state
 
+ROOT = Path(__file__).resolve().parents[2]
 router = APIRouter()
 
 # Fail fast: an invalid fault registry stops the server at import (T-CFG-1).
@@ -58,6 +60,7 @@ class EngineChannel:
     rate_hz: Optional[float] = None
     last_message: Optional[str] = None
     pending_events: List[Any] = field(default_factory=list)
+    highlight_hold: Set[Any] = field(default_factory=set)      # 3D highlight hysteresis state (state_builder)
 
 
 class Services:
@@ -98,7 +101,7 @@ class Services:
                                           "altitude_target_ft": lv.altitude_target, "oat_target_c": lv.oat_target}
         msg = build_state(tick, ch.seq, registry=REGISTRY, active_faults=ch.manager.active(), fault_events=events,
                           rate_hz_actual=None if ch.rate_hz is None else round(ch.rate_hz, 2), levers=levers,
-                          maintenance=self.work_orders.open_orders(engine_id))
+                          maintenance=self.work_orders.open_orders(engine_id), highlight_hold=ch.highlight_hold)
         ch.last_message = msg.model_dump_json()
         rec = getattr(self.hub.runtimes.get(engine_id), "recorder", None)
         if rec is not None:
@@ -555,6 +558,23 @@ def _planner(tile_name: str) -> Any:
     if tile_name not in _PLANNERS:
         _PLANNERS[tile_name] = Planner(load_tile(tile_name))
     return _PLANNERS[tile_name]
+
+
+@router.get("/api/v1/engines/{engine_id}/components")
+def v1_components(engine_id: str) -> Dict[str, Any]:
+    """Component manifest for 3D viewers (M6-05): the web model URL and each component's exact GLB node names
+    (configs/components/<engine>.json, generated from the master .blend export). Highlights in the state message
+    name these component ids, so every viewer resolves parts the same way."""
+    services().channel(engine_id)
+    path = ROOT / "configs" / "components" / f"{engine_id}.json"
+    if not path.exists():
+        raise HTTPException(404, {"code": "NO_MANIFEST", "message": f"no component manifest for {engine_id}"})
+    m = json.loads(path.read_text(encoding="utf-8"))
+    return {"engine_id": engine_id,
+            "model_url": "/models/" + Path(m["glb"]).name,          # web copy synced by scripts/assets (D49)
+            "representative_geometry": m.get("representative_geometry"),
+            "components": [{k: c.get(k) for k in ("component_id", "subsystem", "cylinder", "nodes")}
+                           for c in m["components"]]}
 
 
 @router.get("/api/v1/engines/{engine_id}/state")

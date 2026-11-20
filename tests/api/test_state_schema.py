@@ -123,3 +123,18 @@ def test_hypothesis_outside_the_registry_lights_nothing_and_does_not_break_the_m
     hyp = [{"fault_id": "UNKNOWN_ANOMALY", "name": "UNKNOWN", "kind": "PROCESS", "posterior": 0.95}]
     msg = build_state(_tick_with(runtime_912, hyp, "CAUTION"), seq=6, registry=load_fault_registry())
     assert msg.highlights == []
+
+
+def test_detected_highlight_has_hysteresis_so_it_does_not_flicker(runtime_912):
+    """Enter at hypothesis_posterior_min, leave only below highlight_exit_posterior (a posterior hovering at the
+    entry threshold must not blink the part on and off every isolation cycle)."""
+    reg = load_fault_registry()
+    held: set = set()
+    lit = lambda p: bool(build_state(_tick_with(runtime_912, [{"fault_id": "F23", "name": "OIL_PRESSURE_LOSS",
+                                                               "kind": "PROCESS", "posterior": p}], "CAUTION"),
+                                     seq=7, registry=reg, highlight_hold=held).highlights)
+    assert not lit(0.6)              # below entry, not held yet
+    assert lit(0.75)                 # enters
+    assert lit(0.6)                  # held between exit and entry
+    assert not lit(0.4)              # leaves below exit
+    assert not lit(0.6)              # and needs the entry level again

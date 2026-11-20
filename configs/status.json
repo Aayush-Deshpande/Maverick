@@ -18,6 +18,11 @@
     "status": "ASSUMED",
     "ref": "P Step 2.2 hysteresis: ... for 10 s (simulated seconds, D8)"
   },
+  "highlight_exit_posterior": {
+    "value": 0.5,
+    "status": "ASSUMED",
+    "ref": "3D highlight hysteresis: a part lit at hypothesis_posterior_min stays lit until the posterior falls below this, so a posterior hovering at the entry threshold does not blink the part (UX, P Part 6 U3)"
+  },
   "hypothesis_posterior_min": {
     "value": 0.7,
     "status": "ASSUMED",

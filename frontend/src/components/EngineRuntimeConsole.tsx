@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { Activity, AlertTriangle, Check, ChevronDown, CircleHelp, Radio, RotateCcw, SlidersHorizontal, Zap } from 'lucide-react';
 import { useEngineRuntime, useNow } from '../hooks/useEngineRuntime';
 import { dataAgeMs } from '../store/engineStore';
@@ -6,6 +6,8 @@ import { NO_DATA, num } from '../utils/format';
 import RoutePlannerPanel from './RoutePlannerPanel';
 import StatusBanner from './StatusBanner';
 import EngineerPanel from './EngineerPanel';
+
+const EngineViewer3D = lazy(() => import('./viewer3d/EngineViewer3D'));
 
 const title = (value: string) => value.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c: string) => c.toUpperCase());
 type Detections = { confirmed?: boolean; raw_alarm?: boolean; top_channels?: Array<string | [string, number]>;
@@ -220,6 +222,10 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
         </div>
       </section>}
     </div>
+
+    {show('OPERATOR', 'MAINTENANCE') && <Suspense fallback={<div className="surface-panel p-4 text-xs font-mono text-slate-400">Loading 3D view…</div>}>
+      <EngineViewer3D engineId={runtime.engineId ?? null} highlights={state?.highlights} api={runtime.api} />
+    </Suspense>}
 
     {show('OPERATOR', 'MAINTENANCE') && <section className="surface-panel p-4 sm:p-5 rounded-sm">
       <h3 className="text-sm font-semibold text-white tracking-tight">Prognosis and maintenance</h3>

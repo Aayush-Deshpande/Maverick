@@ -7,7 +7,9 @@ RESUME HERE  (last updated 20 Nov 2026, overnight autonomous session)
 =====================================================================================================================
 Phase:        Phases 1-3 done; Phase 5 (M4) done; Phase 6 (M5) M5-01/02/04/05/06/07/08/09 done. Not started:
               M5-10/11 (canyon app, map UI), M6 views, Phase 7 Blender, M7, M8, 8b.
-Card:         Q12 915 governed DONE incl. run_matrix re-measure + docs page 11. M5-09 glide/divert DONE; M5-11 plan view + altitude profile DONE; M6-01/02 core
+Card:         M6-05 R3F 3D viewer core DONE (highlights from diagnosis, hysteresis). NEXT: default engine 912
+              from config (Prasad 20 Nov), then UX plain-language pass (Prasad: 'UI/UX very intuitive').
+              Q12 915 governed DONE incl. run_matrix re-measure + docs page 11. M5-09 glide/divert DONE; M5-11 plan view + altitude profile DONE; M6-01/02 core
               (console role views + status banner/alerts) DONE; M6-03 core (residuals, twin
               parameters, virtual sensors, vibration orders in the Engineer view) DONE.
               IN PROGRESS: Q12 close-out - 915 governed (configs done), oil relief
@@ -1088,4 +1090,20 @@ reports/evaluation/{detection,nominal}_2026-11-20.csv + summary_2026-11-20.md re
   pitch), VRDE 0/0; variant plant 0.25/0/0/0/0. Isolation top-1/top-3: 68/77, 55/65, 71/87, 67/77, 69/77 %.
   Ours earlier than (or alone vs) the limits-only baseline: 68/68, 29/32 (2 ties), 49/53, 64/68, 58/58.
 Docs page 11 results table + text updated; the 915 fixed-pitch footnote replaced.
+
+=== 20 Nov 2026 M6-05 core: React Three Fiber engine viewer driven by state.highlights (AI: Claude Code)
+Docs checked (D39): drei useGLTF https://drei.docs.pmnd.rs/loaders/gltf-use-gltf ; installed @react-three/drei
+  9.122.0 types: useGLTF(path, useDraco: boolean | string) -> local decoder path '/draco/' (frontend/public/draco).
+Changed: backend/server/api_v1.py GET /api/v1/engines/{id}/components (model_url from the manifest glb name, exact
+  node lists; 404 NO_MANIFEST) + EngineChannel.highlight_hold; backend/server/state_builder.py highlight
+  hysteresis (enter p >= 0.7, leave p < 0.5; configs/status.json highlight_exit_posterior ASSUMED 0.5);
+  frontend viewer3d/EngineViewer3D.tsx (lazy-loaded; RoomEnvironment PMREM lighting and baked-white-emissive
+  neutralisation as in the landing viewer; own material clones; emissive colour by level NO-GO red / CAUTION amber /
+  ADVISORY cyan / SENSOR blue / INJECTED white; legend with reasons + "part not in the model" markers; error
+  boundary; data-highlighted-nodes test hook for T-3D-1), viewer3d/highlights.ts (+test: precedence, three's
+  sanitizeNodeName, unknown levels ignored). Mounted in the Operator and Maintenance views.
+Seen in the browser: AE300 with F23 injected -> isolator leads F26 bearing wear (p 0.65-0.83; F23/F26 share the
+  oil-pressure signature) -> engine block + oil filter lit NO-GO; the injected F23 itself is NOT drawn (D5).
+  Before hysteresis the parts blinked as p hovered at 0.70.
+Tests: tests/api +2 (components endpoint, hysteresis), vitest 22, tests/dynamic 15, truth-leak green.
 
