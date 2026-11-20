@@ -316,8 +316,13 @@ class TestMultiEngineAgnostic:
         r = tick.reliability["mission_reliability"]
         assert 0.0 <= r <= 1.0 and math.isfinite(r), f"{engine_id}: reliability invalid: {r}"
 
-        rul = tick.prognostics["rul"]["rul_point"]
-        assert math.isfinite(rul) and rul > 0.0, f"{engine_id}: RUL invalid: {rul}"
+        # D38 port (20 Nov, Prasad Q13): RUL comes from the trained fleet model or is UNAVAILABLE with a reason
+        rul = tick.prognostics["rul"]
+        if rul["status"] == "OK":
+            assert math.isfinite(rul["rul_h"]) and rul["rul_h"] > 0.0, f"{engine_id}: RUL invalid: {rul}"
+            assert rul["rul_lower_h"] <= rul["rul_h"] <= rul["rul_upper_h"], f"{engine_id}: RUL band invalid: {rul}"
+        else:
+            assert rul["status"] == "UNAVAILABLE" and rul["reason"], f"{engine_id}: RUL invalid: {rul}"
 
 
 # ===========================================================================

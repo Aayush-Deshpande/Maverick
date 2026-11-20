@@ -292,72 +292,8 @@ class MissionReliabilityEngine:
 
     def simulate(self, profile: MissionProfile, n_trials: int = 20000,
                  critical_only: bool = True) -> dict:
-        """Sample mission outcomes; returns R with a Wilson interval.
-
-        Per trial, each component's time-to-failure is drawn against the
-        phase-varying hazard by inverse transform. The first critical failure
-        inside the mission aborts it, and the phase it happened in is recorded —
-        which is what turns "risky sortie" into "risky during the 12.5 h loiter".
-        """
-        comps = [c for c in self.components if (c.mission_critical or not critical_only)]
-        successes = 0
-        first_failure_counts: Dict[str, int] = {c.name: 0 for c in comps}
-        failure_phase_counts: Dict[str, int] = {p.name: 0 for p in profile.phases}
-        abort_times: List[float] = []
-
-        for _ in range(n_trials):
-            earliest_t: Optional[float] = None
-            earliest_c: Optional[str] = None
-            earliest_phase: Optional[str] = None
-
-            for c in comps:
-                target = -math.log(max(self._rng.random(), 1e-15))
-                accumulated = 0.0
-                t_elapsed = 0.0
-                failed_at: Optional[float] = None
-                phase_name: Optional[str] = None
-                for p in profile.phases:
-                    h = c.hazard(p.stress_factor)
-                    if h <= 0:
-                        t_elapsed += p.duration_hours
-                        continue
-                    need = target - accumulated
-                    dt = need / h
-                    if dt <= p.duration_hours:
-                        failed_at = t_elapsed + dt
-                        phase_name = p.name
-                        break
-                    accumulated += h * p.duration_hours
-                    t_elapsed += p.duration_hours
-                if failed_at is not None and (earliest_t is None or failed_at < earliest_t):
-                    earliest_t, earliest_c, earliest_phase = failed_at, c.name, phase_name
-
-            if earliest_t is None:
-                successes += 1
-            else:
-                first_failure_counts[earliest_c] += 1
-                failure_phase_counts[earliest_phase] += 1
-                abort_times.append(earliest_t)
-
-        r = successes / n_trials
-        lo, hi = _wilson_interval(successes, n_trials)
-        ranked = sorted(first_failure_counts.items(), key=lambda kv: -kv[1])
-        limiting = ranked[0][0] if ranked and ranked[0][1] > 0 else None
-        failures = max(n_trials - successes, 1)
-        return {
-            "reliability": round(r, 5),
-            "ci_lower": round(lo, 5),
-            "ci_upper": round(hi, 5),
-            "n_trials": n_trials,
-            "mission_hours": round(profile.total_hours, 2),
-            "limiting_component": limiting,
-            "limiting_component_share": (round(ranked[0][1] / failures, 4)
-                                         if limiting else None),
-            "failure_attribution": {k: v for k, v in ranked if v > 0},
-            "failure_phase_distribution": {k: v for k, v in failure_phase_counts.items() if v > 0},
-            "median_abort_hours": (round(sorted(abort_times)[len(abort_times) // 2], 2)
-                                   if abort_times else None),
-        }
+        """Sample mission outcomes; returns R with a Wilson interval (vectorised path, see simulate_with_limits)."""
+        return self.simulate_with_limits(profile, n_trials=n_trials, critical_only=critical_only)
 
     def simulate_with_limits(self, profile: MissionProfile, n_trials: int = 20000, critical_only: bool = True,
                              limit_crossings: Optional[List[dict]] = None) -> dict:

@@ -71,7 +71,11 @@ def fleet(engine_id: str, n: int) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
 
 
 def evaluate(engine_id: str, n: int, alpha: float = 0.05, seeds=(0, 1, 2)) -> Dict:
-    X, y, g = fleet(engine_id, n)
+    return evaluate_arrays(engine_id, *fleet(engine_id, n), alpha=alpha, seeds=seeds)
+
+
+def evaluate_arrays(engine_id: str, X: np.ndarray, y: np.ndarray, g: np.ndarray, alpha: float = 0.05,
+                    seeds=(0, 1, 2)) -> Dict:
     runs = []
     for s in seeds:
         tr, ca, te = split_groups(g, seed=s)
@@ -90,8 +94,29 @@ def evaluate(engine_id: str, n: int, alpha: float = 0.05, seeds=(0, 1, 2)) -> Di
             "mean": {k: float(np.mean([r[k] for r in runs])) for k in ("rmse_h", "coverage", "mean_width_h")}}
 
 
+def train_and_save(engine_id: str, X: np.ndarray, y: np.ndarray, g: np.ndarray, alpha: float = 0.05) -> Path:
+    """Final service model: fit on 80 % of the trajectories, conformal-calibrate on the other 20 % (by trajectory),
+    saved to var/models/rul_<engine>.pkl (local runtime artefact, never committed)."""
+    import pickle
+    from backend.runtime.paths import var_path
+    ids = np.array(sorted(set(g)))
+    rng = np.random.default_rng(0)
+    rng.shuffle(ids)
+    cal = set(ids[: max(1, len(ids) // 5)])
+    m = ConformalRUL(alpha=alpha).fit(X[~np.isin(g, list(cal))], y[~np.isin(g, list(cal))])
+    m.calibrate(X[np.isin(g, list(cal))], y[np.isin(g, list(cal))])
+    path = var_path("models") / f"rul_{engine_id}.pkl"
+    with path.open("wb") as fh:
+        pickle.dump({"model": m, "sample_every": SAMPLE_EVERY, "hours_per_step": HOURS_PER_STEP,
+                     "trajectories": int(len(ids)), "trained": _dt.date.today().isoformat(),
+                     "evidence_class": "SIMULATION"}, fh)
+    return path
+
+
 def main(engine_id: str, n: int) -> None:
-    res = evaluate(engine_id, n)
+    X, y, g = fleet(engine_id, n)
+    train_and_save(engine_id, X, y, g)
+    res = evaluate_arrays(engine_id, X, y, g)
     OUT.mkdir(parents=True, exist_ok=True)
     (OUT / f"sim_rul_{engine_id}_{_dt.date.today().isoformat()}.json").write_text(json.dumps(res, indent=1), encoding="utf-8")
     print(json.dumps({k: res[k] for k in ("engine_id", "trajectories", "mean_life_h", "mean")}, indent=1))

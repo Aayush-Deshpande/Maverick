@@ -109,6 +109,11 @@
     "cyl": 0,
     "model": 0
   },
+  "backend/prognose/rul_service.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
   "backend/prognose/trends.py": {
     "brand": 0,
     "cyl": 0,
@@ -288,6 +293,16 @@
     "brand": 4,
     "cyl": 64,
     "model": 1
+  },
+  "backend/terrain/dem.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
+  "backend/terrain/fetch.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
   },
   "backend/twin/sim_ukf.py": {
     "brand": 0,

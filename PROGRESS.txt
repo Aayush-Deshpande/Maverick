@@ -5,23 +5,21 @@ section 19.1. Update the RESUME HERE block at every commit and at the end of eve
 =====================================================================================================================
 RESUME HERE  (last updated 20 Nov 2026, overnight autonomous session)
 =====================================================================================================================
-Phase:        Phases 1-3 done (M0, M1, M2, M3 incl. M3-08 evaluation); Phase 5 (M4) done except M4-01/03 (sim
-              run-to-failure fleet + RUL on it); Phase 6 (M5) M5-01/02/04/05/06 done (missions, recorder, replay,
-              re-analysis, sortie report). Not started: M5-07..11 terrain/planner/glide UI, M6 views, Phase 7 Blender,
-              M7 CAN/edge, M8 cleanup/docs, 8b copilot.
-Card:         NEXT: (a) commit the extended residual channels (vib_* orders, batt_i) once the signature + matrix
-              re-run finishes (scratchpad matrix2.log -> reports/evaluation), update docs page 11 numbers;
-              (b) M6-02..04 operator/engineer/maintenance views; (c) M4-01/03 wear + fleet RUL; (d) M5-07/08 planner.
-Branch:       Beta (pushed by Prasad up to ae82c70; everything after is local). main untouched (9b5942e).
-Last commit:  see git log -1 (overnight 20 Nov: 75f2b94 .. M5/M6 console controls).
-State:        Full suite 668 passed, 1 failed (ratchet: legacy engine_service/copilot literals, known), 7 skipped,
-              10 xfailed (~7.5 min). Detection = model-informed residual + conformal scorers + CUSUM + AE/EVT
-              novelty; isolation = Bayesian on calibrated signatures; work orders, adaptive baseline, trends,
-              Monte Carlo reliability, missions, recording/replay all wired in the runtime and state message.
-              Prasad (20 Nov): keep docs_site updated in final-report style (memory feedback-final-report-docs).
-Next step:    see Card. Unstaged on purpose: the 914 .blend re-saves (D50), docs/cleanup/file_coverage_latest.csv.
-              Open questions added overnight: Q11 re-pin tests/test_char_mission.py Monte Carlo value (vectorised
-              path); Q12 915 iS fixed-pitch overspeed - set propeller_governor true for the 915?
+Phase:        Phases 1-3 done; Phase 5 (M4) done incl. M4-01/03 (wear fleet + in-service RUL); Phase 6 (M5)
+              M5-01/02/04/05/06 done; M5-07/08 (terrain + planner) IN PROGRESS. Not started: M5-09..11, M6 views,
+              Phase 7 Blender, M7, M8, 8b.
+Card:         M5-07/08 (Prasad Q14 priority): backend/terrain/dem.py (written, Leh tile N34E077 in var/dem),
+              backend/planning/ (A* on DEM with altitude layers, feasibility from the nominal performance map x
+              measured power factor, refuse with reason, replan), configs/planning.json, /api/v1 routes, T-MIS-6.
+              After that: Q12 915 constant-speed prop (configs/engines/rotax_915is.json propeller_governor true,
+              ASSUMED installation; recalibrate, regenerate 915 signatures, re-measure false alarms, retrain 915 RUL).
+Branch:       Beta (local commits after ae82c70 not pushed). main untouched (9b5942e).
+Last commit:  see git log -1 (20 Nov: M4-03 in-service RUL service + Q11 mission Monte Carlo re-pin).
+State:        Full suite last 668 passed, 1 failed (ratchet legacy, known). Fleet RUL training for all 5 engines
+              runs in the background (var/models/rul_<engine>.pkl, reports/evaluation/sim_rul_<engine>_2026-11-20.json);
+              commit the reports + update docs page 14 when it finishes. var/models is local only.
+Next step:    see Card. Unstaged on purpose: the 914 .blend re-saves (D50), docs/cleanup/file_coverage_latest.csv,
+              data/graph_db/fleet_graph.json.
 Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produce yet (lambda, timing, BSFC, power,
               vibration, GO/NO-GO); some may show blanks or crash on .toFixed(null) until M0-09. Beta only.
               (2) STOP/START return 422 until the engine state machine (M1-12).
@@ -919,3 +917,17 @@ M4-01/03: backend/evaluation/sim_rul.py - 200 rotax_912is tails (seeds 5000+) wo
 M5-07 started (uncommitted, not in this commit): Copernicus GLO-30 tile N34E077 downloaded to var/dem (40 MB,
   3600x3600, tiepoint 77E 35N, 1 arc-second); tifffile 2026.11.16 + imagecodecs 2026.11.11 installed (pre-approved
   deps; add to requirements-optional). Next: backend/terrain/dem.py + planner.
+
+=== 20 Nov 2026 M4-03 / Q11 / Q13 in-service RUL, mission Monte Carlo re-pin (AI: Claude Code, Opus 5.5)
+Branch: Beta
+Changed: backend/prognose/rul_service.py (new), backend/evaluation/sim_rul.py (train_and_save, evaluate_arrays),
+  backend/runtime/engine_runtime.py (RULService replaces the sine-calibrated placeholder and 18*(1-3*damage);
+  end-of-life crossing feeds simulate_with_limits), backend/server/engine_api.py (history rul fields),
+  backend/mission/reliability.py (simulate() delegates to the vectorised simulate_with_limits).
+D38 ports (Prasad Q13, 20 Nov): tests/test_canonical_runtime_pipeline.py and
+  tests/test_adversarial_validation.py::TestMultiEngineAgnostic read prognostics.rul with the new contract:
+  status OK -> finite, lower <= point <= upper (point > 0 kept); else UNAVAILABLE with a reason. Old key rul_point.
+Re-pin (Prasad Q11): tests/test_char_mission.py ISR 18 h seed 1 4000 trials 0.9955 -> 0.996 (vectorised sampler).
+New tests: tests/prognose/test_rul_service.py. Ratchet list + baseline: rul_service, terrain/dem, terrain/fetch at 0.
+Tests: canonical pipeline + api + adversarial + rul_service 65 passed; mission tests 11 passed; ratchet known only.
+

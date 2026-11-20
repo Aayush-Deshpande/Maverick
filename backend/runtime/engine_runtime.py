@@ -9,7 +9,6 @@ Implements ingest(frame, truth): processing a live tick and ingesting a replayed
 
 from __future__ import annotations
 
-import math
 import re
 import threading
 import time
@@ -35,8 +34,8 @@ from backend.twin.sim_ukf import SimThermalUKF
 from backend.twin.virtual_sensors import VirtualSensorSynthesizer
 from backend.twin.validity import TwinValidityMonitor
 from backend.evaluation.damage_accumulation import DamageAccumulator
-from backend.evaluation.conformal import SplitConformalRUL
 from backend.detect.adaptive import AdaptiveBaseline
+from backend.prognose.rul_service import RULService
 from backend.prognose.trends import TrendTracker
 from backend.status.evaluator import frame_readings
 from backend.mission.reliability import (
@@ -160,15 +159,9 @@ class EngineRuntime:
             expected_sigma=sigma_map,
         )
         self.damage_accumulator = DamageAccumulator(name=f"{self.engine_id}_cyl1_head")
-        # placeholder RUL calibration kept only until M4-03 replaces it with the run-to-failure conformal RUL (D38:
-        # tests/test_canonical_runtime_pipeline.py is ported then); not a real calibration
-        self.conformal_rul = SplitConformalRUL()
-        preds = [float(x) for x in np.linspace(18.0, 1.0, 25)]
-        truths = [p + float(0.25 * math.sin(i)) for i, p in enumerate(preds)]
-        scales = [0.4 + 0.03 * i for i in range(25)]
-        self.conformal_rul.calibrate(predictions=preds, truths=truths, scales=scales)
         self.trends: Optional[TrendTracker] = None        # M4-02, built on the detector's channels at calibration
         self.adaptive: Optional[AdaptiveBaseline] = None   # M4-06 guarded per-tail baseline learning
+        self.rul = RULService(engine_config_id)              # M4-03 fleet-trained conformal RUL (or UNAVAILABLE)
 
         components = DEFAULT_COMPONENTS()
         if not self.cfg.is_turbocharged:
@@ -458,6 +451,7 @@ class EngineRuntime:
                 self.isolator.update(det.z_raw)
             if det is not None and self.trends is not None:
                 self.trends.update(frame.t, det.z_raw, frame_readings(frame))
+            self.rul.update(frame.t, None if det is None else det.z_raw, bool(frame.rpm and frame.rpm > 0))
 
             hv = None
             if heavy and self.reservoir is not None and self.detector is not None:
@@ -504,13 +498,11 @@ class EngineRuntime:
                     self.damage_accumulator.finalise()
                     self._dmg_finalise_counter = 0
                 dmg_state = self.damage_accumulator.current_state()
-                # Time-to-limit from residual trends (M4-02). The RUL below is the M4-03 placeholder (see __init__).
-                pred_rul = max(0.5, 18.0 * (1.0 - min(0.95, dmg_state.total * 3.0)))
-                conf_int = self.conformal_rul.interval(pred_rul, alpha=0.05, scale=max(0.5, 2.0 * dmg_state.total))
+                # Time-to-limit from residual trends (M4-02); RUL from the fleet-trained conformal model (M4-03)
                 self._cached_prognostics = {
                     "damage": dmg_state.as_dict(),
                     "time_to_limit": self.trends.time_to_limit() if self.trends is not None else [],
-                    "rul": {**conf_int.as_dict(), "status": "PLACEHOLDER (M4-03)"},
+                    "rul": self.rul.latest,
                 }
 
                 # 8. Mission Reliability & Glide Polar Reachability
@@ -532,7 +524,7 @@ class EngineRuntime:
                 # crossings (M4-04, I-09); the analytic per-component survival stays as the ranking for the UI
                 mc = self.reliability_engine.simulate_with_limits(
                     profile, n_trials=MC_TRIALS,
-                    limit_crossings=(self._cached_prognostics or {}).get("time_to_limit", []))
+                    limit_crossings=(self._cached_prognostics or {}).get("time_to_limit", []) + self._rul_crossing())
                 self._cached_reliability = {
                     "mission_reliability": mc["reliability"],
                     "ci_lower": mc["ci_lower"], "ci_upper": mc["ci_upper"], "n_trials": mc["n_trials"],
@@ -605,6 +597,14 @@ class EngineRuntime:
             )
             self.buffer.append(t)
             return t
+
+    def _rul_crossing(self) -> List[Dict[str, Any]]:
+        """The fleet RUL interval as an end-of-life crossing for the mission Monte Carlo (M4-04)."""
+        r = self.rul.latest
+        if r.get("status") != "OK":
+            return []
+        return [{"channel": "end_of_life", "time_to_limit_s": r["rul_h"] * 3600.0,
+                 "low_s": max(r["rul_lower_h"], 1e-3) * 3600.0, "high_s": r["rul_upper_h"] * 3600.0}]
 
     def _ttl_for_status(self, t: float) -> List[Dict[str, Any]]:
         """Time-to-limit items with the remaining mission time (status CAUTION when a limit falls inside it)."""
