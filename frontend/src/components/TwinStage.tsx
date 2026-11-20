@@ -116,6 +116,7 @@ export default function TwinStage(p: Props) {
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <span className="font-mono text-sm font-semibold tracking-wider">{status ?? 'NO DATA'}</span>
           {reason && status !== 'GO' && <span className="text-xs text-slate-200">{reason}</span>}
+          {active.length > 0 && highlights.length === 0 && <span className="text-xs text-slate-300">diagnosing…</span>}
           {active.length > 0 && <span className="text-xs text-slate-400">injected {active.map((f) => `${f.fault_id}${f.cylinder ? `·c${f.cylinder}` : ''}`).join('  ')}</span>}
           {notice && <span className="ml-auto text-xs opacity-80">{notice}</span>}
         </div>

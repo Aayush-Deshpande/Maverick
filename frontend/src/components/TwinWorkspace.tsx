@@ -8,7 +8,9 @@ import TwinStage from './TwinStage';
 export default function TwinWorkspace({ serverUrl }: { serverUrl: string }) {
   const runtime = useEngineRuntime(serverUrl);
   const labels = useFetchLabels(runtime.api);
-  const [training, setTraining] = useState(false);                   // D56: off by default
+  // D64: the twin exists to watch what you inject, so the injected part shows at once (training display on by
+  // default here); diagnosis then recolours it in its alert level. The console keeps D56's default (off).
+  const [training, setTraining] = useState(true);
   return (
     <LabelsContext.Provider value={labels}>
       <TwinStage engineId={runtime.engineId ?? null} engines={runtime.engines ?? []} onSelectEngine={runtime.selectEngine}
