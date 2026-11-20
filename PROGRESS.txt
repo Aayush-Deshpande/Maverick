@@ -1030,6 +1030,6 @@ Bug 1 (since M5-08): DemTile.name was the FILE name (.tif); the API planner cach
   test_tile_name_round_trips_through_load_tile (fails before, passes after; skips without the tile).
 Bug 2: SVG plan view / profile used white strokes, invisible on the light theme -> currentColor + theme text class;
   right-half airfield labels anchor leftward. EngineerPanel: darker residual bars, TIT label.
-Open (noted, not fixed): data age shows a small negative value (-60..-170 ms) = server wall clock vs browser clock
-  on the same PC; dataAgeMs should use receive time or clamp at 0 with a skew note (M0-09 store).
+Data age fix (same day): useNow samples every 500 ms while frames arrive at ~20 Hz, so a frame newer than the
+  sampled clock gave a negative age; dataAgeMs now clamps at 0 (vitest case added).
 

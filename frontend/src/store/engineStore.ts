@@ -71,5 +71,6 @@ export function useEngineStore<T>(selector: (s: EngineStoreState) => T): T {
 
 /* Data age of one engine in ms, or null when there is no data (shown as NO DATA, never as 0). */
 export function dataAgeMs(slot: EngineSlot | undefined, now: number): number | null {
-  return slot ? now - slot.receivedAt : null;
+  // `now` is sampled on a timer while frames arrive continuously, so a frame can be newer than `now`: age 0, not < 0
+  return slot ? Math.max(0, now - slot.receivedAt) : null;
 }

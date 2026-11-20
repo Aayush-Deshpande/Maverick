@@ -42,6 +42,12 @@ describe('engine store (M0-09)', () => {
   it('reports no data age (null) for an engine without data, never 0', () => {
     expect(dataAgeMs(undefined, 1000)).toBeNull();
   });
+
+  it('a frame newer than the sampled clock has age 0, never negative', () => {
+    const slot = { state: msg('a', 1), receivedAt: 1060, dropped: 0, restarted: false } as any;
+    expect(dataAgeMs(slot, 1000)).toBe(0);
+    expect(dataAgeMs(slot, 1500)).toBe(440);
+  });
 });
 
 class FakeSocket implements SocketLike {
