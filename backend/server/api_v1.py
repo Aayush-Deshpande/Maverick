@@ -592,8 +592,11 @@ def v1_copilot_ask(body: CopilotQuestion) -> Dict[str, Any]:
 def v1_copilot_status() -> Dict[str, Any]:
     """Which language model (if any) phrases the copilot answers; the deterministic answer always works."""
     from backend.agent.llm_engine import LocalLLMEngine
+    from backend.knowledge.manual_index import manual_index
+    idx = manual_index()
     return {"deterministic": "AVAILABLE", "llm": LocalLLMEngine.get_instance().status_payload(),
-            "manual_search": "UNAVAILABLE (card AI-03: real OEM manual index)"}
+            "manual_search": {"status": "AVAILABLE" if idx.docs else "UNAVAILABLE",
+                              "documents": [d["title"] for d in idx.docs], "not_on_this_machine": idx.missing}}
 
 
 @router.get("/api/v1/ui/demo")

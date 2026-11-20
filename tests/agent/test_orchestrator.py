@@ -32,6 +32,10 @@ class Source:
     def work_orders(self, engine_id):
         return [{"id": "WO-1", "title": "Oil pump inspection", "status": "OPEN"}]
 
+    def manuals(self, query, engine_id):
+        return {"hits": [{"document": "Operators Manual X", "edition": "Ed. 2", "page": 53, "score": 0.3,
+                          "text": "Oil pressure below minimum: reduce power"}], "documents": ["OM-X"], "not_on_this_machine": []}
+
 
 class Scripted:
     """Mock provider: calls two tools, then answers with the given sections."""
@@ -61,6 +65,7 @@ def test_deterministic_answer_has_all_seven_sections_from_live_tools():
     assert "land as soon as possible" in s["mitigation"] and "ATA 79" in s["fix"] and "WO-1" in s["fix"]
     assert "40" in s["prognosis"] and "F23" in s["confidence"] and "0.82" in s["confidence"]
     assert "OM-912 i p.2-3" in s["sources"] and "OM sec 4" in s["sources"]
+    assert "Operators Manual X (Ed. 2) p.53" in s["sources"]                 # manual page cited
 
 
 def test_tools_never_return_the_injected_fault_list():
@@ -100,3 +105,15 @@ def test_unknown_engine_state_is_reported_not_invented():
             return None
     s = _sections(answer(CopilotTools(Empty()), "e1", "Status?"))
     assert "no live state" in s["what"]
+
+
+def test_manual_index_cites_real_pages_when_the_manual_is_present():
+    """AI-03: the index holds only the documents in configs/knowledge/manuals.json; local-only OEM files are skipped."""
+    import pytest
+    from backend.knowledge.manual_index import ManualIndex
+    idx = ManualIndex.load()
+    if not any(d["id"] == "OM-914" for d in idx.docs):
+        pytest.skip("Rotax 914 OM not on this machine")
+    hits = idx.search("exhaust gas temperature", "rotax_914")
+    assert hits and all(h["page"] >= 1 and h["document"] for h in hits)
+    assert all("914" in h["document"] or "1629A" in h["document"] for h in hits)     # engine filter holds

@@ -20,6 +20,7 @@ class StateSource(Protocol):
     def config(self, engine_id: str) -> Dict[str, Any]: ...
     def fault(self, fault_id: str) -> Optional[Dict[str, Any]]: ...
     def work_orders(self, engine_id: str) -> List[Dict[str, Any]]: ...
+    def manuals(self, query: str, engine_id: Optional[str]) -> Dict[str, Any]: ...
 
 
 def _round(v: Any) -> Any:
@@ -67,8 +68,10 @@ class CopilotTools:
                  _ENGINE, self.get_prognosis),
             Tool("get_work_orders", "Open and closed maintenance work orders for the engine.", _ENGINE,
                  self.get_work_orders),
-            Tool("search_manuals", "Search the real manufacturer manuals and standards.", {"type": "object",
-                 "properties": {"query": {"type": "string"}}, "required": ["query"]}, self.search_manuals),
+            Tool("search_manuals", "Search the real manufacturer manuals, type certificates and standards that apply "
+                 "to the engine; every hit carries document, edition and page.", {"type": "object",
+                 "properties": {"query": {"type": "string"}, "engine_id": {"type": "string"}}, "required": ["query"]},
+                 self.search_manuals),
         )}
 
     # -- tools ---------------------------------------------------------------------------------------------------
@@ -123,9 +126,8 @@ class CopilotTools:
     def get_work_orders(self, engine_id: str) -> Dict[str, Any]:
         return {"engine_id": engine_id, "work_orders": self.src.work_orders(engine_id)}
 
-    def search_manuals(self, query: str) -> Dict[str, Any]:
-        return {"available": False, "reason": "manual search index not built yet (card AI-03: real OEM manuals "
-                "only, D34/D44); use get_limits, which carries the manual page for every limit"}
+    def search_manuals(self, query: str, engine_id: Optional[str] = None) -> Dict[str, Any]:
+        return self.src.manuals(query, engine_id)
 
     # -- dispatch ------------------------------------------------------------------------------------------------
     def call(self, name: str, args: Dict[str, Any]) -> Dict[str, Any]:
@@ -163,3 +165,10 @@ class ServicesSource:
 
     def work_orders(self, engine_id: str) -> List[Dict[str, Any]]:
         return self.services.work_orders.list(engine_id, None)
+
+    def manuals(self, query: str, engine_id: Optional[str]) -> Dict[str, Any]:
+        from backend.knowledge.manual_index import manual_index
+        idx = manual_index()
+        hits = idx.search(query, engine_id)
+        return {"hits": [{**h, "text": h["text"][:600]} for h in hits], "documents": [d["id"] for d in idx.docs],
+                "not_on_this_machine": idx.missing}

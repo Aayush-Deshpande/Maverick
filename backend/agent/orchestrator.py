@@ -60,6 +60,8 @@ def template_answer(tools: CopilotTools, engine_id: str, results: Dict[str, Any]
     know = tools.call("get_fault_knowledge", {"fault_id": top["fault_id"]}) if top else {}
     if top:
         results["get_fault_knowledge"] = know           # sources cite the diagnosed fault, not an earlier lookup
+        query = f"{(know.get('name') or '').replace('_', ' ').lower()} {know.get('physics_explanation', '')[:80]}"
+        results.setdefault("search_manuals", tools.call("search_manuals", {"query": query, "engine_id": engine_id}))
     readings = state.get("readings") or {}
 
     def reading(ch: str) -> Dict[str, Any]:            # residual names cht_1, reading names cht[1]
@@ -111,6 +113,8 @@ def sources_for(results: Dict[str, Any], tools: CopilotTools, engine_id: str) ->
         src = (know.get(key) or {}).get("source")
         if src:
             out.append(f"registry {know.get('id')} {key}: {src}")
+    for h in ((results.get("search_manuals") or {}).get("hits") or [])[:3]:
+        out.append(f"manual: {h['document']} ({h['edition']}) p.{h['page']}")
     limits = tools.call("get_limits", {"engine_id": engine_id}).get("limits") or {}
     out += sorted({f"limit {ch}: {v.get('ref')}" for ch, v in limits.items() if isinstance(v, dict) and v.get("ref")})[:6]
     return out
