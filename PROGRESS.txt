@@ -7,7 +7,7 @@ RESUME HERE  (last updated 20 Nov 2026, overnight autonomous session)
 =====================================================================================================================
 Phase:        Phases 1-3 done; Phase 5 (M4) done; Phase 6 (M5) M5-01/02/04/05/06/07/08/09 done. Not started:
               M5-10/11 (canyon app, map UI), M6 views, Phase 7 Blender, M7, M8, 8b.
-Card:         Q12 915 governed DONE (committed). M5-09 glide/divert DONE; M5-11 plan view + altitude profile DONE; M6-01/02 core
+Card:         Q12 915 governed DONE incl. run_matrix re-measure + docs page 11. M5-09 glide/divert DONE; M5-11 plan view + altitude profile DONE; M6-01/02 core
               (console role views + status banner/alerts) DONE; M6-03 core (residuals, twin
               parameters, virtual sensors, vibration orders in the Engineer view) DONE.
               IN PROGRESS: Q12 close-out - 915 governed (configs done), oil relief
@@ -1081,4 +1081,11 @@ Changed: backend/server/state_builder.py _detected_highlights: a hypothesis with
 Tests: tests/api/test_state_schema.py +4 (detected NO-GO lights oil_tank with nodes and no INJECTED; posterior 0.3
   lights nothing; sensor hypothesis -> SENSOR; unknown id -> nothing, message still builds). api + truth-leak +
   dynamic 61 passed.
+
+=== 20 Nov 2026 Q12 re-measure: run_matrix all five engines -> docs_site page 11 (AI: Claude Code)
+reports/evaluation/{detection,nominal}_2026-11-20.csv + summary_2026-11-20.md regenerated (governed 915, relief 4.8,
+  new signatures). FA/FH ours / limits-only: AE300 0.25/0, 912 0/0.75, 914 0.50/0, 915 0.25/0 (was 16 fixed
+  pitch), VRDE 0/0; variant plant 0.25/0/0/0/0. Isolation top-1/top-3: 68/77, 55/65, 71/87, 67/77, 69/77 %.
+  Ours earlier than (or alone vs) the limits-only baseline: 68/68, 29/32 (2 ties), 49/53, 64/68, 58/58.
+Docs page 11 results table + text updated; the 915 fixed-pitch footnote replaced.
 
