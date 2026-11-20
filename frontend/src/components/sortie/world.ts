@@ -367,7 +367,7 @@ export class SortieWorld {
   private lastT = -1;
   private closeLens = false;
   /** where the lens finishes the approach, relative to the engine, in the airframe's frame */
-  private static readonly INTO = new THREE.Vector3(-0.72, 0.34, 0.2);
+  private static readonly INTO = new THREE.Vector3(-1.36, 0.64, 0.38);
   /** each skin material's own transparency, restored when the X-ray ends */
   private matBase = new Map<THREE.Material, { transparent: boolean; opacity: number; depthWrite: boolean }>();
   loaded = false;
@@ -588,7 +588,9 @@ export class SortieWorld {
       m.object.position.copy(m.center).negate();
       const spin = new THREE.Group(); spin.add(m.object); spin.rotation.y = theta;
       this.mount.add(spin);
-      this.mount.scale.setScalar(0.45 / m.radius); // the rear fuselage is ~0.9 units across at this station
+      // true scale: the airframe is ~2.1 units per metre and a Rotax with its mounts is ~0.4 m in radius, so it
+      // sits in proportion to the propeller and the fuselage it fills
+      this.mount.scale.setScalar(0.85 / m.radius);
       this.mount.position.copy(this.engineLocal);
       this.mount.visible = false;
       this.carrier.add(this.mount);

@@ -168,31 +168,54 @@ export function drawUnseen(g: CanvasRenderingContext2D, R: Region, k: number, re
   const big = R.compact ? 18 : 30;
   const colW = R.compact ? R.w : (R.w - 36) / 2;
   const top = R.y + 8;
-  text(g, 'A FAULT FROM NO TRAINING LIBRARY · BLOCKED FILTER + FOULED COOLING, TOGETHER', R.x, top, `800 11px ${LABEL}`, `rgba(${ROSE},0.95)`);
-  const card = (x: number, y: number, h: number, hot: boolean) => {
-    g.fillStyle = 'rgba(6, 12, 14, 0.72)'; g.fillRect(x, y, colW, h);
-    g.strokeStyle = hot ? `rgba(${ROSE},0.8)` : `rgba(${INK},0.16)`; g.lineWidth = 1; g.strokeRect(x + 0.5, y + 0.5, colW - 1, h - 1);
-  };
-  const ch = R.compact ? 120 : 196, cy = top + 22;
-
-  // a trained model must answer with a name it knows
-  const lx = R.x;
-  card(lx, cy, ch, false);
-  text(g, 'A TRAINED MODEL', lx + 16, cy + 26, `800 13px ${LABEL}`, `rgba(${INK},0.7)`);
-  text(g, `random forest · taught ${C - 1} faults`, lx + 16, cy + 44, `500 11px ${MONO}`, `rgba(${INK},0.5)`);
+  text(g, 'SAME UNSEEN FAULT · TWO APPROACHES', R.x, top, `800 11px ${LABEL}`, `rgba(${INK},0.62)`);
+  text(g, 'blocked filter + fouled cooling, together: in no training library', R.x + (R.compact ? 0 : 236), top, `500 11px ${MONO}`, `rgba(${INK},0.45)`);
+  const ch = R.compact ? 132 : 206, cy = top + 44;
   const nm = CLASS_NAME[res.classes[gate.candidate]] ?? res.classes[gate.candidate];
-  text(g, `“${nm}”`, lx + 16, cy + 44 + big + 10, `800 ${big}px ${LABEL}`, gate.candidate === 0 ? `rgba(${INK},0.9)` : `rgba(${AMBER},1)`);
-  text(g, gate.candidate === 0 ? 'says all is well' : `${Math.round(gate.top * 100)}% sure · and wrong`, lx + 16, cy + 44 + big + 34, `600 13px ${MONO}`, gate.candidate === 0 ? `rgba(${INK},0.6)` : `rgba(${ROSE},1)`);
-  if (!R.compact) text(g, 'It can only pick from what it was taught.', lx + 16, cy + ch - 18, `500 11px ${MONO}`, `rgba(${INK},0.5)`);
+  const wrong = gate.candidate !== 0;
+  const stamp = (x: number, y: number, ok: boolean, label: string) => {
+    const r = R.compact ? 13 : 17;
+    g.fillStyle = ok ? `rgba(${CYAN},1)` : `rgba(${ROSE},0.95)`;
+    g.beginPath(); g.arc(x + r, y, r, 0, Math.PI * 2); g.fill();
+    g.strokeStyle = '#061012'; g.lineWidth = 3; g.lineCap = 'round'; g.beginPath();
+    if (ok) { g.moveTo(x + r * 0.55, y); g.lineTo(x + r * 0.9, y + r * 0.38); g.lineTo(x + r * 1.5, y - r * 0.4); }
+    else { g.moveTo(x + r * 0.6, y - r * 0.4); g.lineTo(x + r * 1.4, y + r * 0.4); g.moveTo(x + r * 1.4, y - r * 0.4); g.lineTo(x + r * 0.6, y + r * 0.4); }
+    g.stroke(); g.lineCap = 'butt';
+    text(g, label, x + r * 2 + 10, y + 5, `800 ${R.compact ? 13 : 16}px ${LABEL}`, ok ? `rgba(${CYAN},1)` : `rgba(${ROSE},1)`);
+  };
 
-  // the fly circuit learned what normal looks like, and nothing else
+  // the usual approach: a classifier trained on known faults, which must answer with one of their names
+  const lx = R.x;
+  g.fillStyle = 'rgba(6, 12, 14, 0.6)'; g.fillRect(lx, cy, colW, ch);
+  g.strokeStyle = `rgba(${INK},0.12)`; g.lineWidth = 1; g.strokeRect(lx + 0.5, cy + 0.5, colW - 1, ch - 1);
+  text(g, 'THE USUAL APPROACH', lx + 16, cy + 26, `800 13px ${LABEL}`, `rgba(${INK},0.55)`);
+  text(g, `trained classifier (random forest) · taught ${C - 1} faults`, lx + 16, cy + 44, `500 11px ${MONO}`, `rgba(${INK},0.42)`);
+  text(g, wrong ? `“${nm}”` : '“All normal”', lx + 16, cy + 44 + big + 8, `800 ${big}px ${LABEL}`, `rgba(${INK},0.5)`);
+  if (wrong) {
+    const w = g.measureText(`“${nm}”`).width;
+    g.fillStyle = `rgba(${ROSE},0.85)`; g.fillRect(lx + 14, cy + 44 + big - big * 0.32, w + 4, 2.5);
+  }
+  stamp(lx + 16, cy + ch - 34, false, wrong ? `${Math.round(gate.top * 100)}% sure, and wrong` : 'misses it');
+  if (!R.compact) text(g, 'It can only pick a fault it was taught.', lx + 16, cy + ch - 8, `500 10.5px ${MONO}`, `rgba(${INK},0.4)`);
+
+  // ours: the fruit-fly circuit, which only learned what normal flight looks like
   const ox = R.compact ? R.x : R.x + colW + 36, oy = R.compact ? cy + ch + 14 : cy;
-  card(ox, oy, ch, ev.raw);
-  text(g, 'THE FLY CIRCUIT', ox + 16, oy + 26, `800 13px ${LABEL}`, `rgba(${INK},0.7)`);
-  text(g, 'learned normal flight · zero fault labels', ox + 16, oy + 44, `500 11px ${MONO}`, `rgba(${INK},0.5)`);
-  text(g, ev.raw ? 'ABNORMAL' : 'listening…', ox + 16, oy + 44 + big + 10, `800 ${big}px ${LABEL}`, ev.raw ? `rgba(${ROSE},1)` : `rgba(${INK},0.55)`);
-  text(g, ev.raw ? 'matches nothing it has ever seen' : `${SCORER_NAME.fly_bloom} ${ev.ratios.fly_bloom.toFixed(2)}× of threshold`, ox + 16, oy + 44 + big + 34, `600 13px ${MONO}`, ev.raw ? `rgba(${ROSE},1)` : `rgba(${INK},0.6)`);
-  if (!R.compact) text(g, 'It does not need a name to know.', ox + 16, oy + ch - 18, `500 11px ${MONO}`, `rgba(${INK},0.5)`);
+  const glow = g.createLinearGradient(ox, oy, ox, oy + ch);
+  glow.addColorStop(0, 'rgba(88, 230, 242, 0.16)'); glow.addColorStop(1, 'rgba(88, 230, 242, 0.04)');
+  g.fillStyle = 'rgba(6, 14, 16, 0.86)'; g.fillRect(ox, oy, colW, ch);
+  g.fillStyle = glow; g.fillRect(ox, oy, colW, ch);
+  g.strokeStyle = `rgba(${CYAN},0.95)`; g.lineWidth = 2; g.strokeRect(ox + 1, oy + 1, colW - 2, ch - 2);
+  // the tab that says whose this is
+  const tab = 'ANUMAAN · OURS';
+  g.font = `800 11px ${LABEL}`; const tw = g.measureText(tab).width + 18;
+  g.fillStyle = `rgba(${CYAN},1)`; g.fillRect(ox, oy - 20, tw, 20);
+  text(g, tab, ox + 9, oy - 6, `800 11px ${LABEL}`, '#061012');
+  text(g, 'FLY BLOOM · THE FRUIT-FLY CIRCUIT', ox + 16, oy + 26, `800 13px ${LABEL}`, `rgba(${CYAN},1)`);
+  text(g, 'learned normal flight only · zero fault labels', ox + 16, oy + 44, `500 11px ${MONO}`, `rgba(${INK},0.7)`);
+  text(g, ev.raw ? 'ABNORMAL' : 'listening…', ox + 16, oy + 44 + big + 8, `800 ${big}px ${LABEL}`, ev.raw ? `rgba(${INK},1)` : `rgba(${INK},0.55)`);
+  if (ev.raw) stamp(ox + 16, oy + ch - 34, true, 'caught · flagged as never seen');
+  else text(g, `${SCORER_NAME.fly_bloom} ${ev.ratios.fly_bloom.toFixed(2)}× of threshold`, ox + 16, oy + ch - 30, `600 13px ${MONO}`, `rgba(${INK},0.6)`);
+  if (!R.compact) text(g, 'It does not need a name to know.', ox + 16, oy + ch - 8, `500 10.5px ${MONO}`, `rgba(${INK},0.6)`);
 
   // and its memory merges across the fleet: three aircraft, 260 numbers each
   const fy = (R.compact ? oy : cy) + ch + 40;
