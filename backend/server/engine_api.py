@@ -198,9 +198,22 @@ def inject_fault(engine_id: str, body: FaultBody, cmd: Dict[str, Any] = Depends(
             if not matches:
                 raise FaultRejected(f"mode {body.mode!r} has no registry fault applicable to {engine_id}")
             spec, cylinder = matches[0], body.cylinder
+            from backend.runtime.registry import FAULT_REGISTRY
+            legacy = FAULT_REGISTRY.get(body.mode)
+            if spec.scope == "CYLINDER" and cylinder is None and legacy is not None and not legacy.per_cylinder:
+                # an engine-wide legacy mode (e.g. COOLING_DEGRADATION from the 3D twin) keeps its meaning: every
+                # cylinder, as EngineRuntime.inject_fault does
+                faults = [manager.inject(spec.id, cylinder=c, severity=body.severity, ramp_s=body.ramp_sec,
+                                         source="legacy") for c in range(1, cfg.cylinder_count + 1)]
+                return {"status": "SUCCESS", "fault": faults[0].to_dict(), "faults": [x.to_dict() for x in faults]}
         else:
             raise HTTPException(422, "Either 'mode' or 'fault_id' must be specified.")
-        f = manager.inject(spec.id, cylinder=cylinder, severity=body.severity, ramp_s=body.ramp_sec, source="legacy")
+        channel = None
+        if spec.scope == "CHANNEL":                  # old sensor modes meant the CHT sensor of the chosen cylinder
+            channel = f"cht[{cylinder if cylinder is not None else 1}]"
+            cylinder = None
+        f = manager.inject(spec.id, cylinder=cylinder, channel=channel, severity=body.severity, ramp_s=body.ramp_sec,
+                           source="legacy")
     except FaultRejected as exc:
         raise HTTPException(422, str(exc)) from None
     return {"status": "SUCCESS", "fault": f.to_dict()}

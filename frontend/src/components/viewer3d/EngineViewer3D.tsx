@@ -2,10 +2,11 @@ import { Component, Suspense, useEffect, useMemo, useState, type ReactNode } fro
 import { Canvas, useThree } from '@react-three/fiber';
 import { Bounds, OrbitControls, useGLTF } from '@react-three/drei';
 import { Color, Mesh, PMREMGenerator, type Material, type MeshStandardMaterial, type Object3D } from 'three';
-import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
+import * as THREE from 'three';
 import type { Highlight } from '../../api/state';
 import { LEVEL_COLOUR, highlightMap, type HighlightLevel } from './highlights';
 import { componentLabel, useLabels } from '../../utils/labels';
+import { ENGINE_ENV_INTENSITY, disposeEnvironment, prepareEngineMaterials, studioEnvironment } from '../../utils/engineMaterials';
 
 type Manifest = { model_url: string; representative_geometry: string | null; components: Array<{ component_id: string; nodes: string[] }> };
 export type InjectedPart = { component_id: string; reason: string };
@@ -18,33 +19,30 @@ type Props = {
 
 const DRACO_PATH = '/draco/';                             // decoder files shipped in frontend/public/draco
 const EMISSIVE_INTENSITY = 0.9;
-const BAKED_WHITE_EMISSIVE = 0.35;                       // same rule as the landing viewer: near-white baked emissive
-                                                         // without an emissive texture blows out the AE300/VRDE exports
 
-/** Image-based lighting from three's procedural RoomEnvironment (no HDR download), as in the landing viewer. */
+/** Image-based lighting from the shared procedural studio (utils/engineMaterials; no HDR download). */
 function RoomEnv() {
   const { gl, scene } = useThree();
   useEffect(() => {
     const pmrem = new PMREMGenerator(gl);
-    const room = new RoomEnvironment();
+    const room = studioEnvironment(THREE);
     const env = pmrem.fromScene(room, 0.04).texture;
     scene.environment = env;
-    room.dispose();
+    scene.environmentIntensity = ENGINE_ENV_INTENSITY;
+    disposeEnvironment(room);
     return () => { scene.environment = null; env.dispose(); pmrem.dispose(); };
   }, [gl, scene]);
   return null;
 }
 
-/** Own copies of the materials, with baked white emissive neutralised; the cached GLB stays untouched. */
+/** Own copies of the materials (the cached GLB stays untouched), with the shared engine material treatment. */
 function prepare(root: Object3D): void {
   root.traverse((o) => {
     if (!(o instanceof Mesh) || Array.isArray(o.material)) return;
-    const m = (o.material as MeshStandardMaterial).clone();
-    if (m.emissive && !m.emissiveMap && m.emissive.r > BAKED_WHITE_EMISSIVE && m.emissive.g > BAKED_WHITE_EMISSIVE
-        && m.emissive.b > BAKED_WHITE_EMISSIVE) m.emissive.setHex(0x000000);
-    o.material = m;
-    o.userData.baseMaterial = m;
+    o.material = (o.material as MeshStandardMaterial).clone();
+    o.userData.baseMaterial = o.material;
   });
+  prepareEngineMaterials(root);
 }
 
 /** Apply highlight colours to every mesh under a named node; restore the original materials otherwise. */

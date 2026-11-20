@@ -84,3 +84,30 @@ def test_engine_schema(client):
     assert "channels" in data
     assert "operating_limits" in data
     assert client.get("/api/engines/nonexistent_engine/schema").status_code == 404
+
+
+def test_engine_wide_legacy_mode_injects_every_cylinder(client):
+    """3D twin "Cooling" button: COOLING_DEGRADATION has no cylinder in the old library; the registry fault (F19) is
+    per-cylinder, so the legacy route applies it to every cylinder instead of rejecting it (it used to 422)."""
+    from backend.physics.engine_config import load_engine_config
+    engine_id = "rotax_914"
+    r = client.post(f"/api/engines/{engine_id}/faults", json={"mode": "COOLING_DEGRADATION", "severity": 0.8, "ramp_sec": 30})
+    assert r.status_code == 200, r.text
+    assert sorted(f["cylinder"] for f in r.json()["faults"]) == list(range(1, load_engine_config(engine_id).cylinder_count + 1))
+    client.delete(f"/api/engines/{engine_id}/faults")
+
+
+def test_every_twin_fault_button_injects(client):
+    """The 3D twin draws its fault buttons from /api/engines faults; each one must be applicable and accepted (sensor
+    modes go to the chosen cylinder's CHT sensor), so no button silently fails."""
+    import time
+    for profile in client.get("/api/engines").json()["engines"]:
+        eid = profile["engine_id"]
+        for f in profile["faults"]:
+            body = {"mode": f["mode"], "severity": 0.8, "ramp_sec": 30}
+            if f["per_cylinder"]:
+                body["cylinder"] = 2
+            r = client.post(f"/api/engines/{eid}/faults", json=body)
+            assert r.status_code == 200, (eid, f["mode"], r.text)
+            client.delete(f"/api/engines/{eid}/faults")
+            time.sleep(0.12)                      # stay under the per-client command rate limit (D52)

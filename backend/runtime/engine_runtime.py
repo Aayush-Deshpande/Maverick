@@ -692,8 +692,11 @@ class EngineRuntime:
                 # These are operator commands, not plant truth; returning them lets a UI restore
                 # its commanded-fault badge after a reconnect without exposing TruthRecord.
                 "commanded_faults": list(self.injected),
+                # only the old modes that resolve to a registry fault applicable to this engine (no Misfire button on
+                # a diesel, no air-cooling button on a fully liquid-cooled engine)
                 "faults": [{"mode": s.mode, "per_cylinder": s.per_cylinder, "scalar_visible": s.scalar_visible,
-                            "layer": s.layer, "description": s.description} for s in faults_for(c)]}
+                            "layer": s.layer, "description": s.description} for s in faults_for(c)
+                           if s.mode in {f.raw.get("plant_mode_legacy") for f in sim_registry().applicable(c)}]}
 
     # ------------------------------------------------------------------
     # Event log
