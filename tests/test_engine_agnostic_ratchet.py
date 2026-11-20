@@ -87,6 +87,7 @@ GUARDED = [
     "backend/recording/replay.py",
     "backend/mission/executive.py",
     "backend/reports/sortie_report.py",
+    "backend/sim/wear.py",
     "backend/twin/virtual_sensors.py",
     "backend/sim/params.py",
     "backend/sim/plant.py",

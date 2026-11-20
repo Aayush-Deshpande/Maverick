@@ -264,6 +264,11 @@
     "cyl": 0,
     "model": 0
   },
+  "backend/sim/wear.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
   "backend/sources/plant_source.py": {
     "brand": 0,
     "cyl": 0,
