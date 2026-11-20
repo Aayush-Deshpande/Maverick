@@ -10,6 +10,8 @@ layer (backend/sim/sensors.py): the engine itself is healthy.
 """
 from __future__ import annotations
 
+import math
+
 import re
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
@@ -86,9 +88,13 @@ class FaultParameters:
                cyls: List[int], combustion: Any) -> None:
         fx, th, tb, fu, el, vb = self.fx, h["thermal"], h["turbo"], h["fuel"], h["electrical"], h["vibration"]
         mul = lambda d, k, x: d.__setitem__(k, d.get(k, 1.0) * x)        # noqa: E731
-        if name == "quality" or name == "compression_health":
+        if name == "quality":
             for c in cyls:
                 h["quality"][c] *= val
+        elif name == "compression_health":             # leak: part of the charge escapes (less burns) and the rest
+            for c in cyls:                              # burns at a lower effective compression ratio (lost work
+                h["quality"][c] *= math.sqrt(val)       # leaves as exhaust heat)
+                h["late_burn"][c] *= math.sqrt(val)
         elif name == "cycle_variation":
             h["cov_factor"] = max(h.get("cov_factor", 1.0), val)
             for c in cyls:
@@ -150,6 +156,7 @@ class FaultParameters:
             mul(th, "oil_cooler", val)
         elif name == "bearing_clearance":
             mul(th, "pump_health", val ** -fx["bearing_clearance_exponent"])
+            vb["bearing_looseness"] = vb.get("bearing_looseness", 0.0) + max(0.0, val - 1.0)
         elif name == "tooth_damage":
             vb["gear_damage"] = max(vb.get("gear_damage", 0.0), val)
             mul(th, "gear_loss", 1.0 + fx["gear_damage_loss_gain"] * val)

@@ -153,7 +153,10 @@ class Thermal:
                     self.ph["oil_fuel_heat_fraction"] * fuel_heat + hl.get("extra_oil_heat_w", 0.0))
         oil_open = self._opening(self.oil_c, self.ph["oil_thermostat_open_c"], self.ph["oil_thermostat_full_c"],
                                  hl.get("oil_thermostat_stuck"))
-        self.oil_c += dt * (q_oil_in - self.g_oil * s * oil_open * hl.get("oil_cooler", 1.0) * (self.oil_c - ta)) / self.c_oil
+        # a weak pump also pushes less oil through the cooler: its effectiveness falls with flow (heat-exchanger NTU)
+        cooler_flow = hl.get("pump_health", 1.0) ** self.oil["cooler_flow_exponent"]
+        self.oil_c += dt * (q_oil_in - self.g_oil * s * oil_open * hl.get("oil_cooler", 1.0) * cooler_flow
+                            * (self.oil_c - ta)) / self.c_oil
         gear_loss = (1 - self.ph["gear_efficiency"]) * h.brake_w * hl.get("gear_loss", 1.0)
         self.gearbox_c += dt * (gear_loss - self.g_gear * s * (self.gearbox_c - ta)) / self.c_gear
         self.oil_bar = self.oil_pressure_bar(h.rpm, self.oil_c, hl.get("pump_health", 1.0))

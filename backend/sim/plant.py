@@ -114,6 +114,9 @@ class SimEngine:
         self._last_op = None
         lim = cfg.limits or {}
         self._oil_min = (lim.get("oil_p", {}).get("rpm_rule", {}).get("below_min") or lim.get("oil_p", {}).get("warning_low"))
+        # the bearing film starts thinning where pressure leaves the normal band, long before the absolute minimum
+        normal = lim.get("oil_p", {}).get("rpm_rule", {}).get("normal") or lim.get("oil_p", {}).get("normal")
+        self._oil_film_onset = normal[0] if normal else self._oil_min
         self._hot_limits = {k: lim[k]["warning_high"] for k in ("coolant_t", "cht", "oil_t") if "warning_high" in lim.get(k, {})}
 
     # -- commands ------------------------------------------------------------------------------------------
@@ -189,7 +192,7 @@ class SimEngine:
                                      self.core.thermal.friction_multiplier)
         heat.rpm = self.rotor.engine_rpm
         th_health = dict(hl.get("thermal") or {})
-        th_health.setdefault("oil_p_min_bar", self._oil_min)
+        th_health.setdefault("oil_p_min_bar", self._oil_film_onset)
         th_health["egt_factor"] = hl.get("egt_factor")
         th_health["wall_heat_factor"] = 1.0 + self.fx["knock_wall_heat_gain"] * max(0.0, knock - 1.0)
         th_health["extra_oil_heat_w"] = self.fx["turbo_bearing_oil_heat_w"] * (hl.get("turbo") or {}).get("bearing_wear", 0.0)

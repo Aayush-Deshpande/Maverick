@@ -74,6 +74,7 @@
           },
           "detect_window_s": {"type": "number", "exclusiveMinimum": 0},
           "status_at_full_severity": {"enum": ["ADVISORY", "CAUTION", "NO-GO"]},
+          "immediate_no_go": {"type": "boolean", "description": "hazard (e.g. fire risk): a confident diagnosis is NO-GO at once, not graded by severity (D60)"},
           "ata_chapter": {"type": "string"},
           "maintenance_action": {"$ref": "#/$defs/sourced_text"},
           "mitigation_inflight": {"$ref": "#/$defs/sourced_text"},

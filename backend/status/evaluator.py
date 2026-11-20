@@ -7,7 +7,9 @@ diagnosis hypotheses and time-to-limit predictions. It never reads injected faul
 Rules (P Step 2.2):
   warning band (reading with quality OK)      -> NO-GO
   caution band (outside normal, inside warning; or above a time-limited value too long) -> CAUTION
-  hypothesis posterior >= threshold           -> that fault's status_at_full_severity (registry)
+  hypothesis posterior >= threshold           -> that fault's status_at_full_severity graded by its severity
+                                                 estimate (D60: one level lower until the estimate reaches
+                                                 hypothesis_grading; registry immediate_no_go faults are not graded)
   time-to-limit < mission remaining           -> CAUTION "will exceed <limit> in <t>"
   one quarantined sensor                       -> ADVISORY;  two on one subsystem -> CAUTION
   engine_state FAILED                          -> NO-GO;     OFF -> ENGINE_OFF
@@ -93,6 +95,9 @@ class StatusEvaluator:
         self.margin = float(sc["exit_margin_fraction_of_band"]["value"])
         self.hold_s = float(sc["exit_hold_s"]["value"])
         self.posterior_min = float(sc["hypothesis_posterior_min"]["value"])
+        grading = sc["hypothesis_grading"]["value"]
+        self.no_go_at_severity = float(grading["no_go_at_severity"])
+        self.advisory_below_severity = float(grading["advisory_below_severity"])
         self.subsystem = sc["subsystems"]["map"]
         self._active: Dict[str, _Active] = {}
         self._band: Dict[str, tuple] = {}
@@ -106,6 +111,15 @@ class StatusEvaluator:
         self._acknowledged = True
 
     # -- evaluation -----------------------------------------------------------------------------------------
+    def graded_level(self, h: Dict[str, Any]) -> str:
+        """D60: a diagnosis alone is one level below its registry level until the severity estimate says otherwise."""
+        full, sev = h["status_at_full_severity"], h.get("severity")
+        if full == "NO-GO" and not h.get("immediate_no_go"):
+            return "NO-GO" if sev is not None and sev >= self.no_go_at_severity else "CAUTION"
+        if full == "CAUTION" and sev is not None and sev < self.advisory_below_severity:
+            return "ADVISORY"
+        return full
+
     def evaluate(self, t: float, frame: Any, engine_state: Optional[str] = None,
                  quarantined: Iterable[str] = (), hypotheses: Iterable[Dict[str, Any]] = (),
                  time_to_limit: Iterable[Dict[str, Any]] = ()) -> StatusResult:
@@ -120,8 +134,11 @@ class StatusEvaluator:
         found += self._sensor_reasons(q)
         for h in hypotheses:
             if h.get("posterior", 0.0) >= self.posterior_min and h.get("status_at_full_severity"):
-                found.append((Reason("HYPOTHESIS", h["status_at_full_severity"],
-                                     f"{h['fault_id']} {h.get('name', '')} suspected (posterior {h['posterior']:.2f})",
+                level = self.graded_level(h)
+                sev = h.get("severity")
+                found.append((Reason("HYPOTHESIS", level,
+                                     f"{h['fault_id']} {h.get('name', '')} suspected (posterior {h['posterior']:.2f}"
+                                     + (f", severity {sev:.2f}" if sev is not None else "") + ")",
                                      fault_id=h["fault_id"], value=h["posterior"]), None, None))
         for p in time_to_limit:
             if p.get("time_to_limit_s") is not None and p.get("mission_remaining_s") is not None \

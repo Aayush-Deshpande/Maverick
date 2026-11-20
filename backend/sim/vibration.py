@@ -40,7 +40,8 @@ class Vibration:
         return abs(sum(t * p for t, p in zip(torques_by_firing, phasors))) / n
 
     def orders(self, cylinder_torque: Sequence[float], torque_fraction: float, prop_rpm: float,
-               prop_imbalance: float = 0.0, gear_damage: float = 0.0, mount_degradation: float = 0.0) -> Dict[str, float]:
+               prop_imbalance: float = 0.0, gear_damage: float = 0.0, mount_degradation: float = 0.0,
+               bearing_looseness: float = 0.0) -> Dict[str, float]:
         """cylinder_torque: relative torque per cylinder (index = cylinder number - 1), 1.0 = healthy."""
         ph = self.ph
         spread = ph["manufacturing_spread"]
@@ -53,7 +54,8 @@ class Vibration:
         mount = 1.0 + (ph["mount_gain"] - 1.0) * mount_degradation
         out = {
             "0.5X": gain * load * self._order(t, 0.5) / mean * mount * ph["low_order_gain"],
-            "1X": gain * load * self._order(t, 1.0) / mean * mount * ph["low_order_gain"],
+            "1X": (gain * load * self._order(t, 1.0) / mean * ph["low_order_gain"]
+                   + ph["bearing_1x_mm_s"] * bearing_looseness) * mount,    # F26: worn bearings let the crank run out
             "firing": gain * load * self._order(t, self.n_cyl / 2) / mean * mount,
             "prop_1X": ph["prop_1x_mm_s"] * (1 + (ph["prop_imbalance_gain"] - 1) * prop_imbalance) * mount
                        * (max(prop_rpm, 0.0) / self.prop_rpm_ref) ** 2,

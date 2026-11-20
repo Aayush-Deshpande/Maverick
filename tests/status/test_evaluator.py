@@ -98,3 +98,35 @@ def test_t_sts_5_hysteresis_and_latch(ev):
     assert st.level == "NO-GO" and st.latched and st.reasons[0].code == "LATCHED"
     ev.acknowledge()
     assert ev.evaluate(t + 41, frame(oil_t=100.0), engine_state="RUNNING").level == "GO"
+
+
+def test_d60_a_diagnosis_alone_is_graded_by_its_severity_estimate():
+    """D60 (Prasad 20 Nov): a confident diagnosis is not automatically NO-GO. One level below the registry level until
+    the severity estimate reaches hypothesis_grading; hazards flagged immediate_no_go stay NO-GO at once."""
+    ev = StatusEvaluator(load_engine_config(ENGINE))
+    g = load_status_config()["hypothesis_grading"]["value"]
+    h = {"fault_id": "F23", "posterior": 0.9, "status_at_full_severity": "NO-GO"}
+    assert ev.graded_level({**h, "severity": 1.0}) == "CAUTION"
+    assert ev.graded_level({**h, "severity": g["no_go_at_severity"]}) == "NO-GO"
+    assert ev.graded_level({**h, "severity": None}) == "CAUTION"
+    assert ev.graded_level({**h, "severity": 0.2, "immediate_no_go": True}) == "NO-GO"
+    c = {"fault_id": "F25", "posterior": 0.9, "status_at_full_severity": "CAUTION"}
+    assert ev.graded_level({**c, "severity": g["advisory_below_severity"] / 2}) == "ADVISORY"
+    assert ev.graded_level({**c, "severity": 1.0}) == "CAUTION"
+
+
+@pytest.mark.slow
+def test_desert_heat_is_expected_not_diagnosed_as_a_fault():
+    """Environment-aware (Prasad 20 Nov): a healthy engine on an ISA+30 desert day runs hotter, and the twin expects
+    it, so no fault is confidently diagnosed. Certified limits stay absolute (a red line is a red line)."""
+    from backend.runtime.engine_runtime import EngineRuntime
+    rt = EngineRuntime(ENGINE, seed=5)
+    rt.calibrate()
+    rt.set_levers(oat_c=45.0)                                      # Thar summer, near sea level
+    confident = 0
+    for _ in range(600):
+        tick = rt.tick()
+        min_p = load_status_config()["hypothesis_posterior_min"]["value"]
+        confident += any(h.get("fault_id") and (h.get("posterior") or 0) >= min_p
+                         for h in getattr(tick, "hypotheses", None) or [])
+    assert confident == 0

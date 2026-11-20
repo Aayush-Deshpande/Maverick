@@ -245,10 +245,15 @@
       "status": "ASSUMED",
       "ref": "oil pressure at the calibration point (inside the normal band)"
     },
+    "cooler_flow_exponent": {
+      "value": 0.5,
+      "status": "ASSUMED",
+      "ref": "oil-cooler heat rejection ~ (oil flow fraction)^0.5 (heat-exchanger effectiveness falls with flow; pump flow = pump_health). D59"
+    },
     "low_pressure_friction_gain": {
       "value": 3.0,
       "status": "ASSUMED",
-      "ref": "boundary lubrication: bearing friction x (1 + gain * deficit^2) below the minimum pressure (seizure chain, R 21.4)"
+      "ref": "boundary lubrication: bearing friction x (1 + gain * deficit^2) once oil pressure leaves the normal band (lower edge from configs/engines operating_limits; D59); seizure still uses the minimum (seizure chain, R 21.4)"
     }
   },
   "vibration": {
@@ -286,6 +291,11 @@
       "value": 2.5,
       "status": "ASSUMED",
       "ref": "F29: transmissibility multiplier of all orders at full severity"
+    },
+    "bearing_1x_mm_s": {
+      "value": 1.2,
+      "status": "ASSUMED",
+      "ref": "1X vibration added per unit of main-bearing looseness (clearance growth / nominal; F26 full severity = 0.5 -> +0.6 mm/s). Order of magnitude from ISO 10816 class boundaries for small machines (~0.7-1.8 mm/s steps); D59"
     },
     "low_order_gain": {
       "value": 10.0,
@@ -359,7 +369,7 @@
       "ref": "SI dual ignition: one circuit lost halves ignition energy (slower burn) (R 22 F04)"
     },
     "lane_loss_timing_error_deg": {
-      "value": 4.0,
+      "value": 7.0,
       "status": "ASSUMED",
       "ref": "single-plug burn is slower: effective phasing error after a lane loss"
     },

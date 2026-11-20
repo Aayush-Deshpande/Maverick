@@ -63,8 +63,9 @@ def status_hypotheses(hypotheses: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     for h in hypotheses:
         if h["kind"] == "NOMINAL":
             continue
-        level = SENSOR_STATUS if h["kind"] == "SENSOR" else reg.get(h["fault_id"]).raw.get("status_at_full_severity")
-        out.append({**h, "status_at_full_severity": level})
+        raw = {} if h["kind"] == "SENSOR" else reg.get(h["fault_id"]).raw
+        level = SENSOR_STATUS if h["kind"] == "SENSOR" else raw.get("status_at_full_severity")
+        out.append({**h, "status_at_full_severity": level, "immediate_no_go": bool(raw.get("immediate_no_go"))})
     return out
 
 

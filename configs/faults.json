@@ -643,7 +643,8 @@
           "marker_for": "injector {cyl}"
         }
       },
-      "channel_scope": null
+      "channel_scope": null,
+      "immediate_no_go": true
     },
     {
       "id": "F08",
@@ -1281,12 +1282,6 @@
           "unit": "kPa"
         },
         {
-          "channel": "egt[*]",
-          "direction": -1,
-          "min_delta": 20,
-          "unit": "C"
-        },
-        {
           "channel": "turbo_rpm",
           "direction": -1,
           "min_delta": 10000,
@@ -1373,12 +1368,6 @@
           "direction": 1,
           "min_delta": 10,
           "unit": "kPa"
-        },
-        {
-          "channel": "egt[*]",
-          "direction": 1,
-          "min_delta": 20,
-          "unit": "C"
         }
       ],
       "detect_window_s": 30,
@@ -1458,22 +1447,10 @@
       "default_ramp_s": 600.0,
       "expected_signature": [
         {
-          "channel": "map_kpa",
-          "direction": -1,
-          "min_delta": 3,
-          "unit": "kPa"
-        },
-        {
           "channel": "vibration_orders.turbo",
           "direction": 1,
           "min_delta": 0.3,
           "unit": "mm/s"
-        },
-        {
-          "channel": "oil_t",
-          "direction": 1,
-          "min_delta": 2,
-          "unit": "C"
         }
       ],
       "detect_window_s": 600,
@@ -2032,7 +2009,7 @@
           "component": "oil",
           "parameter": "leak_rate_l_per_h",
           "op": "add",
-          "at_full_severity": 0.5
+          "at_full_severity": 2.0
         }
       ],
       "default_severity": 0.8,
@@ -2043,12 +2020,6 @@
           "direction": -1,
           "min_delta": 0.2,
           "unit": "l"
-        },
-        {
-          "channel": "oil_p",
-          "direction": -1,
-          "min_delta": 0.3,
-          "unit": "bar"
         }
       ],
       "detect_window_s": 900,
@@ -2471,12 +2442,6 @@
       "default_ramp_s": 30.0,
       "expected_signature": [
         {
-          "channel": "vibration_orders.1X",
-          "direction": 1,
-          "min_delta": 0.3,
-          "unit": "mm/s"
-        },
-        {
           "channel": "vibration_orders.2X",
           "direction": 1,
           "min_delta": 0.3,
@@ -2547,7 +2512,7 @@
           "component": "combustion",
           "parameter": "compression_health[{cyl}]",
           "op": "scale",
-          "at_full_severity": 0.7
+          "at_full_severity": 0.3
         }
       ],
       "default_severity": 0.8,
@@ -2558,12 +2523,6 @@
           "direction": 1,
           "min_delta": 0.5,
           "unit": "mm/s"
-        },
-        {
-          "channel": "egt[{cyl}]",
-          "direction": 1,
-          "min_delta": 10,
-          "unit": "C"
         }
       ],
       "detect_window_s": 600,

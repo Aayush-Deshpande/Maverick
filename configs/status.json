@@ -68,5 +68,13 @@
     "SENSOR_QUARANTINED": "Sensor not trusted: use the related readings; schedule a sensor check.",
     "HYPOTHESIS": "Suspected fault: see the diagnosis for the recommended action.",
     "LATCHED": "A NO-GO occurred: review the cause and acknowledge before the next flight."
+  },
+  "hypothesis_grading": {
+    "value": {
+      "no_go_at_severity": 1.5,
+      "advisory_below_severity": 0.5
+    },
+    "status": "ASSUMED",
+    "ref": "D60 (Prasad 20 Nov: 'directly NO-GO can be extreme'; audit R 22 e.g. F23 'CAUTION at band edge, NO-GO below minimum'; P Step 2.2 'scaled by severity estimate'). A confident diagnosis alone gives one level below the registry's full-severity level; it reaches the full level when the isolator's severity estimate (1 = the calibrated full-severity signature) is at least no_go_at_severity, and a CAUTION-level fault drops to ADVISORY below advisory_below_severity. Limits (warning band), engine FAILED and registry immediate_no_go faults are NO-GO at once, unchanged."
   }
 }
