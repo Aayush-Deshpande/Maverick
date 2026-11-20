@@ -1,0 +1,7804 @@
+[
+  {
+    "path": "backend/__init__.py",
+    "lines": 1,
+    "purpose": "",
+    "symbols": [],
+    "imports": [],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/ml_runtime_lock.py",
+    "lines": 45,
+    "purpose": "Process-Wide First-Import Lock for `transformers`-Dependent Engines.\nDRDO / iDEX Problem Statement ID: 26054",
+    "symbols": [],
+    "imports": [],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/osacbm.py",
+    "lines": 287,
+    "purpose": "OSA-CBM / ISO 13374 architecture mapping \u2014 F34.",
+    "symbols": [
+      {
+        "name": "Layer",
+        "line": 39,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "ModuleRegistration",
+        "line": 66,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "check_layering",
+        "line": 210,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "coverage",
+        "line": 227,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "architecture_markdown",
+        "line": 246,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/agent/__init__.py",
+    "lines": 3,
+    "purpose": "",
+    "symbols": [],
+    "imports": [
+      "diagnostic_agent"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/agent/copilot.py",
+    "lines": 1261,
+    "purpose": "Agentic Mission Copilot & Tactical Flight Assistant.\nDRDO / iDEX Problem Statement ID: 26054",
+    "symbols": [
+      {
+        "name": "_trim_to_complete_sentence",
+        "line": 127,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_strip_markdown_for_speech",
+        "line": 148,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "MissionCopilot",
+        "line": 193,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "backend.agent.diagnostic_agent",
+      "backend.agent.llm_engine",
+      "backend.knowledge.retrieval.local_store",
+      "backend.voice.conversation",
+      "pathlib",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/agent/diagnostic_agent.py",
+    "lines": 343,
+    "purpose": "Cognitive Diagnostic Agent & ATA Citation Reasoner \u2014 Plane 2\nDRDO / iDEX Problem Statement ID: 26054",
+    "symbols": [
+      {
+        "name": "DiagnosticDirective",
+        "line": 21,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "DiagnosticAgent",
+        "line": 234,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/agent/flight_intent.py",
+    "lines": 149,
+    "purpose": "Natural-Language Flight-Vector Intent Engine (PRD F10).\nDRDO / iDEX Problem Statement ID: 26054",
+    "symbols": [
+      {
+        "name": "FlightIntent",
+        "line": 60,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "parse_flight_intent",
+        "line": 89,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_repo_root",
+        "line": 104,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "default_queue_path",
+        "line": 109,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "write_flight_command",
+        "line": 113,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "handle_flight_command_text",
+        "line": 141,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/agent/llm_engine.py",
+    "lines": 491,
+    "purpose": "Local LLM Reasoning Engine \u2014 served via Ollama (GGUF, GPU-offloaded)\nDRDO / iDEX Problem Statement ID: 26054",
+    "symbols": [
+      {
+        "name": "LocalLLMEngine",
+        "line": 122,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "dotenv",
+      "google",
+      "google.genai",
+      "pathlib",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/alarms/rationalisation.py",
+    "lines": 148,
+    "purpose": "ISA-18.2 Compliant Alarm Management and Flood Suppression (B6.3, VIS-06).",
+    "symbols": [
+      {
+        "name": "AlarmPriority",
+        "line": 18,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "AlarmState",
+        "line": 25,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "RationalisedAlarmSpec",
+        "line": 33,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "ActiveAlarm",
+        "line": 44,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "ISA18AlarmManager",
+        "line": 92,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "enum",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/core/__init__.py",
+    "lines": 9,
+    "purpose": "",
+    "symbols": [],
+    "imports": [
+      "frame"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/core/channels.py",
+    "lines": 39,
+    "purpose": "Channel registry (U2): the canonical channel list is DERIVED from the engine profile, never typed as CHT_1..4.",
+    "symbols": [
+      {
+        "name": "ChannelSpec",
+        "line": 15,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "channel_specs",
+        "line": 23,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "channel_names",
+        "line": 38,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.physics.engine_config",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/core/cycle_block.py",
+    "lines": 48,
+    "purpose": "CycleBlock (INTERFACES Sec 3): high-rate telemetry representation for one 720-degree engine cycle.",
+    "symbols": [
+      {
+        "name": "WaveformChannel",
+        "line": 16,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "CycleBlock",
+        "line": 24,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/core/frame.py",
+    "lines": 232,
+    "purpose": "Canonical low-rate telemetry contract -- B1.1.",
+    "symbols": [
+      {
+        "name": "Frame",
+        "line": 56,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "FaultTruth",
+        "line": 151,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "TruthRecord",
+        "line": 163,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "frame_from_plant",
+        "line": 188,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "truth_from_plant",
+        "line": 218,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/core/limits.py",
+    "lines": 43,
+    "purpose": "Operating-limit (redline) evaluation from the engine profile (U3).  Cylinder-count agnostic.",
+    "symbols": [
+      {
+        "name": "Exceedance",
+        "line": 16,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "check_limits",
+        "line": 25,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.core.frame",
+      "backend.physics.engine_config",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/core/pipeline.py",
+    "lines": 83,
+    "purpose": "OSA-CBM stage executor (B1.3, D05): one pipeline for live, replay and evaluation.",
+    "symbols": [
+      {
+        "name": "Stage",
+        "line": 19,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "StageStats",
+        "line": 28,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "FunctionStage",
+        "line": 39,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "Pipeline",
+        "line": 51,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.core.frame",
+      "backend.osacbm",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/core/profile.py",
+    "lines": 169,
+    "purpose": "EngineProfile (U1, D27): Unified profile joining physics config, asset manifest,\nchannels, applicable fault modes, and provenance summary.",
+    "symbols": [
+      {
+        "name": "EngineProfile",
+        "line": 27,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "_compute_provenance_summary",
+        "line": 129,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_load_asset_manifest",
+        "line": 137,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "load_profile",
+        "line": 149,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "load_all_profiles",
+        "line": 166,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.core.channels",
+      "backend.physics.engine_config",
+      "dataclasses",
+      "pathlib",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/datasets/aces.py",
+    "lines": 86,
+    "purpose": "Synthetic ACES-shaped scenario generator (not a NASA ACES file loader).",
+    "symbols": [
+      {
+        "name": "ACESLoader",
+        "line": 18,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.core.frame",
+      "backend.datasets.base",
+      "pathlib",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/datasets/alfa.py",
+    "lines": 87,
+    "purpose": "Synthetic ALFA-shaped scenario generator (not an ALFA dataset file loader).",
+    "symbols": [
+      {
+        "name": "ALFALoader",
+        "line": 19,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.core.frame",
+      "backend.datasets.base",
+      "pathlib",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/datasets/base.py",
+    "lines": 70,
+    "purpose": "Universal Dataset Abstraction and Metadata Contracts (B7.1, CAP-07, D19, D35).",
+    "symbols": [
+      {
+        "name": "EvidenceClass",
+        "line": 20,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "DatasetManifest",
+        "line": 28,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "DatasetRecord",
+        "line": 42,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "BaseDatasetLoader",
+        "line": 51,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "abc",
+      "backend.core.frame",
+      "dataclasses",
+      "enum",
+      "pathlib",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/datasets/battery.py",
+    "lines": 88,
+    "purpose": "Synthetic NASA PCoE-shaped scenario generator (not a NASA battery-file loader).",
+    "symbols": [
+      {
+        "name": "BatteryLoader",
+        "line": 19,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.core.frame",
+      "backend.datasets.base",
+      "pathlib",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/datasets/cmapss.py",
+    "lines": 103,
+    "purpose": "Synthetic C-MAPSS-shaped scenario generator (not a NASA C-MAPSS file loader).",
+    "symbols": [
+      {
+        "name": "CMAPSSLoader",
+        "line": 19,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.core.frame",
+      "backend.datasets.base",
+      "pathlib",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/datasets/cwru.py",
+    "lines": 91,
+    "purpose": "Synthetic CWRU-shaped scenario generator (not a CWRU signal-file loader).",
+    "symbols": [
+      {
+        "name": "CWRULoader",
+        "line": 20,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.core.frame",
+      "backend.datasets.base",
+      "pathlib",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/datasets/default_3500.py",
+    "lines": 116,
+    "purpose": "Synthetic Multi-Engine 3500-Run Benchmark Dataset Loader (B7.7, BENCH-06, D19).",
+    "symbols": [
+      {
+        "name": "Default3500Loader",
+        "line": 20,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.core.frame",
+      "backend.datasets.base",
+      "backend.physics.engine_config",
+      "pathlib",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/detect/__init__.py",
+    "lines": 10,
+    "purpose": "Calibrated-residual detection stack (W1/W11): per-tail calibration, cheap scorers, conformal thresholds,\npersistence gate, and the sparse reservoir tier. Consumes canonical ``Frame`` only.",
+    "symbols": [],
+    "imports": [
+      "backend.detect.calibration",
+      "backend.detect.detector",
+      "backend.detect.reservoir",
+      "backend.detect.scorers"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/detect/calibration.py",
+    "lines": 146,
+    "purpose": "Per-tail calibration (\"twin-lite\") -- backlog W1, decision D31.",
+    "symbols": [
+      {
+        "name": "_design",
+        "line": 30,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_command",
+        "line": 35,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_measure",
+        "line": 41,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "TailCalibration",
+        "line": 53,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.core.frame",
+      "pathlib",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/detect/detector.py",
+    "lines": 120,
+    "purpose": "ResidualDetector -- calibrated-residual detector with split-conformal thresholds and a persistence gate\n(backlog W1, decisions D31/D36).",
+    "symbols": [
+      {
+        "name": "DetectionResult",
+        "line": 31,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "PersistenceGate",
+        "line": 57,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "ResidualDetector",
+        "line": 74,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "conformal_threshold",
+        "line": 115,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.core.frame",
+      "backend.detect.calibration",
+      "backend.detect.scorers",
+      "collections",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/detect/reservoir.py",
+    "lines": 111,
+    "purpose": "Sparse reservoir tier (backlog W11, decision D36) -- temporal detector on calibrated features.",
+    "symbols": [
+      {
+        "name": "_scale",
+        "line": 26,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "connectome_matrix",
+        "line": 34,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "random_matrix",
+        "line": 47,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "Reservoir",
+        "line": 55,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "pathlib",
+      "scipy",
+      "scipy.sparse.linalg",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/detect/scorers.py",
+    "lines": 68,
+    "purpose": "Cheap anomaly scorers over calibrated feature vectors (backlog W1).",
+    "symbols": [
+      {
+        "name": "FlyBloomScorer",
+        "line": 17,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "Mahalanobis",
+        "line": 48,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "MaxAbsZ",
+        "line": 61,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.ml.flyhash_novelty"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/diagnose/active.py",
+    "lines": 76,
+    "purpose": "Active Diagnosis and Expected Information Gain Test Selection (B5.4, FDP-03, D11).",
+    "symbols": [
+      {
+        "name": "TestRequest",
+        "line": 20,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "ActiveDiagnosticPlanner",
+        "line": 31,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.diagnose.bn",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/diagnose/bn.py",
+    "lines": 128,
+    "purpose": "Diagnostic Bayesian Network and Hypothesis Ranking (B5.3, FDP-02..09, AIM-02, D11).",
+    "symbols": [
+      {
+        "name": "Evidence",
+        "line": 25,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "Hypothesis",
+        "line": 36,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "DiagnosticBayesianNetwork",
+        "line": 45,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.core.frame",
+      "backend.physics.engine_config",
+      "dataclasses",
+      "pathlib",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/diagnose/explain.py",
+    "lines": 78,
+    "purpose": "Audience-Tailored Explanation Generator and XAI Metrics (B5.5, INN-06, VIS-02..04).",
+    "symbols": [
+      {
+        "name": "ExplanationBundle",
+        "line": 30,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "ExplanationGenerator",
+        "line": 40,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.diagnose.bn",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/dsp/__init__.py",
+    "lines": 5,
+    "purpose": "DSP Package -- Order Tracking and Vibration Signal Processing for Propulsion Digital Twin.",
+    "symbols": [],
+    "imports": [
+      "backend.dsp.order_tracker"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/dsp/order_tracker.py",
+    "lines": 179,
+    "purpose": "Order-Tracking Vibration Digital Signal Processing (DSP) Module (B2.4, HMS-09, PS-26054).",
+    "symbols": [
+      {
+        "name": "OrderSpectrumReport",
+        "line": 20,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "OrderTracker",
+        "line": 45,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.physics.engine_config",
+      "backend.physics.structure",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/economics/impact.py",
+    "lines": 98,
+    "purpose": "Fleet Economics, Mission Reliability, and Financial Impact Model (V7, INN-06).",
+    "symbols": [
+      {
+        "name": "CostModelParameters",
+        "line": 16,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "FleetEconomicMetrics",
+        "line": 25,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "FleetEconomicsModel",
+        "line": 37,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/edge/__init__.py",
+    "lines": 3,
+    "purpose": "",
+    "symbols": [],
+    "imports": [
+      "compressor"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/edge/compressor.py",
+    "lines": 272,
+    "purpose": "Edge feature compression, bandwidth and power accounting \u2014 F08 / F67 / F68.",
+    "symbols": [
+      {
+        "name": "LinkBudget",
+        "line": 44,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "EdgeFeatureFrame",
+        "line": 59,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "EdgeCompressor",
+        "line": 115,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "PowerBudget",
+        "line": 200,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "LatencyBudget",
+        "line": 238,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/edge/node.py",
+    "lines": 88,
+    "purpose": "EdgeNode -- persistence-gated scalar downlink with bandwidth, latency and power accounting (W4, D34).",
+    "symbols": [
+      {
+        "name": "EdgeProfile",
+        "line": 28,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "EdgeNode",
+        "line": 38,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.core.frame",
+      "backend.detect",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/evaluation/__init__.py",
+    "lines": 55,
+    "purpose": "ANUMAAN evaluation package.",
+    "symbols": [],
+    "imports": [
+      "conformal",
+      "damage_accumulation",
+      "prognostic_metrics",
+      "threshold_baseline"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/evaluation/conformal.py",
+    "lines": 237,
+    "purpose": "Conformal prediction for RUL intervals \u2014 F12 / F53.",
+    "symbols": [
+      {
+        "name": "Interval",
+        "line": 44,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "_conformal_quantile",
+        "line": 71,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "SplitConformalRUL",
+        "line": 88,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "AdaptiveConformal",
+        "line": 149,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "empirical_coverage",
+        "line": 192,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "coverage_curve",
+        "line": 218,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/evaluation/damage_accumulation.py",
+    "lines": 313,
+    "purpose": "Physics-of-failure damage accumulation \u2014 F36 / F37.",
+    "symbols": [
+      {
+        "name": "Cycle",
+        "line": 53,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "extract_turning_points",
+        "line": 65,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "rainflow_cycles",
+        "line": 92,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "CoffinManson",
+        "line": 134,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "ShockCoolingLaw",
+        "line": 166,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "ComponentDamage",
+        "line": 195,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "DamageAccumulator",
+        "line": 224,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "accumulate_from_series",
+        "line": 302,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/evaluation/harness.py",
+    "lines": 422,
+    "purpose": "Evaluation harness \u2014 closes G03, implements F18.",
+    "symbols": [
+      {
+        "name": "Scenario",
+        "line": 44,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "ScenarioResult",
+        "line": 64,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "EvaluationHarness",
+        "line": 123,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "ml.crank_diagnostics",
+      "plant.virtual_engine",
+      "threshold_baseline",
+      "twin.residual_detector",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/evaluation/prognostic_metrics.py",
+    "lines": 206,
+    "purpose": "Standard PHM prognostic performance metrics \u2014 F60.",
+    "symbols": [
+      {
+        "name": "PrognosticSeries",
+        "line": 48,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "_alpha_bounds",
+        "line": 76,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "prognostic_horizon",
+        "line": 82,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "alpha_lambda",
+        "line": 104,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "relative_accuracy",
+        "line": 124,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "convergence",
+        "line": 139,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "evaluate",
+        "line": 178,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/evaluation/threshold_baseline.py",
+    "lines": 217,
+    "purpose": "Conventional threshold monitor, as a measured baseline \u2014 F13.",
+    "symbols": [
+      {
+        "name": "Limit",
+        "line": 39,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "Alarm",
+        "line": 57,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "ThresholdMonitor",
+        "line": 97,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "compare_detection",
+        "line": 161,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "false_alarm_rate",
+        "line": 206,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/evaluation/validation.py",
+    "lines": 357,
+    "purpose": "External validation, protocol correctness and novelty handling \u2014 F14/F16/F17/F62/F63.",
+    "symbols": [
+      {
+        "name": "ResidualShield",
+        "line": 53,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "NoveltyGate",
+        "line": 127,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "ad_scores",
+        "line": 189,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "Sim2RealReport",
+        "line": 248,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "validate_against_aces",
+        "line": 276,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/fadec_emulator/emulator.py",
+    "lines": 122,
+    "purpose": "FADEC Emulator with Cylinder Balancing, UDS Diagnostics, and XCP (B2.6, OPT-01/02, TEX-05, D09).",
+    "symbols": [
+      {
+        "name": "UDSResponse",
+        "line": 24,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "FADECEmulator",
+        "line": 32,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.core.frame",
+      "backend.physics.engine_config",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/federation/aggregator.py",
+    "lines": 110,
+    "purpose": "Federated Aggregator with Differential Privacy and Canary Validation Gate (W7, INN-04, D28).",
+    "symbols": [
+      {
+        "name": "AggregationResult",
+        "line": 19,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "FederatedAggregator",
+        "line": 29,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.federation.colony",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/federation/colony.py",
+    "lines": 67,
+    "purpose": "Federated Edge Colony Node and Local Update Extraction (W7, INN-04, D28).",
+    "symbols": [
+      {
+        "name": "ColonyModelDelta",
+        "line": 15,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "ColonyNode",
+        "line": 23,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/foundation/forecast_chronos.py",
+    "lines": 93,
+    "purpose": "Probabilistic Time-Series Forecasting Interface (W8, INN-06, D35).",
+    "symbols": [
+      {
+        "name": "ForecastResult",
+        "line": 18,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "TimeSeriesForecaster",
+        "line": 28,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/foundation/tabpfn_wrapper.py",
+    "lines": 79,
+    "purpose": "TabPFN In-Context Tabular Classifier Wrapper (W8, INN-06, D35).",
+    "symbols": [
+      {
+        "name": "TabularPrediction",
+        "line": 18,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "InContextTabularClassifier",
+        "line": 25,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/foundation/text_classifier.py",
+    "lines": 94,
+    "purpose": "Zero-Shot Maintenance Log & PIREP Text Classifier (W10, INN-06, D35).",
+    "symbols": [
+      {
+        "name": "TextClassificationResult",
+        "line": 17,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "MaintenanceTextClassifier",
+        "line": 27,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/graph/__init__.py",
+    "lines": 11,
+    "purpose": "",
+    "symbols": [],
+    "imports": [
+      "mission_graph",
+      "mission_reporter"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/graph/mission_graph.py",
+    "lines": 447,
+    "purpose": "Mission Knowledge Graph & Fleet Intelligence Engine \u2014 Phase J\nDRDO / iDEX Problem Statement ID: 26054",
+    "symbols": [
+      {
+        "name": "SortieNode",
+        "line": 20,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "SubsystemNode",
+        "line": 41,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "AnomalyEventNode",
+        "line": 52,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "MaintenanceActionNode",
+        "line": 70,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "MissionKnowledgeGraph",
+        "line": 89,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/graph/mission_reporter.py",
+    "lines": 246,
+    "purpose": "Post-Flight Mission Reporter \u2014 Phase J\nDRDO / iDEX Problem Statement ID: 26054",
+    "symbols": [
+      {
+        "name": "_fmt_relative",
+        "line": 47,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "MissionReporter",
+        "line": 55,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "backend.graph.mission_graph",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/knowledge/loaders/__init__.py",
+    "lines": 34,
+    "purpose": "Document Loaders and Ingestion Engine for Rotax 912 iS & UAV Manuals.\nDRDO / iDEX Problem Statement ID: 26054",
+    "symbols": [
+      {
+        "name": "load_and_chunk_file",
+        "line": 15,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "backend.knowledge.loaders.chunker",
+      "backend.knowledge.loaders.office_loader",
+      "backend.knowledge.loaders.pdf_loader",
+      "backend.knowledge.loaders.text_loader",
+      "pathlib",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/knowledge/loaders/chunker.py",
+    "lines": 78,
+    "purpose": "Paragraph & Section Text Chunker for Aerospace Technical Documents.\nDRDO / iDEX Problem Statement ID: 26054",
+    "symbols": [
+      {
+        "name": "chunk_document",
+        "line": 12,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/knowledge/loaders/office_loader.py",
+    "lines": 74,
+    "purpose": "Local Office (DOCX / PPTX) Document Loader for Engine Directives.\nDRDO / iDEX Problem Statement ID: 26054",
+    "symbols": [
+      {
+        "name": "load_docx",
+        "line": 13,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "load_pptx",
+        "line": 48,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "docx",
+      "pathlib",
+      "pptx",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/knowledge/loaders/pdf_loader.py",
+    "lines": 57,
+    "purpose": "Local PDF Document Loader for Aerospace & Engine Manuals.\nDRDO / iDEX Problem Statement ID: 26054",
+    "symbols": [
+      {
+        "name": "load_pdf",
+        "line": 13,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "pathlib",
+      "pypdf",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/knowledge/loaders/text_loader.py",
+    "lines": 26,
+    "purpose": "Local Text / Markdown Loader for SOPs, Flight Manuals, and Directives.\nDRDO / iDEX Problem Statement ID: 26054",
+    "symbols": [
+      {
+        "name": "load_text",
+        "line": 10,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "pathlib",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/knowledge/retrieval/__init__.py",
+    "lines": 7,
+    "purpose": "Retrieval and Reranking Service for Rotax 912 iS & DRDO UAV Manuals.\nDRDO / iDEX Problem Statement ID: 26054",
+    "symbols": [],
+    "imports": [
+      "backend.knowledge.retrieval.local_store",
+      "backend.knowledge.retrieval.reranker"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/knowledge/retrieval/embedding_index.py",
+    "lines": 99,
+    "purpose": "Local Semantic Embedding Index for Aerospace Manuals.\nDRDO / iDEX Problem Statement ID: 26054",
+    "symbols": [
+      {
+        "name": "_get_model",
+        "line": 32,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_corpus_fingerprint",
+        "line": 59,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "semantic_rank",
+        "line": 67,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "backend.ml_runtime_lock",
+      "sentence_transformers",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/knowledge/retrieval/local_store.py",
+    "lines": 122,
+    "purpose": "Local Technical Manual Knowledge Store.\nDRDO / iDEX Problem Statement ID: 26054",
+    "symbols": [
+      {
+        "name": "LocalKnowledgeStore",
+        "line": 31,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "backend.knowledge.loaders",
+      "backend.knowledge.retrieval.reranker",
+      "pathlib",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/knowledge/retrieval/reranker.py",
+    "lines": 85,
+    "purpose": "Local Cross-Encoder Semantic Reranking Service for Aerospace Manuals.\nDRDO / iDEX Problem Statement ID: 26054",
+    "symbols": [
+      {
+        "name": "_get_ranker",
+        "line": 16,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "rerank_passages",
+        "line": 28,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "backend.knowledge.retrieval.embedding_index",
+      "flashrank",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/link/link_emulator.py",
+    "lines": 113,
+    "purpose": "Constrained Datalink Emulator and Priority Store-and-Forward (B2.7, INN-07, OPT-03).",
+    "symbols": [
+      {
+        "name": "QueuedPacket",
+        "line": 23,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "DatalinkEmulator",
+        "line": 30,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/maintenance/work_package.py",
+    "lines": 278,
+    "purpose": "Automated Maintenance Work Package Generation and Opportunistic Scheduler (B10.1, B10.2, INN-06).",
+    "symbols": [
+      {
+        "name": "SparePart",
+        "line": 21,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "MaintenanceTask",
+        "line": 29,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "WorkPackage",
+        "line": 43,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "WorkPackageGenerator",
+        "line": 82,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.diagnose.bn",
+      "backend.prognose.rul",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/mission/__init__.py",
+    "lines": 10,
+    "purpose": "",
+    "symbols": [],
+    "imports": [
+      "glide",
+      "prescriptive",
+      "reliability"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/mission/glide.py",
+    "lines": 226,
+    "purpose": "MALE UAV Aerodynamic Glide Polar and Emergency Runway Reachability Module (PS-26054).",
+    "symbols": [
+      {
+        "name": "DiversionAirfield",
+        "line": 19,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "AirfieldReachability",
+        "line": 30,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "GlideAssessment",
+        "line": 56,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "UAVGlidePolar",
+        "line": 104,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/mission/prescriptive.py",
+    "lines": 264,
+    "purpose": "Prescriptive advisory and mission re-planning \u2014 F57 / F58.",
+    "symbols": [
+      {
+        "name": "DerateOption",
+        "line": 44,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "ReplanResult",
+        "line": 81,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "PrescriptiveAdvisor",
+        "line": 111,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "reliability",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/mission/profiles.py",
+    "lines": 107,
+    "purpose": "MALE UAV Multi-Phase Mission Profiles (R10, B1.4, D16).",
+    "symbols": [
+      {
+        "name": "MissionPhase",
+        "line": 17,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "MissionSegment",
+        "line": 31,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "MissionProfile",
+        "line": 42,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "create_standard_male_surveillance_mission",
+        "line": 69,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "create_high_altitude_leh_mission",
+        "line": 91,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "enum",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/mission/reliability.py",
+    "lines": 391,
+    "purpose": "Mission reliability \u2014 F56.",
+    "symbols": [
+      {
+        "name": "components_for_fault",
+        "line": 80,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "MissionPhase",
+        "line": 101,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "MissionProfile",
+        "line": 129,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "ComponentHazard",
+        "line": 181,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "DEFAULT_COMPONENTS",
+        "line": 207,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "MissionReliabilityEngine",
+        "line": 240,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "_wilson_interval",
+        "line": 379,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/ml/__init__.py",
+    "lines": 6,
+    "purpose": "",
+    "symbols": [],
+    "imports": [
+      "rul_estimator"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/ml/anomaly_detector.py",
+    "lines": 410,
+    "purpose": "Residual Autoencoder \u2014 Unsupervised Anomaly Detector\nDRDO / iDEX Problem Statement ID: 26054",
+    "symbols": [
+      {
+        "name": "_relu",
+        "line": 32,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_sigmoid_list",
+        "line": 36,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_matmul_bias",
+        "line": 40,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_mse",
+        "line": 52,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_he_init",
+        "line": 56,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_zeros",
+        "line": 65,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_normalise",
+        "line": 94,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "AutoencoderWeights",
+        "line": 108,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "ResidualAutoencoder",
+        "line": 122,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/ml/crank_diagnostics.py",
+    "lines": 439,
+    "purpose": "Per-cylinder combustion diagnostics from crank angular velocity \u2014 F02/F03/F04/F05/F06.",
+    "symbols": [
+      {
+        "name": "CylinderContribution",
+        "line": 57,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "MisfireReport",
+        "line": 79,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "CrankDiagnostics",
+        "line": 119,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "angular_resample",
+        "line": 311,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "order_spectrum",
+        "line": 347,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "order_features",
+        "line": 363,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "envelope_spectrum",
+        "line": 398,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "collections",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/ml/detection_pipeline.py",
+    "lines": 759,
+    "purpose": "Integrated Real-Time Detection Pipeline \u2014 Plane 1\nDRDO / iDEX Problem Statement ID: 26054",
+    "symbols": [
+      {
+        "name": "ThresholdBaselineReport",
+        "line": 67,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "DiagnosticEvent",
+        "line": 97,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "PipelineState",
+        "line": 116,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "MajorityVoteBuffer",
+        "line": 135,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "DetectionPipeline",
+        "line": 181,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "backend.agent.diagnostic_agent",
+      "backend.ml.anomaly_detector",
+      "backend.ml.flyhash_novelty",
+      "backend.ml.spectral_analyser",
+      "backend.ml.trend_analyser",
+      "backend.physics.sensor_validator",
+      "backend.physics.thermo_model",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/ml/flyhash_novelty.py",
+    "lines": 237,
+    "purpose": "FlyHash sparse coding for vibration/residual novelty detection.",
+    "symbols": [
+      {
+        "name": "residual_and_order_features",
+        "line": 88,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "SparseRandomProjection",
+        "line": 111,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "FlyHashEncoder",
+        "line": 142,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "NoveltyReport",
+        "line": 172,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "FlyNoveltyDetector",
+        "line": 181,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.physics.thermo_model",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/ml/rul_estimator.py",
+    "lines": 217,
+    "purpose": "Rotax 912 iS Prognostics & Remaining Useful Life (RUL) Estimator\nDRDO / iDEX Problem Statement ID: 26054",
+    "symbols": [
+      {
+        "name": "MissionGoNoGoAdvisory",
+        "line": 15,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "RULEstimator",
+        "line": 29,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "backend.physics.thermo_model",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/ml/spectral_analyser.py",
+    "lines": 279,
+    "purpose": "Gearbox FFT Spectral Analyser\nDRDO / iDEX Problem Statement ID: 26054",
+    "symbols": [
+      {
+        "name": "SpectralReport",
+        "line": 33,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "GearboxSpectralAnalyser",
+        "line": 60,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/ml/trend_analyser.py",
+    "lines": 755,
+    "purpose": "Degradation Trend Analyser + Probabilistic RUL Engine\nDRDO / iDEX Problem Statement ID: 26054",
+    "symbols": [
+      {
+        "name": "_linspace",
+        "line": 45,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_least_squares_linear",
+        "line": 52,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_fit_exponential",
+        "line": 77,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_fit_power_law",
+        "line": 92,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_aic",
+        "line": 107,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "DegradationModel",
+        "line": 115,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "ChannelTrendReport",
+        "line": 126,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "RULEstimate",
+        "line": 138,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "GoNoGoAdvisory",
+        "line": 149,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "PrognosticsReport",
+        "line": 159,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "ScoreBuffer",
+        "line": 176,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "DegradationTrendAnalyser",
+        "line": 249,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "ProbabilisticRULEstimator",
+        "line": 447,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "PrognosticsWorker",
+        "line": 616,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/performance/maps.py",
+    "lines": 144,
+    "purpose": "Engine Performance Maps and Atmospheric Scaling (R9, B1.4, D16).",
+    "symbols": [
+      {
+        "name": "AtmosphericState",
+        "line": 21,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "PerformanceMaps",
+        "line": 29,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.physics.engine_config",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/physics/__init__.py",
+    "lines": 14,
+    "purpose": "",
+    "symbols": [],
+    "imports": [
+      "sensor_validator",
+      "thermo_model"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/physics/combustion_ci.py",
+    "lines": 178,
+    "purpose": "CI (Compression Ignition / CRDi) Combustion Physics Model (B2.1).",
+    "symbols": [
+      {
+        "name": "CICombustionParams",
+        "line": 21,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "calc_ignition_delay_deg",
+        "line": 34,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "double_wiebe_mass_burned",
+        "line": 47,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "CICombustionModel",
+        "line": 93,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.physics.engine_config",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/physics/crank_dynamics.py",
+    "lines": 364,
+    "purpose": "Crank-angle-resolved engine dynamics \u2014 F01.",
+    "symbols": [
+      {
+        "name": "EngineGeometry",
+        "line": 52,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "WiebeCombustion",
+        "line": 125,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "CylinderState",
+        "line": 149,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "CrankDynamicsModel",
+        "line": 164,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/physics/engine_config.py",
+    "lines": 312,
+    "purpose": "Engine class as configuration, not hardcoding \u2014 F31.",
+    "symbols": [
+      {
+        "name": "IgnitionMode",
+        "line": 73,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "InductionType",
+        "line": 78,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "CylinderLayout",
+        "line": 84,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "TurbochargerSpec",
+        "line": 110,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "EngineConfig",
+        "line": 123,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "load_engine_config",
+        "line": 296,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "available_engines",
+        "line": 308,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "pathlib",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/physics/exposure.py",
+    "lines": 229,
+    "purpose": "Environmental exposure accumulator \u2014 F40.",
+    "symbols": [
+      {
+        "name": "ExposureRecord",
+        "line": 41,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "ExposureAccumulator",
+        "line": 72,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "pathlib",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/physics/fuel_thermal.py",
+    "lines": 219,
+    "purpose": "Fuel thermal management and cold-fuel risk \u2014 F42.",
+    "symbols": [
+      {
+        "name": "FuelProperties",
+        "line": 41,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "FuelThermalState",
+        "line": 76,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "FuelThermalModel",
+        "line": 101,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/physics/induction.py",
+    "lines": 182,
+    "purpose": "Induction path: air filter restriction and the dust-ingestion wear chain \u2014 F43.",
+    "symbols": [
+      {
+        "name": "DustEnvironment",
+        "line": 40,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "InductionState",
+        "line": 62,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "InductionModel",
+        "line": 90,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/physics/injector_faults.py",
+    "lines": 274,
+    "purpose": "Compression-ignition injector fault library \u2014 F41.",
+    "symbols": [
+      {
+        "name": "InjectorState",
+        "line": 66,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "InjectorFault",
+        "line": 88,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "InjectorBank",
+        "line": 103,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/physics/oil_system.py",
+    "lines": 265,
+    "purpose": "Oil system health: wear-metal spectrum, debris, blow-by \u2014 F39.",
+    "symbols": [
+      {
+        "name": "WearMetalLimits",
+        "line": 63,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "OilState",
+        "line": 85,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "OilSystemModel",
+        "line": 114,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/physics/rail.py",
+    "lines": 110,
+    "purpose": "Common-Rail Hydraulics and Injector Physics Model (B2.2, FDP-03).",
+    "symbols": [
+      {
+        "name": "RailConfig",
+        "line": 21,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "CommonRailHydraulics",
+        "line": 30,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/physics/sensor_validator.py",
+    "lines": 460,
+    "purpose": "Sensor Sanity & Plausibility Validator\nDRDO / iDEX Problem Statement ID: 26054",
+    "symbols": [
+      {
+        "name": "ChannelSanityStatus",
+        "line": 67,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "SanityReport",
+        "line": 79,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "SensorSanityValidator",
+        "line": 101,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "apply_residual_shielding",
+        "line": 409,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "dataclasses",
+      "thermo_model",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/physics/structure.py",
+    "lines": 143,
+    "purpose": "Structural Dynamics and High-Rate Acoustic Waveform Physics (B2.3, B2.4, HMS-09, FDP-09).",
+    "symbols": [
+      {
+        "name": "BearingGeometry",
+        "line": 23,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "StructuralAcoustics",
+        "line": 54,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.physics.engine_config",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/physics/thermo_model.py",
+    "lines": 418,
+    "purpose": "Rotax 912 iS Sport 1D Thermodynamic Physics Model & Residual Calculator\nDRDO / iDEX Problem Statement ID: 26054",
+    "symbols": [
+      {
+        "name": "EnginePhysicalState",
+        "line": 29,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "ResidualVector",
+        "line": 87,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "RotaxThermoModel",
+        "line": 117,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "lookup_performance_map",
+        "line": 411,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/physics/turbo_model.py",
+    "lines": 254,
+    "purpose": "Turbocharger / boosted induction model \u2014 F32.",
+    "symbols": [
+      {
+        "name": "isa_ambient",
+        "line": 50,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "TurboState",
+        "line": 65,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "TurboFaults",
+        "line": 96,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "TurbochargerModel",
+        "line": 105,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "engine_config",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/plant/__init__.py",
+    "lines": 3,
+    "purpose": "",
+    "symbols": [],
+    "imports": [
+      "virtual_engine"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/plant/adapter.py",
+    "lines": 187,
+    "purpose": "Independent-plant adapter \u2014 bridges VirtualEngine into the twin's data path.",
+    "symbols": [
+      {
+        "name": "IndependentPlantAdapter",
+        "line": 95,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.physics.thermo_model",
+      "backend.plant.virtual_engine",
+      "backend.telemetry.can_streamer",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/plant/sensors_hr.py",
+    "lines": 89,
+    "purpose": "High-Rate Sensor Chain Emulation (B2.5, FDP-06).",
+    "symbols": [
+      {
+        "name": "TriggerWheelConfig",
+        "line": 21,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "HighRateSensorChain",
+        "line": 28,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "scipy",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/plant/virtual_engine.py",
+    "lines": 435,
+    "purpose": "Independent virtual engine \u2014 the plant, not the twin. Closes G01.",
+    "symbols": [
+      {
+        "name": "EngineVariation",
+        "line": 67,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "SensorChannel",
+        "line": 97,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "SensorModel",
+        "line": 130,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "VirtualEngine",
+        "line": 164,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "physics.crank_dynamics",
+      "physics.engine_config",
+      "physics.fuel_thermal",
+      "physics.induction",
+      "physics.injector_faults",
+      "physics.oil_system",
+      "physics.turbo_model",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/prognose/rul.py",
+    "lines": 87,
+    "purpose": "Dual-Path Remaining Useful Life (RUL) Prognostics (B6.1, CAP-06, AIM-05, D18).",
+    "symbols": [
+      {
+        "name": "RULEstimate",
+        "line": 19,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "DualPathRULEstimator",
+        "line": 32,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/reliability/__init__.py",
+    "lines": 4,
+    "purpose": "",
+    "symbols": [],
+    "imports": [
+      "fmeca",
+      "isolability"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/reliability/fmeca.py",
+    "lines": 450,
+    "purpose": "FMECA \u2014 failure mode, effects and criticality analysis \u2014 F33.",
+    "symbols": [
+      {
+        "name": "SeverityClass",
+        "line": 36,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "FailureMode",
+        "line": 48,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "FMECA",
+        "line": 108,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "build_default_fmeca",
+        "line": 220,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "pathlib",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/reliability/isolability.py",
+    "lines": 292,
+    "purpose": "Fault detectability and isolability analysis \u2014 F35.",
+    "symbols": [
+      {
+        "name": "IsolabilityReport",
+        "line": 39,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "SignatureMatrix",
+        "line": 77,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "canonical_signature",
+        "line": 258,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "from_fmeca",
+        "line": 276,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/reports/__init__.py",
+    "lines": 5,
+    "purpose": "",
+    "symbols": [],
+    "imports": [],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/reports/mission_bundle.py",
+    "lines": 365,
+    "purpose": "Mission Knowledge Graph -> Report Dump adapter \u2014 DRDO / iDEX PS-26054",
+    "symbols": [
+      {
+        "name": "build_and_write_mission_bundle",
+        "line": 57,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_build_health",
+        "line": 139,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_build_faults",
+        "line": 177,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_build_timeline",
+        "line": 215,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_build_predictions",
+        "line": 294,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_build_actions",
+        "line": 328,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_iso",
+        "line": 364,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "backend.reports.report_dump_writer",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/reports/report_dump_writer.py",
+    "lines": 285,
+    "purpose": "Post-Mission Report Dump Writer \u2014 DRDO / iDEX Problem Statement ID: 26054",
+    "symbols": [
+      {
+        "name": "default_report_root",
+        "line": 73,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "worst_severity",
+        "line": 78,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "format_elapsed",
+        "line": 88,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "ReportDumpWriter",
+        "line": 96,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "summarise_telemetry_csv",
+        "line": 230,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/runtime/__init__.py",
+    "lines": 6,
+    "purpose": "",
+    "symbols": [],
+    "imports": [
+      "backend.runtime.engine_runtime",
+      "backend.runtime.hub",
+      "backend.runtime.levers",
+      "backend.runtime.registry"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/runtime/engine_runtime.py",
+    "lines": 754,
+    "purpose": "EngineRuntime -- one engine profile's simulator + injectors + detector bank (R1/R2/R3/R7, D29, D05).",
+    "symbols": [
+      {
+        "name": "Tick",
+        "line": 56,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "_first_cylinder_index",
+        "line": 77,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "EngineRuntime",
+        "line": 101,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.agent.diagnostic_agent",
+      "backend.core.frame",
+      "backend.detect",
+      "backend.dsp.order_tracker",
+      "backend.evaluation.conformal",
+      "backend.evaluation.damage_accumulation",
+      "backend.mission.glide",
+      "backend.mission.reliability",
+      "backend.physics.engine_config",
+      "backend.physics.sensor_validator",
+      "backend.runtime.levers",
+      "backend.runtime.registry",
+      "backend.runtime.sensor_levers",
+      "backend.sources",
+      "backend.twin.ukf",
+      "backend.twin.validity",
+      "backend.twin.virtual_sensors",
+      "collections",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/runtime/hub.py",
+    "lines": 90,
+    "purpose": "RuntimeHub -- every engine profile runs concurrently; the dropdown selects which one gets the heavy tier\nand the primary stream (R1, D29).  Deterministic: same seeds + same tick count => identical streams.",
+    "symbols": [
+      {
+        "name": "RuntimeHub",
+        "line": 15,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.physics.engine_config",
+      "backend.runtime.engine_runtime",
+      "backend.server.engine_service",
+      "concurrent.futures",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/runtime/levers.py",
+    "lines": 46,
+    "purpose": "Operating levers with first-order dynamics (R3, closes G02).",
+    "symbols": [
+      {
+        "name": "Levers",
+        "line": 13,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "dataclasses"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/runtime/registry.py",
+    "lines": 51,
+    "purpose": "Fault registry (R2, D30): which plant faults an engine profile accepts, and which of them the scalar\nchannels can actually see.  Faults are filtered per profile from the engine config, never hard-coded per engine.",
+    "symbols": [
+      {
+        "name": "FaultSpec",
+        "line": 14,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "_all",
+        "line": 23,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_turbo",
+        "line": 24,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_ci",
+        "line": 25,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "faults_for",
+        "line": 46,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "thermal_visible_faults",
+        "line": 50,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.physics.engine_config",
+      "backend.plant.virtual_engine",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/runtime/sensor_levers.py",
+    "lines": 135,
+    "purpose": "Sensor-layer fault levers (R7, D30): bias, drift, stuck, noise, dropout, and spoofing.",
+    "symbols": [
+      {
+        "name": "SensorFault",
+        "line": 19,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "SensorLevers",
+        "line": 27,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.core.frame",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/security/can_ids.py",
+    "lines": 101,
+    "purpose": "CAN Bus Intrusion Detection System (CAN IDS) (B9.1, INN-07, D17).",
+    "symbols": [
+      {
+        "name": "CANAlert",
+        "line": 18,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "CANIntrusionDetector",
+        "line": 26,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/security/merkle_log.py",
+    "lines": 85,
+    "purpose": "Tamper-Evident Merkle-Sealed Flight Log (B9.1, INN-07, D17).",
+    "symbols": [
+      {
+        "name": "FlightLogEntry",
+        "line": 18,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "MerkleFlightLog",
+        "line": 26,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/server/__init__.py",
+    "lines": 4,
+    "purpose": "Rotax 912 iS MALE UAV Digital Twin \u2014 Laptop Backend Server Package\nDRDO / iDEX Problem Statement ID: 26054",
+    "symbols": [],
+    "imports": [],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/server/engine_api.py",
+    "lines": 256,
+    "purpose": "Engine API (R4): per-engine REST + WebSocket routes over the concurrent RuntimeHub (D29).",
+    "symbols": [
+      {
+        "name": "get_hub",
+        "line": 32,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_rt",
+        "line": 47,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "SelectBody",
+        "line": 54,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "FaultBody",
+        "line": 58,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "LeverBody",
+        "line": 67,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "list_engines",
+        "line": 74,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "select_engine",
+        "line": 79,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "engine_state",
+        "line": 89,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "engine_history",
+        "line": 97,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "engine_events",
+        "line": 150,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "engine_schema",
+        "line": 167,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "inject_fault",
+        "line": 177,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "clear_faults",
+        "line": 208,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "set_levers",
+        "line": 214,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "ws_engine",
+        "line": 219,
+        "kind": "AsyncFunctionDef"
+      },
+      {
+        "name": "ws_fleet",
+        "line": 237,
+        "kind": "AsyncFunctionDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.core.profile",
+      "backend.runtime",
+      "backend.runtime.registry",
+      "fastapi",
+      "pydantic",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/server/engine_service.py",
+    "lines": 1043,
+    "purpose": "Authoritative Real-Time Engine & Analytics Service\nRotax 912 iS MALE UAV Digital Twin \u2014 Laptop Backend Server\nDRDO / iDEX Problem Statement ID: 26054",
+    "symbols": [
+      {
+        "name": "EngineStateService",
+        "line": 97,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "backend.agent.copilot",
+      "backend.agent.diagnostic_agent",
+      "backend.core.frame",
+      "backend.dsp.order_tracker",
+      "backend.graph.mission_graph",
+      "backend.graph.mission_reporter",
+      "backend.mission.glide",
+      "backend.mission.reliability",
+      "backend.ml.detection_pipeline",
+      "backend.ml.rul_estimator",
+      "backend.ml.trend_analyser",
+      "backend.physics.engine_config",
+      "backend.physics.sensor_validator",
+      "backend.physics.thermo_model",
+      "backend.plant.adapter",
+      "backend.reports.mission_bundle",
+      "backend.server.schemas",
+      "backend.telemetry.can_streamer",
+      "backend.twin.validity",
+      "backend.twin.virtual_sensors",
+      "backend.voice.stt_engine",
+      "backend.voice.tts_engine",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/server/main.py",
+    "lines": 623,
+    "purpose": "FastAPI Real-Time Telemetry & Control Server\nRotax 912 iS MALE UAV Digital Twin \u2014 Laptop Backend Server\nDRDO / iDEX Problem Statement ID: 26054",
+    "symbols": [
+      {
+        "name": "AIAskRequest",
+        "line": 67,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "VoiceResetRequest",
+        "line": 71,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "MaintenanceSignoffRequest",
+        "line": 75,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "FlightCommandRequest",
+        "line": 79,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "lifespan",
+        "line": 99,
+        "kind": "AsyncFunctionDef"
+      },
+      {
+        "name": "serve_threejs_twin",
+        "line": 143,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "broadcast_telemetry_loop",
+        "line": 174,
+        "kind": "AsyncFunctionDef"
+      },
+      {
+        "name": "root",
+        "line": 212,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "get_health",
+        "line": 240,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "get_current_state",
+        "line": 255,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "post_control_command",
+        "line": 262,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "export_cbm_debrief",
+        "line": 272,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "get_fleet_cbm_summary",
+        "line": 284,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "get_region_comparison",
+        "line": 297,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "list_replay_manifests",
+        "line": 309,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "get_replay_manifest",
+        "line": 315,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "get_replay_frame",
+        "line": 324,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "post_flight_command",
+        "line": 333,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "list_maintenance_work_orders",
+        "line": 351,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "signoff_maintenance_action",
+        "line": 360,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "get_ai_status",
+        "line": 385,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "warmup_ai_engine",
+        "line": 392,
+        "kind": "AsyncFunctionDef"
+      },
+      {
+        "name": "ask_ai_copilot",
+        "line": 401,
+        "kind": "AsyncFunctionDef"
+      },
+      {
+        "name": "get_voice_status",
+        "line": 424,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "warmup_voice_engines",
+        "line": 436,
+        "kind": "AsyncFunctionDef"
+      },
+      {
+        "name": "reset_voice_session",
+        "line": 459,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "voice_converse",
+        "line": 467,
+        "kind": "AsyncFunctionDef"
+      },
+      {
+        "name": "get_voice_thinking",
+        "line": 540,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "websocket_telemetry_endpoint",
+        "line": 557,
+        "kind": "AsyncFunctionDef"
+      },
+      {
+        "name": "websocket_blender_endpoint",
+        "line": 589,
+        "kind": "AsyncFunctionDef"
+      }
+    ],
+    "imports": [
+      "backend.agent.flight_intent",
+      "backend.agent.llm_engine",
+      "backend.server.engine_api",
+      "backend.server.engine_service",
+      "backend.server.schemas",
+      "backend.telemetry.replay_engine",
+      "backend.voice.stt_engine",
+      "backend.voice.thinking_stream",
+      "backend.voice.tts_engine",
+      "contextlib",
+      "dataclasses",
+      "dotenv",
+      "fastapi",
+      "fastapi.middleware.cors",
+      "fastapi.responses",
+      "fastapi.staticfiles",
+      "pathlib",
+      "pydantic",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/server/schemas.py",
+    "lines": 180,
+    "purpose": "Pydantic Data Schemas & API Contracts\nRotax 912 iS MALE UAV Digital Twin \u2014 Laptop Backend Server\nDRDO / iDEX Problem Statement ID: 26054",
+    "symbols": [
+      {
+        "name": "EngineTelemetry",
+        "line": 11,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "AnalyticsState",
+        "line": 62,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "UnifiedTelemetryState",
+        "line": 133,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "ControlCommand",
+        "line": 144,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "VoiceConverseResponse",
+        "line": 158,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "ServerHealthResponse",
+        "line": 171,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "pydantic",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/sources/__init__.py",
+    "lines": 1,
+    "purpose": "",
+    "symbols": [],
+    "imports": [
+      "plant_source"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/sources/plant_source.py",
+    "lines": 56,
+    "purpose": "PlantSource -- the current independent plant behind the canonical Frame contract (B1.2, part 1).",
+    "symbols": [
+      {
+        "name": "PlantSource",
+        "line": 24,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.core.frame",
+      "backend.plant.virtual_engine",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/sources/recorder.py",
+    "lines": 60,
+    "purpose": "Recorder + ReplaySource (W3, B1.2): record any Frame stream to .npz + manifest and replay it bit-exactly.",
+    "symbols": [
+      {
+        "name": "record",
+        "line": 21,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "ReplaySource",
+        "line": 38,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.core.frame",
+      "dataclasses",
+      "pathlib",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/sources/waveform.py",
+    "lines": 209,
+    "purpose": "WaveformSource and WaveformRecorder (W3, SIM-03): High-rate CycleBlock acquisition and .npz recording/replay.",
+    "symbols": [
+      {
+        "name": "WaveformSource",
+        "line": 26,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "WaveformRecorder",
+        "line": 147,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.core.cycle_block",
+      "backend.physics.combustion_ci",
+      "backend.physics.engine_config",
+      "backend.physics.rail",
+      "backend.physics.structure",
+      "backend.plant.sensors_hr",
+      "pathlib",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/telemetry/__init__.py",
+    "lines": 3,
+    "purpose": "",
+    "symbols": [],
+    "imports": [
+      "can_streamer"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/telemetry/aces_loader.py",
+    "lines": 289,
+    "purpose": "NASA ACES real-telemetry loader \u2014 F48.",
+    "symbols": [
+      {
+        "name": "_decode_name_matrix",
+        "line": 165,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "ACESGranule",
+        "line": 182,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "load_granule",
+        "line": 271,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "list_granules",
+        "line": 285,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "pathlib",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/telemetry/can_streamer.py",
+    "lines": 512,
+    "purpose": "Rotax 912 iS Telemetry Streamer & DRDO Fault Injector\nDRDO / iDEX Problem Statement ID: 26054",
+    "symbols": [
+      {
+        "name": "TelemetryStreamer",
+        "line": 75,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "backend.physics.thermo_model",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/telemetry/mavlink_efi.py",
+    "lines": 209,
+    "purpose": "MAVLink EFI_STATUS ingestion \u2014 F46.",
+    "symbols": [
+      {
+        "name": "EFIFrame",
+        "line": 82,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "efi_to_anumaan",
+        "line": 98,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "MAVLinkEFISource",
+        "line": 132,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "replay_tlog",
+        "line": 192,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "pathlib",
+      "pymavlink",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/telemetry/replay_engine.py",
+    "lines": 203,
+    "purpose": "Historical Mission Replay Engine (PRD F12 / final_tasks/02_HISTORICAL_MISSION_REPLAY_AND_SCRUBBER.md).\nDRDO / iDEX Problem Statement ID: 26054",
+    "symbols": [
+      {
+        "name": "_repo_root",
+        "line": 23,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "default_report_dump_dir",
+        "line": 27,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_FrameIndex",
+        "line": 32,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "ReplayEngine",
+        "line": 45,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/telemetry/socketcan_bridge.py",
+    "lines": 182,
+    "purpose": "SocketCAN & SAE J1939 Telemetry Ingestion Bridge\nDRDO / iDEX Problem Statement ID: 26054 \u2014 Defence GCS Ready Ingestion",
+    "symbols": [
+      {
+        "name": "SocketCANBridge",
+        "line": 28,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/twin/__init__.py",
+    "lines": 4,
+    "purpose": "",
+    "symbols": [],
+    "imports": [
+      "integrity",
+      "validity"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/twin/degradation.py",
+    "lines": 136,
+    "purpose": "Degradation Particle Filter and SINDy Law Identification (B4.4, CAP-05/13, INN-01).",
+    "symbols": [
+      {
+        "name": "SINDyIdentifier",
+        "line": 17,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "DegradationParticleFilter",
+        "line": 88,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/twin/history.py",
+    "lines": 107,
+    "purpose": "Operational History and Severity Accumulator per Tail (R11, B4.6).",
+    "symbols": [
+      {
+        "name": "MaintenanceRecord",
+        "line": 19,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "TailHistoryState",
+        "line": 29,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "OperationalHistoryTracker",
+        "line": 57,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/twin/integrity.py",
+    "lines": 301,
+    "purpose": "Physics-constrained telemetry integrity \u2014 F54 / F55.",
+    "symbols": [
+      {
+        "name": "PhysicalConstraint",
+        "line": 55,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "default_constraints",
+        "line": 81,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_expected_map",
+        "line": 142,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "IntegrityVerdict",
+        "line": 149,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "TelemetryIntegrityMonitor",
+        "line": 172,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "collections",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/twin/model.py",
+    "lines": 158,
+    "purpose": "Dynamic Lumped-Parameter Thermofluid Twin Model (B4.1, B4.6, D03).",
+    "symbols": [
+      {
+        "name": "ThermofluidParams",
+        "line": 21,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "DynamicThermofluidModel",
+        "line": 34,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.physics.engine_config",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/twin/priors.py",
+    "lines": 64,
+    "purpose": "Hierarchical Fleet Priors and Empirical Bayes Personalization (B4.5, SYS-09).",
+    "symbols": [
+      {
+        "name": "FleetPrior",
+        "line": 15,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "TailPriorEngine",
+        "line": 38,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/twin/residual_detector.py",
+    "lines": 243,
+    "purpose": "Physics-residual detector with per-tail calibration \u2014 F50, and the detector the\nevaluation harness actually needs.",
+    "symbols": [
+      {
+        "name": "ExpectationModel",
+        "line": 48,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "DetectionVerdict",
+        "line": 89,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "ResidualDetector",
+        "line": 107,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/twin/ukf.py",
+    "lines": 195,
+    "purpose": "UKF Joint State and Parameter Estimation Twin (B4.2, CAP-11, DTC-02/04).",
+    "symbols": [
+      {
+        "name": "ParameterEstimate",
+        "line": 24,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "ThermofluidUKF",
+        "line": 39,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.core.frame",
+      "backend.physics.engine_config",
+      "backend.twin.model",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/twin/validity.py",
+    "lines": 323,
+    "purpose": "Twin validity monitoring \u2014 F51 / F52.",
+    "symbols": [
+      {
+        "name": "chi2_bounds",
+        "line": 60,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "ValidityVerdict",
+        "line": 84,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "TwinValidityMonitor",
+        "line": 124,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "collections",
+      "dataclasses",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/twin/virtual_sensors.py",
+    "lines": 89,
+    "purpose": "Virtual Sensor Synthesis Module (B4.2, CAP-11, DRDO PS-26054).",
+    "symbols": [
+      {
+        "name": "VirtualSensorSynthesizer",
+        "line": 20,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.core.frame",
+      "backend.physics.engine_config",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/voice/__init__.py",
+    "lines": 5,
+    "purpose": "Voice Interaction Layer (Plane 2 extension) \u2014 Speech-to-Text, Text-to-Speech, and\nmulti-turn conversational orchestration for the Mission Copilot.\nDRDO / iDEX Problem Statement ID: 26054",
+    "symbols": [],
+    "imports": [],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/voice/conversation.py",
+    "lines": 50,
+    "purpose": "Voice Conversation State Manager.\nDRDO / iDEX Problem Statement ID: 26054",
+    "symbols": [
+      {
+        "name": "VoiceConversationManager",
+        "line": 21,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "collections",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/voice/stt_engine.py",
+    "lines": 192,
+    "purpose": "Local Whisper.cpp Speech-to-Text Engine \u2014 ggml-tiny.en (CPU, offline).\nDRDO / iDEX Problem Statement ID: 26054",
+    "symbols": [
+      {
+        "name": "_find_ffmpeg",
+        "line": 55,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "LocalWhisperSTT",
+        "line": 67,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "pathlib",
+      "pywhispercpp.model",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/voice/thinking_stream.py",
+    "lines": 48,
+    "purpose": "Live \"Thinking\" Preview Buffer for the Voice Copilot.\nDRDO / iDEX Problem Statement ID: 26054",
+    "symbols": [
+      {
+        "name": "ThinkingStreamStore",
+        "line": 24,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "backend/voice/tts_engine.py",
+    "lines": 177,
+    "purpose": "Local Kokoro-82M Text-to-Speech Engine (offline, GPU-accelerated when available).\nDRDO / iDEX Problem Statement ID: 26054",
+    "symbols": [
+      {
+        "name": "LocalKokoroTTS",
+        "line": 43,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "backend.ml_runtime_lock",
+      "kokoro",
+      "pathlib",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "experiments/E17_detector_bakeoff_plant.py",
+    "lines": 315,
+    "purpose": "E17 -- Universal vs per-engine detectors, and fly-inspired novelty vs classical, on the\nmulti-engine plant.  (docs/build/DETECTOR_DECISION.md)",
+    "symbols": [
+      {
+        "name": "simulate_run",
+        "line": 59,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "build",
+        "line": 78,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "design",
+        "line": 95,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "Calib",
+        "line": 100,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "stack",
+        "line": 133,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "FBF",
+        "line": 141,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "Maha",
+        "line": 165,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "MaxZ",
+        "line": 176,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "IF",
+        "line": 184,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "novelty_metrics",
+        "line": 193,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "rf",
+        "line": 207,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "macro_f1",
+        "line": 211,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "main",
+        "line": 215,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.ml.flyhash_novelty",
+      "backend.physics.engine_config",
+      "backend.sources",
+      "pathlib",
+      "sklearn.ensemble",
+      "sklearn.linear_model",
+      "sklearn.metrics"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "experiments/E19_connectome_reservoir.py",
+    "lines": 126,
+    "purpose": "E19 - fly connectome as a reservoir (temporal detector) vs its own controls.\nEvidence class: SIMULATION (plant data).  Pre-registered rule: docs/build/FLY_100_WAYS.md.\nContenders (same z-features, same ridge readout unless noted):\n  connectome | shuffled (edge-target rewired) | random ESN (same N/nnz) | windowed RF | static RF",
+    "symbols": [
+      {
+        "name": "load_conn",
+        "line": 31,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "scale",
+        "line": 43,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "shuffled",
+        "line": 51,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "random_esn",
+        "line": 58,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "run_res",
+        "line": 65,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "feats",
+        "line": 74,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "mf1",
+        "line": 78,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "windowed",
+        "line": 82,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "main",
+        "line": 87,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.physics.engine_config",
+      "pathlib",
+      "scipy",
+      "scipy.sparse.linalg",
+      "sklearn.ensemble",
+      "sklearn.linear_model",
+      "sklearn.metrics"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "experiments/E20_runtime_end_to_end.py",
+    "lines": 77,
+    "purpose": "E20 - end-to-end evidence through the PRODUCT code path (RuntimeHub / EngineRuntime), not an experiment script.",
+    "symbols": [
+      {
+        "name": "one",
+        "line": 29,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "main",
+        "line": 53,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.physics.engine_config",
+      "backend.runtime",
+      "backend.runtime.registry",
+      "pathlib"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "experiments/E21_twin_estimation.py",
+    "lines": 120,
+    "purpose": "Experiment E21: Dynamic Twin Joint State/Parameter Estimation & SINDy Law Recovery (B4.1, B4.2, B4.4).",
+    "symbols": [
+      {
+        "name": "run_experiment",
+        "line": 30,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.physics.engine_config",
+      "backend.twin.degradation",
+      "backend.twin.model",
+      "backend.twin.priors",
+      "backend.twin.ukf",
+      "pathlib"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "experiments/E22_diag_prognostics.py",
+    "lines": 98,
+    "purpose": "Experiment E22: Diagnosis, Active Test Selection, Dual-Path Prognostics, and Alarm Management (B5.3, B5.4, B6.1, B6.3).",
+    "symbols": [
+      {
+        "name": "run_experiment",
+        "line": 32,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.alarms.rationalisation",
+      "backend.diagnose.active",
+      "backend.diagnose.bn",
+      "backend.diagnose.explain",
+      "backend.physics.engine_config",
+      "backend.prognose.rul",
+      "pathlib"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "experiments/E23_edgelink_security.py",
+    "lines": 243,
+    "purpose": "E23: Datalink, FADEC Emulation, and Cybersecurity Benchmark (B2.6, B2.7, B9.1, OPT-01, OPT-02, OPT-03, INN-07, D17).",
+    "symbols": [
+      {
+        "name": "run_e23_benchmark",
+        "line": 30,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.fadec_emulator.emulator",
+      "backend.link.link_emulator",
+      "backend.physics.engine_config",
+      "backend.security.can_ids",
+      "backend.security.merkle_log",
+      "pathlib"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "experiments/E24_fleet_des.py",
+    "lines": 268,
+    "purpose": "E24: 12-Tail 3-Base Discrete Event Simulation (DES) Fleet Reliability & Economics (B10.1, B10.2, V7, R9, R10, R11).",
+    "symbols": [
+      {
+        "name": "SimulatedTail",
+        "line": 41,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "run_e24_fleet_simulation",
+        "line": 55,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.diagnose.bn",
+      "backend.economics.impact",
+      "backend.maintenance.work_package",
+      "backend.mission.profiles",
+      "backend.performance.maps",
+      "backend.physics.engine_config",
+      "backend.prognose.rul",
+      "backend.twin.history",
+      "dataclasses",
+      "pathlib",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "experiments/E25_foundation_bakeoff.py",
+    "lines": 193,
+    "purpose": "E25: Foundation Model Bake-off: PIREP NLP, Chronos Forecasting, and In-Context Tabular (W8, W10, INN-06, D35).",
+    "symbols": [
+      {
+        "name": "run_e25_bakeoff",
+        "line": 27,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.foundation.forecast_chronos",
+      "backend.foundation.tabpfn_wrapper",
+      "backend.foundation.text_classifier",
+      "pathlib"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "frontend/src/App.tsx",
+    "lines": 344
+  },
+  {
+    "path": "frontend/src/index.css",
+    "lines": 328
+  },
+  {
+    "path": "frontend/src/main.tsx",
+    "lines": 10
+  },
+  {
+    "path": "frontend/src/vite-env.d.ts",
+    "lines": 1
+  },
+  {
+    "path": "frontend/src/components/AerospaceMarkdown.tsx",
+    "lines": 209
+  },
+  {
+    "path": "frontend/src/components/CalculationsPanel.tsx",
+    "lines": 193
+  },
+  {
+    "path": "frontend/src/components/ConnectionModal.tsx",
+    "lines": 210
+  },
+  {
+    "path": "frontend/src/components/DiagnosticCard.tsx",
+    "lines": 358
+  },
+  {
+    "path": "frontend/src/components/EngineControls.tsx",
+    "lines": 217
+  },
+  {
+    "path": "frontend/src/components/EngineRuntimeConsole.tsx",
+    "lines": 121
+  },
+  {
+    "path": "frontend/src/components/FaultMatrix.tsx",
+    "lines": 127
+  },
+  {
+    "path": "frontend/src/components/Header.tsx",
+    "lines": 193
+  },
+  {
+    "path": "frontend/src/components/MaintenanceDashboardPanel.tsx",
+    "lines": 475
+  },
+  {
+    "path": "frontend/src/components/MissionReadinessCard.tsx",
+    "lines": 199
+  },
+  {
+    "path": "frontend/src/components/MissionReplayScrubber.tsx",
+    "lines": 213
+  },
+  {
+    "path": "frontend/src/components/PanelErrorBoundary.tsx",
+    "lines": 62
+  },
+  {
+    "path": "frontend/src/components/PropulsionEngineerPanel.tsx",
+    "lines": 546
+  },
+  {
+    "path": "frontend/src/components/ReadingsPanel.tsx",
+    "lines": 226
+  },
+  {
+    "path": "frontend/src/components/SubsystemHealthCard.tsx",
+    "lines": 182
+  },
+  {
+    "path": "frontend/src/components/VoiceCopilot.tsx",
+    "lines": 894
+  },
+  {
+    "path": "frontend/src/components/landing/AnumaanSplash.tsx",
+    "lines": 151
+  },
+  {
+    "path": "frontend/src/components/landing/HudFrame.tsx",
+    "lines": 219
+  },
+  {
+    "path": "frontend/src/components/landing/LandingArchitecture.tsx",
+    "lines": 159
+  },
+  {
+    "path": "frontend/src/components/landing/LandingDetection.tsx",
+    "lines": 141
+  },
+  {
+    "path": "frontend/src/components/landing/LandingExploreCTA.tsx",
+    "lines": 193
+  },
+  {
+    "path": "frontend/src/components/landing/LandingFleetMap.tsx",
+    "lines": 271
+  },
+  {
+    "path": "frontend/src/components/landing/LandingFooter.tsx",
+    "lines": 47
+  },
+  {
+    "path": "frontend/src/components/landing/LandingGCSPreview.tsx",
+    "lines": 323
+  },
+  {
+    "path": "frontend/src/components/landing/LandingHero3D.tsx",
+    "lines": 582
+  },
+  {
+    "path": "frontend/src/components/landing/LandingMatrix.tsx",
+    "lines": 270
+  },
+  {
+    "path": "frontend/src/components/landing/LandingNav.tsx",
+    "lines": 69
+  },
+  {
+    "path": "frontend/src/components/landing/LandingPage.tsx",
+    "lines": 249
+  },
+  {
+    "path": "frontend/src/components/landing/LandingPillars.tsx",
+    "lines": 247
+  },
+  {
+    "path": "frontend/src/components/landing/LandingProblem.tsx",
+    "lines": 211
+  },
+  {
+    "path": "frontend/src/components/landing/LandingPrognosis.tsx",
+    "lines": 125
+  },
+  {
+    "path": "frontend/src/components/landing/LandingReliability.tsx",
+    "lines": 136
+  },
+  {
+    "path": "frontend/src/components/landing/LandingTheatres.tsx",
+    "lines": 138
+  },
+  {
+    "path": "frontend/src/components/landing/LandingTicker.tsx",
+    "lines": 81
+  },
+  {
+    "path": "frontend/src/components/landing/LandingTwin.tsx",
+    "lines": 153
+  },
+  {
+    "path": "frontend/src/components/landing/aeroLineup.ts",
+    "lines": 141
+  },
+  {
+    "path": "frontend/src/components/landing/anumaan-splash.css",
+    "lines": 236
+  },
+  {
+    "path": "frontend/src/components/landing/hud-frame.css",
+    "lines": 612
+  },
+  {
+    "path": "frontend/src/components/landing/landing-editorial.css",
+    "lines": 1029
+  },
+  {
+    "path": "frontend/src/components/landing/landing-investigation.css",
+    "lines": 916
+  },
+  {
+    "path": "frontend/src/components/landing/landing.css",
+    "lines": 127
+  },
+  {
+    "path": "frontend/src/hooks/useEngineRuntime.ts",
+    "lines": 129
+  },
+  {
+    "path": "frontend/src/hooks/useMissionReplay.ts",
+    "lines": 232
+  },
+  {
+    "path": "frontend/src/hooks/useTelemetrySocket.ts",
+    "lines": 287
+  },
+  {
+    "path": "frontend/src/types/telemetry.ts",
+    "lines": 192
+  },
+  {
+    "path": "scripts/audit_aero_dt_coverage.py",
+    "lines": 104,
+    "purpose": "Audit script for Aero Piston Engine Digital Twin Knowledge Base (DRDO PS 26054).\nVerifies 100% presence, distribution, and depth across all 36 prompt dimensions and PS requirements.",
+    "symbols": [],
+    "imports": [
+      "pathlib"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/audit_drdo_intent_coverage.py",
+    "lines": 91,
+    "purpose": "Audit script for DRDO Intent & Expected Solution Knowledge Base (DRDO PS 26054).\nVerifies 100% presence, distribution, and depth across all 31 prompt dimensions and requirements.",
+    "symbols": [],
+    "imports": [
+      "pathlib"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/audit_fl_coverage.py",
+    "lines": 59,
+    "purpose": "",
+    "symbols": [],
+    "imports": [],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/audit_ideal_blueprint_coverage.py",
+    "lines": 79,
+    "purpose": "Coverage and Verification Audit for Ideal Project Blueprint Suite (DRDO PS 26054).\nVerifies that all 32 required architectural sections, principles, formulas, and diagrams\nare comprehensively covered across the 8 blueprint volumes and master portal in final_touch/.",
+    "symbols": [],
+    "imports": [
+      "pathlib"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/build_aero_dt_knowledge_base.py",
+    "lines": 82,
+    "purpose": "Master Builder for Aero Piston Engine Digital Twin Knowledge Base (DRDO PS 26054).\nCompiles 10 exhaustive, peer-reviewed, defense-grade markdown volumes covering:\n1. PS Deconstruction & Traceability Matrix\n2. Aero-Engine Physics, Thermodynamics & UAV Systems\n3. Failure Modes, FMECA & Reliability Engineering\n4. Digital Twin Theory, State Estimation & Simulation\n5. AI/ML Prognostics, RUL & Uncertainty Quantification\n6. Avionics Hardware, Edge AI & System Interfaces\n7. GCS HMI, Mission Decision Support & Fleet Federated Learning\n8. DRDO Ecosystem, Certification, Airworthiness & Supply Chain\n9. Red-Team Review, Gaps, Benchmarking & Evidence Base\n10. Master Conceptual Synthesis & Architectural Portal",
+    "symbols": [],
+    "imports": [
+      "dt_builder",
+      "pathlib"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/build_architecture_knowledge.py",
+    "lines": 731,
+    "purpose": "Script to generate comprehensive Architecture Knowledge, Mental Models, Data Flows,\nMind Maps, and Feature Deep-Dives for Project ANUMAAN (DRDO / SIH PS-26054).\nOutputs to final_touch/ and final touch/ directories.",
+    "symbols": [
+      {
+        "name": "main",
+        "line": 706,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "pathlib"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/build_drdo_intent_knowledge_base.py",
+    "lines": 75,
+    "purpose": "Master Builder for DRDO Intent & Expected Solution Knowledge Base (DRDO PS 26054).\nCompiles 8 exhaustive research volumes reverse-engineering the engineering intent behind PS 26054:\n1. DRDO_INTENT_PS_DECONSTRUCTION_AND_SEMANTICS.md\n2. DRDO_INTENT_END_TO_END_SYSTEM_RECONSTRUCTION.md\n3. DRDO_INTENT_PHYSICS_AND_AI_HYBRID_COUPLING.md\n4. DRDO_INTENT_HEALTH_MONITORING_AND_PARAM_CORRELATION.md\n5. DRDO_INTENT_MISSION_RELIABILITY_REPLAY_AND_GCS.md\n6. DRDO_INTENT_DEFENCE_GRADE_CERTIFICATION_AND_EVIDENCE.md\n7. DRDO_INTENT_CREDIBILITY_REDTEAM_AND_PROJECT_GAP_ANALYSIS.md\n8. MASTER_DRDO_EXPECTED_SOLUTION_SYNTHESIS.md",
+    "symbols": [],
+    "imports": [
+      "intent_builder",
+      "pathlib"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/build_fl_knowledge_base.py",
+    "lines": 1153,
+    "purpose": "Comprehensive Federated Learning Knowledge Base Builder (Version 3 - 100% Audited).\nExtracted from FedNeMo papers, implementation code, PRDs, and design documents.\nOutputs to final_touch/ and final touch/.",
+    "symbols": [],
+    "imports": [
+      "pathlib"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/build_ideal_project_blueprint.py",
+    "lines": 178,
+    "purpose": "Master Builder for Ideal Project Blueprint (DRDO PS 26054).\nCompiles 8 comprehensive, deeply reasoned, technically defensible engineering volumes\nand an overarching Master Synthesis Portal into:\n- e:/backup-llm/backup-no-llm/3d_engine/final_touch/\n- e:/backup-llm/backup-no-llm/3d_engine/final touch/",
+    "symbols": [],
+    "imports": [
+      "blueprint_builder",
+      "pathlib"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/generate_analysis_md.py",
+    "lines": 602,
+    "purpose": "Comprehensive File-by-File Repository Audit Generator\nTarget: final_touch/analysis.md and 'final touch/analysis.md'\nWorkspace: e:/backup-llm/backup-no-llm/3d_engine\nDRDO / SIH Problem Statement ID: 26054 (ANUMAAN Digital Twin)",
+    "symbols": [
+      {
+        "name": "get_file_stats",
+        "line": 25,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "analyze_python_file",
+        "line": 40,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "infer_python_purpose",
+        "line": 109,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "analyze_js_ts_file",
+        "line": 195,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "analyze_markdown_file",
+        "line": 247,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "analyze_json_yaml_file",
+        "line": 293,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "analyze_batch_file",
+        "line": 327,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "analyze_csv_data_file",
+        "line": 356,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "analyze_binary_asset_file",
+        "line": 376,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "audit_single_file",
+        "line": 426,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "main",
+        "line": 445,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "pathlib"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/generate_rotax_manifests.py",
+    "lines": 378,
+    "purpose": "Generate asset manifests for the three Rotax engines from their shipped GLB geometry.",
+    "symbols": [
+      {
+        "name": "glb_node_names",
+        "line": 57,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "group_of",
+        "line": 67,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "cylinder_of",
+        "line": 84,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "classify",
+        "line": 133,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "resolve_thermal",
+        "line": 141,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "build",
+        "line": 297,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "main",
+        "line": 359,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "collections",
+      "pathlib",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/ingest_rag_docs.py",
+    "lines": 573,
+    "purpose": "RAG Knowledge Ingestion & Document Downloader / Generator\nDRDO / iDEX Problem Statement ID: 26054 \u2014 Rotax 912 iS Digital Twin",
+    "symbols": [
+      {
+        "name": "build_pdf_doc",
+        "line": 441,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "build_docx_doc",
+        "line": 496,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "ingest_knowledge",
+        "line": 522,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "backend.agent.copilot",
+      "backend.knowledge.retrieval.local_store",
+      "pathlib",
+      "reportlab.lib",
+      "reportlab.lib.pagesizes",
+      "reportlab.lib.styles",
+      "reportlab.platypus"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/inject_pixelcode_avionix.py",
+    "lines": 19,
+    "purpose": "",
+    "symbols": [],
+    "imports": [],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/populate_engine_references.py",
+    "lines": 50,
+    "purpose": "",
+    "symbols": [],
+    "imports": [],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/render_cad_rotax.py",
+    "lines": 127,
+    "purpose": "",
+    "symbols": [
+      {
+        "name": "setup_render_settings",
+        "line": 5,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "clear_lights_cameras",
+        "line": 14,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "add_studio_lighting",
+        "line": 19,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "get_scene_bbox",
+        "line": 44,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "render_multi_views",
+        "line": 62,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/run_15_step_verification_demo.py",
+    "lines": 251,
+    "purpose": "ANUMAAN 15-STEP TECHNICAL VERIFICATION DEMONSTRATION SCRIPT\nDRDO / iDEX Problem Statement ID: 26054",
+    "symbols": [
+      {
+        "name": "print_step",
+        "line": 32,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "run_15_step_verification",
+        "line": 39,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "backend.core.frame",
+      "backend.evaluation.conformal",
+      "backend.evaluation.damage_accumulation",
+      "backend.mission.glide",
+      "backend.mission.reliability",
+      "backend.physics.engine_config",
+      "backend.runtime.engine_runtime",
+      "backend.server.engine_service",
+      "pathlib",
+      "typing"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/simulate_missions.py",
+    "lines": 153,
+    "purpose": "Accelerated mission generator -> report_dump/\nDRDO / iDEX Problem Statement ID: 26054",
+    "symbols": [
+      {
+        "name": "simulate_mission",
+        "line": 47,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_apply_simulated_timescale",
+        "line": 91,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_close_telemetry_log",
+        "line": 121,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "main",
+        "line": 130,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "backend.server.engine_service",
+      "backend.server.schemas"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/test_socketcan_mavlink_bridge.py",
+    "lines": 131,
+    "purpose": "Test & Verification: SocketCAN, MAVLink EFI, and VRDE-Jayem Aero-Diesel Ingestion\nDRDO / iDEX Problem Statement ID: 26054",
+    "symbols": [
+      {
+        "name": "test_socketcan",
+        "line": 17,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_mavlink",
+        "line": 57,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_engine_configurations",
+        "line": 93,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "backend.physics.engine_config",
+      "backend.telemetry.mavlink_efi",
+      "backend.telemetry.socketcan_bridge"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/verify_kinematics.py",
+    "lines": 65,
+    "purpose": "",
+    "symbols": [],
+    "imports": [],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/blueprint_builder/vol1_master_executive_and_requirements.py",
+    "lines": 190,
+    "purpose": "Blueprint Volume 1: Master Executive Philosophy, Requirements Re-Derivation, and System Boundaries.\nDefines the executive architecture, first principles, PS traceability matrix, master mental model, and system boundaries.",
+    "symbols": [],
+    "imports": [],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/blueprint_builder/vol2_physics_twin_and_state_estimation.py",
+    "lines": 205,
+    "purpose": "Blueprint Volume 2: Physics Engine, Dynamic State Observer, and Digital Twin Core.\nDefines the genuine digital twin definition, 0D/1D thermodynamic MVEM formulations,\nExtended Kalman Filter (EKF), virtual sensors, state vector, and synchronization.",
+    "symbols": [],
+    "imports": [],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/blueprint_builder/vol3_health_monitoring_and_fault_management.py",
+    "lines": 230,
+    "purpose": "Blueprint Volume 3: Health Monitoring, Sensor Validation, and Fault Management Pipeline.\nDefines parity space sensor validation, thermodynamic residual generation, composite Health Indices,\nDeep VAE + Extreme Value Theory anomaly detection, and the 10-stage FMECA fault management chain.",
+    "symbols": [],
+    "imports": [],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/blueprint_builder/vol4_prognostics_mission_reliability_and_flight_envelope.py",
+    "lines": 192,
+    "purpose": "Blueprint Volume 4: Prognostics, RUL, and Mission Reliability Coupling.\nDefines physics-informed degradation kinetics, Wiener drift processes, Conformal Prediction RUL intervals,\ntactical flight envelope derating, and aircraft aerodynamic glide polar reachability cone.",
+    "symbols": [],
+    "imports": [],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/blueprint_builder/vol5_avionics_edge_and_gcs_hmi.py",
+    "lines": 162,
+    "purpose": "Blueprint Volume 5: Avionics Ingestion, Edge Architecture, and Dual-Role GCS HMI.\nDefines avionics bus protocols (SocketCAN, MAVLink, ARINC 429), edge FFT processing,\n170ms latency budget, dual-role HMI (Pilot HUD vs Propulsion Console), and EEMUA 191 alarm rationalization.",
+    "symbols": [],
+    "imports": [],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/blueprint_builder/vol6_fleet_intelligence_and_federated_learning.py",
+    "lines": 158,
+    "purpose": "Blueprint Volume 6: Fleet Intelligence, Cross-Engine Analytics, and Disciplined Federated Learning.\nDefines the justification for FL in defence, hierarchical depot topology, Differential Privacy,\nFedRand/StochasticLoRA parameter-efficient aggregation, non-IID handling, and fleet population benchmarking.",
+    "symbols": [],
+    "imports": [],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/blueprint_builder/vol7_verification_certification_and_security.py",
+    "lines": 195,
+    "purpose": "Blueprint Volume 7: Verification & Validation Pyramid, Sim-to-Real, Aerospace Certification, and Security.\nDefines the 10-level V&V pyramid, domain randomization sim-to-real transfer, CEMILAC DO-178C DAL-C roadmap,\nASTM F3269-17 Run-Time Verification Monitor, and multi-layer defence cybersecurity.",
+    "symbols": [],
+    "imports": [],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/blueprint_builder/vol8_gap_analysis_implementation_roadmap_and_review.py",
+    "lines": 456,
+    "purpose": "Blueprint Volume 8: Codebase Gap Analysis, Technology Stack, Repository Structure, and Engineering Roadmap.\nDefines tech stack justification, 3d_engine gap analysis (Keep/Refactor/Replace/Remove/Add/Defer/Investigate),\nrepository structure, data flow schemas, 5 user journeys, 15-step demo script, honesty manifesto, 13-phase roadmap, and 12-point review.",
+    "symbols": [],
+    "imports": [],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/dt_builder/vol10_master_portal.py",
+    "lines": 101,
+    "purpose": "Volume 10: Master Conceptual Synthesis & Architectural Navigation Portal\nFor DRDO Problem Statement 26054: Aero Piston Engine Digital Twin for MALE UAVs",
+    "symbols": [],
+    "imports": [],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/dt_builder/vol1_ps_deconstruction.py",
+    "lines": 189,
+    "purpose": "Volume 1: Problem Statement Deconstruction & Master Traceability Matrix\nFor DRDO Problem Statement 26054: Aero Piston Engine Digital Twin for MALE UAVs",
+    "symbols": [],
+    "imports": [],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/dt_builder/vol2_engine_physics.py",
+    "lines": 252,
+    "purpose": "Volume 2: Aero-Engine Physics, Thermodynamics & UAV Propulsion Systems\nFor DRDO Problem Statement 26054: Aero Piston Engine Digital Twin for MALE UAVs",
+    "symbols": [],
+    "imports": [],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/dt_builder/vol3_failure_modes_fmeca.py",
+    "lines": 146,
+    "purpose": "Volume 3: Failure Modes, FMECA & Reliability Engineering\nFor DRDO Problem Statement 26054: Aero Piston Engine Digital Twin for MALE UAVs",
+    "symbols": [],
+    "imports": [],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/dt_builder/vol4_digital_twin_theory.py",
+    "lines": 200,
+    "purpose": "Volume 4: Digital Twin Theory, State Estimation & Simulation\nFor DRDO Problem Statement 26054: Aero Piston Engine Digital Twin for MALE UAVs",
+    "symbols": [],
+    "imports": [],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/dt_builder/vol5_ai_ml_prognostics.py",
+    "lines": 212,
+    "purpose": "Volume 5: AI/ML Prognostics, RUL & Uncertainty Quantification\nFor DRDO Problem Statement 26054: Aero Piston Engine Digital Twin for MALE UAVs",
+    "symbols": [],
+    "imports": [],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/dt_builder/vol6_avionics_edge_interfaces.py",
+    "lines": 137,
+    "purpose": "Volume 6: Avionics Hardware, Edge AI & System Interfaces\nFor DRDO Problem Statement 26054: Aero Piston Engine Digital Twin for MALE UAVs",
+    "symbols": [],
+    "imports": [],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/dt_builder/vol7_gcs_hmi_mission_fleet.py",
+    "lines": 141,
+    "purpose": "Volume 7: GCS HMI, Mission Decision Support & Fleet Federated Learning\nFor DRDO Problem Statement 26054: Aero Piston Engine Digital Twin for MALE UAVs",
+    "symbols": [],
+    "imports": [],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/dt_builder/vol8_drdo_certification_supply.py",
+    "lines": 139,
+    "purpose": "Volume 8: DRDO Ecosystem, Certification, Airworthiness & Supply Chain\nFor DRDO Problem Statement 26054: Aero Piston Engine Digital Twin for MALE UAVs",
+    "symbols": [],
+    "imports": [],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/dt_builder/vol9_red_team_gaps_evidence.py",
+    "lines": 142,
+    "purpose": "Volume 9: Red-Team Review, Gaps, Benchmarking & Evidence Base\nFor DRDO Problem Statement 26054: Aero Piston Engine Digital Twin for MALE UAVs",
+    "symbols": [],
+    "imports": [],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/intent_builder/vol1_deconstruction_semantics.py",
+    "lines": 205,
+    "purpose": "Volume 1: DRDO PS Deconstruction, Semantic Intent & The Master Solution Matrix\nReverse-engineering the engineering intent behind DRDO Problem Statement 26054.",
+    "symbols": [],
+    "imports": [],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/intent_builder/vol2_end_to_end_system.py",
+    "lines": 252,
+    "purpose": "Volume 2: Reconstructed End-to-End System Architecture, Real-Time Latency & Modularity\nReverse-engineering the engineering intent behind DRDO Problem Statement 26054.",
+    "symbols": [],
+    "imports": [],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/intent_builder/vol3_physics_ai_coupling.py",
+    "lines": 151,
+    "purpose": "Volume 3: The Physics-AI Coupling Engine, Degradation Tracking & RUL Feasibility\nReverse-engineering the engineering intent behind DRDO Problem Statement 26054.",
+    "symbols": [],
+    "imports": [],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/intent_builder/vol4_health_monitoring_params.py",
+    "lines": 144,
+    "purpose": "Volume 4: Health Monitoring Parameters, Cross-Correlation & Diagnostic Spectrum\nReverse-engineering the engineering intent behind DRDO Problem Statement 26054.",
+    "symbols": [],
+    "imports": [],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/intent_builder/vol5_mission_reliability_gcs.py",
+    "lines": 135,
+    "purpose": "Volume 5: Mission Reliability Enhancement, Mission Replay & Deployment Ecosystems\nReverse-engineering the engineering intent behind DRDO Problem Statement 26054.",
+    "symbols": [],
+    "imports": [],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/intent_builder/vol6_defence_certification_data.py",
+    "lines": 110,
+    "purpose": "Volume 6: Defence-Grade Engineering, Certification Pathways & The Data Reality Check\nReverse-engineering the engineering intent behind DRDO Problem Statement 26054.",
+    "symbols": [],
+    "imports": [],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/intent_builder/vol7_credibility_gap_analysis.py",
+    "lines": 110,
+    "purpose": "Volume 7: Credibility Engineering, Red-Team Review & Current Project Gap Analysis\nReverse-engineering the engineering intent behind DRDO Problem Statement 26054.",
+    "symbols": [],
+    "imports": [],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/intent_builder/vol8_master_intent_portal.py",
+    "lines": 59,
+    "purpose": "Volume 8: Master DRDO Intent Synthesis & Architectural Navigation Portal\nReverse-engineering the engineering intent behind DRDO Problem Statement 26054.",
+    "symbols": [],
+    "imports": [],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/lib/anumaan_blender_lib.py",
+    "lines": 398,
+    "purpose": "",
+    "symbols": [
+      {
+        "name": "reset_scene",
+        "line": 7,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "make_collections",
+        "line": 17,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "unique_name",
+        "line": 30,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "add_twin_nodes",
+        "line": 38,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "create_pbr_material",
+        "line": 177,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "material_library",
+        "line": 212,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "skin_material",
+        "line": 245,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "add_tracked_camera",
+        "line": 251,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "studio_lighting",
+        "line": 271,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "add_driver",
+        "line": 306,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "loft_rings",
+        "line": 319,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "curve_tube",
+        "line": 347,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "tri_count",
+        "line": 367,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "pack_and_save",
+        "line": 389,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "pathlib"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/lib/anumaan_cad_lib.py",
+    "lines": 817,
+    "purpose": "ANUMAAN CAD Mechanical Modeling Library\nProvides high-density, manufacturing-grade mechanical component generators:\n- Propeller drive flanges (counterbored bolt holes, central spigot, hollow bore)\n- Cast reduction gearbox housings (radial reinforcement ribs, perimeter bolt circles, sight glass, inspection hatches, governor module)\n- Engine blocks (inline-4 cast monoblocks, inter-cylinder valleys, stiffening webs, starter pockets)\n- Deep structural oil sumps (cooling fins, flanged rails, magnetic drain plugs, turbo oil drain bosses)\n- Billet engine mounting brackets (cooling fins, rubber isolation bushings, through-bolts)\n- Cylinder heads & valve covers (recessed bolt wells, cam domes, oil filler necks, glow plugs)\n- Common rail fuel injection (forged rails, pressure sensors, solenoid injec",
+    "symbols": [
+      {
+        "name": "bmesh_add_cylinder",
+        "line": 23,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "add_hex_bolt",
+        "line": 30,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "add_bolt_circle",
+        "line": 70,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "build_propeller_flange",
+        "line": 86,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "build_spiral_volute",
+        "line": 116,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "build_plate_fin_cooler",
+        "line": 163,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "build_detailed_alternator_saha",
+        "line": 194,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "build_billet_engine_mount",
+        "line": 309,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "build_tbolt_hose_clamp",
+        "line": 365,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "build_fadec_ecu_box",
+        "line": 395,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "build_tube_mesh",
+        "line": 426,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "build_curved_tube_object",
+        "line": 498,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "build_diecast_rib",
+        "line": 507,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "build_organic_gearbox_casing",
+        "line": 554,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "build_industrial_turbo",
+        "line": 630,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/lib/anumaan_twin_controller.py",
+    "lines": 215,
+    "purpose": "ANUMAAN Universal Digital Twin Controller\nEmbedded into .blend assets alongside <asset_id>_manifest.json\nFully generic, reads all components, faults, cameras and mechanisms from the manifest.",
+    "symbols": [
+      {
+        "name": "get_manifest",
+        "line": 11,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "ANUMAAN_PT_Controller",
+        "line": 20,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "ANUMAAN_OT_SetDisplayMode",
+        "line": 76,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "ANUMAAN_OT_SwitchCamera",
+        "line": 99,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "ANUMAAN_OT_ApplyFault",
+        "line": 109,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "ANUMAAN_OT_ClearState",
+        "line": 160,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "register",
+        "line": 183,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "unregister",
+        "line": 204,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/tools/audit_reachability.py",
+    "lines": 148,
+    "purpose": "Reachability audit -- which Python modules are LIVE, HARNESS/TEST-only, or DEAD?",
+    "symbols": [
+      {
+        "name": "module_name",
+        "line": 29,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "collect",
+        "line": 37,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "imports_of",
+        "line": 47,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "closure",
+        "line": 84,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "main",
+        "line": 95,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "pathlib"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/tools/build_all_proper_blends.py",
+    "lines": 280,
+    "purpose": "Comprehensive Engine Blend Master Builder\nTransforms and finalizes all 5 UAV engines into complete, production-grade .blend files:\n1. Rotax 914 F Turbo: Complete 590-part CAD assembly from Rotax 914.stp with full PBR shading, turbo highlights, studio lights, camera.\n2. Rotax 915 iS: Complete 45MB CAD geometry with full PBR shaders, studio lights, camera, and Collection_Rotax_915iS.\n3. VRDE / Jayem 2.2L: Complete 472-part CRDi turbodiesel CAD assembly with studio lights, camera, and Collection_VRDE_2_2L.\n4. Austro Engine AE300: Complete common-rail diesel CAD assembly with studio lights, camera, and Collection_Austro_AE300.\n5. Rotax 912 iS Sport: Standard baseline digital twin with Collection_Rotax_912iS.\n6. Anumaan Master Twin: Master scene containing all 5 distinct CAD collections for ins",
+    "symbols": [
+      {
+        "name": "create_pbr_mat",
+        "line": 24,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "add_studio_setup",
+        "line": 48,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "finalize_rotax_914",
+        "line": 104,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "finalize_rotax_915",
+        "line": 167,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "finalize_master_twin",
+        "line": 217,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "main",
+        "line": 273,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "pathlib"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/tools/build_master_twin_blend.py",
+    "lines": 133,
+    "purpose": "Master Blend Builder for ANUMAAN Multi-Engine Digital Twin\nCombines all 5 UAV engines into a single optimized master blend file:\n- Rotax 912 iS Sport\n- Rotax 914 F Turbo\n- Rotax 915 iS A Turbo Intercooled\n- Austro Engine AE300 / AE330\n- VRDE / JAYEM 2.2L",
+    "symbols": [
+      {
+        "name": "main",
+        "line": 25,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/tools/build_rotax_914_turbo.py",
+    "lines": 284,
+    "purpose": "Rotax 914 F Turbo CAD Model Rebuilder\nRebuilds the genuine Rotax 914 Turbo aero-engine directly from the CAD assembly geometry.\nCreates discrete named components, authentic PBR materials, millimeter-to-meter scaling,\nstudio lighting, camera rigs, saves standalone .blend files and exports the web GLB.",
+    "symbols": [
+      {
+        "name": "create_pbr_material",
+        "line": 24,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "setup_materials",
+        "line": 49,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "build_rotax_914_model",
+        "line": 68,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "pathlib"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/tools/compose_ai_target_sheets.py",
+    "lines": 126,
+    "purpose": "Composite the alpha renders onto the ai-tagert studio backdrop and build sheets.",
+    "symbols": [
+      {
+        "name": "font",
+        "line": 13,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "flatten",
+        "line": 17,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "trim",
+        "line": 23,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "fit",
+        "line": 37,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "sheet",
+        "line": 52,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "PIL",
+      "pathlib"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/tools/composite_showcase_hud.py",
+    "lines": 566,
+    "purpose": "Aerospace HUD Compositor for Rotax 914 F Technical Cinematic Showcase\n======================================================================\nComposites high-end aerospace digital twin HUD graphics onto rendered frames:\n- 3D-tracked anchor points with pulsing reticles\n- Anti-aliased 45\u00b0 angled leader lines\n- Glassmorphic aerospace telemetry cards with detailed engineering specs\n- Top global telemetry banner with live parameters\n- Bottom 6-station progression ribbon\n- Master Station 6 multi-sensor telemetry cluster\n- Encodes 1080p MP4 cinematic video via OpenCV\n- Generates 3\u00d72 Master Contact Sheet via Pillow",
+    "symbols": [
+      {
+        "name": "draw_hud_overlay",
+        "line": 182,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "composite_all_stations",
+        "line": 410,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "composite_all_frames",
+        "line": 446,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "encode_cinematic_mp4",
+        "line": 476,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "generate_master_contact_sheet",
+        "line": 508,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "PIL",
+      "pathlib"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/tools/create_engine_blend_files.py",
+    "lines": 196,
+    "purpose": "Engine Blend Generator \u2014 Creates dedicated, fully-configured standalone .blend files\nfor all engine variants:\n- VRDE / Jayem 2.2L (Indigenous DRDO CRDi Diesel) -> assets/blender/vrde_jayem_2_2l.blend\n- Rotax 914 F (Turbocharged TCU)                  -> assets/blender/rotax_914.blend & rotax_914_f.blend\n- Austro Engine AE300 (Jet-A1 Common Rail Diesel) -> assets/blender/austro_ae300.blend",
+    "symbols": [
+      {
+        "name": "setup_studio_lighting_and_camera",
+        "line": 20,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "create_vrde_jayem_blend",
+        "line": 80,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "create_rotax_914_blend",
+        "line": 117,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "create_austro_ae300_blend",
+        "line": 155,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "main",
+        "line": 189,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "pathlib"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/tools/export_all_engine_glbs.py",
+    "lines": 98,
+    "purpose": "Exporter Script: Exports all 5 UAV engines into optimized Draco-compressed GLB models for WebGL.",
+    "symbols": [
+      {
+        "name": "export_collection_to_glb",
+        "line": 19,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "main",
+        "line": 61,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/tools/generate_all_engine_showcases.py",
+    "lines": 1170,
+    "purpose": "Universal Multi-Engine Cinematic Showcase Generator \u2014 DRDO ANUMAAN\n===================================================================\nGenerates complete 6-station cinematic technical showcases for all ANUMAAN engines:\n- rotax_912is    : Rotax 912 iS Sport (Naturally Aspirated Spark Ignition, Dual FADEC)\n- rotax_914      : Rotax 914 F (Turbocharged Spark Ignition)\n- rotax_915is    : Rotax 915 iS (Turbocharged Intercooled Spark Ignition)\n- austro_ae300   : Austro Engine AE300 / AE330 (Common-Rail Turbo Diesel, Jet-A1)\n- vrde_jayem_2_2l: DRDO VRDE / Jayem 2.2L (Indigenous 180 HP CRDi Turbo Diesel)",
+    "symbols": [
+      {
+        "name": "generate_blender_script",
+        "line": 523,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "composite_engine_hud",
+        "line": 826,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "run_engine_showcase",
+        "line": 1117,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "PIL",
+      "pathlib"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/tools/import_rotax_914_cad_to_blend.py",
+    "lines": 183,
+    "purpose": "Import Rotax 914 CAD STL to Master Blend File\nImports the genuine 122.8 MB Rotax 914 Turbo CAD mesh, scales/centers/orients it properly,\nseparates into components/loose parts, applies multi-material shading (engine block, cylinder heads,\nturbocharger turbine/compressor, exhaust downpipes, intake runners, fasteners), sets up studio lighting,\nand saves to assets/blender/rotax_914.blend and assets/blender/rotax_914_f.blend.",
+    "symbols": [
+      {
+        "name": "create_pbr_material",
+        "line": 21,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "main",
+        "line": 46,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "pathlib"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/tools/inspect_blend.py",
+    "lines": 145,
+    "purpose": "",
+    "symbols": [
+      {
+        "name": "inspect_scene",
+        "line": 7,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "pathlib"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/tools/probe_api.py",
+    "lines": 93,
+    "purpose": "",
+    "symbols": [
+      {
+        "name": "probe",
+        "line": 5,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "pathlib"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/tools/render_acceptance.py",
+    "lines": 159,
+    "purpose": "ANUMAAN - Master Acceptance Renderer\nRenders full acceptance set per Section 15.3 and writes render_manifest.json",
+    "symbols": [
+      {
+        "name": "render_acceptance_set",
+        "line": 14,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "pathlib"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/tools/render_ai_target_360.py",
+    "lines": 184,
+    "purpose": "Render tei_pd170 at the angles defined by the ai-tagert 360 reference set.",
+    "symbols": [
+      {
+        "name": "side_of",
+        "line": 38,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "aim",
+        "line": 95,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "place_rig",
+        "line": 98,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "fits",
+        "line": 116,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "shoot",
+        "line": 126,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "ortho_fit",
+        "line": 154,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "bpy_extras.object_utils",
+      "mathutils",
+      "pathlib"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/tools/render_all_engines.py",
+    "lines": 375,
+    "purpose": "Multi-Engine 3D Rendering Pipeline \u2014 ANUMAAN\nRenders high-resolution beauty shots and fault visualization stills for all 5 UAV engines:\n- Rotax 912 iS (Naturally Aspirated Spark Ignition)\n- Rotax 914 (Turbocharged Spark Ignition)\n- Rotax 915 iS (Turbocharged Intercooled Spark Ignition)\n- Austro AE300 / AE330 (Common-Rail Turbo Diesel)\n- VRDE / JAYEM 2.2L (Indigenous 180 hp CRDi Turbo Diesel)",
+    "symbols": [
+      {
+        "name": "create_fault_emission_material",
+        "line": 236,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "setup_camera",
+        "line": 252,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "render_engine",
+        "line": 268,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "main",
+        "line": 361,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "pathlib"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/tools/render_austro_all_views.py",
+    "lines": 39,
+    "purpose": "",
+    "symbols": [],
+    "imports": [
+      "pathlib"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/tools/render_rotax_914_showcase.py",
+    "lines": 488,
+    "purpose": "Rotax 914 F Turbo \u2014 Technical Digital Twin Cinematic Showcase\n=============================================================\nProduces a 20-second (480 frames @ 24fps) cinematic engineering showcase:",
+    "symbols": [
+      {
+        "name": "compute_engine_bounds",
+        "line": 54,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "orbit_point",
+        "line": 74,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "setup_world",
+        "line": 88,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "setup_studio_lighting",
+        "line": 107,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "setup_floor",
+        "line": 142,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "setup_camera_choreography",
+        "line": 173,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "compute_and_save_tracking_data",
+        "line": 294,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "configure_render",
+        "line": 336,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "render_station_stills",
+        "line": 370,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "render_animation_frames",
+        "line": 396,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "main",
+        "line": 419,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "bpy_extras.object_utils",
+      "pathlib"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/tools/update_master_twin.py",
+    "lines": 49,
+    "purpose": "Update Master Twin Blend:\nEnsures assets/blender/anumaan_master_twin.blend has all 5 collections properly populated\nwith their distinct engine meshes and materials.",
+    "symbols": [
+      {
+        "name": "update_master_twin",
+        "line": 15,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "pathlib"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "scripts/validate/validate_asset.py",
+    "lines": 236,
+    "purpose": "",
+    "symbols": [
+      {
+        "name": "run_validation",
+        "line": 9,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "pathlib"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "tests/__init__.py",
+    "lines": 1,
+    "purpose": "",
+    "symbols": [],
+    "imports": [],
+    "syntax": "parsed"
+  },
+  {
+    "path": "tests/test_aces_channel_binding.py",
+    "lines": 111,
+    "purpose": "ACES EGT/CHT channel-binding fix (B0.3).",
+    "symbols": [
+      {
+        "name": "test_egt_channels_bind_to_distinct_named_columns_not_to_water_temp",
+        "line": 37,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_egt_values_are_no_longer_the_170_degree_misbinding",
+        "line": 57,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_cht_egt3_egt4_now_resolve",
+        "line": 75,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_find_channel_requires_start_of_string_match",
+        "line": 88,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_manifest_records_the_unit_caveat",
+        "line": 100,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.telemetry.aces_loader",
+      "pathlib"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "tests/test_adversarial_validation.py",
+    "lines": 416,
+    "purpose": "Adversarial Validation Suite \u2014 DRDO iDEX PS-26054\n===================================================\nVerifies behavioral correctness under controlled perturbations:",
+    "symbols": [
+      {
+        "name": "calibrated_runtime",
+        "line": 56,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "run_ticks",
+        "line": 62,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "TestSensorFaultDiscrimination",
+        "line": 71,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "TestPrognosticSensitivity",
+        "line": 142,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "TestDamageAccumulation",
+        "line": 186,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "TestConformalRULIntegrity",
+        "line": 235,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "TestDeterministicReplay",
+        "line": 270,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "TestMultiEngineAgnostic",
+        "line": 303,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "TestRuntimeHubAuthority",
+        "line": 328,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "TestAdversarialSensors",
+        "line": 352,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "TestEndToEndBehavioral",
+        "line": 390,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.core.frame",
+      "backend.evaluation.conformal",
+      "backend.evaluation.damage_accumulation",
+      "backend.mission.reliability",
+      "backend.physics.sensor_validator",
+      "backend.runtime.engine_runtime",
+      "backend.runtime.hub",
+      "backend.twin.validity"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "tests/test_agent_and_graph.py",
+    "lines": 168,
+    "purpose": "Unit Tests for Plane 2 Diagnostic Agent and Mission Knowledge Graph\nDRDO / iDEX Problem Statement ID: 26054",
+    "symbols": [
+      {
+        "name": "TestDiagnosticAgent",
+        "line": 19,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "TestMissionKnowledgeGraphAndReporter",
+        "line": 48,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "backend.agent.diagnostic_agent",
+      "backend.graph.mission_graph",
+      "backend.graph.mission_reporter"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "tests/test_analytical_pipeline.py",
+    "lines": 788,
+    "purpose": "Comprehensive Test Suite \u2014 New Analytical Modules\nDRDO / iDEX Problem Statement ID: 26054",
+    "symbols": [
+      {
+        "name": "nominal_state",
+        "line": 43,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_make_residual",
+        "line": 62,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "TestSensorSanityValidator",
+        "line": 79,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "TestResidualAutoencoder",
+        "line": 142,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "TestGearboxSpectralAnalyser",
+        "line": 245,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "TestTrendAnalyserFitting",
+        "line": 324,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "TestProbabilisticRUL",
+        "line": 387,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "TestScoreBuffer",
+        "line": 470,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "TestMajorityVoteBuffer",
+        "line": 516,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "TestDetectionPipeline",
+        "line": 557,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "TestPS_Pillar2_EarlyWarning",
+        "line": 638,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "TestPrognosticsWorker",
+        "line": 748,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "backend.ml.anomaly_detector",
+      "backend.ml.detection_pipeline",
+      "backend.ml.spectral_analyser",
+      "backend.ml.trend_analyser",
+      "backend.physics.sensor_validator",
+      "backend.physics.thermo_model"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "tests/test_camera_transitions.py",
+    "lines": 128,
+    "purpose": "",
+    "symbols": [
+      {
+        "name": "test_camera_movement_and_zooms",
+        "line": 60,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [],
+    "syntax": "parsed"
+  },
+  {
+    "path": "tests/test_canonical_runtime_pipeline.py",
+    "lines": 158,
+    "purpose": "End-to-End Acceptance Test for the Canonical Digital Twin Pipeline.\nDRDO / iDEX Problem Statement ID: 26054.",
+    "symbols": [
+      {
+        "name": "test_canonical_runtime_pipeline_end_to_end",
+        "line": 26,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_sensor_fault_shielding_and_attribution",
+        "line": 97,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_engine_service_unified_state_serialization",
+        "line": 119,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_multi_engine_agnostic_pipeline",
+        "line": 148,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "backend.core.frame",
+      "backend.physics.engine_config",
+      "backend.runtime.engine_runtime",
+      "backend.server.engine_service"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "tests/test_causal_propagation.py",
+    "lines": 134,
+    "purpose": "Unit Tests for Multi-Parameter Causal Fault Propagation\nDRDO / iDEX PS-26054 Rotax 912 iS Digital Twin",
+    "symbols": [
+      {
+        "name": "test_streamer_fault_causality",
+        "line": 12,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_engine_service_dynamic_subsystems",
+        "line": 89,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "backend.physics.thermo_model",
+      "backend.server.engine_service",
+      "backend.telemetry.can_streamer"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "tests/test_char_crank_telemetry.py",
+    "lines": 233,
+    "purpose": "Characterization tests (B0.9): ml/crank_diagnostics, telemetry/{mavlink_efi,socketcan_bridge}.",
+    "symbols": [
+      {
+        "name": "traces",
+        "line": 21,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_healthy_engine_is_nominal_and_uniform",
+        "line": 32,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_dead_cylinder_attributed_and_net_absorbing",
+        "line": 46,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_partial_misfire_reads_as_partial_but_still_flagged",
+        "line": 63,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_misfire_rate_recovered_exactly",
+        "line": 76,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_misfire_rate_monotone_in_fault_frequency",
+        "line": 91,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_crank_diagnostics_reset_and_validation",
+        "line": 102,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_healthy_four_cylinder_order2_dominance",
+        "line": 115,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_order_helpers_edge_cases",
+        "line": 130,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_angular_resample_speed_invariant_order_bin",
+        "line": 137,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_envelope_spectrum_finds_modulation_tone",
+        "line": 150,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_efi_to_anumaan_dict_mapping_and_units",
+        "line": 162,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_efi_object_input_missing_and_bad_fields",
+        "line": 180,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_mavlink_source_health_without_connection",
+        "line": 188,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_socketcan_disconnected_is_inert",
+        "line": 196,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_socketcan_pack_decode_roundtrip",
+        "line": 205,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_socketcan_saturation_and_unknown_frame",
+        "line": 225,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "backend.ml.crank_diagnostics",
+      "backend.physics.crank_dynamics",
+      "backend.telemetry.mavlink_efi",
+      "backend.telemetry.socketcan_bridge"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "tests/test_char_evaluation.py",
+    "lines": 202,
+    "purpose": "Characterization tests (B0.9): backend/evaluation/{conformal,damage_accumulation,prognostic_metrics}.",
+    "symbols": [
+      {
+        "name": "test_rainflow_astm_series_cycle_count",
+        "line": 25,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_rainflow_total_is_half_the_number_of_ranges",
+        "line": 36,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_rainflow_deterministic_and_simple_cases",
+        "line": 41,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_turning_points_collapse_monotone_runs",
+        "line": 50,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_coffin_manson_threshold_and_monotonic",
+        "line": 54,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_shock_cooling_only_when_cooling_faster_than_limit",
+        "line": 65,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_accumulator_damage_grows_with_swing_and_is_deterministic",
+        "line": 73,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_accumulator_shock_cooling_streaming",
+        "line": 91,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_accumulator_initial_damage_carried",
+        "line": 103,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_synthetic",
+        "line": 111,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_split_conformal_coverage_on_seeded_set",
+        "line": 117,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_conformal_interval_structure_and_monotonic_in_alpha",
+        "line": 133,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_conformal_uncalibrated_raises_and_length_mismatch",
+        "line": 145,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_coverage_curve_tracks_diagonal_roughly",
+        "line": 153,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_adaptive_conformal_tracks_realised_coverage",
+        "line": 165,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_prognostic_series_true_rul_and_validation",
+        "line": 178,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_evaluate_good_predictor_passes_waterfall",
+        "line": 185,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_evaluate_bad_predictor_gates_later_metrics",
+        "line": 197,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "backend.evaluation.conformal",
+      "backend.evaluation.damage_accumulation",
+      "backend.evaluation.prognostic_metrics"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "tests/test_char_harness_osacbm_edge.py",
+    "lines": 213,
+    "purpose": "Characterization tests (B0.9): evaluation/harness, osacbm, physics/exposure, edge/compressor.",
+    "symbols": [
+      {
+        "name": "test_harness_nominal_no_false_alarms_and_deterministic",
+        "line": 19,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_harness_misfire_detected_by_crank_channel_on_right_cylinder",
+        "line": 29,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_harness_cooling_degradation_plant_fails_and_twin_warns_first",
+        "line": 41,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_harness_run_all_summary_and_markdown",
+        "line": 51,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_default_scenarios_catalogue",
+        "line": 60,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_osacbm_registry_headline",
+        "line": 70,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_osacbm_registered_modules_import",
+        "line": 81,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_osacbm_layering_violation_is_detected",
+        "line": 86,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_exposure_baseline_environment_is_baseline",
+        "line": 100,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_exposure_harsh_environment_accelerates_wear",
+        "line": 111,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_exposure_start_stop_transitions",
+        "line": 133,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_exposure_save_load_roundtrip",
+        "line": 143,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_exposure_one_continuous_brownout_is_one_event",
+        "line": 156,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_edge_frame_pack_layout_and_size",
+        "line": 165,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_edge_compressor_build_publish_and_bandwidth",
+        "line": 179,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_link_power_latency_budgets",
+        "line": 202,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "backend",
+      "backend.edge.compressor",
+      "backend.evaluation.harness",
+      "backend.physics.exposure"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "tests/test_char_mission.py",
+    "lines": 113,
+    "purpose": "Characterization tests (B0.9): backend/mission/{reliability,prescriptive}.py",
+    "symbols": [
+      {
+        "name": "test_wilson_interval_values",
+        "line": 11,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_profile_and_stress_factor",
+        "line": 25,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_component_hazard_grows_with_damage",
+        "line": 37,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_analytic_reliability_baseline",
+        "line": 48,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_damage_lowers_reliability_and_derate_raises_it",
+        "line": 60,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_monte_carlo_seeded_determinism_and_agreement_with_analytic",
+        "line": 73,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_assess_verdicts",
+        "line": 83,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_prescriptive_derate_options_shape_and_monotone_cost",
+        "line": 91,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_prescriptive_advise_go_path",
+        "line": 105,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "backend.mission.prescriptive",
+      "backend.mission.reliability"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "tests/test_char_reliability.py",
+    "lines": 121,
+    "purpose": "Characterization tests (B0.9): backend/reliability/{fmeca,isolability}.py",
+    "symbols": [
+      {
+        "name": "fmeca",
+        "line": 13,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_failure_mode_scores",
+        "line": 17,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_default_fmeca_headline_numbers",
+        "line": 30,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_ranked_by_rpn_is_sorted_and_deterministic",
+        "line": 42,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_fmeca_markdown_and_json",
+        "line": 50,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_canonical_signature_collides_on_same_physics",
+        "line": 60,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_toy",
+        "line": 66,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_toy_matrix_ambiguity_and_discriminator",
+        "line": 74,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_isolability_monotone_in_channels_and_channel_value",
+        "line": 89,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_default_fmeca_isolability_current_value",
+        "line": 102,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_default_fmeca_dropping_channels_never_improves",
+        "line": 115,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "backend.reliability.fmeca",
+      "backend.reliability.isolability"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "tests/test_char_twin.py",
+    "lines": 168,
+    "purpose": "Characterization tests (B0.9): backend/twin/{validity,integrity}.py",
+    "symbols": [
+      {
+        "name": "test_chi2_bounds_shape",
+        "line": 14,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_feed",
+        "line": 22,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_validity_nominal_is_trustworthy",
+        "line": 30,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_validity_drift_and_fault_attribution",
+        "line": 45,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_validity_bias_and_sensor_fault",
+        "line": 58,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_validity_envelope_and_reset",
+        "line": 68,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_validity_deterministic_for_same_input",
+        "line": 79,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_frame",
+        "line": 90,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_default_constraints_zero_residual_on_ideal_frame",
+        "line": 109,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_integrity_calibrated_accepts_nominal_and_flags_spoof",
+        "line": 119,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_integrity_single_violation_is_sensor_fault",
+        "line": 138,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_integrity_frozen_stale_and_lane_checks",
+        "line": 149,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "backend.twin.integrity",
+      "backend.twin.validity"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "tests/test_char_validation_baseline.py",
+    "lines": 199,
+    "purpose": "Characterization tests (B0.9): backend/evaluation/{validation,threshold_baseline}.py",
+    "symbols": [
+      {
+        "name": "test_threshold_debounce_and_levels",
+        "line": 17,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_threshold_glitch_does_not_alarm_and_rearms",
+        "line": 31,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_threshold_low_limits_and_unknown_channels",
+        "line": 46,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_threshold_custom_limits",
+        "line": 56,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_compare_detection_lead_time",
+        "line": 61,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_false_alarm_rate",
+        "line": 74,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_shield_quarantine_recovery_dwell",
+        "line": 85,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_shield_dirty_again_resets_dwell",
+        "line": 97,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_shield_shield_usable_health_index",
+        "line": 106,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_novelty_gate_decisions",
+        "line": 123,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_ad_scores_point_adjust_inflates",
+        "line": 138,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_ad_scores_perfect_none_and_length_check",
+        "line": 149,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_Granule",
+        "line": 159,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "_Model",
+        "line": 181,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "test_validate_against_aces_fake_granule",
+        "line": 186,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_validate_against_aces_missing_rpm_reports_error",
+        "line": 197,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "backend.evaluation.threshold_baseline",
+      "backend.evaluation.validation",
+      "pathlib"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "tests/test_copilot_and_knowledge.py",
+    "lines": 156,
+    "purpose": "Test Suite for Ingested Knowledge Store, Document Loaders & Mission Copilot.\nDRDO / iDEX Problem Statement ID: 26054",
+    "symbols": [
+      {
+        "name": "TestKnowledgeAndCopilot",
+        "line": 21,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "backend.agent.copilot",
+      "backend.knowledge.loaders.chunker",
+      "backend.knowledge.loaders.text_loader",
+      "backend.knowledge.retrieval.local_store",
+      "backend.knowledge.retrieval.reranker",
+      "backend.voice.stt_engine",
+      "pathlib"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "tests/test_core_pipeline_and_profile.py",
+    "lines": 157,
+    "purpose": "Tests for backend/core/pipeline.py, channels.py, limits.py, and profile.py (B1.3, U1, U2, U3).",
+    "symbols": [
+      {
+        "name": "test_pipeline_layer_ordering",
+        "line": 13,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_pipeline_unique_names",
+        "line": 30,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_pipeline_execution_and_cadence",
+        "line": 40,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_channel_registry",
+        "line": 77,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_limits_check",
+        "line": 94,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_engine_profile",
+        "line": 138,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "backend.core.channels",
+      "backend.core.frame",
+      "backend.core.limits",
+      "backend.core.pipeline",
+      "backend.core.profile",
+      "backend.osacbm",
+      "backend.physics.engine_config"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "tests/test_data_and_federation_stack.py",
+    "lines": 107,
+    "purpose": "Tests for DATA and Federation Stack (B7.1-B7.7, W7, INN-04, D19, D28, D35).",
+    "symbols": [
+      {
+        "name": "test_dataset_manifests_and_loaders",
+        "line": 26,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_federated_colony_and_canary_gate",
+        "line": 63,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.datasets.aces",
+      "backend.datasets.alfa",
+      "backend.datasets.base",
+      "backend.datasets.battery",
+      "backend.datasets.cmapss",
+      "backend.datasets.cwru",
+      "backend.datasets.default_3500",
+      "backend.federation.aggregator",
+      "backend.federation.colony"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "tests/test_detect_stack.py",
+    "lines": 135,
+    "purpose": "W1/W11: calibrated-residual detector, conformal thresholds, persistence gate, reservoir tier.",
+    "symbols": [
+      {
+        "name": "run",
+        "line": 13,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "tail914",
+        "line": 31,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "det914",
+        "line": 38,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_frames_carry_command_fields",
+        "line": 42,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_calibration_roundtrip",
+        "line": 47,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_conformal_threshold_quantile",
+        "line": 56,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_false_alarm_rate_bounded_on_fresh_nominal",
+        "line": 62,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_calibration_is_per_tail",
+        "line": 70,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_detects_faults_and_ranks_above_nominal",
+        "line": 79,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_gate_and_evidence",
+        "line": 87,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_persistence_gate",
+        "line": 95,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_engine_agnostic_same_code_path",
+        "line": 101,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_rejects_too_few_frames",
+        "line": 110,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_reservoir_random_streams_and_separates",
+        "line": 115,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_federated_fly_bloom_merge_equals_pooled",
+        "line": 126,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "backend.detect",
+      "backend.sources",
+      "sklearn.metrics"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "tests/test_diag_stack.py",
+    "lines": 107,
+    "purpose": "Tests for DIAG Stack (B5.3, B5.4, B5.5, B6.1, B6.3): BN diagnosis, active test selection, XAI, RUL, ISA-18.2.",
+    "symbols": [
+      {
+        "name": "test_bayesian_network_diagnosis",
+        "line": 12,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_active_diagnostic_planner",
+        "line": 28,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_explanation_generator",
+        "line": 42,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_dual_path_rul_and_disagreement",
+        "line": 53,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_isa18_alarm_management_and_shelving",
+        "line": 83,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "backend.alarms.rationalisation",
+      "backend.diagnose.active",
+      "backend.diagnose.bn",
+      "backend.diagnose.explain",
+      "backend.physics.engine_config",
+      "backend.prognose.rul"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "tests/test_edge_and_replay.py",
+    "lines": 66,
+    "purpose": "W3/W4: recorder/replay bit-exactness and the edge node's gated downlink accounting.",
+    "symbols": [
+      {
+        "name": "flight",
+        "line": 13,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "tail",
+        "line": 26,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_record_replay_is_bit_exact",
+        "line": 32,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_replay_detects_tampering",
+        "line": 43,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_edge_gates_downlink_and_accounts",
+        "line": 51,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_host_profile_is_labelled_measured",
+        "line": 65,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "backend.detect",
+      "backend.edge.node",
+      "backend.sources",
+      "backend.sources.recorder"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "tests/test_edgelink_stack.py",
+    "lines": 141,
+    "purpose": "Tests for EDGELINK Stack (B2.6, B2.7, B9.1, OPT-01, OPT-02, OPT-03, INN-07, D17).",
+    "symbols": [
+      {
+        "name": "test_fadec_emulator_balancing_and_uds",
+        "line": 22,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_datalink_emulator_priority_and_jamming",
+        "line": 61,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_merkle_flight_log_tamper_detection",
+        "line": 98,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_can_intrusion_detector",
+        "line": 122,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.fadec_emulator.emulator",
+      "backend.link.link_emulator",
+      "backend.physics.engine_config",
+      "backend.security.can_ids",
+      "backend.security.merkle_log"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "tests/test_engine_agnostic_ratchet.py",
+    "lines": 128,
+    "purpose": "Engine-agnosticism ratchet (docs/build/UNIVERSALITY_AUDIT.md, decision D27).",
+    "symbols": [
+      {
+        "name": "count_file",
+        "line": 61,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "current_counts",
+        "line": 69,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_load_baseline",
+        "line": 73,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_engine_specific_literals_never_increase",
+        "line": 77,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_baseline_is_not_stale_upward",
+        "line": 96,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_update",
+        "line": 107,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "pathlib"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "tests/test_engine_api.py",
+    "lines": 75,
+    "purpose": "R4: engine API over the hub (uses a small hub injected into the router module).",
+    "symbols": [
+      {
+        "name": "client",
+        "line": 11,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_list_and_profiles",
+        "line": 23,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_state_has_no_truth_fields",
+        "line": 31,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_fault_validation_and_select",
+        "line": 39,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_levers",
+        "line": 50,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_ws_engine_streams",
+        "line": 55,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_ws_fleet",
+        "line": 62,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_engine_schema",
+        "line": 68,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "backend.runtime",
+      "fastapi",
+      "fastapi.testclient"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "tests/test_engine_config_provenance.py",
+    "lines": 90,
+    "purpose": "Engine config provenance (B0.4).",
+    "symbols": [
+      {
+        "name": "test_all_configs_load",
+        "line": 23,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_rotax_915is_exists_for_heron_mk_ii",
+        "line": 31,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_every_numeric_field_has_a_classified_provenance_entry",
+        "line": 44,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_every_provenance_entry_has_a_valid_status_and_ref",
+        "line": 55,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_vrde_config_does_not_overclaim_as_a_verified_specification",
+        "line": 65,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.physics.engine_config"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "tests/test_fault_highlighting.py",
+    "lines": 147,
+    "purpose": "",
+    "symbols": [
+      {
+        "name": "MockMaterialSlot",
+        "line": 59,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "MockMeshObject",
+        "line": 63,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "MockCollections",
+        "line": 82,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "test_fault_highlighting_and_material_swaps",
+        "line": 90,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [],
+    "syntax": "parsed"
+  },
+  {
+    "path": "tests/test_fleet_stack.py",
+    "lines": 170,
+    "purpose": "Tests for FLEET Stack (B10.1, B10.2, V7, R9, R10, R11).",
+    "symbols": [
+      {
+        "name": "test_performance_maps_and_atmosphere",
+        "line": 29,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_mission_profiles",
+        "line": 57,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_work_package_generator",
+        "line": 76,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_fleet_economics_model",
+        "line": 117,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_operational_history_tracker",
+        "line": 151,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.diagnose.bn",
+      "backend.economics.impact",
+      "backend.maintenance.work_package",
+      "backend.mission.profiles",
+      "backend.performance.maps",
+      "backend.physics.engine_config",
+      "backend.prognose.rul",
+      "backend.twin.history"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "tests/test_flyhash_novelty.py",
+    "lines": 159,
+    "purpose": "Tests for backend.ml.flyhash_novelty -- the FlyHash sparse-coding novelty layer.",
+    "symbols": [
+      {
+        "name": "test_feature_vector_has_documented_dimensionality",
+        "line": 26,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_feature_vector_accepts_real_order_features",
+        "line": 34,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_projection_row_fan_in_is_exact",
+        "line": 44,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_encoder_sparsity_matches_target",
+        "line": 51,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_similar_inputs_produce_similar_codes",
+        "line": 60,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_detector_uncalibrated_never_flags_novel",
+        "line": 83,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_detector_flags_genuine_outlier_after_calibration",
+        "line": 91,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_reset_calibration_clears_state",
+        "line": 117,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_edge_latency_budget",
+        "line": 128,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_reproducible_with_fixed_seed",
+        "line": 148,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_fan_in_cannot_exceed_input_dim",
+        "line": 157,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "backend.ml.crank_diagnostics",
+      "backend.ml.flyhash_novelty",
+      "backend.physics.thermo_model"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "tests/test_foundation_stack.py",
+    "lines": 93,
+    "purpose": "Tests for FOUNDATION Stack (W8, W10, INN-06, D35).",
+    "symbols": [
+      {
+        "name": "test_maintenance_text_classifier",
+        "line": 19,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_time_series_forecaster",
+        "line": 42,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_in_context_tabular_classifier",
+        "line": 65,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.foundation.forecast_chronos",
+      "backend.foundation.tabpfn_wrapper",
+      "backend.foundation.text_classifier"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "tests/test_frame_and_plant_source.py",
+    "lines": 90,
+    "purpose": "B1.1 / B1.2(part 1): the canonical Frame contract and PlantSource.",
+    "symbols": [
+      {
+        "name": "test_frame_has_no_truth_or_twin_output_fields",
+        "line": 22,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_frame_from_dict_refuses_forbidden_fields",
+        "line": 30,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_frame_validates_source_and_cylinder_counts",
+        "line": 35,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_unmeasured_channels_are_none_not_zero",
+        "line": 42,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_plant_source_emits_frame_and_separate_truth",
+        "line": 48,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_injected_fault_appears_in_truth_only_never_in_frame",
+        "line": 58,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_same_seed_reproduces_and_different_builds_differ",
+        "line": 69,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_engine_class_is_configuration",
+        "line": 77,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_a_cooling_fault_moves_plant_readings_without_leaking_the_label",
+        "line": 84,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "backend.core.frame",
+      "backend.sources"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "tests/test_fun_req_compliance.py",
+    "lines": 290,
+    "purpose": "Comprehensive Functional Requirements & Gap Resolution Compliance Test Suite\nDRDO / iDEX Problem Statement ID: 26054 \u2014 Project ANUMAAN\nRotax 912 iS Sport MALE UAV Digital Twin",
+    "symbols": [
+      {
+        "name": "test_decoupled_plant_differential_dynamics",
+        "line": 40,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_rotax_performance_maps_and_injection",
+        "line": 64,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_sensor_drift_detection_and_residual_shielding",
+        "line": 91,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_threshold_baseline_comparator_lead_time",
+        "line": 130,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_canonical_mission_regimes",
+        "line": 167,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_high_rate_vibration_dft_and_orders",
+        "line": 195,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_conformal_rul_prediction_intervals",
+        "line": 232,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_no_shortcut_fake_diagnosis_echo",
+        "line": 260,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "backend.ml.detection_pipeline",
+      "backend.ml.rul_estimator",
+      "backend.ml.spectral_analyser",
+      "backend.ml.trend_analyser",
+      "backend.physics.sensor_validator",
+      "backend.physics.thermo_model",
+      "backend.server.engine_service",
+      "backend.server.schemas",
+      "backend.telemetry.can_streamer"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "tests/test_independent_plant_adapter.py",
+    "lines": 150,
+    "purpose": "Tests for backend.plant.adapter.IndependentPlantAdapter \u2014 the G01 wiring.",
+    "symbols": [
+      {
+        "name": "_make_adapter",
+        "line": 20,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_nominal_frame_is_well_formed",
+        "line": 26,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_nominal_residuals_are_structured_not_pure_noise",
+        "line": 40,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_mapped_faults_move_the_expected_channel",
+        "line": 70,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_unmapped_faults_pass_through_untouched",
+        "line": 100,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_fault_switch_reinjects_plant_fault",
+        "line": 122,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_truth_access_for_evaluation_only",
+        "line": 141,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "backend.physics.thermo_model",
+      "backend.plant.adapter",
+      "backend.telemetry.can_streamer"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "tests/test_llm_provider_default.py",
+    "lines": 41,
+    "purpose": "Guards the B0.2 fix: the LLM must default to disabled, and must never default to\na Chinese-origin model. See docs/build/DECISIONS.md D14.",
+    "symbols": [
+      {
+        "name": "test_default_provider_is_none_and_disabled",
+        "line": 12,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_backward_compat_alias_exists",
+        "line": 28,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_qwen_is_not_the_default_provider_model",
+        "line": 33,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "__future__"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "tests/test_no_truth_leak.py",
+    "lines": 115,
+    "purpose": "Guards against ground-truth leaking into the live inference path (B0.1).",
+    "symbols": [
+      {
+        "name": "_find_forbidden_attribute_reads",
+        "line": 50,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "_iter_python_files",
+        "line": 74,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_no_ground_truth_attribute_reads_in_live_inference_path",
+        "line": 81,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_flyhash_novelty_calibration_does_not_reference_fault_id",
+        "line": 97,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "__future__",
+      "pathlib"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "tests/test_physics_and_telemetry.py",
+    "lines": 127,
+    "purpose": "",
+    "symbols": [
+      {
+        "name": "TestRotaxPhysicsAndTelemetry",
+        "line": 13,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "backend.physics.thermo_model",
+      "backend.telemetry.can_streamer"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "tests/test_runtime_hub.py",
+    "lines": 121,
+    "purpose": "R1-R3: concurrent per-engine runtimes, fault registry, lever dynamics, isolation, determinism.",
+    "symbols": [
+      {
+        "name": "hub",
+        "line": 16,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_registry_filters_by_profile",
+        "line": 22,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_invalid_fault_rejected",
+        "line": 28,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_all_engines_tick_and_only_selected_gets_heavy",
+        "line": 35,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_fault_isolated_to_one_engine_and_marked_manual",
+        "line": 44,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_detector_alarms_on_injected_fault_not_on_other_engine",
+        "line": 55,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_lever_first_order_dynamics_and_physics_response",
+        "line": 66,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_determinism_same_seed_same_stream",
+        "line": 86,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_cpu_cost_is_small",
+        "line": 94,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_all_five_engines_concurrent_load_and_isolation",
+        "line": 101,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "backend.physics.engine_config",
+      "backend.runtime",
+      "backend.runtime.levers",
+      "backend.runtime.registry"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "tests/test_runtime_sensor_levers_and_replay.py",
+    "lines": 134,
+    "purpose": "Tests for SensorLevers (R7) and bit-exact live-vs-replay (D05).",
+    "symbols": [
+      {
+        "name": "test_sensor_levers_operations",
+        "line": 10,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_runtime_sensor_fault_kpi_exclusion",
+        "line": 53,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_bit_exact_live_vs_replay",
+        "line": 77,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "backend.core.frame",
+      "backend.runtime.engine_runtime",
+      "backend.runtime.sensor_levers"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "tests/test_server_api.py",
+    "lines": 195,
+    "purpose": "Unit & Integration Tests for Backend FastAPI Telemetry & Control Server\nDRDO / iDEX Problem Statement ID: 26054",
+    "symbols": [
+      {
+        "name": "client",
+        "line": 14,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_root_endpoint",
+        "line": 19,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_health_endpoint",
+        "line": 28,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_state_snapshot_schema",
+        "line": 38,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_control_fault_activation_and_clearing",
+        "line": 74,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_commanded_fault_highlights_immediately",
+        "line": 95,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_control_throttle_and_environment",
+        "line": 145,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_control_engine_stop_and_start",
+        "line": 162,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_debrief_export_endpoint",
+        "line": 181,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "backend.server.engine_service",
+      "backend.server.main",
+      "fastapi.testclient"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "tests/test_twin_stack.py",
+    "lines": 84,
+    "purpose": "Tests for Twin Stack (B4.1, B4.2, B4.4, B4.5, B4.6): dynamic twin, UKF estimation, SINDy, priors.",
+    "symbols": [
+      {
+        "name": "test_dynamic_thermofluid_model",
+        "line": 13,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_thermofluid_ukf_parameter_tracking",
+        "line": 31,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_sindy_sparse_law_discovery",
+        "line": 52,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_degradation_particle_filter",
+        "line": 63,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_hierarchical_fleet_priors_personalization",
+        "line": 73,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "backend.physics.engine_config",
+      "backend.twin.degradation",
+      "backend.twin.model",
+      "backend.twin.priors",
+      "backend.twin.ukf"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "tests/test_voice_copilot.py",
+    "lines": 132,
+    "purpose": "Test Suite for Voice Mission Copilot Conversational Logic.\nDRDO / iDEX Problem Statement ID: 26054",
+    "symbols": [
+      {
+        "name": "TestVoiceCopilot",
+        "line": 23,
+        "kind": "ClassDef"
+      },
+      {
+        "name": "TestVoiceConversationManager",
+        "line": 112,
+        "kind": "ClassDef"
+      }
+    ],
+    "imports": [
+      "backend.agent.copilot",
+      "backend.voice.conversation",
+      "pathlib"
+    ],
+    "syntax": "parsed"
+  },
+  {
+    "path": "tests/test_waveform_stack.py",
+    "lines": 153,
+    "purpose": "Tests for Waveform Stack (B2.1-B2.5, W3): CI combustion, rail acoustics, structural dynamics, high-rate DAQ.",
+    "symbols": [
+      {
+        "name": "test_ci_combustion_peak_pressure_class",
+        "line": 16,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_common_rail_hydraulics_and_injector_coking",
+        "line": 33,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_draper_resonance_and_bearing_orders",
+        "line": 64,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_sensor_chain_timer_and_adc",
+        "line": 95,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_waveform_source_and_recorder_npz_sha256",
+        "line": 106,
+        "kind": "FunctionDef"
+      },
+      {
+        "name": "test_waveform_visibility_of_scalar_invisible_faults",
+        "line": 128,
+        "kind": "FunctionDef"
+      }
+    ],
+    "imports": [
+      "backend.physics.combustion_ci",
+      "backend.physics.engine_config",
+      "backend.physics.rail",
+      "backend.physics.structure",
+      "backend.plant.sensors_hr",
+      "backend.sources.waveform",
+      "pathlib"
+    ],
+    "syntax": "parsed"
+  }
+]

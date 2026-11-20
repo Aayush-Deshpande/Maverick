@@ -1,0 +1,48 @@
+{
+  "zero_bridge": {
+    "input": {
+      "altitude_ft": 0,
+      "oat_c": 0,
+      "oil_pressure_bar": 0,
+      "fuel_flow": 0,
+      "map_kpa": 0,
+      "bus_voltage": 0
+    },
+    "output": {
+      "altitude_ft": 20000.0,
+      "oat_c": -20.0,
+      "oil_pressure_bar": 3.8,
+      "fuel_flow": 18.0,
+      "map_kpa": 90.0,
+      "bus_voltage": 14.1
+    }
+  },
+  "mixed_contract": {
+    "go_no_go": "GO",
+    "planned_sortie_hours": 18.0,
+    "rul_p10_hours": 0.0,
+    "rul_p50_hours": 0.9,
+    "mission_reliability": {
+      "mission_reliability": 0,
+      "limiting_component": "cylinder_head_1"
+    },
+    "residuals": {
+      "mahalanobis": 3.13
+    },
+    "score_presented_as_probability_by_legacy_ui": 3.127
+  },
+  "hidden_truth_changes_diagnosis_with_identical_frame_and_detector": [
+    {
+      "hidden_mode": "MISFIRE",
+      "diagnosis": "Ignition Misfire (Lane A)",
+      "fault_id": 3,
+      "confidence": 0.98
+    },
+    {
+      "hidden_mode": "COOLING_DEGRADATION",
+      "diagnosis": "Cylinder #2 CHT Overheat",
+      "fault_id": 1,
+      "confidence": 0.98
+    }
+  ]
+}
