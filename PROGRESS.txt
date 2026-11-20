@@ -17,15 +17,16 @@ Last commit:  see git log -1.
 State:        tests/dynamic 15 passed, vitest 25, tsc OK; landing loads with no console errors. Full suite last
               698 passed (+ known ratchet; timing test flaky only under load).
 Latest:       D55 done (diesel lambda 1.35 + boost 247/227 kPa CALIBRATED from BSFC 235/215; live cruise EGT ~390-430 C). D58 (914 charge-path cooling, cold-day density criterion); survey inset AE300 no longer renders white.
-Next step:    20 Nov night, Prasad: "fix everything"; status must be graded, environment-aware (D60).
-              COMMITTED since last update: D59 round 2 physics (T-FLT-1 107/144), D60 graded diagnosis status +
-              desert test, D61 shared accelerometer hypothesis, 3D pulse + camera fly-to + Focus fault, acceptance
-              script + first result (docs/verification/inject_anywhere_2026-11-20.csv: 141/144 live, 92/144 top-3,
-              highlight exact whenever the injected fault is top-1).
-              RUNNING: acceptance rerun after D60/D61 (scratchpad accept2.txt -> docs/verification CSV overwritten).
-              Next: compare with the first run, commit the new CSV; then the remaining isolation misses (F04 lane loss
-              weak physics, F10 fuel supply on diesels, F17 turbo bearing at cruise, slow thermal F21/F24/F25 on the
-              Rotax), restart the live backend (it still runs pre-D59-round-2 code), re-check in the browser.
+Next step:    21 Nov ~01:00. Acceptance (scripts/verify/inject_anywhere.py, clean engines per round), run 3:
+              142/142 injections live from console / 3D twin / GCS, 127/142 injected faults in the top-3 diagnosis,
+              highlight exact in every case the injected fault is top-1 (docs/verification/inject_anywhere_2026-11-21.csv).
+              Committed since: D62 ECU-reported lane loss (F36; F04 = 914 only), harness fixes.
+              RUNNING: signatures regenerated with rail_p scored (backend/detect/calibration.py SCALAR_CHANNELS,
+              UNCOMMITTED) + tests. Then commit, rerun acceptance, compare (target: F09 rail decay on the diesels).
+              Remaining misses (run 3): F09 AE/VRDE (rail_p fix), F10 AE/VRDE (no low-pressure fuel sensor modelled on
+              CI engines), F12 914 carb icing (looks like F15), F14 AE boost leak, F24 912 oil leak, F32/F34 912
+              electrical (F34 masked by a running alternator: real), F35 glow plug (cold start only: real), F37 governor
+              hunting (variance, not a mean shift). Live backend still on old code: restart + browser check after.
               Prasad decisions 20 Nov: Q1 = b (test_calibration_is_per_tail stays failing, 19.6 % vs 20 %);
               Q2 superseded by D60 (the oil pump test's original CAUTION expectation holds again).
               Prasad's uncommitted deploy edits (his to commit): frontend/.env.production,
