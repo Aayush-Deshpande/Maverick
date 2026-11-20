@@ -63,6 +63,13 @@ export default function TwinStage(p: Props) {
       else if (k === 'c') { const n = p.cylinders; if (n) setCyl((c) => (c % n) + 1); }
       else if (k === 'f') setFocus((n) => n + 1);
       else if (k === 't') p.onTraining(!p.training);
+      else if (k === 'r') {                          // a seized engine stays seized until reset (R 19.4)
+        p.command('/faults', 'DELETE')
+          .then(() => p.command('/engine', 'POST', { command: 'RESET' }))
+          .then(() => p.command('/engine', 'POST', { command: 'START' }))
+          .then(() => p.command('/status/acknowledge', 'POST', {}))
+          .then(() => say('Engine reset and restarted')).catch((e) => say(e instanceof Error ? e.message : 'Reset failed'));
+      }
       else return;
       e.preventDefault();
     };
@@ -100,7 +107,7 @@ export default function TwinStage(p: Props) {
         <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1.5 border-t border-surface-border pt-3 text-[11px] text-slate-400">
           <span><kbd className={key}>0</kbd> clear all</span><span><kbd className={key}>Q</kbd><kbd className={`${key} ml-1`}>E</kbd> page</span>
           <span><kbd className={key}>C</kbd> cylinder {cyl}</span><span><kbd className={key}>F</kbd> focus</span>
-          <span className="col-span-2"><kbd className={key}>T</kbd> training {p.training ? 'on' : 'off'}</span>
+          <span><kbd className={key}>T</kbd> training {p.training ? 'on' : 'off'}</span><span><kbd className={key}>R</kbd> reset engine</span>
         </div>
       </aside>
 

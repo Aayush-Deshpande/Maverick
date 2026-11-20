@@ -25,7 +25,11 @@ const EMISSIVE_INTENSITY = 0.9;
 const PULSE_PEAK = 2.2;                                  // peak glow of a highlighted part while it pulses
 const PULSE_HZ = 1.2;                                    // highlighted parts breathe at this rate (P Part 6 X2)
 const PULSE_MIN = 0.1;                                   // ...between this share of the peak glow and the peak
-const FOCUS_CONTEXT = 0.15;                              // fly-to frame: part size x this margin, so its place on the engine stays visible
+const ORBIT_DISTANCE = 0.9;                              // fault view: share of the whole-engine framing distance
+const ORBIT_LIFT = 0.35;                                 // ...seen slightly from above
+const AIM_TOWARD_PART = 0.35;                            // ...looking from the engine centre this far toward the part
+const LOOP_SPEED = 0.6;                                  // then a slow loop around the engine (OrbitControls units)
+const LOOP_DELAY_MS = 1200;                              // after the fly-to has settled
 
 /** Image-based lighting from the shared procedural studio (utils/engineMaterials; no HDR download). */
 function RoomEnv() {
@@ -81,6 +85,7 @@ function Model({ url, levels, onLit, focusRequest }: { url: string; levels: Map<
   const root = useMemo(() => { const r = scene.clone(true); prepare(r); return r; }, [scene]);  // own copy per viewer
   const glowing = useRef<MeshStandardMaterial[]>([]);
   const bounds = useBounds();
+  const get = useThree((st) => st.get);
   useEffect(() => { const r = applyHighlights(root, levels); glowing.current = r.glowing; onLit(r.lit); }, [root, levels, onLit]);
   useFrame(({ clock }) => {                                // pulse: the eye finds the faulty part at once
     const k = PULSE_MIN + (1 - PULSE_MIN) * (0.5 + 0.5 * Math.sin(clock.elapsedTime * 2 * Math.PI * PULSE_HZ));
@@ -95,11 +100,24 @@ function Model({ url, levels, onLit, focusRequest }: { url: string; levels: Map<
     const names = new Set(target ? target.split('|') : []);
     const box = new Box3();
     root.traverse((o) => { if (names.has(o.name)) box.expandByObject(o); });
+    const controls = get().controls as unknown as { autoRotate: boolean; autoRotateSpeed: number } | null;
     if (box.isEmpty()) {
       if (framed.current !== root) bounds.refresh(root).reset().clip();     // drei 9.122: reset() moves the camera
+      if (controls) controls.autoRotate = false;
     } else {
-      box.expandByScalar(box.getSize(new Vector3()).length() * FOCUS_CONTEXT);
-      bounds.refresh(box).reset().clip();
+      // stay outside the engine: orbit to the side where the part faces the viewer, whole engine still in frame,
+      // aim a little toward the part, then loop slowly around it (P Part 6 X2)
+      const { center, distance } = bounds.refresh(root).getSize();
+      const part = box.getCenter(new Vector3());
+      const out = part.clone().sub(center);
+      if (out.lengthSq() < 1e-9) out.copy(get().camera.position).sub(center);
+      out.normalize().add(new Vector3(0, ORBIT_LIFT, 0)).normalize();
+      bounds.moveTo(center.clone().addScaledVector(out, distance * ORBIT_DISTANCE))
+        .lookAt({ target: center.clone().lerp(part, AIM_TOWARD_PART) });
+      if (controls) {
+        controls.autoRotate = false;
+        window.setTimeout(() => { controls.autoRotate = true; controls.autoRotateSpeed = LOOP_SPEED; }, LOOP_DELAY_MS);
+      }
     }
     framed.current = root;
   }, [target, focusRequest, root, bounds]);
