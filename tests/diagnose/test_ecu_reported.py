@@ -20,6 +20,6 @@ def test_lost_ecu_lane_is_reported_and_diagnosed_without_a_residual_alarm():
 
 def test_lane_faults_split_by_who_can_report_them():
     reg = registry()
-    assert reg.get("F04").applicable(load_engine_config("rotax_914"))[0]           # dual CDI, nothing reports it
-    assert not reg.get("F04").applicable(load_engine_config("rotax_912is"))[0]     # ECU lanes: that is F36
-    assert reg.get("F36").applicable(load_engine_config("rotax_912is"))[0]
+    assert reg.get("F04").applicability(load_engine_config("rotax_914"))[0]           # dual CDI, nothing reports it
+    assert not reg.get("F04").applicability(load_engine_config("rotax_912is"))[0]     # ECU lanes: that is F36
+    assert reg.get("F36").applicability(load_engine_config("rotax_912is"))[0]
