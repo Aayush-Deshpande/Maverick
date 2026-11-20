@@ -571,6 +571,16 @@ def v1_ui_labels(lang: str = Query(default="en", pattern="^[a-z]{2}$")) -> Dict[
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+@router.get("/api/v1/ui/demo")
+def v1_ui_demo() -> Dict[str, Any]:
+    """The landing's "Run the demo" scenario (configs/ui/demo.json): which engine, view and fault the console opens
+    with. The console injects it through the normal fault endpoint (source "demo")."""
+    path = ROOT / "configs" / "ui" / "demo.json"
+    if not path.exists():
+        raise HTTPException(404, {"code": "NO_DEMO", "message": "no demo scenario configured"})
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
 @router.get("/api/v1/engines/{engine_id}/components")
 def v1_components(engine_id: str) -> Dict[str, Any]:
     """Component manifest for 3D viewers (M6-05): the web model URL and each component's exact GLB node names

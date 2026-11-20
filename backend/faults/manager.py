@@ -19,7 +19,7 @@ from typing import Any, Callable, Dict, List, Optional, Protocol
 from backend.faults.registry import FaultRegistry, FaultRejected
 from backend.physics.engine_config import EngineConfig
 
-SOURCES = {"console", "3d", "blender", "gcs", "voice", "api", "mission", "replay", "test", "legacy"}
+SOURCES = {"console", "3d", "blender", "gcs", "voice", "api", "mission", "replay", "test", "legacy", "demo"}
 
 
 class SimulationAdapter(Protocol):

@@ -1,0 +1,14 @@
+{
+  "_comment": "Landing 'Run the demo' scenario (D57 hand-off into the live console). Display and command data only: the console plays it through the normal /api/v1 fault endpoint with source 'demo', so status, diagnosis and 3D highlights come from the live pipeline, never from this file.",
+  "engine_id": "rotax_912is",
+  "view": "OPERATOR",
+  "training": true,
+  "inject": { "fault_id": "F23", "severity": 1.0 },
+  "headline": "Demo: oil pressure loss on the Rotax 912 iS Sport",
+  "steps": [
+    "The fault is injected into the physics (oil pump health), not into the readings.",
+    "Watch oil pressure fall, the status move from GO towards NO-GO, and the reason name the limit.",
+    "Diagnosis lights the oil tank on the 3D engine once it is confident (training mode also outlines the injected part).",
+    "Clear the fault with 'Clear all' to watch the engine recover."
+  ]
+}

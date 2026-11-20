@@ -4,6 +4,7 @@ import { useEngineRuntime, useNow } from '../hooks/useEngineRuntime';
 import { dataAgeMs } from '../store/engineStore';
 import { NO_DATA, num } from '../utils/format';
 import { LabelsContext, channelLabel, componentLabel, useFetchLabels } from '../utils/labels';
+import { consumeDemoRequest } from '../demoIntent';
 import RoutePlannerPanel from './RoutePlannerPanel';
 import StatusBanner from './StatusBanner';
 import EngineerPanel from './EngineerPanel';
@@ -34,6 +35,8 @@ const loadView = (): View => {
   try { const v = localStorage.getItem(VIEW_KEY); return VIEWS.some((x) => x.id === v) ? (v as View) : 'OPERATOR'; }
   catch { return 'OPERATOR'; }
 };
+
+type DemoScenario = { engine_id: string; view: View; training: boolean; inject: { fault_id: string; severity?: number; cylinder?: number }; headline: string; steps: string[] };
 
 export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
   const runtime = useEngineRuntime(serverUrl);
@@ -97,6 +100,24 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
     try { await fn(); setNotice(success); setTimeout(() => setNotice(''), 3500); }
     catch (cause) { setNotice(cause instanceof Error ? cause.message : 'Command failed'); }
   };
+  // Landing "Run the demo" (configs/ui/demo.json via /api/v1/ui/demo): open its engine and view, then inject its
+  // fault through the normal fault endpoint once the stream is live. Everything shown after that is the live pipeline.
+  const [demo, setDemo] = useState<DemoScenario | null>(null);
+  const [demoArmed, setDemoArmed] = useState(false);
+  useEffect(() => {
+    if (!consumeDemoRequest()) return;
+    runtime.api('/api/v1/ui/demo', 'GET').then((d: DemoScenario) => {
+      setDemo(d); setDemoArmed(true);
+      if (VIEWS.some((v) => v.id === d.view)) setView(d.view);
+      setTraining(d.training);
+      runtime.selectEngine(d.engine_id);
+    }).catch(() => setNotice('Demo scenario unavailable'));
+  }, []);  // eslint-disable-line react-hooks/exhaustive-deps -- one-shot on open
+  useEffect(() => {
+    if (!demo || !demoArmed || runtime.engineId !== demo.engine_id || !live) return;
+    setDemoArmed(false);
+    void run(() => runtime.command('/faults', 'POST', { ...demo.inject, source: 'demo', request_id: newRequestId() }), demo.headline);
+  }, [demo, demoArmed, runtime.engineId, live]);  // eslint-disable-line react-hooks/exhaustive-deps
   const inject = () => {
     if (!fault) return;
     void run(() => runtime.command('/faults', 'POST', {
@@ -116,6 +137,13 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
     : runtime.connection;
 
   return <LabelsContext.Provider value={labels}><div className="space-y-4">
+    {demo && <section className="surface-panel p-4 border-accent/60" aria-live="polite">
+      <div className="flex items-start justify-between gap-3">
+        <h3 className="text-sm font-semibold text-white">{demo.headline}</h3>
+        <button type="button" onClick={() => setDemo(null)} className="text-xs font-mono text-slate-400 hover:text-white">Close</button>
+      </div>
+      <ol className="mt-2 list-decimal pl-5 space-y-1 text-xs text-slate-300">{demo.steps.map((step) => <li key={step}>{step}</li>)}</ol>
+    </section>}
     <section className="surface-panel p-4 sm:p-5">
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
         <div>

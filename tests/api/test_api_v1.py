@@ -133,3 +133,17 @@ def test_ui_labels_are_served_from_config(client):
     assert set(body["status"]) >= {"GO", "ADVISORY", "CAUTION", "NO-GO", "ENGINE_OFF", "UNKNOWN"}
     assert client.get("/api/v1/ui/labels", params={"lang": "xx"}).status_code == 404
     assert client.get("/api/v1/ui/labels", params={"lang": "../runtime"}).status_code == 422
+
+
+def test_ui_demo_scenario_is_served_from_config_and_injectable(client):
+    """Landing "Run the demo" (D57): the scenario comes from configs/ui/demo.json and its fault is accepted by the normal
+    fault endpoint for its engine, with source "demo"."""
+    demo = client.get("/api/v1/ui/demo").json()
+    engines = {e["engine_id"] for e in client.get("/api/v1/engines").json()["engines"]}
+    assert demo["engine_id"] in engines
+    applicable = {f["id"] for f in client.get("/api/v1/faults", params={"engine": demo["engine_id"]}).json()["faults"]}
+    assert demo["inject"]["fault_id"] in applicable
+    r = client.post(f"/api/v1/engines/{demo['engine_id']}/faults",
+                    json={**demo["inject"], "source": "demo", "request_id": "demo-test-1"})
+    assert r.status_code in (200, 201), r.text
+    client.delete(f"/api/v1/engines/{demo['engine_id']}/faults")
