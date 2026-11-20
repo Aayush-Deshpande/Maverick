@@ -571,6 +571,31 @@ def v1_ui_labels(lang: str = Query(default="en", pattern="^[a-z]{2}$")) -> Dict[
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+class CopilotQuestion(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    engine_id: str
+    question: str = Field(min_length=1, max_length=500)
+
+
+@router.post("/api/v1/copilot/ask")
+def v1_copilot_ask(body: CopilotQuestion) -> Dict[str, Any]:
+    """Copilot agent (Phase 8b, D45): the 7-section answer built from read-only tools over the live state message
+    (what the screen shows). LLM optional (ANUMAAN_LLM_PROVIDER); without one the answer is deterministic."""
+    from backend.agent.orchestrator import answer, configured_provider
+    from backend.agent.tools import CopilotTools, ServicesSource
+    services().channel(body.engine_id)                         # 404 for an unknown engine
+    return answer(CopilotTools(ServicesSource(services(), REGISTRY)), body.engine_id, body.question,
+                  configured_provider())
+
+
+@router.get("/api/v1/copilot/status")
+def v1_copilot_status() -> Dict[str, Any]:
+    """Which language model (if any) phrases the copilot answers; the deterministic answer always works."""
+    from backend.agent.llm_engine import LocalLLMEngine
+    return {"deterministic": "AVAILABLE", "llm": LocalLLMEngine.get_instance().status_payload(),
+            "manual_search": "UNAVAILABLE (card AI-03: real OEM manual index)"}
+
+
 @router.get("/api/v1/ui/demo")
 def v1_ui_demo() -> Dict[str, Any]:
     """The landing's "Run the demo" scenario (configs/ui/demo.json): which engine, view and fault the console opens
