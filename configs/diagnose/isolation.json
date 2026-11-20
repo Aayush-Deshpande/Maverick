@@ -102,5 +102,10 @@
     },
     "status": "ASSUMED",
     "ref": "D61: channels derived from ONE physical sensor (every vibration order comes from the engine accelerometer's spectrum) share one sensor-fault hypothesis: a bad accelerometer shifts all its orders together, so a single raised order is evidence of a mechanical fault (bearing, gearbox, prop, mount), not of a sensor offset. Key = sensor name, value = channel-name prefix."
+  },
+  "ecu_report_posterior": {
+    "value": 0.95,
+    "status": "ASSUMED",
+    "ref": "D62: an ECU self-test report (e.g. a lane lost, Rotax OM-912 i p.4-5 warning indicator) is direct evidence, like a fault code; kept below 1 for a faulty report"
   }
 }

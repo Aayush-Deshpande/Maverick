@@ -504,6 +504,10 @@ class EngineRuntime:
                     self._cached_hypotheses = [h.to_dict() for h in hyps]
                 else:
                     self._cached_hypotheses = []
+                reported = self._ecu_reported(frame)               # 6c. ECU self-test reports (D62)
+                if reported:
+                    ids = {r["fault_id"] for r in reported}
+                    self._cached_hypotheses = reported + [h for h in self._cached_hypotheses if h.get("fault_id") not in ids]
 
                 # 7. Fatigue Damage Accumulation & Conformal RUL Intervals
                 head_t = float(frame.cht[0]) if frame.cht and frame.cht[0] is not None else None
@@ -643,6 +647,21 @@ class EngineRuntime:
                 return None
             self.mission.abort()
             return self.mission.progress(self.source.now())
+
+    def _ecu_reported(self, frame: Frame) -> List[Dict[str, Any]]:
+        """Faults the ECU reports itself (D62): fewer healthy lanes than the engine has -> the registry's ecu_reported
+        LANE fault, as direct evidence (a fault code), independent of the residual detector."""
+        lanes = int(getattr(self.cfg, "ecu_lanes", 0) or 0)
+        if frame.ecu_lanes_ok is None or not lanes or frame.ecu_lanes_ok >= lanes:
+            return []
+        if not hasattr(self, "_ecu_report_post"):
+            iso_cfg = json.loads((Path(__file__).resolve().parents[2] / "configs" / "diagnose" / "isolation.json")
+                                 .read_text(encoding="utf-8"))
+            self._ecu_report_post = float(iso_cfg["ecu_report_posterior"]["value"])
+        return [{"fault_id": f.id, "name": f.name, "kind": "PROCESS", "cylinder": None, "channel": None,
+                 "posterior": self._ecu_report_post, "severity": None, "group": "ECU self-test report",
+                 "supporting": [], "contradicting": []}
+                for f in sim_registry().applicable(self.cfg) if f.raw.get("ecu_reported") == "LANE"]
 
     def tick(self, heavy: bool = False) -> Tick:
         with self._lock:

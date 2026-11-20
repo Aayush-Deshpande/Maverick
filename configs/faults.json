@@ -285,6 +285,12 @@
           "in": [
             2
           ]
+        },
+        {
+          "field": "ecu_lanes",
+          "in": [
+            0
+          ]
         }
       ],
       "legacy_ids": [],
@@ -311,12 +317,6 @@
           "direction": 1,
           "min_delta": 15,
           "unit": "C"
-        },
-        {
-          "channel": "lane_status",
-          "direction": 1,
-          "min_delta": 1,
-          "unit": "state"
         }
       ],
       "detect_window_s": 10,
@@ -3074,7 +3074,8 @@
           "marker_for": null
         }
       },
-      "channel_scope": null
+      "channel_scope": null,
+      "ecu_reported": "LANE"
     },
     {
       "id": "F37",

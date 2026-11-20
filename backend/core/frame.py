@@ -93,6 +93,7 @@ class Frame:
     fadec_trim: List[float] = field(default_factory=list)   # %, cylinder balancing
     fadec_adapt: List[float] = field(default_factory=list)  # %, drift adaptation
     fadec_lane: Optional[str] = None      # "A" | "B"
+    ecu_lanes_ok: Optional[int] = None    # lanes the ECU's self-test reports healthy; None = engine has no ECU lanes
 
     bus_v: Optional[float] = None         # V
     bus_i: Optional[float] = None         # A

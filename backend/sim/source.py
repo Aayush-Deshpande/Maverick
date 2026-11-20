@@ -52,6 +52,7 @@ class SimSource:
         self.tail_id, self.engine_serial = tail_id, engine_serial
         self.cfg = load_engine_config(engine_config_id)
         self.n_cylinders = self.cfg.cylinder_count
+        self._ecu_lanes = int(getattr(self.cfg, "ecu_lanes", 0) or 0)      # the ECU reports its own lane state
         self.ci = bool(self.cfg.is_compression_ignition)
         self.plant = SimEngine(self.cfg)
         self.plant.warm_start(throttle_pct)
@@ -154,6 +155,7 @@ class SimSource:
                       egt=[m[f"egt[{i}]"] for i in range(1, n + 1)], coolant_t=m["coolant_t"], oil_p=m["oil_p"],
                       oil_t=m["oil_t"], fuel_flow=m["fuel_flow"], rail_p=m.get("rail_p"), fuel_p=m.get("fuel_p"),
                       gearbox_t=m["gearbox_t"], engine_state=o.state,
+                      ecu_lanes_ok=(self._ecu_lanes - o.lanes_failed) if self._ecu_lanes else None,
                       ign_cmd=o.ign_timing_btdc, bus_v=m["bus_v"], bus_i=m["alt_i"], batt_i=m["batt_i"],
                       alt=o.altitude_ft, oat=o.oat_c, tas=o.tas_kt,
                       vibration_orders={k: m[f"vib[{k}]"] for k in o.vibration if m[f"vib[{k}]"] is not None},
