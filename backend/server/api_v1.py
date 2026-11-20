@@ -357,6 +357,13 @@ def v1_recording_states(sortie_id: str, offset: int = Query(0, ge=0), limit: int
             "states": read_states(_sortie_dir(sortie_id), offset, limit)}
 
 
+@router.get("/api/v1/recordings/{sortie_id}/verify")
+def v1_recording_verify(sortie_id: str) -> Dict[str, Any]:
+    """M7-04 / T-CAN-3: recompute the Merkle root of the recorded frames and compare it with the sealed root."""
+    from backend.recording.recorder import verify_sortie
+    return verify_sortie(_sortie_dir(sortie_id))
+
+
 @router.get("/api/v1/recordings/{sortie_id}/report", response_class=HTMLResponse)
 def v1_recording_report(sortie_id: str) -> HTMLResponse:
     """Sortie health report (M5-06), generated from the recording on first request."""

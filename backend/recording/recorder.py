@@ -20,6 +20,8 @@ import uuid
 from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional
 
+from backend.security.merkle_log import merkle_root
+
 ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -64,13 +66,16 @@ class SortieRecorder:
         self._frames = gzip.open(self.dir / "frames.jsonl.gz", "at", encoding="utf-8")
         self._states = gzip.open(self.dir / "states.jsonl.gz", "at", encoding="utf-8")
         self._timeline = (self.dir / "timeline.jsonl").open("a", encoding="utf-8")
+        self._leaves: List[str] = []
         self._write_meta()
 
     def _write_meta(self) -> None:
         (self.dir / "meta.json").write_text(json.dumps(self.meta, indent=1), encoding="utf-8")
 
     def add_frame(self, frame: Any) -> None:
-        self._frames.write(json.dumps(dataclasses.asdict(frame)) + "\n")
+        line = json.dumps(dataclasses.asdict(frame))
+        self._frames.write(line + "\n")
+        self._leaves.append(hashlib.sha256(line.encode("utf-8")).hexdigest())   # M7-04: sealed at stop
         self.meta["frames"] += 1
 
     def add_tick(self, tick: Any) -> None:
@@ -82,9 +87,22 @@ class SortieRecorder:
     def stop(self, t: float) -> Dict[str, Any]:
         for f in (self._frames, self._states, self._timeline):
             f.close()
-        self.meta.update(stop_sim_t=t, stop_wall=_now())
+        self.meta.update(stop_sim_t=t, stop_wall=_now(), integrity={
+            "method": "SHA-256 Merkle tree over the frames.jsonl.gz lines (M7-04, T-CAN-3)",
+            "merkle_root": merkle_root(self._leaves), "leaves": len(self._leaves)})
         self._write_meta()
         return self.meta
+
+
+def verify_sortie(sortie_dir: Path) -> Dict[str, Any]:
+    """Recompute the Merkle root from the recorded frames; any changed, added or removed frame breaks it."""
+    meta = json.loads((sortie_dir / "meta.json").read_text(encoding="utf-8"))
+    sealed = (meta.get("integrity") or {}).get("merkle_root")
+    leaves = [hashlib.sha256(line.rstrip("\n").encode("utf-8")).hexdigest()
+              for line in _lines(sortie_dir / "frames.jsonl.gz")]
+    root = merkle_root(leaves)
+    return {"sortie_id": meta.get("sortie_id"), "sealed_root": sealed, "recomputed_root": root,
+            "frames": len(leaves), "valid": sealed is not None and sealed == root}
 
 
 def list_recordings(root: Optional[Path] = None) -> List[Dict[str, Any]]:

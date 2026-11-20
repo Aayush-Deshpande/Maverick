@@ -160,6 +160,10 @@ def build_report(sortie_dir: Path) -> str:
 
     parts.append(f"<h2>Configuration provenance</h2><p>Configuration hash {e(meta['config_hash'])} (engine, fault registry, "
                  f"detection and physics configs). Engine limits from: {e('; '.join(sorted({str(v.get('ref')) for v in (cfg.limits or {}).values() if v.get('ref')})))}.</p>")
+    seal = meta.get("integrity") or {}
+    parts.append("<h2>Integrity</h2>" + (f"<p>Merkle root of the {seal.get('leaves')} recorded frames: <code>{e(seal.get('merkle_root'))}</code> "
+                 f"({e(seal.get('method'))}). Re-checking the recording recomputes this root; a changed, added or removed "
+                 "frame does not match.</p>" if seal.get("merkle_root") else "<p>Recording not sealed (stopped before M7-04 or still running).</p>"))
     parts.append(f"<h2>Software version</h2><p>{e(_git_version())}</p></body></html>")
     return "".join(parts)
 
