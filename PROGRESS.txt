@@ -17,26 +17,20 @@ Last commit:  see git log -1.
 State:        tests/dynamic 15 passed, vitest 25, tsc OK; landing loads with no console errors. Full suite last
               698 passed (+ known ratchet; timing test flaky only under load).
 Latest:       D55 done (diesel lambda 1.35 + boost 247/227 kPa CALIBRATED from BSFC 235/215; live cruise EGT ~390-430 C). D58 (914 charge-path cooling, cold-day density criterion); survey inset AE300 no longer renders white.
-Next step:    20 Nov night. Prasad: skip Blender; finish all fixes, AI orchestrator, Phase 8 UX, Phase 9, Phase 10;
-              full authority to install packages (on D:). Final bar (Prasad): inject from ANY surface -> live telemetry
-              -> detected -> correct part highlighted, all in sync.
-              COMMITTED tonight: D59 signatures (74/144), AI-05 copilot (+panel, Gemini live-tested), AI-03 real
-              manual index, state.derived efficiency (+Engineer panel), 3D twin tab = console 3D-first view (all 5
-              engines, one highlight path), old twin page on compressed models, M7-01/02/04 CAN (v2 DBC, CanLink,
-              data_source CAN, DBC-driven IDS, T-CAN-1 pass), Merkle-sealed sorties (T-CAN-3), /can status endpoint.
-              Packages: python-can 4.6.1 + cantools 45.2.0 in D:\AI\pysite\py314 (site-packages .pth points there).
-              UNCOMMITTED (fault physics round 2, D59 cont.): oil film friction from the normal-band edge, oil cooler
-              effectiveness ~ flow^0.5, compression loss = sqrt split quality/late burn (F30 0.3), bearing looseness
-              1X, lane loss 7 deg, F24 2 L/h, F15/F16 EGT + F17 map/oil_t + F29 1X + F24 oil_p + F30 EGT lines
-              removed; signatures regenerated 22:43. BLOCKED from committing by two test decisions (below).
-              Then: python scripts/verify/inject_anywhere.py (end-to-end acceptance, writes docs/verification/).
-QUESTIONS FOR PRASAD (the guard blocked me from changing these tests; your call):
-              (Q1) tests/test_detect_stack.py::test_calibration_is_per_tail: 19.6 % vs > 20 % since D58 (healthy run).
-                   Option (a) strict xfail -> M3-01/02 re-port, or keep failing.
-              (Q2) tests/api/test_status_api.py::test_failed_oil_pump_gives_caution...: with the real oil chain the
-                   F23 diagnosis is confident within 20 s, so status = NO-GO (registry level for a confirmed oil pump
-                   failure) instead of the hard-coded CAUTION. Proposed assertion: level == NO-GO if an F23 HYPOTHESIS
-                   reason is present else CAUTION (oil_p reason with 2.0 bar limit still required).
+Next step:    20 Nov night, Prasad: "fix everything"; status must be graded, environment-aware (D60).
+              COMMITTED since last update: D59 round 2 physics (T-FLT-1 107/144), D60 graded diagnosis status +
+              desert test, D61 shared accelerometer hypothesis, 3D pulse + camera fly-to + Focus fault, acceptance
+              script + first result (docs/verification/inject_anywhere_2026-11-20.csv: 141/144 live, 92/144 top-3,
+              highlight exact whenever the injected fault is top-1).
+              RUNNING: acceptance rerun after D60/D61 (scratchpad accept2.txt -> docs/verification CSV overwritten).
+              Next: compare with the first run, commit the new CSV; then the remaining isolation misses (F04 lane loss
+              weak physics, F10 fuel supply on diesels, F17 turbo bearing at cruise, slow thermal F21/F24/F25 on the
+              Rotax), restart the live backend (it still runs pre-D59-round-2 code), re-check in the browser.
+              Prasad decisions 20 Nov: Q1 = b (test_calibration_is_per_tail stays failing, 19.6 % vs 20 %);
+              Q2 superseded by D60 (the oil pump test's original CAUTION expectation holds again).
+              Prasad's uncommitted deploy edits (his to commit): frontend/.env.production,
+              frontend/src/hooks/useTelemetrySocket.ts, frontend/.vercelignore (new backend maverick-vnrg.onrender.com).
+              Unstaged on purpose: 914 .blend re-saves (D50), docs/cleanup/file_coverage_latest.csv.
 Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produce yet (lambda, timing, BSFC, power,
               vibration, GO/NO-GO); some may show blanks or crash on .toFixed(null) until M0-09. Beta only.
               (2) STOP/START return 422 until the engine state machine (M1-12).
