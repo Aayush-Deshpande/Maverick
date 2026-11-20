@@ -5,9 +5,10 @@ import type { Highlight } from '../../api/state';
 export const LEVEL_ORDER = ['INJECTED', 'SENSOR', 'ADVISORY', 'CAUTION', 'NO-GO'] as const;
 export type HighlightLevel = (typeof LEVEL_ORDER)[number];
 
-// D4 / D5 colours: red NO-GO, amber CAUTION, cyan ADVISORY, blue SENSOR, white INJECTED (training mode only)
+// D4 / D5 colours: red NO-GO, amber CAUTION, cyan ADVISORY, blue SENSOR, violet INJECTED (training display; white
+// washed out on the light stage, and red/amber/cyan stay reserved for alerts)
 export const LEVEL_COLOUR: Record<HighlightLevel, string> = {
-  'NO-GO': '#d63a2f', CAUTION: '#e0a020', ADVISORY: '#22b8cf', SENSOR: '#4c7ff0', INJECTED: '#ffffff',
+  'NO-GO': '#d63a2f', CAUTION: '#e0a020', ADVISORY: '#22b8cf', SENSOR: '#4c7ff0', INJECTED: '#8b5cf6',
 };
 
 /** GLTFLoader stores node names through PropertyBinding.sanitizeNodeName (spaces -> underscores, etc.);
