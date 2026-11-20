@@ -1,0 +1,37 @@
+{
+ "engine_id": "rotax_912is",
+ "evidence_class": "SIMULATION",
+ "trajectories": 200,
+ "samples": 5165,
+ "target_coverage": 0.95,
+ "hours_per_step": 2.0,
+ "mean_life_h": 1010.76,
+ "runs": [
+  {
+   "split": 0,
+   "test_trajectories": 40,
+   "rmse_h": 237.49884860979952,
+   "coverage": 0.9543197616683218,
+   "mean_width_h": 1031.676246674137
+  },
+  {
+   "split": 1,
+   "test_trajectories": 40,
+   "rmse_h": 231.1702975401544,
+   "coverage": 0.9459459459459459,
+   "mean_width_h": 985.7619198878542
+  },
+  {
+   "split": 2,
+   "test_trajectories": 40,
+   "rmse_h": 207.57759587424056,
+   "coverage": 0.9256120527306968,
+   "mean_width_h": 868.5868953747615
+  }
+ ],
+ "mean": {
+  "rmse_h": 225.41558067473147,
+  "coverage": 0.9419592534483215,
+  "mean_width_h": 962.0083539789175
+ }
+}

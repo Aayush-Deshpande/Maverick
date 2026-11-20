@@ -905,3 +905,17 @@ backend/reports/sortie_report.py: self-contained HTML from a recording (summary,
   config hash + limit sources, git version, evidence class). GET /api/v1/recordings/{id}/report. PDF not done (needs
   a renderer dependency; the browser can print the HTML). The three legacy writers are not removed yet (M8-02).
 Tests: tests/recording/test_sortie_report.py.
+
+=== 20 Nov 2026  extended residual channels + M4-01/M4-03 simulated fleet RUL
+Residual also scores vib_1X / vib_prop_1X / vib_gear_mesh / vib_firing / vib_turbo / vib_knock (Frame.vibration_
+  orders) and batt_i, regression-only baselines, outside the 13 detector features (detector FA unchanged).
+  Signatures regenerated; matrix re-run: isolation top-3 AE300 64->80 %, 914 72->87 %, VRDE 66->77 %, 912 58->65 %;
+  FA/FH unchanged (AE300 0.25, 912 0, 914 0.25, 915 15.5 limiter regime, VRDE 0).
+M4-01/03: backend/evaluation/sim_rul.py - 200 rotax_912is tails (seeds 5000+) worn to end of life by
+  backend/sim/wear.py (2 flight hours per plant second at cruise); features = residual window means + hours; label
+  = hours to end of life; ConformalRUL split by trajectory. Result (SIMULATION): mean life ~640 h, RMSE 225 h,
+  coverage 94.2 % for the 95 % target, mean width 962 h. Other engines not run yet. Runtime RUL still the labelled
+  placeholder until this model is wired (next).
+M5-07 started (uncommitted, not in this commit): Copernicus GLO-30 tile N34E077 downloaded to var/dem (40 MB,
+  3600x3600, tiepoint 77E 35N, 1 arc-second); tifffile 2026.11.16 + imagecodecs 2026.11.11 installed (pre-approved
+  deps; add to requirements-optional). Next: backend/terrain/dem.py + planner.

@@ -35,7 +35,16 @@ from backend.detect.reference import ModelReference
 CALIBRATION_SCHEMA = "tail_calibration/2"
 # scalar channels scored when the engine has them (frame value not None): the model predicts the first ones; bus
 # voltage and fuel pressure have no model term yet and are learned per tail by the regression alone
-SCALAR_CHANNELS = ("oil_p", "oil_t", "fuel_flow", "map_kpa", "rpm", "coolant_t", "gearbox_t", "bus_v", "fuel_p")
+SCALAR_CHANNELS = ("oil_p", "oil_t", "fuel_flow", "map_kpa", "rpm", "coolant_t", "gearbox_t", "bus_v", "fuel_p",
+                   "batt_i", "vib_1X", "vib_prop_1X", "vib_gear_mesh", "vib_firing", "vib_turbo", "vib_knock")
+VIB_PREFIX = "vib_"                              # vib_<order>: an order amplitude from Frame.vibration_orders
+
+
+def _value(frame: Frame, name: str):
+    """A scored channel's measured value (vibration orders live in a dict; None = not measured)."""
+    if name.startswith(VIB_PREFIX):
+        return (frame.vibration_orders or {}).get(name[len(VIB_PREFIX):])
+    return getattr(frame, name)
 FEATURE_SCALARS = SCALAR_CHANNELS[:5]            # detector feature vector (fixed 13 features, learned scorers)
 Z_CLIP = 10.0
 INPUT_CHANNELS = ("rpm", "oil_t")                # measured channels the nominal reference uses as inputs
@@ -63,7 +72,7 @@ def _measure(frame: Frame, n_cyl: int, scalars: Sequence[str], strict: bool = Tr
     unmeasured, so it contributes no evidence (z = 0), and is never replaced by a made-up number."""
     if len(frame.cht) != n_cyl or len(frame.egt) != n_cyl:
         raise ValueError(f"expected {n_cyl} CHT/EGT channels, got {len(frame.cht)}/{len(frame.egt)}")
-    vals = list(frame.cht) + list(frame.egt) + [getattr(frame, name) for name in scalars]
+    vals = list(frame.cht) + list(frame.egt) + [_value(frame, name) for name in scalars]
     if strict:
         missing = [n for n, v in zip(["cht"] * n_cyl + ["egt"] * n_cyl + list(scalars), vals) if v is None]
         if missing:
@@ -169,7 +178,7 @@ class TailCalibration:
             raise ValueError(f"need >= 50 nominal frames to calibrate, got {len(frames)}")
         f0 = frames[0]
         n_cyl = len(f0.cht)
-        scalars = tuple(s for s in SCALAR_CHANNELS if getattr(f0, s) is not None)
+        scalars = tuple(s for s in SCALAR_CHANNELS if _value(f0, s) is not None)
         cmds = [_command(f) for f in frames]
         tail = _identify_tail(f0.engine_config_id, n_cyl, scalars, frames)
         ref = ModelReference(f0.engine_config_id, n_cyl, scalars, tail)
