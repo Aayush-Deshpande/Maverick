@@ -171,6 +171,7 @@ class EngineRuntime:
         self.glide_polar = UAVGlidePolar()
         self.isolator: Optional[BayesianIsolator] = None          # built on the detector's channels at calibration
         self._cached_hypotheses: List[Dict[str, Any]] = []
+        self.work_orders: Optional[Any] = None             # shared WorkOrderStore, attached by the API services (M4-05)
         self.status_evaluator = StatusEvaluator(self.cfg)
         self.alert_manager = AlertManager()
 
@@ -319,20 +320,36 @@ class EngineRuntime:
             self.source.clear_faults()
             self.sensor_levers.clear()
             self.injected.clear()
-            self.sensor_fdi.reset()
-            self.validity_monitor.reset()
-            self._cached_validity = None
-            self._cached_diagnosis = None
-            self._cached_hypotheses = []
-            if self.isolator is not None:
-                self.isolator.reset()
-            self._cached_prognostics = None
-            if self.trends is not None:
-                self.trends.reset()
-            if self.detector:
-                self.detector.gate.reset()
-                if self.detector.cusum is not None:
-                    self.detector.cusum.reset()
+            self._reset_inference()
+
+    def complete_repair(self, fault_id: Optional[str]) -> int:
+        """A signed-off work order: the simulated repair removes that fault from the plant (a time-to-limit order
+        without a fault id repairs nothing) and the inference state restarts from the repaired engine.
+        Returns the number of plant faults removed. Operator command path, not inference."""
+        with self._lock:
+            before = len(self.source.faults)
+            if fault_id:
+                self.source.faults[:] = [f for f in self.source.faults if f.fault_id != fault_id]
+                self.injected[:] = [f for f in self.injected if f.get("mode") != fault_id]
+            self._reset_inference()
+            return before - len(self.source.faults)
+
+    def _reset_inference(self) -> None:
+        """Restart detection, isolation, trends and caches (after clearing or repairing faults); caller holds the lock."""
+        self.sensor_fdi.reset()
+        self.validity_monitor.reset()
+        self._cached_validity = None
+        self._cached_diagnosis = None
+        self._cached_hypotheses = []
+        if self.isolator is not None:
+            self.isolator.reset()
+        self._cached_prognostics = None
+        if self.trends is not None:
+            self.trends.reset()
+        if self.detector:
+            self.detector.gate.reset()
+            if self.detector.cusum is not None:
+                self.detector.cusum.reset()
 
     def set_sensor_fault(self, kind: str, channel: str, **kwargs) -> None:
         """Inject sensor-level fault (R7): bias, drift, stuck, noise, dropout, spoof."""
@@ -527,6 +544,13 @@ class EngineRuntime:
 
                 # 9. Deterministic directive from the registry for the leading hypothesis (M3-06/I-07)
                 self._cached_diagnosis = directive(self._cached_hypotheses)
+
+                # 10. Work orders from evidence: confident hypotheses and near time-to-limit trends (M4-05)
+                if self.work_orders is not None:
+                    self.work_orders.open_from_hypotheses(self.engine_id, self.tail_id, self._cached_hypotheses, frame.t)
+                    self.work_orders.open_from_time_to_limit(self.engine_id, self.tail_id,
+                                                             (self._cached_prognostics or {}).get("time_to_limit", []),
+                                                             frame.t)
 
             validity_dict = self._cached_validity
             prognostics_dict = self._cached_prognostics

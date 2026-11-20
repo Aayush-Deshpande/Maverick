@@ -26,6 +26,7 @@ from backend.faults.manager import FaultManager, RuntimeAdapter
 from backend.sim.maps import maps_for
 from backend.faults.registry import FaultRejected, load_fault_registry
 from backend.physics.engine_config import load_engine_config
+from backend.maintenance.work_orders import WorkOrderStore
 from backend.server.security import COMMAND_LOG, command_guard
 from backend.server.state_builder import build_state
 
@@ -55,10 +56,13 @@ class EngineChannel:
 
 
 class Services:
-    def __init__(self, hub: Any):
+    def __init__(self, hub: Any, work_orders: Optional[WorkOrderStore] = None):
         self.hub = hub
         self.channels: Dict[str, EngineChannel] = {}
         self._lock = threading.Lock()
+        self.work_orders = work_orders or WorkOrderStore()      # one store per simulation owner (var/maintenance)
+        for rt in hub.runtimes.values():
+            rt.work_orders = self.work_orders
 
     def channel(self, engine_id: str) -> EngineChannel:
         with self._lock:
@@ -88,7 +92,8 @@ class Services:
         levers = None if lv is None else {"throttle": tick.frame.throttle, "throttle_target": lv.throttle_target,
                                           "altitude_target_ft": lv.altitude_target, "oat_target_c": lv.oat_target}
         msg = build_state(tick, ch.seq, registry=REGISTRY, active_faults=ch.manager.active(), fault_events=events,
-                          rate_hz_actual=None if ch.rate_hz is None else round(ch.rate_hz, 2), levers=levers)
+                          rate_hz_actual=None if ch.rate_hz is None else round(ch.rate_hz, 2), levers=levers,
+                          maintenance=self.work_orders.open_orders(engine_id))
         ch.last_message = msg.model_dump_json()
         return ch.last_message
 
@@ -130,6 +135,13 @@ class AlertCommand(BaseModel):
     model_config = ConfigDict(extra="forbid")
     alert_id: Optional[str] = Field(default=None, max_length=200, description="omit to acknowledge every alert")
     duration_s: Optional[float] = Field(default=None, gt=0, le=86400)
+
+
+class WorkOrderCommand(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    to: Literal["IN_WORK", "SIGNED_OFF"]
+    by: Optional[str] = Field(default=None, min_length=1, max_length=80, description="person signing (needed to sign off)")
+    note: Optional[str] = Field(default=None, max_length=500)
 
 
 class EngineCommand(BaseModel):
@@ -253,6 +265,33 @@ def v1_alert_ack(engine_id: str, body: AlertCommand, cmd: Dict[str, Any] = Depen
     if any(a.level == "NO-GO" for a in rt.alert_manager.alerts.values()) or body.alert_id is None:
         rt.status_evaluator.acknowledge()                     # acknowledging the warning also releases the latch
     return {"engine_id": engine_id, "acknowledged": ids}
+
+
+@router.get("/api/v1/engines/{engine_id}/work_orders")
+def v1_work_orders(engine_id: str, status: Optional[Literal["OPEN", "IN_WORK", "SIGNED_OFF"]] = None) -> Dict[str, Any]:
+    services().channel(engine_id)
+    return {"engine_id": engine_id, "work_orders": services().work_orders.list(engine_id, status)}
+
+
+@router.post("/api/v1/work_orders/{wo_id}/transition")
+def v1_work_order_transition(wo_id: str, body: WorkOrderCommand, cmd: Dict[str, Any] = Depends(command_guard)) -> Dict[str, Any]:
+    store = services().work_orders
+    try:
+        wo = store.transition(wo_id, body.to, body.by, body.note)
+    except KeyError:
+        raise HTTPException(404, {"code": "NO_SUCH_WORK_ORDER", "message": f"no work order {wo_id!r}"}) from None
+    except ValueError as e:
+        raise HTTPException(409, {"code": "TRANSITION_REJECTED", "message": str(e)}) from None
+    repaired = 0
+    rt = services().hub.runtimes.get(wo["engine_id"])
+    if body.to == "SIGNED_OFF" and rt is not None and wo["fault_id"]:
+        # simulated repair of the signed-off fault: through the fault manager (events, active list), then the runtime
+        # removes anything injected directly and restarts inference on the repaired engine
+        ch = services().channel(wo["engine_id"])
+        for f in [f for f in ch.manager.active() if f.fault_id == wo["fault_id"]]:
+            repaired += len(ch.manager.clear(f.uuid, source="maintenance"))
+        repaired += rt.complete_repair(wo["fault_id"])
+    return {"work_order": wo, "repaired_plant_faults": repaired, "events": store.events(wo_id)}
 
 
 @router.post("/api/v1/engines/{engine_id}/alerts/shelve")

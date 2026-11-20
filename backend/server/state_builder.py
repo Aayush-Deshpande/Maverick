@@ -84,7 +84,8 @@ def _status(st: Optional[Dict[str, Any]]) -> Status:
 
 def build_state(tick: Any, seq: int, *, registry: Any = None, active_faults: Iterable[Any] = (),
                 fault_events: Iterable[Any] = (), rate_hz_actual: Optional[float] = None, time_scale: float = 1.0,
-                levers: Optional[Dict[str, Optional[float]]] = None, training_mode: bool = False) -> StateMessage:
+                levers: Optional[Dict[str, Optional[float]]] = None, training_mode: bool = False,
+                maintenance: Iterable[Dict[str, Any]] = ()) -> StateMessage:
     f = tick.frame
     engine_id = tick.engine_id
     readings: Dict[str, Reading] = {}
@@ -144,6 +145,7 @@ def build_state(tick: Any, seq: int, *, registry: Any = None, active_faults: Ite
         engine_state=f.engine_state,
         highlights=highlights,
         prognostics=tick.prognostics, reliability=tick.reliability,
+        maintenance=list(maintenance),                                      # M4-05 open work orders
         active_faults=faults_out, events_since=events,
         vibration_orders={k: float(v) for k, v in (f.vibration_orders or {}).items()},
         virtual_sensors={k: float(v) for k, v in (f.virtual_sensors or {}).items() if v is not None},

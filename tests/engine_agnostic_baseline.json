@@ -54,6 +54,11 @@
     "cyl": 0,
     "model": 0
   },
+  "backend/maintenance/work_orders.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
   "backend/ml/anomaly_detector.py": {
     "brand": 1,
     "cyl": 0,

@@ -7,7 +7,7 @@ RESUME HERE  (last updated 20 Nov 2026, overnight autonomous session)
 =====================================================================================================================
 Phase:        PHASE 1 (M0) cards done (M0-01..M0-12; M0-10 reduced, see its entry). NEXT: CHECKPOINT PHASE 1 (manual
               look by Prasad), then Phase 2 in demo-first order: M1-01 sim package + clock, M1-02 atmosphere, ...
-Card:         M4-02 done (trends/time-to-limit); M3-08 matrix run pending (reports/evaluation); NEXT M4-05/M4-06, M4-01/03. Prasad away until ~08:45 20 Nov with full
+Card:         M4-02 done (trends/time-to-limit); M3-08 matrix run pending (reports/evaluation); M4-05 done; NEXT M4-06 adaptive baseline, M4-01/03 fleet + RUL, M4-04. Prasad away until ~08:45 20 Nov with full
               permission (installs to D:, any package/model/dataset): KEEP BUILDING card after card, never wait.
 Branch:       Beta (pushed by Prasad up to ae82c70; later commits local). main untouched (9b5942e).
 Last commit:  M3-04 on Beta (see git log -1).
@@ -822,3 +822,19 @@ Runtime publishes prognostics.time_to_limit; status gets it (CAUTION only when a
   fields; ported when the real RUL lands) and is now labelled status 'PLACEHOLDER (M4-03)' in the state.
   status/evaluator._readings -> frame_readings (public, reused by trends). Docs: docs_site page 14 time-to-limit.
 Tests: tests/prognose/test_trends.py (T-PRG-1 3 runs, flat residual -> no trend, theilslopes API).
+
+=== 20 Nov 2026  M4-05 maintenance work orders (T-PRG-4)
+backend/maintenance/work_orders.py: SQLite store var/maintenance/maintenance.sqlite (sqlite3 stdlib). Orders open
+  from evidence only: the leading isolation hypothesis with posterior >= 0.7 held for 6 consecutive evaluations
+  (configs/maintenance.json, ASSUMED; without the stability rule early unsettled rankings opened wrong orders), or
+  a time-to-limit trend inside 1 h. Content = registry text (ATA, action + source, mitigation); no invented part
+  numbers/costs (the legacy work_package.py catalogue invents them - not used, archive in M8). OPEN -> IN_WORK ->
+  SIGNED_OFF (sign-off needs a name), events table, persists across restart; open orders cached per engine and
+  published in state.maintenance. API: GET /api/v1/engines/{id}/work_orders, POST /api/v1/work_orders/{id}/
+  transition (command_guard). Sign-off = simulated repair: the fault manager clears that fault id, then
+  EngineRuntime.complete_repair removes directly injected ones and resets inference (_reset_inference shared
+  with clear_faults). A misdiagnosis therefore does NOT repair the engine (honest).
+Isolability noted: F01/F05/F30 signatures cosine 0.9997 on the 912 (one ambiguity group: dead / lean / low-
+  compression cylinder look the same in these channels); the order goes to the group leader by FMECA prior.
+Tests: tests/maintenance/test_work_orders.py (store life cycle + restart, time-to-limit order, API misfire ->
+  order -> sign-off -> fault cleared).
