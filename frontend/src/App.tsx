@@ -147,30 +147,10 @@ export function App() {
         {workspace === 'runtime' ? (
           <EngineRuntimeConsole serverUrl={serverUrl} />
         ) : workspace === 'twin' ? (
-          <section className="surface-panel overflow-hidden border border-surface-border">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-surface-border px-4 py-3 bg-surface">
-              <div>
-                <h2 className="text-xs font-bold tracking-wider uppercase text-white font-mono flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-                  Interactive Engine Twin CAD
-                </h2>
-                <p className="mt-0.5 text-xs text-slate-400 font-mono">
-                  Fault location, component highlighting and camera transitions · coupled to authoritative 20 Hz backend
-                </p>
-              </div>
-              <span className="text-xs font-mono uppercase tracking-wider text-accent border border-accent/30 bg-accent/10 px-2 py-0.5 rounded-sm">
-                WebGL 3D · Live State
-              </span>
-            </div>
-            <iframe
-              title="ANUMAAN interactive engine twin"
-              // Beta's twin (apps/threejs_twin, on /api/v1 since M0-10): highlights from the shared registry and manifests.
-              // main's /twin page is used only by the landing film (presentation, D57).
-              src={`${serverUrl}/apps/threejs_twin/?backend=${encodeURIComponent(serverUrl)}`}
-              className="block h-[calc(100vh-12rem)] min-h-[680px] w-full bg-[#e8e7df]"
-              allow="fullscreen"
-            />
-          </section>
+          // The 3D twin is the console's 3D-first view: same store, same fault API, highlights from state.highlights
+          // and the component manifests, so console, twin and GCS always agree. The old apps/threejs_twin page
+          // (own fault-to-part table, three engines) stays reachable at {serverUrl}/app until it is archived (D10).
+          <EngineRuntimeConsole serverUrl={serverUrl} initialView="TWIN" key="twin" />
         ) : (
           <>
             {workspace === 'legacy' && !isConnected && (

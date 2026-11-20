@@ -15,6 +15,7 @@ type Props = {
   highlights: Highlight[] | undefined;
   injected?: InjectedPart[];                               // training mode only (D56): drawn as INJECTED
   api: (path: string, method: string, body?: unknown) => Promise<any>;
+  tall?: boolean;                                          // the 3D twin view gives the engine most of the screen
 };
 
 const DRACO_PATH = '/draco/';                             // decoder files shipped in frontend/public/draco
@@ -88,7 +89,7 @@ class ModelBoundary extends Component<{ children: ReactNode; resetKey: string },
 /** 3D engine view (M6-05): loads the engine's web model named by the component manifest and lights exactly the
  *  nodes listed in state.highlights, in the colour of their level. Highlights come from diagnosis + status (D5);
  *  the viewer has no fault tables of its own. */
-export default function EngineViewer3D({ engineId, highlights: detected, injected, api }: Props) {
+export default function EngineViewer3D({ engineId, highlights: detected, injected, api, tall }: Props) {
   const [manifest, setManifest] = useState<Manifest | null>(null);
   const [error, setError] = useState('');
   const [lit, setLit] = useState<string[]>([]);
@@ -115,7 +116,7 @@ export default function EngineViewer3D({ engineId, highlights: detected, injecte
         <h3 className="text-sm font-semibold text-white tracking-tight">3D engine</h3>
         {manifest?.representative_geometry && <span className="text-xs font-mono text-slate-400">{manifest.representative_geometry}</span>}
       </div>
-      <div className="mt-3 h-[min(60vh,420px)] rounded-sm border border-surface-border bg-black/20">
+      <div className={`mt-3 rounded-sm border border-surface-border bg-black/20 ${tall ? 'h-[min(75vh,760px)]' : 'h-[min(60vh,420px)]'}`}>
         {error ? <div className="p-4 text-xs font-mono text-slate-300">{error}</div>
           : !manifest ? <div className="p-4 text-xs font-mono text-slate-400">Loading component manifest…</div>
           : <ModelBoundary resetKey={manifest.model_url}>

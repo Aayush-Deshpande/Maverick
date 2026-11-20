@@ -154,7 +154,11 @@ def serve_threejs_twin():
 
 app.mount("/apps/threejs_twin", StaticFiles(directory=_THREEJS_TWIN, html=True), name="threejs-twin-assets")
 
+# compressed engine models (D49): the synced frontend copy, else the committed canonical folder, so the 3D twin
+# page always loads the same Draco files as the console viewer (never the 80 MB uncompressed exports)
 _MODELS_DIR = _REPO_ROOT / "frontend" / "public" / "models"
+if not (_MODELS_DIR / "rotax_912is.glb").exists():
+    _MODELS_DIR = _REPO_ROOT / "assets" / "web" / "engines"
 if _MODELS_DIR.exists():
     app.mount("/models", StaticFiles(directory=_MODELS_DIR), name="static-models")
 
