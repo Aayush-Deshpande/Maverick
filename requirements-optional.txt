@@ -13,6 +13,10 @@
 # --- Explanations (Phase 3, M3-06)
 # shap
 
+# --- Terrain planner (Phase 6, M5-07/08): reads the Copernicus GLO-30 GeoTIFF (DEFLATE/LZW tiles)
+tifffile==2026.11.16
+imagecodecs==2026.11.11
+
 # --- CAN / FADEC (Phase 9, M7-01..02)
 # cantools
 # python-can

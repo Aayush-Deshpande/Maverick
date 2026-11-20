@@ -168,6 +168,22 @@ class EngineCommand(BaseModel):
     command: Literal["START", "STOP", "RESET"]
 
 
+class GeoPoint(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    lat: float = Field(ge=-90.0, le=90.0)
+    lon: float = Field(ge=-180.0, le=180.0)
+    altitude_ft: Optional[float] = Field(default=None, ge=-1000.0, le=36000.0)
+
+
+class RouteRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    engine_id: str
+    start: GeoPoint
+    goal: GeoPoint
+    isa_dev_c: float = Field(default=0.0, ge=-40.0, le=40.0)
+    power_factor: Optional[float] = Field(default=None, ge=0.0, le=1.0)   # None: from the engine's measured frame
+
+
 def _reject(exc: FaultRejected) -> HTTPException:
     return HTTPException(status_code=422, detail={"code": "FAULT_REJECTED", "message": str(exc)})
 
@@ -396,6 +412,63 @@ def v1_commands(limit: int = 100) -> Dict[str, Any]:
     """Recent command log (D52): who sent what, with request_id and result. Newest last."""
     items = list(COMMAND_LOG)[-max(1, limit):]
     return {"commands": items}
+
+
+def _terrain_tile():
+    from backend.planning.performance import planning_config
+    from backend.terrain.dem import TerrainUnavailable, load_tile
+    try:
+        return load_tile(planning_config()["dem"]["tile"])
+    except TerrainUnavailable as e:
+        raise HTTPException(503, {"code": "TERRAIN_UNAVAILABLE", "message": str(e)}) from None
+
+
+@router.get("/api/v1/terrain/elevation")
+def v1_terrain_elevation(lat: float = Query(ge=-90.0, le=90.0), lon: float = Query(ge=-180.0, le=180.0)) -> Dict[str, Any]:
+    """Copernicus GLO-30 elevation (M5-07); 503 TERRAIN_UNAVAILABLE when the tile is not downloaded."""
+    tile = _terrain_tile()
+    if not tile.contains(lat, lon):
+        raise HTTPException(422, {"code": "OUTSIDE_TERRAIN", "message": f"({lat}, {lon}) is outside {tile.name}",
+                                  "bounds": tile.bounds})
+    return {"lat": lat, "lon": lon, "elevation_m": round(tile.elevation_m(lat, lon), 1), "tile": tile.name,
+            "source": "Copernicus GLO-30 DSM"}
+
+
+@router.post("/api/v1/planning/route")
+def v1_plan_route(body: RouteRequest) -> Dict[str, Any]:
+    """Terrain route with engine-health feasibility (M5-08, T-MIS-6). Read-only: it commands nothing.
+    Without power_factor the engine's latest MEASURED frame sets it (nominal model MAP/rpm ratio); an engine with no
+    running frame gives 409 instead of an assumed healthy engine."""
+    from backend.planning.performance import power_factor_for_frame
+    services().channel(body.engine_id)
+    tile = _terrain_tile()
+    if body.power_factor is not None:
+        pf, source = body.power_factor, {"kind": "OPERATOR"}
+    else:
+        tick = services().hub.latest.get(body.engine_id)
+        frame = None if tick is None else tick.frame
+        pf, ratios = (None, {}) if frame is None or not frame.rpm else power_factor_for_frame(body.engine_id, frame)
+        if pf is None:
+            raise HTTPException(409, {"code": "NO_POWER_EVIDENCE", "message": f"{body.engine_id} has no running "
+                                      "measured frame to estimate available power; pass power_factor explicitly"})
+        source = {"kind": "MEASURED", "ratios": {k: round(v, 4) for k, v in ratios.items()}, "sim_time_s": frame.t}
+    start_alt = body.start.altitude_ft
+    if start_alt is None:
+        raise HTTPException(422, {"code": "ROUTE_REJECTED", "message": "start.altitude_ft is required"})
+    plan = _planner(tile.name).plan(body.engine_id, (body.start.lat, body.start.lon, start_alt),
+                                    (body.goal.lat, body.goal.lon), pf, body.isa_dev_c)
+    return {**plan.as_dict(), "power_factor_source": source, "terrain": tile.name, "evidence_class": "SIMULATION"}
+
+
+_PLANNERS: Dict[str, Any] = {}
+
+
+def _planner(tile_name: str) -> Any:
+    from backend.planning.planner import Planner
+    from backend.terrain.dem import load_tile
+    if tile_name not in _PLANNERS:
+        _PLANNERS[tile_name] = Planner(load_tile(tile_name))
+    return _PLANNERS[tile_name]
 
 
 @router.get("/api/v1/engines/{engine_id}/state")

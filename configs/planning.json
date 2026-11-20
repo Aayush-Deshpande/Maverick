@@ -1,0 +1,29 @@
+{
+  "schema_version": "planning/1",
+  "description": "Terrain route planning (cards M5-07/M5-08, P Part 4 Step 5.7). Airframe values are installation data for a generic single-engine MALE UAV class (no public data for a specific airframe): ASSUMED. The engine side comes from the calibrated engine model (configs/engines), never from this file.",
+  "dem": {
+    "tile": "Copernicus_DSM_COG_10_N34_00_E077_00_DEM",
+    "bucket_url": "https://copernicus-dem-30m.s3.amazonaws.com",
+    "status": "PUBLIC",
+    "ref": "Copernicus GLO-30 DSM, ESA/Airbus, public AWS open data registry (registry.opendata.aws/copernicus-dem); tile N34 E077 covers Leh / Ladakh"
+  },
+  "grid": {
+    "block_px": {"value": 60, "status": "ASSUMED", "ref": "planning cell = 60 x 60 DEM posts (about 1.85 km x 1.5 km at 34 N); cell elevation = block maximum (conservative)"},
+    "layer_ft": {"value": 1000.0, "status": "ASSUMED", "ref": "altitude layer spacing"},
+    "min_layer_ft": {"value": 8000.0, "status": "ASSUMED", "ref": "lowest layer (below the Indus valley floor)"},
+    "max_layer_ft": {"value": 26000.0, "status": "ASSUMED", "ref": "highest layer considered"}
+  },
+  "rules": {
+    "min_clearance_ft": {"value": 1000.0, "status": "ASSUMED", "ref": "minimum terrain clearance above the cell maximum (en-route 300 m class margin)"},
+    "min_climb_rate_fpm": {"value": 100.0, "status": "ASSUMED", "ref": "service-ceiling definition: highest altitude with at least 100 ft/min climb"},
+    "climb_cost_m_per_m": {"value": 3.0, "status": "ASSUMED", "ref": "route cost: metres of horizontal distance equivalent to 1 m of climb (energy)"}
+  },
+  "airframe": {
+    "mass_kg": {"value": 650.0, "status": "ASSUMED", "ref": "single-engine MALE UAV class take-off mass"},
+    "wing_area_m2": {"value": 9.5, "status": "ASSUMED", "ref": "aspect ratio about 18 class wing"},
+    "cd0": {"value": 0.030, "status": "ASSUMED", "ref": "parasite drag coefficient, clean MALE airframe"},
+    "induced_k": {"value": 0.024, "status": "ASSUMED", "ref": "1/(pi*AR*e) with AR 18, e 0.75"},
+    "climb_eas_kt": {"value": 75.0, "status": "ASSUMED", "ref": "climb speed held as equivalent airspeed"},
+    "prop_efficiency": {"value": 0.78, "status": "ASSUMED", "ref": "propeller efficiency in climb"}
+  }
+}

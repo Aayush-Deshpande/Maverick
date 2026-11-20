@@ -85,6 +85,8 @@ GUARDED = [
     "backend/prognose/rul_service.py",
     "backend/terrain/dem.py",
     "backend/terrain/fetch.py",
+    "backend/planning/performance.py",
+    "backend/planning/planner.py",
     "backend/evaluation/cmapss.py",
     "backend/recording/recorder.py",
     "backend/recording/replay.py",
