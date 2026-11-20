@@ -1048,3 +1048,9 @@ Docs: docs_site 20 "The Fleet and Engine Console" rewritten to the built role vi
 Seen but not fixed (Q6c, needs data): AE300 at 60 % lever shows EGT about 206 C / TIT 194 C and BSFC about 165 g/kWh
   - the ASSUMED diesel lambda/boost make it run too lean and cold (already open question 6c).
 
+=== 20 Nov 2026 M6-02: master warning / caution tones (AI: Claude Code)
+Changed: frontend/src/utils/alertTone.ts (+test): Web Audio tones, NO-GO = fast 1 kHz triple chime, CAUTION = single
+  660 Hz chime (P Part 6 U2 / AC 25.1322-1 one tone per level); sounds only when ENTERING a worse level and not
+  after acknowledge; no AudioContext or no user gesture -> silent, the visual banner stays primary.
+  StatusBanner.tsx: tone on level change + "Tones on/off" toggle (per viewer). Tests: vitest 19, tests/dynamic 15.
+

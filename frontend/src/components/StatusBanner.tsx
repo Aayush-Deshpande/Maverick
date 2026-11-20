@@ -1,4 +1,6 @@
+import { useEffect, useRef, useState } from 'react';
 import type { AlertOut, Status } from '../api/state';
+import { playAlertTone, toneFor } from '../utils/alertTone';
 import { NO_DATA, num } from '../utils/format';
 
 type Props = {
@@ -23,6 +25,13 @@ const LEVEL_STYLE: Record<string, string> = {
  *  acknowledge, and per-alert acknowledge / shelve. Everything comes from the state message. */
 export default function StatusBanner({ engineId, status, alerts, simTimeS, api, onNotice }: Props) {
   const level = status?.level ?? 'UNKNOWN';
+  const [muted, setMuted] = useState(false);
+  const prev = useRef<string | undefined>(undefined);
+  useEffect(() => {                                       // aural alert on entering CAUTION / NO-GO (U2)
+    const tone = toneFor(prev.current, status?.level);
+    prev.current = status?.level;
+    if (tone && !muted && !status?.acknowledged) playAlertTone(tone);
+  }, [status?.level, status?.acknowledged, muted]);
   const style = LEVEL_STYLE[level] ?? 'border-surface-border text-slate-200';
   const base = engineId ? `/api/v1/engines/${encodeURIComponent(engineId)}` : null;
   const act = async (path: string, body: unknown, text: string) => {
@@ -37,6 +46,8 @@ export default function StatusBanner({ engineId, status, alerts, simTimeS, api, 
     <section aria-label="Engine status" aria-live="polite" className={`rounded-sm border p-4 ${style}`}>
       <div className="flex flex-wrap items-center gap-3">
         <span className="text-xl font-semibold font-mono tracking-tight">{level === 'UNKNOWN' ? NO_DATA : level.replace('_', ' ')}</span>
+        <button type="button" aria-pressed={muted} onClick={() => setMuted(!muted)}
+          className="rounded-sm border border-current px-2 py-0.5 text-xs font-mono opacity-70 hover:opacity-100">{muted ? 'Tones off' : 'Tones on'}</button>
         {status?.latched && <span className="text-xs font-mono">LATCHED{status.acknowledged ? ' · acknowledged, waiting for the cause to clear' : ''}</span>}
         {status?.latched && !status.acknowledged && (
           <button type="button" onClick={() => act('/status/acknowledge', undefined, 'Status acknowledged')}
