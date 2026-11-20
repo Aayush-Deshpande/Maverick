@@ -1033,3 +1033,18 @@ Bug 2: SVG plan view / profile used white strokes, invisible on the light theme 
 Data age fix (same day): useNow samples every 500 ms while frames arrive at ~20 Hz, so a frame newer than the
   sampled clock gave a negative age; dataAgeMs now clamps at 0 (vitest case added).
 
+=== 20 Nov 2026 M0-06 fix: WebSocket fan-out starved fleet subscribers; docs page 20 console views (AI: Claude Code)
+Bug (found in the browser): each client had ONE latest-only asyncio.Queue(maxsize=1) for all its engines. A fleet
+  subscriber gets 5 engines per broadcast cycle, so every offer replaced the previous engine's message and only
+  the last engine of each cycle got through; the selected engine could show NO DATA indefinitely.
+Fix: backend/server/api_v1.py Client keeps latest-only PER ENGINE (pending dict + Event; dropped counts only
+  same-engine replacements); sender sends all pending. T-WS-1 property kept (slow client never blocks the hub;
+  send timeout closes it).
+Tests: tests/api/test_api_v1.py test_latest_only_queue_drops_old_messages PORTED to the new API (same check:
+  older same-engine message replaced, counted), NEW test_fleet_client_keeps_the_latest_message_of_every_engine
+  (failed before, passes after). tests/api 40 passed. Browser: all five fleet tiles live at once.
+Docs: docs_site 20 "The Fleet and Engine Console" rewritten to the built role views + status banner; three new
+  screenshots in docs_site/public/assets/playwright/08-10 (914 operator, engineer, mission over the Leh tile).
+Seen but not fixed (Q6c, needs data): AE300 at 60 % lever shows EGT about 206 C / TIT 194 C and BSFC about 165 g/kWh
+  - the ASSUMED diesel lambda/boost make it run too lean and cold (already open question 6c).
+

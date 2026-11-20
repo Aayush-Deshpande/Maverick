@@ -575,18 +575,23 @@ class Client:
     ws: WebSocket
     id: str
     engines: Set[str] = field(default_factory=set)
-    queue: "asyncio.Queue[str]" = field(default_factory=lambda: asyncio.Queue(maxsize=1))
+    pending: Dict[str, str] = field(default_factory=dict)      # engine_id -> newest unsent message
+    ready: asyncio.Event = field(default_factory=asyncio.Event)
     dropped: int = 0
 
-    def offer(self, message: str) -> None:
-        """Latest-only: if the previous message was not sent yet, replace it and count the drop."""
-        if self.queue.full():
-            try:
-                self.queue.get_nowait()
-                self.dropped += 1
-            except asyncio.QueueEmpty:
-                pass
-        self.queue.put_nowait(message)
+    def offer(self, message: str, engine_id: str) -> None:
+        """Latest-only PER ENGINE: an unsent older message of the same engine is replaced and counted; other
+        engines' messages are kept, so a fleet subscriber never starves the selected engine."""
+        if engine_id in self.pending:
+            self.dropped += 1
+        self.pending[engine_id] = message
+        self.ready.set()
+
+    def take(self) -> List[str]:
+        out = list(self.pending.values())
+        self.pending.clear()
+        self.ready.clear()
+        return out
 
 
 class Broadcaster:
@@ -611,7 +616,7 @@ class Broadcaster:
                     continue
                 for c in list(self.clients.values()):
                     if engine_id in c.engines:
-                        c.offer(msg)
+                        c.offer(msg, engine_id)
             await asyncio.sleep(BROADCAST_POLL_S)
         if _services is not None:
             _services.hub.set_active(set())               # nobody watches: back to the idle rate
@@ -629,12 +634,13 @@ async def ws_v1(ws: WebSocket) -> None:
 
     async def sender() -> None:
         while True:
-            message = await client.queue.get()
-            try:
-                await asyncio.wait_for(ws.send_text(message), timeout=SEND_TIMEOUT_S)
-            except asyncio.TimeoutError:
-                await ws.close(code=1008, reason="client too slow")
-                return
+            await client.ready.wait()
+            for message in client.take():
+                try:
+                    await asyncio.wait_for(ws.send_text(message), timeout=SEND_TIMEOUT_S)
+                except asyncio.TimeoutError:
+                    await ws.close(code=1008, reason="client too slow")
+                    return
 
     send_task = asyncio.create_task(sender())
     try:
@@ -657,7 +663,7 @@ async def ws_v1(ws: WebSocket) -> None:
                 for e in wanted:                       # snapshot on subscribe (R 19.3 resync)
                     ch = services().channel(e)
                     if ch.last_message:
-                        client.offer(ch.last_message)
+                        client.offer(ch.last_message, e)
                 await ws.send_json({"type": "subscribed", "engines": sorted(wanted)})
     except WebSocketDisconnect:
         pass

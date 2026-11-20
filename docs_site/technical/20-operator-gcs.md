@@ -100,23 +100,38 @@ ANUMAAN's ground control station opens by default on a fleet and engine console,
 
 ### The Fleet and Engine Console
 
-The default view presents fleet tiles across all five engine profiles: Rotax 912 iS, Rotax 914, Rotax 915 iS, Austro AE300, and VRDE Jayem 2.2L. Selecting a tile brings that engine's live scalar telemetry to the foreground and warms its tier-1 reservoir classifier, the pipeline stage described in [Bio-Inspired Sparse Novelty Coding](10-bio-inspired-sparse-novelty-coding.md) and [Fault Diagnosis](11-fault-diagnosis.md) that produces classifier-level fault evidence once it has enough recent history to work from.
+The runtime console is one page with a single WebSocket subscription to the whole fleet. Every panel is built from
+the same state message, so two screens watching the same engine show the same thing. A row of buttons switches the
+*role view*. This is a client-side choice, remembered in the browser and never sent to the server, so one user's
+view never changes another's.
 
-Below the telemetry, the console shows tier-0 residual evidence directly: threshold ratios against the physics-expected value at the current operating point, persistence-confirmed alarms (a residual has to hold, not merely spike, before it is treated as evidence), and the leading channels driving any active alarm. This is the same residual machinery described in [Residual Analysis](08-residual-analysis.md), surfaced without abstraction so an operator can see exactly which channel moved and by how much.
+| View | What it shows |
+|---|---|
+| **Operator** | The status banner, fleet tiles for all five engines, key readings, flight-condition levers, missions and recording, fault injection for training, time to limit, remaining useful life with its 95 % band, and mission reliability. |
+| **Propulsion engineer** | Detector evidence and the ranked isolation hypotheses with their supporting channels. Also the residual of every detector channel (measured minus engine model, in noise sigmas), the twin's health-parameter estimates with intervals, virtual sensors (labelled VIRTUAL because they are model estimates) and vibration orders. |
+| **Maintenance** | Hypotheses and evidence, time to limit, RUL, and the work orders with their *in work* and *sign off* flow. |
+| **Mission** | Levers and missions, the terrain route check with an altitude profile, the engine-out glide check with divert, and a plan view of the route, glide footprint and nearby airfields (see [Mission Planning](16-mission-planning.md)). |
 
-The console also carries the controls needed to exercise the system: profile-valid fault injection and clearing, scoped to the faults that are physically meaningful for the selected engine, and flight-condition levers for throttle, altitude, and outside air temperature that drive the same physics runtime the residual detector watches. An embedded 3D twin view sits alongside the telemetry, rendering the selected engine's model with live component highlighting, so an active fault is not just a number in a table but a location on the physical engine.
+**Status banner.** The engine status (ENGINE OFF, GO, ADVISORY, CAUTION, NO-GO) follows the flight-deck colour rules:
 
-![ANUMAAN Operator Ground Control Station Workspace](/assets/playwright/01_runtime_workspace.png)
-*Figure 1: ANUMAAN Operator Ground Control Station runtime workspace showing live telemetry tiles, 3D twin viewport, and physics operating levers.*
+- red is used only for NO-GO, amber only for CAUTION and cyan for ADVISORY;
+- GO is not an alert and has no alert colour;
+- every non-GO level lists its reasons, with the reading and the limit it was compared against;
+- a latched NO-GO shows *Acknowledge*, and it clears only once its cause has cleared too;
+- each active alert shows its count and its recommended action. It can be acknowledged and, unless it is a NO-GO,
+  shelved for 10 minutes.
 
-![Live Fault Injection and Bayesian Diagnosis](/assets/playwright/04_live_fault_injected.png)
-*Figure 2: Real-time fault injection triggering persistence-confirmed residual alarms and exact Bayesian fault ranking.*
+**Honest gaps on screen.** A value the system does not have is shown as NO DATA, never as a default. This applies
+to an engine still calibrating, a detector not yet calibrated, or an RUL without a trained model.
 
-![Operator Throttle Derate Advisory Execution](/assets/playwright/05_operator_derated.png)
-*Figure 3: Prescriptive advisory panel issuing throttle derate recommendation with mission reliability impact projection.*
+![Operator view of the runtime console](/assets/playwright/08_console_operator_view.png)
+*Figure 1: Operator view, Rotax 914 at cruise. GO banner, live fleet tiles for all five engines, scenario levers, and prognosis: the RUL with its band from the simulated fleet model, and mission reliability. SIMULATION evidence.*
 
-![Post-Mission Debrief Report](/assets/playwright/06_sortie_debrief.png)
-*Figure 4: Post-mission debrief showing timeline replay, stress cycle counts, and component remaining useful life delta.*
+![Engineer view: twin and residuals](/assets/playwright/09_engineer_twin_residuals.png)
+*Figure 2: Engineer view. Residuals ranked by size, twin health parameters with intervals, virtual sensors and vibration orders.*
+
+![Mission view: route, profile and glide](/assets/playwright/10_mission_route_glide.png)
+*Figure 3: Mission view over the Leh tile. A powered route Leh to Thoise with the measured power factor, the altitude profile, an engine-out glide check from 20,000 ft (both airfields BLOCKED_BY_TERRAIN), and the plan view.*
 
 ### The Rotax-Deep Workspace
 

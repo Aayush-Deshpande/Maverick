@@ -87,10 +87,18 @@ def test_websocket_subscriber_sees_fault_injected_by_another_client(client):
 
 
 def test_latest_only_queue_drops_old_messages():
-    import asyncio
+    """Latest-only per engine (T-WS-1): an unsent older message of the same engine is replaced and counted."""
     c = api_v1.Client(ws=None, id="x")
-    c.offer("a")
-    c.offer("b")
-    assert c.queue.get_nowait() == "b" and c.dropped == 1
-    with pytest.raises(asyncio.QueueEmpty):
-        c.queue.get_nowait()
+    c.offer("a", "rotax_912is")
+    c.offer("b", "rotax_912is")
+    assert c.take() == ["b"] and c.dropped == 1
+    assert c.take() == []
+
+
+def test_fleet_client_keeps_the_latest_message_of_every_engine():
+    """A fleet subscriber must not starve: one engine's frame never replaces another engine's unsent frame
+    (found 20 Nov 2026: a single size-1 queue let only the last engine of each broadcast cycle through)."""
+    c = api_v1.Client(ws=None, id="x")
+    for engine in ("austro_ae300", "rotax_914", "rotax_912is"):
+        c.offer(f"m-{engine}", engine)
+    assert sorted(c.take()) == ["m-austro_ae300", "m-rotax_912is", "m-rotax_914"] and c.dropped == 0
