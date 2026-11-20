@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { NO_DATA, num } from '../utils/format';
+import RouteMap from './RouteMap';
 
 type Airfield = { id: string; name: string; lat: number; lon: number; elevation_ft: number };
 type Waypoint = { lat: number; lon: number; altitude_ft: number; terrain_ft: number; climb_rate_fpm: number };
@@ -15,7 +16,7 @@ type GlideField = {
 };
 type Glide = {
   glide_ratio: number; speed_best_glide_kt: number; sink_rate_fpm: number; propeller_feathered: boolean;
-  reachable_airfields: GlideField[]; footprint: { range_km: number }[] | null; terrain: string | null;
+  reachable_airfields: GlideField[]; footprint: { range_km: number; lat: number; lon: number }[] | null; terrain: string | null;
 };
 
 type Props = {
@@ -81,6 +82,10 @@ export default function RoutePlannerPanel({ engineId, api }: Props) {
     finally { setBusy(false); }
   };
   const ranges = (glide?.footprint ?? []).map((p) => p.range_km).sort((a, b) => a - b);
+  const MAP_RADIUS_KM = 150;                              // airfields drawn on the plan view: within this of the centre
+  const centre = glide && posValid ? { lat: Number(pos.lat), lon: Number(pos.lon) } : plan?.waypoints[0] ?? null;
+  const nearKm = (a: { lat: number; lon: number }) => centre == null ? 0
+    : 111.32 * Math.hypot(a.lat - centre.lat, (a.lon - centre.lon) * Math.cos((centre.lat * Math.PI) / 180));
 
   const select = 'bg-black/20 border border-surface-border rounded-sm px-2 py-1 text-xs text-slate-200';
   return (
@@ -152,6 +157,17 @@ export default function RoutePlannerPanel({ engineId, api }: Props) {
               </tr>
             ))}</tbody>
           </table>
+        </div>
+      )}
+      {(plan || glide) && (
+        <div className="mt-3">
+          <RouteMap
+            route={plan?.feasible ? plan.waypoints : divert?.powered_route?.feasible ? divert.powered_route.waypoints : []}
+            footprint={glide?.footprint ?? null}
+            airfields={airfields.filter((a) => nearKm(a) <= MAP_RADIUS_KM).map((a) => ({ ...a, status: glide?.reachable_airfields.find((g) => g.airfield_id === a.id)?.status }))}
+            aircraft={glide && posValid ? { lat: Number(pos.lat), lon: Number(pos.lon) } : null}
+          />
+          <div className="mt-1 text-xs font-mono text-slate-500">Plan view: route (solid), engine-out glide footprint (dashed), airfields (squares) · SIMULATION</div>
         </div>
       )}
       {divert && (

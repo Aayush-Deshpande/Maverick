@@ -7,7 +7,8 @@ RESUME HERE  (last updated 20 Nov 2026, overnight autonomous session)
 =====================================================================================================================
 Phase:        Phases 1-3 done; Phase 5 (M4) done; Phase 6 (M5) M5-01/02/04/05/06/07/08/09 done. Not started:
               M5-10/11 (canyon app, map UI), M6 views, Phase 7 Blender, M7, M8, 8b.
-Card:         M5-09 glide/divert DONE (committed). IN PROGRESS: Q12 close-out - 915 governed (configs done), oil relief
+Card:         M5-09 glide/divert DONE; M5-11 part 1 (SVG plan view: route, glide footprint, airfields) DONE.
+              IN PROGRESS: Q12 close-out - 915 governed (configs done), oil relief
               5.0 -> 4.8 bar (ASSUMED, see entry), signatures for all 5 engines regenerating
               (scripts/diagnose/gen_signatures.py), then full suite, run_matrix re-measure (docs page 11 table:
               the 915 row is still the fixed-pitch one), 915 fleet RUL report -> docs page 14 row ROW_915.
@@ -978,3 +979,10 @@ Tests: tests/planning 21 + api 4 new; planning+adversarial+canonical+truth-leak+
 ASSUMED values added: glide.windmill_ld_factor 0.724 (carried over), pattern_height_ft 1500, glide_clearance_ft 500,
   confident_margin_ft 2000, path_step_m 250, footprint_bearings 36, feathering_propeller false.
 Questions for Prasad: (Q15) do the UAV installations have a feathering propeller? (sets L/D 18.6 vs 13.5).
+
+=== 20 Nov 2026 M5-11 (part 1) Plan view of route + glide footprint (AI: Claude Code)
+Changed: frontend/src/components/RouteMap.tsx (new, dependency-free SVG, equirectangular x cos(lat), scale bar),
+  RouteMap.test.tsx (new, vitest + react-dom/server), RoutePlannerPanel.tsx (mounts it; airfields within 150 km of
+  the aircraft / route start). Colours: neutral slate/white only (red/amber/cyan reserved for alerts, U1).
+Tests: npx tsc --noEmit OK; npx vitest run 10 passed. Not yet built: waypoint editing on the map, altitude profile.
+
