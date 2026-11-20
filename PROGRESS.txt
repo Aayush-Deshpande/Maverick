@@ -7,7 +7,7 @@ RESUME HERE  (last updated 20 Nov 2026, overnight autonomous session)
 =====================================================================================================================
 Phase:        PHASE 1 (M0) cards done (M0-01..M0-12; M0-10 reduced, see its entry). NEXT: CHECKPOINT PHASE 1 (manual
               look by Prasad), then Phase 2 in demo-first order: M1-01 sim package + clock, M1-02 atmosphere, ...
-Card:         M4-02 done (trends/time-to-limit); M3-08 matrix run pending (reports/evaluation); M4-05 done; NEXT M4-06 adaptive baseline, M4-01/03 fleet + RUL, M4-04. Prasad away until ~08:45 20 Nov with full
+Card:         M4-02 done (trends/time-to-limit); M3-08 matrix run pending (reports/evaluation); M4-06 done; NEXT M4-01 wear + fleet, M4-03 RUL, M4-04 Monte Carlo reliability. Prasad away until ~08:45 20 Nov with full
               permission (installs to D:, any package/model/dataset): KEEP BUILDING card after card, never wait.
 Branch:       Beta (pushed by Prasad up to ae82c70; later commits local). main untouched (9b5942e).
 Last commit:  M3-04 on Beta (see git log -1).
@@ -838,3 +838,11 @@ Isolability noted: F01/F05/F30 signatures cosine 0.9997 on the 912 (one ambiguit
   compression cylinder look the same in these channels); the order goes to the group leader by FMECA prior.
 Tests: tests/maintenance/test_work_orders.py (store life cycle + restart, time-to-limit order, API misfire ->
   order -> sign-off -> fault cleared).
+
+=== 20 Nov 2026  M4-06 adaptive per-tail baseline (T-PRG-3) - commit e12c2f9
+backend/detect/adaptive.py: EWMA of the residual mean/variance (configs/detect.json adaptive, ASSUMED) learned only
+  while status GO >= 30 min, CUSUM < h/2, no detector/novelty alarm, no open work order; committed as numbered
+  versions every 600 s of accepted time, each step limited (0.5 sigma offset, x1.25 sigma) so a slow fault cannot
+  be absorbed; rollback to any kept version; persisted var/baselines/<tail>.json; status (version, reason,
+  learning) published in prognostics.baseline. Wired after the status evaluator in the runtime.
+Tests: tests/detect/test_adaptive.py (every guard, step limit, rollback).
