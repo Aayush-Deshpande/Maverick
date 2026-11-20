@@ -17,7 +17,8 @@ Last commit:  see git log -1.
 State:        tests/dynamic 15 passed, vitest 25, tsc OK; landing loads with no console errors. Full suite last
               698 passed (+ known ratchet; timing test flaky only under load).
 Latest:       D55 done (diesel lambda 1.35 + boost 247/227 kPa CALIBRATED from BSFC 235/215; live cruise EGT ~390-430 C). D58 (914 charge-path cooling, cold-day density criterion); survey inset AE300 no longer renders white.
-Next step:    21 Nov ~04:00: 3D twin tab = keyboard visualizer (TwinWorkspace/TwinStage), injected part lit in
+Next step:    21 Nov ~04:15: restart settle (restart_settle_s, diagnosis restarts clean after START/RESET) and the
+              3D twin lists only faults that light a part (e20ea58). Session ended by Prasad. 21 Nov ~04:00: 3D twin tab = keyboard visualizer (TwinWorkspace/TwinStage), injected part lit in
               0.1-0.2 s (D64), camera orbits outside the engine then loops, R resets a failed engine. Open: reset should
               also clear diagnosis memory (F11 ADVISORY lingers briefly). Do NOT merge to main until Prasad says
               GO TO MAIN. 21 Nov ~03:20: 3D twin = full-screen keyboard visualizer (1-9/0/Q/E/C/F/T/Esc). Prasad merges Beta -> main
