@@ -8,6 +8,7 @@ import { consumeDemoRequest } from '../demoIntent';
 import RoutePlannerPanel from './RoutePlannerPanel';
 import StatusBanner from './StatusBanner';
 import EngineerPanel from './EngineerPanel';
+import CopilotPanel from './CopilotPanel';
 
 const EngineViewer3D = lazy(() => import('./viewer3d/EngineViewer3D'));
 
@@ -179,6 +180,7 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
       units={Object.fromEntries(Object.entries(state?.readings ?? {}).map(([k, r]) => [k, r.unit]))}
       api={runtime.api} onNotice={(t) => { setNotice(t); setTimeout(() => setNotice(''), 3500); }} />
 
+    {show('OPERATOR', 'ENGINEER', 'MAINTENANCE') && <CopilotPanel engineId={runtime.engineId ?? null} api={runtime.api} />}
     {show('OPERATOR') && <section aria-label="Fleet overview" className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-2">
       {runtime.engines.map((engine) => {
         const s = runtime.fleet[engine.engine_id]?.state;
