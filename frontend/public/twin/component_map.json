@@ -1,0 +1,167 @@
+{
+  "schema": 1,
+  "about": "Single source of truth for component-level fault mapping, shared by the web twin and the landing film. Names are mesh-name prefixes from the exported GLBs (the same object names as the Blender assemblies). '{c}' is the faulted cylinder. 'pipeline' is ordered from where the fault originates to the sensor that reads it. 'evidence' lists the detector channels (backend/detect/calibration.py) that see the fault; an empty list means the fault is waveform-only and the scalar detector cannot see it by design (backend/runtime/registry.py). Validated by tests/test_component_map.py.",
+  "highlight": {
+    "fault_rgb": [1.0, 0.28, 0.05],
+    "ghost_rgb": [0.06, 0.22, 0.38],
+    "evidence_rgb": [0.35, 0.9, 0.95],
+    "note": "Fault and ghost colours are the values of M_Fault_RedHighlight and M_GhostVision_XRay in apps/blender_twin/standalone_fault_diagnostic_app.py, so Blender and web show the same thing."
+  },
+  "engines": {
+    "rotax_912is": {
+      "label": "Rotax 912 iS Sport",
+      "cylinders": 4,
+      "sensors": {},
+      "sensors_note": "This asset has no separately modelled sensors; channels are read by the dual-lane ECU.",
+      "subsystems": {
+        "oil": ["Oil_Tank"],
+        "fuel": ["Fuel_Pump"],
+        "ignition": ["Wiring_Harness"],
+        "cooling": ["Cooling_Air_Baffle", "Water_Hoses"],
+        "exhaust": ["Exhaust_System"],
+        "gearbox": ["Gearbox_Type_2"],
+        "electrical": ["External_Alternator", "Starter_09Kw", "Starter_Relay"],
+        "control": ["ECU_M"],
+        "structure": ["Rotax_912i_Base", "Engine_Suspension_Frame", "Covers_Theme"]
+      },
+      "faults": {
+        "MISFIRE": { "pipeline": [["ECU_M"], ["Wiring_Harness"]], "evidence": ["egt", "cht", "rpm"], "note": "Ignition path from ECU through the harness; the harness is shared, so it is not cylinder-specific in this asset." },
+        "COOLING_DEGRADATION": { "pipeline": [["Water_Hoses"], ["Cooling_Air_Baffle"]], "evidence": ["cht", "oil_t"] },
+        "OIL_PRESSURE_LOSS": { "pipeline": [["Oil_Tank"]], "evidence": ["oil_p", "oil_t"], "note": "Dry-sump oil tank; the pump and scavenge lines are inside the crankcase mesh and are not separate." },
+        "AIR_FILTER_BLOCKAGE": { "pipeline": [["Fuel_Pump"], ["Rotax_912i_Base"]], "evidence": ["map_kpa", "egt"], "note": "No separate airbox mesh; the induction side of the engine base is shown as context." },
+        "SENSOR_STUCK": { "pipeline": [["Wiring_Harness"], ["ECU_M"]], "evidence": ["cht"], "note": "Sensor faults are quarantined by sensor sanity before they reach the engine detector." },
+        "SENSOR_BIAS_DRIFT": { "pipeline": [["Wiring_Harness"], ["ECU_M"]], "evidence": ["cht"] }
+      }
+    },
+    "rotax_914": {
+      "label": "Rotax 914 F",
+      "cylinders": 4,
+      "sensors": {},
+      "sensors_note": "No separately modelled sensors in this asset.",
+      "subsystems": {
+        "cylinders": ["Rotax914_Cylinder_Bank", "Rotax914_Cylinder_Head"],
+        "cooling": ["Rotax914_Coolant_Line"],
+        "induction": ["Rotax914_Intake_Manifold"],
+        "turbo": ["Rotax914_Turbo_Compressor", "Rotax914_Turbo_Turbine_Exhaust", "Rotax914_Turbo_Wastegate"],
+        "exhaust": ["Rotax914_Plumbing_Exhaust"],
+        "gearbox": ["Rotax914_Gearbox_Front", "Rotax914_Prop_Flange"],
+        "structure": ["Rotax914_Crankcase_Block", "Rotax914_Starter_Motor"]
+      },
+      "faults": {
+        "MISFIRE": { "pipeline": [["Rotax914_Cylinder_Head"], ["Rotax914_Cylinder_Bank"]], "evidence": ["egt", "cht", "rpm"] },
+        "COOLING_DEGRADATION": { "pipeline": [["Rotax914_Coolant_Line"], ["Rotax914_Cylinder_Head"]], "evidence": ["cht", "oil_t"] },
+        "OIL_PRESSURE_LOSS": { "pipeline": [["Rotax914_Crankcase_Block"]], "evidence": ["oil_p", "oil_t"], "note": "No separate oil pump mesh; the crankcase is shown as context." },
+        "AIR_FILTER_BLOCKAGE": { "pipeline": [["Rotax914_Intake_Manifold"]], "evidence": ["map_kpa", "egt"] },
+        "BOOST_LEAK": { "pipeline": [["Rotax914_Turbo_Compressor"], ["Rotax914_Intake_Manifold"]], "evidence": ["map_kpa", "egt"] },
+        "WASTEGATE_STUCK_OPEN": { "pipeline": [["Rotax914_Plumbing_Exhaust"], ["Rotax914_Turbo_Wastegate"]], "evidence": ["map_kpa"] },
+        "TURBO_BEARING_WEAR": { "pipeline": [["Rotax914_Turbo_Compressor", "Rotax914_Turbo_Turbine_Exhaust"]], "evidence": [], "note": "Waveform-only: no scalar channel changes, so the tier-0 detector does not see it by design." },
+        "SENSOR_STUCK": { "pipeline": [["Rotax914_Cylinder_Head"]], "evidence": ["cht"] },
+        "SENSOR_BIAS_DRIFT": { "pipeline": [["Rotax914_Cylinder_Head"]], "evidence": ["cht"] }
+      }
+    },
+    "rotax_915is": {
+      "label": "Rotax 915 iS",
+      "cylinders": 4,
+      "sensors": { "oat": ["Ambient sensor"] },
+      "subsystems": {
+        "oil": ["Oil tank"],
+        "cooling": ["Air baffles"],
+        "charge_air": ["Intercooler"],
+        "boost_control": ["Overboost valve", "Magnetovalve"],
+        "gearbox": ["Tranny"],
+        "control": ["ECU", "Fusebox"],
+        "structure": ["Main engine"]
+      },
+      "faults": {
+        "MISFIRE": { "pipeline": [["ECU"], ["Main engine"]], "evidence": ["egt", "cht", "rpm"], "note": "Cylinders are not separate meshes in this asset." },
+        "COOLING_DEGRADATION": { "pipeline": [["Air baffles"]], "evidence": ["cht", "oil_t"] },
+        "OIL_PRESSURE_LOSS": { "pipeline": [["Oil tank"]], "evidence": ["oil_p", "oil_t"] },
+        "AIR_FILTER_BLOCKAGE": { "pipeline": [["Air baffles"], ["Intercooler"]], "evidence": ["map_kpa", "egt"] },
+        "BOOST_LEAK": { "pipeline": [["Intercooler"]], "evidence": ["map_kpa", "egt"] },
+        "WASTEGATE_STUCK_OPEN": { "pipeline": [["Magnetovalve"], ["Overboost valve"]], "evidence": ["map_kpa"] },
+        "TURBO_BEARING_WEAR": { "pipeline": [["Overboost valve", "Magnetovalve"]], "evidence": [], "note": "Waveform-only; turbo rotating assembly is not a separate mesh." },
+        "SENSOR_STUCK": { "pipeline": [["Ambient sensor"], ["ECU"]], "evidence": ["cht"] },
+        "SENSOR_BIAS_DRIFT": { "pipeline": [["Ambient sensor"], ["ECU"]], "evidence": ["cht"] }
+      }
+    },
+    "austro_ae300": {
+      "label": "Austro AE300",
+      "cylinders": 4,
+      "sensors": {
+        "oil_p": ["Sensor_Oil_Press"],
+        "oil_t": ["Sensor_Oil_Temp"],
+        "egt": ["Sensor_EGT_{c}_"],
+        "cht": ["Sensor_Coolant_Temp"],
+        "map_kpa": ["Sensor_Boost"],
+        "fuel_flow": ["Sensor_Fuel_Flow"],
+        "rpm": ["Sensor_RPM", "Sensor_Crank"],
+        "rail_p": ["Sensor_Fuel_Rail_Press"]
+      },
+      "sensors_note": "A liquid-cooled diesel: the CHT channel is read from the coolant temperature sensor.",
+      "subsystems": {
+        "fuel_injection": ["Fuel_Pump_ZME", "HP_Fuel_Pump", "Common_Rail", "Rail_PLV_Valve", "Fuel_Line_", "Injector_", "Fuel_Spill_Rail"],
+        "turbo_charge_air": ["Air_Filter_Box", "Turbocharger", "Boost_Pipe_Hot", "Intercooler", "Boost_Pipe_Cold", "Intake_Manifold"],
+        "exhaust": ["Exhaust_Manifold", "Exhaust_Downpipe", "Heat_Shield_Turbo"],
+        "oil": ["Oil_Sump", "Oil_Filter", "Oil_Cooler", "PCU_Oil_Line", "Turbo_Oil_Feed_Line", "Turbo_Oil_Drain_Line"],
+        "cooling": ["Water_Pump", "Coolant_Hose_", "Turbo_Coolant_Lines"],
+        "gearbox": ["Gearbox", "Prop_Flange", "Prop_Governor_PCU"],
+        "control": ["ECU_Lane_A", "ECU_Lane_B", "Engine_Harness_Loom", "Glow_Plug_Control_Unit"],
+        "structure": ["Engine_Block", "Cylinder_Head"]
+      },
+      "faults": {
+        "MISFIRE": { "pipeline": [["Injector_{c}_"], ["Glow_Plugs"], ["Sensor_EGT_{c}_"]], "evidence": ["egt", "cht", "rpm"] },
+        "COOLING_DEGRADATION": { "pipeline": [["Water_Pump"], ["Coolant_Hose_"], ["Cylinder_Head"], ["Sensor_Coolant_Temp"]], "evidence": ["cht", "oil_t"] },
+        "OIL_PRESSURE_LOSS": { "pipeline": [["Oil_Sump"], ["Oil_Filter"], ["Oil_Cooler"], ["PCU_Oil_Line", "Turbo_Oil_Feed_Line"], ["Sensor_Oil_Press"]], "evidence": ["oil_p", "oil_t"] },
+        "AIR_FILTER_BLOCKAGE": { "pipeline": [["Air_Filter_Box", "Air_Intake_Duct", "Air_Filter_Duct"], ["Turbocharger"], ["Sensor_Boost"]], "evidence": ["map_kpa", "egt"] },
+        "BOOST_LEAK": { "pipeline": [["Turbocharger"], ["Boost_Pipe_Hot"], ["Intercooler"], ["Boost_Pipe_Cold"], ["Intake_Manifold"], ["Sensor_Boost"]], "evidence": ["map_kpa", "egt"] },
+        "WASTEGATE_STUCK_OPEN": { "pipeline": [["Exhaust_Manifold"], ["Turbocharger"], ["Sensor_Boost"]], "evidence": ["map_kpa"], "note": "The wastegate is integral to the turbocharger housing in this asset." },
+        "TURBO_BEARING_WEAR": { "pipeline": [["Turbo_Oil_Feed_Line"], ["Turbocharger"], ["Turbo_Oil_Drain_Line"]], "evidence": [], "note": "Waveform-only: invisible to the scalar detector by design." },
+        "INJECTOR_COKING": { "pipeline": [["HP_Fuel_Pump"], ["Common_Rail"], ["Fuel_Line_{c}_"], ["Injector_{c}_"]], "evidence": [], "note": "Waveform-only (crank-angle signature); shown for injection, not claimed as detected by the scalar tier." },
+        "INJECTOR_NEEDLE_STICK": { "pipeline": [["Common_Rail"], ["Fuel_Line_{c}_"], ["Injector_{c}_"], ["Fuel_Spill_Rail"]], "evidence": [], "note": "Waveform-only." },
+        "RAIL_PRESSURE_DECAY": { "pipeline": [["Fuel_Pump_ZME"], ["HP_Fuel_Pump"], ["Common_Rail", "Rail_PLV_Valve"], ["Sensor_Fuel_Rail_Press"]], "evidence": [], "note": "Waveform-only in the detector; the rail pressure sensor is modelled but not a detector channel." },
+        "SENSOR_STUCK": { "pipeline": [["Sensor_Coolant_Temp"], ["Engine_Harness_Loom"], ["ECU_Lane_A", "ECU_Lane_B"]], "evidence": ["cht"] },
+        "SENSOR_BIAS_DRIFT": { "pipeline": [["Sensor_Coolant_Temp"], ["Engine_Harness_Loom"], ["ECU_Lane_A", "ECU_Lane_B"]], "evidence": ["cht"] }
+      }
+    },
+    "vrde_jayem_2_2l": {
+      "label": "VRDE–Jayem 2.2L",
+      "cylinders": 4,
+      "sensors": {
+        "oil_p": ["Sensor_Oil_Press"],
+        "oil_t": ["Sensor_Oil_Temp"],
+        "egt": ["Sensor_EGT_{c}_"],
+        "cht": ["Sensor_Coolant_Temp"],
+        "map_kpa": ["Sensor_MAP", "Sensor_Boost"],
+        "fuel_flow": ["Sensor_Fuel_Flow"],
+        "rpm": ["Sensor_RPM", "Crank_Sensor_"],
+        "rail_p": ["Rail_Pressure_Sensor", "Sensor_Fuel_Rail_Press"]
+      },
+      "sensors_note": "A liquid-cooled diesel: the CHT channel is read from the coolant temperature sensor.",
+      "subsystems": {
+        "fuel_injection": ["Fuel_Filter_ASAK", "Fuel_Hose_ASAK_Feed", "HP_Fuel_Pump", "Common_Rail", "Rail_Relief_Valve", "Fuel_Line_HP_Cyl", "Injector_", "Fuel_Return_LeakOff_Rail"],
+        "two_stage_turbo": ["Turbo_LP_", "Turbo_Interstage_Duct", "Turbo_HP_", "Wastegate_", "Intercooler", "Intake_Manifold"],
+        "exhaust": ["Exhaust_Collector", "Exhaust_Downpipe", "Exhaust_Heat_Blanket"],
+        "oil": ["Oil_Sump", "Oil_Filter", "Oil_Cooler", "Oil_Feed_Turbo_HP", "Oil_Feed_Turbo_LP", "Turbo_Oil_Drain"],
+        "cooling": ["Water_Pump", "Coolant_Hose_", "Coolant_Rail_", "Coolant_Pipe_"],
+        "gearbox": ["Gearbox", "Prop_Flange", "Flywheel"],
+        "control": ["ECU_Lane_A", "ECU_Lane_B", "Harness_Spine", "Harness_Br_"],
+        "glow": ["Glow_Plug_Cyl"],
+        "structure": ["Engine_Block", "Cylinder_Head"]
+      },
+      "faults": {
+        "MISFIRE": { "pipeline": [["Fuel_Line_HP_Cyl{c}"], ["Injector_{c}_"], ["Glow_Plug_Cyl{c}"], ["Sensor_EGT_{c}_"]], "evidence": ["egt", "cht", "rpm"] },
+        "COOLING_DEGRADATION": { "pipeline": [["Water_Pump"], ["Coolant_Hose_Pump_Feed"], ["Coolant_Rail_Runner", "Coolant_Rail_Coupler"], ["Cylinder_Head"], ["Coolant_Hose_HeadReturn"], ["Sensor_Coolant_Temp"]], "evidence": ["cht", "oil_t"] },
+        "OIL_PRESSURE_LOSS": { "pipeline": [["Oil_Sump"], ["Oil_Filter"], ["Oil_Cooler_Line_A", "Oil_Cooler_Line_B", "Oil_Cooler_M"], ["Oil_Feed_Turbo_LP", "Oil_Feed_Turbo_HP"], ["Sensor_Oil_Press"]], "evidence": ["oil_p", "oil_t"] },
+        "AIR_FILTER_BLOCKAGE": { "pipeline": [["Turbo_LP_CompressorVolute"], ["Turbo_Interstage_Duct"], ["Sensor_MAP"]], "evidence": ["map_kpa", "egt"], "note": "No air-filter mesh in this asset; the first compressor inlet is shown." },
+        "BOOST_LEAK": { "pipeline": [["Turbo_LP_CompressorVolute"], ["Turbo_Interstage_Duct"], ["Turbo_HP_CompressorVolute"], ["Turbo_Silicone_Coupler"], ["Intercooler"], ["Intake_Manifold"], ["Sensor_Boost", "Sensor_MAP"]], "evidence": ["map_kpa", "egt"] },
+        "WASTEGATE_STUCK_OPEN": { "pipeline": [["Exhaust_Collector"], ["Turbo_HP_TurbineVolute"], ["Wastegate_", "Turbo_HP_Wastegate_"], ["Sensor_MAP"]], "evidence": ["map_kpa"] },
+        "TURBO_BEARING_WEAR": { "pipeline": [["Oil_Feed_Turbo_HP", "Oil_Feed_Turbo_LP"], ["Turbo_HP_CHRA", "Turbo_LP_CHRA"], ["Turbo_Oil_Drain"]], "evidence": [], "note": "Waveform-only. The CHRA (centre housing rotating assembly) is where the bearings live." },
+        "INJECTOR_COKING": { "pipeline": [["HP_Fuel_Pump"], ["Common_Rail"], ["Fuel_Line_HP_Cyl{c}"], ["Injector_{c}_"]], "evidence": [], "note": "Waveform-only (crank-angle signature); shown for injection, not claimed as detected by the scalar tier." },
+        "INJECTOR_NEEDLE_STICK": { "pipeline": [["Common_Rail"], ["Fuel_Line_HP_Cyl{c}"], ["Injector_{c}_"], ["Fuel_Return_LeakOff_Rail"]], "evidence": [], "note": "Waveform-only." },
+        "RAIL_PRESSURE_DECAY": { "pipeline": [["Fuel_Filter_ASAK"], ["HP_Fuel_Pump"], ["Common_Rail", "Rail_Relief_Valve"], ["Rail_Pressure_Sensor"]], "evidence": [], "note": "Waveform-only in the detector; the rail pressure sensor is modelled but not a detector channel." },
+        "SENSOR_STUCK": { "pipeline": [["Sensor_Coolant_Temp"], ["Harness_Spine"], ["ECU_Lane_A", "ECU_Lane_B"]], "evidence": ["cht"] },
+        "SENSOR_BIAS_DRIFT": { "pipeline": [["Sensor_Coolant_Temp"], ["Harness_Spine"], ["ECU_Lane_A", "ECU_Lane_B"]], "evidence": ["cht"] }
+      }
+    }
+  }
+}

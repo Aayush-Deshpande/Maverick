@@ -5,25 +5,23 @@ section 19.1. Update the RESUME HERE block at every commit and at the end of eve
 =====================================================================================================================
 RESUME HERE  (last updated 20 Nov 2026, overnight autonomous session)
 =====================================================================================================================
-Phase:        Phases 1-3 done; Phase 5 (M4) done; Phase 6 (M5) M5-01/02/04/05/06/07/08/09 done. Not started:
-              M5-10/11 (canyon app, map UI), M6 views, Phase 7 Blender, M7, M8, 8b.
-Card:         M6-05 R3F 3D viewer core DONE (highlights from diagnosis, hysteresis). Default engine 912 DONE.
-              NEXT: UX plain-language pass (M6-06) (Prasad: 'UI/UX very intuitive').
-              Q12 915 governed DONE incl. run_matrix re-measure + docs page 11. M5-09 glide/divert DONE; M5-11 plan view + altitude profile DONE; M6-01/02 core
-              (console role views + status banner/alerts) DONE; M6-03 core (residuals, twin
-              parameters, virtual sensors, vibration orders in the Engineer view) DONE.
-              IN PROGRESS: Q12 close-out - 915 governed (configs done), oil relief
-              5.0 -> 4.8 bar (ASSUMED, see entry), signatures for all 5 engines regenerating
-              (scripts/diagnose/gen_signatures.py), then full suite, run_matrix re-measure (docs page 11 table:
-              the 915 row is still the fixed-pitch one). (915 fleet RUL report + docs page 14 DONE.)
-Branch:       Beta (local commits not pushed). main untouched (9b5942e).
-Last commit:  see git log -1 (M5-09 glide reachability + divert).
-State:        Full suite before Q12 close-out: 686 passed, 2 failed (both from the 915 governor change, fixed:
-              F37 applicability list, T-STS-2 oil relief) + ratchet legacy (known). Fleet RUL models in var/models
-              (local only) for 912/914/AE300/VRDE; 915 training.
-Next step:    finish Q12 close-out (above), commit; then M5-11 map view of route + glide footprint, M6 views.
-              Unstaged on purpose: the 914 .blend re-saves (D50), docs/cleanup/file_coverage_latest.csv,
-              data/graph_db/fleet_graph.json.
+Phase:        Phases 0-3, 5 done; Phase 6 (M5) done except M5-10 (D54: do not touch); Phase 4 (M6) M6-01..05 done,
+              M6-06 in progress (labels + plain status done). Not started: Phase 7 (D53 workflow), 8, 8b, 9, 10.
+Card:         MAIN LANDING IMPORT DONE (Prasad 20 Nov: "get the latest main's frontend"). main's landing/sortie/
+              studio/survey/demoIntent/index.html/vite.config/public media taken via `git restore --source=origin/main`
+              (only paths Beta never changed); App.tsx = main's minus the 4 SET_ROLE calls; survey/frame.ts adapts
+              Beta's /api/engines/{id}/state to the survey's frame shape. Beta engine GLBs kept (D49). Presentation
+              layer outside T-DYN-1 (Prasad option A, D57).
+Branch:       Beta (local commits not pushed). main untouched (local main = origin/main 4559afd; only read).
+Last commit:  see git log -1.
+State:        tests/dynamic 15 passed, vitest 25, tsc OK; landing loads with no console errors. Full suite last
+              698 passed (+ known ratchet; timing test flaky only under load).
+Next step:    1) Not imported from main on purpose: backend/runtime, engine_api, detect/calibration changes,
+                 apps/threejs_twin, main's EngineRuntimeConsole demo (Beta's v1 console kept; wire the landing's
+                 "Run the demo" (demoIntent) into Beta's console via a configs/ui demo scenario), web/review,
+                 output pptx, task.md, tests/test_component_map.py (main's twin component map).
+              2) Then: verification pass "inject anywhere -> correct part" for all 5 engines; D55 diesel calibration.
+              Unstaged on purpose: 914 .blend re-saves (D50), docs/cleanup/file_coverage_latest.csv.
 Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produce yet (lambda, timing, BSFC, power,
               vibration, GO/NO-GO); some may show blanks or crash on .toFixed(null) until M0-09. Beta only.
               (2) STOP/START return 422 until the engine state machine (M1-12).
@@ -1138,4 +1136,3 @@ Changed: frontend utils/labels.tsx (+test; fetch + context, exact -> {n} pattern
 Browser (912, F23 injected, training off): banner "No-go" + sentence + plain reasons; 3D lights exactly the 4
   Oil_Tank nodes from the diagnosis (data-highlighted-nodes hook).
 Tests: vitest 25, tests/status 15, tests/dynamic 15.
-

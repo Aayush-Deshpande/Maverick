@@ -1,0 +1,236 @@
+/* ==========================================================================
+   ANUMAAN — Native Intro Splash Screen
+   Blends seamless 60fps MP4 video into the editorial paper background
+   ========================================================================== */
+
+:root {
+  --splash-bg: #f2f1eb;
+  --splash-ink: #101b20;
+  --splash-accent: #c44d2d;
+  --splash-rule: rgba(16, 27, 32, 0.12);
+}
+
+body.ae-splash-active {
+  overflow: hidden !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+
+/* Fullscreen Overlay Container */
+.ae-splash-root {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 999999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--splash-bg);
+  pointer-events: none; /* Clicks pass through / no video pause controls */
+  user-select: none;
+  -webkit-user-select: none;
+  overflow: hidden;
+  will-change: opacity, transform, filter;
+  transition:
+    opacity 720ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 720ms cubic-bezier(0.16, 1, 0.3, 1),
+    filter 720ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Smooth exit animation */
+.ae-splash-root.ae-splash-exiting {
+  opacity: 0;
+  transform: scale(1.025);
+  filter: blur(8px);
+}
+
+/* Backdrop ambient wash */
+.ae-splash-backdrop {
+  position: absolute;
+  inset: 0;
+  background-color: var(--splash-bg);
+  background-image: 
+    radial-gradient(ellipse at 50% 50%, rgba(255, 255, 255, 0.45) 0%, rgba(242, 241, 235, 0) 70%),
+    linear-gradient(to right, rgba(16, 27, 32, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(16, 27, 32, 0.02) 1px, transparent 1px);
+  background-size: 100% 100%, 32px 32px, 32px 32px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* HUD Metadata in upper corners */
+.ae-splash-hud-meta {
+  position: absolute;
+  top: 28px;
+  left: 36px;
+  right: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: 'PixelCode', monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(16, 27, 32, 0.6);
+  z-index: 4;
+  pointer-events: none;
+  animation: aeSplashFadeIn 800ms ease-out forwards;
+}
+
+.ae-splash-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  background: rgba(16, 27, 32, 0.04);
+  border: 1px solid var(--splash-rule);
+  border-radius: 2px;
+  font-weight: 600;
+}
+
+.ae-splash-pill::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: var(--splash-accent);
+  border-radius: 50%;
+  animation: aeSplashPulse 1.4s ease-in-out infinite;
+}
+
+.ae-splash-serial {
+  opacity: 0.7;
+}
+
+/* Stage centering the video */
+.ae-splash-stage {
+  position: relative;
+  z-index: 2;
+  width: min(840px, 90vw);
+  max-height: 80vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Native Video Element — 100% Stripped of player visuals */
+.ae-splash-video {
+  width: 100%;
+  height: auto;
+  max-height: 75vh;
+  object-fit: contain;
+  display: block;
+  outline: none;
+  border: none;
+  box-shadow: none;
+  pointer-events: none; /* User cannot right click, scrub, or pause */
+  
+  /* CRITICAL BLENDING:
+     Multiplies video's off-white pixels (#f1f1ec) seamlessly with 
+     page's paper background (#f2f1eb). No rectangular box edge is visible! */
+  mix-blend-mode: multiply;
+
+  /* Feathered radial mask to ensure 0 boundary seam */
+  mask-image: radial-gradient(ellipse 90% 85% at 50% 50%, #000 65%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 90% 85% at 50% 50%, #000 65%, transparent 100%);
+
+  opacity: 0;
+  transform: scale(0.985);
+  transition: opacity 400ms ease-out, transform 400ms ease-out;
+}
+
+.ae-splash-video.is-playing {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Subtle Skip Button */
+.ae-splash-skip {
+  position: absolute;
+  bottom: 32px;
+  right: 36px;
+  z-index: 5;
+  pointer-events: auto; /* Active so user can skip if they want */
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: rgba(242, 241, 235, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--splash-rule);
+  border-radius: 4px;
+  font-family: 'PixelCode', monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--splash-ink);
+  cursor: pointer;
+  opacity: 0.65;
+  transition: opacity 200ms ease, border-color 200ms ease, transform 200ms ease;
+  animation: aeSplashFadeIn 1200ms ease-out forwards;
+}
+
+.ae-splash-skip:hover {
+  opacity: 1;
+  border-color: rgba(16, 27, 32, 0.35);
+  transform: translateY(-1px);
+}
+
+.ae-splash-skip kbd {
+  display: inline-block;
+  padding: 2px 5px;
+  font-size: 9px;
+  background: rgba(16, 27, 32, 0.07);
+  border-radius: 2px;
+  border: 1px solid rgba(16, 27, 32, 0.15);
+}
+
+/* Technical micro-progress line at bottom */
+.ae-splash-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: rgba(16, 27, 32, 0.06);
+  z-index: 4;
+  overflow: hidden;
+}
+
+.ae-splash-progress-bar {
+  height: 100%;
+  width: 100%;
+  background: var(--splash-accent);
+  transform-origin: left center;
+  animation: aeSplashProgress 6.0s cubic-bezier(0.2, 0, 0.3, 1) forwards;
+}
+
+@keyframes aeSplashProgress {
+  0% { transform: scaleX(0); }
+  100% { transform: scaleX(1); }
+}
+
+@keyframes aeSplashPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+@keyframes aeSplashFadeIn {
+  from { opacity: 0; }
+  to { opacity: 0.7; }
+}
+
+@media (max-width: 640px) {
+  .ae-splash-hud-meta {
+    top: 18px;
+    left: 20px;
+    right: 20px;
+    font-size: 10px;
+  }
+  .ae-splash-skip {
+    bottom: 20px;
+    right: 20px;
+  }
+}
