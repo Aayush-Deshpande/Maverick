@@ -9,11 +9,13 @@ Implements ingest(frame, truth): processing a live tick and ingesting a replayed
 
 from __future__ import annotations
 
+import json
 import re
 import threading
 import time
 from collections import deque
 from dataclasses import dataclass, field
+from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, Deque, Dict, List, Optional, Sequence, Tuple, Union
 
@@ -115,8 +117,16 @@ EVENT_LEVELS = ("INFORMATION", "ADVISORY", "WARNING", "CRITICAL")
 
 class EngineRuntime:
     def __init__(self, engine_config_id: str, seed: int = 0, tail_id: Optional[str] = None,
-                 warmup_ticks: int = WARMUP_TICKS, buffer_len: int = 3600) -> None:
+                 warmup_ticks: int = WARMUP_TICKS, buffer_len: int = 3600, data_source: Optional[str] = None) -> None:
         self.engine_id = engine_config_id
+        # configs/runtime.json data_source: DIRECT = frames straight from the plant; CAN = every frame is encoded to the
+        # v2 DBC, sent on a python-can bus, intrusion-checked and decoded before the twin sees it (M7-02, T-CAN-1)
+        rt_cfg = json.loads((Path(__file__).resolve().parents[2] / "configs" / "runtime.json").read_text(encoding="utf-8"))
+        self.data_source = data_source or rt_cfg["data_source"]
+        self.can_link = None
+        if self.data_source == "CAN":
+            from backend.sources.can_link import CanLink
+            self.can_link = CanLink(channel=f"anumaan-{engine_config_id}-{seed}", interface=rt_cfg["can_interface"])
         self.cfg: EngineConfig = load_engine_config(engine_config_id)
         self.seed = seed
         self.tail_id = tail_id or f"TAIL-{engine_config_id}-{seed}"
@@ -641,6 +651,8 @@ class EngineRuntime:
             self.levers.advance(DT)
             raw_frame, truth = self.source.step(DT, throttle_pct=self.levers.throttle_pct,
                                                 altitude_ft=self.levers.altitude_ft, oat_c=self.levers.oat_c)
+            if self.can_link is not None:
+                raw_frame = self.can_link.roundtrip(raw_frame)
 
             # Apply sensor layer manipulations (R7)
             frame = self.sensor_levers.apply(raw_frame, DT)

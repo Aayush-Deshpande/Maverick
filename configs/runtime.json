@@ -5,7 +5,7 @@
   "idle_tick_divisor": 5,
   "idle_tick_divisor_note": "Engines nobody subscribes to tick at tick_rate_hz / idle_tick_divisor to save CPU/memory on small hosts; every subscribed engine ticks at full rate.",
   "data_source": "DIRECT",
-  "data_source_note": "DIRECT (in-process simulation) now; CAN / MAVLINK / REPLAY sources arrive in M5-M7 behind the same Frame contract.",
+  "data_source_note": "DIRECT: frames straight from the in-process plant. CAN (M7-02): every frame crosses a python-can bus as the v2 DBC messages (configs/can/anumaan_engine_v2.dbc), is checked by the CAN intrusion detector and decoded before the twin sees it. REPLAY is the recording hub.",
   "default_engine_id": "rotax_912is",
   "default_engine_id_note": "Engine every client opens on first visit (Prasad 20 Nov 2026; D25/D47: the Rotax 912 iS Sport is the reference engine and first for demos). A ?engine= URL parameter or the user's later choice overrides it.",
   "legacy_engine_id": "rotax_912is",
@@ -36,5 +36,7 @@
       60
     ],
     "note": "DECISIONS D8: default 1x, selectable 1/5/20/60x. Plant integrates at internal_step_s; each published frame runs time_scale * (1/tick_rate_hz) / internal_step_s steps (R 21.3). 0.05 s keeps 60x affordable (60 steps per frame); fast first-order states (MAP, spool) use the exact exponential update so they stay stable at this step (T-PHY-9, T-PHY-11)."
-  }
+  },
+  "can_interface": "virtual",
+  "can_interface_note": "python-can interface used when data_source is CAN: 'virtual' (in-process, Windows/CI) or 'socketcan' with a vcan0/can0 channel on Linux."
 }

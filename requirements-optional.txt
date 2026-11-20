@@ -17,9 +17,11 @@
 tifffile==2026.11.16
 imagecodecs==2026.11.11
 
-# --- CAN / FADEC (Phase 9, M7-01..02)
-# cantools
-# python-can
+# --- CAN / FADEC (Phase 9, M7-01..02). Installed 20 Nov 2026 (Prasad's OK) with
+#     pip install --target D:\AI\pysite\py314 ... and a site-packages .pth pointing there (D40: files on D:)
+#     docs: https://python-can.readthedocs.io/en/stable/ , https://cantools.readthedocs.io/en/latest/
+cantools==45.2.0
+python-can==4.6.1
 
 # --- Research only (backend/foundation, not used by the product)
 # chronos-forecasting
