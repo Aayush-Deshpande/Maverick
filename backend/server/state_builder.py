@@ -133,6 +133,32 @@ def _residuals(det: Any) -> Dict[str, float]:
     return {n: round(float(z), 3) for n, z in zip(det.channel_names, det.z_raw) if math.isfinite(float(z))}
 
 
+KJ_PER_KWH_S = 3600.0                         # seconds per hour (kg/h -> kg/s), named for the unit change
+
+
+@lru_cache(maxsize=None)
+def _lhv_j_kg(engine_id: str) -> Optional[float]:
+    from backend.physics.engine_config import load_engine_config
+    from backend.sim.combustion import load_fuel
+    try:
+        return load_fuel(load_engine_config(engine_id).fuel)["lhv_mj_kg"] * 1e6
+    except (KeyError, FileNotFoundError):
+        return None
+
+
+def _derived(f: Any, engine_id: str) -> Dict[str, Optional[float]]:
+    """Efficiency figures an engine monitor can compute without a torque sensor: the twin's indicated-power estimate
+    with the MEASURED fuel flow (P Part 3.10 "efficiency trends"). Indicated, not brake: no friction model is assumed
+    here. Missing input -> null (NO DATA), never a default."""
+    p_ind = (f.virtual_sensors or {}).get("P_ind_kw")
+    ff = f.fuel_flow                                                    # kg/h
+    lhv = _lhv_j_kg(engine_id)
+    ok = p_ind is not None and ff is not None and p_ind > 0 and ff > 0
+    return {"power_ind_kw_est": float(p_ind) if p_ind is not None else None,
+            "bsfc_ind_g_kwh_est": ff * 1000.0 / p_ind if ok else None,
+            "thermal_eff_ind_est": p_ind * 1000.0 / (ff / KJ_PER_KWH_S * lhv) if ok and lhv else None}
+
+
 def build_state(tick: Any, seq: int, *, registry: Any = None, active_faults: Iterable[Any] = (),
                 fault_events: Iterable[Any] = (), rate_hz_actual: Optional[float] = None, time_scale: float = 1.0,
                 levers: Optional[Dict[str, Optional[float]]] = None, training_mode: bool = False,
@@ -205,4 +231,5 @@ def build_state(tick: Any, seq: int, *, registry: Any = None, active_faults: Ite
         active_faults=faults_out, events_since=events,
         vibration_orders={k: float(v) for k, v in (f.vibration_orders or {}).items()},
         virtual_sensors={k: float(v) for k, v in (f.virtual_sensors or {}).items() if v is not None},
+        derived=_derived(f, engine_id),
     )

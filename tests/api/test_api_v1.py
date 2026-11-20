@@ -147,3 +147,15 @@ def test_ui_demo_scenario_is_served_from_config_and_injectable(client):
                     json={**demo["inject"], "source": "demo", "request_id": "demo-test-1"})
     assert r.status_code in (200, 201), r.text
     client.delete(f"/api/v1/engines/{demo['engine_id']}/faults")
+
+
+def test_state_carries_estimated_efficiency_from_measured_fuel_flow(client):
+    """P Part 3.10 efficiency trends: indicated power (twin estimate) with the measured fuel flow gives indicated BSFC
+    and thermal efficiency; a missing input gives null, never a default."""
+    from backend.server.state_builder import _derived
+    from types import SimpleNamespace
+    d = _derived(SimpleNamespace(virtual_sensors={"P_ind_kw": 60.0}, fuel_flow=15.0), "rotax_912is")
+    assert d["bsfc_ind_g_kwh_est"] == 250.0
+    assert 0.25 < d["thermal_eff_ind_est"] < 0.45                    # 60 kW from 15 kg/h of avgas at 43.5 MJ/kg
+    gone = _derived(SimpleNamespace(virtual_sensors={}, fuel_flow=15.0), "rotax_912is")
+    assert gone == {"power_ind_kw_est": None, "bsfc_ind_g_kwh_est": None, "thermal_eff_ind_est": None}
