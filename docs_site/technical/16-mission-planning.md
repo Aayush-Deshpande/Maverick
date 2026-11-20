@@ -1,99 +1,95 @@
-# Mission Planning
+# Missions, Recording and Replay
 
-A digital twin that only reports the instantaneous state of an engine answers half of PS-26054. The other half is mission reliability: whether the engine's current health, combined with the profile the operator intends to fly and the environment it will fly through, supports completing that specific mission. Answering that question requires a component that actually flies the mission, phase by phase, driving the physics engine with realistic kinematics and atmosphere rather than a fixed set of test conditions. That component is the mission executive.
+The problem statement asks the twin to simulate engine behaviour across mission profiles and environments (high altitude, endurance, hot weather, rapid throttle changes) and to support post-flight analysis and replay. ANUMAAN does this with missions written as data, an executive that flies them through the same controls an operator uses, and a recorder whose sorties can be replayed and re-analysed.
 
-The mission executive is a single authoritative state machine. It owns UAV kinematics, ISA atmospheric modeling, the mission phase sequence, and the levers that drive the selected engine's physics runtime, and it is the one place in ANUMAAN where "what is the aircraft doing right now" is decided. Every other subsystem, including reliability estimation, telemetry recording, and the 3D visualization layer, reads from this state rather than computing its own version of it.
+---
 
-## The problem
+## 1. Missions are configuration
 
-A mission profile is not a single operating point. An eighteen-hour endurance mission moves through taxi, takeoff, climb, cruise, loiter, and descent, each phase demanding a different throttle setting, altitude, and airspeed, each exposing the engine to a different combination of thermal and mechanical stress. Evaluating engine health against a single steady-state condition cannot answer whether the aircraft will complete the mission as planned, because the risk is not uniform across the profile. A sustained high-power climb stresses the engine differently than a loiter segment, and a mission commander needs an answer conditioned on the specific profile they intend to fly, not a generic health snapshot.
+Each mission is a JSON file in `configs/missions/` with ordered phases. A phase has a duration in simulated seconds, a lever setting, a target altitude, either an outside air temperature or an ISA deviation, and optional scheduled faults. Every file carries its source.
 
-## Why it matters
+| Preset | What it exercises | Source |
+|---|---|---|
+| High altitude, Leh to 25,000 ft | Take-off from about 10,700 ft, climb to FL250, cruise, descent | Leh airfield elevation (AIP India) |
+| Hot weather, Thar, ISA+30 | Take-off, climb and a one-hour patrol about 45 °C above standard at the surface | Roadmap scenario (dust not yet modelled) |
+| Rapid throttle transitions | 20 idle / take-off cycles, 20 s each | Roadmap scenario |
+| Endurance 18 h | ISR loiter profile | Roadmap scenario |
+| Endurance 24 h (VRDE only) | The same profile at 24 h | Jayem's stated 24-30 h mission class |
 
-MALE UAVs fly long ISR, relay, and maritime surveillance missions where a propulsion failure in flight can mean mission abort, asset loss, or an unsafe recovery. The problem statement's phrase is mission reliability enhancement, not just fault detection: an operator needs to know, before and during a mission, whether the plan is achievable given the aircraft's current state. That requires a mission model detailed enough to expose phase-by-phase stress, connected directly to the same physics and detection pipeline that produces the health picture in the first place.
+---
 
-## Our approach
+## 2. The mission executive
 
-The mission executive advances one authoritative simulation tick at a time, at a 20 Hz rate, and on every tick it computes the aircraft's kinematics and atmosphere, determines the current mission phase, and commands the selected engine's physics runtime through the same lever interface an operator would use manually. The mission phase model is the primary planning unit: a sequence of named operating-condition phases (taxi out, takeoff, climb, cruise or transit, loiter or reconnaissance, dash, descent, approach and landing, taxi in, shutdown), each with a duration, altitude range, throttle setting, and outside air temperature, rather than a route defined purely by geographic waypoints. A geodetic waypoint-following autopilot mode also exists for missions authored as a route rather than a phase sequence, and the executive dispatches to whichever mode the loaded mission definition supplies.
+The executive runs on the engine's simulation clock and sets lever targets through exactly the path the operator's sliders use. A climbing aircraft gets its outside air temperature recomputed from its *current* altitude, using the ISA lapse rate plus the phase's deviation. Scheduled faults enter through the normal fault path, labelled as scripted. While a mission runs:
 
-## How it works
+- the **remaining mission** becomes the profile of the [mission-reliability](17-mission-reliability.md) Monte Carlo;
+- a predicted limit crossing **before the mission ends** raises a CAUTION with the reason "will exceed … in … min";
+- the state message carries the mission, the current phase, the elapsed and remaining time, and the number of throttle transitions.
 
-Each simulation tick, the executive advances the flight model (phase-based or waypoint-based) to get position, altitude, attitude, commanded throttle, and outside air temperature for that instant. It samples the ISA atmospheric model at the current altitude and QNH to get barometric pressure and density altitude, so that engine performance responds to genuine atmospheric physics rather than a fixed sea-level assumption. It then writes throttle, altitude, and ambient temperature as levers into the selected engine's runtime, which advances the physics core exactly as it would for a manually operated engine. The resulting telemetry frame, together with the tier-0 residual detector, the novelty layer, and the diagnostic output, is folded back into the canonical mission state.
+**Measured (SIMULATION).**
 
-**Kinematics.** The flight model tracks geodetic position (WGS84 latitude and longitude), a local East-North-Up projected coordinate frame for cases like the canyon terrain scenario where a metric local frame is more useful than raw geodetic coordinates, altitude, ground speed, true and indicated airspeed, heading, pitch, and bank angle. Waypoint-mode missions carry a real WGS84 projector so recorded telemetry includes genuine latitude and longitude; phase-based missions, which have no geographic route by construction, leave those fields unset rather than reporting a fabricated position.
+| Scenario | Result |
+|---|---|
+| Leh, 912 iS (naturally aspirated) | Manifold pressure in the climb at FL200–250 is below 75 % of its value at 11,000–13,500 ft |
+| Leh, 915 iS (turbocharged) | The turbo control unit holds climb manifold pressure flat (about 126 kPa) from 12,500 to 15,000 ft, and it decays to about 95 kPa above 20,000 ft |
+| Thar ISA+30 | Every temperature margin shrinks against the same leg at ISA (head temperature +5 °C, coolant +4 °C, EGT +30 °C). The thermostats hold the oil temperature within a few degrees. |
+| Rapid throttle | All 39 commanded transitions are flown; engine speed swings by more than 1,000 rpm on each |
 
-**Atmosphere.** The ISA atmospheric model computes temperature lapse, barometric pressure, and density altitude from the current altitude, QNH, and outside air temperature offset, so a hot-desert mission and a high-cold-mountain mission produce genuinely different engine performance at the same throttle setting, exactly as they would on a real airframe.
+---
 
-**Fault injection.** A mission definition can carry scheduled fault events, either tied to elapsed time in the overall mission or, in phase mode, tied to elapsed time within a specific named phase so that a fault fires at the right point in the profile regardless of how the phases around it are resized or reordered. The operator can also inject a live fault at any point during simulation, and both paths route through the same engine runtime fault interface.
+## 3. Recording a sortie
 
-**Levers.** Throttle, altitude, and outside air temperature are the three commanded quantities that flow from the mission executive into the engine's physics runtime every tick. This is the same interface the operator console uses for manual engine control, so the mission executive does not bypass the physics core or apply a simplified surrogate: a scripted mission and a manually flown one drive the identical engine model.
+A recording is a folder per sortie:
 
-## Operator workflow
+| File | Content |
+|---|---|
+| `meta.json` | engine, tail, seed, calibration length, mission and its start, configuration hash, start/stop time |
+| `frames.jsonl.gz` | every **measured** frame, exactly as the system received it, before any inference touched it |
+| `timeline.jsonl` | the decision record of every tick: status level, reason codes, confirmed alarm, the three leading hypotheses |
+| `states.jsonl.gz` | every state message published to the operator |
 
-The mission operations interface covers three stages:
-1. In the planning stage, the operator selects or authors a mission profile against an engine and environment, setting durations, throttle settings, and altitudes per phase.
-2. In the live simulation stage, the mission runs at up to 20x time scale, with the operator able to pause, resume, derate propulsion, divert, abort to a landing state, or inject faults, while watching phase-by-phase telemetry, reliability, and diagnostic output update in real time.
-3. In the debrief stage, a completed mission is available for full replay and stress cycle accounting.
+No simulator truth is ever written to a recording.
 
-![Mission Operations Cockpit Initial Setup](/assets/playwright/01_mission_operations_initial.png)
-*Figure 1: Mission operations cockpit: platform selection, 10-phase sequence timeline, and environment configuration.*
+---
 
-![Configured Phase Profile Builder](/assets/playwright/02_mission_planner_configured.png)
-*Figure 2: Configured mission profile displaying duration, throttle, altitude profile, and scheduled fault triggers.*
+## 4. Replay and re-analysis
 
-![Live Mission Simulation with Fault Injection](/assets/playwright/04_live_fault_injected.png)
-*Figure 3: In-flight simulation tracking active phase kinematics and real-time residual response to injected failure modes.*
+- **Replay** serves the recorded state messages page by page, flagged as replay, so the interface shows exactly what the operator saw.
+- **Re-analysis** proves where the decisions came from. A fresh runtime of the same tail is rebuilt from its seed. The recorded measured frames are then pushed through the identical processing path with **no truth and no fault list**, and the decision timeline must come out identical.
 
-## Mission recording and replay
+**Measured.** A 240-second Thar sortie with an oil-pressure fault injected during the flight re-analyses to an identical decision timeline, tick by tick. The status levels, reasons and hypotheses therefore came from the measurements alone. A recording that did not start at a known runtime state is reported as "not comparable" instead of being claimed identical.
 
-Every tick that produces engine telemetry is appended as a synchronized row into the mission's frame buffer: RPM, propeller RPM, throttle, position, attitude, per-cylinder CHT and EGT, oil pressure, fuel flow, altitude, outside air temperature, true airspeed, flight phase, and a continuous reliability-derived health index. Fields the physics plant does not model for a given mission mode, such as geodetic position for a phase-based mission with no route, are recorded as unset rather than filled with a fabricated constant, so a debrief reader can distinguish "not measured in this mode" from "measured and nominal." When a mission completes, aborts, or is manually ended, the full frame buffer, the fault timeline, and mission metadata are exported as a persistent mission report bundle with CSV telemetry logs and a JSON manifest, retrievable afterward through a replay engine that supports scrubbing to any point in the mission and seeking directly to event markers such as fault onset.
+---
 
-![Mission Debrief and Stress Analysis](/assets/playwright/06_sortie_debrief.png)
-*Figure 4: Post-mission debrief displaying cumulative stress cycles, thermal excursions, and limiting component analysis.*
+## 5. Sortie health report
 
-![Mission Replay Engine Scrubbing](/assets/playwright/07_transitioned_to_replay.png)
-*Figure 5: Replay engine interface with event marker scrubbing across the completed mission history.*
+Every recording produces a self-contained HTML report with these sections:
 
-## Architecture
+- summary;
+- status timeline with reasons;
+- limit exceedances, recomputed from the measured values against the engine-manual limits, with duration and limit source;
+- alerts with operator actions;
+- hypotheses with their supporting channels;
+- fuel-flow and temperature trends;
+- end-of-sortie prognostics and mission reliability;
+- maintenance work orders raised;
+- configuration hash with the limit sources;
+- software version.
 
-```mermaid
-flowchart TB
-    PROFILE["Mission profile: phases or waypoints"]
-    ENV["Environment: ISA, theater, wind, dust"]
-    HEALTH["Current engine health / faults"]
+The first line states the evidence class.
 
-    PROFILE --> EXEC["Mission executive"]
-    ENV --> EXEC
-    HEALTH --> EXEC
+---
 
-    EXEC --> KIN["Kinematics + atmosphere"]
-    KIN --> LEVERS["Throttle / altitude / OAT levers"]
-    LEVERS --> RUNTIME["Engine physics runtime"]
-    RUNTIME --> TELEM["Telemetry frame"]
-    TELEM --> DETECT["Detection + novelty + diagnosis"]
-    DETECT --> STATE["Canonical mission state"]
-    STATE --> RECORD["Mission frame buffer"]
-    RECORD --> EXPORT["Mission report bundle: CSV + JSON"]
-    EXPORT --> REPLAY["Replay engine"]
-```
+## 6. Not yet built
 
-*Mission profile, environment, and engine health drive one authoritative simulation loop that produces phase-by-phase state and a recorded mission.*
+- Terrain-aware route planning (Copernicus DEM, A* with clearance and climb feasibility) and replanning when engine health drops.
+- The glide-reachability map driven by the aircraft's real position.
+- A converter for the recordings made by the earlier prototype.
 
-## Example
-
-The default endurance preset flies a Rotax 912 iS through a six-phase profile (takeoff, climb, cruise, loiter, descent, landing) in a high-cold Ladakh theater, with a cooling-degradation fault scheduled to trigger sixty seconds into the cruise phase at severity 0.85, ramping in over forty seconds. Because the fault trigger is scoped to elapsed time within the cruise phase rather than to global mission time, the fault still fires at the correct point in the profile even if the phases ahead of it are resized. As the fault ramps in, the mission executive's periodic reliability sampling picks up the resulting component damage and the prescriptive advisory escalates accordingly.
-
-## Integration
-
-The mission executive is the single point where mission profile, environment, and engine health come together to drive the physics runtime, and its output state feeds mission reliability (which samples the executive's live phase and fault state to build a mission profile that reflects what the mission will actually fly from the current point forward, not a generic canned profile), the 3D visualization layer (which renders the same runtime state rather than an independently computed position), and the mission data exporter.
-
-## Validation
-
-The mission executive and its supporting kinematics and phase-engine modules are covered by the project's pytest suite alongside the physics and detection modules. The Ladakh canyon preset's waypoints are authored directly against the actual terrain mesh's real gorge and ridge geometry, so the flown route genuinely traverses the terrain it is depicted against rather than being placed independently of it.
+---
 
 ## Related systems
 
-- [Mission Reliability](17-mission-reliability.md)
-- [Dataset Strategy](15-dataset-strategy.md)
-- [The 3D Digital Twin](18-3d-digital-twin.md)
-- [Blender and the Simulation Environment](19-blender-and-simulation-environment.md)
+- [Mission Reliability Enhancement](17-mission-reliability.md)
+- [Fault Diagnosis and Isolation](11-fault-diagnosis.md)
+- [Remaining Useful Life Estimation](14-remaining-useful-life.md)
