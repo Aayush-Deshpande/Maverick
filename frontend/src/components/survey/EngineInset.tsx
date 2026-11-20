@@ -37,16 +37,17 @@ export function EngineInset({ engineId, label, eager = false }: Props) {
       if (started || cancelled || !element) return;
       started = true;
       setPhase('loading');
-      const [THREE, { GLTFLoader }, { DRACOLoader }, { OrbitControls }] = await Promise.all([
+      const [THREE, { GLTFLoader }, { DRACOLoader }, { OrbitControls }, { RoomEnvironment }] = await Promise.all([
         import('three'),
         import('three/examples/jsm/loaders/GLTFLoader.js'),
         import('three/examples/jsm/loaders/DRACOLoader.js'),
         import('three/examples/jsm/controls/OrbitControls.js'),
+        import('three/examples/jsm/environments/RoomEnvironment.js'),
       ]);
       // Download and module import overlap; decode starts the moment both are ready.
       const bytesPromise = fetchModel(ENGINE_MODELS[engineId], (loaded, total) => { if (!cancelled) setProgress({ loaded, total }); }, controller.signal);
       if (cancelled) return;
-      const { renderer, scene, camera, env } = createStage(THREE, element);
+      const { renderer, scene, camera, env } = createStage(THREE, RoomEnvironment, element);
       const controls = new OrbitControls(camera, renderer.domElement);
       controls.enableDamping = true; controls.enablePan = false; controls.autoRotateSpeed = 0.5;
       controls.minDistance = 2.4; controls.maxDistance = 9;
