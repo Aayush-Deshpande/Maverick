@@ -124,6 +124,11 @@
     "cyl": 0,
     "model": 0
   },
+  "backend/reports/sortie_report.py": {
+    "brand": 0,
+    "cyl": 0,
+    "model": 0
+  },
   "backend/runtime/hub.py": {
     "brand": 0,
     "cyl": 0,

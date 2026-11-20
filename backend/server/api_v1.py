@@ -20,6 +20,7 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List, Literal, Optional, Set
 
 from fastapi import APIRouter, Depends, HTTPException, Query, WebSocket, WebSocketDisconnect
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from backend.faults.manager import FaultManager, RuntimeAdapter
@@ -30,6 +31,7 @@ from backend.maintenance.work_orders import WorkOrderStore
 from backend.mission.executive import list_missions
 from backend.recording.recorder import list_recordings, read_states, recordings_dir
 from backend.recording.replay import compare
+from backend.reports.sortie_report import write_report
 from backend.server.security import COMMAND_LOG, command_guard
 from backend.server.state_builder import build_state
 
@@ -308,6 +310,16 @@ def v1_recording_states(sortie_id: str, offset: int = Query(0, ge=0), limit: int
     """Replay: the recorded state messages, page by page, flagged as replay (the UI shows a REPLAY badge)."""
     return {"sortie_id": sortie_id, "source": "REPLAY", "offset": offset,
             "states": read_states(_sortie_dir(sortie_id), offset, limit)}
+
+
+@router.get("/api/v1/recordings/{sortie_id}/report", response_class=HTMLResponse)
+def v1_recording_report(sortie_id: str) -> HTMLResponse:
+    """Sortie health report (M5-06), generated from the recording on first request."""
+    d = _sortie_dir(sortie_id)
+    path = d / "report.html"
+    if not path.exists():
+        path = write_report(d)
+    return HTMLResponse(path.read_text(encoding="utf-8"))
 
 
 @router.post("/api/v1/recordings/{sortie_id}/reanalyse")
