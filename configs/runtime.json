@@ -38,5 +38,7 @@
     "note": "DECISIONS D8: default 1x, selectable 1/5/20/60x. Plant integrates at internal_step_s; each published frame runs time_scale * (1/tick_rate_hz) / internal_step_s steps (R 21.3). 0.05 s keeps 60x affordable (60 steps per frame); fast first-order states (MAP, spool) use the exact exponential update so they stay stable at this step (T-PHY-9, T-PHY-11)."
   },
   "can_interface": "virtual",
-  "can_interface_note": "python-can interface used when data_source is CAN: 'virtual' (in-process, Windows/CI) or 'socketcan' with a vcan0/can0 channel on Linux."
+  "can_interface_note": "python-can interface used when data_source is CAN: 'virtual' (in-process, Windows/CI) or 'socketcan' with a vcan0/can0 channel on Linux.",
+  "restart_settle_s": 60,
+  "restart_settle_s_note": "After START/RESET the start-up transient (cranking, rpm climbing, temperatures settling) is not a fault: diagnosis neither learns nor reports for this many simulated seconds, and starts again from a clean state (real engine monitors suppress diagnosis during start-up). ASSUMED."
 }

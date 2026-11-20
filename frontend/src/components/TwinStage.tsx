@@ -2,7 +2,8 @@ import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 
 const EngineViewer3D = lazy(() => import('./viewer3d/EngineViewer3D'));
 
-type Fault = { id: string; name: string; scope?: string; default_severity?: number | null };
+type Fault = { id: string; name: string; kind?: string; scope?: string; default_severity?: number | null;
+  components?: Record<string, { now?: string[] }> };
 type Props = {
   engineId: string | null;
   engines: Array<{ engine_id: string; display_name?: string }>;
@@ -32,8 +33,12 @@ export default function TwinStage(p: Props) {
   const [cyl, setCyl] = useState(1);
   const [focus, setFocus] = useState(0);
   const [notice, setNotice] = useState('');
-  const pages = Math.max(1, Math.ceil(p.faults.length / PAGE));
-  const shown = p.faults.slice(page * PAGE, page * PAGE + PAGE);
+  // only faults that light a part of THIS engine's model (sensor faults and parts missing from the model stay in the
+  // console); the 3D twin is for watching a fault land on the engine
+  const visible = useMemo(() => p.faults.filter((f) => f.kind !== 'SENSOR'
+    && (f.components?.[p.engineId ?? '']?.now ?? []).length > 0), [p.faults, p.engineId]);
+  const pages = Math.max(1, Math.ceil(visible.length / PAGE));
+  const shown = visible.slice(page * PAGE, page * PAGE + PAGE);
   const active = (p.state?.active_faults ?? []) as Array<{ fault_id: string; name: string; cylinder?: number | null }>;
   const status = p.state?.status?.level as string | undefined;
   const reason = (p.state?.status?.reasons ?? [])[0]?.text as string | undefined;

@@ -123,6 +123,8 @@ class EngineRuntime:
         # v2 DBC, sent on a python-can bus, intrusion-checked and decoded before the twin sees it (M7-02, T-CAN-1)
         rt_cfg = json.loads((Path(__file__).resolve().parents[2] / "configs" / "runtime.json").read_text(encoding="utf-8"))
         self.data_source = data_source or rt_cfg["data_source"]
+        self._restart_settle_s = float(rt_cfg["restart_settle_s"])
+        self._settle_until = float("-inf")
         self.can_link = None
         if self.data_source == "CAN":
             from backend.sources.can_link import CanLink
@@ -333,6 +335,9 @@ class EngineRuntime:
         with self._lock:
             {"START": self.source.start, "STOP": self.source.stop, "RESET": self.source.reset}[command]()
             self.manual_origin = True
+            if command in ("START", "RESET"):          # the start-up transient is not a fault: settle, then diagnose
+                self._reset_inference()
+                self._settle_until = self.source.now() + self._restart_settle_s
             return {"command": command, "engine_state": self.source.plant.state}
 
     def clear_faults(self) -> None:
@@ -463,7 +468,8 @@ class EngineRuntime:
                 if top_chans and all(c in _quarantined_lower for c in top_chans):
                     det.raw_alarm = False
                     det.confirmed = False
-            if det is not None and self.isolator is not None and det.z_raw is not None:
+            settling = frame.t < self._settle_until             # start-up transient after START/RESET
+            if det is not None and self.isolator is not None and det.z_raw is not None and not settling:
                 self.isolator.update(det.z_raw)
             if det is not None and self.trends is not None:
                 self.trends.update(frame.t, det.z_raw, frame_readings(frame))
@@ -499,7 +505,7 @@ class EngineRuntime:
                 # 6b. Isolation (M3-05): Bayesian posterior over registry faults and sensor offsets while any
                 # detection channel is alarming; evidence only, never the injected list (M3-07, T-DYN-4)
                 alarm = bool(det and (det.confirmed or (det.drift or {}).get("alarm") or (det.novelty or {}).get("alarm")))
-                if alarm and self.isolator is not None:
+                if alarm and self.isolator is not None and not settling:
                     hyps = self.isolator.posterior(self.detector.cal.sensor_coupling(frame))
                     self._cached_hypotheses = [h.to_dict() for h in hyps]
                 else:
