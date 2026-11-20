@@ -17,11 +17,17 @@ Last commit:  see git log -1.
 State:        tests/dynamic 15 passed, vitest 25, tsc OK; landing loads with no console errors. Full suite last
               698 passed (+ known ratchet; timing test flaky only under load).
 Latest:       D55 done (diesel lambda 1.35 + boost 247/227 kPa CALIBRATED from BSFC 235/215; live cruise EGT ~390-430 C). D58 (914 charge-path cooling, cold-day density criterion); survey inset AE300 no longer renders white.
-Next step:    1) Not imported from main on purpose: backend/runtime, engine_api, detect/calibration changes,
-                 apps/threejs_twin, main's EngineRuntimeConsole demo (Beta's v1 console kept; wire the landing's
-                 "Run the demo" (demoIntent) into Beta's console via a configs/ui demo scenario), web/review,
-                 output pptx, task.md, tests/test_component_map.py (main's twin component map).
-              2) Then: verification pass "inject anywhere -> correct part" for all 5 engines; D55 diesel calibration.
+Next step:    Session 20 Nov (budget-limited) done: D58 physics, D55 diesels, demo button, viewer materials (procedural
+              studio env), 3D-twin fault buttons. Remaining, in order:
+              1) OPEN REGRESSION (slow ratchet tests/sim/test_t_flt_1.py): rotax_914 F20 coolant_t +9.5 C vs 10 C after
+                 D58 (cooler charge, less head heat). Fix the coolant-loss physics response; do NOT drop the pair.
+              2) Q7 registry signatures (61/144 pairs pass, docs/physics/t_flt_1_report.csv): Prasad said "make it work
+                 like real life" -> remove channels the physics correctly masks (governed rpm F04/F06/F08 on
+                 constant-speed props, F34 bus_v with alternator running, F13/F14 map below boost limit, F35 warm
+                 engine, F37 hunting not mean shift), and fix real gaps (diesel per-cylinder EGT on F06/F30/F35,
+                 F23/F19 oil_t, F24 oil_qty/oil_p, F26/F29 1X vibration).
+              3) Old 3D twin page: keyboard-hint text overlaps the fault bar (bottom left); 912 still on legacy fault
+                 list. 4) M6-06 text size/contrast/phone; M6-07 Playwright (needs OK). 5) Phase 7, 8, 8b, 9, 10.
               Unstaged on purpose: 914 .blend re-saves (D50), docs/cleanup/file_coverage_latest.csv.
 Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produce yet (lambda, timing, BSFC, power,
               vibration, GO/NO-GO); some may show blanks or crash on .toFixed(null) until M0-09. Beta only.
