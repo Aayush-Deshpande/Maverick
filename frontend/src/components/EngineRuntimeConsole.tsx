@@ -297,6 +297,17 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
 
     {show('MISSION') && <RoutePlannerPanel engineId={runtime.engineId ?? null} api={runtime.api} />}
 
+    {show('ENGINEER') && <section className="surface-panel p-4 sm:p-5 rounded-sm" aria-label="Efficiency">
+      <h3 className="text-sm font-semibold text-white">Efficiency</h3>
+      <p className="mt-1 text-xs text-slate-400">From the measured fuel flow and the twin's indicated-power estimate (no torque sensor on the engine).</p>
+      <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
+        {Object.entries(state?.derived ?? {}).map(([key, value]) => <div key={key} className="rounded-sm border border-surface-border p-3">
+          <div className="text-xs text-slate-400">{channelLabel(labels, key)}</div>
+          <div className="mt-1 text-lg font-mono tabular-nums text-white">{value == null ? NO_DATA
+            : key.startsWith('thermal_eff') ? `${num(value * 100, 1)} %` : key.startsWith('bsfc') ? `${num(value, 0)} g/kWh` : `${num(value, 1)} kW`}</div>
+        </div>)}
+      </div>
+    </section>}
     {show('ENGINEER') && <EngineerPanel residuals={state?.residuals} twin={state?.twin as any}
       virtualSensors={state?.virtual_sensors} vibration={state?.vibration_orders} />}
 

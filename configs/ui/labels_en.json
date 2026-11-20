@@ -25,7 +25,10 @@
     "vib_gear_mesh": "Vibration, gear mesh",
     "vib_knock": "Vibration, knock band",
     "vib_prop_1X": "Vibration, propeller 1x",
-    "vib_turbo": "Vibration, turbocharger"
+    "vib_turbo": "Vibration, turbocharger",
+    "power_ind_kw_est": "Indicated power (estimate)",
+    "bsfc_ind_g_kwh_est": "Fuel used per kWh (indicated, estimate)",
+    "thermal_eff_ind_est": "Thermal efficiency (indicated, estimate)"
   },
   "components": {
     "ecu": "Engine control unit (ECU)",
@@ -56,11 +59,29 @@
     "prop_governor": "Propeller governor"
   },
   "status": {
-    "GO": {"title": "Engine healthy", "text": "All readings are inside their limits and no fault is suspected."},
-    "ADVISORY": {"title": "Advisory", "text": "Something needs attention, but the mission can continue. The reasons are listed below."},
-    "CAUTION": {"title": "Caution", "text": "A reading or a suspected fault needs action soon. Follow the actions listed below."},
-    "NO-GO": {"title": "No-go", "text": "Do not continue the mission on this engine: a limit is exceeded or a serious fault is likely. Follow the actions listed below."},
-    "ENGINE_OFF": {"title": "Engine off", "text": "The engine is not running."},
-    "UNKNOWN": {"title": "Waiting for data", "text": "No status yet: the engine is still calibrating or the connection is down."}
+    "GO": {
+      "title": "Engine healthy",
+      "text": "All readings are inside their limits and no fault is suspected."
+    },
+    "ADVISORY": {
+      "title": "Advisory",
+      "text": "Something needs attention, but the mission can continue. The reasons are listed below."
+    },
+    "CAUTION": {
+      "title": "Caution",
+      "text": "A reading or a suspected fault needs action soon. Follow the actions listed below."
+    },
+    "NO-GO": {
+      "title": "No-go",
+      "text": "Do not continue the mission on this engine: a limit is exceeded or a serious fault is likely. Follow the actions listed below."
+    },
+    "ENGINE_OFF": {
+      "title": "Engine off",
+      "text": "The engine is not running."
+    },
+    "UNKNOWN": {
+      "title": "Waiting for data",
+      "text": "No status yet: the engine is still calibrating or the connection is down."
+    }
   }
 }
