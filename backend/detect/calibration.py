@@ -34,9 +34,10 @@ from backend.detect.reference import ModelReference
 
 CALIBRATION_SCHEMA = "tail_calibration/2"
 # scalar channels scored when the engine has them (frame value not None): the model predicts the first ones; bus
-# voltage and fuel pressure have no model term yet and are learned per tail by the regression alone
+# voltage, fuel pressure and common-rail pressure have no model term yet and are learned per tail by the regression
+# alone (rail_p: the FADEC's own pressure sensor on the CI engines; without it F09 rail decay was invisible)
 SCALAR_CHANNELS = ("oil_p", "oil_t", "fuel_flow", "map_kpa", "rpm", "coolant_t", "gearbox_t", "bus_v", "fuel_p",
-                   "batt_i", "vib_1X", "vib_prop_1X", "vib_gear_mesh", "vib_firing", "vib_turbo", "vib_knock")
+                   "rail_p", "batt_i", "vib_1X", "vib_prop_1X", "vib_gear_mesh", "vib_firing", "vib_turbo", "vib_knock")
 VIB_PREFIX = "vib_"                              # vib_<order>: an order amplitude from Frame.vibration_orders
 
 

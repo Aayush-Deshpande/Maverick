@@ -3,7 +3,7 @@
  "engine_id": "rotax_914",
  "status": "CALIBRATED",
  "ref": "scripts/diagnose/gen_signatures.py on the backend/sim plant (SIMULATION evidence class)",
- "date": "2026-11-20",
+ "date": "2026-11-21",
  "channels": [
   "cht_1",
   "cht_2",

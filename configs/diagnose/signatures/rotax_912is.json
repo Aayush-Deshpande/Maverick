@@ -3,7 +3,7 @@
  "engine_id": "rotax_912is",
  "status": "CALIBRATED",
  "ref": "scripts/diagnose/gen_signatures.py on the backend/sim plant (SIMULATION evidence class)",
- "date": "2026-11-20",
+ "date": "2026-11-21",
  "channels": [
   "cht_1",
   "cht_2",
@@ -140,35 +140,6 @@
     4.124
    ],
    "spread": 0.763
-  },
-  "F04": {
-   "scope": "ENGINE",
-   "z": [
-    -0.443,
-    0.717,
-    -0.262,
-    0.612,
-    0.746,
-    0.636,
-    0.186,
-    -0.256,
-    0.137,
-    0.161,
-    -0.07,
-    0.277,
-    0.236,
-    -0.863,
-    0.468,
-    -0.06,
-    0.312,
-    0.399,
-    -0.255,
-    0.14,
-    0.612,
-    -0.017,
-    0.653
-   ],
-   "spread": 0.651
   },
   "F05": {
    "scope": "CYLINDER",
