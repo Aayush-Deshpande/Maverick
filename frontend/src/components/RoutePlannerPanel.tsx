@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { NO_DATA, num } from '../utils/format';
 import RouteMap from './RouteMap';
+import AltitudeProfile from './AltitudeProfile';
 
 type Airfield = { id: string; name: string; lat: number; lon: number; elevation_ft: number };
 type Waypoint = { lat: number; lon: number; altitude_ft: number; terrain_ft: number; climb_rate_fpm: number };
@@ -118,6 +119,8 @@ export default function RoutePlannerPanel({ engineId, api }: Props) {
           </div>
           {plan.feasible && <>
             <div className="text-slate-400">{num(plan.distance_km, 1)} km · highest {num(plan.max_altitude_ft, 0)} ft · min clearance {plan.min_clearance_ft == null ? NO_DATA : `${num(plan.min_clearance_ft, 0)} ft`} · {plan.waypoints.length} waypoints</div>
+            <AltitudeProfile waypoints={plan.waypoints} />
+            <div className="text-slate-500">Profile: planned altitude (line) over the planner's terrain height, cell maximum (shaded)</div>
             <div className="max-h-40 overflow-y-auto border border-surface-border rounded-sm">
               <table className="w-full text-left">
                 <thead className="text-slate-500"><tr><th className="px-2 py-1">Lat</th><th className="px-2">Lon</th><th className="px-2">Alt ft</th><th className="px-2">Terrain ft</th><th className="px-2">Climb fpm</th></tr></thead>

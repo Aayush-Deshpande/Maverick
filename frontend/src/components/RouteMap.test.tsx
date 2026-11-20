@@ -22,3 +22,18 @@ describe('RouteMap', () => {
     expect(nums.every((v) => v >= 0 && v <= 480)).toBe(true);
   });
 });
+
+describe('AltitudeProfile', () => {
+  it('keeps the planned line above the terrain band when the plan has clearance', async () => {
+    const { default: AltitudeProfile } = await import('./AltitudeProfile');
+    const wps = [
+      { lat: 34.4, lon: 77.45, altitude_ft: 20000, terrain_ft: 17000 },
+      { lat: 34.3, lon: 77.5, altitude_ft: 21000, terrain_ft: 19500 },
+      { lat: 34.2, lon: 77.5, altitude_ft: 14000, terrain_ft: 11000 },
+    ];
+    const html = renderToStaticMarkup(<AltitudeProfile waypoints={wps} />);
+    const line = /<polyline points="([^"]+)"/.exec(html)![1].split(' ').map((p) => Number(p.split(',')[1]));
+    const ground = /<polygon points="([^"]+)"/.exec(html)![1].split(' ').slice(1, -1).map((p) => Number(p.split(',')[1]));
+    line.forEach((yv, i) => expect(yv).toBeLessThan(ground[i]));            // SVG y grows downward
+  });
+});
