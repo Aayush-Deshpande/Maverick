@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { highlightMap, sanitize } from './highlights';
+import { focusNodes, highlightMap, sanitize } from './highlights';
 
 const h = (level: string, nodes: string[]) => ({ component_id: 'c', level, nodes, reason: 'r' }) as any;
 
@@ -20,5 +20,13 @@ describe('highlightMap', () => {
 
   it('nothing highlighted without highlights', () => {
     expect(highlightMap(undefined).size).toBe(0);
+  });
+});
+
+describe('focusNodes', () => {
+  it('frames the parts at the highest level present, and nothing when nothing is lit', () => {
+    const levels = new Map([['Oil_Tank', 'CAUTION'], ['ECU', 'NO-GO'], ['Wiring', 'NO-GO'], ['Hose', 'INJECTED']] as const);
+    expect(focusNodes(new Map(levels))).toEqual(['ECU', 'Wiring']);
+    expect(focusNodes(new Map())).toEqual([]);
   });
 });

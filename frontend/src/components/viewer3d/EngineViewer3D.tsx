@@ -1,10 +1,10 @@
-import { Component, Suspense, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Canvas, useThree } from '@react-three/fiber';
-import { Bounds, OrbitControls, useGLTF } from '@react-three/drei';
-import { Color, Mesh, PMREMGenerator, type Material, type MeshStandardMaterial, type Object3D } from 'three';
+import { Component, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { Bounds, OrbitControls, useBounds, useGLTF } from '@react-three/drei';
+import { Box3, Color, Mesh, PMREMGenerator, Vector3, type Material, type MeshStandardMaterial, type Object3D } from 'three';
 import * as THREE from 'three';
 import type { Highlight } from '../../api/state';
-import { LEVEL_COLOUR, highlightMap, type HighlightLevel } from './highlights';
+import { LEVEL_COLOUR, focusNodes, highlightMap, type HighlightLevel } from './highlights';
 import { componentLabel, useLabels } from '../../utils/labels';
 import { ENGINE_ENV_INTENSITY, disposeEnvironment, prepareEngineMaterials, studioEnvironment } from '../../utils/engineMaterials';
 
@@ -20,6 +20,9 @@ type Props = {
 
 const DRACO_PATH = '/draco/';                             // decoder files shipped in frontend/public/draco
 const EMISSIVE_INTENSITY = 0.9;
+const PULSE_HZ = 1.2;                                    // highlighted parts breathe at this rate (P Part 6 X2)
+const PULSE_MIN = 0.35;                                  // ...between this share of full glow and full glow
+const FOCUS_CONTEXT = 0.15;                              // fly-to frame: part size x this margin, so its place on the engine stays visible
 
 /** Image-based lighting from the shared procedural studio (utils/engineMaterials; no HDR download). */
 function RoomEnv() {
@@ -47,8 +50,9 @@ function prepare(root: Object3D): void {
 }
 
 /** Apply highlight colours to every mesh under a named node; restore the original materials otherwise. */
-function applyHighlights(root: Object3D, levels: Map<string, HighlightLevel>): string[] {
+function applyHighlights(root: Object3D, levels: Map<string, HighlightLevel>): { lit: string[]; glowing: MeshStandardMaterial[] } {
   const lit: string[] = [];
+  const glowing: MeshStandardMaterial[] = [];
   const paint = (obj: Object3D, level: HighlightLevel | undefined) => {
     const here = levels.get(obj.name) ?? level;
     if (levels.has(obj.name)) lit.push(obj.name);
@@ -56,7 +60,7 @@ function applyHighlights(root: Object3D, levels: Map<string, HighlightLevel>): s
       const base = (obj.userData.baseMaterial ??= obj.material) as Material;
       if (here) {
         const m = (base as MeshStandardMaterial).clone();
-        if ('emissive' in m) { m.emissive = new Color(LEVEL_COLOUR[here]); m.emissiveIntensity = EMISSIVE_INTENSITY; }
+        if ('emissive' in m) { m.emissive = new Color(LEVEL_COLOUR[here]); m.emissiveIntensity = EMISSIVE_INTENSITY; glowing.push(m); }
         obj.material = m;
       } else if (obj.material !== base) {
         obj.material = base;
@@ -65,13 +69,37 @@ function applyHighlights(root: Object3D, levels: Map<string, HighlightLevel>): s
     obj.children.forEach((c) => paint(c, here));
   };
   paint(root, undefined);
-  return lit;
+  return { lit, glowing };
 }
 
-function Model({ url, levels, onLit }: { url: string; levels: Map<string, HighlightLevel>; onLit: (n: string[]) => void }) {
+function Model({ url, levels, onLit, focusRequest }: { url: string; levels: Map<string, HighlightLevel>;
+                                                      onLit: (n: string[]) => void; focusRequest: number }) {
   const { scene } = useGLTF(url, DRACO_PATH);
   const root = useMemo(() => { const r = scene.clone(true); prepare(r); return r; }, [scene]);  // own copy per viewer
-  useEffect(() => { onLit(applyHighlights(root, levels)); }, [root, levels, onLit]);
+  const glowing = useRef<MeshStandardMaterial[]>([]);
+  const bounds = useBounds();
+  useEffect(() => { const r = applyHighlights(root, levels); glowing.current = r.glowing; onLit(r.lit); }, [root, levels, onLit]);
+  useFrame(({ clock }) => {                                // pulse: the eye finds the faulty part at once
+    const k = PULSE_MIN + (1 - PULSE_MIN) * (0.5 + 0.5 * Math.sin(clock.elapsedTime * 2 * Math.PI * PULSE_HZ));
+    for (const m of glowing.current) m.emissiveIntensity = EMISSIVE_INTENSITY * k;
+  });
+  // fly to the highest-level parts when that set changes (not every message) or on request. A new engine model
+  // frames the whole engine; highlights clearing leaves the camera where it is (no jumping back and forth while a
+  // diagnosis hovers at its threshold).
+  const target = useMemo(() => focusNodes(levels).join('|'), [levels]);
+  const framed = useRef<Object3D | null>(null);
+  useEffect(() => {
+    const names = new Set(target ? target.split('|') : []);
+    const box = new Box3();
+    root.traverse((o) => { if (names.has(o.name)) box.expandByObject(o); });
+    if (box.isEmpty()) {
+      if (framed.current !== root) bounds.refresh(root).reset().clip();     // drei 9.122: reset() moves the camera
+    } else {
+      box.expandByScalar(box.getSize(new Vector3()).length() * FOCUS_CONTEXT);
+      bounds.refresh(box).reset().clip();
+    }
+    framed.current = root;
+  }, [target, focusRequest, root, bounds]);
   return <primitive object={root} />;
 }
 
@@ -93,6 +121,7 @@ export default function EngineViewer3D({ engineId, highlights: detected, injecte
   const [manifest, setManifest] = useState<Manifest | null>(null);
   const [error, setError] = useState('');
   const [lit, setLit] = useState<string[]>([]);
+  const [focusRequest, setFocusRequest] = useState(0);
   const labels = useLabels();
   const highlights = useMemo<Highlight[]>(() => {
     const nodesOf = new Map((manifest?.components ?? []).map((c) => [c.component_id, c.nodes]));
@@ -114,7 +143,11 @@ export default function EngineViewer3D({ engineId, highlights: detected, injecte
     <section className="surface-panel p-4 sm:p-5 rounded-sm" data-highlighted-nodes={lit.join(',')}>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h3 className="text-sm font-semibold text-white tracking-tight">3D engine</h3>
-        {manifest?.representative_geometry && <span className="text-xs font-mono text-slate-400">{manifest.representative_geometry}</span>}
+        <div className="flex items-center gap-3">
+          {manifest?.representative_geometry && <span className="text-xs font-mono text-slate-400">{manifest.representative_geometry}</span>}
+          {lit.length > 0 && <button type="button" onClick={() => setFocusRequest((n) => n + 1)}
+            className="rounded-sm border border-surface-border px-2 py-1 text-xs text-slate-200 hover:border-surface-border-strong">Focus fault</button>}
+        </div>
       </div>
       <div className={`mt-3 rounded-sm border border-surface-border bg-black/20 ${tall ? 'h-[min(75vh,760px)]' : 'h-[min(60vh,420px)]'}`}>
         {error ? <div className="p-4 text-xs font-mono text-slate-300">{error}</div>
@@ -125,7 +158,7 @@ export default function EngineViewer3D({ engineId, highlights: detected, injecte
                 <directionalLight position={[3, 4, 3]} intensity={1.4} />
                 <Suspense fallback={null}>
                   <Bounds fit clip observe margin={1.2}>
-                    <Model url={manifest.model_url} levels={levels} onLit={setLit} />
+                    <Model url={manifest.model_url} levels={levels} onLit={setLit} focusRequest={focusRequest} />
                   </Bounds>
                 </Suspense>
                 <OrbitControls makeDefault enableDamping />

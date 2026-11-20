@@ -28,3 +28,11 @@ export function highlightMap(highlights: Highlight[] | undefined): Map<string, H
   }
   return out;
 }
+
+/** Node names the camera should frame: the parts at the highest level present (a NO-GO part over a CAUTION one).
+ *  Empty when nothing is highlighted, so the viewer returns to the whole engine. */
+export function focusNodes(levels: Map<string, HighlightLevel>): string[] {
+  let top = -1;
+  for (const l of levels.values()) top = Math.max(top, LEVEL_ORDER.indexOf(l));
+  return top < 0 ? [] : [...levels].filter(([, l]) => LEVEL_ORDER.indexOf(l) === top).map(([n]) => n).sort();
+}
