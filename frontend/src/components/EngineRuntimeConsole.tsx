@@ -36,6 +36,11 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
   const detectorEntries = Object.entries(det?.ratios ?? {}).sort((a, b) => b[1] - a[1]);
   const activeFaults = state?.active_faults ?? [];
   const hypotheses = state?.hypotheses ?? [];
+  const prog = (state?.prognostics ?? null) as { time_to_limit?: Array<{ channel: string; limit: number; time_to_limit_s: number; low_s: number; high_s: number }>; baseline?: { version: number; learning: boolean; reason: string } } | null;
+  const ttl = prog?.time_to_limit ?? [];
+  const baseline = prog?.baseline ?? null;
+  const rel = (state?.reliability ?? null) as { mission_reliability: number; ci_lower: number; ci_upper: number; mission_profile: string; limiting_component?: string } | null;
+  const orders = (state?.maintenance ?? []) as Array<{ id: string; title: string; ata_chapter?: string; status: string; action?: string }>;
   const fault = faults.find((f) => f.id === faultId);
   const age = dataAgeMs(runtime.slot, now);
   const live = runtime.connection === 'LIVE';
@@ -190,6 +195,29 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
         </div>
       </section>
     </div>
+
+    <section className="surface-panel p-4 sm:p-5 rounded-sm">
+      <h3 className="text-sm font-semibold text-white tracking-tight">Prognosis and maintenance</h3>
+      <div className="mt-3 grid grid-cols-1 lg:grid-cols-3 gap-3 text-xs font-mono">
+        <div className="rounded-sm border border-surface-border p-3">
+          <div className="text-slate-300">Time to limit</div>
+          {ttl.length ? ttl.map((x) => <div key={x.channel} className="mt-1 text-slate-400">{x.channel} → {x.limit} in {num(x.time_to_limit_s / 60, 0)} min <span className="text-slate-500">({num(x.low_s / 60, 0)}–{num(x.high_s / 60, 0)})</span></div>) : <div className="mt-1 text-slate-500">No significant trend toward a limit</div>}
+          {baseline && <div className="mt-2 text-slate-500">Baseline v{baseline.version} · {baseline.learning ? 'learning' : `held: ${baseline.reason}`}</div>}
+        </div>
+        <div className="rounded-sm border border-surface-border p-3">
+          <div className="text-slate-300">Mission reliability</div>
+          {rel ? <><div className="mt-1 text-lg text-white tabular-nums">{num(rel.mission_reliability * 100, 2)}%</div>
+            <div className="text-slate-500">95 % CI {num(rel.ci_lower * 100, 2)}–{num(rel.ci_upper * 100, 2)} % · {rel.mission_profile}</div>
+            {rel.limiting_component && <div className="text-slate-400">Limiting: {rel.limiting_component}</div>}</> : <div className="mt-1 text-slate-500">{NO_DATA}</div>}
+        </div>
+        <div className="rounded-sm border border-surface-border p-3">
+          <div className="text-slate-300">Work orders</div>
+          {orders.length ? orders.map((w) => <div key={w.id} className="mt-2"><div className="text-slate-200">{w.title}</div><div className="text-slate-500">{w.ata_chapter ? `ATA ${w.ata_chapter} · ` : ''}{w.status}</div><div className="text-slate-400">{w.action}</div>
+            <div className="mt-1 flex gap-2">{w.status === 'OPEN' && <button onClick={() => void run(() => runtime.api(`/api/v1/work_orders/${encodeURIComponent(w.id)}/transition`, 'POST', { to: 'IN_WORK', by: 'console' }), 'Work order in work')} className="rounded-sm border border-surface-border px-2 py-1 hover:bg-white/5">In work</button>}
+              <button onClick={() => void run(() => runtime.api(`/api/v1/work_orders/${encodeURIComponent(w.id)}/transition`, 'POST', { to: 'SIGNED_OFF', by: 'console operator' }), 'Signed off - repair applied')} className="rounded-sm border border-surface-border px-2 py-1 hover:bg-white/5">Sign off</button></div></div>) : <div className="mt-1 text-slate-500">No open work order</div>}
+        </div>
+      </div>
+    </section>
 
     <section className="surface-panel p-4 sm:p-5 rounded-sm">
       <div className="flex items-center justify-between gap-3"><div><h3 className="font-semibold text-white">Live engine channels</h3><p className="text-xs text-slate-500 mt-1">From the v1 state message · {state?.evidence_class ?? 'SIMULATION'} evidence</p></div><Radio className="w-4 h-4 text-slate-500" /></div>

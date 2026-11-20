@@ -109,9 +109,18 @@ export function useEngineRuntime(serverUrl: string) {
     return response.json();
   }, [engineId, serverUrl]);
 
+  /** A command on an /api/v1 path that is not engine-scoped (e.g. work-order transitions). */
+  const api = useCallback(async (path: string, method: string, body?: unknown) => {
+    const response = await fetch(`${serverUrl}${path}`, {
+      method, headers: body ? { 'Content-Type': 'application/json' } : undefined, body: body ? JSON.stringify(body) : undefined,
+    });
+    if (!response.ok) throw new Error(await readError(response));
+    return response.json();
+  }, [serverUrl]);
+
   const profile = useMemo(() => engines.find((e) => e.engine_id === engineId) ?? null, [engines, engineId]);
   return {
     engines, engineId, selectEngine: setEngineId, profile, faults, fleet, slot, state: slot?.state ?? null,
-    connection, error: error || streamError || '', command, refresh: loadEngines,
+    connection, error: error || streamError || '', command, api, refresh: loadEngines,
   };
 }
