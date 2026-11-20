@@ -27,10 +27,6 @@ def test_t_phy_1_diesels_meet_take_off_power(engines, engine_id):
     assert m.steady_point(100, m.cfg.rated_rpm, SL).brake_w == pytest.approx(m.cfg.rated_power_kw * 1000, rel=0.02)
 
 
-@pytest.mark.xfail(strict=True, reason="Question for Prasad: the ASSUMED/PLACEHOLDER diesel full-load lambda (1.55/1.52) "
-                   "and max boost (190/195 kPa) give too little air for the rated power: eta_i 0.56-0.58 (CI is ~0.42-0.50) "
-                   "and BSFC 163-168 g/kWh (config 235/218, VRDE brochure ~215). Needs sourced lambda/boost or OK to "
-                   "derive them from BSFC.")
 @pytest.mark.parametrize("engine_id", CI)
 def test_diesel_calibration_is_physically_plausible(engines, engine_id):
     m = engines[engine_id]

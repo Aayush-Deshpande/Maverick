@@ -27,7 +27,7 @@
     "compression_ratio": 17.5
   },
   "turbo": {
-    "max_boost_kpa": 190.0,
+    "max_boost_kpa": 247.0,
     "critical_altitude_ft": 18000.0,
     "wastegate_controlled": true,
     "max_shaft_rpm": 172000.0,
@@ -45,7 +45,7 @@
   "dry_mass_kg": 185.0,
   "tbo_hours": 1800.0,
   "nominal_bsfc_g_kwh": 235.0,
-  "nominal_lambda": 1.55,
+  "nominal_lambda": 1.35,
   "nominal_inj_timing_btdc": 8.0,
   "nominal_ign_timing_btdc": null,
   "rail_pressure_bar": 1800.0,
@@ -102,8 +102,8 @@
       "ref": "typical for this class; not independently confirmed"
     },
     "turbo.max_boost_kpa": {
-      "status": "ASSUMED",
-      "ref": "not in the cited spec sheet"
+      "status": "CALIBRATED",
+      "ref": "2026-11-20 (D55): derived, not measured. Full-load lambda fixed at 1.35 (common-rail diesels run near the smoke limit, ~1.3-1.4 at full load); max boost solved so the calibrated plant reproduces the published BSFC 235 g/kWh (config nominal_bsfc_g_kwh) at take-off, SL ISA (eta_i 0.402). Was 190.0 kPa / lambda 1.55, which gave BSFC ~165 and EGT ~206 C"
     },
     "turbo.critical_altitude_ft": {
       "status": "ASSUMED",
@@ -126,8 +126,8 @@
       "ref": "typical for a modern CRDi diesel in this class; not independently confirmed"
     },
     "nominal_lambda": {
-      "status": "ASSUMED",
-      "ref": "typical lean-burn CI value; not independently confirmed"
+      "status": "CALIBRATED",
+      "ref": "2026-11-20 (D55): derived, not measured. Full-load lambda fixed at 1.35 (common-rail diesels run near the smoke limit, ~1.3-1.4 at full load); max boost solved so the calibrated plant reproduces the published BSFC 235 g/kWh (config nominal_bsfc_g_kwh) at take-off, SL ISA (eta_i 0.402). Was 190.0 kPa / lambda 1.55, which gave BSFC ~165 and EGT ~206 C"
     },
     "nominal_inj_timing_btdc": {
       "status": "ASSUMED",
