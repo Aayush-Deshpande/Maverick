@@ -40,16 +40,16 @@ const CalcCard: React.FC<{
   return (
     <div className="border border-surface-border bg-surface-card p-3.5 space-y-2.5 flex flex-col">
       <div className="flex items-start gap-2">
-        <span className="text-[10px] font-mono text-slate-600 mt-0.5 shrink-0">{step}</span>
+        <span className="text-xs font-mono text-slate-600 mt-0.5 shrink-0">{step}</span>
         <div>
           <h4 className="text-xs font-semibold text-slate-100">{title}</h4>
-          <p className="text-[10.5px] text-slate-500 leading-snug">{purpose}</p>
+          <p className="text-xs text-slate-500 leading-snug">{purpose}</p>
         </div>
       </div>
 
       {formula}
 
-      <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">
+      <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
         {inputs.map((inp) => (
           <div key={inp.label} className="flex justify-between gap-2 border-b border-surface-border/50 py-0.5">
             <span className="text-slate-500">{inp.label}</span>
@@ -98,7 +98,7 @@ export const CalculationsPanel: React.FC<CalculationsPanelProps> = ({ state }) =
         </div>
         <div>
           <h2 className="text-xs font-semibold text-white">Detection Logic & Prognostic Calculations</h2>
-          <p className="text-[11px] text-slate-500">The four calculations that turn raw residuals into the Go/No-Go certification</p>
+          <p className="text-xs text-slate-500">The four calculations that turn raw residuals into the Go/No-Go certification</p>
         </div>
       </div>
 
@@ -184,7 +184,7 @@ export const CalculationsPanel: React.FC<CalculationsPanelProps> = ({ state }) =
         />
       </div>
 
-      <p className="text-[10px] text-slate-600 pt-1 border-t border-surface-border">
+      <p className="text-xs text-slate-600 pt-1 border-t border-surface-border">
         Not shown here to keep the instrument panel legible: AIC-based model selection (linear / exponential / power-law) across three trend
         windows (2 / 10 / 30 min), and the 500-iteration Monte Carlo parameter perturbation that produces the p10/p50/p90 spread above —
         see the Prognostics &amp; Mission Readiness panel for the resulting per-component RUL table.

@@ -151,9 +151,9 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
           <h2 className="mt-2 text-xl sm:text-2xl font-semibold text-white tracking-tight">Engine condition, with evidence</h2>
           <p className="mt-1 text-xs text-slate-400 font-mono">Live plant telemetry, calibrated residuals, and operator-controlled fault scenarios.</p>
         </div>
-        <label className="relative flex items-center gap-3 rounded-sm border border-surface-border bg-surface-card px-3 py-2 min-w-[260px]">
+        <label className="relative flex items-center gap-3 rounded-sm border border-surface-border bg-surface-card px-3 py-2 w-full sm:w-auto sm:min-w-[260px] min-w-0">
           <span className="text-xs uppercase tracking-wider text-slate-400 font-mono">Powerplant</span>
-          <select value={runtime.engineId ?? ''} onChange={(event) => runtime.selectEngine(event.target.value)} className="flex-1 bg-transparent text-xs font-mono text-white outline-none appearance-none pr-6 cursor-pointer">
+          <select value={runtime.engineId ?? ''} onChange={(event) => runtime.selectEngine(event.target.value)} className="flex-1 min-w-0 w-0 truncate bg-transparent text-xs font-mono text-white outline-none appearance-none pr-6 cursor-pointer">
             {runtime.engines.map((engine) => <option key={engine.engine_id} value={engine.engine_id} className="bg-surface-card text-[#101b20]">{engine.display_name}</option>)}
           </select><ChevronDown className="w-4 h-4 text-slate-400 pointer-events-none absolute right-3" />
         </label>

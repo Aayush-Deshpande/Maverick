@@ -67,11 +67,11 @@ export const Header: React.FC<HeaderProps> = ({
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-xs font-bold tracking-wider text-white">ANUMAAN</span>
-                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-sm bg-white/5 text-slate-300 border border-surface-border">
+                <span className="text-xs font-mono px-1.5 py-0.5 rounded-sm bg-white/5 text-slate-300 border border-surface-border">
                   DRDO PS-26054
                 </span>
               </div>
-              <p className="text-[10px] text-slate-400 font-mono hidden sm:flex items-center gap-1.5">
+              <p className="text-xs text-slate-400 font-mono hidden sm:flex items-center gap-1.5">
                 <span>{runtimeMode ? 'Multi-engine propulsion health console' : 'MALE UAV Digital Twin GCS'}</span>
                 {!runtimeMode && <><span className="text-slate-700">·</span>
                 <span className="text-slate-400 flex items-center gap-1">
@@ -111,7 +111,7 @@ export const Header: React.FC<HeaderProps> = ({
                     <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-success"></span>
                   </span>
                   <span className="font-medium hidden sm:inline">20 Hz Active</span>
-                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-black/20 text-success">
+                  <span className="text-xs font-mono px-1.5 py-0.5 rounded bg-black/20 text-success">
                     {latencyMs}ms
                   </span>
                 </>
@@ -159,7 +159,7 @@ export const Header: React.FC<HeaderProps> = ({
               <button
                 key={r.id}
                 onClick={() => onSelectRole(r.id)}
-                className={`flex items-center gap-1 px-2.5 py-1 rounded-sm text-[11px] font-medium transition-colors ${
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-sm text-xs font-medium transition-colors ${
                   isActive
                     ? 'bg-accent text-white shadow-sm'
                     : 'text-slate-400 hover:text-white hover:bg-white/5'
@@ -176,7 +176,7 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Right: Sortie & settings */}
         <div className="flex items-center gap-2">
           {!runtimeMode && <div className="hidden xl:flex flex-col text-right">
-            <span className="text-[10px] text-slate-500">Sortie</span>
+            <span className="text-xs text-slate-500">Sortie</span>
             <span className="text-xs font-mono text-slate-300">{state.sortie_id}</span>
           </div>}
 

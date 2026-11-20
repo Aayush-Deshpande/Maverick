@@ -98,7 +98,7 @@ export function App() {
 
       <main className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-4 md:p-6 space-y-4">
         <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div className="text-[10px] uppercase tracking-[0.18em] text-[#68757a] font-mono flex items-center gap-2">
+          <div className="text-xs uppercase tracking-[0.18em] text-[#68757a] font-mono flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-accent" />
             <span>ANUMAAN · GCS WORKSPACE</span>
           </div>
@@ -154,11 +154,11 @@ export function App() {
                   <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
                   Interactive Engine Twin CAD
                 </h2>
-                <p className="mt-0.5 text-[11px] text-slate-400 font-mono">
+                <p className="mt-0.5 text-xs text-slate-400 font-mono">
                   Fault location, component highlighting and camera transitions · coupled to authoritative 20 Hz backend
                 </p>
               </div>
-              <span className="text-[10px] font-mono uppercase tracking-wider text-accent border border-accent/30 bg-accent/10 px-2 py-0.5 rounded-sm">
+              <span className="text-xs font-mono uppercase tracking-wider text-accent border border-accent/30 bg-accent/10 px-2 py-0.5 rounded-sm">
                 WebGL 3D · Live State
               </span>
             </div>
@@ -183,7 +183,7 @@ export function App() {
                     <h4 className="text-xs font-semibold text-critical font-mono">
                       Telemetry Datalink Disconnected
                     </h4>
-                    <p className="text-[11px] text-slate-400 mt-0.5 font-mono">
+                    <p className="text-xs text-slate-400 mt-0.5 font-mono">
                       Awaiting 20 Hz telemetry feed from backend server at{' '}
                       <span className="font-medium text-slate-200">{serverUrl}</span>
                     </p>
@@ -230,7 +230,7 @@ export function App() {
                 })}
               </div>
 
-              <div className="flex items-center gap-2 text-[10px] font-mono text-slate-400">
+              <div className="flex items-center gap-2 text-xs font-mono text-slate-400">
                 <Radio className="w-3.5 h-3.5 text-accent" />
                 <span>DRDO PS-26054 CYBER-PHYSICAL STACK</span>
               </div>
@@ -308,7 +308,7 @@ export function App() {
       </main>
 
       {workspace === 'legacy' ? <footer className="bg-surface/80 border-t border-surface-border py-3 px-4 text-center mt-auto">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-500">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
           <div className="flex items-center gap-2">
             <Shield className="w-3.5 h-3.5" />
             <span>DRDO / iDEX PS-26054 — Rotax 912 iS Sport High-Altitude MALE UAV Digital Twin</span>
@@ -327,7 +327,7 @@ export function App() {
             </span>
           </div>
         </div>
-      </footer> : <footer className="bg-surface/80 border-t border-surface-border py-3 px-4 text-center mt-auto text-[11px] text-slate-500">DRDO / iDEX PS-26054 · Simulation-backed multi-engine condition monitoring demonstrator</footer>}
+      </footer> : <footer className="bg-surface/80 border-t border-surface-border py-3 px-4 text-center mt-auto text-xs text-slate-500">DRDO / iDEX PS-26054 · Simulation-backed multi-engine condition monitoring demonstrator</footer>}
 
       <Suspense fallback={null}>
         <ConnectionModal

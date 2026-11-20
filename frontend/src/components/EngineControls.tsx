@@ -37,7 +37,7 @@ export const EngineControls: React.FC<EngineControlsProps> = ({ state, onCommand
             <h2 className="text-xs font-semibold text-white">
               Flight Deck &amp; Propulsion Controls
             </h2>
-            <p className="text-[11px] text-slate-500">Authoritative ECU FADEC command</p>
+            <p className="text-xs text-slate-500">Authoritative ECU FADEC command</p>
           </div>
         </div>
 
@@ -70,7 +70,7 @@ export const EngineControls: React.FC<EngineControlsProps> = ({ state, onCommand
               <span className="text-base font-semibold font-mono text-white">
                 {throttle.toFixed(0)}%
               </span>
-              <span className="text-[10px] text-slate-500">command</span>
+              <span className="text-xs text-slate-500">command</span>
             </div>
           </div>
 
@@ -100,14 +100,14 @@ export const EngineControls: React.FC<EngineControlsProps> = ({ state, onCommand
                   key={p.label}
                   disabled={!isEngineOn}
                   onClick={() => handleThrottleChange(p.val)}
-                  className={`py-1.5 px-2 text-[11px] rounded-sm border transition-colors disabled:opacity-30 ${
+                  className={`py-1.5 px-2 text-xs rounded-sm border transition-colors disabled:opacity-30 ${
                     isActive
                       ? 'border-accent-muted text-accent bg-accent-dim font-medium'
                       : 'bg-surface-card border-surface-border text-slate-400 hover:text-white hover:border-surface-border-strong'
                   }`}
                 >
                   <div className="font-medium">{p.label}</div>
-                  <div className="text-[9px] font-mono text-slate-500">{p.sub}</div>
+                  <div className="text-xs font-mono text-slate-500">{p.sub}</div>
                 </button>
               );
             })}
@@ -121,59 +121,59 @@ export const EngineControls: React.FC<EngineControlsProps> = ({ state, onCommand
               <Compass className="w-3.5 h-3.5 text-slate-500" />
               Mission Regimes (SIM-05..08)
             </span>
-            <span className="text-[10px] font-mono text-accent">{theater}</span>
+            <span className="text-xs font-mono text-accent">{theater}</span>
           </div>
 
           <div className="grid grid-cols-2 gap-1.5">
             <button
               onClick={() => onCommand({ action: 'SET_REGIME', regime: 'LADAKH', region: 'LADAKH' })}
-              className={`px-2 py-1.5 text-[11px] rounded-sm border transition-colors text-left ${
+              className={`px-2 py-1.5 text-xs rounded-sm border transition-colors text-left ${
                 theater === 'LADAKH'
                   ? 'border-accent-muted text-accent bg-accent-dim font-medium'
                   : 'bg-surface-card border-surface-border text-slate-400 hover:text-white'
               }`}
             >
               <div className="font-semibold">Ladakh (20k ft)</div>
-              <div className="text-[9px] text-slate-500 font-mono">SIM-05 High-Alt</div>
+              <div className="text-xs text-slate-500 font-mono">SIM-05 High-Alt</div>
             </button>
             <button
               onClick={() => onCommand({ action: 'SET_REGIME', regime: 'THAR_DESERT', region: 'THAR_DESERT' })}
-              className={`px-2 py-1.5 text-[11px] rounded-sm border transition-colors text-left ${
+              className={`px-2 py-1.5 text-xs rounded-sm border transition-colors text-left ${
                 theater === 'THAR_DESERT'
                   ? 'border-warning-muted text-warning bg-warning-dim font-medium'
                   : 'bg-surface-card border-surface-border text-slate-400 hover:text-white'
               }`}
             >
               <div className="font-semibold">Thar (+44°C)</div>
-              <div className="text-[9px] text-slate-500 font-mono">SIM-07 Hot-Weather</div>
+              <div className="text-xs text-slate-500 font-mono">SIM-07 Hot-Weather</div>
             </button>
             <button
               onClick={() => onCommand({ action: 'SET_REGIME', regime: 'ENDURANCE_LOITER', region: 'ENDURANCE_LOITER' })}
-              className={`px-2 py-1.5 text-[11px] rounded-sm border transition-colors text-left ${
+              className={`px-2 py-1.5 text-xs rounded-sm border transition-colors text-left ${
                 theater === 'ENDURANCE_LOITER'
                   ? 'border-emerald-500/50 text-emerald-300 bg-emerald-500/10 font-medium'
                   : 'bg-surface-card border-surface-border text-slate-400 hover:text-white'
               }`}
             >
               <div className="font-semibold">Endurance Loiter</div>
-              <div className="text-[9px] text-slate-500 font-mono">SIM-06 Eco-Cruise</div>
+              <div className="text-xs text-slate-500 font-mono">SIM-06 Eco-Cruise</div>
             </button>
             <button
               onClick={() => onCommand({ action: 'SET_REGIME', regime: 'RAPID_THROTTLE_TRANSIENTS', region: 'RAPID_THROTTLE_TRANSIENTS' })}
-              className={`px-2 py-1.5 text-[11px] rounded-sm border transition-colors text-left ${
+              className={`px-2 py-1.5 text-xs rounded-sm border transition-colors text-left ${
                 theater === 'RAPID_THROTTLE_TRANSIENTS'
                   ? 'border-indigo-500/50 text-indigo-300 bg-indigo-500/10 font-medium'
                   : 'bg-surface-card border-surface-border text-slate-400 hover:text-white'
               }`}
             >
               <div className="font-semibold">Rapid Transients</div>
-              <div className="text-[9px] text-slate-500 font-mono">SIM-08 FADEC Burst</div>
+              <div className="text-xs text-slate-500 font-mono">SIM-08 FADEC Burst</div>
             </button>
           </div>
 
           <div className="grid grid-cols-2 gap-3 pt-1">
             <div className="space-y-1 bg-surface-card p-2 rounded-sm border border-surface-border">
-              <div className="flex justify-between text-[11px]">
+              <div className="flex justify-between text-xs">
                 <span className="text-slate-400 flex items-center gap-1">
                   <Mountain className="w-3 h-3 text-slate-500" />
                   Altitude
@@ -192,7 +192,7 @@ export const EngineControls: React.FC<EngineControlsProps> = ({ state, onCommand
             </div>
 
             <div className="space-y-1 bg-surface-card p-2 rounded-sm border border-surface-border">
-              <div className="flex justify-between text-[11px]">
+              <div className="flex justify-between text-xs">
                 <span className="text-slate-400 flex items-center gap-1">
                   <Thermometer className="w-3 h-3 text-slate-500" />
                   OAT

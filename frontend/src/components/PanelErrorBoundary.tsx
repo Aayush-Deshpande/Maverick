@@ -43,7 +43,7 @@ export class PanelErrorBoundary extends React.Component<PanelErrorBoundaryProps,
               <h4 className="text-xs font-semibold text-critical font-mono uppercase tracking-wide">
                 {this.props.label} panel offline
               </h4>
-              <p className="text-[11px] text-slate-400 mt-0.5 font-mono">
+              <p className="text-xs text-slate-400 mt-0.5 font-mono">
                 {this.state.error.message || 'Unexpected rendering error.'} — other panels remain operational.
               </p>
             </div>
