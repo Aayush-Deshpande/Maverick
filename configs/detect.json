@@ -142,5 +142,43 @@
       "status": "ASSUMED",
       "ref": "fixed seed: the scorer is deterministic"
     }
+  },
+  "adaptive": {
+    "description": "Adaptive per-tail baseline (card M4-06, P Step 4.6): learns slow, healthy drift of this tail only while it is provably nominal.",
+    "ewma_alpha": {
+      "value": 0.001,
+      "status": "ASSUMED",
+      "ref": "EWMA weight per frame of the residual mean/variance (time constant ~1000 frames)"
+    },
+    "hold_go_s": {
+      "value": 1800.0,
+      "status": "ASSUMED",
+      "ref": "P Step 4.6: status must have been GO for >= 30 min"
+    },
+    "cusum_fraction": {
+      "value": 0.5,
+      "status": "ASSUMED",
+      "ref": "P Step 4.6: no CUSUM statistic above h/2"
+    },
+    "commit_every_s": {
+      "value": 600.0,
+      "status": "ASSUMED",
+      "ref": "accepted learning time between baseline versions"
+    },
+    "sigma_step_limit": {
+      "value": 1.25,
+      "status": "ASSUMED",
+      "ref": "one version may change a channel's sigma by at most this factor either way"
+    },
+    "offset_step_limit_sigma": {
+      "value": 0.5,
+      "status": "ASSUMED",
+      "ref": "one version may move a channel's offset by at most this many sigma (a fault cannot be learned in one step)"
+    },
+    "max_versions": {
+      "value": 50,
+      "status": "ASSUMED",
+      "ref": "baseline versions kept for rollback"
+    }
   }
 }

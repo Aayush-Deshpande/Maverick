@@ -36,6 +36,7 @@ from backend.twin.virtual_sensors import VirtualSensorSynthesizer
 from backend.twin.validity import TwinValidityMonitor
 from backend.evaluation.damage_accumulation import DamageAccumulator
 from backend.evaluation.conformal import SplitConformalRUL
+from backend.detect.adaptive import AdaptiveBaseline
 from backend.prognose.trends import TrendTracker
 from backend.status.evaluator import frame_readings
 from backend.mission.reliability import (
@@ -163,6 +164,7 @@ class EngineRuntime:
         scales = [0.4 + 0.03 * i for i in range(25)]
         self.conformal_rul.calibrate(predictions=preds, truths=truths, scales=scales)
         self.trends: Optional[TrendTracker] = None        # M4-02, built on the detector's channels at calibration
+        self.adaptive: Optional[AdaptiveBaseline] = None   # M4-06 guarded per-tail baseline learning
 
         components = DEFAULT_COMPONENTS()
         if not self.cfg.is_turbocharged:
@@ -205,6 +207,7 @@ class EngineRuntime:
             self.detector = ResidualDetector.calibrate(frames, alpha=0.01)
             self.isolator = BayesianIsolator(self.engine_id, self.detector.cal.channel_names())
             self.trends = TrendTracker(self.cfg.limits or {}, self.detector.cal.channel_names(), self.detector.cal.sigma)
+            self.adaptive = AdaptiveBaseline(self.detector.cal, self.tail_id)
             self.levers = Levers()
             self.ready = True
 
@@ -566,6 +569,11 @@ class EngineRuntime:
                                                      quarantined=_quarantined_lower,
                                                      hypotheses=status_hypotheses(self._cached_hypotheses))
             alerts = [a.to_dict() for a in self.alert_manager.update(frame.t, verdict)]
+            if self.adaptive is not None:                  # M4-06: learn only while provably nominal
+                open_orders = len(self.work_orders.open_orders(self.engine_id)) if self.work_orders is not None else 0
+                self.adaptive.update(frame.t, verdict.level, det, open_orders)
+                if prognostics_dict is not None:
+                    prognostics_dict = {**prognostics_dict, "baseline": self.adaptive.status()}
             status = {**verdict.to_dict(), "alerts": alerts, "master": self.alert_manager.master()}
             t = Tick(
                 engine_id=self.engine_id,
