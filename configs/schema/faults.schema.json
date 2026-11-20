@@ -59,6 +59,12 @@
               "type": "object",
               "required": ["channel", "direction", "min_delta", "unit"],
               "properties": {
+                "applies_when": {
+                  "type": "array",
+                  "description": "this line holds only for engines matching every condition (D59)",
+                  "items": {"type": "object", "required": ["field", "in"], "additionalProperties": false,
+                            "properties": {"field": {"type": "string"}, "in": {"type": "array", "minItems": 1}}}
+                },
                 "channel": {"type": "string"},
                 "direction": {"enum": [-1, 0, 1]},
                 "min_delta": {"type": "number", "minimum": 0},

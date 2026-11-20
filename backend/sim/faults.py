@@ -51,7 +51,7 @@ class FaultParameters:
 
     def health(self, active: Iterable[Any], t_s: float, combustion: Any = None) -> Tuple[Dict[str, Any], List[Dict[str, Any]]]:
         n, fx = self.n, self.fx
-        h: Dict[str, Any] = {"quality": [1.0] * n, "injector": [1.0] * n, "turbo": {}, "fuel": {}, "thermal": {},
+        h: Dict[str, Any] = {"quality": [1.0] * n, "late_burn": [1.0] * n, "injector": [1.0] * n, "turbo": {}, "fuel": {}, "thermal": {},
                              "electrical": {}, "vibration": {}, "egt_factor": [1.0] * n, "glow_failed": [False] * n}
         sensor_faults: List[Dict[str, Any]] = []
         oil_lost_l = 0.0
@@ -96,8 +96,8 @@ class FaultParameters:
                 h.setdefault("cov_cylinders", set()).add(c)
         elif name == "burn_duration":
             loss = combustion.timing_factor((val - 1.0) * fx["burn_duration_deg_per_unit"]) if combustion else 1.0
-            for c in cyls:
-                h["quality"][c] *= loss
+            for c in cyls:                        # the fuel still burns, late in the expansion: work falls and the
+                h["late_burn"][c] *= loss         # lost share leaves as exhaust heat (EGT rises), not as unburnt fuel
         elif name == "glow_plug_ok":
             for c in cyls:
                 h["glow_failed"][c] = h["glow_failed"][c] or val < 0.5

@@ -76,7 +76,7 @@ class MeanValueEngine:
                      filter_factor: float = 1.0, map_target_pa: Optional[float] = None,
                      turbo_health: Optional[Dict] = None, fuel_health: Optional[Dict] = None,
                      injector: Optional[Sequence[float]] = None, quality: Optional[Sequence[float]] = None,
-                     timing_error_deg: float = 0.0) -> OperatingPoint:
+                     timing_error_deg: float = 0.0, late_burn: Optional[Sequence[float]] = None) -> OperatingPoint:
         """Steady operating point. SI: throttle_pct is the butterfly. CI (quality-governed): throttle_pct is the power
         lever = share of the full-load injection quantity; there is no butterfly. Per-cylinder faults enter through
         `injector` (flow coefficients) and `quality` (combustion quality); see backend/sim/fuel.py and combustion.py."""
@@ -84,6 +84,7 @@ class MeanValueEngine:
         n = self.n_cyl
         inj = list(injector) if injector is not None else [1.0] * n
         qual = list(quality) if quality is not None else [1.0] * n
+        late = list(late_burn) if late_burn is not None else [1.0] * n     # slow/late burn: less work, fuel still burns
         ind = self.induction
         key = (throttle_pct, rpm, atm, filter_factor, map_target_pa,
                tuple(sorted(turbo_health.items())) if turbo_health else None)
@@ -133,7 +134,7 @@ class MeanValueEngine:
                 demand = m_air_cyl / (afr * lam) * inj[i] * delivery
             m_f = self.combustion.deliverable_fuel(demand, m_air_cyl)
             lam_i = m_air_cyl / (afr * m_f) if m_f > 0 else float("inf")
-            w = self.combustion.indicated_work_j(m_f, lam_i, timing_error_deg, qual[i])
+            w = self.combustion.indicated_work_j(m_f, lam_i, timing_error_deg, qual[i] * late[i])
             cyl_fuel.append(m_f * cycles_per_s)
             cyl_w.append(w * cycles_per_s)
             cyl_lam.append(lam_i)

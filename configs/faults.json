@@ -474,13 +474,13 @@
           "component": "fuel",
           "parameter": "injector_flow[{cyl}]",
           "op": "scale",
-          "at_full_severity": 0.7
+          "at_full_severity": 0.9
         },
         {
           "component": "combustion",
           "parameter": "burn_duration[{cyl}]",
           "op": "scale",
-          "at_full_severity": 1.5
+          "at_full_severity": 3.0
         }
       ],
       "default_severity": 0.8,
@@ -502,7 +502,15 @@
           "channel": "rpm",
           "direction": -1,
           "min_delta": 10,
-          "unit": "rpm"
+          "unit": "rpm",
+          "applies_when": [
+            {
+              "field": "propeller_governor",
+              "in": [
+                false
+              ]
+            }
+          ]
         }
       ],
       "detect_window_s": 90,
@@ -679,7 +687,15 @@
           "channel": "rpm",
           "direction": -1,
           "min_delta": 50,
-          "unit": "rpm"
+          "unit": "rpm",
+          "applies_when": [
+            {
+              "field": "propeller_governor",
+              "in": [
+                false
+              ]
+            }
+          ]
         },
         {
           "channel": "vibration_orders.0.5X",
@@ -1169,10 +1185,10 @@
       "default_ramp_s": 30.0,
       "expected_signature": [
         {
-          "channel": "map_kpa",
-          "direction": -1,
-          "min_delta": 5,
-          "unit": "kPa"
+          "channel": "turbo_rpm",
+          "direction": 1,
+          "min_delta": 2000,
+          "unit": "rpm"
         },
         {
           "channel": "turbo_rpm",
@@ -1696,7 +1712,7 @@
           "component": "coolant",
           "parameter": "pump_flow_health",
           "op": "scale",
-          "at_full_severity": 0.4
+          "at_full_severity": 0.15
         }
       ],
       "default_severity": 0.8,
@@ -1786,7 +1802,7 @@
           "component": "coolant",
           "parameter": "radiator_effectiveness",
           "op": "scale",
-          "at_full_severity": 0.5
+          "at_full_severity": 0.3
         }
       ],
       "default_severity": 0.8,

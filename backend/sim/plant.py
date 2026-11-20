@@ -166,7 +166,8 @@ class SimEngine:
         op, knock, retard = knock_controlled_point(self.core, self.ecu, throttle, max(rpm, 1.0), atm, timing_err,
                                            hl.get("knock_factor", 1.0), filter_factor=hl.get("filter_factor", 1.0),
                                            turbo_health=hl.get("turbo"), fuel_health=hl.get("fuel"),
-                                           injector=hl.get("injector"), quality=quality)
+                                           injector=hl.get("injector"), quality=quality,
+                                           late_burn=hl.get("late_burn"))
         friction_w = op.friction_w * self.core.thermal.friction_multiplier
         brake_w = (op.indicated_w - friction_w) if fuel_on else -friction_w
         if self.state == FAILED:

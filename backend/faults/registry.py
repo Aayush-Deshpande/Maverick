@@ -74,11 +74,19 @@ class FaultSpec:
                                f"but {cfg.engine_id} has {value!r}")
         return True, "applies"
 
+    def signature_items(self, cfg: Optional[EngineConfig] = None) -> List[Dict[str, Any]]:
+        """Expected-signature lines that hold for this engine: a line with its own applies_when (e.g. "rpm falls" only
+        without a propeller governor, which would hold rpm) is dropped where the installation masks it (D59)."""
+        items = self.raw["expected_signature"]
+        if cfg is None:
+            return list(items)
+        return [i for i in items if all(_config_value(cfg, c["field"]) in c["in"] for c in i.get("applies_when", []))]
+
     def resolved_signature(self, cylinder: Optional[int] = None, channel: Optional[str] = None,
-                           n_cylinders: int = 4) -> List[Dict[str, Any]]:
+                           n_cylinders: int = 4, cfg: Optional[EngineConfig] = None) -> List[Dict[str, Any]]:
         """Expected signature with {cyl}, [*] and {channel} expanded to concrete channel names."""
         out: List[Dict[str, Any]] = []
-        for item in self.raw["expected_signature"]:
+        for item in self.signature_items(cfg):
             ch = item["channel"]
             if "{channel}" in ch:
                 if channel is None:

@@ -26,7 +26,7 @@ def channel_value(o: Any, channel: str, cylinder: Optional[int]) -> Optional[flo
               "oil_p": o.oil_bar, "gearbox_t": o.gearbox_c, "fuel_flow": o.fuel_kg_h, "fuel_p": o.fuel_bar,
               "rail_p": o.fuel_bar, "power_kw": o.power_kw, "bus_v": o.bus_v, "batt_i": o.battery_a,
               "cov_imep": o.cov_imep_pct, "charge_t": o.charge_t_c, "turbo_rpm": o.turbo_rpm,
-              "lane_status": float(o.lanes_failed), "oil_qty": o.oil_qty_l}
+              "lane_status": float(o.lanes_failed), "oil_qty": o.oil_qty_l, "soc": o.soc}
     return simple.get(channel)
 
 
@@ -60,7 +60,7 @@ def run_pair(cfg: Any, registry: Any, fault_id: str, cylinder: Optional[int] = N
             eng.step(DT)
         engines.append(eng)
     fault.t0_s = engines[1].t
-    sigs = [x for x in raw["expected_signature"] if x["channel"] != "{channel}"]
+    sigs = [x for x in spec.signature_items(cfg) if x["channel"] != "{channel}"]
     best = [None] * len(sigs)
     for _ in range(int(seconds / DT)):                      # lockstep: largest movement in the expected direction
         base = engines[0].step(DT)
