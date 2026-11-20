@@ -70,7 +70,7 @@ export default function TwinStage(p: Props) {
 
   const highlights = (p.state?.highlights ?? []) as Array<{ component_id: string; level: string; reason: string }>;
   return (
-    <div className="relative h-[calc(100vh-11rem)] min-h-[480px] overflow-hidden rounded-2xl border border-slate-300/70 bg-[radial-gradient(ellipse_at_center,#ffffff_0%,#eef1f4_75%)] shadow-sm">
+    <div className="relative h-[calc(100vh-11rem)] min-h-[480px] overflow-hidden rounded-sm border border-surface-border bg-[#e8e7df]">
       <Suspense fallback={<div className="p-6 text-xs font-mono text-slate-500">Loading 3D view…</div>}>
         <EngineViewer3D engineId={p.engineId} highlights={p.state?.highlights} api={p.api} injected={injected} fill focusSignal={focus} bare />
       </Suspense>
@@ -99,7 +99,7 @@ export default function TwinStage(p: Props) {
 
       {/* bottom: what is going on */}
       <div className="absolute inset-x-6 bottom-6 rounded-2xl border border-slate-200/80 bg-white/60 text-slate-900 shadow-lg backdrop-blur-xl px-5 py-3 text-sm" aria-live="polite">
-        <span className={`font-semibold ${status ? LEVEL_TEXT[status] ?? 'text-white' : 'text-slate-500'}`}>{status ?? 'NO DATA'}</span>
+        <span className={`font-semibold ${status ? LEVEL_TEXT[status] ?? 'text-slate-900' : 'text-slate-500'}`}>{status ?? 'NO DATA'}</span>
         {reason && status !== 'GO' && <span className="ml-2 text-slate-800">{reason}</span>}
         {active.length > 0 && <span className="ml-3 text-slate-500">Injected: {active.map((f) => `${f.fault_id}${f.cylinder ? ` cyl ${f.cylinder}` : ''}`).join(', ')}</span>}
         {highlights.length > 0 && <div className="mt-1 text-xs text-slate-600">{highlights.map((h) => `${h.level} · ${h.component_id.replace(/_/g, ' ')} · ${h.reason}`).join('   |   ')}</div>}
