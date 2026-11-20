@@ -17,7 +17,8 @@ Last commit:  see git log -1.
 State:        tests/dynamic 15 passed, vitest 25, tsc OK; landing loads with no console errors. Full suite last
               698 passed (+ known ratchet; timing test flaky only under load).
 Latest:       D55 done (diesel lambda 1.35 + boost 247/227 kPa CALIBRATED from BSFC 235/215; live cruise EGT ~390-430 C). D58 (914 charge-path cooling, cold-day density criterion); survey inset AE300 no longer renders white.
-Next step:    21 Nov ~02:00. FINAL acceptance (parallel, clean engines): 142/142 injections live (console 120, 3D
+Next step:    21 Nov ~03:20: 3D twin = full-screen keyboard visualizer (1-9/0/Q/E/C/F/T/Esc). Prasad merges Beta -> main
+              himself (guard blocks the AI; D14/D30). 21 Nov ~02:00: FINAL acceptance (parallel, clean engines): 142/142 injections live (console 120, 3D
               twin 17, GCS 5), 130/142 injected faults in the top-3 diagnosis (912 21/24, 914 25/26, 915 29/30, AE300
               28/31, VRDE 27/31), 0 wrong highlights when the injected fault is top-1
               (docs/verification/inject_anywhere_2026-11-21.csv). Committed: D60 graded status, D61 shared accelerometer,

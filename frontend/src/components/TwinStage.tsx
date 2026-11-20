@@ -9,11 +9,12 @@ type Props = {
   onSelectEngine: (id: string) => void;
   state: any;
   faults: Fault[];
-  cylinders: number;
+  cylinders: number | null;                       // from the engine profile; null = unknown (C does nothing)
   api: (path: string, method: string, body?: unknown) => Promise<any>;
   command: (path: string, method: string, body?: unknown) => Promise<any>;
   training: boolean;
   onTraining: (on: boolean) => void;
+  onExit: () => void;
 };
 
 const PAGE = 9;                                    // keys 1-9 pick a fault on the current page
@@ -58,9 +59,10 @@ export default function TwinStage(p: Props) {
       else if (k === '0') p.command('/faults', 'DELETE').then(() => say('All faults cleared')).catch(() => say('Clear failed'));
       else if (k === 'q') setPage((n) => (n - 1 + pages) % pages);
       else if (k === 'e') setPage((n) => (n + 1) % pages);
-      else if (k === 'c') setCyl((n) => (n % Math.max(1, p.cylinders)) + 1);
+      else if (k === 'c') { const n = p.cylinders; if (n) setCyl((c) => (c % n) + 1); }
       else if (k === 'f') setFocus((n) => n + 1);
       else if (k === 't') p.onTraining(!p.training);
+      else if (k === 'escape') p.onExit();
       else return;
       e.preventDefault();
     };
@@ -68,21 +70,26 @@ export default function TwinStage(p: Props) {
     return () => window.removeEventListener('keydown', onKey);
   }, [shown, cyl, pages, p]);
 
+  const highlights = (p.state?.highlights ?? []) as Array<{ component_id: string; level: string; reason: string }>;
   return (
-    <div className="relative h-[calc(100vh-9rem)] min-h-[420px]">
-      <Suspense fallback={<div className="surface-panel p-4 text-xs font-mono text-slate-400">Loading 3D view…</div>}>
-        <EngineViewer3D engineId={p.engineId} highlights={p.state?.highlights} api={p.api} injected={injected} fill focusSignal={focus} />
+    <div className="fixed inset-0 z-50 bg-[#e8e7df]">
+      <Suspense fallback={<div className="p-6 text-xs font-mono text-slate-400">Loading 3D view…</div>}>
+        <EngineViewer3D engineId={p.engineId} highlights={p.state?.highlights} api={p.api} injected={injected} fill focusSignal={focus} bare />
       </Suspense>
-      <aside className="absolute left-6 top-16 w-[min(320px,calc(100%-3rem))] rounded-sm border border-surface-border bg-surface/90 p-3 text-xs backdrop-blur-sm"
-        aria-label="Keyboard fault controls">
-        <select value={p.engineId ?? ''} onChange={(e) => p.onSelectEngine(e.target.value)}
-          className="w-full rounded-sm border border-surface-border bg-transparent px-2 py-1 text-xs text-white">
+
+      {/* top right: engine and exit */}
+      <div className="absolute right-4 top-4 flex items-center gap-2">
+        <select value={p.engineId ?? ''} onChange={(e) => p.onSelectEngine(e.target.value)} aria-label="Engine"
+          className="rounded-sm border border-surface-border bg-surface/90 px-3 py-2 text-sm text-white backdrop-blur-sm">
           {p.engines.map((e) => <option key={e.engine_id} value={e.engine_id}>{e.display_name ?? e.engine_id}</option>)}
         </select>
-        <div className={`mt-2 font-semibold ${status ? LEVEL_TEXT[status] ?? 'text-white' : 'text-slate-400'}`}>
-          {status ?? 'NO DATA'}{reason && status !== 'GO' ? <span className="ml-1 font-normal text-slate-300">· {reason}</span> : null}
-        </div>
-        {active.length > 0 && <div className="mt-1 text-slate-300">Active: {active.map((f) => `${f.fault_id}${f.cylinder ? ` cyl ${f.cylinder}` : ''}`).join(', ')}</div>}
+        <button type="button" onClick={p.onExit} className="rounded-sm border border-surface-border bg-surface/90 px-3 py-2 text-sm text-white">Exit (Esc)</button>
+      </div>
+
+      {/* left: faults on the keyboard */}
+      <aside className="absolute left-4 top-4 w-[min(300px,calc(100%-2rem))] rounded-sm border border-surface-border bg-surface/85 p-3 text-xs backdrop-blur-sm"
+        aria-label="Keyboard fault controls">
+        <div className="font-semibold text-white">Inject a fault</div>
         <ol className="mt-2 space-y-0.5 font-mono">
           {shown.map((f, i) => <li key={f.id} className="flex gap-2 text-slate-200">
             <span className="w-4 text-slate-400">{i + 1}</span><span className="truncate">{title(f.name)}{f.scope === 'CYLINDER' ? ` (cyl ${cyl})` : ''}</span>
@@ -91,8 +98,16 @@ export default function TwinStage(p: Props) {
         <div className="mt-2 border-t border-surface-border pt-2 font-mono text-slate-400">
           1-9 inject · 0 clear all · Q/E page {page + 1}/{pages} · C cylinder {cyl} · F focus · T training {p.training ? 'on' : 'off'}
         </div>
-        {notice && <div className="mt-1 text-slate-200" aria-live="polite">{notice}</div>}
       </aside>
+
+      {/* bottom: what is going on */}
+      <div className="absolute inset-x-4 bottom-4 rounded-sm border border-surface-border bg-surface/85 px-4 py-3 text-sm backdrop-blur-sm" aria-live="polite">
+        <span className={`font-semibold ${status ? LEVEL_TEXT[status] ?? 'text-white' : 'text-slate-400'}`}>{status ?? 'NO DATA'}</span>
+        {reason && status !== 'GO' && <span className="ml-2 text-slate-200">{reason}</span>}
+        {active.length > 0 && <span className="ml-3 text-slate-400">Injected: {active.map((f) => `${f.fault_id}${f.cylinder ? ` cyl ${f.cylinder}` : ''}`).join(', ')}</span>}
+        {highlights.length > 0 && <div className="mt-1 text-xs text-slate-300">{highlights.map((h) => `${h.level} · ${h.component_id.replace(/_/g, ' ')} · ${h.reason}`).join('   |   ')}</div>}
+        {notice && <div className="mt-1 text-xs text-slate-200">{notice}</div>}
+      </div>
     </div>
   );
 }

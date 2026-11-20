@@ -141,7 +141,7 @@ export function EngineRuntimeConsole({ serverUrl, initialView }: { serverUrl: st
 
   if (view === 'TWIN') return <LabelsContext.Provider value={labels}>
     <TwinStage engineId={runtime.engineId ?? null} engines={runtime.engines ?? []} onSelectEngine={runtime.selectEngine} state={state}
-      faults={faults} cylinders={profile?.cylinders ?? 4} api={runtime.api} command={runtime.command} training={training} onTraining={setTraining} />
+      faults={faults} cylinders={profile?.cylinders ?? null} api={runtime.api} command={runtime.command} training={training} onTraining={setTraining} onExit={() => setView('OPERATOR')} />
   </LabelsContext.Provider>;
   return <LabelsContext.Provider value={labels}><div className="space-y-4">
     {demo && <section className="surface-panel p-4 border-accent/60" aria-live="polite">

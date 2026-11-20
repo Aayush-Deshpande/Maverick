@@ -17,6 +17,7 @@ type Props = {
   api: (path: string, method: string, body?: unknown) => Promise<any>;
   fill?: boolean;                                          // 3D twin view: the engine fills its container
   focusSignal?: number;                                    // increments -> fly to the faulty part (keyboard F)
+  bare?: boolean;                                          // canvas only (the 3D twin overlays its own header/legend)
 };
 
 const DRACO_PATH = '/draco/';                             // decoder files shipped in frontend/public/draco
@@ -118,7 +119,7 @@ class ModelBoundary extends Component<{ children: ReactNode; resetKey: string },
 /** 3D engine view (M6-05): loads the engine's web model named by the component manifest and lights exactly the
  *  nodes listed in state.highlights, in the colour of their level. Highlights come from diagnosis + status (D5);
  *  the viewer has no fault tables of its own. */
-export default function EngineViewer3D({ engineId, highlights: detected, injected, api, fill, focusSignal = 0 }: Props) {
+export default function EngineViewer3D({ engineId, highlights: detected, injected, api, fill, focusSignal = 0, bare }: Props) {
   const [manifest, setManifest] = useState<Manifest | null>(null);
   const [error, setError] = useState('');
   const [lit, setLit] = useState<string[]>([]);
@@ -141,16 +142,16 @@ export default function EngineViewer3D({ engineId, highlights: detected, injecte
 
   const missing = (highlights ?? []).filter((h) => !h.nodes?.length);
   return (
-    <section className={`surface-panel p-4 sm:p-5 rounded-sm ${fill ? 'h-full flex flex-col' : ''}`} data-highlighted-nodes={lit.join(',')}>
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
+    <section className={bare ? 'h-full' : `surface-panel p-4 sm:p-5 rounded-sm ${fill ? 'h-full flex flex-col' : ''}`} data-highlighted-nodes={lit.join(',')}>
+      {!bare && <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h3 className="text-sm font-semibold text-white tracking-tight">3D engine</h3>
         <div className="flex items-center gap-3">
           {manifest?.representative_geometry && <span className="text-xs font-mono text-slate-400">{manifest.representative_geometry}</span>}
           {lit.length > 0 && <button type="button" onClick={() => setFocusRequest((n) => n + 1)}
             className="rounded-sm border border-surface-border px-2 py-1 text-xs text-slate-200 hover:border-surface-border-strong">Focus fault</button>}
         </div>
-      </div>
-      <div className={`mt-3 rounded-sm border border-surface-border bg-black/20 ${fill ? 'flex-1 min-h-0' : 'h-[min(60vh,420px)]'}`}>
+      </div>}
+      <div className={bare ? 'h-full' : `mt-3 rounded-sm border border-surface-border bg-black/20 ${fill ? 'flex-1 min-h-0' : 'h-[min(60vh,420px)]'}`}>
         {error ? <div className="p-4 text-xs font-mono text-slate-300">{error}</div>
           : !manifest ? <div className="p-4 text-xs font-mono text-slate-400">Loading component manifest…</div>
           : <ModelBoundary resetKey={manifest.model_url}>
@@ -166,7 +167,7 @@ export default function EngineViewer3D({ engineId, highlights: detected, injecte
               </Canvas>
             </ModelBoundary>}
       </div>
-      <ul className="mt-2 space-y-0.5 text-xs font-mono">
+      {!bare && <ul className="mt-2 space-y-0.5 text-xs font-mono">
         {(highlights ?? []).length === 0 && <li className="text-slate-500">No part highlighted: no confident diagnosis.</li>}
         {(highlights ?? []).map((h, i) => (
           <li key={`${h.component_id}-${i}`} className="flex items-center gap-2 text-slate-300">
@@ -176,7 +177,7 @@ export default function EngineViewer3D({ engineId, highlights: detected, injecte
           </li>
         ))}
         {missing.length > 0 && <li className="text-slate-500">{missing.length} highlighted component(s) have no node in this model.</li>}
-      </ul>
+      </ul>}
     </section>
   );
 }
