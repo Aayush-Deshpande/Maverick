@@ -220,7 +220,9 @@ def v1_engines() -> Dict[str, Any]:
         out.append({"engine_id": engine_id, "display_name": cfg.display_name, "manufacturer": cfg.manufacturer,
                     "ignition_mode": cfg.ignition_mode, "induction": cfg.induction, "fuel_system": cfg.fuel_system,
                     "cylinders": cfg.cylinder_count, "ready": bool(getattr(rt, "ready", False))})
-    return {"engines": out}
+    rt_cfg = json.loads((ROOT / "configs" / "runtime.json").read_text(encoding="utf-8"))
+    default = rt_cfg.get("default_engine_id")
+    return {"engines": out, "default_engine_id": default if default in hub.runtimes else None}
 
 
 @router.get("/api/v1/engines/{engine_id}/config")

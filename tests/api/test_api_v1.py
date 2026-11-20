@@ -113,3 +113,14 @@ def test_component_manifest_endpoint_serves_the_web_model_and_exact_nodes(client
     oil = next(c for c in body["components"] if c["component_id"] == "oil_tank")
     assert oil["nodes"] and all(n.startswith("Oil_Tank_") for n in oil["nodes"])
     assert client.get("/api/v1/engines/nope/components").status_code == 404
+
+
+def test_engine_list_names_the_configured_default_engine(client):
+    """Prasad 20 Nov 2026 (D25/D47): every first-time visitor starts on the Rotax 912 iS Sport. The choice is
+    configuration (configs/runtime.json default_engine_id), served by the API, never a literal in the UI."""
+    import json
+    from pathlib import Path
+    want = json.loads((Path(__file__).resolve().parents[2] / "configs" / "runtime.json").read_text())["default_engine_id"]
+    body = client.get("/api/v1/engines").json()
+    assert body["default_engine_id"] == want
+    assert want in [e["engine_id"] for e in body["engines"]]

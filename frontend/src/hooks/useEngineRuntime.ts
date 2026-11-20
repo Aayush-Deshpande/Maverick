@@ -59,13 +59,15 @@ export function useEngineRuntime(serverUrl: string) {
     try {
       const response = await fetch(`${serverUrl}/api/v1/engines`, { cache: 'no-store' });
       if (!response.ok) throw new Error(await readError(response));
-      const data = await response.json() as { engines: V1Engine[] };
+      const data = await response.json() as { engines: V1Engine[]; default_engine_id?: string | null };
       setEngines(data.engines);
       setError('');
       setEngineId((current) => {
         if (current && data.engines.some((e) => e.engine_id === current)) return current;
         const fromUrl = new URLSearchParams(window.location.search).get('engine');
-        return data.engines.find((e) => e.engine_id === fromUrl)?.engine_id ?? data.engines[0]?.engine_id ?? null;
+        // ?engine= first, then the server's configured default (configs/runtime.json), then the first engine listed
+        const pick = [fromUrl, data.default_engine_id].find((id) => id && data.engines.some((e) => e.engine_id === id));
+        return pick ?? data.engines[0]?.engine_id ?? null;
       });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Cannot reach the engine runtime');
