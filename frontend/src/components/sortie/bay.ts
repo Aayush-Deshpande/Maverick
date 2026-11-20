@@ -142,6 +142,20 @@ export class EngineBay {
    *  reveal: the whole engine in its own materials, subsystems naming themselves, then the measurement points
    *  signal: the fault begins in the oil system; the rest goes to X-ray; the camera closes on the oil sensor
    */
+  /** What the airframe needs to mount this same engine in its nacelle: a clone, its centre, size and the
+   *  direction of the reduction gearbox (the propeller end) in the model's own frame. */
+  mount() {
+    if (!this.root) return null;
+    const gb = this.anchors.find((a) => a.key === 'gearbox');
+    const gear = gb ? gb.center.clone().sub(this.center).setY(0) : new THREE.Vector3(0, 0, 1);
+    if (gear.lengthSq() < 1e-9) gear.set(0, 0, 1);
+    return { object: this.root.clone(true), center: this.center.clone(), radius: this.radius, gear: gear.normalize() };
+  }
+
+  /** The direction the reveal opens from (azimuth, elevation in the model frame), set by the airframe so the
+   *  bay shot continues the approach shot instead of cutting to an unrelated angle. */
+  start = { a: 0.55, e: 0.36 };
+
   film(stage: 'reveal' | 'signal', k: number, sev: number, real: number, w: number, h: number): BayFrame {
     this.camera.aspect = w / h; this.camera.updateProjectionMatrix();
     const signal = stage === 'signal';
@@ -150,9 +164,11 @@ export class EngineBay {
     const focus = signal ? sstep(0.05, 0.4, k) : 0;
     const push = signal ? sstep(0.8, 1, k) : 0;          // into the sensor, then the film dissolves to the data
     const target = this.center.clone().lerp(this.faultCenter, focus);
-    const ang = (signal ? 2.05 + 0.25 * k : 0.55 + 1.5 * k) + real * 0.01;
-    const elev = signal ? 0.3 - 0.1 * push : 0.36;
-    const dist = this.radius * ((signal ? 1.75 - 0.55 * focus : 2.5 - 0.25 * k) * (1 - 0.82 * push));
+    // one continuous orbit across both shots: the reveal ends exactly where the signal shot begins
+    const a0 = this.start.a, e0 = this.start.e;
+    const ang = (signal ? a0 + 1.2 + 0.25 * k : a0 + 1.2 * sstep(0, 1, k)) + real * 0.01;
+    const elev = signal ? e0 - 0.06 * focus - 0.1 * push : e0;
+    const dist = this.radius * ((signal ? 2.25 - 1.05 * focus : 2.5 - 0.25 * k) * (1 - 0.82 * push));
     this.camera.position.set(
       target.x + dist * Math.cos(elev) * Math.cos(ang),
       target.y + dist * Math.sin(elev),

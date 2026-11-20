@@ -328,7 +328,7 @@ export class SortieWorld {
   renderer: THREE.WebGLRenderer;
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(42, 1, 1, 40000);
-  private carrier = new THREE.Group();
+  readonly carrier = new THREE.Group();
   private ghost = new THREE.Group();
   private ghostMats: THREE.ShaderMaterial[] = [];
   private hull: THREE.Vector3[] = [];
@@ -360,6 +360,16 @@ export class SortieWorld {
   /** Where the aircraft is for the listener: pan, distance, closing speed (for Doppler). */
   listener = { pan: 0, dist: 100, closing: 0 };
   private lastDist = -1;
+  /** the real Rotax, mounted in the nacelle, seen through the skin on the approach */
+  private mount = new THREE.Group();
+  /** last frame's camera target: a jump between frames is a cut, never a swoop */
+  private lastTarget: THREE.Vector3 | null = null;
+  private lastT = -1;
+  private closeLens = false;
+  /** where the lens finishes the approach, relative to the engine, in the airframe's frame */
+  private static readonly INTO = new THREE.Vector3(-0.72, 0.34, 0.2);
+  /** each skin material's own transparency, restored when the X-ray ends */
+  private matBase = new Map<THREE.Material, { transparent: boolean; opacity: number; depthWrite: boolean }>();
   loaded = false;
 
   constructor(private host: HTMLElement) {
@@ -509,7 +519,7 @@ export class SortieWorld {
       for (let i = 0; i < pa.count; i += step) { v.fromBufferAttribute(pa, i).applyMatrix4(m.matrixWorld).applyMatrix4(inv); this.hull.push(v.clone()); }
       // the airframe's own materials, made able to turn to X-ray on the approach to the nacelle
       const mats = Array.isArray(m.material) ? m.material : [m.material];
-      mats.forEach((mt) => { if (mt && !this.bodyMats.includes(mt)) this.bodyMats.push(mt); });
+      mats.forEach((mt) => { if (mt && !this.bodyMats.includes(mt)) { this.bodyMats.push(mt); this.matBase.set(mt, { transparent: mt.transparent, opacity: mt.opacity, depthWrite: mt.depthWrite }); } });
     });
 
     // wheels: the lowest hull point near mid-fuselage is the main gear; the tail is checked separately
@@ -523,6 +533,14 @@ export class SortieWorld {
     const propY = tail.length ? tail.reduce((s2, q) => s2 + q.y, 0) / tail.length : 0;
     this.propLocal.set(0, propY, propZ);
     this.prop.position.copy(this.propLocal);
+    // the engine sits in the rear fuselage, just forward of the pusher: centre it on the fuselage section there
+    const zE = propZ + 1.5;
+    const sect = this.hull.filter((q) => Math.abs(q.z - zE) < 0.7 && Math.abs(q.x) < 1.4);
+    if (sect.length) {
+      const ys = sect.map((q) => q.y);
+      this.engineLocal.set(0, (Math.min(...ys) + Math.max(...ys)) / 2, zE);
+      this.glow.position.copy(this.engineLocal);
+    }
     const discTex = (() => {
       const c = document.createElement('canvas'); c.width = c.height = 256;
       const g = c.getContext('2d')!;
@@ -554,6 +572,7 @@ export class SortieWorld {
     });
     twin.scale.multiplyScalar(1.015);
     this.ghost.add(twin);
+    this.xray = -1; // the skin's state is applied on the next frame, whatever the story time
     this.loaded = true;
   }
 
@@ -562,6 +581,23 @@ export class SortieWorld {
     const bay = new EngineBay(this.renderer);
     await bay.load(map);
     this.bay = bay;
+    // the same engine, in the nacelle: the propeller end (reduction gearbox) faces aft, toward the pusher
+    const m = bay.mount();
+    if (m) {
+      const theta = Math.atan2(m.gear.z, m.gear.x) + Math.PI / 2;
+      m.object.position.copy(m.center).negate();
+      const spin = new THREE.Group(); spin.add(m.object); spin.rotation.y = theta;
+      this.mount.add(spin);
+      this.mount.scale.setScalar(0.45 / m.radius); // the rear fuselage is ~0.9 units across at this station
+      this.mount.position.copy(this.engineLocal);
+      this.mount.visible = false;
+      this.carrier.add(this.mount);
+      // compile its materials now, so the first frame of the reveal does not stall
+      this.mount.visible = true; this.renderer.compile(this.scene, this.camera); this.mount.visible = false;
+      // the bay shot opens from the angle the approach arrives at, so the cut matches
+      const d = SortieWorld.INTO.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), -theta).normalize();
+      bay.start = { a: Math.atan2(d.z, d.x), e: Math.asin(d.y) };
+    }
   }
 
   resize() {
@@ -673,31 +709,34 @@ export class SortieWorld {
         const r1 = sstep(0, 0.42, k), r2 = sstep(0.42, 0.96, k);
         const chase = at(-50, 16, 12);
         const side = at(4, 12, 4.5);
-        const into = engine.clone().addScaledVector(right, 2.2).add(new THREE.Vector3(0, 1.0, 0)).addScaledVector(fwd, 0.6);
+        const into = this.carrier.localToWorld(this.engineLocal.clone().add(SortieWorld.INTO));
         cam = chase.lerp(side, r1).lerp(into, r2);
-        look = at(6, 0, 0.5).lerp(engine, Math.max(0.4 * r1, r2));
+        look = at(6, 0, 0.5).lerp(engine, Math.max(0.4 * r1, sstep(0.42, 0.74, k)));
         break;
       }
       case 'inside':
       case 'signal':
-        cam = engine.clone().addScaledVector(right, 2).add(new THREE.Vector3(0, 1, 0));
+        cam = this.carrier.localToWorld(this.engineLocal.clone().add(SortieWorld.INTO));
         look = engine.clone();
         break;
-      case 'pipeline':
       case 'memory':
         cam = at(-120 + 20 * e, 46 - 12 * e, 40 - 8 * e);
         look = at(90, 0, 0);
         break;
+      case 'pipeline':
       case 'detect':
-        if (t < T_CONFIRM) { cam = at(-110 + 14 * e, 40 - 8 * e, 34); look = at(90, 0, 0); }
+        if (t < T_CONFIRM) {
+          const u = sstep(startOf('pipeline'), T_CONFIRM, t);
+          cam = at(-120 + 26 * u, 46 - 14 * u, 40 - 6 * u); look = at(90, 0, 0);
+        }
         else { const e2 = sstep(T_CONFIRM, T_CONFIRM + 5, t); cam = at(62 - 12 * e2, 28 - 4 * e2, 7); look = at(0, 0, 0); }
         break;
       case 'decide': {
         // close on the aircraft while the options arrive, then up until the terrain becomes a map
-        const a = 0.9 + 0.9 * sstep(0, 0.35, k);
-        const close = at(Math.cos(a) * 60, Math.sin(a) * 60, 14);
+        const o = sstep(0, 0.35, k), a = 0.447 + 1.35 * o, rr = 55.5 + 4.5 * o;
+        const close = at(Math.cos(a) * rr, Math.sin(a) * rr, 7 + 7 * o);
         const mv = mapView();
-        const r = sstep(0.33, 0.62, k);
+        const r = sstep(0.2, 0.55, k);
         cam = close.lerp(mv.cam, r);
         look = pos.clone().lerp(mv.look, r);
         break;
@@ -705,7 +744,7 @@ export class SortieWorld {
       case 'divert': {
         // down from the map into a three-quarter chase as the aircraft banks onto the new heading
         const mv = mapView();
-        const r = sstep(0.0, 0.55, k);
+        const r = sstep(0.0, 0.7, k);
         cam = mv.cam.clone().lerp(at(-66, -30, 20), r);
         look = mv.look.clone().lerp(at(70, 0, 0), r);
         break;
@@ -720,7 +759,7 @@ export class SortieWorld {
       default: { // land: one continuous shot, approach to roll-out, stopping beside the runway
         const tf = this.fieldPos[0].p;
         const end = new THREE.Vector3(); pointAt(T_TOUCH + ROLL, end);
-        const chase = at(-60, 16, 15);
+        const chase = at(-66, -30, 20).lerp(at(-60, 16, 15), sstep(0, 0.3, k));
         const hold = end.clone().addScaledVector(right, 70).addScaledVector(fwd, 55).add(new THREE.Vector3(0, 16, 0));
         const r = sstep(0.45, 0.85, k);
         cam = chase.lerp(hold, r);
@@ -758,14 +797,20 @@ export class SortieWorld {
     this.ghost.position.copy(this.carrier.position);
     this.ghost.quaternion.copy(this.carrier.quaternion);
     this.ghost.translateX(18 * dock); this.ghost.translateY(6 * dock);
-    for (const m of this.ghostMats) { m.uniforms.uA.value = show * (0.85 - 0.25 * r.sev + 0.9 * nacelle); m.uniforms.uTime.value = real; m.uniforms.uCol.value = CYAN; }
+    const open = id === 'approach' ? sstep(0.72, 0.9, kc) : 0;
+    for (const m of this.ghostMats) { m.uniforms.uA.value = show * (0.85 - 0.25 * r.sev + 0.9 * nacelle) * (1 - 0.85 * open); m.uniforms.uTime.value = real; m.uniforms.uCol.value = CYAN; }
     this.ghost.visible = show > 0.001 && this.loaded;
     // the skin turns to X-ray as the lens nears the engine
     const xr = id === 'approach' ? sstep(0.35, 0.78, kc) : 0;
     if (Math.abs(xr - this.xray) > 1e-3) {
       this.xray = xr;
-      for (const mt of this.bodyMats) { mt.transparent = xr > 0.001; mt.opacity = 1 - 0.85 * xr; mt.depthWrite = xr < 0.5; mt.needsUpdate = true; }
+      for (const mt of this.bodyMats) {
+        const b = this.matBase.get(mt)!;
+        mt.transparent = b.transparent || xr > 0.001; mt.opacity = b.opacity * (1 - 0.88 * xr); mt.depthWrite = b.depthWrite && xr < 0.5; mt.needsUpdate = true;
+      }
     }
+
+    this.mount.visible = this.xray > 0.02 && !fl;
 
     // engine glow: amber while drifting, alarm rose once confirmed
     const pulse = 0.6 + 0.4 * Math.sin(real * (r.confirmed ? 9 : 5));
@@ -800,9 +845,14 @@ export class SortieWorld {
 
     // camera: eases between shots, snaps on a cut
     const { cam, look } = this.rig(t, real, pos, fwd);
+    // a target that leaps between two consecutive frames is a change of shot: cut to it, never swoop across
+    if (this.lastTarget && Math.abs(t - this.lastT) < 0.5 && cam.distanceTo(this.lastTarget) > 30) this.hasCam = false;
+    this.lastTarget = cam.clone(); this.lastT = t;
     if (!this.hasCam) { this.camPos.copy(cam); this.camLook.copy(look); this.hasCam = true; }
     const kk = 1 - Math.exp(-dt * (id === 'approach' || id === 'cold' ? 6 : 2.6));
     this.camPos.lerp(cam, kk); this.camLook.lerp(look, Math.min(1, kk * 1.6));
+    const close = id === 'approach' && kc > 0.3;
+    if (close !== this.closeLens) { this.closeLens = close; this.camera.near = close ? 0.05 : 1; this.camera.far = close ? 9000 : 40000; this.camera.updateProjectionMatrix(); }
     this.camera.position.copy(this.camPos);
     this.camera.lookAt(this.camLook);
     // a handheld breath on every shot, and a jolt when the film cuts back from the ground station to the lock

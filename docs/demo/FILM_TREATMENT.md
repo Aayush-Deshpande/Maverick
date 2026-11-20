@@ -170,3 +170,20 @@ boundary in one line, and three actions: run the demo, open the 3D twin, open th
   route with a banked turn; a derate cue in the engine sound.
 - Restructured timeline: the fault starts on its own in the bay (the injection moves to the evidence card as the
   test method: "every fault shown was injected into the plant through the console's API").
+
+---
+
+## Revision 2 — pitch the idea, not the build status
+
+The film now argues the architecture in `docs/study/22_final_recommendation.md`, `docs/audit/03_the_actual_solution.md`
+and `docs/audit/08_deployable_system_blueprint.md`: *the digital twin that listens to the engine*.
+
+| Change | Why |
+|---|---|
+| **The engine is mounted in the nacelle.** The real Rotax CAD sits in the rear fuselage, gearbox aft; the skin goes X-ray and the lens closes on it. The bay shot opens from the same angle (computed from the mount), so the cut into the engine is a match. | The viewer sees where the engine is before going inside it. |
+| **"On board" replaces the twelve-card pipeline.** Three beats, one number each: 10 kHz vibration → locked to crank angle, every cylinder, every cycle (order tracking) → 160 kbit/s raw against 22 kbit/s spare, so only a 29-byte frame goes down (690× smaller). | The bandwidth argument is the load-bearing reason for the edge split (`backend/edge/compressor.py`). |
+| **The fruit fly is named.** A two-row analogy above the live detector: 50 receptors → 2,000 neurons → top 5% vs 13 features → 260 units → top 13. | Judges have to be told it is a fly circuit, not just shown a hash. |
+| **"Beyond" is two verdicts.** A trained model's confident wrong name against "ABNORMAL"; then three aircraft memories merging into one. | One comparison, read in a second. |
+| **The end card is the architecture in six lines.** Listens to the crankshaft · thinks on board · keeps working when jammed · knows the unknown · the fleet learns, the data stays · advises, never flies. First rung: VRDE's test cell. | The pitch, not a test report. |
+| **Copy is one line per shot.** | Judges do not read paragraphs over moving pictures. |
+| **Camera continuity.** A target that jumps between two frames is a cut, never a swoop; the mind scenes share one dolly; detect → decide and divert → land pick up where the previous shot left off; the bay's two shots are one orbit. Verified by stepping the whole film at 60 fps and measuring the camera against the aircraft. | The "bugs in how the video moves". |

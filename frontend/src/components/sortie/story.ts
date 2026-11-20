@@ -16,66 +16,23 @@ export interface Chapter {
 }
 
 /** The five movements of the film, plus the cold open (docs/demo/FILM_TREATMENT.md). */
-export const MOVEMENTS = ['One engine', 'The problem', 'The twin', 'The signal', 'The decision', 'Beyond'];
+export const MOVEMENTS = ['One engine', 'The problem', 'The twin', 'On board', 'The decision', 'Beyond'];
 
+// One line of copy per shot. The picture carries the argument; the words only name it.
 export const CHAPTERS: Chapter[] = [
   { id: 'cold', movement: 0, dur: 14, title: 'One engine.', body: 'Ladakh · 18,000 ft · hour six of eighteen' },
-  {
-    id: 'problem', movement: 1, dur: 20,
-    title: 'A redline speaks last.',
-    body: 'A gauge that is still green is not an engine that is well. By the time the needle moves, the airframe is already committed.',
-  },
-  {
-    id: 'twin', movement: 2, dur: 8,
-    title: 'A second engine flies alongside, in software.',
-    body: 'A physics model of this exact engine predicts every channel at this altitude, throttle and outside air.',
-  },
-  { id: 'approach', movement: 2, dur: 8, title: '', body: '' },
-  {
-    id: 'inside', movement: 2, dur: 12,
-    title: 'One hundred and nine parts.',
-    body: 'The twin is this engine, part by part: the named components of the Blender assembly, and every place the engine is measured.',
-  },
-  {
-    id: 'signal', movement: 3, dur: 10,
-    title: 'Oil pressure slips. Nothing is red yet.',
-    body: 'The fault begins inside the oil system. Every gauge is still in the green; the gap from what the twin expects is not.',
-  },
-  {
-    id: 'pipeline', movement: 3, dur: 14,
-    title: 'One frame. Twelve stages. Fifty milliseconds.',
-    body: 'Follow one frame of telemetry out of the engine and through the real pipeline, to the hash that seals it into the sortie record.',
-  },
-  {
-    id: 'detect', movement: 3, dur: 12,
-    title: 'Thirteen numbers, read the way a fly reads a smell.',
-    body: 'Calibrated residuals expand into 260 sparse units and only the strongest 13 fire. Three scorers with split-conformal thresholds; three of the last five frames must agree.',
-  },
-  {
-    id: 'memory', movement: 3, dur: 7,
-    title: 'It reads the path, not the snapshot.',
-    body: 'A 500-node reservoir carries a fading memory of every frame before this one, and names the fault from how the drift developed.',
-  },
-  {
-    id: 'decide', movement: 4, dur: 14,
-    title: 'Detection is half the job.',
-    body: 'The twin turns the finding into options, each with what it costs. Then it checks where the aircraft can still glide.',
-  },
-  {
-    id: 'divert', movement: 4, dur: 9,
-    title: 'ANUMAAN advises. The crew decides.',
-    body: 'The route is drawn from the glide reach. The aircraft leaves its valley, and power comes back to spare the engine.',
-  },
-  {
-    id: 'land', movement: 4, dur: 13,
-    title: 'The airframe comes home.',
-    body: 'The engine arrives at the hangar with its work order already written.',
-  },
-  {
-    id: 'beyond', movement: 5, dur: 15,
-    title: 'A forest can only name what it was taught.',
-    body: 'And if it had been something no one had ever seen? The one-class tier, trained on normal flight alone, says abnormal. Every flight makes the fleet sharper, and no telemetry leaves the aircraft.',
-  },
+  { id: 'problem', movement: 1, dur: 20, title: 'A redline speaks last.', body: 'The gauge stays green until it is too late to turn back.' },
+  { id: 'twin', movement: 2, dur: 8, title: 'A twin flies alongside.', body: 'A physics model of this exact engine, predicting every sensor, every second.' },
+  { id: 'approach', movement: 2, dur: 10, title: '', body: '' },
+  { id: 'inside', movement: 2, dur: 10, title: 'Every part. Every sensor.', body: '109 named components, the same model in Blender and on the web.' },
+  { id: 'signal', movement: 3, dur: 10, title: 'Oil pressure slips. Every gauge: green.', body: 'But the twin expected more. That gap is the first warning.' },
+  { id: 'pipeline', movement: 3, dur: 14, title: 'Heard on board. Sent as 29 bytes.', body: 'Raw vibration cannot fit down the datalink. So the aircraft does the listening, and sends only what it heard.' },
+  { id: 'detect', movement: 3, dur: 12, title: 'Borrowed from a fruit fly’s brain.', body: 'A fly knows a smell it has never met. ANUMAAN knows an engine going wrong without ever being shown a fault.' },
+  { id: 'memory', movement: 3, dur: 7, title: 'It remembers how it got here.', body: 'A 500-node reservoir reads the path of the drift, and names the fault.' },
+  { id: 'decide', movement: 4, dur: 14, title: 'Detection is half the job.', body: 'Every option, with its cost. Then: where can it still glide?' },
+  { id: 'divert', movement: 4, dur: 9, title: 'ANUMAAN advises. The crew decides.', body: 'Thoise is in reach. Power comes back to spare the engine.' },
+  { id: 'land', movement: 4, dur: 13, title: 'The airframe comes home.', body: 'With its work order already written.' },
+  { id: 'beyond', movement: 5, dur: 15, title: 'Never seen it. Still caught.', body: 'A trained model can only name what it was taught. The fly circuit learned normal flight, so anything else stands out.' },
 ];
 
 export const STARTS = CHAPTERS.reduce<number[]>((acc, _c, i) => { acc.push(i ? acc[i - 1] + CHAPTERS[i - 1].dur : 0); return acc; }, []);

@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { ArrowDown, ArrowUpRight, Box, ChevronLeft, ChevronRight, Pause, Play, RotateCcw, Volume2, VolumeX } from 'lucide-react';
 import { CHAPTERS, DIRECTIVE, GLIDE, INJECTION, MOVEMENTS, OIL, STARTS, TOTAL, T_ASSESS, T_INJECT, chapterAt, gauges, oilExpected, oilMeasured, startOf } from './story';
 import { INSERT, RADIO, RADIO_HOLD, T_CONFIRM, readout, type Readout } from './timeline';
-import { NOMINAL_RAW, SCORERS, tier0 } from './detector';
+import { SCORERS, tier0 } from './detector';
 import { reservoir, startReservoir } from './brain';
 import { drawDetect, drawMemory, region } from './mind';
 import { drawPipeline, drawUnseen, pipelineReach, type UnseenState } from './scenes';
@@ -29,7 +29,6 @@ interface Props {
 type Phase = 'gate' | 'insert' | 'play';
 
 const BAY_KEYS = ['oil', 'fuel', 'ignition', 'cooling', 'exhaust', 'gearbox', 'electrical', 'control'];
-const ENGINE_LINEUP: Array<[string, string]> = [['rotax_912is', 'Rotax 912 iS'], ['rotax_914', 'Rotax 914 F'], ['rotax_915is', 'Rotax 915 iS'], ['austro_ae300', 'Austro AE300'], ['vrde_jayem_2_2l', 'VRDE–Jayem 2.2L']];
 /** The order the assessment resolves the airfields: furthest first, the one that works last. */
 const FIELD_ORDER = ['VIKG', 'VILH', 'VI82'];
 const SCORER_LABEL = { fly_bloom: 'Fly Bloom', mahalanobis: 'Mahalanobis', max_abs_z: 'max |z|' } as const;
@@ -168,6 +167,7 @@ export function SortieFilm({ onRunDemo, onOpenConsole, onOpenTwin, evidenceHref,
         const mod = await import('./world');
         if (disposed) return;
         w = new mod.SortieWorld(el);
+        if (import.meta.env.DEV) (window as unknown as { __sortie?: SortieWorld }).__sortie = w;
       } catch {
         setStatus('nogl'); clock.current.ready = true; preloader.step('scene', true); preloader.step('aircraft', true); preloader.step('bay', true); return;
       }
@@ -237,10 +237,10 @@ export function SortieFilm({ onRunDemo, onOpenConsole, onOpenTwin, evidenceHref,
         const R = region(W, H, lb);
         const aDetect = id === 'detect' && c.t < T_CONFIRM ? sstep(0, 0.1, k) : 0;
         const aMemory = id === 'memory' ? sstep(0, 0.08, k) * (1 - sstep(0.94, 1, k)) : 0;
-        drawDetect(g, R, c.t, aDetect);
+        drawDetect(g, R.compact ? R : { ...R, y: R.y + 92, h: R.h - 92 }, c.t, aDetect);
         drawMemory(g, R, c.t, startOf('memory'), res, aMemory);
         const fade = (x: number) => sstep(0, 0.07, x) * (1 - sstep(0.95, 1, x));
-        drawPipeline(g, R, c.t, k, res, id === 'pipeline' ? fade(k) : 0);
+        drawPipeline(g, R, c.t, k, c.real, id === 'pipeline' ? fade(k) : 0);
         const unseen: UnseenState | null = drawUnseen(g, R, k, res, id === 'beyond' ? fade(k) : 0);
         // the engine is measured: points on the real geometry, their lines gathering into one bundle
         if (screen.bay) {
@@ -258,7 +258,7 @@ export function SortieFilm({ onRunDemo, onOpenConsole, onOpenTwin, evidenceHref,
         // the assessment: lines from the aircraft to each field, resolving one at a time
         if (id === 'decide' && screen.aircraft.on) {
           FIELD_ORDER.forEach((fid, n) => {
-            const at = T_ASSESS + 1.4 + n * 1.3;
+            const at = T_ASSESS + 2.6 + n * 1.1;
             if (c.t < at - 0.9) return;
             const f = screen.fields.find((x) => x.id === fid); const spec = GLIDE.fields.find((x) => x.id === fid);
             if (!f || !spec || !f.on) return;
@@ -286,7 +286,7 @@ export function SortieFilm({ onRunDemo, onOpenConsole, onOpenTwin, evidenceHref,
           const bump = (x: number, at: number, w2: number) => Math.max(0, 1 - Math.abs(x - at) / w2);
           void bump;
           // dissolves through light: into the engine, and out of it into the data
-          const op = id === 'approach' ? sstep(0.86, 0.98, k) : id === 'inside' ? 1 - sstep(0, 0.07, k)
+          const op = id === 'approach' ? 0.55 * sstep(0.9, 0.995, k) : id === 'inside' ? 0.55 * (1 - sstep(0, 0.05, k))
             : id === 'signal' ? sstep(0.88, 0.99, k) : id === 'pipeline' ? 1 - sstep(0, 0.06, k) : 0;
           flashRef.current.style.opacity = String(op * 0.95);
         }
@@ -397,12 +397,14 @@ export function SortieFilm({ onRunDemo, onOpenConsole, onOpenTwin, evidenceHref,
   const ch = CHAPTERS[ci];
   const id = ch.id;
   const inBay = (id === 'inside' || id === 'signal') && bayInfo.ready;
+  const nacelle = id === 'approach' && progress > 0.7;
+  const flyOn = id === 'detect' && r.t < T_CONFIRM;
   const signalHot = id === 'signal' && progress > 0.18;
   const split = id === 'signal' && progress > 0.46 && progress < 0.78;
   const showInstruments = id === 'twin' || (id === 'signal' && progress < 0.44);
   const afterConfirm = r.t >= T_CONFIRM;
   const locked = (id === 'detect' && afterConfirm) || (id === 'decide' && progress < 0.33);
-  const resolved = (fid: string) => r.t >= T_ASSESS + 1.4 + FIELD_ORDER.indexOf(fid) * 1.3;
+  const resolved = (fid: string) => r.t >= T_ASSESS + 2.6 + FIELD_ORDER.indexOf(fid) * 1.1;
   const showFieldMark = (fid: string) => (id === 'decide' && resolved(fid)) || id === 'divert' || id === 'land';
   const showGlide = (id === 'decide' && resolved('VI82')) || id === 'divert';
   const gated = phase === 'gate';
@@ -418,7 +420,6 @@ export function SortieFilm({ onRunDemo, onOpenConsole, onOpenTwin, evidenceHref,
     : { title: ch.title, body: ch.body };
   const showCopy = !!copy.title && !flash && !(id === 'cold' && progress < 0.42) && !(id === 'signal' && split);
   const needle = -120 + 240 * Math.min(1, Math.max(0, r.oilP / 6)); // 0..6 bar across 240 degrees
-  const confirmAfter = (T_CONFIRM - T_INJECT).toFixed(1);
 
   return (
     <section ref={root} className={`so-film is-${id}${status === 'nogl' ? ' is-nogl' : ''}${ci >= CHAPTERS.findIndex((x) => x.id === 'decide') ? ' is-imax' : ''}${flash ? ' is-flash' : ''}${gated ? ' is-gated' : ''}${ended ? ' is-ended' : ''}${mindOn ? ' is-mind' : ''}${inBay ? ' is-bay' : ''}`} aria-labelledby="so-title" aria-roledescription="film">
@@ -448,7 +449,7 @@ export function SortieFilm({ onRunDemo, onOpenConsole, onOpenTwin, evidenceHref,
           <i /><span>{subsystemName(key)}</span>
         </div>
       ))}
-      <div className={`so-baytag${inBay && id === 'inside' ? ' is-shown' : ''}`} aria-hidden={!(inBay && id === 'inside')}>
+      <div className={`so-baytag${(inBay && id === 'inside') || nacelle ? ' is-shown' : ''}`} aria-hidden={!((inBay && id === 'inside') || nacelle)}>
         <strong>Rotax 912 iS</strong>
         <span>{bayInfo.ready ? `${bayInfo.meshes} named components` : '109 named components'} · from assets/blender/rotax_912_is_sport.blend</span>
       </div>
@@ -485,10 +486,17 @@ export function SortieFilm({ onRunDemo, onOpenConsole, onOpenTwin, evidenceHref,
         </ol>
       </aside>
 
-      <figure className={`so-engines${id === 'pipeline' ? ' is-shown' : ''}`} aria-hidden={id !== 'pipeline'}>
-        <ul>{ENGINE_LINEUP.map(([eid, name]) => <li key={eid}><img src={`/survey/posters/${eid}.webp`} alt="" width={1200} height={900} loading="lazy" decoding="async" /><small>{name}</small></li>)}</ul>
-        <figcaption>One pipeline, five engine profiles, calibrated per aircraft. E17 (simulation): Mahalanobis AUROC 0.973 on an engine it had never seen.</figcaption>
-      </figure>
+      {/* the idea, borrowed: the fruit fly's olfactory circuit, and the same circuit on engine data */}
+      <aside className={`so-fly${flyOn ? ' is-shown' : ''}`} aria-hidden={!flyOn}>
+        <div className="so-fly-row">
+          <svg viewBox="0 0 48 48" width="34" height="34" aria-hidden><ellipse cx="24" cy="27" rx="5" ry="10" /><circle cx="24" cy="14" r="4.2" /><path d="M20 22 C8 14 4 24 12 28 C16 30 19 27 20 24Z M28 22 C40 14 44 24 36 28 C32 30 29 27 28 24Z" className="w" /><path d="M20 30l-7 5M20 26l-8 0M28 30l7 5M28 26l8 0M22 11l-4-5M26 11l4-5" className="l" /></svg>
+          <b>Fruit fly</b><span>50 smell receptors</span><i>→</i><span>2,000 neurons</span><i>→</i><span>top 5% fire</span><i>→</i><em>“never smelt this”</em>
+        </div>
+        <div className="so-fly-row is-ours">
+          <svg viewBox="0 0 48 48" width="34" height="34" aria-hidden><rect x="10" y="16" width="28" height="18" rx="2" /><path d="M14 16v-5h8v5M26 16v-5h8v5M38 22h5v6h-5M10 22H5v6h5" className="l" /></svg>
+          <b>ANUMAAN</b><span>13 engine features</span><i>→</i><span>260 units</span><i>→</i><span>top 13 fire</span><i>→</i><em>“never flew like this”</em>
+        </div>
+      </aside>
 
       {showCopy && (
         <div className={`so-copy is-${id}`} key={`${ch.id}-${opening}-${afterConfirm && id === 'detect' ? 'c' : ''}`}>
@@ -564,11 +572,17 @@ export function SortieFilm({ onRunDemo, onOpenConsole, onOpenTwin, evidenceHref,
         <div className="so-final-inner">
           <p className="so-final-word">ANUMAAN</p>
           <p className="so-final-hi"><span lang="hi">अनुमान</span> · inference</p>
-          <ul className="so-final-facts">
-            <li><b>Computed, not animated.</b> The detector you watched was the backend's tier-0 algorithm running in this browser: it confirmed the fault {confirmAfter} s after injection, and its gate held back {NOMINAL_RAW} raw false alarm{NOMINAL_RAW === 1 ? '' : 's'} before the fault existed.</li>
-            <li><b>How it was tested.</b> The fault in this film, like every fault in the console, was injected into the plant model through the console's own API: <code>{INJECTION.method} {INJECTION.path}</code>.</li>
-            <li><b>In the runtime</b> (simulation, five engines × three tails, experiment E20): every scalar-visible fault detected, zero confirmed false alarms in 300 nominal ticks, oil-pressure loss confirmed 7–10 s after injection.</li>
+          <p className="so-final-line">The digital twin that listens to the engine.</p>
+          <ul className="so-pillars">
+            <li><b>Listens to the crankshaft</b><span>Cylinder by cylinder, cycle by cycle. Five of the eight faults DRDO named live in the vibration.</span></li>
+            <li><b>Thinks on board</b><span>One accelerometer outruns the whole datalink. Only 29 bytes a second go down.</span></li>
+            <li><b>Keeps working when jammed</b><span>Link lost: it keeps watching, queues its findings, and alerts through the autopilot.</span></li>
+            <li><b>Knows the unknown</b><span>A fruit-fly circuit flags faults that no one ever labelled.</span></li>
+            <li><b>The fleet learns, the data stays</b><span>Memories merge across aircraft over thin links: federated, signed, frozen in flight.</span></li>
+            <li><b>Advises, never flies</b><span>A STANAG 4586 telemetry consumer, never a controller. The crew decides.</span></li>
           </ul>
+          <p className="so-final-next"><b>First rung</b> · the same software on VRDE's test cell: seeded faults, and data that DRDO owns.</p>
+          <p className="so-final-note">The film is a simulated sortie; the detector, reservoir and fleet merge in it ran live in this browser. The fault was injected through the console's own API ({INJECTION.method} {INJECTION.path}).</p>
           <div className="so-final-actions">
             <button type="button" className="so-btn so-btn-hot" onClick={onRunDemo} tabIndex={ended ? 0 : -1}><Play size={16} aria-hidden /> Run the 60-second demo</button>
             <button type="button" className="so-btn so-btn-ghost" onClick={onOpenTwin} tabIndex={ended ? 0 : -1}><Box size={16} aria-hidden /> Inject a fault in the 3D twin</button>
@@ -588,7 +602,7 @@ export function SortieFilm({ onRunDemo, onOpenConsole, onOpenTwin, evidenceHref,
           {armed && (canBegin ? (
             <div className="so-gate-inner" key="ready">
               <p id="so-gate-title" className="so-gate-title">What we built, running</p>
-              <p className="so-gate-lede">Two and a half minutes. One aircraft, one engine, one fault: caught while every gauge was green, traced through the real system, and brought home. Everything inside the machine is computed live in your browser.</p>
+              <p className="so-gate-lede">Two and a half minutes. One aircraft, one engine, one fault caught while every gauge was green. How ANUMAAN listens, thinks on board, and brings the airframe home.</p>
               {load.failed && <p className="so-gate-warn">Some assets did not load; the film will use stills where it has to.</p>}
               <div className="so-gate-actions">
                 <button ref={gateBtn} type="button" className="so-btn so-btn-light" onClick={() => begin(true)}><Volume2 size={17} aria-hidden /> Begin with sound</button>
