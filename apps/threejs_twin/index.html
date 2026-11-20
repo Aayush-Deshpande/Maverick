@@ -450,6 +450,9 @@
     .loading-bar, .load-bar-wrap { background: rgba(16,27,32,.1); }
     .vignette { background: none; }
     .key-hint { color: rgba(189,75,43,.72); }
+    /* The hint block sits under the bottom fault/regime bars on anything but a very wide screen; the toolbar
+       buttons already show their keys, so hide it rather than overlap. */
+    @media (max-width: 1899px) { .key-hint { display: none; } }
 
     /* ── READABILITY & DECLUTTER PASS ──────────────────────────────
        The base styles above were tuned for a dense dark HUD (7-9px mono
