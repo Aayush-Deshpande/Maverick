@@ -200,7 +200,7 @@ export const ReadingsPanel: React.FC<ReadingsPanelProps> = ({ state }) => {
           <StatChip label="Fuel Rail Press." value={`${fmt(t.FUEL_RAIL_P, 2)} bar`} />
           <StatChip label="Battery Current" value={`${t.BATTERY_CURRENT > 0 ? '+' : ''}${fmt(t.BATTERY_CURRENT, 1)} A`} />
           <StatChip label="FADEC Lane" value={t.FADEC_ACTIVE_LANE} />
-          <StatChip label="Flight Phase" value={t.FLIGHT_PHASE.replace('_', ' ')} />
+          <StatChip label="Flight Phase" value={t.FLIGHT_PHASE ? t.FLIGHT_PHASE.replace('_', ' ') : 'NO DATA'} />
         </div>
       </div>
 
