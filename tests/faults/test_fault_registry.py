@@ -44,7 +44,7 @@ def test_duplicate_ids_rejected(tmp_path):
     ("F14", ["rotax_914", "rotax_915is", "austro_ae300", "vrde_jayem_2_2l"], ["rotax_912is"]),  # turbo
     ("F18", ["rotax_915is", "austro_ae300", "vrde_jayem_2_2l"], ["rotax_912is", "rotax_914"]),  # intercooler
     ("F35", ["austro_ae300", "vrde_jayem_2_2l"], ["rotax_912is", "rotax_914", "rotax_915is"]),  # glow plugs
-    ("F37", ["austro_ae300", "vrde_jayem_2_2l"], ["rotax_912is", "rotax_914", "rotax_915is"]),  # governor
+    ("F37", ["austro_ae300", "vrde_jayem_2_2l", "rotax_915is"], ["rotax_912is", "rotax_914"]),  # governor (915 governed since Q12)
 ])
 def test_applicability_per_engine(reg, fault_id, applies, not_applies):
     spec = reg.get(fault_id)

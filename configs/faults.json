@@ -3164,6 +3164,13 @@
           ],
           "marker": false,
           "marker_for": null
+        },
+        "rotax_915is": {
+          "now": [
+            "gearbox"
+          ],
+          "marker": true,
+          "marker_for": "prop_governor"
         }
       },
       "channel_scope": null

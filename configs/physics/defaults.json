@@ -231,9 +231,9 @@
       "ref": "Vogel constant (T + c)"
     },
     "relief_bar": {
-      "value": 5.0,
+      "value": 4.8,
       "status": "ASSUMED",
-      "ref": "relief valve cracks at the top of the 2-5 bar normal band (R 21.5 step 5)"
+      "ref": "regulated oil pressure just inside the top of the 2-5 bar normal band (R 21.5 step 5). Was 5.0 = exactly the band top, so a healthy engine at high rpm (governed 915 at rated rpm, any engine at take-off) read CAUTION on sensor noise alone; 4.8 leaves about 6 sigma of the 0.03 bar sender noise (20 Nov 2026)"
     },
     "calibration_rpm_fraction": {
       "value": 0.6,

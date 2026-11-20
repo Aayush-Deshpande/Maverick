@@ -218,6 +218,10 @@
     "turbo.tcu_nominal_airbox": {
       "status": "ASSUMED",
       "ref": "shape copied from the Rotax 914 OM Ed. 2 p. 7-10 Fig. 6 TCU schedule (same Rotax boost-control family); the 915 iS OM is not in docs/reference. The model scales it so the take-off point is the 915's own calibrated take-off target. Replace with the 915 iS OM schedule when available (PROGRESS Questions)."
+    },
+    "propeller_governor": {
+      "status": "ASSUMED",
+      "ref": "installation choice, not engine data: MALE UAV 915 iSc installations use a constant-speed propeller; governor holds rated rpm like the AE300/VRDE setups (Prasad Q12, 20 Nov 2026). Fixed pitch drove the engine into the ECU rev limiter at high lever."
     }
   },
   "operating_limits": {
@@ -233,7 +237,7 @@
   "ecu_lanes": 2,
   "glow_plugs": false,
   "thermostat": false,
-  "propeller_governor": false,
+  "propeller_governor": true,
   "limits": {
     "oil_p": {
       "unit": "bar",
@@ -274,6 +278,7 @@
   },
   "notes": {
     "egt_cht": "E121 gives no EGT/CHT limit for the 915 iSc; the existing egt_max_c/cht_max_c values stay ASSUMED until the 915 OM is obtained (AI-03a).",
-    "not_916": "Do not mix up with the 916 iSc (117 kW, critical altitude up to 23,000 ft)."
+    "not_916": "Do not mix up with the 916 iSc (117 kW, critical altitude up to 23,000 ft).",
+    "propeller": "Constant-speed propeller since 20 Nov 2026 (Prasad Q12); installation data in configs/installations/propellers.json CONSTANT_SPEED (ASSUMED)."
   }
 }
