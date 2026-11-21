@@ -3,6 +3,7 @@ import { useTelemetrySocket } from './hooks/useTelemetrySocket';
 import { Header } from './components/Header';
 import { PanelErrorBoundary } from './components/PanelErrorBoundary';
 import { LandingPage } from './components/landing/LandingPage';
+import InfoTooltip from './components/InfoTooltip';
 
 // Lazy-load non-landing dashboards and consoles to ensure initial landing page bundle is ultralight
 const EngineControls = lazy(() => import('./components/EngineControls').then((m) => ({ default: m.EngineControls })));
@@ -102,6 +103,11 @@ export function App() {
           <div className="text-xs uppercase tracking-[0.18em] text-[#68757a] font-mono flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-accent" />
             <span>ANUMAAN · GCS WORKSPACE</span>
+            <InfoTooltip
+              title="Workspace Modes"
+              content="Switch between workspaces: Overview (editorial presentation), Engine Runtime (20 Hz live simulation across 5 engines), 3D Twin (keyboard-driven 3D engine CAD), or Tactical GCS (operator flight deck)."
+              width={280}
+            />
           </div>
           <div className="flex rounded-sm border border-surface-border bg-surface-card p-0.5 text-xs font-mono">
             <button
