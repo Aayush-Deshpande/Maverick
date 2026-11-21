@@ -3,15 +3,15 @@ Rules: AGENTS.md ("If the context resets"), DECISIONS.md D22/D23. Entry format: 
 section 19.1. Update the RESUME HERE block at every commit and at the end of every session.
 
 =====================================================================================================================
-RESUME HERE  (last updated 21 Nov 2026, Phase 7 Card B-02: Rotax 915 iS Decomposed & Manifest Updated)
+RESUME HERE  (last updated 21 Nov 2026, Phase 7 Card B-03: Rotax 914 Resegmentation & Wastegate Reassignment)
 =====================================================================================================================
-Phase:        Phase 7 (Blender Model Refinement) Card B-02 completed.
-Card:         B-02: Rotax 915 iS decomposed from 1 merged mesh into 56 discrete component nodes (49 component definitions), CAD-id parts renamed to ECU mounting hardware, per-cylinder heads/barrels/injectors/plugs/sensors and engine placeholders added, master blend updated, 18.83 MB GLB exported and verified (T-REPO-2 5/5 PASS, 13/13 manifest tests pass).
+Phase:        Phase 7 (Blender Model Refinement) Card B-03 completed.
+Card:         B-03: Rotax 914 resegmentation: 320 wastegate objects reassigned (294 fasteners to fasteners, 23 turbo exhaust plumbing to turbo_turbine, 3 flapper parts to wastegate), cylinder barrels 1-4 and heads 1-4 cleanly split and identified, missing placeholders added (carburettors, airbox, TCU, wastegate actuator, oil/cooling, sensors), master blend updated, 5.30 MB GLB exported and verified (T-REPO-2 5/5 PASS, 13/13 manifest tests pass, forbidden mappings verified clean).
 Branch:       Beta
-Last commit:  20ae66f M7-B02: Rotax 915 iS component decomposition and manifest update
-State:        All 5 engine GLBs under 20 MB budget. T-REPO-2 node validator PASS (109/109, 590/590, 56/56, 164/164, 452/452). tests/assets/test_component_manifests.py 13 passed. Vitest 32 passed, tsc clean.
-Latest:       B-02 done. B-01 done.
-Next step:    Card B-03: Rotax 914 re-segmentation: reassign 320 wastegate objects, separate cylinder barrels & heads, add placeholders.
+Last commit:  (pending commit for B-03)
+State:        All 5 engine GLBs under 20 MB budget. T-REPO-2 node validator PASS (109/109, 304/304, 56/56, 164/164, 452/452). tests/assets/test_component_manifests.py 13 passed. Vitest 32 passed, tsc clean.
+Latest:       B-03 done. B-02 done. B-01 done.
+Next step:    Card B-04: Rotax 912 iS grouping & placeholders (geometry confirmed correct per D47; group 21 base parts into crankcase/barrels/heads/intake, add component empties and standard placeholders).
 Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produce yet (lambda, timing, BSFC, power,
               vibration, GO/NO-GO); some may show blanks or crash on .toFixed(null) until M0-09. Beta only.
               (2) STOP/START return 422 until the engine state machine (M1-12).
@@ -1177,6 +1177,29 @@ Checked against frontend/AGENTS.md and D5/D49/D57:
   * scripts/blender/validate_nodes.py: ALL 5 ENGINES PASS T-REPO-2 (912: 109/109, 914: 590/590, 915: 56/56, AE300: 164/164, VRDE: 452/452).
   * tests/assets/test_component_manifests.py: 13/13 passed.
   * tests/test_camera_transitions.py, tests/test_fault_highlighting.py, tests/test_no_truth_leak.py: all passed.
+
+=== 21 Nov 2026 Phase 7 Card B-03: Rotax 914 Resegmentation & Wastegate Reassignment (AI: Antigravity)
+- Rule D1 & D53 Safe Archival & Promotion:
+  * Safely git mv assets/blender/engines/rotax_914/rotax_914.blend -> assets/blender/engines/rotax_914/variants/rotax_914_original.blend.
+  * Promoted resegmented rotax_914_work.blend to assets/blender/engines/rotax_914/rotax_914.blend.
+  * Updated Collection_Rotax_914 in assets/blender/scenes/anumaan_master_twin.blend.
+- Cylinder Decomposition & Identification:
+  * Resegmented merged Rotax914_Cylinder_Bank_1 along x=0 plane into distinct Cylinder_Barrel_1 and Cylinder_Barrel_3 (122 x 161 x 143 mm).
+  * Renamed Rotax914_Cylinder_Head_5 -> Cylinder_Barrel_2, Rotax914_Cylinder_Head_4 -> Cylinder_Barrel_4.
+  * Split rocker head covers along x=0 plane into Cylinder_Head_1, Cylinder_Head_2, Cylinder_Head_3, Cylinder_Head_4.
+- Wastegate Reassignment (320 missegmented objects):
+  * Reassigned 294 fastener/small bracket objects into Engine_Fittings_Fasteners (fasteners component).
+  * Reassigned 23 large turbo exhaust plumbing objects into Turbocharger_Exhaust_Plumbing (turbo_turbine component).
+  * Isolated 3 true wastegate valve parts into Wastegate_Flapper_Assembly (wastegate component).
+- Added Missing Placeholders:
+  * Carburettor_1, Carburettor_2, Airbox_Filter, TCU_Control_Unit, Wastegate_Actuator, Ignition_CDI, Oil_Tank, Oil_Pump, Oil_Cooler, Water_Pump, Radiator, Alternator, Fuel_Pump, Spark_Plug_1..4, Sensor_CHT_1..4, Sensor_EGT_1..4, Sensor_MAP, Sensor_Oil_Press, Sensor_Oil_Temp.
+- Re-exported assets/web/engines/rotax_914.glb: 5.30 MB (Draco compression, well under 20 MB budget).
+- Generated configs/components/rotax_914.json: 304 nodes mapped across 48 components, exactly 0 unassigned nodes.
+- Updated configs/faults.json: replaced cylinder_bank_unverified on rotax_914 (F01, F02, F03, F19, F30) with target components; cylinder_bank_unverified and wastegate_MISSEGMENTED eliminated.
+- Tests & Validation:
+  * scripts/blender/validate_nodes.py: ALL 5 ENGINES PASS T-REPO-2 (109/109, 304/304, 56/56, 164/164, 452/452).
+  * tests/assets/test_component_manifests.py: 13/13 passed (including test_forbidden_mappings).
+
 
 
 

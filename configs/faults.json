@@ -83,10 +83,12 @@
         },
         "rotax_914": {
           "now": [
-            "cylinder_bank_unverified"
+            "spark_plug_{cyl}",
+            "cylinder_head_{cyl}",
+            "ignition_cdi"
           ],
-          "marker": true,
-          "marker_for": "cylinder {cyl} head and plugs"
+          "marker": false,
+          "marker_for": null
         },
         "rotax_915is": {
           "now": [
@@ -157,10 +159,12 @@
         },
         "rotax_914": {
           "now": [
-            "cylinder_bank_unverified"
+            "spark_plug_{cyl}",
+            "cylinder_head_{cyl}",
+            "ignition_cdi"
           ],
-          "marker": true,
-          "marker_for": "cylinder {cyl} head and plugs"
+          "marker": false,
+          "marker_for": null
         },
         "rotax_915is": {
           "now": [
@@ -255,7 +259,10 @@
         },
         "rotax_914": {
           "now": [
-            "cylinder_bank_unverified"
+            "cylinder_head_1",
+            "cylinder_head_2",
+            "cylinder_head_3",
+            "cylinder_head_4"
           ],
           "marker": false,
           "marker_for": null
@@ -1670,10 +1677,10 @@
         },
         "rotax_914": {
           "now": [
-            "cylinder_bank_unverified"
+            "cylinder_barrel_{cyl}"
           ],
-          "marker": true,
-          "marker_for": "baffles"
+          "marker": false,
+          "marker_for": null
         },
         "rotax_915is": {
           "now": [
@@ -2560,7 +2567,8 @@
         },
         "rotax_914": {
           "now": [
-            "cylinder_bank_unverified"
+            "cylinder_head_{cyl}",
+            "cylinder_barrel_{cyl}"
           ],
           "marker": false,
           "marker_for": null
