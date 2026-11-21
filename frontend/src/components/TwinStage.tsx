@@ -286,6 +286,7 @@ export default function TwinStage(p: Props) {
           focusSignal={focus}
           bare
           autoRotate={autoRotate}
+          readings={p.state?.readings}
         />
       </Suspense>
 

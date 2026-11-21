@@ -299,6 +299,7 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
     {show('OPERATOR', 'MAINTENANCE') && <Suspense fallback={<div className="surface-panel p-4 text-xs font-mono text-slate-400">Loading 3D view…</div>}>
       <EngineViewer3D engineId={runtime.engineId ?? null} highlights={state?.highlights} api={runtime.api}
         injected={training ? activeFaults.flatMap((f) => (f.components ?? []).map((c) => ({ component_id: c, reason: `${f.fault_id} ${title(f.name)} (injected)` }))) : []}
+        readings={state?.readings}
         />
     </Suspense>}
 
