@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Activity, AlertTriangle, ArrowDown, ArrowRight, CheckCircle2, Clock, Info, Lock, Sparkles, X } from 'lucide-react';
+import { Activity, AlertTriangle, ArrowDown, ArrowRight, CheckCircle2, Clock, Info, Lock, RotateCw, Sparkles, X } from 'lucide-react';
 import InfoTooltip from './InfoTooltip';
 
 const EngineViewer3D = lazy(() => import('./viewer3d/EngineViewer3D'));
@@ -50,6 +50,7 @@ export default function TwinStage(p: Props) {
   const [focus, setFocus] = useState(0);
   const [notice, setNotice] = useState('');
   const [showGuide, setShowGuide] = useState(false);
+  const [autoRotate, setAutoRotate] = useState(true);
 
   // Anti-spam telemetry settling interlock state
   const [settlingUntil, setSettlingUntil] = useState<number | null>(null);
@@ -283,6 +284,7 @@ export default function TwinStage(p: Props) {
           fill
           focusSignal={focus}
           bare
+          autoRotate={autoRotate}
         />
       </Suspense>
 
@@ -303,6 +305,16 @@ export default function TwinStage(p: Props) {
             ))}
           </select>
         </label>
+        <div className="h-3.5 w-px bg-surface-border" />
+        <button
+          type="button"
+          onClick={() => setAutoRotate((r) => !r)}
+          className="flex items-center gap-1.5 text-xs font-mono text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
+          title={autoRotate ? 'Pause 3D engine auto-rotation' : 'Resume 3D engine auto-rotation'}
+        >
+          <RotateCw className="w-3.5 h-3.5 text-accent" />
+          <span className="hidden sm:inline">{autoRotate ? 'Rotating' : 'Paused'}</span>
+        </button>
         <div className="h-3.5 w-px bg-surface-border" />
         <button
           type="button"
