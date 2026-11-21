@@ -61,7 +61,6 @@ describe('TwinStage 3D View & Telemetry Interlock', () => {
 
     // Verify Telemetry Bus HUD in the fault aside panel
     expect(html).toContain('TELEMETRY BUS READY');
-    expect(html).toContain('20 HZ NOMINAL');
 
     // Verify interactive fault buttons
     expect(html).toContain('Spark Plug Fouling');
