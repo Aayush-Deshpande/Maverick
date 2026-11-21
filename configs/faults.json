@@ -76,10 +76,12 @@
       "components": {
         "rotax_912is": {
           "now": [
-            "wiring_harness"
+            "spark_plug_{cyl}",
+            "ignition_coil_{cyl}",
+            "cylinder_head_{cyl}"
           ],
-          "marker": true,
-          "marker_for": "spark plug / coil of cylinder {cyl}"
+          "marker": false,
+          "marker_for": null
         },
         "rotax_914": {
           "now": [
@@ -152,10 +154,12 @@
       "components": {
         "rotax_912is": {
           "now": [
-            "wiring_harness"
+            "spark_plug_{cyl}",
+            "ignition_coil_{cyl}",
+            "cylinder_head_{cyl}"
           ],
-          "marker": true,
-          "marker_for": "spark plug / coil of cylinder {cyl}"
+          "marker": false,
+          "marker_for": null
         },
         "rotax_914": {
           "now": [
@@ -252,10 +256,13 @@
       "components": {
         "rotax_912is": {
           "now": [
-            "crankcase_cylinders_base"
+            "cylinder_head_1",
+            "cylinder_head_2",
+            "cylinder_head_3",
+            "cylinder_head_4"
           ],
-          "marker": true,
-          "marker_for": "cylinder heads"
+          "marker": false,
+          "marker_for": null
         },
         "rotax_914": {
           "now": [
@@ -445,10 +452,11 @@
       "components": {
         "rotax_912is": {
           "now": [
-            "fuel_pump"
+            "injector_{cyl}",
+            "fuel_rail"
           ],
-          "marker": true,
-          "marker_for": "injector {cyl} / fuel rail"
+          "marker": false,
+          "marker_for": null
         },
         "rotax_915is": {
           "now": [
@@ -643,10 +651,11 @@
         },
         "rotax_912is": {
           "now": [
-            "fuel_pump"
+            "injector_{cyl}",
+            "fuel_rail"
           ],
-          "marker": true,
-          "marker_for": "injector {cyl} / fuel rail"
+          "marker": false,
+          "marker_for": null
         },
         "rotax_915is": {
           "now": [
@@ -1142,9 +1151,11 @@
       "description": "air filter blockage",
       "components": {
         "rotax_912is": {
-          "now": [],
-          "marker": true,
-          "marker_for": "airbox / air filter"
+          "now": [
+            "airbox_filter"
+          ],
+          "marker": false,
+          "marker_for": null
         },
         "rotax_914": {
           "now": [
@@ -1744,7 +1755,8 @@
       "components": {
         "rotax_912is": {
           "now": [
-            "coolant_hoses"
+            "coolant_hoses",
+            "water_pump"
           ],
           "marker": false,
           "marker_for": null
@@ -1827,9 +1839,11 @@
       "description": "radiator blockage",
       "components": {
         "rotax_912is": {
-          "now": [],
-          "marker": true,
-          "marker_for": "radiator"
+          "now": [
+            "radiator"
+          ],
+          "marker": false,
+          "marker_for": null
         },
         "rotax_914": {
           "now": [],
@@ -2146,9 +2160,11 @@
       "description": "oil cooler blockage",
       "components": {
         "rotax_912is": {
-          "now": [],
-          "marker": true,
-          "marker_for": "oil cooler"
+          "now": [
+            "oil_cooler"
+          ],
+          "marker": false,
+          "marker_for": null
         },
         "rotax_914": {
           "now": [],
@@ -2231,7 +2247,7 @@
       "components": {
         "rotax_912is": {
           "now": [
-            "crankcase_cylinders_base"
+            "crankcase"
           ],
           "marker": false,
           "marker_for": null
@@ -2405,9 +2421,11 @@
       "description": "propeller imbalance",
       "components": {
         "rotax_912is": {
-          "now": [],
-          "marker": true,
-          "marker_for": "propeller flange"
+          "now": [
+            "prop_flange"
+          ],
+          "marker": false,
+          "marker_for": null
         },
         "rotax_914": {
           "now": [
@@ -2560,10 +2578,11 @@
       "components": {
         "rotax_912is": {
           "now": [
-            "crankcase_cylinders_base"
+            "cylinder_head_{cyl}",
+            "cylinder_barrel_{cyl}"
           ],
-          "marker": true,
-          "marker_for": "cylinder {cyl}"
+          "marker": false,
+          "marker_for": null
         },
         "rotax_914": {
           "now": [
