@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Activity, AlertTriangle, ArrowDown, ArrowRight, CheckCircle2, Clock, Info, Lock, Sparkles, X } from 'lucide-react';
+import { Activity, AlertTriangle, ArrowDown, ArrowRight, CheckCircle2, Clock, Info, Lock, RotateCw, Sparkles, X } from 'lucide-react';
 import InfoTooltip from './InfoTooltip';
 
 const EngineViewer3D = lazy(() => import('./viewer3d/EngineViewer3D'));
@@ -50,6 +50,7 @@ export default function TwinStage(p: Props) {
   const [focus, setFocus] = useState(0);
   const [notice, setNotice] = useState('');
   const [showGuide, setShowGuide] = useState(false);
+  const [autoRotate, setAutoRotate] = useState(true);
 
   // Anti-spam telemetry settling interlock state
   const [settlingUntil, setSettlingUntil] = useState<number | null>(null);
@@ -283,6 +284,7 @@ export default function TwinStage(p: Props) {
           fill
           focusSignal={focus}
           bare
+          autoRotate={autoRotate}
         />
       </Suspense>
 
@@ -306,6 +308,16 @@ export default function TwinStage(p: Props) {
         <div className="h-3.5 w-px bg-surface-border" />
         <button
           type="button"
+          onClick={() => setAutoRotate((r) => !r)}
+          className="flex items-center gap-1.5 text-xs font-mono text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
+          title={autoRotate ? 'Pause 3D engine auto-rotation' : 'Resume 3D engine auto-rotation'}
+        >
+          <RotateCw className="w-3.5 h-3.5 text-accent" />
+          <span className="hidden sm:inline">{autoRotate ? 'Rotating' : 'Paused'}</span>
+        </button>
+        <div className="h-3.5 w-px bg-surface-border" />
+        <button
+          type="button"
           onClick={() => setShowGuide(true)}
           className="flex items-center gap-1.5 text-xs font-mono text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
           title="Digital Twin & Telemetry Architecture Guide (Press ?)"
@@ -326,8 +338,8 @@ export default function TwinStage(p: Props) {
           <span className="flex items-center gap-1.5">
             <span className={label}>Inject a fault</span>
             <InfoTooltip
-              title="Fault Injection"
-              content="Injects physical parameter changes into the 20 Hz simulation. Telemetry and UKF observer isolate the fault and frame the part in 3D."
+              title="Inject Fault Scenario"
+              content="Simulates an engine malfunction in real time, such as an ignition misfire or cooling leak. The diagnostic system isolates the issue and highlights the affected part on the 3D model."
               placement="right"
             />
           </span>
@@ -416,7 +428,7 @@ export default function TwinStage(p: Props) {
             <kbd className={key}>0</kbd> clear all
             <InfoTooltip
               title="Clear Injected Faults"
-              content="Removes all active fault perturbations and returns the plant to nominal baseline."
+              content="Removes all simulated engine faults and restores the engine to normal healthy operation."
               shortcut="0"
             />
           </span>
@@ -424,8 +436,8 @@ export default function TwinStage(p: Props) {
             <kbd className={key}>Q</kbd>
             <kbd className={key}>E</kbd> page
             <InfoTooltip
-              title="Page Catalogue"
-              content="Cycles through the fault catalogue available for this powerplant."
+              title="Browse Scenarios"
+              content="Cycles through the list of simulated faults available for this specific engine."
               shortcut="Q / E"
             />
           </span>
@@ -441,31 +453,31 @@ export default function TwinStage(p: Props) {
             </button>
             <InfoTooltip
               title="Target Cylinder"
-              content="Cycles target cylinder (1 to 4) for single-cylinder faults like misfires or injector clogs. Rotax and Austro engines have 4 cylinders."
+              content="Selects which cylinder (1 to 4) will experience single-cylinder issues like a spark misfire or blocked fuel injector."
               shortcut="C"
             />
           </div>
           <span className="flex items-center gap-1">
             <kbd className={key}>F</kbd> focus
             <InfoTooltip
-              title="Camera Focus"
-              content="Orbits and zooms the 3D camera to frame the highest-severity diagnosed component."
+              title="Focus 3D View"
+              content="Automatically rotates and zooms the 3D camera directly onto the component experiencing the most serious issue."
               shortcut="F"
             />
           </span>
           <span className="flex items-center gap-1">
             <kbd className={key}>T</kbd> train {p.training ? 'on' : 'off'}
             <InfoTooltip
-              title="Training Display"
-              content="When enabled (default), highlights the injected part immediately in violet for training. In real flight (off), parts illuminate only after UKF diagnostic attribution."
+              title="Training Mode"
+              content="When switched on, immediately highlights the injected fault in purple for classroom training. In real flight mode, parts illuminate only when our diagnostic AI independently detects the malfunction."
               shortcut="T"
             />
           </span>
           <span className="flex items-center gap-1">
             <kbd className={key}>R</kbd> reset
             <InfoTooltip
-              title="Engine Reset & Restart"
-              content="A seized engine remains seized until reset. Clears faults, resets FADEC memory, and cold-restarts ignition."
+              title="Reset Engine"
+              content="Restarts the engine from a clean slate. Clears simulated damage, resets electronic engine controls, and starts the engine up fresh."
               shortcut="R"
             />
           </span>
@@ -483,8 +495,8 @@ export default function TwinStage(p: Props) {
           <span className="inline-flex items-center gap-1.5 font-mono text-sm font-semibold tracking-wider">
             <span>{status ?? 'NO DATA'}</span>
             <InfoTooltip
-              title="Annunciator Status"
-              content="14 CFR 25.1322 alert levels: GO (nominal), CAUTION (amber, advisory threshold exceeded), or NO-GO (red, critical limit breached)."
+              title="Flight Readiness Status"
+              content="Aviation flight status indicator: GO (green, all systems normal), CAUTION (amber, advisory warning or abnormal sensor trend), or NO-GO (red, dangerous safety limit breached)."
             />
           </span>
           {reason && status !== 'GO' && <span className="text-xs text-slate-700">{reason}</span>}

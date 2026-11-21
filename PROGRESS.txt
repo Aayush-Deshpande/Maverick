@@ -3,36 +3,21 @@ Rules: AGENTS.md ("If the context resets"), DECISIONS.md D22/D23. Entry format: 
 section 19.1. Update the RESUME HERE block at every commit and at the end of every session.
 
 =====================================================================================================================
-RESUME HERE  (last updated 21 Nov 2026, 3D twin telemetry interlock session)
+RESUME HERE  (last updated 21 Nov 2026, Engine Runtime Architecture & Info Popovers session)
 =====================================================================================================================
 Phase:        Phases 0-3, 5 done; Phase 6 (M5) done except M5-10 (D54: do not touch); Phase 4 (M6) M6-01..05 done,
-              M6-06 in progress (labels + plain status done). Not started: Phase 7 (D53 workflow), 8, 8b, 9, 10.
-Card:         D67 (3D Twin anti-spam telemetry interlock & guide): 2.8s transient settling window blocks successive
-              fault injections; tactical HUD LED bar & live telemetry countdown prevents spamming; clickable locked
-              buttons; top-right Guide button opens architecture guide modal (keys 1-9, 0, Q/E, C, F, T, R, ?).
-Branch:       Beta (local commits not pushed). main untouched (local main = origin/main 4559afd; only read).
-Last commit:  see git log -1.
-State:        vitest 30 passed, tsc OK, pytest backend canonical pipeline 4 passed.
-Latest:       D67 done (3D Twin anti-spam telemetry interlock + architecture guide modal + interactive buttons). D66 (violet injected highlight). D65 (canonical compressed models).
-Next step:    21 Nov ~04:15: restart settle (restart_settle_s, diagnosis restarts clean after START/RESET) and the
-              3D twin lists only faults that light a part (e20ea58). Session ended by Prasad. 21 Nov ~04:00: 3D twin tab = keyboard visualizer (TwinWorkspace/TwinStage), injected part lit in
-              0.1-0.2 s (D64), camera orbits outside the engine then loops, R resets a failed engine. Open: reset should
-              also clear diagnosis memory (F11 ADVISORY lingers briefly). Do NOT merge to main until Prasad says
-              GO TO MAIN. 21 Nov ~03:20: 3D twin = full-screen keyboard visualizer (1-9/0/Q/E/C/F/T/Esc). Prasad merges Beta -> main
-              himself (guard blocks the AI; D14/D30). 21 Nov ~02:00: FINAL acceptance (parallel, clean engines): 142/142 injections live (console 120, 3D
-              twin 17, GCS 5), 130/142 injected faults in the top-3 diagnosis (912 21/24, 914 25/26, 915 29/30, AE300
-              28/31, VRDE 27/31), 0 wrong highlights when the injected fault is top-1
-              (docs/verification/inject_anywhere_2026-11-21.csv). Committed: D60 graded status, D61 shared accelerometer,
-              D62 ECU-reported lane loss, D63 common-rail supply + rail_p/fuel_p scored; T-FLT-1 109/142.
-              Remaining 12 misses: F35 glow plug (AE/VRDE: cold start only, real), F34 battery (912/VRDE: masked by a
-              running alternator, real), F37 governor hunting (AE/VRDE/915: a variance, the detector scores means; add an
-              rpm-fluctuation feature), F24 oil leak (912/VRDE: slow), F14 AE boost leak, F32 + F04 Rotax (S02 wins).
-              Next: restart the live backend (old code) + browser check; F37 rpm-fluctuation feature; then Phase 8/10.
-              Prasad decisions 20 Nov: Q1 = b (test_calibration_is_per_tail stays failing, 19.6 % vs 20 %);
-              Q2 superseded by D60 (the oil pump test's original CAUTION expectation holds again).
-              Prasad's uncommitted deploy edits (his to commit): frontend/.env.production,
-              frontend/src/hooks/useTelemetrySocket.ts, frontend/.vercelignore (new backend maverick-vnrg.onrender.com).
-              Unstaged on purpose: 914 .blend re-saves (D50), docs/cleanup/file_coverage_latest.csv.
+              M6-06 in progress. Not started: Phase 7 (D53 workflow), 8, 8b, 9, 10.
+Card:         D68 (Avionics architecture guide modal & comprehensive info popovers): Added detailed pipeline architecture
+              modal in EngineRuntimeConsole explaining continuous 20 Hz thermodynamic ODE integration, sensor FDI, UKF
+              thermal state observer, virtual sensor synthesis, multi-channel residual detection, Bayesian fault isolation,
+              conformal RUL intervals, 10k Monte Carlo mission reliability, and automated ATA work orders. Added non-clipping
+              portal-based InfoTooltip popovers across all KPI cards, badges, fleet overview, scenario controls, and
+              engineer twin & vibration order panels.
+Branch:       Beta (committed and pushed to origin/Beta: 241456c). main untouched (waiting for Prasad's explicit "Deploy").
+Last commit:  241456c M6-06: D68 avionics architecture guide modal and comprehensive info tooltips across engine runtime console
+State:        vitest 32 passed (10 files), tsc OK, frontend build OK (12.83s).
+Latest:       D68 done (Engine Runtime architecture modal + full InfoTooltip coverage grounded in repository physics). D67 done (3D Twin anti-spam telemetry interlock + architecture guide modal). D66 (violet injected highlight). D65 (canonical compressed models).
+Next step:    Wait for Prasad's review. When approved and Prasad says "Deploy", merge Beta into main, push to origin/main, and deploy to Vercel production. Until then, keep strictly on Beta.
 Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produce yet (lambda, timing, BSFC, power,
               vibration, GO/NO-GO); some may show blanks or crash on .toFixed(null) until M0-09. Beta only.
               (2) STOP/START return 422 until the engine state machine (M1-12).

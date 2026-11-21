@@ -45,9 +45,11 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={() => handleLinkClick('home')}
               className="flex items-center gap-2.5 text-left group"
             >
-              <div className="size-7 bg-stone-900 text-white font-mono font-bold text-xs flex items-center justify-center rounded-xs tracking-tighter">
-                AN
-              </div>
+              <img
+                src="/images/anumaan-mark-editorial.png"
+                alt="ANUMAAN"
+                className="size-7 object-contain rounded-xs border border-stone-300 bg-white shadow-xs"
+              />
               <div>
                 <div className="flex items-center gap-2">
                   <span className="font-mono text-xs font-bold text-stone-950 uppercase tracking-wider group-hover:text-stone-700 transition-colors">

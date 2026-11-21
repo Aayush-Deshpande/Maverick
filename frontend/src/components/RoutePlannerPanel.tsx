@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { NO_DATA, num } from '../utils/format';
 import RouteMap from './RouteMap';
 import AltitudeProfile from './AltitudeProfile';
+import InfoTooltip from './InfoTooltip';
 
 type Airfield = { id: string; name: string; lat: number; lon: number; elevation_ft: number };
 type Waypoint = { lat: number; lon: number; altitude_ft: number; terrain_ft: number; climb_rate_fpm: number };
@@ -91,7 +92,14 @@ export default function RoutePlannerPanel({ engineId, api }: Props) {
   const select = 'bg-black/20 border border-surface-border rounded-sm px-2 py-1 text-xs text-slate-200';
   return (
     <section className="surface-panel p-4 sm:p-5 rounded-sm">
-      <h3 className="text-sm font-semibold text-white tracking-tight">Terrain route check</h3>
+      <div className="flex items-center gap-2">
+        <h3 className="text-sm font-semibold text-white tracking-tight">Terrain route check</h3>
+        <InfoTooltip
+          title="Terrain Route & Clearance Check"
+          content="Calculates whether the aircraft can safely climb over high terrain between airfields using the engine's current available power."
+          width={280}
+        />
+      </div>
       <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-mono">
         <select aria-label="From airfield" className={select} value={from} onChange={(e) => setFrom(e.target.value)}>
           {airfields.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
@@ -133,7 +141,14 @@ export default function RoutePlannerPanel({ engineId, api }: Props) {
           <div className="text-slate-500">Copernicus GLO-30 terrain · airframe data ASSUMED · SIMULATION · not for navigation</div>
         </div>
       )}
-      <h4 className="mt-4 text-xs font-semibold text-white">Engine-out glide and divert</h4>
+      <div className="mt-4 flex items-center gap-2">
+        <h4 className="text-xs font-semibold text-white">Engine-out glide and divert</h4>
+        <InfoTooltip
+          title="Emergency Glide & Divert"
+          content="Simulates where the aircraft can glide without engine power, calculating whether it can safely reach emergency runways while clearing mountain terrain."
+          width={280}
+        />
+      </div>
       <div className="mt-2 flex flex-wrap items-center gap-2 text-xs font-mono">
         {(['lat', 'lon', 'alt'] as const).map((k) => (
           <input key={k} aria-label={k === 'alt' ? 'Altitude ft' : k} className={`${select} w-24`} inputMode="decimal"
