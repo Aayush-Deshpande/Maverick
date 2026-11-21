@@ -3,6 +3,7 @@ import type { AlertOut, Reason1, Status } from '../api/state';
 import { playAlertTone, toneFor } from '../utils/alertTone';
 import { channelLabel, useLabels } from '../utils/labels';
 import { NO_DATA, num } from '../utils/format';
+import InfoTooltip from './InfoTooltip';
 
 type Props = {
   engineId: string | null;
@@ -59,11 +60,37 @@ export default function StatusBanner({ engineId, status, alerts, simTimeS, units
   return (
     <section aria-label="Engine status" aria-live="polite" className={`rounded-sm border p-4 ${style}`}>
       <div className="flex flex-wrap items-center gap-3">
-        <span className="text-xl font-semibold tracking-tight">{say?.title ?? (level === 'UNKNOWN' ? NO_DATA : level.replace('_', ' '))}</span>
-        {say && level !== 'UNKNOWN' && <span className="text-xs font-mono opacity-70">{level.replace('_', ' ')}</span>}
-        <button type="button" aria-pressed={muted} onClick={() => setMuted(!muted)}
-          className="rounded-sm border border-current px-2 py-0.5 text-xs font-mono opacity-70 hover:opacity-100">{muted ? 'Tones off' : 'Tones on'}</button>
-        {status?.latched && <span className="text-xs font-mono">LATCHED{status.acknowledged ? ' · acknowledged, waiting for the cause to clear' : ''}</span>}
+        <div className="inline-flex items-center gap-1.5">
+          <span className="text-xl font-semibold tracking-tight">{say?.title ?? (level === 'UNKNOWN' ? NO_DATA : level.replace('_', ' '))}</span>
+          {say && level !== 'UNKNOWN' && <span className="text-xs font-mono opacity-70">{level.replace('_', ' ')}</span>}
+          <InfoTooltip
+            title="Engine Health Classification"
+            content="Aviation flight readiness status: GO means all engine temperatures, pressures, and sensors are within safe limits. CAUTION alerts to abnormal trends, and NO-GO indicates a critical limit breach requiring immediate pilot action."
+            width={280}
+            iconClassName="w-3.5 h-3.5 opacity-60 hover:opacity-100 transition-opacity"
+          />
+        </div>
+        <div className="inline-flex items-center gap-1">
+          <button type="button" aria-pressed={muted} onClick={() => setMuted(!muted)}
+            className="rounded-sm border border-current px-2 py-0.5 text-xs font-mono opacity-70 hover:opacity-100">{muted ? 'Tones off' : 'Tones on'}</button>
+          <InfoTooltip
+            title="Cockpit Audio Warning Tones"
+            content="Controls audible flight deck alarm chimes on or off. When enabled, sounds audio warning and caution chimes if temperatures, pressures, or engine safety limits enter danger zones (following aviation cockpit alerting standards)."
+            width={280}
+            iconClassName="w-3.5 h-3.5 opacity-60 hover:opacity-100 transition-opacity"
+          />
+        </div>
+        {status?.latched && (
+          <div className="inline-flex items-center gap-1">
+            <span className="text-xs font-mono">LATCHED{status.acknowledged ? ' · acknowledged, waiting for the cause to clear' : ''}</span>
+            <InfoTooltip
+              title="Warning Safety Latch"
+              content="Keeps this warning active on screen even if the sensor reading briefly dips back into normal range. Ensures the pilot or ground crew investigates the root cause before clearing the alert."
+              width={280}
+              iconClassName="w-3.5 h-3.5 opacity-60 hover:opacity-100 transition-opacity"
+            />
+          </div>
+        )}
         {status?.latched && !status.acknowledged && (
           <button type="button" onClick={() => act('/status/acknowledge', undefined, 'Status acknowledged')}
             className="ml-auto rounded-sm border border-current px-3 py-1 text-xs font-mono hover:bg-white/5">Acknowledge</button>

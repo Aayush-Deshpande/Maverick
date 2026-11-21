@@ -7,6 +7,7 @@ import type { Highlight } from '../../api/state';
 import { LEVEL_COLOUR, focusNodes, highlightMap, type HighlightLevel } from './highlights';
 import { componentLabel, useLabels } from '../../utils/labels';
 import { ENGINE_ENV_INTENSITY, disposeEnvironment, prepareEngineMaterials, studioEnvironment } from '../../utils/engineMaterials';
+import InfoTooltip from '../InfoTooltip';
 
 type Manifest = { model_url: string; representative_geometry: string | null; components: Array<{ component_id: string; nodes: string[] }> };
 export type InjectedPart = { component_id: string; reason: string };
@@ -179,7 +180,14 @@ export default function EngineViewer3D({ engineId, highlights: detected, injecte
   return (
     <section className={bare ? 'h-full' : `surface-panel p-4 sm:p-5 rounded-sm ${fill ? 'h-full flex flex-col' : ''}`} data-highlighted-nodes={lit.join(',')}>
       {!bare && <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h3 className="text-sm font-semibold text-white tracking-tight">3D engine</h3>
+        <div className="flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-white tracking-tight">3D engine</h3>
+          <InfoTooltip
+            title="Interactive 3D Engine Twin"
+            content="A realistic 3D CAD digital twin of the selected aircraft engine. Drag with your mouse or finger to rotate and inspect internal components. When a diagnostic fault or anomaly is detected, the affected physical component automatically illuminates."
+            width={300}
+          />
+        </div>
         <div className="flex items-center gap-2">
           {manifest?.representative_geometry && <span className="text-xs font-mono text-slate-400">{manifest.representative_geometry}</span>}
           <button

@@ -228,9 +228,16 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
         {notice && <span className="ml-auto text-accent font-medium">{notice}</span>}
       </div>
       {runtime.error && <div className="mt-3 rounded-sm border border-surface-border bg-white/[0.03] p-3 text-xs font-mono text-slate-200">{runtime.error}. Check the backend connection in Settings.</div>}
-      <nav aria-label="Console view" className="mt-3 flex flex-wrap gap-1 text-xs font-mono">
-        {VIEWS.map((v) => <button key={v.id} type="button" aria-pressed={view === v.id} onClick={() => setView(v.id)}
-          className={`px-3 py-1.5 rounded-sm border ${view === v.id ? 'border-surface-border-strong bg-white/10 text-white' : 'border-surface-border text-slate-400 hover:bg-white/5'}`}>{v.label}</button>)}
+      <nav aria-label="Console view" className="mt-3 flex flex-wrap items-center gap-1 text-xs font-mono">
+        <div className="flex items-center gap-1">
+          {VIEWS.map((v) => <button key={v.id} type="button" aria-pressed={view === v.id} onClick={() => setView(v.id)}
+            className={`px-3 py-1.5 rounded-sm border ${view === v.id ? 'border-surface-border-strong bg-white/10 text-white' : 'border-surface-border text-slate-400 hover:bg-white/5'}`}>{v.label}</button>)}
+          <InfoTooltip
+            title="Role-Based Console Views"
+            content="Tailors dashboard panels to operational roles: Operator shows primary flight gauges and warnings; Propulsion engineer displays physics equations, digital twin residuals, and virtual sensors; Maintenance shows component wear, remaining life, and repair orders; Mission manages flight routes; All panels displays everything simultaneously."
+            width={320}
+          />
+        </div>
         <div className="ml-auto inline-flex items-center gap-1">
           <button type="button" aria-pressed={training} onClick={() => setTraining(!training)} title="Training mode also draws the injected fault on the 3D engine"
             className={`px-3 py-1.5 rounded-sm border ${training ? 'border-surface-border-strong bg-white/10 text-white' : 'border-surface-border text-slate-400 hover:bg-white/5'}`}>Training mode: {training ? 'on' : 'off'}</button>
@@ -248,17 +255,27 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
       api={runtime.api} onNotice={(t) => { setNotice(t); setTimeout(() => setNotice(''), 3500); }} />
 
     {show('OPERATOR', 'ENGINEER', 'MAINTENANCE') && <CopilotPanel engineId={runtime.engineId ?? null} api={runtime.api} />}
-    {show('OPERATOR') && <section aria-label="Fleet overview" className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-2">
-      {runtime.engines.map((engine) => {
-        const s = runtime.fleet[engine.engine_id]?.state;
-        const d = (s?.detections ?? null) as Detections | null;
-        const cht = maxOf(Object.entries(s?.readings ?? {}).filter(([k]) => k.startsWith('cht[')).map(([, r]) => r.value));
-        return <button key={engine.engine_id} onClick={() => runtime.selectEngine(engine.engine_id)} className={`surface-panel p-3 text-left transition-colors rounded-sm hover:border-surface-border-strong ${runtime.engineId === engine.engine_id ? 'border-accent/70 bg-accent/10 shadow-sm' : ''}`}>
-          <div className="flex items-center justify-between gap-2"><span className="truncate text-xs font-medium text-slate-200">{engine.display_name}</span><span className={`h-1.5 w-1.5 rounded-full ${!s ? 'bg-slate-600' : d?.confirmed ? 'bg-critical' : d?.raw_alarm ? 'bg-warning' : 'bg-success'}`} /></div>
-          <div className="mt-2 text-xs font-mono text-slate-400">{s ? `${num(s.readings?.rpm?.value, 0)} RPM · ${num(cht, 0)}° CHT` : engine.ready ? NO_DATA : 'Calibrating profile'}</div>
-          <div className="mt-1 text-xs uppercase tracking-wider font-mono text-slate-500">{runtime.engineId === engine.engine_id ? '● Selected' : d?.confirmed ? 'Confirmed anomaly' : d?.raw_alarm ? 'Raw anomaly' : s ? 'Monitoring' : 'Preparing'}</div>
-        </button>;
-      })}
+    {show('OPERATOR') && <section aria-label="Fleet overview" className="space-y-1.5">
+      <div className="flex items-center gap-2 text-xs font-mono text-slate-400">
+        <span className="uppercase tracking-wider font-semibold text-slate-300">Fleet Engine Status</span>
+        <InfoTooltip
+          title="Fleet Engines"
+          content="Select any engine in the fleet to switch the live digital twin monitor and inspect its individual sensor telemetry, temperature, and diagnostics."
+          width={280}
+        />
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-2">
+        {runtime.engines.map((engine) => {
+          const s = runtime.fleet[engine.engine_id]?.state;
+          const d = (s?.detections ?? null) as Detections | null;
+          const cht = maxOf(Object.entries(s?.readings ?? {}).filter(([k]) => k.startsWith('cht[')).map(([, r]) => r.value));
+          return <button key={engine.engine_id} onClick={() => runtime.selectEngine(engine.engine_id)} className={`surface-panel p-3 text-left transition-colors rounded-sm hover:border-surface-border-strong ${runtime.engineId === engine.engine_id ? 'border-accent/70 bg-accent/10 shadow-sm' : ''}`}>
+            <div className="flex items-center justify-between gap-2"><span className="truncate text-xs font-medium text-slate-200">{engine.display_name}</span><span className={`h-1.5 w-1.5 rounded-full ${!s ? 'bg-slate-600' : d?.confirmed ? 'bg-critical' : d?.raw_alarm ? 'bg-warning' : 'bg-success'}`} /></div>
+            <div className="mt-2 text-xs font-mono text-slate-400">{s ? `${num(s.readings?.rpm?.value, 0)} RPM · ${num(cht, 0)}° CHT` : engine.ready ? NO_DATA : 'Calibrating profile'}</div>
+            <div className="mt-1 text-xs uppercase tracking-wider font-mono text-slate-500">{runtime.engineId === engine.engine_id ? '● Selected' : d?.confirmed ? 'Confirmed anomaly' : d?.raw_alarm ? 'Raw anomaly' : s ? 'Monitoring' : 'Preparing'}</div>
+          </button>;
+        })}
+      </div>
     </section>}
 
     {show('OPERATOR', 'ENGINEER') && <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
