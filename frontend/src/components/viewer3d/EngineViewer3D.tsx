@@ -27,7 +27,7 @@ const EMISSIVE_INTENSITY = 0.9;
 const PULSE_PEAK = 2.2;                                  // peak glow of a highlighted part while it pulses
 const PULSE_HZ = 1.2;                                    // highlighted parts breathe at this rate (P Part 6 X2)
 const PULSE_MIN = 0.1;                                   // ...between this share of the peak glow and the peak
-const ORBIT_DISTANCE = 3.2;                               // fault view: comfortable distance keeping the engine in view
+const ORBIT_DISTANCE = 2.2;                               // fault view: comfortable distance keeping the engine in view
 const ORBIT_LIFT = 0.35;                                 // ...seen slightly from above
 const AIM_TOWARD_PART = 0.35;                            // ...looking from the engine centre this far toward the part
 const LOOP_SPEED = 0.6;                                  // then a slow loop around the engine (OrbitControls units)
@@ -122,7 +122,7 @@ function Model({ url, levels, onLit, focusRequest, autoRotateEnabled }: { url: s
         controls.autoRotateSpeed = 0.8;
       }
       if (framed.current !== root) {
-        bounds.moveTo([2.8, 1.8, 3.4]).lookAt({ target: [0, 0.05, 0] });
+        bounds.moveTo([1.65, 1.1, 2.0]).lookAt({ target: [0, 0.05, 0] });
       }
     } else {
       // stay outside the engine: orbit to the side where the part faces the viewer, whole engine still in frame,
@@ -220,7 +220,7 @@ export default function EngineViewer3D({ engineId, highlights: detected, injecte
         {error ? <div className="p-4 text-xs font-mono text-slate-300">{error}</div>
           : !manifest ? <div className="p-4 text-xs font-mono text-slate-400">Loading component manifest…</div>
           : <ModelBoundary resetKey={manifest.model_url}>
-              <Canvas camera={{ position: [2.8, 1.8, 3.4], fov: 42 }} dpr={[1, 2]}>
+              <Canvas camera={{ position: [1.65, 1.1, 2.0], fov: 42 }} dpr={[1, 2]}>
                 <RoomEnv />
                 <directionalLight position={[3, 4, 3]} intensity={1.4} />
                 <Suspense fallback={null}>
