@@ -6,15 +6,15 @@ Update the RESUME HERE block at every commit and at the end of every session.
 Part 1 historical session log (Phases 0 through 7, 19 Nov - 22 Nov 2026) is preserved in PROGRESS.txt.
 
 =====================================================================================================================
-RESUME HERE  (last updated 22 Nov 2026, Phase 8b AI-05 DYNAMIC CONVERSATIONAL AI & DRDO DISCIPLINED COPILOT)
+RESUME HERE  (last updated 22 Nov 2026, Phase 8 Card UX-01 PHOTOREALISTIC X-RAY GLASS, THERMAL HEATMAPS & GHOST)
 =====================================================================================================================
-Phase:        Phase 8b (LLM Copilot, RAG & Voice Agent) & Phase 7 VERIFIED.
-Card:         AI-05 (Dynamic Conversational Intelligence & Disciplined Guardrails): Removed early canned demo intercepts (_demo_misfire_response) from active generation paths; preserved canned responses strictly as offline fallbacks when LLM is unavailable; upgraded system prompts with strict DRDO military discipline, zero conversational fluff, immediate findings, and strict off-topic guardrails (refusing casual/non-aviation queries); increased token ceiling for deep technical explanations; verified live dynamic generation and speech round-trip in Python 3.12 via Gemini and Kokoro TTS; all 17 AI/RAG/Voice unit tests 100% PASS; added real animated spinners, skeleton placeholders, and in-transcript thinking loaders for chatbot and voice.
+Phase:        Phase 8 (UX Polish & Digital Twin Visualization).
+Card:         UX-01 (Photorealistic X-Ray Glass Engine, Dynamic FLIR Thermal Pyrometry, and Twin Ghost Overlay): Implemented 4 real-time interactive render modes in EngineViewer3D: (1) Solid CAD PBR, (2) Physical X-Ray Glass (MeshPhysicalMaterial with transmission: 0.92, IOR: 1.48, roughness: 0.12, thickness: 0.8, clearcoat: 1.0, depthWrite: false) revealing internal reciprocating pistons and cylinders, (3) Dynamic FLIR Thermal Pyrometry with live 20 Hz multi-physics CHT 1..4 (50-140°C) and EGT 1..4 (400-950°C) blackbody vertex incandescence, smoked obsidian casing, and interactive ThermalLegend HUD overlay, (4) Holographic Twin Ghost. Preserved absolute visual priority for diagnostic/anomaly highlights across all modes; 48/48 Vitest tests passed; TypeScript check clean; backend tests 100% PASS.
 Branch:       Beta
-Last commit:  7b84f9a DOC-01: append AI-05 session log to PROGRESS_2.txt
-State:        Phase 8b live verified. Dynamic generation active on port 8000. Python 3.12 backend daemon running. Frontend dev server running on port 5173.
-Latest:       Dynamic, disciplined DRDO AI copilot and voicebot active.
-Next step:    Phase 8: UX Polish (UX-01 Glass Engine, live thermal heat-map, twin ghost overlay, UX-02 Time Machine timeline scrub).
+Last commit:  5ba2f45 UX-01: implement photorealistic x-ray glass casing, dynamic thermal heatmaps, and twin ghost overlay
+State:        UX-01 verified. 4 render modes active in TwinStage and EngineRuntimeConsole. 48/48 Vitest tests passed.
+Latest:       Photorealistic X-Ray Glass, dynamic FLIR thermal heatmaps, and Twin Ghost overlay live in EngineViewer3D.
+Next step:    Phase 8 UX-02 (Time Machine mission timeline scrubber & historical replay).
 Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produce yet (lambda, timing, BSFC, power,
               vibration, GO/NO-GO); some may show blanks or crash on .toFixed(null) until M0-09. Beta only.
               (2) STOP/START return 422 until the engine state machine (M1-12).
@@ -73,3 +73,29 @@ Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produ
   * 419e28e: DOC-01: rotate session log and decisions to PROGRESS_2.txt and DECISIONS_2.md
   * b0f4bdd: M7-B06: track final engine showcase beauty renders and comparisons
   * 11ccf8e: DOC-01: update HEAD commit in PROGRESS_2.txt
+
+=== 22 Nov 2026 Phase 8 Card UX-01 (Photorealistic X-Ray Glass Engine, Dynamic FLIR Thermal Pyrometry & Twin Ghost Overlay): 3D Viewport Multi-Mode Shaders (AI: Antigravity)
+- Research & Architectural Design (D71):
+  * Researched high-fidelity aerospace digital twin cutaways and blackbody incandescence GLSL shaders.
+  * Discarded flat alpha-blending transparency (`opacity: 0.5`) which looks like toy plastic; implemented true physical transmission via `THREE.MeshPhysicalMaterial` (`transmission: 0.92`, `ior: 1.48`, `roughness: 0.12`, `thickness: 0.8`, `clearcoat: 1.0`, `depthWrite: false`).
+  * Selective Component Masking (`engineComponents.ts`): Casing/block/covers/baffles become physical optical glass; internal cylinder assemblies (heads 1-4, barrels 1-4, pistons, injectors, fuel lines) remain solid high-detail PBR metal.
+  * Planck / FLIR Thermal Pyrometry Curve (`engineShaders.ts`): Implemented continuous blackbody incandescence ramp mapping live 20 Hz thermodynamic differential equation readings:
+    - CHT Range (50°C to 140°C+): Slate steel (<60°C) -> Teal/indigo (60-85°C) -> Optimal cruise emerald/amber (85-110°C) -> Cadmium orange (110-128°C) -> Warning vivid red (128-138°C) -> Incandescent overheat magenta/crimson (>138°C).
+    - EGT Range (400°C to 950°C+): Deep cherry red (<600°C) -> Vivid combustion red-orange (600-750°C) -> Molten neon orange (750-880°C) -> Golden yellow (880-940°C) -> Incandescent white-hot glow (>940°C).
+  * Smoked Obsidian Contrast: In Thermal mode, casing becomes semi-transparent dark smoked obsidian (`transmission: 0.65`, `opacity: 0.35`, `depthWrite: false`), allowing internal glowing cylinder heads and incandescent exhaust to shine through clearly.
+  * Holographic Twin Ghost Overlay: Cyan rim glow (`#06b6d4`, `emissiveIntensity: 0.8`, `opacity: 0.45`, `depthWrite: false`).
+  * Invariant: Anomaly/diagnostic highlights (`INJECTED`, `ADVISORY`, `CAUTION`, `CRITICAL`) maintain absolute visual priority across all modes with 1.2 Hz breathing pulse and 2.2 peak intensity.
+- Interactive HUD & Legend:
+  * Segmented Viewport Mode Selector: Added responsive canvas HUD toolbar (`[ SOLID ] [ X-RAY GLASS ] [ THERMAL FLIR ] [ TWIN GHOST ]`) positioned inside viewport canvas overlay.
+  * `ThermalLegend.tsx`: Added aerospace FLIR pyrometry overlay displaying individual cylinder CHT readouts (CYL 1..4), hot section EGT readout, limit markers, and calibrated FLIR spectrum gradient bar.
+  * Integration: Wired live telemetry readings into `EngineViewer3D` in both `TwinStage.tsx` and `EngineRuntimeConsole.tsx`.
+- Verification & Test Suite:
+  * `engineShaders.test.ts`: Verified blackbody color ramps, optical glass transmission parameters, thermal material emission, and in-place shader mutation.
+  * `engineComponents.test.ts`: Verified casing, internal, exhaust, and accessory classification and cylinder number extraction across all 5 engine architectures.
+  * `ThermalLegend.test.tsx`: Verified dynamic telemetry rendering and missing-data fallback.
+  * `EngineViewer3D.test.tsx`: Verified segmented HUD rendering and thermal legend activation.
+  * Vitest Suite: 48/48 tests passed (14 test files).
+  * TypeScript Check: Clean (0 errors via `npx tsc --noEmit`).
+  * Backend Pytest: 11/11 passed in `test_char_twin.py` and `test_camera_transitions.py`.
+- Commits:
+  * 5ba2f45: UX-01: implement photorealistic x-ray glass casing, dynamic thermal heatmaps, and twin ghost overlay
