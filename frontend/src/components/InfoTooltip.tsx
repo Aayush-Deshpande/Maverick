@@ -9,6 +9,7 @@ export interface InfoTooltipProps {
   placement?: 'top' | 'bottom' | 'left' | 'right' | 'auto';
   className?: string;
   iconClassName?: string;
+  width?: number;
 }
 
 /**
@@ -24,6 +25,7 @@ export const InfoTooltip: React.FC<InfoTooltipProps> = ({
   placement = 'auto',
   className = '',
   iconClassName = 'w-3 h-3 text-slate-400 hover:text-slate-800 transition-colors',
+  width = 260,
 }) => {
   const [open, setOpen] = useState(false);
   const [coords, setCoords] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
@@ -34,7 +36,7 @@ export const InfoTooltip: React.FC<InfoTooltipProps> = ({
   const calculatePosition = () => {
     if (!triggerRef.current) return;
     const rect = triggerRef.current.getBoundingClientRect();
-    const width = 250;
+    const w = width;
     const padding = 12;
 
     let left = rect.left;
@@ -46,19 +48,19 @@ export const InfoTooltip: React.FC<InfoTooltipProps> = ({
       top = rect.top - 10;
     } else if (placement === 'left' || (placement === 'auto' && rect.right > window.innerWidth - 300)) {
       // Position to the left of the trigger
-      left = rect.left - width - 8;
+      left = rect.left - w - 8;
       top = rect.top - 10;
     } else if (placement === 'bottom') {
-      left = rect.left + rect.width / 2 - width / 2;
+      left = rect.left + rect.width / 2 - w / 2;
       top = rect.bottom + 6;
     } else {
       // Default top
-      left = rect.left + rect.width / 2 - width / 2;
+      left = rect.left + rect.width / 2 - w / 2;
       top = rect.top - 90;
     }
 
     // Viewport clamping: ensures 0px cutoff on all sides
-    left = Math.max(padding, Math.min(window.innerWidth - width - padding, left));
+    left = Math.max(padding, Math.min(window.innerWidth - w - padding, left));
     top = Math.max(padding, Math.min(window.innerHeight - 150 - padding, top));
 
     setCoords({ top, left });
@@ -139,8 +141,8 @@ export const InfoTooltip: React.FC<InfoTooltipProps> = ({
               if (timeoutRef.current) clearTimeout(timeoutRef.current);
             }}
             onMouseLeave={handleMouseLeave}
-            style={{ top: `${coords.top}px`, left: `${coords.left}px` }}
-            className="fixed z-[120] w-[250px] max-w-[calc(100vw-2rem)] rounded-sm border border-surface-border-strong bg-[#fcfbf7] p-2.5 text-xs text-slate-800 shadow-card animate-fade-in pointer-events-auto text-left"
+            style={{ top: `${coords.top}px`, left: `${coords.left}px`, width: `${width}px` }}
+            className="fixed z-[120] max-w-[calc(100vw-2rem)] rounded-sm border border-surface-border-strong bg-[#fcfbf7] p-2.5 text-xs text-slate-800 shadow-card animate-fade-in pointer-events-auto text-left"
           >
             {title && (
               <div className="flex items-center justify-between gap-2 border-b border-surface-border/60 pb-1 mb-1.5">

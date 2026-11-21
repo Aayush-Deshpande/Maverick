@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { NO_DATA, num } from '../utils/format';
 import { channelLabel, useLabels } from '../utils/labels';
+import InfoTooltip from './InfoTooltip';
 
 type TwinParam = { name: string; location: string; mean: number; ci: [number, number]; healthy: boolean };
 type Props = {
@@ -30,10 +31,24 @@ export default function EngineerPanel({ residuals, twin, virtualSensors, vibrati
   const params = twin?.params ?? [];
   return (
     <section className="surface-panel p-4 sm:p-5 rounded-sm">
-      <h3 className="text-sm font-semibold text-white tracking-tight">Twin and residuals</h3>
+      <div className="flex items-center gap-2">
+        <h3 className="text-sm font-semibold text-white tracking-tight">Twin and residuals</h3>
+        <InfoTooltip
+          title="State Observer & Residuals"
+          content="Compares live 20 Hz telemetry against the UKF thermofluid engine model. Innovation z-scores highlight anomalous deviations while health parameters track degradation."
+          width={280}
+        />
+      </div>
       <div className="mt-3 grid grid-cols-1 lg:grid-cols-2 gap-4 text-xs font-mono">
         <div>
-          <div className="text-slate-300">Residuals, measured minus engine model (σ)</div>
+          <div className="flex items-center gap-1.5 text-slate-300">
+            <span>Residuals, measured minus engine model (σ)</span>
+            <InfoTooltip
+              title="Normalized Residuals (z-score)"
+              content="Innovation vector z = (y_meas - y_model) / σ_noise in sensor standard deviations. Magnitudes |z| > 3.0 indicate statistically significant plant deviation."
+              width={260}
+            />
+          </div>
           {shown.length ? <ul className="mt-2 space-y-1.5">{shown.map(([ch, z]) => (
             <li key={ch} className="grid grid-cols-[minmax(7rem,14rem)_1fr_3.5rem] items-center gap-2">
               <span className="truncate text-slate-400" title={ch}>{channelLabel(labels, ch)}</span>
@@ -49,7 +64,14 @@ export default function EngineerPanel({ residuals, twin, virtualSensors, vibrati
             {all ? `Show top ${TOP_N}` : `Show all ${res.length}`}</button>}
         </div>
         <div>
-          <div className="text-slate-300">Health parameters (twin estimate, 1 = nominal) · NIS {twin?.nis == null ? NO_DATA : num(twin.nis, 2)}</div>
+          <div className="flex items-center gap-1.5 text-slate-300">
+            <span>Health parameters (twin estimate, 1 = nominal) · NIS {twin?.nis == null ? NO_DATA : num(twin.nis, 2)}</span>
+            <InfoTooltip
+              title="UKF Health Parameters & NIS"
+              content="Unscented Kalman Filter estimates for cooling efficiency (1.0 = nominal, <0.75 outside nominal). Normalized Innovation Squared (NIS = νᵀ S⁻¹ ν) tests model-sensor consistency."
+              width={280}
+            />
+          </div>
           {params.length ? <table className="mt-2 w-full text-left">
             <thead className="text-slate-500"><tr><th className="py-0.5">Parameter</th><th>Estimate</th><th>Interval</th><th /></tr></thead>
             <tbody>{params.map((p) => (
@@ -60,11 +82,25 @@ export default function EngineerPanel({ residuals, twin, virtualSensors, vibrati
               </tr>
             ))}</tbody>
           </table> : <div className="mt-2 text-slate-500">{NO_DATA}</div>}
-          <div className="mt-4 text-slate-300">Virtual sensors <span className="text-slate-500">(VIRTUAL: model estimates, not measured)</span></div>
+          <div className="mt-4 flex items-center gap-1.5 text-slate-300">
+            <span>Virtual sensors <span className="text-slate-500">(VIRTUAL: model estimates, not measured)</span></span>
+            <InfoTooltip
+              title="Virtual Sensor Synthesis"
+              content="Physical variables computed from thermodynamic equations: P_max (combustion peak pressure), h_min (journal bearing oil film via Reynolds equation), P_ind (indicated power), and TIT (turbine inlet temp)."
+              width={280}
+            />
+          </div>
           {Object.keys(virtualSensors ?? {}).length ? <div className="mt-1 space-y-0.5">{Object.entries(virtualSensors!).map(([k, v]) => (
             <div key={k} className="text-slate-400">{VIRTUAL_LABELS[k]?.[0] ?? k} <span className="text-slate-200 tabular-nums">{num(v, 2)}</span> {VIRTUAL_LABELS[k]?.[1] ?? ''}</div>
           ))}</div> : <div className="mt-1 text-slate-500">{NO_DATA}</div>}
-          <div className="mt-4 text-slate-300">Vibration orders (mm/s)</div>
+          <div className="mt-4 flex items-center gap-1.5 text-slate-300">
+            <span>Vibration orders (mm/s)</span>
+            <InfoTooltip
+              title="Tach-Synchronous Vibration Orders"
+              content="Order-domain spectral harmonics: 0.5X (camshaft/valves/single-cylinder anomaly), 1.0X (crankshaft mechanical imbalance), 2.0X (4-cylinder firing harmonic)."
+              width={280}
+            />
+          </div>
           {Object.keys(vibration ?? {}).length ? <div className="mt-1 grid grid-cols-3 gap-x-3 gap-y-0.5">{Object.entries(vibration!).map(([k, v]) => (
             <div key={k} className="text-slate-400">{k} <span className="text-slate-200 tabular-nums">{num(v, 3)}</span></div>
           ))}</div> : <div className="mt-1 text-slate-500">{NO_DATA}</div>}
