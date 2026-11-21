@@ -11,7 +11,7 @@ RESUME HERE  (last updated 22 Nov 2026, Phase 8b AI-05 DYNAMIC CONVERSATIONAL AI
 Phase:        Phase 8b (LLM Copilot, RAG & Voice Agent) & Phase 7 VERIFIED.
 Card:         AI-05 (Dynamic Conversational Intelligence & Disciplined Guardrails): Removed early canned demo intercepts (_demo_misfire_response) from active generation paths; preserved canned responses strictly as offline fallbacks when LLM is unavailable; upgraded system prompts with strict DRDO military discipline, zero conversational fluff, immediate findings, and strict off-topic guardrails (refusing casual/non-aviation queries); increased token ceiling for deep technical explanations; verified live dynamic generation and speech round-trip in Python 3.12 via Gemini and Kokoro TTS; all 17 AI/RAG/Voice unit tests 100% PASS; added real animated spinners, skeleton placeholders, and in-transcript thinking loaders for chatbot and voice.
 Branch:       Beta
-Last commit:  a37b571 AI-05: record decision D69 and append AI-05 session log to PROGRESS.txt
+Last commit:  419e28e DOC-01: rotate session log and decisions to PROGRESS_2.txt and DECISIONS_2.md
 State:        Phase 8b live verified. Dynamic generation active on port 8000. Python 3.12 backend daemon running. Frontend dev server running on port 5173.
 Latest:       Dynamic, disciplined DRDO AI copilot and voicebot active.
 Next step:    Phase 8: UX Polish (UX-01 Glass Engine, live thermal heat-map, twin ghost overlay, UX-02 Time Machine timeline scrub).
