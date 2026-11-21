@@ -1,7 +1,9 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Activity, AlertTriangle, ArrowDown, ArrowRight, CheckCircle2, Clock, Info, Lock, RotateCw, Sparkles, X, Zap } from 'lucide-react';
+import { Activity, AlertTriangle, ArrowDown, ArrowRight, CheckCircle2, Clock, Info, Lock, RotateCw, Search, Sparkles, X, Zap } from 'lucide-react';
 import InfoTooltip from './InfoTooltip';
+import CommandPalette from './CommandPalette';
+import type { EngineViewMode } from './viewer3d/EngineViewer3D';
 
 const EngineViewer3D = lazy(() => import('./viewer3d/EngineViewer3D'));
 
@@ -50,6 +52,8 @@ export default function TwinStage(p: Props) {
   const [focus, setFocus] = useState(0);
   const [notice, setNotice] = useState('');
   const [showGuide, setShowGuide] = useState(false);
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<EngineViewMode>('solid');
   const [autoRotate, setAutoRotate] = useState(true);
   const [mobileControlsOpen, setMobileControlsOpen] = useState(false);
 
@@ -167,16 +171,35 @@ export default function TwinStage(p: Props) {
     const onKey = (e: KeyboardEvent) => {
       const el = e.target as HTMLElement | null;
       if (el && ['INPUT', 'SELECT', 'TEXTAREA'].includes(el.tagName)) return;
+
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+        e.preventDefault();
+        setCommandPaletteOpen((prev) => !prev);
+        return;
+      }
+      if (e.key === '/' && !commandPaletteOpen && !showGuideRef.current) {
+        e.preventDefault();
+        setCommandPaletteOpen(true);
+        return;
+      }
+      if (e.key === 'Escape') {
+        if (commandPaletteOpen) {
+          setCommandPaletteOpen(false);
+          e.preventDefault();
+          return;
+        }
+        if (showGuideRef.current) {
+          setShowGuide(false);
+          e.preventDefault();
+          return;
+        }
+      }
+      if (commandPaletteOpen) return;
       if (e.ctrlKey || e.metaKey || e.altKey) return;
       const k = e.key.toLowerCase();
 
       if (k === '?' || (k === 'h' && !showGuideRef.current)) {
         setShowGuide((s) => !s);
-        e.preventDefault();
-        return;
-      }
-      if (e.key === 'Escape' && showGuideRef.current) {
-        setShowGuide(false);
         e.preventDefault();
         return;
       }
@@ -231,6 +254,11 @@ export default function TwinStage(p: Props) {
   const label = 'text-[11px] uppercase tracking-[0.18em] font-mono text-slate-400';
   const key =
     'inline-flex h-5 min-w-5 items-center justify-center rounded-[3px] border border-surface-border-strong bg-surface-card px-1 font-mono text-[10px] text-slate-700 shadow-[0_1px_0_rgba(0,0,0,0.15)]';
+
+  const notify = (text: string) => {
+    setNotice(text);
+    window.setTimeout(() => setNotice(''), 3000);
+  };
 
   const injectFault = (f: Fault) => {
     if (isSettling) {
@@ -287,11 +315,24 @@ export default function TwinStage(p: Props) {
           bare
           autoRotate={autoRotate}
           readings={p.state?.readings}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
         />
       </Suspense>
 
       {/* Top right: Unified Powerplant & Guide Toolbar */}
       <div className="surface-panel absolute right-2 sm:right-4 top-2 sm:top-4 z-10 flex items-center gap-1.5 sm:gap-3 rounded-sm px-2 sm:px-3 py-1.5 shadow-sm text-xs font-mono">
+        <button
+          type="button"
+          onClick={() => setCommandPaletteOpen(true)}
+          className="flex items-center gap-1.5 text-xs font-mono text-slate-600 hover:text-cyan-700 transition-colors cursor-pointer"
+          title="Tactical Command Palette (Ctrl+K)"
+        >
+          <Search className="w-3.5 h-3.5 text-cyan-600" />
+          <span className="font-semibold text-slate-700 hidden sm:inline">Commands</span>
+          <kbd className={`${key} hidden sm:inline-flex`}>Ctrl+K</kbd>
+        </button>
+        <div className="h-3.5 w-px bg-surface-border" />
         <label className="flex items-center gap-1.5 sm:gap-2">
           <span className={`${label} hidden sm:inline`}>Powerplant</span>
           <select
@@ -685,6 +726,7 @@ export default function TwinStage(p: Props) {
                   <div className="flex items-center gap-1.5"><kbd className={key}>F</kbd><span>Refocus camera</span></div>
                   <div className="flex items-center gap-1.5"><kbd className={key}>T</kbd><span>Training highlight</span></div>
                   <div className="flex items-center gap-1.5"><kbd className={key}>R</kbd><span>Reset & restart</span></div>
+                  <div className="flex items-center gap-1.5"><kbd className={key}>Ctrl+K</kbd><span>Command palette</span></div>
                   <div className="flex items-center gap-1.5"><kbd className={key}>?</kbd><span>Toggle guide</span></div>
                 </div>
               </div>
@@ -705,6 +747,54 @@ export default function TwinStage(p: Props) {
         </div>,
         document.body
       )}
+
+      {/* Tactical Command Palette (Ctrl+K) */}
+      <CommandPalette
+        isOpen={commandPaletteOpen}
+        onClose={() => setCommandPaletteOpen(false)}
+        selectedEngineId={p.engineId}
+        onSelectEngine={(id) => {
+          p.onSelectEngine(id);
+          setCommandPaletteOpen(false);
+        }}
+        onSelectViewMode={(mode) => {
+          setViewMode(mode);
+          setCommandPaletteOpen(false);
+        }}
+        onOpenCanInspector={() => {
+          setCommandPaletteOpen(false);
+          p.onNavigateToRuntime?.();
+        }}
+        onOpenConnectionModal={() => {
+          setCommandPaletteOpen(false);
+        }}
+        onToggleVoice={() => {
+          setCommandPaletteOpen(false);
+        }}
+        onInjectFault={(fid) => {
+          const f = p.faults.find((item) => item.id === fid);
+          if (f) injectFault(f);
+          setCommandPaletteOpen(false);
+        }}
+        onClearFaults={() => {
+          p.command('/faults', 'DELETE')
+            .then(() => notify('All faults cleared'))
+            .catch(() => notify('Clear failed'));
+          setCommandPaletteOpen(false);
+        }}
+        onSetThrottle={(pct) => {
+          p.command('/levers', 'POST', { throttle_pct: pct })
+            .then(() => notify(`Throttle set to ${pct}%`))
+            .catch(() => notify('Lever update failed'));
+          setCommandPaletteOpen(false);
+        }}
+        onEngineCommand={(cmd) => {
+          p.command('/engine', 'POST', { action: cmd })
+            .then(() => notify(`Engine ${cmd} command sent`))
+            .catch(() => notify(`${cmd} failed`));
+          setCommandPaletteOpen(false);
+        }}
+      />
     </div>
   );
 }

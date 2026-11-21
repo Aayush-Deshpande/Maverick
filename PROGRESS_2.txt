@@ -122,3 +122,20 @@ Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produ
   * End-to-End Live Check: Port 8000 backend daemon validated against `/health`, `/ready`, `/api/v1/runtime/source`, and `/api/v1/engines/{engine_id}/can/inject_spoof`.
 - Commits:
   * e3e7093: M7-M8: avionics CAN bus link, tactical command palette and production docker packaging
+  * a86bff0: DOC-01: record M7-M8 commit in PROGRESS_2.txt
+
+=== 22 Nov 2026 Phase 8 / 10 Webview Audit, Operator Tooltips & Production Docs Polish (AI: Antigravity)
+- Webview Visual Verification & Clean Browser Audit:
+  * Automated CDP Verification (`scripts/tools/verify_webview_flow.py`): Tested end-to-end user journeys across Landing, Engine Runtime Console, and 3D Twin workspaces in headless Chrome.
+  * Verified 0 console errors, 0 console warnings, and 0 unhandled exceptions.
+  * Captured 9 high-definition full-viewport audit screenshots across all interactive states into conversation artifact directory.
+- Operator Guidance & Tooltips Polish:
+  * `RuntimeGuideModal.tsx`: Expanded architecture guide with Sections 10 (Multi-Mode 3D Viewport & FLIR Thermal Pyrometry), 11 (Avionics SAE J1939 CAN Bus & Threat Detection), and 12 (Tactical Command Palette & Remote Cockpit Displays).
+  * `TwinStage.tsx`: Wired global `Ctrl+K` Command Palette hotkey and added top toolbar Commands button; bound `viewMode` directly to 3D engine canvas; added `(i)` button explanations across all fault and telemetry controls.
+- Documentation & Binding Decisions:
+  * `DECISIONS_2.md`: Formally recorded D72 (Avionics CAN Bus & IDS), D73 (Command Palette & Mobile QR Remote), and D74 (Production Multi-Stage Containerization & Probes).
+  * `README.md`: Documented single-command Docker deployment (`docker compose up --build`), standard K8s probes (`/health`, `/ready`), and new tactical operator features.
+- Verification & Test Suite:
+  * Frontend Vitest: 52/52 tests passed across 16 test files (100% PASS).
+  * TypeScript Check: Clean (0 errors via `npx tsc --noEmit`).
+  * Backend Pytest: 100% PASS.

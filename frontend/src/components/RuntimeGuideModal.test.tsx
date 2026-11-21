@@ -15,6 +15,9 @@ describe('RuntimeGuideModal', () => {
     expect(html).toContain('Remaining Useful Life &amp; Danger Warnings');
     expect(html).toContain('Mission Reliability &amp; Risk Forecasting');
     expect(html).toContain('Automated Ground Crew Work Orders');
+    expect(html).toContain('Multi-Mode 3D Viewport &amp; FLIR Thermal Pyrometry');
+    expect(html).toContain('Avionics SAE J1939 CAN Bus &amp; Threat Detection');
+    expect(html).toContain('Tactical Command Palette &amp; Remote Cockpit Displays');
   });
 
   it('renders nothing when closed', () => {

@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Activity, AlertTriangle, CheckCircle2, Clock, Cpu, Gauge, Info, ShieldCheck, Wrench, X, Zap } from 'lucide-react';
+import { Activity, AlertTriangle, CheckCircle2, Clock, Cpu, Eye, Gauge, Info, Network, ShieldCheck, Terminal, Wrench, X, Zap } from 'lucide-react';
 
 interface RuntimeGuideModalProps {
   open: boolean;
@@ -163,6 +163,45 @@ export const RuntimeGuideModal: React.FC<RuntimeGuideModalProps> = ({ open, onCl
             </div>
             <p className="mt-1.5 text-xs">
               When an issue is diagnosed, the system automatically drafts official aviation-standard work orders (categorized under international ATA chapters like Engine Fuel, Ignition, or Cooling). Ground technicians can review the findings, service the engine, and sign off on completed repairs.
+            </p>
+          </div>
+
+          {/* Section 10 */}
+          <div className="rounded-sm border border-surface-border bg-black/[0.02] p-3">
+            <div className="flex items-center gap-1.5 text-slate-800 font-semibold uppercase tracking-wider text-[11px] font-mono">
+              <Eye className="w-3.5 h-3.5 text-indigo-600" />
+              <span>10. Multi-Mode 3D Viewport &amp; FLIR Thermal Pyrometry</span>
+            </div>
+            <p className="mt-1.5 text-xs">
+              The 3D engine viewport supports 4 real-time operational render modes:
+            </p>
+            <ul className="mt-1.5 list-disc pl-5 space-y-1 text-slate-600 text-[11px]">
+              <li><strong>Solid CAD</strong>: Certified high-fidelity PBR metallic CAD models for baseline structural inspection.</li>
+              <li><strong>Physical X-Ray Glass</strong>: High-transmission optical glass casing revealing the internal reciprocating pistons, cylinder sleeves, and mechanical linkages.</li>
+              <li><strong>Dynamic FLIR Thermal</strong>: Continuous Planck blackbody incandescence driven by 20 Hz thermodynamic differential equations. Real-time CHT (50–140°C) and EGT (400–950°C) heatmaps expose cylinder imbalances instantly.</li>
+              <li><strong>Twin Ghost</strong>: Holographic rim-lit wireframe overlay for augmented diagnostics and spatial referencing.</li>
+            </ul>
+          </div>
+
+          {/* Section 11 */}
+          <div className="rounded-sm border border-surface-border bg-black/[0.02] p-3">
+            <div className="flex items-center gap-1.5 text-slate-800 font-semibold uppercase tracking-wider text-[11px] font-mono">
+              <Network className="w-3.5 h-3.5 text-cyan-600" />
+              <span>11. Avionics SAE J1939 CAN Bus &amp; Threat Detection</span>
+            </div>
+            <p className="mt-1.5 text-xs">
+              FADEC engine communications run over a certified virtual SAE J1939 CAN bus using 29-bit extended arbitration IDs. Operators can hot-swap between direct simulation and the CAN telemetry bus with zero latency. The integrated CAN Intrusion Detection System (CAN IDS) continuously monitors the bus for cyber threats, flagging rogue message IDs, dropped sequence counter frames, and sensor spoofing attempts with Merkle-tree cryptographic validation.
+            </p>
+          </div>
+
+          {/* Section 12 */}
+          <div className="rounded-sm border border-surface-border bg-black/[0.02] p-3">
+            <div className="flex items-center gap-1.5 text-slate-800 font-semibold uppercase tracking-wider text-[11px] font-mono">
+              <Terminal className="w-3.5 h-3.5 text-amber-600" />
+              <span>12. Tactical Command Palette &amp; Remote Cockpit Displays</span>
+            </div>
+            <p className="mt-1.5 text-xs">
+              Operators can press <kbd className="px-1 py-0.5 rounded bg-black/10 font-mono text-[10px]">Ctrl+K</kbd> anywhere to trigger the military HUD command palette for rapid single-stroke switching of engines, 3D views, throttle detents, and diagnostic tests. Mobile and tablet secondary screens can pair instantly via the top connection QR code with zero installation.
             </p>
           </div>
         </div>
