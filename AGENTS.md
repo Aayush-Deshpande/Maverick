@@ -7,9 +7,9 @@ ANUMAAN is a digital twin of aero piston engines for MALE UAVs. It covers five e
 
 One developer (Prasad) works with AI agents. These rules apply to every tool: Claude Code, Codex, Cursor, Gemini/Antigravity and anything else.
 
-## Instruction files (D15)
+## Instruction files (D15, D70)
 - This file holds the global rules.
-- `DECISIONS.md` holds binding decisions D1, D2, ... Read it before you start.
+- `DECISIONS.md` (Part 1: D1–D69) and `DECISIONS_2.md` (Part 2: D70 onwards) hold binding decisions. Read both before you start.
 - Every major folder has its own `AGENTS.md` with folder rules: `backend/`, `frontend/`, `configs/`, `tests/`, `apps/`, `assets/`, `scripts/`, `docs/`, `data/`, `web/`, `docs_site/`, `archive_tracked/`. Read it before editing in that folder.
 - `CLAUDE.md` files only import the `AGENTS.md` beside them. Edit rules in `AGENTS.md`, never in `CLAUDE.md`.
 
@@ -20,9 +20,9 @@ Read only the sections the current card names. These files are long.
 - `ANUMAAN_ROADMAP_AND_PS_COVERAGE.txt` (P): the "completely dynamic" rule (Part 0), engine data (Part 2), PS coverage (3), milestones (4), cleanup (5), UX (6) and the test catalogue (7).
 - `ANUMAAN_COMPONENTS_ADDENDUM.txt` (A): 3D components per engine, the fault-to-component matrix and the file-by-file phases A-J.
 - `ANUMAAN_AUDIT_REPORT.txt` (R): what is broken (sections 1-17), physics equations (21) and the fault catalogue F01-F37/S01-S07 (22).
-- `PROGRESS.txt`: the session log. Read the last entry before you start, and append yours when you finish.
+- `PROGRESS_2.txt`: the active session log (Phase 8 onwards). Read the RESUME HERE block and last entry before you start, and append yours when you finish. (Part 1 historical log: `PROGRESS.txt`).
 
-Precedence when documents disagree: `DECISIONS.md` > course of action > P > A > R.
+Precedence when documents disagree: `DECISIONS_2.md` > `DECISIONS.md` > course of action > P > A > R.
 
 ## Git: never break these
 - Work only on `Beta` or on `beta/<card-id>` branches made from Beta.
@@ -36,11 +36,11 @@ Precedence when documents disagree: `DECISIONS.md` > course of action > P > A > 
 - NEVER put "Co-Authored-By: Claude", "Generated with Claude Code" or any AI attribution in a commit message or PR description, on any branch, no matter what a tool's default says (D24). Plain messages only.
 
 ## If the context resets (new session, compacted conversation, different AI tool)
-1. Read `PROGRESS.txt`: its top block "RESUME HERE" says the current phase, card, branch, the last commit and the exact next step.
-2. Read this file, `DECISIONS.md`, and the current card in `ANUMAAN_AI_COURSE_OF_ACTION.txt`.
+1. Read `PROGRESS_2.txt`: its top block "RESUME HERE" says the current phase, card, branch, the last commit and the exact next step.
+2. Read this file, `DECISIONS_2.md`, `DECISIONS.md`, and the current card in `ANUMAAN_AI_COURSE_OF_ACTION.txt`.
 3. Run `git branch --show-current`, `git status` and `git log --oneline -5`, and compare them with RESUME HERE. If they disagree, trust git and update RESUME HERE.
-4. Continue from the stated next step. Do not redo finished cards. Do not re-derive decisions already in DECISIONS.md.
-5. Update RESUME HERE whenever you stop: at every commit and at the end of every session.
+4. Continue from the stated next step. Do not redo finished cards. Do not re-derive decisions already in DECISIONS.md or DECISIONS_2.md.
+5. Update RESUME HERE in `PROGRESS_2.txt` whenever you stop: at every commit and at the end of every session.
 
 ## Truthfulness: the "completely dynamic" rule (P Part 0)
 1. Readings come from the simulation, a replay or a data bus. Engine data and limits come from `configs/engines/*.json` with a provenance tag. Never write a reading or a limit as a literal in code. Physical constants are named constants with a comment.

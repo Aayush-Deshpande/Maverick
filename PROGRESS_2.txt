@@ -1,0 +1,42 @@
+ANUMAAN - PROGRESS LOG (PART 2: Phase 8 Onwards)
+Rules: AGENTS.md ("If the context resets"), DECISIONS.md D22/D23, DECISIONS_2.md D70.
+Entry format: ANUMAAN_AI_COURSE_OF_ACTION.txt section 19.1.
+Update the RESUME HERE block at every commit and at the end of every session.
+
+Part 1 historical session log (Phases 0 through 7, 19 Nov - 22 Nov 2026) is preserved in PROGRESS.txt.
+
+=====================================================================================================================
+RESUME HERE  (last updated 22 Nov 2026, Phase 8b AI-05 DYNAMIC CONVERSATIONAL AI & DRDO DISCIPLINED COPILOT)
+=====================================================================================================================
+Phase:        Phase 8b (LLM Copilot, RAG & Voice Agent) & Phase 7 VERIFIED.
+Card:         AI-05 (Dynamic Conversational Intelligence & Disciplined Guardrails): Removed early canned demo intercepts (_demo_misfire_response) from active generation paths; preserved canned responses strictly as offline fallbacks when LLM is unavailable; upgraded system prompts with strict DRDO military discipline, zero conversational fluff, immediate findings, and strict off-topic guardrails (refusing casual/non-aviation queries); increased token ceiling for deep technical explanations; verified live dynamic generation and speech round-trip in Python 3.12 via Gemini and Kokoro TTS; all 17 AI/RAG/Voice unit tests 100% PASS; added real animated spinners, skeleton placeholders, and in-transcript thinking loaders for chatbot and voice.
+Branch:       Beta
+Last commit:  a37b571 AI-05: record decision D69 and append AI-05 session log to PROGRESS.txt
+State:        Phase 8b live verified. Dynamic generation active on port 8000. Python 3.12 backend daemon running. Frontend dev server running on port 5173.
+Latest:       Dynamic, disciplined DRDO AI copilot and voicebot active.
+Next step:    Phase 8: UX Polish (UX-01 Glass Engine, live thermal heat-map, twin ghost overlay, UX-02 Time Machine timeline scrub).
+Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produce yet (lambda, timing, BSFC, power,
+              vibration, GO/NO-GO); some may show blanks or crash on .toFixed(null) until M0-09. Beta only.
+              (2) STOP/START return 422 until the engine state machine (M1-12).
+              (3) M0-08b changed tests/test_causal_propagation.py::test_engine_service_dynamic_subsystems to tick
+              through the full 6 s legacy fault ramp (140 ticks instead of 40). Thresholds unchanged. It used to pass
+              only because the removed background loop ticked the same object in parallel. Please confirm.
+              (6) M1-10 physics questions (tests are strict xfails, not skipped):
+                  a) Rotax 914 T-PHY-4: without an intercooler the model loses ~6 % take-off power at 8,000 ft
+                     (compressor discharge 345 K vs 326 K at SL); the OM says power holds to 8,000 ft. Need a
+                     confirmed compressor efficiency, or confirm the airbox/charge-temperature behaviour.
+                  b) T-PHY-3 at ISA-30: MAP-limited engines make 105-112 % of rated on a cold day (dense air at the
+                     same MAP; true for the NA 912 too). Keep the criterion for ISA..ISA+35 only, or add a documented
+                     cold-day limit?
+                  c) Diesels (M1-11): the ASSUMED (AE300) / PLACEHOLDER (VRDE) full-load lambda 1.55/1.52 and max
+                     boost 190/195 kPa give too little air for rated power: eta_i 0.56-0.58 (CI ~0.42-0.50), BSFC
+                     163-168 g/kWh vs config 235/218 and the VRDE brochure ~215. Sourced values, or OK to derive
+                     lambda/boost from BSFC? (strict xfail test_diesel_calibration_is_physically_plausible)
+              (7) M1-13 T-FLT-1: registry signatures the physics does not (and should not) show; change the
+                  registry or the scenario? constant-speed diesels hold rpm (F04/F06/F08 rpm); a running alternator
+                  masks battery faults (F34 bus_v); the boost controller compensates a leak below its limit
+                  (F13/F14 map_kpa); F35 shows only on a cold start; F37 is hunting, not a mean prop_rpm shift;
+                  F23 oil_t; F11 fuel_flow; F05 clog at severity 1 is past the lean misfire limit (EGT/CHT fall).
+=====================================================================================================================
+
+=== Future sessions continue below ===

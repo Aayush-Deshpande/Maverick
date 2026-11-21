@@ -1,4 +1,6 @@
-ANUMAAN - PROGRESS LOG
+ANUMAAN - PROGRESS LOG (PART 1: Phases 0 through 7 - ARCHIVED)
+NOTE: This file is Part 1 (Phases 0 through 7).
+All active session logging, updates, and the live RESUME HERE block are maintained in PROGRESS_2.txt (Part 2).
 Rules: AGENTS.md ("If the context resets"), DECISIONS.md D22/D23. Entry format: ANUMAAN_AI_COURSE_OF_ACTION.txt
 section 19.1. Update the RESUME HERE block at every commit and at the end of every session.
 
