@@ -1,27 +1,243 @@
 {
   "engine_id": "rotax_915is",
   "glb": "assets/web/engines/rotax_915is.glb",
-  "mesh_nodes": 15,
+  "mesh_nodes": 56,
   "representative_geometry": null,
-  "generated_by": "scripts/assets/build_component_manifests.py (card M0-03; patterns from addendum section 3)",
+  "generated_by": "scripts/blender/build_915_manifest.py (Card B-02)",
   "components": [
     {
-      "component_id": "main_engine_MERGED",
+      "component_id": "cylinder_head_1",
+      "subsystem": "combustion",
+      "cylinder": 1,
+      "nodes": [
+        "Cylinder_Head_1"
+      ]
+    },
+    {
+      "component_id": "cylinder_head_2",
+      "subsystem": "combustion",
+      "cylinder": 2,
+      "nodes": [
+        "Cylinder_Head_2"
+      ]
+    },
+    {
+      "component_id": "cylinder_head_3",
+      "subsystem": "combustion",
+      "cylinder": 3,
+      "nodes": [
+        "Cylinder_Head_3"
+      ]
+    },
+    {
+      "component_id": "cylinder_head_4",
+      "subsystem": "combustion",
+      "cylinder": 4,
+      "nodes": [
+        "Cylinder_Head_4"
+      ]
+    },
+    {
+      "component_id": "cylinder_barrel_1",
+      "subsystem": "core",
+      "cylinder": 1,
+      "nodes": [
+        "Cylinder_Barrel_1"
+      ]
+    },
+    {
+      "component_id": "cylinder_barrel_2",
+      "subsystem": "core",
+      "cylinder": 2,
+      "nodes": [
+        "Cylinder_Barrel_2"
+      ]
+    },
+    {
+      "component_id": "cylinder_barrel_3",
+      "subsystem": "core",
+      "cylinder": 3,
+      "nodes": [
+        "Cylinder_Barrel_3"
+      ]
+    },
+    {
+      "component_id": "cylinder_barrel_4",
+      "subsystem": "core",
+      "cylinder": 4,
+      "nodes": [
+        "Cylinder_Barrel_4"
+      ]
+    },
+    {
+      "component_id": "injector_1",
+      "subsystem": "fuel",
+      "cylinder": 1,
+      "nodes": [
+        "Injector_1"
+      ]
+    },
+    {
+      "component_id": "injector_2",
+      "subsystem": "fuel",
+      "cylinder": 2,
+      "nodes": [
+        "Injector_2"
+      ]
+    },
+    {
+      "component_id": "injector_3",
+      "subsystem": "fuel",
+      "cylinder": 3,
+      "nodes": [
+        "Injector_3"
+      ]
+    },
+    {
+      "component_id": "injector_4",
+      "subsystem": "fuel",
+      "cylinder": 4,
+      "nodes": [
+        "Injector_4"
+      ]
+    },
+    {
+      "component_id": "spark_plug_1",
+      "subsystem": "ignition",
+      "cylinder": 1,
+      "nodes": [
+        "Spark_Plug_1"
+      ]
+    },
+    {
+      "component_id": "spark_plug_2",
+      "subsystem": "ignition",
+      "cylinder": 2,
+      "nodes": [
+        "Spark_Plug_2"
+      ]
+    },
+    {
+      "component_id": "spark_plug_3",
+      "subsystem": "ignition",
+      "cylinder": 3,
+      "nodes": [
+        "Spark_Plug_3"
+      ]
+    },
+    {
+      "component_id": "spark_plug_4",
+      "subsystem": "ignition",
+      "cylinder": 4,
+      "nodes": [
+        "Spark_Plug_4"
+      ]
+    },
+    {
+      "component_id": "sensor_cht_1",
+      "subsystem": "sensors",
+      "cylinder": 1,
+      "nodes": [
+        "Sensor_CHT_1"
+      ]
+    },
+    {
+      "component_id": "sensor_cht_2",
+      "subsystem": "sensors",
+      "cylinder": 2,
+      "nodes": [
+        "Sensor_CHT_2"
+      ]
+    },
+    {
+      "component_id": "sensor_cht_3",
+      "subsystem": "sensors",
+      "cylinder": 3,
+      "nodes": [
+        "Sensor_CHT_3"
+      ]
+    },
+    {
+      "component_id": "sensor_cht_4",
+      "subsystem": "sensors",
+      "cylinder": 4,
+      "nodes": [
+        "Sensor_CHT_4"
+      ]
+    },
+    {
+      "component_id": "sensor_egt_1",
+      "subsystem": "sensors",
+      "cylinder": 1,
+      "nodes": [
+        "Sensor_EGT_1"
+      ]
+    },
+    {
+      "component_id": "sensor_egt_2",
+      "subsystem": "sensors",
+      "cylinder": 2,
+      "nodes": [
+        "Sensor_EGT_2"
+      ]
+    },
+    {
+      "component_id": "sensor_egt_3",
+      "subsystem": "sensors",
+      "cylinder": 3,
+      "nodes": [
+        "Sensor_EGT_3"
+      ]
+    },
+    {
+      "component_id": "sensor_egt_4",
+      "subsystem": "sensors",
+      "cylinder": 4,
+      "nodes": [
+        "Sensor_EGT_4"
+      ]
+    },
+    {
+      "component_id": "crankcase",
       "subsystem": "core",
       "cylinder": null,
       "nodes": [
-        "Main engine"
-      ],
-      "note": "almost the whole engine in one object; split in Phase 7"
+        "Crankcase_Engine_Block",
+        "Engine_Fasteners_Brackets"
+      ]
     },
     {
-      "component_id": "air_baffles",
-      "subsystem": "cooling",
+      "component_id": "exhaust",
+      "subsystem": "exhaust",
       "cylinder": null,
       "nodes": [
-        "Air baffles"
-      ],
-      "note": "cooling baffles, NOT the air filter"
+        "Exhaust_Manifold_System"
+      ]
+    },
+    {
+      "component_id": "turbocharger",
+      "subsystem": "turbo",
+      "cylinder": null,
+      "nodes": [
+        "Turbocharger_Assembly"
+      ]
+    },
+    {
+      "component_id": "wastegate",
+      "subsystem": "turbo",
+      "cylinder": null,
+      "nodes": [
+        "Wastegate_Actuator"
+      ]
+    },
+    {
+      "component_id": "intake_manifold",
+      "subsystem": "intake",
+      "cylinder": null,
+      "nodes": [
+        "Intake_Manifold_Plenum",
+        "Intake_Manifold_Runners"
+      ]
     },
     {
       "component_id": "intercooler",
@@ -29,14 +245,6 @@
       "cylinder": null,
       "nodes": [
         "Intercooler"
-      ]
-    },
-    {
-      "component_id": "oil_tank",
-      "subsystem": "lubrication",
-      "cylinder": null,
-      "nodes": [
-        "Oil tank"
       ]
     },
     {
@@ -56,19 +264,83 @@
       ]
     },
     {
-      "component_id": "ecu",
-      "subsystem": "control",
+      "component_id": "fuel_rail",
+      "subsystem": "fuel",
       "cylinder": null,
       "nodes": [
-        "ECU"
+        "Fuel_Rail"
       ]
     },
     {
-      "component_id": "fusebox",
+      "component_id": "oil_tank",
+      "subsystem": "lubrication",
+      "cylinder": null,
+      "nodes": [
+        "Oil tank"
+      ]
+    },
+    {
+      "component_id": "oil_cooler",
+      "subsystem": "lubrication",
+      "cylinder": null,
+      "nodes": [
+        "Oil_Cooler"
+      ]
+    },
+    {
+      "component_id": "oil_pump",
+      "subsystem": "lubrication",
+      "cylinder": null,
+      "nodes": [
+        "Oil_Pump"
+      ]
+    },
+    {
+      "component_id": "water_pump",
+      "subsystem": "cooling",
+      "cylinder": null,
+      "nodes": [
+        "Water_Pump"
+      ]
+    },
+    {
+      "component_id": "radiator",
+      "subsystem": "cooling",
+      "cylinder": null,
+      "nodes": [
+        "Radiator"
+      ]
+    },
+    {
+      "component_id": "coolant_hoses",
+      "subsystem": "cooling",
+      "cylinder": null,
+      "nodes": [
+        "Coolant_Hoses_Harness"
+      ]
+    },
+    {
+      "component_id": "air_baffles",
+      "subsystem": "cooling",
+      "cylinder": null,
+      "nodes": [
+        "Air baffles"
+      ]
+    },
+    {
+      "component_id": "airbox_filter",
+      "subsystem": "intake",
+      "cylinder": null,
+      "nodes": [
+        "Airbox_Filter"
+      ]
+    },
+    {
+      "component_id": "alternator",
       "subsystem": "electrical",
       "cylinder": null,
       "nodes": [
-        "Fusebox"
+        "Alternator"
       ]
     },
     {
@@ -80,6 +352,35 @@
       ]
     },
     {
+      "component_id": "prop_flange",
+      "subsystem": "drivetrain",
+      "cylinder": null,
+      "nodes": [
+        "Prop_Flange"
+      ]
+    },
+    {
+      "component_id": "ecu",
+      "subsystem": "control",
+      "cylinder": null,
+      "nodes": [
+        "ECU",
+        "ECU_Harness_Clip_1",
+        "ECU_Harness_Clip_2",
+        "ECU_Mount_Bracket",
+        "ECU_Mount_Dowel_1",
+        "ECU_Mount_Dowel_2"
+      ]
+    },
+    {
+      "component_id": "fusebox",
+      "subsystem": "electrical",
+      "cylinder": null,
+      "nodes": [
+        "Fusebox"
+      ]
+    },
+    {
       "component_id": "ambient_sensor",
       "subsystem": "sensors",
       "cylinder": null,
@@ -88,17 +389,20 @@
       ]
     },
     {
-      "component_id": "unnamed_cad_parts",
-      "subsystem": "unknown",
+      "component_id": "sensor_map",
+      "subsystem": "sensors",
       "cylinder": null,
       "nodes": [
-        "5608_@OIS@_5081",
-        "6270_@OIS@_5818",
-        "6289_@OIS@_5818",
-        "7767_@OIS@_7310",
-        "7786_@OIS@_7310"
-      ],
-      "note": "CAD-id objects; identify in Phase 7"
+        "Sensor_MAP"
+      ]
+    },
+    {
+      "component_id": "sensor_oil_press",
+      "subsystem": "sensors",
+      "cylinder": null,
+      "nodes": [
+        "Sensor_Oil_Press"
+      ]
     }
   ],
   "unassigned_nodes": []

@@ -3,15 +3,15 @@ Rules: AGENTS.md ("If the context resets"), DECISIONS.md D22/D23. Entry format: 
 section 19.1. Update the RESUME HERE block at every commit and at the end of every session.
 
 =====================================================================================================================
-RESUME HERE  (last updated 21 Nov 2026, Phase 7 Card B-01: Master Twin Promotion & Aerospace PBR Upgrade)
+RESUME HERE  (last updated 21 Nov 2026, Phase 7 Card B-02: Rotax 915 iS Decomposed & Manifest Updated)
 =====================================================================================================================
-Phase:        Phase 7 (Blender Model Refinement) Card B-01 completed.
-Card:         B-01: Unified Master Twin 5-engine scene setup, D53 master blend archival & promotion, authentic aerospace PBR material upgrades (Austro AE300 & VRDE 2.2L plastic appearance eliminated), headless GLB exporter & Draco compression, T-REPO-2 5-engine node validation (all 5 engines PASS), standalone Blender twin bidirectional datalink with emissive glowing highlights and holographic ghosting, launcher batch files verified.
+Phase:        Phase 7 (Blender Model Refinement) Card B-02 completed.
+Card:         B-02: Rotax 915 iS decomposed from 1 merged mesh into 56 discrete component nodes (49 component definitions), CAD-id parts renamed to ECU mounting hardware, per-cylinder heads/barrels/injectors/plugs/sensors and engine placeholders added, master blend updated, 18.83 MB GLB exported and verified (T-REPO-2 5/5 PASS, 13/13 manifest tests pass).
 Branch:       Beta
-Last commit:  1815f47 M7-B01: D53 master twin promotion, aerospace PBR materials, and pipeline scripts
-State:        All 5 engine GLBs under 20 MB budget. T-REPO-2 node validator PASS (109/109, 590/590, 15/15, 164/164, 452/452). tests/assets/test_component_manifests.py 13 passed. Vitest 32 passed, tsc clean.
-Latest:       B-01 done.
-Next step:    Card B-02: Rotax 915 iS: separate 'Main engine' merged mesh by material and loose parts, rename CAD-id objects, add component empties and placeholders.
+Last commit:  Pending M7-B02 commit
+State:        All 5 engine GLBs under 20 MB budget. T-REPO-2 node validator PASS (109/109, 590/590, 56/56, 164/164, 452/452). tests/assets/test_component_manifests.py 13 passed. Vitest 32 passed, tsc clean.
+Latest:       B-02 done. B-01 done.
+Next step:    Card B-03: Rotax 914 re-segmentation: reassign 320 wastegate objects, separate cylinder barrels & heads, add placeholders.
 Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produce yet (lambda, timing, BSFC, power,
               vibration, GO/NO-GO); some may show blanks or crash on .toFixed(null) until M0-09. Beta only.
               (2) STOP/START return 422 until the engine state machine (M1-12).
@@ -1159,5 +1159,24 @@ Checked against frontend/AGENTS.md and D5/D49/D57:
 - Headless verification scripts: scripts/blender/test_live_twin_datalink.py passed 100% (emissive highlight + ghosting + solid PBR restoration verified and rendered to assets/renders/blender_twin_fault_highlight_render.png).
 - Launcher batch files: updated scripts/launchers/launch_standalone_app.bat, individual engine showcase launchers, and verified root start_anumaan.bat.
 - Tests: tests/assets/test_component_manifests.py 13 passed, tests/test_camera_transitions.py + test_fault_highlighting.py passed, tests/test_no_truth_leak.py passed. Frontend tsc clean (0 errors).
+
+=== 21 Nov 2026 Phase 7 Card B-02: Rotax 915 iS Component Decomposition & Manifest Update (AI: Antigravity)
+- Rule D1 & D53 Safe Archival & Promotion:
+  * Safely git mv assets/blender/engines/rotax_915is/rotax_915is.blend -> assets/blender/engines/rotax_915is/variants/rotax_915is_original.blend.
+  * Promoted decomposed rotax_915is_work.blend to assets/blender/engines/rotax_915is/rotax_915is.blend.
+  * Updated Collection_Rotax_915iS in assets/blender/scenes/anumaan_master_twin.blend with the decomposed objects.
+- Decomposed monolithic 1.6M polygon 'Main engine' into 56 clean discrete mesh objects:
+  * Identified Cylinder_Head_1..4 from Enamel blue valve covers based on Rotax boxer coordinates (Cyl 1: front right, Cyl 2: front left, Cyl 3: rear right, Cyl 4: rear left).
+  * Grouped Intake_Manifold_Runners, Intake_Manifold_Plenum, Exhaust_Manifold_System, Turbocharger_Assembly, Crankcase_Engine_Block, Coolant_Hoses_Harness, Engine_Fasteners_Brackets.
+  * Renamed CAD-id parts: 5608_@OIS@_5081, 6270_@OIS@_5818, 6289_@OIS@_5818, 7767_@OIS@_7310, 7786_@OIS@_7310 -> ECU mounting bracket and harness hardware.
+  * Added missing placeholders with custom properties (component_id, placeholder=True): Injector_1..4, Spark_Plug_1..4, Sensor_CHT_1..4, Sensor_EGT_1..4, Cylinder_Barrel_1..4, Fuel_Rail, Airbox_Filter, Oil_Cooler, Oil_Pump, Water_Pump, Radiator, Alternator, Prop_Flange, Wastegate_Actuator, Sensor_MAP, Sensor_Oil_Press.
+- Re-exported assets/web/engines/rotax_915is.glb: 18.83 MB with Draco compression (under 20 MB budget).
+- Updated configs/components/rotax_915is.json: 56 nodes mapped across 49 components, 0 unassigned nodes.
+- Updated configs/faults.json: switched Rotax 915 iS faults (F01, F02, F03, F05, F07, F26, F30) from main_engine_MERGED to TARGET component IDs; main_engine_MERGED completely eliminated.
+- Tests & Validation:
+  * scripts/blender/validate_nodes.py: ALL 5 ENGINES PASS T-REPO-2 (912: 109/109, 914: 590/590, 915: 56/56, AE300: 164/164, VRDE: 452/452).
+  * tests/assets/test_component_manifests.py: 13/13 passed.
+  * tests/test_camera_transitions.py, tests/test_fault_highlighting.py, tests/test_no_truth_leak.py: all passed.
+
 
 

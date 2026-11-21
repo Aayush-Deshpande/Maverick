@@ -71,8 +71,8 @@ def export_engine(engine_id, output_dir=None, blend_file=None):
             export_cameras=False,
             export_lights=False,
             export_draco_mesh_compression_enable=True,
-            export_draco_mesh_compression_level=7,
-            export_draco_position_quantization=14,
+            export_draco_mesh_compression_level=10,
+            export_draco_position_quantization=13,
             export_draco_normal_quantization=10,
             export_draco_texcoord_quantization=12
         )

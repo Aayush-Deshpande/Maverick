@@ -90,10 +90,11 @@
         },
         "rotax_915is": {
           "now": [
-            "main_engine_MERGED"
+            "spark_plug_{cyl}",
+            "cylinder_head_{cyl}"
           ],
-          "marker": true,
-          "marker_for": "cylinder {cyl}"
+          "marker": false,
+          "marker_for": null
         }
       },
       "channel_scope": null
@@ -163,10 +164,11 @@
         },
         "rotax_915is": {
           "now": [
-            "main_engine_MERGED"
+            "spark_plug_{cyl}",
+            "cylinder_head_{cyl}"
           ],
-          "marker": true,
-          "marker_for": "cylinder {cyl}"
+          "marker": false,
+          "marker_for": null
         },
         "austro_ae300": {
           "now": [
@@ -260,10 +262,13 @@
         },
         "rotax_915is": {
           "now": [
-            "main_engine_MERGED"
+            "cylinder_head_1",
+            "cylinder_head_2",
+            "cylinder_head_3",
+            "cylinder_head_4"
           ],
-          "marker": true,
-          "marker_for": "cylinder heads"
+          "marker": false,
+          "marker_for": null
         }
       },
       "channel_scope": null
@@ -440,10 +445,11 @@
         },
         "rotax_915is": {
           "now": [
-            "main_engine_MERGED"
+            "injector_{cyl}",
+            "fuel_rail"
           ],
-          "marker": true,
-          "marker_for": "injector {cyl}"
+          "marker": false,
+          "marker_for": null
         }
       },
       "channel_scope": null
@@ -637,10 +643,11 @@
         },
         "rotax_915is": {
           "now": [
-            "main_engine_MERGED"
+            "injector_{cyl}",
+            "fuel_rail"
           ],
-          "marker": true,
-          "marker_for": "injector {cyl}"
+          "marker": false,
+          "marker_for": null
         }
       },
       "channel_scope": null,
@@ -2231,7 +2238,7 @@
         },
         "rotax_915is": {
           "now": [
-            "main_engine_MERGED"
+            "crankcase"
           ],
           "marker": false,
           "marker_for": null
@@ -2560,10 +2567,11 @@
         },
         "rotax_915is": {
           "now": [
-            "main_engine_MERGED"
+            "spark_plug_{cyl}",
+            "cylinder_head_{cyl}"
           ],
-          "marker": true,
-          "marker_for": "cylinder {cyl}"
+          "marker": false,
+          "marker_for": null
         },
         "austro_ae300": {
           "now": [
