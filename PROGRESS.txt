@@ -8,7 +8,7 @@ RESUME HERE  (last updated 21 Nov 2026, Phase 7 Card B-02: Rotax 915 iS Decompos
 Phase:        Phase 7 (Blender Model Refinement) Card B-02 completed.
 Card:         B-02: Rotax 915 iS decomposed from 1 merged mesh into 56 discrete component nodes (49 component definitions), CAD-id parts renamed to ECU mounting hardware, per-cylinder heads/barrels/injectors/plugs/sensors and engine placeholders added, master blend updated, 18.83 MB GLB exported and verified (T-REPO-2 5/5 PASS, 13/13 manifest tests pass).
 Branch:       Beta
-Last commit:  Pending M7-B02 commit
+Last commit:  20ae66f M7-B02: Rotax 915 iS component decomposition and manifest update
 State:        All 5 engine GLBs under 20 MB budget. T-REPO-2 node validator PASS (109/109, 590/590, 56/56, 164/164, 452/452). tests/assets/test_component_manifests.py 13 passed. Vitest 32 passed, tsc clean.
 Latest:       B-02 done. B-01 done.
 Next step:    Card B-03: Rotax 914 re-segmentation: reassign 320 wastegate objects, separate cylinder barrels & heads, add placeholders.
