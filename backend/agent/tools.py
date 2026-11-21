@@ -150,7 +150,7 @@ class ServicesSource:
         self.services, self.registry = services, registry
 
     def state(self, engine_id: str) -> Optional[Dict[str, Any]]:
-        msg = self.services.channel(engine_id).last_message
+        msg = self.services.build_message(engine_id) or self.services.channel(engine_id).last_message
         return json.loads(msg) if msg else None
 
     def config(self, engine_id: str) -> Dict[str, Any]:
