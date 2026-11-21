@@ -1159,15 +1159,17 @@
         },
         "rotax_914": {
           "now": [
-            "intake_manifold"
+            "airbox_filter"
           ],
           "marker": false,
           "marker_for": null
         },
         "rotax_915is": {
-          "now": [],
-          "marker": true,
-          "marker_for": "airbox / air filter"
+          "now": [
+            "airbox_filter"
+          ],
+          "marker": false,
+          "marker_for": null
         },
         "austro_ae300": {
           "now": [
@@ -1334,10 +1336,11 @@
       "components": {
         "rotax_914": {
           "now": [
-            "turbo_turbine"
+            "wastegate",
+            "wastegate_actuator"
           ],
-          "marker": true,
-          "marker_for": "wastegate (the 'wastegate' objects are missegmented)"
+          "marker": false,
+          "marker_for": null
         },
         "rotax_915is": {
           "now": [
@@ -1418,10 +1421,11 @@
       "components": {
         "rotax_914": {
           "now": [
-            "turbo_turbine"
+            "wastegate",
+            "wastegate_actuator"
           ],
-          "marker": true,
-          "marker_for": "wastegate (the 'wastegate' objects are missegmented)"
+          "marker": false,
+          "marker_for": null
         },
         "rotax_915is": {
           "now": [
@@ -1850,14 +1854,18 @@
           "marker_for": null
         },
         "rotax_914": {
-          "now": [],
-          "marker": true,
-          "marker_for": "radiator"
+          "now": [
+            "radiator"
+          ],
+          "marker": false,
+          "marker_for": null
         },
         "rotax_915is": {
-          "now": [],
-          "marker": true,
-          "marker_for": "radiator"
+          "now": [
+            "radiator"
+          ],
+          "marker": false,
+          "marker_for": null
         },
         "austro_ae300": {
           "now": [
