@@ -8,7 +8,7 @@ RESUME HERE  (last updated 21 Nov 2026, Phase 7 Card B-01: Master Twin Promotion
 Phase:        Phase 7 (Blender Model Refinement) Card B-01 completed.
 Card:         B-01: Unified Master Twin 5-engine scene setup, D53 master blend archival & promotion, authentic aerospace PBR material upgrades (Austro AE300 & VRDE 2.2L plastic appearance eliminated), headless GLB exporter & Draco compression, T-REPO-2 5-engine node validation (all 5 engines PASS), standalone Blender twin bidirectional datalink with emissive glowing highlights and holographic ghosting, launcher batch files verified.
 Branch:       Beta
-Last commit:  Pending M7-B01 commit
+Last commit:  1815f47 M7-B01: D53 master twin promotion, aerospace PBR materials, and pipeline scripts
 State:        All 5 engine GLBs under 20 MB budget. T-REPO-2 node validator PASS (109/109, 590/590, 15/15, 164/164, 452/452). tests/assets/test_component_manifests.py 13 passed. Vitest 32 passed, tsc clean.
 Latest:       B-01 done.
 Next step:    Card B-02: Rotax 915 iS: separate 'Main engine' merged mesh by material and loose parts, rename CAD-id objects, add component empties and placeholders.
