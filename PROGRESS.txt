@@ -1271,6 +1271,38 @@ Checked against frontend/AGENTS.md and D5/D49/D57:
 - Commits:
   * dec0f11: M7-B06: revert artificial placeholder meshes, restore authentic CAD realism across all engines, and fix 914 comparison renders.
 
+=== 22 Nov 2026 Phase 8b Card AI-05 (Dynamic Conversational Intelligence, DRDO Military Bearing & Zero-Lag Telemetry): Upgraded AI Copilot & Voice Agent (AI: Antigravity)
+- Architecture & Performance Optimization (D69):
+  * Zero-Lag In-Memory Telemetry Grounding: Telemetry snapshot and FMECA diagnostics are queried directly from the in-memory simulation channel in RAM (<0.1 ms latency, zero disk I/O, zero DB polling loops).
+  * Event-Driven Execution: The AI computes only on operator inquiry or voice turn; no background polling loops.
+  * Asynchronous Worker Offloading: STT, LLM generation, and TTS synthesis are dispatched via `asyncio.to_thread`, ensuring the 20 Hz WebSocket telemetry broadcast loop to the UI is never stalled.
+  * Synchronous Tool State Query: In `backend/agent/tools.py`, `ServicesSource.state()` resolves live state via `self.services.build_message(engine_id) or self.services.channel(engine_id).last_message`.
+- Dynamic Intelligence with Offline Emergency Fallback:
+  * Removed early demo canned intercepts (`_demo_misfire_response`) from `ask()` and `ask_voice()` in `backend/agent/copilot.py`.
+  * Preserved deterministic ATA checklists strictly as offline emergency fallbacks when no LLM is configured or network is unreachable.
+  * Expanded token ceilings (voice: 280 tokens; chat: 450 tokens) for fluid, comprehensive technical explanations.
+- DRDO Military Bearing & Strict Guardrails:
+  * System prompt identity set to MAVERICK, Tactical AI Flight & Propulsion Copilot for the ANUMAAN MALE UAV Digital Twin (DRDO / iDEX PS-26054).
+  * Direct action-first opening sentences with zero conversational fluff, greetings, or apologies.
+  * Strict off-topic guardrails: casual or non-aviation inquiries trigger immediate refusal: "Security notice: This terminal is strictly restricted to ANUMAAN UAV propulsion diagnostics, telemetry evaluation, and operational flight procedures."
+  * Voice replies strictly plain spoken text without markdown formatting (`no **`, `no ##`).
+- Real Frontend Loaders & Shimmer Feedback:
+  * `CopilotPanel.tsx`: Added `Loader2` spinner on "Ask" button, live telemetry query status banner, and 4 animated skeleton wireframe cards (`animate-pulse`).
+  * `DiagnosticCard.tsx`: Added animated `Loader2` reasoning banner during mission copilot queries.
+  * `VoiceCopilot.tsx`: Added in-transcript live thinking message bubble (`<Bot />`) streaming tokens from the backend thinking buffer with animated cursor (`▋`).
+- Live Verification & Test Suite:
+  * Python 3.12 verified end-to-end for Whisper.cpp STT + Gemini Flash Lite LLM + Kokoro-82M TTS.
+  * Fault injection verification (`F01 Ignition Misfire Cyl 2`): `egt[2]` dropped to 10.5 °C; 1X vibration spiked to 27.44 z; FMECA diagnosed `F01` with posterior 1.00; dynamic LLM cited Rotax OM-912 i pages 14 & 73 and ATA Chapter 79.
+  * Unit tests: 17/17 PASS in `tests/test_copilot_and_knowledge.py` and `tests/test_voice_copilot.py`.
+  * Frontend: 32/32 Vitest tests passed; TypeScript check clean (0 errors).
+- Commits:
+  * 1148f6d: AI-05: upgrade copilot and voice agent to dynamic DRDO conversational intelligence with disciplined guardrails and offline fallback
+  * bbc6579: AI-05: update PROGRESS.txt with dynamic AI copilot and disciplined guardrails verification
+  * ab4df16: AI-05: ensure live state message is built synchronously on copilot tool query
+  * aacdddc: AI-05: update PROGRESS.txt with live state synchronous message commit
+  * 94d2ea8: AI-05: add real animated spinners, skeleton placeholders, and in-transcript thinking loaders for chatbot and voice
+  * c323bfc: AI-05: update PROGRESS.txt with frontend loader enhancements
+
 
 
 
