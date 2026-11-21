@@ -20,9 +20,9 @@ describe('EngineViewer3D Multi-Mode HUD and Viewport', () => {
     );
 
     expect(html).toContain('SOLID');
-    expect(html).toContain('X-RAY GLASS');
-    expect(html).toContain('THERMAL FLIR');
-    expect(html).toContain('TWIN GHOST');
+    expect(html).toContain('X-RAY');
+    expect(html).toContain('THERMAL');
+    expect(html).toContain('WIREFRAME');
   });
 
   it('renders ThermalLegend when viewMode is thermal', () => {
@@ -36,7 +36,7 @@ describe('EngineViewer3D Multi-Mode HUD and Viewport', () => {
       />
     );
 
-    expect(html).toContain('Thermal FLIR Pyrometry');
+    expect(html).toContain('Thermal Pyrometry (FLIR)');
     expect(html).toContain('115.0°C');
     expect(html).toContain('122.0°C');
   });

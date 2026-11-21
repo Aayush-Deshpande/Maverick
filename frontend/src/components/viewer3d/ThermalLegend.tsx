@@ -54,16 +54,16 @@ export default function ThermalLegend({
 
   return (
     <div
-      className={`surface-panel rounded-sm border border-surface-border p-2.5 sm:p-3 text-xs font-mono backdrop-blur-md bg-slate-950/80 shadow-lg ${className}`}
+      className={`surface-panel rounded-sm border border-surface-border p-2.5 sm:p-3 text-xs font-mono bg-[#f7f6f0] text-slate-800 shadow-md ${className}`}
     >
-      <div className="flex items-center justify-between gap-3 border-b border-surface-border/60 pb-2">
+      <div className="flex items-center justify-between gap-3 border-b border-surface-border pb-2">
         <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
-          <span className="font-bold tracking-wider text-slate-100 uppercase">
-            Thermal FLIR Pyrometry
+          <span className="w-2 h-2 rounded-full bg-rose-600 animate-pulse" />
+          <span className="font-bold tracking-wider text-slate-900 uppercase">
+            Thermal Pyrometry (FLIR)
           </span>
         </div>
-        <span className="text-[10px] text-slate-400 font-mono">
+        <span className="text-[10px] text-slate-600 font-mono">
           20 Hz Dynamic
         </span>
       </div>
@@ -81,18 +81,18 @@ export default function ThermalLegend({
               key={c.id}
               className={`rounded-sm border px-2 py-1.5 flex flex-col justify-between ${
                 isOverheat
-                  ? 'border-rose-500 bg-rose-950/40 text-rose-200'
-                  : 'border-surface-border/60 bg-black/40 text-slate-200'
+                  ? 'border-rose-400 bg-rose-50 text-rose-950 shadow-2xs'
+                  : 'border-surface-border bg-white text-slate-900 shadow-2xs'
               }`}
             >
-              <div className="flex items-center justify-between text-[10px] text-slate-400">
-                <span>{c.label}</span>
+              <div className="flex items-center justify-between text-[10px] text-slate-600">
+                <span className="font-medium">{c.label}</span>
                 <span
-                  className="w-2 h-2 rounded-full"
+                  className="w-2 h-2 rounded-full border border-black/10"
                   style={{ backgroundColor: hex }}
                 />
               </div>
-              <div className="mt-1 font-bold text-sm">
+              <div className="mt-1 font-bold text-sm text-slate-900">
                 {c.val !== null ? `${c.val.toFixed(1)}°C` : 'NO DATA'}
               </div>
             </div>
@@ -101,10 +101,10 @@ export default function ThermalLegend({
       </div>
 
       {/* Exhaust & Gradient Bar */}
-      <div className="mt-2.5 pt-2 border-t border-surface-border/40 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+      <div className="mt-2.5 pt-2 border-t border-surface-border flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div className="flex items-center gap-2 text-[11px]">
-          <span className="text-slate-400">HOT SECTION / EGT:</span>
-          <span className="font-bold text-amber-300">
+          <span className="text-slate-600 font-medium">HOT SECTION / EGT:</span>
+          <span className="font-bold text-slate-900 font-mono">
             {egt !== null ? `${egt.toFixed(1)}°C` : 'NO DATA'}
           </span>
           <span className="text-[10px] text-slate-500">
@@ -114,16 +114,16 @@ export default function ThermalLegend({
 
         {/* FLIR Incandescence Color Gradient Bar */}
         <div className="flex items-center gap-1.5">
-          <span className="text-[9px] text-slate-400">40°C</span>
+          <span className="text-[9px] text-slate-600 font-mono">40°C</span>
           <div
-            className="w-24 sm:w-32 h-2 rounded-xs border border-surface-border/60"
+            className="w-24 sm:w-32 h-2 rounded-xs border border-surface-border"
             style={{
               background:
                 'linear-gradient(to right, #334155, #0d9488, #10b981, #f59e0b, #ef4444, #f43f5e, #ffffff)',
             }}
             title="FLIR Thermal Spectrum: Slate (<60°C) -> Teal (85°C) -> Green (100°C) -> Amber (120°C) -> Red (>135°C) -> Incandescent White (>900°C)"
           />
-          <span className="text-[9px] text-slate-400">950°C</span>
+          <span className="text-[9px] text-slate-600 font-mono">950°C</span>
         </div>
       </div>
     </div>

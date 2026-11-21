@@ -42,7 +42,11 @@ export const InfoTooltip: React.FC<InfoTooltipProps> = ({
     let left = rect.left;
     let top = rect.top;
 
-    if (placement === 'right' || (placement === 'auto' && rect.left < 300)) {
+    if (placement === 'bottom' || (placement === 'auto' && rect.top < 120)) {
+      // Position below the trigger (ideal for top toolbars and headers)
+      left = rect.left + rect.width / 2 - w / 2;
+      top = rect.bottom + 6;
+    } else if (placement === 'right' || (placement === 'auto' && rect.left < 300)) {
       // Position to the right of the trigger (ideal for left-aligned aside panels)
       left = rect.right + 8;
       top = rect.top - 10;
@@ -50,9 +54,6 @@ export const InfoTooltip: React.FC<InfoTooltipProps> = ({
       // Position to the left of the trigger
       left = rect.left - w - 8;
       top = rect.top - 10;
-    } else if (placement === 'bottom') {
-      left = rect.left + rect.width / 2 - w / 2;
-      top = rect.bottom + 6;
     } else {
       // Default top
       left = rect.left + rect.width / 2 - w / 2;

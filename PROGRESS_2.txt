@@ -6,14 +6,14 @@ Update the RESUME HERE block at every commit and at the end of every session.
 Part 1 historical session log (Phases 0 through 7, 19 Nov - 22 Nov 2026) is preserved in PROGRESS.txt.
 
 =====================================================================================================================
-RESUME HERE  (last updated 22 Nov 2026, Phase 8 UX-06 Command Palette & CAN Bus Inspector Editorial Redesign)
+RESUME HERE  (last updated 22 Nov 2026, Phase 8 UX-07 Unified 3D Viewport Toolbar & Camera Orbit Polish)
 =====================================================================================================================
-Phase:        Phase 8 (Operator UX / Editorial Design System Alignment).
-Card:         UX-06 (Editorial Design System Polish & De-Slop for Command Palette & CAN Bus Inspector): Purged generic AI-generated dark sci-fi tropes, electric cyan glows, and unreadable black-on-dark contrast inversions; redesigned both overlays into ANUMAAN's warm paper / ink editorial design system (surface-panel bg-[#f7f6f0], crisp white card containers, sharp 1px borders, terracotta accents, high-contrast readable typography); real domain copy for SAE J1939 telemetry, CAN IDS attack simulation, and tactical power levers; verified with Chrome CDP audit, 52/52 Vitest passed, tsc clean.
+Phase:        Phase 8 (Operator UX / 3D Viewport & Production Readiness Polish).
+Card:         UX-07 (Unified 3D Viewport Toolbar, Mode Keyboard Cycling, Orbit Camera Center Reset, and Quality Polish): Integrated view mode selector directly into top-right toolbar with intuitive names (SOLID, X-RAY, THERMAL, WIREFRAME); wired 'V' hotkey to cycle views; built non-cluttered, high-density InfoTooltip with 'bottom' placement; fixed auto-rotation toggle by wiring controlled prop synchronization in EngineViewer3D; fixed orbit camera axis reset on clear-all (controls.target.set(0, 0.05, 0)); updated Clear All hotkey to 'X' with clickable sidebar action buttons; 52/52 Vitest passed, tsc clean, pytest passed.
 Branch:       Beta
-Last commit:  9b30b63 UX-06: redesign command palette and CAN bus inspector to native editorial paper surface system
-State:        Command Palette and CAN Bus Inspector fully aligned with editorial design system. 52/52 Vitest, 3/3 Pytest passed.
-Latest:       Command Palette & CAN Bus Inspector de-slopped and redesigned to native paper/ink design tokens.
+Last commit:  (pending commit for UX-07)
+State:        3D twin stage, toolbars, camera rigs, and operator tooltips fully polished and tested. 52/52 Vitest, 0 tsc errors.
+Latest:       3D render mode selector incorporated into unified toolbar; auto-rotation and camera reset verified.
 Next step:    Phase 8 UX-02 (Time Machine mission timeline scrubber & historical replay).
 Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produce yet (lambda, timing, BSFC, power,
               vibration, GO/NO-GO); some may show blanks or crash on .toFixed(null) until M0-09. Beta only.
@@ -155,3 +155,25 @@ Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produ
   * TypeScript Check: Clean (0 errors via `npx tsc --noEmit`).
   * Backend Pytest: 100% PASS (`tests/can/test_can_endpoints.py`, `tests/test_production_ops.py`).
   * Webview Automated Verification: `scripts/tools/verify_webview_flow.py` executed cleanly with 0 console errors/warnings in Chrome CDP headless, capturing crisp screenshots of both redesigned modals.
+
+=== 22 Nov 2026 Phase 8 Card UX-07 (Unified 3D Viewport Toolbar, Mode Keyboard Cycling, Camera Center Reset & Asset Clean) (AI: Antigravity)
+- Unified 3D Viewport Toolbar & Professional Nomenclature:
+  * Incorporated render mode buttons directly into the main top-right toolbar card in `TwinStage.tsx`, removing all duplicate/floating bars that previously collided with the fault sidebar.
+  * Standardized professional terminology: `SOLID`, `X-RAY`, `THERMAL`, `WIREFRAME` (purged confusing labels like 'CAD' or 'Twin Ghost' and simplified 'X-Ray Glass' strictly to 'X-RAY').
+  * Wired global keyboard shortcut `V` to cycle through the 4 render modes sequentially with operator toast notices.
+- Ergonomic, Non-Obstructive Tooltips (`InfoTooltip.tsx`):
+  * Redesigned 3D render mode tooltip into a clean, structured micro-card with color-coded badges and concise natural-language descriptions.
+  * Enhanced `InfoTooltip.tsx` with intelligent `placement="bottom"` clamping for all top-docked toolbars, ensuring popovers never cover the controls they explain.
+- Camera Orbit Centering & Auto-Rotation Synchronization:
+  * Fixed auto-rotation toggle in `EngineViewer3D.tsx` by synchronizing controlled `autoRotate` props directly into `CameraRig` OrbitControls.
+  * Fixed rotation axis reset: when all faults are cleared (`box.isEmpty()`), `controls.target.set(0, 0.05, 0)` is restored, eliminating off-center camera wobbling.
+- Intuitive Fault Management & Keybinding Ergonomics:
+  * Changed Clear All keybinding from `0` to `X` (with `0` and `Delete` fallbacks); converted sidebar labels into interactive, clickable buttons for both `X clear all` and `R reset`.
+  * Updated Twin Guide Architecture Reference (`?`) with `V Cycle 3D render views` and `X Clear all faults`.
+- Verified Production Assets (`images/`):
+  * Purged 25 obsolete intermediate test files (including early white cyclorama studio bowl mesh comparisons).
+  * Retained 30 verified production beauty CAD renders and audit captures.
+- Comprehensive Verification:
+  * Frontend Vitest: 52/52 tests passed across 16 test files (100% PASS).
+  * TypeScript Check: Clean (0 errors via `npx tsc --noEmit`).
+  * Backend Pytest: 100% PASS (`tests/can/test_can_endpoints.py`, `tests/test_production_ops.py`).

@@ -54,26 +54,26 @@ export default function CopilotPanel({ engineId, api }: Props) {
       </form>
       {busy && (
         <div className="mt-3 space-y-3" aria-live="polite">
-          <div className="flex items-center gap-2 text-xs font-mono text-slate-300 bg-white/[0.02] border border-surface-border px-3 py-2 rounded-sm">
+          <div className="flex items-center gap-2 text-xs font-mono text-slate-800 bg-white border border-surface-border px-3 py-2 rounded-sm shadow-2xs">
             <Loader2 size={14} className="animate-spin text-accent shrink-0" />
             <span>Reading live engine telemetry, physical limits, and ATA manual procedures…</span>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 animate-pulse">
-            <div className="md:col-span-2 rounded-sm border border-surface-border/50 bg-white/[0.01] p-3 space-y-2">
-              <div className="h-3 w-32 bg-slate-700/50 rounded-sm"></div>
-              <div className="h-4 w-5/6 bg-slate-800/40 rounded-sm"></div>
+            <div className="md:col-span-2 rounded-sm border border-surface-border bg-white p-3 space-y-2 shadow-2xs">
+              <div className="h-3 w-32 bg-black/[0.08] rounded-sm"></div>
+              <div className="h-4 w-5/6 bg-black/[0.05] rounded-sm"></div>
             </div>
-            <div className="rounded-sm border border-surface-border/50 bg-white/[0.01] p-3 space-y-2">
-              <div className="h-3 w-28 bg-slate-700/50 rounded-sm"></div>
-              <div className="h-4 w-4/5 bg-slate-800/40 rounded-sm"></div>
+            <div className="rounded-sm border border-surface-border bg-white p-3 space-y-2 shadow-2xs">
+              <div className="h-3 w-28 bg-black/[0.08] rounded-sm"></div>
+              <div className="h-4 w-4/5 bg-black/[0.05] rounded-sm"></div>
             </div>
-            <div className="rounded-sm border border-surface-border/50 bg-white/[0.01] p-3 space-y-2">
-              <div className="h-3 w-36 bg-slate-700/50 rounded-sm"></div>
-              <div className="h-4 w-4/5 bg-slate-800/40 rounded-sm"></div>
+            <div className="rounded-sm border border-surface-border bg-white p-3 space-y-2 shadow-2xs">
+              <div className="h-3 w-36 bg-black/[0.08] rounded-sm"></div>
+              <div className="h-4 w-4/5 bg-black/[0.05] rounded-sm"></div>
             </div>
-            <div className="md:col-span-2 rounded-sm border border-surface-border/50 bg-white/[0.01] p-3 space-y-2">
-              <div className="h-3 w-40 bg-slate-700/50 rounded-sm"></div>
-              <div className="h-3 w-2/3 bg-slate-800/30 rounded-sm"></div>
+            <div className="md:col-span-2 rounded-sm border border-surface-border bg-white p-3 space-y-2 shadow-2xs">
+              <div className="h-3 w-40 bg-black/[0.08] rounded-sm"></div>
+              <div className="h-3 w-2/3 bg-black/[0.05] rounded-sm"></div>
             </div>
           </div>
         </div>

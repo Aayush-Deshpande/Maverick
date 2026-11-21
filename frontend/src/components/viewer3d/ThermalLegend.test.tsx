@@ -17,7 +17,7 @@ describe('ThermalLegend HUD overlay', () => {
 
     const html = renderToStaticMarkup(<ThermalLegend readings={readings} chtMax={135} egtMax={950} />);
 
-    expect(html).toContain('Thermal FLIR Pyrometry');
+    expect(html).toContain('Thermal Pyrometry (FLIR)');
     expect(html).toContain('118.5°C');
     expect(html).toContain('136.4°C');
     expect(html).toContain('840.0°C');
@@ -27,7 +27,7 @@ describe('ThermalLegend HUD overlay', () => {
 
   it('renders fallback when no telemetry readings are available', () => {
     const html = renderToStaticMarkup(<ThermalLegend readings={null} />);
-    expect(html).toContain('Thermal FLIR Pyrometry');
+    expect(html).toContain('Thermal Pyrometry (FLIR)');
     expect(html).toContain('NO DATA');
   });
 });

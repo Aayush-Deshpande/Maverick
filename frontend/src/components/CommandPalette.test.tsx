@@ -40,9 +40,9 @@ describe('CommandPalette component', () => {
 
     // 3D Visual Modes
     expect(html).toContain('Solid CAD Surface');
-    expect(html).toContain('X-Ray Optical Glass');
-    expect(html).toContain('Thermal FLIR Heatmap');
-    expect(html).toContain('Twin Ghost');
+    expect(html).toContain('X-Ray Internal View');
+    expect(html).toContain('Thermal Pyrometry Heatmap');
+    expect(html).toContain('Wireframe Structural Overlay');
 
     // Tactical Faults & Operations
     expect(html).toContain('Ignition Misfire Cylinder 2');

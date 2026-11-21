@@ -247,10 +247,9 @@ function Model({
       if (controls) {
         controls.autoRotate = autoRotateEnabled;
         controls.autoRotateSpeed = 0.8;
+        controls.target.set(0, 0.05, 0);
       }
-      if (framed.current !== root) {
-        bounds.moveTo([1.65, 1.1, 2.0]).lookAt({ target: [0, 0.05, 0] });
-      }
+      bounds.moveTo([1.65, 1.1, 2.0]).lookAt({ target: [0, 0.05, 0] });
     } else {
       const part = box.getCenter(new Vector3());
       const out = part.clone().sub(new Vector3(0, 0.05, 0));
@@ -301,7 +300,7 @@ export default function EngineViewer3D({
   fill,
   focusSignal = 0,
   bare,
-  autoRotate: initialAutoRotate = true,
+  autoRotate: propAutoRotate,
   readings,
   viewMode: controlledViewMode,
   onViewModeChange,
@@ -314,7 +313,9 @@ export default function EngineViewer3D({
   const [error, setError] = useState('');
   const [lit, setLit] = useState<string[]>([]);
   const [focusRequest, setFocusRequest] = useState(0);
-  const [autoRotate, setAutoRotate] = useState(initialAutoRotate);
+  const [internalAutoRotate, setInternalAutoRotate] = useState(true);
+  const autoRotate = propAutoRotate !== undefined ? propAutoRotate : internalAutoRotate;
+  const setAutoRotate = setInternalAutoRotate;
   const labels = useLabels();
 
   const highlights = useMemo<Highlight[]>(() => {
@@ -375,53 +376,55 @@ export default function EngineViewer3D({
       )}
 
       <div className={`relative overflow-hidden ${bare ? 'h-full' : `mt-3 rounded-sm border border-surface-border bg-black/20 ${fill ? 'flex-1 min-h-0' : 'h-[min(60vh,420px)]'}`}`}>
-        {/* View Mode Segmented HUD Toolbar */}
-        <div className="absolute left-2 sm:left-3 top-2 sm:top-3 z-10 flex items-center gap-1 rounded-sm border border-surface-border bg-slate-950/85 p-1 shadow-md backdrop-blur-xs text-xs font-mono">
-          <button
-            type="button"
-            onClick={() => setMode('solid')}
-            className={`px-2 py-1 rounded-xs transition-colors flex items-center gap-1.5 cursor-pointer ${
-              viewMode === 'solid' ? 'bg-primary text-white font-semibold shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'
-            }`}
-            title="Solid CAD PBR mode: original photorealistic aerospace materials"
-          >
-            <Box className="w-3.5 h-3.5" />
-            <span className="hidden md:inline">SOLID</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode('glass')}
-            className={`px-2 py-1 rounded-xs transition-colors flex items-center gap-1.5 cursor-pointer ${
-              viewMode === 'glass' ? 'bg-primary text-white font-semibold shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'
-            }`}
-            title="X-Ray Glass mode: physical optical glass casing revealing internal reciprocating pistons and cylinders"
-          >
-            <ScanLine className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="hidden md:inline">X-RAY GLASS</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode('thermal')}
-            className={`px-2 py-1 rounded-xs transition-colors flex items-center gap-1.5 cursor-pointer ${
-              viewMode === 'thermal' ? 'bg-primary text-white font-semibold shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'
-            }`}
-            title="Thermal FLIR mode: live dynamic vertex incandescence per cylinder CHT and exhaust EGT"
-          >
-            <Flame className="w-3.5 h-3.5 text-rose-400" />
-            <span className="hidden md:inline">THERMAL FLIR</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode('ghost')}
-            className={`px-2 py-1 rounded-xs transition-colors flex items-center gap-1.5 cursor-pointer ${
-              viewMode === 'ghost' ? 'bg-primary text-white font-semibold shadow-xs' : 'text-slate-300 hover:text-white hover:bg-white/10'
-            }`}
-            title="Twin Ghost mode: holographic cyan digital twin overlay"
-          >
-            <Radio className="w-3.5 h-3.5 text-sky-400" />
-            <span className="hidden md:inline">TWIN GHOST</span>
-          </button>
-        </div>
+        {/* View Mode Segmented HUD Toolbar (rendered in non-bare embed, e.g. standalone console card) */}
+        {!bare && (
+          <div className="surface-panel absolute right-2 sm:right-3 top-2 sm:top-3 z-10 flex items-center gap-1 rounded-sm border border-surface-border bg-[#f7f6f0] p-1 shadow-xs text-xs font-mono">
+            <button
+              type="button"
+              onClick={() => setMode('solid')}
+              className={`px-2 py-1 rounded-xs transition-colors flex items-center gap-1.5 cursor-pointer ${
+                viewMode === 'solid' ? 'bg-accent text-white font-semibold shadow-xs' : 'text-slate-700 hover:text-slate-900 hover:bg-black/5'
+              }`}
+              title="Solid: Full physical engine CAD surface"
+            >
+              <Box className="w-3.5 h-3.5 text-slate-700" />
+              <span className="hidden md:inline">SOLID</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode('glass')}
+              className={`px-2 py-1 rounded-xs transition-colors flex items-center gap-1.5 cursor-pointer ${
+                viewMode === 'glass' ? 'bg-accent text-white font-semibold shadow-xs' : 'text-slate-700 hover:text-slate-900 hover:bg-black/5'
+              }`}
+              title="X-Ray: Optical glass casing revealing reciprocating internal assemblies"
+            >
+              <ScanLine className="w-3.5 h-3.5 text-cyan-600" />
+              <span className="hidden md:inline">X-RAY</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode('thermal')}
+              className={`px-2 py-1 rounded-xs transition-colors flex items-center gap-1.5 cursor-pointer ${
+                viewMode === 'thermal' ? 'bg-accent text-white font-semibold shadow-xs' : 'text-slate-700 hover:text-slate-900 hover:bg-black/5'
+              }`}
+              title="Thermal: Live dynamic vertex incandescence pyrometry"
+            >
+              <Flame className="w-3.5 h-3.5 text-rose-600" />
+              <span className="hidden md:inline">THERMAL</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode('ghost')}
+              className={`px-2 py-1 rounded-xs transition-colors flex items-center gap-1.5 cursor-pointer ${
+                viewMode === 'ghost' ? 'bg-accent text-white font-semibold shadow-xs' : 'text-slate-700 hover:text-slate-900 hover:bg-black/5'
+              }`}
+              title="Wireframe: Holographic structural reference model"
+            >
+              <Radio className="w-3.5 h-3.5 text-indigo-600" />
+              <span className="hidden md:inline">WIREFRAME</span>
+            </button>
+          </div>
+        )}
 
         {/* Dynamic Thermal FLIR Overlay */}
         {viewMode === 'thermal' && (

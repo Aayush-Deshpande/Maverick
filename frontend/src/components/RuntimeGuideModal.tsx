@@ -179,7 +179,7 @@ export const RuntimeGuideModal: React.FC<RuntimeGuideModalProps> = ({ open, onCl
               <li><strong>Solid CAD</strong>: Certified high-fidelity PBR metallic CAD models for baseline structural inspection.</li>
               <li><strong>Physical X-Ray Glass</strong>: High-transmission optical glass casing revealing the internal reciprocating pistons, cylinder sleeves, and mechanical linkages.</li>
               <li><strong>Dynamic FLIR Thermal</strong>: Continuous Planck blackbody incandescence driven by 20 Hz thermodynamic differential equations. Real-time CHT (50–140°C) and EGT (400–950°C) heatmaps expose cylinder imbalances instantly.</li>
-              <li><strong>Twin Ghost</strong>: Holographic rim-lit wireframe overlay for augmented diagnostics and spatial referencing.</li>
+              <li><strong>Nominal Baseline Reference</strong>: High-precision nominal digital twin reference overlay for real-time visual departure detection and anomaly localization.</li>
             </ul>
           </div>
 
