@@ -20,7 +20,8 @@ echo.
 
 set "PYTHONUTF8=1"
 set "ANUMAAN_ENGINE_ID=rotax_914"
-set "TARGET_BLEND=%ROOT%assets\blender\scenes\anumaan_master_twin.blend"
+set "TARGET_BLEND=%ROOT%assets\blender\scenes\anumaan_master_twin_work.blend"
+if not exist "%TARGET_BLEND%" set "TARGET_BLEND=%ROOT%assets\blender\scenes\anumaan_master_twin.blend"
 
 set "BLENDER_EXE="
 if exist "D:\Blender\blender.exe" set "BLENDER_EXE=D:\Blender\blender.exe"
@@ -40,4 +41,4 @@ if not defined BLENDER_EXE (
     exit /b 1
 )
 
-start "" "%BLENDER_EXE%" "%TARGET_BLEND%" --python "%ROOT%apps\blender_twin\standalone_digital_twin_app.py"
+start "" "%BLENDER_EXE%" "%TARGET_BLEND%" --python "%ROOT%apps\blender_twin\standalone_digital_twin_app.py" -- --engine %ANUMAAN_ENGINE_ID%

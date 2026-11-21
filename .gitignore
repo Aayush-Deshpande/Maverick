@@ -8,6 +8,7 @@ __pycache__/
 *.blend2
 *.blend@
 *.blend_crash.txt
+*_work.blend
 
 # Virtual environments
 venv/

@@ -210,8 +210,8 @@
       "subsystem": "fuel",
       "cylinder": null,
       "nodes": [
-        "Fuel_Feed_Hose_M_PlasticBlack_0.001",
-        "Fuel_Return_Hose_M_PlasticBlack_0.001",
+        "Fuel_Feed_Hose_M_PlasticBlack_0",
+        "Fuel_Return_Hose_M_PlasticBlack_0",
         "Fuel_Return_LeakOff_Rail_M_Stainless_0"
       ]
     },
@@ -269,7 +269,7 @@
         "Jubilee_Clamp_09_M_Stainless_0",
         "Jubilee_Clamp_10_M_Stainless_0",
         "Swept_C_Hose_Clamp_M_Stainless_0",
-        "Swept_C_Hose_M_BraidedSilver_0.001",
+        "Swept_C_Hose_M_BraidedSilver_0",
         "Turbo_Interstage_Duct_M_Steel_0",
         "Turbo_Silicone_Coupler_M_BlueSilicone_0",
         "Turbo_T_Clamp_1_M_Stainless_0",
@@ -292,8 +292,8 @@
       "subsystem": "turbo",
       "cylinder": null,
       "nodes": [
-        "Oil_Feed_Turbo_HP_M_BraidedSilver_0.001",
-        "Oil_Feed_Turbo_LP_M_BraidedSilver_0.001"
+        "Oil_Feed_Turbo_HP_M_BraidedSilver_0",
+        "Oil_Feed_Turbo_LP_M_BraidedSilver_0"
       ]
     },
     {
@@ -347,7 +347,7 @@
         "ExMan_Bolt_07",
         "ExMan_Bolt_08",
         "Exhaust_Collector_M_HeatTintedSteel_0",
-        "Exhaust_Downpipe_M_Stainless_0.001",
+        "Exhaust_Downpipe_M_Stainless_0",
         "Exhaust_Heat_Blanket_M_HeatShield_0",
         "Exhaust_VBand_Clamp_M_Stainless_0"
       ]
@@ -379,11 +379,11 @@
         "Coolant_Clamp_3_M_Stainless_0",
         "Coolant_Elbow_Upper_M_BlueSilicone_0",
         "Coolant_Forward_Blue_AN_Elbow",
-        "Coolant_Hose_Bypass_M_BlueSilicone_0.001",
-        "Coolant_Hose_HeadReturn_M_BlueSilicone_0.001",
-        "Coolant_Hose_Lower_M_BlueSilicone_0.001",
-        "Coolant_Hose_Pump_Feed_M_BlueSilicone_0.001",
-        "Coolant_Hose_Upper_M_BlueSilicone_0.001",
+        "Coolant_Hose_Bypass_M_BlueSilicone_0",
+        "Coolant_Hose_HeadReturn_M_BlueSilicone_0",
+        "Coolant_Hose_Lower_M_BlueSilicone_0",
+        "Coolant_Hose_Pump_Feed_M_BlueSilicone_0",
+        "Coolant_Hose_Upper_M_BlueSilicone_0",
         "Coolant_Pipe_Insulated_M_BraidedSilver_0",
         "Coolant_Pipe_Junction_M_CastAluminium_0",
         "Top_Coolant_RedBlue_AN_Fitting",
@@ -451,8 +451,8 @@
       "subsystem": "lubrication",
       "cylinder": null,
       "nodes": [
-        "Oil_Cooler_Line_A_M_BraidedSilver_0.001",
-        "Oil_Cooler_Line_B_M_BraidedSilver_0.001",
+        "Oil_Cooler_Line_A_M_BraidedSilver_0",
+        "Oil_Cooler_Line_B_M_BraidedSilver_0",
         "Oil_Cooler_M_CastAluminium_0.001",
         "Oil_Cooler_Port_Cap_M_YellowPoly_0"
       ]
@@ -463,7 +463,7 @@
       "cylinder": null,
       "nodes": [
         "Dipstick_Grip_M_YellowPoly_0",
-        "Dipstick_Tube_M_Steel_0.001",
+        "Dipstick_Tube_M_Steel_0",
         "Label_Engine_Oil",
         "Oil_Filler_Cap_M_PlasticBlack_0",
         "Oil_Filler_Cap_M_YellowPoly_0"
@@ -597,13 +597,13 @@
         "Alternator_Term_Post_1",
         "Alternator_Term_Post_2",
         "Alternator_Term_Post_3",
-        "Power_Drop_Cable_1.001",
+        "Power_Drop_Cable_1",
         "Power_Drop_Cable_1_Boot",
         "Power_Drop_Cable_1_Lug",
-        "Power_Drop_Cable_2.001",
+        "Power_Drop_Cable_2",
         "Power_Drop_Cable_2_Boot",
         "Power_Drop_Cable_2_Lug",
-        "Power_Drop_Cable_3.001",
+        "Power_Drop_Cable_3",
         "Power_Drop_Cable_3_Boot",
         "Power_Drop_Cable_3_Lug"
       ]
@@ -688,11 +688,11 @@
         "Harness_Boot_22_M_YellowPoly_0",
         "Harness_Boot_23_M_YellowPoly_0",
         "Harness_Boot_24_M_YellowPoly_0",
-        "Harness_Br_Alternators_M_PlasticBlack_0.001",
-        "Harness_Br_Gearbox_M_PlasticBlack_0.001",
-        "Harness_Br_Injectors_M_PlasticBlack_0.001",
-        "Harness_Br_Starter_M_PlasticBlack_0.001",
-        "Harness_Br_Turbo_M_PlasticBlack_0.001",
+        "Harness_Br_Alternators_M_PlasticBlack_0",
+        "Harness_Br_Gearbox_M_PlasticBlack_0",
+        "Harness_Br_Injectors_M_PlasticBlack_0",
+        "Harness_Br_Starter_M_PlasticBlack_0",
+        "Harness_Br_Turbo_M_PlasticBlack_0",
         "Harness_P_Clamp_01_M_Stainless_0",
         "Harness_P_Clamp_02_M_Stainless_0",
         "Harness_P_Clamp_03_M_Stainless_0",
@@ -712,7 +712,7 @@
         "Harness_P_Clamp_17_M_Stainless_0",
         "Harness_P_Clamp_18_M_Stainless_0",
         "Harness_P_Clamp_19_M_Stainless_0",
-        "Harness_Spine_M_PlasticBlack_0.001",
+        "Harness_Spine_M_PlasticBlack_0",
         "Label_Harness_Tag"
       ]
     },
