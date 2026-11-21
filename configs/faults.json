@@ -1683,7 +1683,8 @@
       "components": {
         "rotax_912is": {
           "now": [
-            "cooling_air_baffle"
+            "cooling_air_baffle",
+            "cylinder_barrel_{cyl}"
           ],
           "marker": false,
           "marker_for": null
@@ -1697,7 +1698,8 @@
         },
         "rotax_915is": {
           "now": [
-            "air_baffles"
+            "air_baffles",
+            "cylinder_barrel_{cyl}"
           ],
           "marker": false,
           "marker_for": null
@@ -2673,22 +2675,27 @@
       "components": {
         "rotax_912is": {
           "now": [
-            "exhaust"
+            "exhaust",
+            "sensor_egt_{cyl}"
           ],
           "marker": false,
           "marker_for": null
         },
         "rotax_914": {
           "now": [
-            "exhaust"
+            "exhaust",
+            "sensor_egt_{cyl}"
           ],
           "marker": false,
           "marker_for": null
         },
         "rotax_915is": {
-          "now": [],
-          "marker": true,
-          "marker_for": "exhaust"
+          "now": [
+            "exhaust",
+            "sensor_egt_{cyl}"
+          ],
+          "marker": false,
+          "marker_for": null
         },
         "austro_ae300": {
           "now": [
