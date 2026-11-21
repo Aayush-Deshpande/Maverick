@@ -213,6 +213,7 @@ export default function TwinStage(p: Props) {
         setSettlingFault(null);
         setRemainingMs(0);
         p.command('/faults', 'DELETE')
+          .then(() => p.command('/status/acknowledge', 'POST', {}))
           .then(() => say('All faults cleared · Nominal state restored'))
           .catch(() => say('Clear failed'));
       } else if (k === 'q') {
@@ -645,6 +646,7 @@ export default function TwinStage(p: Props) {
                 setSettlingFault(null);
                 setRemainingMs(0);
                 p.command('/faults', 'DELETE')
+                  .then(() => p.command('/status/acknowledge', 'POST', {}))
                   .then(() => notify('All faults cleared · Nominal state restored'))
                   .catch(() => notify('Clear failed'));
               }}

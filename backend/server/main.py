@@ -254,7 +254,7 @@ def root_liveness() -> Dict[str, Any]:
     """Root container liveness probe (M8-01, T-OPS-1)."""
     return {
         "status": "UP",
-        "ready": api_v1_module._services is not None,
+        "ready": api_v1_module.services() is not None,
         "service": "ANUMAAN Digital Twin Server",
         "loop_frequency_hz": load_runtime_settings()["tick_rate_hz"]
     }

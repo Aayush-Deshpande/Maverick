@@ -368,6 +368,7 @@ class EngineRuntime:
             self.sensor_levers.clear()
             self.injected.clear()
             self._reset_inference()
+            self._settle_until = self.source.now() + self._restart_settle_s
 
     def complete_repair(self, fault_id: Optional[str]) -> int:
         """A signed-off work order: the simulated repair removes that fault from the plant (a time-to-limit order
