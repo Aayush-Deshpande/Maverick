@@ -3,14 +3,14 @@ Rules: AGENTS.md ("If the context resets"), DECISIONS.md D22/D23. Entry format: 
 section 19.1. Update the RESUME HERE block at every commit and at the end of every session.
 
 =====================================================================================================================
-RESUME HERE  (last updated 22 Nov 2026, Phase 7 REALISM RESTORED - Authentic CAD Twins Re-established)
+RESUME HERE  (last updated 22 Nov 2026, Phase 8b AI-05 DYNAMIC CONVERSATIONAL AI & DRDO DISCIPLINED COPILOT)
 =====================================================================================================================
-Phase:        Phase 7 (Blender Model Refinement & 3D Twins) COMPLETED & VERIFIED WITH AUTHENTIC REALISM.
-Card:         B-06 (Realism Restoration & Placeholder Cleanup): Purged all 105 artificial primitive placeholder boxes/slabs across all 5 engines; restored 100% authentic CAD realism without sacrificing physical detail; preserved genuine decomposition (915 split into real heads/barrels/turbo/plenum; 914 wastegate/barrels resegmented; AE300 & VRDE 100% genuine aerospace geometry); fixed Rotax 914 comparison camera clipping & lighting; regenerated high-res side-by-side comparison images in artifacts; T-REPO-2 100% PASS (109, 276, 25, 164, 452 nodes); Section 8 tests 100% PASS (20/20); end-to-end runtime verification 40/40 PASS (100%).
+Phase:        Phase 8b (LLM Copilot, RAG & Voice Agent) & Phase 7 VERIFIED.
+Card:         AI-05 (Dynamic Conversational Intelligence & Disciplined Guardrails): Removed early canned demo intercepts (_demo_misfire_response) from active generation paths; preserved canned responses strictly as offline fallbacks when LLM is unavailable; upgraded system prompts with strict DRDO military discipline, zero conversational fluff, immediate findings, and strict off-topic guardrails (refusing casual/non-aviation queries); increased token ceiling for deep technical explanations; verified live dynamic generation and speech round-trip in Python 3.12 via Gemini and Kokoro TTS; all 17 AI/RAG/Voice unit tests 100% PASS.
 Branch:       Beta
-Last commit:  dec0f11 M7-B06: revert artificial placeholder meshes, restore authentic CAD realism across all engines, and fix 914 comparison renders
-State:        Phase 7 100% verified. Real CAD engines restored with aerospace PBR materials. Vitest 32 passed, tsc clean (0 errors), Pytest passed.
-Latest:       Realism restored across all 5 engines.
+Last commit:  1148f6d AI-05: upgrade copilot and voice agent to dynamic DRDO conversational intelligence with disciplined guardrails and offline fallback
+State:        Phase 8b live verified. Dynamic generation active on port 8000. Python 3.12 backend daemon running. Frontend dev server running on port 5173.
+Latest:       Dynamic, disciplined DRDO AI copilot and voicebot active.
 Next step:    Phase 8: UX Polish (UX-01 Glass Engine, live thermal heat-map, twin ghost overlay, UX-02 Time Machine timeline scrub).
 Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produce yet (lambda, timing, BSFC, power,
               vibration, GO/NO-GO); some may show blanks or crash on .toFixed(null) until M0-09. Beta only.
