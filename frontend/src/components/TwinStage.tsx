@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Activity, AlertTriangle, ArrowDown, ArrowRight, CheckCircle2, Clock, Info, Lock, Sparkles, X } from 'lucide-react';
+import InfoTooltip from './InfoTooltip';
 
 const EngineViewer3D = lazy(() => import('./viewer3d/EngineViewer3D'));
 
@@ -300,6 +301,11 @@ export default function TwinStage(p: Props) {
               </option>
             ))}
           </select>
+          <InfoTooltip
+            title="Powerplant Selection"
+            content="Switch between all 5 MALE UAV aero engines: Rotax 912 iSc, Rotax 914 Turbo, Rotax 915 iSc, Austro AE300 Diesel, and VRDE 2.2L. Each loads its authentic CAD geometry and physics parameters."
+            placement="bottom"
+          />
         </label>
         <div className="h-3.5 w-px bg-surface-border" />
         <button
@@ -321,7 +327,14 @@ export default function TwinStage(p: Props) {
       >
         {/* Header & Page */}
         <div className="flex items-center justify-between">
-          <span className={label}>Inject a fault</span>
+          <span className="flex items-center gap-1.5">
+            <span className={label}>Inject a fault</span>
+            <InfoTooltip
+              title="Fault Injection"
+              content="Injects physical parameter changes directly into the 20 Hz thermodynamic equations. Never generates fake data; signatures propagate through sensor lag and UKF observer to frame the faulty part."
+              placement="right"
+            />
+          </span>
           <span className="font-mono text-[10px] text-slate-500">
             page {page + 1}/{pages}
           </span>
@@ -405,29 +418,67 @@ export default function TwinStage(p: Props) {
         <div className="mt-2 grid grid-cols-2 gap-x-2 gap-y-1 border-t border-surface-border pt-2 text-[10px] font-mono text-slate-500">
           <span className="flex items-center gap-1">
             <kbd className={key}>0</kbd> clear all
+            <InfoTooltip
+              title="Clear Active Faults"
+              content="Removes all injected faults and allows thermodynamic channels to return to nominal equilibrium."
+              shortcut="0"
+              placement="top"
+            />
           </span>
           <span className="flex items-center gap-1">
             <kbd className={key}>Q</kbd>
             <kbd className={key}>E</kbd> page
+            <InfoTooltip
+              title="Page Catalogue"
+              content="Cycles through the fault catalogue available for this powerplant."
+              shortcut="Q / E"
+              placement="top"
+            />
           </span>
-          <button
-            type="button"
-            onClick={cycleCylinder}
-            className="flex items-center gap-1 text-left hover:text-slate-900 transition-colors cursor-pointer"
-            title="Click or press C to switch target cylinder (1-4) for cylinder-specific faults"
-          >
-            <kbd className={key}>C</kbd>
-            <span>cyl {cyl}</span>
-            <span className="text-[9px] text-slate-400 font-sans">(cycle)</span>
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={cycleCylinder}
+              className="flex items-center gap-1 text-left hover:text-slate-900 transition-colors cursor-pointer"
+              title="Click or press C to cycle target cylinder (1-4) for single-cylinder faults"
+            >
+              <kbd className={key}>C</kbd>
+              <span>cyl {cyl}</span>
+              <span className="text-[9px] text-slate-400 font-sans">(cycle)</span>
+            </button>
+            <InfoTooltip
+              title="Target Cylinder"
+              content="Cycles which cylinder receives single-cylinder faults like misfire, injector clogs, or spark fouling. Rotax and Austro engines have 4 cylinders."
+              shortcut="C"
+              placement="top"
+            />
+          </div>
           <span className="flex items-center gap-1">
             <kbd className={key}>F</kbd> focus
+            <InfoTooltip
+              title="Camera Focus"
+              content="Orbits and zooms the 3D camera to frame the highest-severity faulty engine component."
+              shortcut="F"
+              placement="top"
+            />
           </span>
           <span className="flex items-center gap-1">
             <kbd className={key}>T</kbd> train {p.training ? 'on' : 'off'}
+            <InfoTooltip
+              title="Training Display"
+              content="When enabled (default), highlights the injected part immediately in violet for training. In real flight (off), parts illuminate only after UKF diagnostic attribution."
+              shortcut="T"
+              placement="top"
+            />
           </span>
           <span className="flex items-center gap-1">
             <kbd className={key}>R</kbd> reset
+            <InfoTooltip
+              title="Engine Reset & Cold Restart"
+              content="A seized engine remains seized until reset. Clears faults, resets FADEC memory, and cold-restarts ignition."
+              shortcut="R"
+              placement="top"
+            />
           </span>
         </div>
       </aside>
@@ -440,8 +491,13 @@ export default function TwinStage(p: Props) {
         aria-live="polite"
       >
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          <span className="font-mono text-sm font-semibold tracking-wider">
-            {status ?? 'NO DATA'}
+          <span className="inline-flex items-center gap-1.5 font-mono text-sm font-semibold tracking-wider">
+            <span>{status ?? 'NO DATA'}</span>
+            <InfoTooltip
+              title="Annunciator Status"
+              content="14 CFR 25.1322 flight deck alert levels: GO (nominal flight operations), CAUTION (amber, advisory threshold exceeded), or NO-GO (red, critical flight safety limit breached)."
+              placement="top"
+            />
           </span>
           {reason && status !== 'GO' && <span className="text-xs text-slate-700">{reason}</span>}
           {isSettling && (
