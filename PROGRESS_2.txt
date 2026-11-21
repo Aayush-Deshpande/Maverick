@@ -11,7 +11,7 @@ RESUME HERE  (last updated 22 Nov 2026, Phase 9 M7-01/02/04 CAN BUS, Phase 8 UX-
 Phase:        Phase 9 (Avionics & CAN Bus) / Phase 8 (Command Palette & QR Remote) / Phase 10 (Production Packaging).
 Card:         M7-M8 (Avionics CAN Bus Link, Tactical Command Palette & Production Docker Packaging): Implemented dynamic runtime data source switching (DIRECT vs CAN FADEC J1939) with zero restart; live J1939 29-bit arbitration telemetry stream with rolling sequence counters; CAN IDS threat injection & real-time anomaly detection; global Ctrl+K Command Palette with fuzzy search across 6 tactical categories; phone QR secondary screen pairing; production multi-stage Dockerfile and docker-compose.yml with Kubernetes /health and /ready probes; 52/52 Vitest passed, backend ops tests 100% PASS.
 Branch:       Beta
-Last commit:  e702e08 UX-01: track live web viewport screenshots and CGI x-ray thermal beauty renders
+Last commit:  e3e7093 M7-M8: avionics CAN bus link, tactical command palette and production docker packaging
 State:        M7-01/02/04, UX-03b/04, M8-01 verified. CAN link switching, Command Palette, and container probes live. 52/52 Vitest passed.
 Latest:       CAN bus inspector with threat injection, global Ctrl+K command palette, mobile QR remote pairing, and production Docker containerization complete.
 Next step:    Phase 8 UX-02 (Time Machine mission timeline scrubber & historical replay).
@@ -120,3 +120,5 @@ Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produ
   * Frontend Vitest: 52/52 tests passed (16 test files) including `CanBusInspector.test.tsx` and `CommandPalette.test.tsx`.
   * TypeScript Check: Clean (0 errors via `npx tsc --noEmit`).
   * End-to-End Live Check: Port 8000 backend daemon validated against `/health`, `/ready`, `/api/v1/runtime/source`, and `/api/v1/engines/{engine_id}/can/inject_spoof`.
+- Commits:
+  * e3e7093: M7-M8: avionics CAN bus link, tactical command palette and production docker packaging
