@@ -11,7 +11,7 @@ RESUME HERE  (last updated 22 Nov 2026, Phase 8 Card UX-01 PHOTOREALISTIC X-RAY 
 Phase:        Phase 8 (UX Polish & Digital Twin Visualization).
 Card:         UX-01 (Photorealistic X-Ray Glass Engine, Dynamic FLIR Thermal Pyrometry, and Twin Ghost Overlay): Implemented 4 real-time interactive render modes in EngineViewer3D: (1) Solid CAD PBR, (2) Physical X-Ray Glass (MeshPhysicalMaterial with transmission: 0.92, IOR: 1.48, roughness: 0.12, thickness: 0.8, clearcoat: 1.0, depthWrite: false) revealing internal reciprocating pistons and cylinders, (3) Dynamic FLIR Thermal Pyrometry with live 20 Hz multi-physics CHT 1..4 (50-140°C) and EGT 1..4 (400-950°C) blackbody vertex incandescence, smoked obsidian casing, and interactive ThermalLegend HUD overlay, (4) Holographic Twin Ghost. Preserved absolute visual priority for diagnostic/anomaly highlights across all modes; 48/48 Vitest tests passed; TypeScript check clean; backend tests 100% PASS.
 Branch:       Beta
-Last commit:  5ba2f45 UX-01: implement photorealistic x-ray glass casing, dynamic thermal heatmaps, and twin ghost overlay
+Last commit:  da464c5 DOC-01: append UX-01 session log and update RESUME HERE in PROGRESS_2.txt
 State:        UX-01 verified. 4 render modes active in TwinStage and EngineRuntimeConsole. 48/48 Vitest tests passed.
 Latest:       Photorealistic X-Ray Glass, dynamic FLIR thermal heatmaps, and Twin Ghost overlay live in EngineViewer3D.
 Next step:    Phase 8 UX-02 (Time Machine mission timeline scrubber & historical replay).
