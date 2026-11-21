@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Activity, AlertTriangle, ArrowDown, ArrowRight, CheckCircle2, Clock, Info, Lock, RotateCw, Sparkles, X } from 'lucide-react';
+import { Activity, AlertTriangle, ArrowDown, ArrowRight, CheckCircle2, Clock, Info, Lock, RotateCw, Sparkles, X, Zap } from 'lucide-react';
 import InfoTooltip from './InfoTooltip';
 
 const EngineViewer3D = lazy(() => import('./viewer3d/EngineViewer3D'));
@@ -51,6 +51,7 @@ export default function TwinStage(p: Props) {
   const [notice, setNotice] = useState('');
   const [showGuide, setShowGuide] = useState(false);
   const [autoRotate, setAutoRotate] = useState(true);
+  const [mobileControlsOpen, setMobileControlsOpen] = useState(false);
 
   // Anti-spam telemetry settling interlock state
   const [settlingUntil, setSettlingUntil] = useState<number | null>(null);
@@ -274,8 +275,8 @@ export default function TwinStage(p: Props) {
   };
 
   return (
-    <div className="relative left-1/2 w-[calc(100vw-2.5rem)] -translate-x-1/2 h-[calc(100vh-11rem)] min-h-[480px] overflow-hidden rounded-sm border border-surface-border bg-[#e8e7df]">
-      <Suspense fallback={<div className="p-6 text-xs font-mono text-slate-400">Loading 3D view…</div>}>
+    <div className="relative left-1/2 w-[calc(100vw-1.5rem)] sm:w-[calc(100vw-2.5rem)] -translate-x-1/2 h-[calc(100vh-12rem)] min-h-[420px] sm:min-h-[480px] overflow-hidden rounded-sm border border-surface-border bg-[#e8e7df]">
+      <Suspense fallback={<div className="absolute inset-0 flex items-center justify-center p-6 text-xs font-mono text-slate-400">Loading 3D view…</div>}>
         <EngineViewer3D
           engineId={p.engineId}
           highlights={p.state?.highlights}
@@ -289,13 +290,13 @@ export default function TwinStage(p: Props) {
       </Suspense>
 
       {/* Top right: Unified Powerplant & Guide Toolbar */}
-      <div className="surface-panel absolute right-4 top-4 z-10 flex items-center gap-3 rounded-sm px-3 py-1.5 shadow-sm">
-        <label className="flex items-center gap-2">
-          <span className={label}>Powerplant</span>
+      <div className="surface-panel absolute right-2 sm:right-4 top-2 sm:top-4 z-10 flex items-center gap-1.5 sm:gap-3 rounded-sm px-2 sm:px-3 py-1.5 shadow-sm text-xs font-mono">
+        <label className="flex items-center gap-1.5 sm:gap-2">
+          <span className={`${label} hidden sm:inline`}>Powerplant</span>
           <select
             value={p.engineId ?? ''}
             onChange={(e) => p.onSelectEngine(e.target.value)}
-            className="bg-transparent text-xs font-mono text-slate-800 outline-none cursor-pointer"
+            className="bg-transparent text-xs font-mono text-slate-800 outline-none cursor-pointer max-w-[125px] sm:max-w-none truncate"
             title="Select powerplant (Rotax 912 iSc, 914, 915 iSc, Austro AE300, VRDE 2.2L)"
           >
             {p.engines.map((e) => (
@@ -323,14 +324,31 @@ export default function TwinStage(p: Props) {
           title="Digital Twin & Telemetry Architecture Guide (Press ?)"
         >
           <Info className="w-3.5 h-3.5 text-accent" />
-          <span className="font-semibold text-slate-700">Twin Guide</span>
-          <kbd className={key}>?</kbd>
+          <span className="font-semibold text-slate-700 hidden sm:inline">Twin Guide</span>
+          <kbd className={`${key} hidden sm:inline-flex`}>?</kbd>
         </button>
       </div>
 
-      {/* Left: Compact, High-Density Fault Controls (fits viewport without overlap) */}
+      {/* Mobile Toggle Button for Fault Scenarios */}
+      <div className="md:hidden absolute left-2 top-2 z-10">
+        <button
+          type="button"
+          onClick={() => setMobileControlsOpen(true)}
+          className="surface-panel flex items-center gap-1.5 rounded-sm px-2.5 py-1.5 text-xs font-mono font-medium text-slate-800 shadow-sm border border-surface-border hover:bg-black/5"
+        >
+          <Zap className="w-3.5 h-3.5 text-accent" />
+          <span>Faults</span>
+          {active.length > 0 && <span className="w-2 h-2 rounded-full bg-critical animate-pulse" />}
+        </button>
+      </div>
+
+      {/* Compact, High-Density Fault Controls (Desktop persistent / Mobile sliding panel) */}
       <aside
-        className="surface-panel absolute left-4 top-4 z-10 w-[min(280px,calc(100%-2rem))] max-h-[calc(100%-4.5rem)] overflow-y-auto rounded-sm p-2.5 shadow-card"
+        className={`surface-panel z-20 md:z-10 w-[min(300px,calc(100%-1rem))] md:w-[280px] max-h-[calc(100%-4rem)] md:max-h-[calc(100%-4.5rem)] overflow-y-auto rounded-sm p-2.5 shadow-card ${
+          mobileControlsOpen
+            ? 'fixed left-2 top-2 bottom-auto md:absolute md:left-4 md:top-4 block'
+            : 'hidden md:block md:absolute md:left-4 md:top-4'
+        }`}
         aria-label="Keyboard fault controls"
       >
         {/* Header & Page */}
@@ -343,9 +361,19 @@ export default function TwinStage(p: Props) {
               placement="right"
             />
           </span>
-          <span className="font-mono text-[10px] text-slate-500">
-            page {page + 1}/{pages}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-[10px] text-slate-500">
+              page {page + 1}/{pages}
+            </span>
+            <button
+              type="button"
+              onClick={() => setMobileControlsOpen(false)}
+              className="md:hidden text-slate-400 hover:text-slate-800 p-0.5 rounded-sm cursor-pointer"
+              aria-label="Close fault panel"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* High-Precision Avionics Telemetry Settling Line */}
@@ -486,45 +514,48 @@ export default function TwinStage(p: Props) {
 
       {/* Bottom: Annunciator Strip with quick navigation */}
       <div
-        className={`surface-panel absolute inset-x-4 bottom-4 rounded-sm border-l-4 px-4 py-2 z-10 ${
+        className={`surface-panel absolute inset-x-2 sm:inset-x-4 bottom-2 sm:bottom-4 rounded-sm border-l-4 px-2.5 sm:px-4 py-1.5 sm:py-2 z-10 ${
           status && STRIP[status] ? STRIP[status] : 'border-l-surface-border text-slate-800'
         }`}
         aria-live="polite"
       >
-        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          <span className="inline-flex items-center gap-1.5 font-mono text-sm font-semibold tracking-wider">
-            <span>{status ?? 'NO DATA'}</span>
-            <InfoTooltip
-              title="Flight Readiness Status"
-              content="Aviation flight status indicator: GO (green, all systems normal), CAUTION (amber, advisory warning or abnormal sensor trend), or NO-GO (red, dangerous safety limit breached)."
-            />
-          </span>
-          {reason && status !== 'GO' && <span className="text-xs text-slate-700">{reason}</span>}
-          {isSettling && (
-            <span className="inline-flex items-center gap-1 text-xs font-mono text-accent font-medium">
-              <Activity className="w-3 h-3 animate-pulse" />
-              <span>settling transient: {settlingFault?.name} [{(remainingMs / 1000).toFixed(1)}s]</span>
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 font-mono text-sm font-semibold tracking-wider">
+              <span>{status ?? 'NO DATA'}</span>
+              <InfoTooltip
+                title="Flight Readiness Status"
+                content="Aviation flight status indicator: GO (green, all systems normal), CAUTION (amber, advisory warning or abnormal sensor trend), or NO-GO (red, dangerous safety limit breached)."
+              />
             </span>
-          )}
-          {active.length > 0 && highlights.length === 0 && !isSettling && (
-            <span className="text-xs text-slate-500">diagnosing…</span>
-          )}
-          {active.length > 0 && (
-            <span className="text-xs text-slate-600 font-mono">
-              injected {active.map((f) => `${f.fault_id}${f.cylinder ? `·c${f.cylinder}` : ''}`).join('  ')}
-            </span>
-          )}
+            {reason && status !== 'GO' && <span className="text-xs text-slate-700 truncate max-w-[160px] sm:max-w-none">{reason}</span>}
+            {isSettling && (
+              <span className="inline-flex items-center gap-1 text-xs font-mono text-accent font-medium">
+                <Activity className="w-3 h-3 animate-pulse" />
+                <span className="hidden sm:inline">settling transient:</span> {settlingFault?.name} [{(remainingMs / 1000).toFixed(1)}s]
+              </span>
+            )}
+            {active.length > 0 && highlights.length === 0 && !isSettling && (
+              <span className="text-xs text-slate-500">diagnosing…</span>
+            )}
+            {active.length > 0 && (
+              <span className="text-xs text-slate-600 font-mono hidden sm:inline">
+                injected {active.map((f) => `${f.fault_id}${f.cylinder ? `·c${f.cylinder}` : ''}`).join('  ')}
+              </span>
+            )}
+          </div>
 
           {/* Quick links to live telemetry stream and full console */}
-          <div className="ml-auto flex items-center gap-2">
+          <div className="flex items-center gap-2 text-xs font-mono">
             <button
               type="button"
               onClick={scrollToTelemetry}
-              className="inline-flex items-center gap-1 text-xs font-mono text-slate-600 hover:text-slate-900 transition-colors"
+              className="inline-flex items-center gap-1 text-slate-600 hover:text-slate-900 transition-colors"
               title="Scroll down to view live 20 Hz telemetry numbers and thermodynamic equations"
             >
               <ArrowDown className="w-3 h-3 text-accent" />
-              <span>Live Telemetry Numbers ↓</span>
+              <span className="hidden sm:inline">Live Telemetry Numbers ↓</span>
+              <span className="sm:hidden">Telemetry ↓</span>
             </button>
             {p.onNavigateToRuntime && (
               <>
@@ -532,14 +563,15 @@ export default function TwinStage(p: Props) {
                 <button
                   type="button"
                   onClick={p.onNavigateToRuntime}
-                  className="inline-flex items-center gap-1 text-xs font-mono text-accent hover:underline font-medium"
+                  className="inline-flex items-center gap-1 text-accent hover:underline font-medium"
                 >
-                  <span>Engine Runtime Console</span>
+                  <span className="hidden sm:inline">Engine Runtime Console</span>
+                  <span className="sm:hidden">Runtime</span>
                   <ArrowRight className="w-3 h-3" />
                 </button>
               </>
             )}
-            {notice && <span className="text-xs opacity-90 font-mono text-slate-600 ml-2">{notice}</span>}
+            {notice && <span className="text-xs opacity-90 font-mono text-slate-600 ml-1 truncate max-w-[150px]">{notice}</span>}
           </div>
         </div>
         {highlights.length > 0 && (
