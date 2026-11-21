@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
-import { Activity, AlertTriangle, Check, ChevronDown, CircleHelp, Info, Radio, RotateCcw, SlidersHorizontal, Zap } from 'lucide-react';
+import { Activity, AlertTriangle, Check, ChevronDown, CircleHelp, Info, Radio, RotateCcw, Search, SlidersHorizontal, Zap } from 'lucide-react';
 import { useEngineRuntime, useNow } from '../hooks/useEngineRuntime';
 import { dataAgeMs } from '../store/engineStore';
 import { NO_DATA, num } from '../utils/format';
@@ -11,6 +11,9 @@ import EngineerPanel from './EngineerPanel';
 import CopilotPanel from './CopilotPanel';
 import InfoTooltip from './InfoTooltip';
 import RuntimeGuideModal from './RuntimeGuideModal';
+import CanBusInspector from './CanBusInspector';
+import CommandPalette from './CommandPalette';
+import { ConnectionModal } from './ConnectionModal';
 
 const EngineViewer3D = lazy(() => import('./viewer3d/EngineViewer3D'));
 
@@ -52,6 +55,9 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
   const [levers, setLevers] = useState<{ throttle_pct: number; altitude_ft: number; oat_c: number } | null>(null);
   const [notice, setNotice] = useState('');
   const [showGuide, setShowGuide] = useState(false);
+  const [canInspectorOpen, setCanInspectorOpen] = useState(false);
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [connectionModalOpen, setConnectionModalOpen] = useState(false);
   const [missions, setMissions] = useState<Array<{ id: string; title: string; engines: string | string[] }>>([]);
   const [missionId, setMissionId] = useState('');
   const [recording, setRecording] = useState(false);
@@ -168,6 +174,16 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
+            onClick={() => setCommandPaletteOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-sm border border-surface-border bg-surface-card text-xs font-mono text-slate-300 hover:text-cyan-300 hover:border-cyan-500/50 transition-colors cursor-pointer"
+            title="Tactical Command Palette (Ctrl+K)"
+          >
+            <Search className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="font-semibold text-slate-200">Commands</span>
+            <kbd className="inline-flex h-4 items-center rounded border border-surface-border bg-white/5 px-1 font-mono text-[9px] text-slate-400">Ctrl+K</kbd>
+          </button>
+          <button
+            type="button"
             onClick={() => setShowGuide(true)}
             className="flex items-center gap-1.5 px-3 py-2 rounded-sm border border-surface-border bg-surface-card text-xs font-mono text-slate-300 hover:text-white hover:border-surface-border-strong transition-colors cursor-pointer"
             title="Avionics Architecture & Digital Twin Guide (Press ?)"
@@ -200,14 +216,20 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
             width={260}
           />
         </span>
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border border-surface-border text-slate-300">
+        <button
+          type="button"
+          onClick={() => setCanInspectorOpen(true)}
+          className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm border border-surface-border bg-surface-card text-slate-300 hover:border-cyan-500/60 hover:text-cyan-300 transition-colors cursor-pointer"
+          title="Open Avionics CAN Bus & FADEC Telemetry Hub (M7-01/02)"
+        >
+          <span className={`w-1.5 h-1.5 rounded-full ${state?.source === 'CAN' ? 'bg-cyan-400 animate-pulse' : 'bg-emerald-500'}`} />
           <span>{state?.source ?? NO_DATA} SOURCE</span>
           <InfoTooltip
             title="Data Source"
-            content="Shows where telemetry originates: live physical simulation, a recorded flight playback, or hardware-in-the-loop test benches."
+            content="Shows where telemetry originates: live physical simulation, a recorded flight playback, or virtual/hardware CAN bus (click to open CAN Bus Hub)."
             width={260}
           />
-        </span>
+        </button>
         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border border-surface-border text-slate-300">
           <span>{state?.evidence_class ?? NO_DATA} EVIDENCE</span>
           <InfoTooltip
@@ -512,5 +534,46 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
     </section>}
     <div className="flex items-start gap-2 px-1 text-xs leading-relaxed text-slate-600"><CircleHelp className="w-3.5 h-3.5 shrink-0 mt-0.5" /><span>This console runs virtual plant data (SIMULATION evidence). Detection, isolation and status read only the measured channels; injected scenarios are shown for training only.</span></div>
     <RuntimeGuideModal open={showGuide} onClose={() => setShowGuide(false)} />
+    <CanBusInspector engineId={runtime.engineId ?? 'rotax_912is'} isOpen={canInspectorOpen} onClose={() => setCanInspectorOpen(false)} />
+    <CommandPalette
+      isOpen={commandPaletteOpen}
+      onClose={() => setCommandPaletteOpen(false)}
+      selectedEngineId={runtime.engineId ?? null}
+      onSelectEngine={(id) => runtime.selectEngine(id)}
+      onSelectViewMode={() => {}}
+      onOpenCanInspector={() => setCanInspectorOpen(true)}
+      onOpenConnectionModal={() => setConnectionModalOpen(true)}
+      onToggleVoice={() => {}}
+      onInjectFault={(id, sev) => {
+        void run(() => runtime.command('/faults', 'POST', {
+          fault_id: id,
+          severity: sev,
+          source: 'palette',
+          request_id: newRequestId(),
+        }), `Fault ${id} injected`);
+      }}
+      onClearFaults={() => {
+        void run(() => runtime.command('/faults', 'DELETE', { source: 'palette' }), 'All faults cleared');
+      }}
+      onSetThrottle={(pct) => {
+        void run(() => runtime.command('/levers', 'POST', {
+          throttle_pct: pct,
+          request_id: newRequestId(),
+        }), `Throttle set to ${pct}%`);
+      }}
+      onEngineCommand={(cmd) => {
+        void run(() => runtime.command('/engine', 'POST', {
+          command: cmd,
+          request_id: newRequestId(),
+        }), `Engine ${cmd} command sent`);
+      }}
+    />
+    <ConnectionModal
+      isOpen={connectionModalOpen}
+      onClose={() => setConnectionModalOpen(false)}
+      serverUrl={serverUrl}
+      onSave={() => {}}
+      isConnected={live}
+    />
   </div></LabelsContext.Provider>;
 }

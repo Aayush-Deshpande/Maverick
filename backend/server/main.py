@@ -249,6 +249,29 @@ def root():
     }
 
 
+@app.get("/health")
+def root_liveness() -> Dict[str, Any]:
+    """Root container liveness probe (M8-01, T-OPS-1)."""
+    return {
+        "status": "UP",
+        "ready": api_v1_module._services is not None,
+        "service": "ANUMAAN Digital Twin Server",
+        "loop_frequency_hz": load_runtime_settings()["tick_rate_hz"]
+    }
+
+
+@app.get("/ready")
+def root_readiness() -> Dict[str, Any]:
+    """Root container readiness probe (M8-01, T-OPS-1)."""
+    if api_v1_module._services is None:
+        raise HTTPException(503, "Initializing engine runtimes")
+    return {
+        "ready": True,
+        "selected_engine": api_v1_module._services.hub.selected,
+        "total_engines": len(api_v1_module._services.hub.engines)
+    }
+
+
 @app.get("/api/health", response_model=ServerHealthResponse)
 def get_health():
     service = EngineStateService.get_instance()

@@ -212,19 +212,69 @@ export const ConnectionModal: React.FC<ConnectionModalProps> = ({
           </div>
 
           {/* Connection Guide */}
-          <div className="bg-white/[0.02] p-3.5 rounded-sm border border-surface-border text-xs text-slate-400 space-y-1.5 font-sans leading-relaxed">
-            <div className="flex items-center gap-1.5 text-slate-300 font-medium text-xs font-mono">
-              <HelpCircle className="w-3.5 h-3.5 text-accent" />
-              <span>Deployment &amp; Evaluation Guide</span>
+          <div className="bg-white/[0.02] p-3.5 rounded-sm border border-surface-border text-xs text-slate-400 space-y-2 font-sans leading-relaxed">
+            <div className="flex items-center justify-between text-slate-300 font-medium text-xs font-mono">
+              <div className="flex items-center gap-1.5">
+                <HelpCircle className="w-3.5 h-3.5 text-accent" />
+                <span>Deployment &amp; Mobile Remote Pairing (UX-04)</span>
+              </div>
+              <span className="text-[10px] text-accent px-1.5 py-0.5 rounded border border-accent/40 bg-accent/10">
+                LAN AUTO-PAIR
+              </span>
             </div>
+
+            {/* QR Code Remote Card */}
+            <div className="flex items-center gap-4 p-2.5 rounded border border-surface-border bg-slate-950/60 font-mono">
+              <div className="w-20 h-20 bg-white p-1 rounded flex items-center justify-center flex-shrink-0">
+                <svg viewBox="0 0 29 29" className="w-full h-full text-slate-950 fill-current">
+                  {/* Stylized QR Code Matrix */}
+                  <rect x="0" y="0" width="7" height="7" />
+                  <rect x="1" y="1" width="5" height="5" fill="white" />
+                  <rect x="2" y="2" width="3" height="3" />
+                  <rect x="22" y="0" width="7" height="7" />
+                  <rect x="23" y="1" width="5" height="5" fill="white" />
+                  <rect x="24" y="2" width="3" height="3" />
+                  <rect x="0" y="22" width="7" height="7" />
+                  <rect x="1" y="23" width="5" height="5" fill="white" />
+                  <rect x="2" y="24" width="3" height="3" />
+                  <rect x="9" y="2" width="2" height="2" />
+                  <rect x="13" y="2" width="2" height="2" />
+                  <rect x="17" y="2" width="2" height="2" />
+                  <rect x="9" y="6" width="2" height="2" />
+                  <rect x="15" y="6" width="2" height="2" />
+                  <rect x="9" y="10" width="11" height="2" />
+                  <rect x="2" y="10" width="3" height="2" />
+                  <rect x="24" y="10" width="3" height="2" />
+                  <rect x="11" y="14" width="7" height="2" />
+                  <rect x="21" y="14" width="2" height="2" />
+                  <rect x="9" y="18" width="2" height="2" />
+                  <rect x="15" y="18" width="5" height="2" />
+                  <rect x="9" y="22" width="3" height="2" />
+                  <rect x="15" y="22" width="2" height="2" />
+                  <rect x="21" y="22" width="4" height="2" />
+                  <rect x="11" y="26" width="4" height="2" />
+                  <rect x="19" y="26" width="2" height="2" />
+                  <rect x="25" y="26" width="2" height="2" />
+                </svg>
+              </div>
+              <div className="space-y-1 min-w-0">
+                <div className="text-[11px] font-semibold text-slate-200">
+                  Scan to Open Mobile Secondary Screen
+                </div>
+                <div className="text-[10px] text-slate-400">
+                  Evaluators can point their smartphone camera at this QR code to load the wireless GCS cockpit and inject faults remotely.
+                </div>
+                <div className="text-[10px] text-cyan-400 truncate">
+                  Target: {typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:8000/?role=pilot` : 'http://192.168.1.x:8000'}
+                </div>
+              </div>
+            </div>
+
             <p className="text-[11px]">
               1. <strong className="text-slate-300 font-mono">Workstation Evaluation:</strong> Select <code className="text-accent font-mono">http://127.0.0.1:8000</code> to connect directly to the local physics simulator and Blender 3D viewport.
             </p>
             <p className="text-[11px]">
-              2. <strong className="text-slate-300 font-mono">Remote Mobile Flight Deck:</strong> Connect a smartphone or tablet to your local Wi-Fi IP (<code className="text-accent font-mono">http://192.168.1.x:8000</code>) or an HTTPS tunnel gateway to demonstrate wireless fault injection and live twin synchronization.
-            </p>
-            <p className="text-[11px]">
-              3. <strong className="text-slate-300 font-mono">Public Cloud Evaluation:</strong> Select the cloud datalink relay (<code className="text-accent font-mono">https://maverick-vnrg.onrender.com</code>) for remote evaluation without local server setup.
+              2. <strong className="text-slate-300 font-mono">Remote Mobile Flight Deck:</strong> Connect a smartphone or tablet to your local Wi-Fi IP or tunnel gateway to demonstrate wireless fault injection and live twin synchronization.
             </p>
           </div>
 

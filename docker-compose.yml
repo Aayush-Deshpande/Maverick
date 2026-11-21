@@ -1,0 +1,22 @@
+services:
+  anumaan:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: anumaan_digital_twin
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUTF8=1
+      - PYTHONUNBUFFERED=1
+      - ANUMAAN_LLM_PROVIDER=none
+      - ANUMAAN_DATA_DIR=/app/var
+    volumes:
+      - ./var:/app/var
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s

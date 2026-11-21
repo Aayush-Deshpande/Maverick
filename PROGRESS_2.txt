@@ -6,14 +6,14 @@ Update the RESUME HERE block at every commit and at the end of every session.
 Part 1 historical session log (Phases 0 through 7, 19 Nov - 22 Nov 2026) is preserved in PROGRESS.txt.
 
 =====================================================================================================================
-RESUME HERE  (last updated 22 Nov 2026, Phase 8 Card UX-01 PHOTOREALISTIC X-RAY GLASS, THERMAL HEATMAPS & GHOST)
+RESUME HERE  (last updated 22 Nov 2026, Phase 9 M7-01/02/04 CAN BUS, Phase 8 UX-03b/04 COMMAND PALETTE, Phase 10 M8-01 DOCKER)
 =====================================================================================================================
-Phase:        Phase 8 (UX Polish & Digital Twin Visualization).
-Card:         UX-01 (Photorealistic X-Ray Glass Engine, Dynamic FLIR Thermal Pyrometry, and Twin Ghost Overlay): Implemented 4 real-time interactive render modes in EngineViewer3D: (1) Solid CAD PBR, (2) Physical X-Ray Glass (MeshPhysicalMaterial with transmission: 0.92, IOR: 1.48, roughness: 0.12, thickness: 0.8, clearcoat: 1.0, depthWrite: false) revealing internal reciprocating pistons and cylinders, (3) Dynamic FLIR Thermal Pyrometry with live 20 Hz multi-physics CHT 1..4 (50-140°C) and EGT 1..4 (400-950°C) blackbody vertex incandescence, smoked obsidian casing, and interactive ThermalLegend HUD overlay, (4) Holographic Twin Ghost. Preserved absolute visual priority for diagnostic/anomaly highlights across all modes; 48/48 Vitest tests passed; TypeScript check clean; backend tests 100% PASS.
+Phase:        Phase 9 (Avionics & CAN Bus) / Phase 8 (Command Palette & QR Remote) / Phase 10 (Production Packaging).
+Card:         M7-M8 (Avionics CAN Bus Link, Tactical Command Palette & Production Docker Packaging): Implemented dynamic runtime data source switching (DIRECT vs CAN FADEC J1939) with zero restart; live J1939 29-bit arbitration telemetry stream with rolling sequence counters; CAN IDS threat injection & real-time anomaly detection; global Ctrl+K Command Palette with fuzzy search across 6 tactical categories; phone QR secondary screen pairing; production multi-stage Dockerfile and docker-compose.yml with Kubernetes /health and /ready probes; 52/52 Vitest passed, backend ops tests 100% PASS.
 Branch:       Beta
 Last commit:  e702e08 UX-01: track live web viewport screenshots and CGI x-ray thermal beauty renders
-State:        UX-01 verified. 4 render modes active in TwinStage and EngineRuntimeConsole. 48/48 Vitest tests passed.
-Latest:       Photorealistic X-Ray Glass, dynamic FLIR thermal heatmaps, and Twin Ghost overlay live in EngineViewer3D.
+State:        M7-01/02/04, UX-03b/04, M8-01 verified. CAN link switching, Command Palette, and container probes live. 52/52 Vitest passed.
+Latest:       CAN bus inspector with threat injection, global Ctrl+K command palette, mobile QR remote pairing, and production Docker containerization complete.
 Next step:    Phase 8 UX-02 (Time Machine mission timeline scrubber & historical replay).
 Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produce yet (lambda, timing, BSFC, power,
               vibration, GO/NO-GO); some may show blanks or crash on .toFixed(null) until M0-09. Beta only.
@@ -99,3 +99,24 @@ Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produ
   * Backend Pytest: 11/11 passed in `test_char_twin.py` and `test_camera_transitions.py`.
 - Commits:
   * 5ba2f45: UX-01: implement photorealistic x-ray glass casing, dynamic thermal heatmaps, and twin ghost overlay
+
+=== 22 Nov 2026 Phase 9 / 8 / 10 Cards M7-01, M7-02, M7-04, UX-03b, UX-04, M8-01 (Virtual CAN Bus, Tactical Command Palette, Production Packaging) (AI: Antigravity)
+- Phase 9 Avionics & CAN Bus Link (M7-01, M7-02, M7-04):
+  * Dynamic Runtime Source Switching: Implemented zero-restart hot-swapping between DIRECT simulator feed and CAN (FADEC SAE J1939) link in `backend/runtime/engine_runtime.py` and `backend/runtime/hub.py`.
+  * J1939 Frame Stream: Added real-time recent frames buffer (arbitration IDs, cycle time ms, payload hex, 4-bit sequence counters 0..15) in `backend/sources/can_link.py`.
+  * Real-Time CAN IDS Threat Simulation: Built `inject_spoof` supporting rogue arbitration IDs (`UNKNOWN_ID`), sequence counter jumps (`SEQUENCE_GAP`), and out-of-range payloads (`OUT_OF_RANGE`), integrated with Merkle flight recorder verification.
+  * API Endpoints: Exposed `GET/POST /api/v1/runtime/source`, `GET /api/v1/engines/{engine_id}/can`, and `POST /api/v1/engines/{engine_id}/can/inject_spoof`.
+  * Frontend HUD: Created `CanBusInspector.tsx` with live candump stream, source toggle, IDS alert log, threat injector triggers, and Merkle ledger status.
+- Phase 8 Tactical Operator Controls (UX-03b, UX-04):
+  * Global Command Palette (`CommandPalette.tsx`): Built high-density modal overlay responding to `Ctrl+K`, `Cmd+K`, and `/`. Features fuzzy search across 6 categories: Engines (5 architectures with ACTIVE badges), 3D Views (CAD PBR, Glass, FLIR Thermal, Twin Ghost), Fault Injections (F01..F37), Engine Levers (IDLE, TAKEOFF, CRUISE), Avionics (CAN Link, Merkle ledger), Sorties (M01..M05), and Tools.
+  * Mobile Phone Secondary Screen Remote (`ConnectionModal.tsx`): Embedded vector SVG QR code resolving host machine LAN IP (`http://<LAN_IP>:8000/?role=pilot`) for zero-install smartphone/tablet secondary GCS display pairing.
+  * HUD Integration: Wired Command Palette and CanBusInspector modals to top status bar buttons in `EngineRuntimeConsole.tsx`.
+- Phase 10 Production Packaging & Hardening (M8-01):
+  * Multi-Stage Containerization (`Dockerfile`): Node 22 Alpine builder compiling React SPA (`npm run build`), copied into slim Python 3.13 production runtime serving unified FastAPI backend and static assets on port 8000.
+  * Docker Compose (`docker-compose.yml`): Single-command deployment with production restart policies, volume mounts, and built-in healthcheck probe.
+  * Kubernetes Probes: Added `/health` (immediate liveness probe) and `/ready` (503 during engine runtime calibration, 200 OK once ready) to `backend/server/main.py` and `api_v1.py`.
+- Verification & Test Suite:
+  * Backend Pytest: `tests/can/test_can_endpoints.py` and `tests/test_production_ops.py` passed (100% PASS).
+  * Frontend Vitest: 52/52 tests passed (16 test files) including `CanBusInspector.test.tsx` and `CommandPalette.test.tsx`.
+  * TypeScript Check: Clean (0 errors via `npx tsc --noEmit`).
+  * End-to-End Live Check: Port 8000 backend daemon validated against `/health`, `/ready`, `/api/v1/runtime/source`, and `/api/v1/engines/{engine_id}/can/inject_spoof`.

@@ -205,6 +205,28 @@ class EngineRuntime:
 
 
 
+    def set_data_source(self, source: str) -> None:
+        """Switch between DIRECT and CAN on the fly (M7-02)."""
+        norm_source = source.strip().upper()
+        if norm_source not in ("DIRECT", "CAN"):
+            raise ValueError(f"Unknown data source {source!r}; expected DIRECT or CAN")
+        if norm_source == self.data_source:
+            return
+        if norm_source == "CAN":
+            if self.can_link is None:
+                rt_cfg = json.loads((Path(__file__).resolve().parents[2] / "configs" / "runtime.json").read_text(encoding="utf-8"))
+                from backend.sources.can_link import CanLink
+                self.can_link = CanLink(channel=f"anumaan-{self.engine_id}-{self.seed}", interface=rt_cfg.get("can_interface", "virtual"))
+            self.data_source = "CAN"
+        else:
+            if self.can_link is not None:
+                try:
+                    self.can_link.close()
+                except Exception:
+                    pass
+                self.can_link = None
+            self.data_source = "DIRECT"
+
     # ---- lifecycle ------------------------------------------------------------------------
     def calibrate(self) -> None:
         """Nominal ground run-up on THIS tail, then fit calibration + conformal thresholds."""
