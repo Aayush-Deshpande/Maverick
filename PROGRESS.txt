@@ -3,20 +3,17 @@ Rules: AGENTS.md ("If the context resets"), DECISIONS.md D22/D23. Entry format: 
 section 19.1. Update the RESUME HERE block at every commit and at the end of every session.
 
 =====================================================================================================================
-RESUME HERE  (last updated 20 Nov 2026, overnight autonomous session)
+RESUME HERE  (last updated 21 Nov 2026, 3D twin telemetry interlock session)
 =====================================================================================================================
 Phase:        Phases 0-3, 5 done; Phase 6 (M5) done except M5-10 (D54: do not touch); Phase 4 (M6) M6-01..05 done,
               M6-06 in progress (labels + plain status done). Not started: Phase 7 (D53 workflow), 8, 8b, 9, 10.
-Card:         MAIN LANDING IMPORT DONE (Prasad 20 Nov: "get the latest main's frontend"). main's landing/sortie/
-              studio/survey/demoIntent/index.html/vite.config/public media taken via `git restore --source=origin/main`
-              (only paths Beta never changed); App.tsx = main's minus the 4 SET_ROLE calls; survey/frame.ts adapts
-              Beta's /api/engines/{id}/state to the survey's frame shape. Beta engine GLBs kept (D49). Presentation
-              layer outside T-DYN-1 (Prasad option A, D57).
+Card:         D67 (3D Twin anti-spam telemetry interlock & guide): 2.8s transient settling window blocks successive
+              fault injections; tactical HUD LED bar & live telemetry countdown prevents spamming; clickable locked
+              buttons; top-right Guide button opens architecture guide modal (keys 1-9, 0, Q/E, C, F, T, R, ?).
 Branch:       Beta (local commits not pushed). main untouched (local main = origin/main 4559afd; only read).
 Last commit:  see git log -1.
-State:        tests/dynamic 15 passed, vitest 25, tsc OK; landing loads with no console errors. Full suite last
-              698 passed (+ known ratchet; timing test flaky only under load).
-Latest:       D55 done (diesel lambda 1.35 + boost 247/227 kPa CALIBRATED from BSFC 235/215; live cruise EGT ~390-430 C). D58 (914 charge-path cooling, cold-day density criterion); survey inset AE300 no longer renders white.
+State:        vitest 30 passed, tsc OK, pytest backend canonical pipeline 4 passed.
+Latest:       D67 done (3D Twin anti-spam telemetry interlock + architecture guide modal + interactive buttons). D66 (violet injected highlight). D65 (canonical compressed models).
 Next step:    21 Nov ~04:15: restart settle (restart_settle_s, diagnosis restarts clean after START/RESET) and the
               3D twin lists only faults that light a part (e20ea58). Session ended by Prasad. 21 Nov ~04:00: 3D twin tab = keyboard visualizer (TwinWorkspace/TwinStage), injected part lit in
               0.1-0.2 s (D64), camera orbits outside the engine then loops, R resets a failed engine. Open: reset should
