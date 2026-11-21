@@ -1,8 +1,8 @@
 {
   "engine_id": "austro_ae300",
   "glb": "assets/web/engines/austro_ae300.glb",
-  "mesh_nodes": 167,
-  "representative_geometry": "representative geometry (AE330 shape)",
+  "mesh_nodes": 164,
+  "representative_geometry": "AE330-shaped geometry (representative)",
   "generated_by": "scripts/assets/build_component_manifests.py (card M0-03; patterns from addendum section 3)",
   "components": [
     {
@@ -652,30 +652,6 @@
         "Brass_Fittings_M_MachinedBrass_0",
         "Cabin_Heat_Ports_M_MachinedBrass_0",
         "Torque_Seal_Marks_M_TorqueSealBlue_0"
-      ]
-    },
-    {
-      "component_id": "vgt_actuator",
-      "subsystem": "turbo",
-      "cylinder": null,
-      "nodes": [
-        "VGT_Actuator"
-      ]
-    },
-    {
-      "component_id": "thermostat",
-      "subsystem": "cooling",
-      "cylinder": null,
-      "nodes": [
-        "Thermostat"
-      ]
-    },
-    {
-      "component_id": "radiator",
-      "subsystem": "cooling",
-      "cylinder": null,
-      "nodes": [
-        "Radiator.003"
       ]
     }
   ],

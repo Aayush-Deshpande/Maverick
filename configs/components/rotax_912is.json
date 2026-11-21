@@ -1,407 +1,10 @@
 {
   "engine_id": "rotax_912is",
   "glb": "assets/web/engines/rotax_912is.glb",
-  "mesh_nodes": 149,
+  "mesh_nodes": 109,
   "representative_geometry": null,
-  "generated_by": "scripts/blender/build_912_manifest.py (Card B-04)",
+  "generated_by": "scripts/assets/build_component_manifests.py (card M0-03; patterns from addendum section 3)",
   "components": [
-    {
-      "component_id": "cylinder_head_1",
-      "subsystem": "combustion",
-      "cylinder": 1,
-      "nodes": [
-        "Cylinder_Head_1.002"
-      ]
-    },
-    {
-      "component_id": "cylinder_head_2",
-      "subsystem": "combustion",
-      "cylinder": 2,
-      "nodes": [
-        "Cylinder_Head_2.002"
-      ]
-    },
-    {
-      "component_id": "cylinder_head_3",
-      "subsystem": "combustion",
-      "cylinder": 3,
-      "nodes": [
-        "Cylinder_Head_3.002"
-      ]
-    },
-    {
-      "component_id": "cylinder_head_4",
-      "subsystem": "combustion",
-      "cylinder": 4,
-      "nodes": [
-        "Cylinder_Head_4.002"
-      ]
-    },
-    {
-      "component_id": "cylinder_barrel_1",
-      "subsystem": "core",
-      "cylinder": 1,
-      "nodes": [
-        "Cylinder_Barrel_1.002"
-      ]
-    },
-    {
-      "component_id": "cylinder_barrel_2",
-      "subsystem": "core",
-      "cylinder": 2,
-      "nodes": [
-        "Cylinder_Barrel_2.002"
-      ]
-    },
-    {
-      "component_id": "cylinder_barrel_3",
-      "subsystem": "core",
-      "cylinder": 3,
-      "nodes": [
-        "Cylinder_Barrel_3.002"
-      ]
-    },
-    {
-      "component_id": "cylinder_barrel_4",
-      "subsystem": "core",
-      "cylinder": 4,
-      "nodes": [
-        "Cylinder_Barrel_4.002"
-      ]
-    },
-    {
-      "component_id": "injector_1",
-      "subsystem": "fuel",
-      "cylinder": 1,
-      "nodes": [
-        "Injector_1.001"
-      ]
-    },
-    {
-      "component_id": "injector_2",
-      "subsystem": "fuel",
-      "cylinder": 2,
-      "nodes": [
-        "Injector_2.001"
-      ]
-    },
-    {
-      "component_id": "injector_3",
-      "subsystem": "fuel",
-      "cylinder": 3,
-      "nodes": [
-        "Injector_3.001"
-      ]
-    },
-    {
-      "component_id": "injector_4",
-      "subsystem": "fuel",
-      "cylinder": 4,
-      "nodes": [
-        "Injector_4.001"
-      ]
-    },
-    {
-      "component_id": "spark_plug_1",
-      "subsystem": "ignition",
-      "cylinder": 1,
-      "nodes": [
-        "Spark_Plug_1.002"
-      ]
-    },
-    {
-      "component_id": "spark_plug_2",
-      "subsystem": "ignition",
-      "cylinder": 2,
-      "nodes": [
-        "Spark_Plug_2.002"
-      ]
-    },
-    {
-      "component_id": "spark_plug_3",
-      "subsystem": "ignition",
-      "cylinder": 3,
-      "nodes": [
-        "Spark_Plug_3.002"
-      ]
-    },
-    {
-      "component_id": "spark_plug_4",
-      "subsystem": "ignition",
-      "cylinder": 4,
-      "nodes": [
-        "Spark_Plug_4.002"
-      ]
-    },
-    {
-      "component_id": "ignition_coil_1",
-      "subsystem": "ignition",
-      "cylinder": 1,
-      "nodes": [
-        "Ignition_Coil_1"
-      ]
-    },
-    {
-      "component_id": "ignition_coil_2",
-      "subsystem": "ignition",
-      "cylinder": 2,
-      "nodes": [
-        "Ignition_Coil_2"
-      ]
-    },
-    {
-      "component_id": "ignition_coil_3",
-      "subsystem": "ignition",
-      "cylinder": 3,
-      "nodes": [
-        "Ignition_Coil_3"
-      ]
-    },
-    {
-      "component_id": "ignition_coil_4",
-      "subsystem": "ignition",
-      "cylinder": 4,
-      "nodes": [
-        "Ignition_Coil_4"
-      ]
-    },
-    {
-      "component_id": "sensor_cht_1",
-      "subsystem": "sensors",
-      "cylinder": 1,
-      "nodes": [
-        "Sensor_CHT_1.002"
-      ]
-    },
-    {
-      "component_id": "sensor_cht_2",
-      "subsystem": "sensors",
-      "cylinder": 2,
-      "nodes": [
-        "Sensor_CHT_2.002"
-      ]
-    },
-    {
-      "component_id": "sensor_cht_3",
-      "subsystem": "sensors",
-      "cylinder": 3,
-      "nodes": [
-        "Sensor_CHT_3.002"
-      ]
-    },
-    {
-      "component_id": "sensor_cht_4",
-      "subsystem": "sensors",
-      "cylinder": 4,
-      "nodes": [
-        "Sensor_CHT_4.002"
-      ]
-    },
-    {
-      "component_id": "sensor_egt_1",
-      "subsystem": "sensors",
-      "cylinder": 1,
-      "nodes": [
-        "Sensor_EGT_1.002"
-      ]
-    },
-    {
-      "component_id": "sensor_egt_2",
-      "subsystem": "sensors",
-      "cylinder": 2,
-      "nodes": [
-        "Sensor_EGT_2.002"
-      ]
-    },
-    {
-      "component_id": "sensor_egt_3",
-      "subsystem": "sensors",
-      "cylinder": 3,
-      "nodes": [
-        "Sensor_EGT_3.002"
-      ]
-    },
-    {
-      "component_id": "sensor_egt_4",
-      "subsystem": "sensors",
-      "cylinder": 4,
-      "nodes": [
-        "Sensor_EGT_4.002"
-      ]
-    },
-    {
-      "component_id": "fuel_rail",
-      "subsystem": "fuel",
-      "cylinder": null,
-      "nodes": [
-        "Fuel_Rail.001"
-      ]
-    },
-    {
-      "component_id": "intake_manifold",
-      "subsystem": "intake",
-      "cylinder": null,
-      "nodes": [
-        "Intake_Manifold"
-      ]
-    },
-    {
-      "component_id": "airbox_filter",
-      "subsystem": "intake",
-      "cylinder": null,
-      "nodes": [
-        "Airbox_Filter.002"
-      ]
-    },
-    {
-      "component_id": "oil_pump",
-      "subsystem": "lubrication",
-      "cylinder": null,
-      "nodes": [
-        "Oil_Pump.002"
-      ]
-    },
-    {
-      "component_id": "oil_cooler",
-      "subsystem": "lubrication",
-      "cylinder": null,
-      "nodes": [
-        "Oil_Cooler.002"
-      ]
-    },
-    {
-      "component_id": "radiator",
-      "subsystem": "cooling",
-      "cylinder": null,
-      "nodes": [
-        "Radiator.002"
-      ]
-    },
-    {
-      "component_id": "water_pump",
-      "subsystem": "cooling",
-      "cylinder": null,
-      "nodes": [
-        "Water_Pump.002"
-      ]
-    },
-    {
-      "component_id": "prop_flange",
-      "subsystem": "drivetrain",
-      "cylinder": null,
-      "nodes": [
-        "Prop_Flange.001"
-      ]
-    },
-    {
-      "component_id": "sensor_map",
-      "subsystem": "sensors",
-      "cylinder": null,
-      "nodes": [
-        "Sensor_MAP.002"
-      ]
-    },
-    {
-      "component_id": "sensor_oil_press",
-      "subsystem": "sensors",
-      "cylinder": null,
-      "nodes": [
-        "Sensor_Oil_Press.002"
-      ]
-    },
-    {
-      "component_id": "sensor_oil_temp",
-      "subsystem": "sensors",
-      "cylinder": null,
-      "nodes": [
-        "Sensor_Oil_Temp.001"
-      ]
-    },
-    {
-      "component_id": "sensor_coolant_temp",
-      "subsystem": "sensors",
-      "cylinder": null,
-      "nodes": [
-        "Sensor_Coolant_Temp"
-      ]
-    },
-    {
-      "component_id": "crankcase",
-      "subsystem": "core",
-      "cylinder": null,
-      "nodes": [
-        "Rotax_912i_Base_M_Black_0",
-        "Rotax_912i_Base_M_Chrome_0",
-        "Rotax_912i_Base_M_Chrome_0.001",
-        "Rotax_912i_Base_M_Cobalt_0",
-        "Rotax_912i_Base_M_Cobalt_0.001",
-        "Rotax_912i_Base_M_Copper_0",
-        "Rotax_912i_Base_M_Labels_0",
-        "Rotax_912i_Base_M_Motherboard_0",
-        "Rotax_912i_Base_M_PlasticBlack_0",
-        "Rotax_912i_Base_M_PlasticBlack_0.001",
-        "Rotax_912i_Base_M_PlasticCable_0",
-        "Rotax_912i_Base_M_PlasticCable_0.001",
-        "Rotax_912i_Base_M_PlasticGreen_0",
-        "Rotax_912i_Base_M_Rubber_0",
-        "Rotax_912i_Base_M_SteelBlack_0",
-        "Rotax_912i_Base_M_SteelBlack_0.001",
-        "Rotax_912i_Base_M_SteelDark_0",
-        "Rotax_912i_Base_M_Steel_0",
-        "Rotax_912i_Base_M_Steel_0.001",
-        "Rotax_912i_Base_M_Steel_0.002",
-        "Rotax_912i_Base_M_Steel_0.003",
-        "Rotax_912i_Base_M_Steel_0.004"
-      ]
-    },
-    {
-      "component_id": "covers",
-      "subsystem": "structure",
-      "cylinder": null,
-      "nodes": [
-        "Covers_Theme_M_Chrome_0",
-        "Covers_Theme_M_Cobalt_0",
-        "Covers_Theme_M_PlasticBlack_0",
-        "Covers_Theme_M_PlasticCable_0",
-        "Covers_Theme_M_PlasticGreen_0",
-        "Covers_Theme_M_PlasticTheme_0",
-        "Covers_Theme_M_PlasticWhite_0",
-        "Covers_Theme_M_SteelDark_0",
-        "Covers_Theme_M_Steel_0",
-        "Covers_Theme_M_Steel_0.001"
-      ]
-    },
-    {
-      "component_id": "cert_plate",
-      "subsystem": "structure",
-      "cylinder": null,
-      "nodes": [
-        "Cert_912iSSport_M_Chrome_0",
-        "Cert_912iSSport_M_Labels_0"
-      ]
-    },
-    {
-      "component_id": "cooling_air_baffle",
-      "subsystem": "cooling",
-      "cylinder": null,
-      "nodes": [
-        "Cooling_Air_Baffle_M_PlasticWhite_0"
-      ]
-    },
-    {
-      "component_id": "coolant_hoses",
-      "subsystem": "cooling",
-      "cylinder": null,
-      "nodes": [
-        "Water_Hoses_M_Chrome_0",
-        "Water_Hoses_M_Cobalt_0",
-        "Water_Hoses_M_Labels_0",
-        "Water_Hoses_M_PlasticBlack_0",
-        "Water_Hoses_M_Rubber_0",
-        "Water_Hoses_M_SteelDark_0",
-        "Water_Hoses_M_Steel_0"
-      ]
-    },
     {
       "component_id": "ecu",
       "subsystem": "control",
@@ -444,69 +47,12 @@
       ]
     },
     {
-      "component_id": "exhaust",
-      "subsystem": "exhaust",
-      "cylinder": null,
-      "nodes": [
-        "Exhaust_System_M_Chrome_0",
-        "Exhaust_System_M_Cobalt_0",
-        "Exhaust_System_M_PlasticBlack_0",
-        "Exhaust_System_M_SteelDark_0",
-        "Exhaust_System_M_Steel_0"
-      ]
-    },
-    {
       "component_id": "alternator",
       "subsystem": "electrical",
       "cylinder": null,
       "nodes": [
         "External_Alternator_M_Rotax914_Extras_0",
         "External_Alternator_M_TimingBelt_0"
-      ]
-    },
-    {
-      "component_id": "fuel_pump",
-      "subsystem": "fuel",
-      "cylinder": null,
-      "nodes": [
-        "Fuel_Pump_M_Chrome_0",
-        "Fuel_Pump_M_Cobalt_0",
-        "Fuel_Pump_M_PlasticBlack_0",
-        "Fuel_Pump_M_Rubber_0",
-        "Fuel_Pump_M_SteelDark_0",
-        "Fuel_Pump_M_Steel_0"
-      ]
-    },
-    {
-      "component_id": "gearbox",
-      "subsystem": "drivetrain",
-      "cylinder": null,
-      "nodes": [
-        "Gearbox_Type_2_M_Cobalt_0",
-        "Gearbox_Type_2_M_MetalPaintedBlack_0",
-        "Gearbox_Type_2_M_PlasticBlack_0",
-        "Gearbox_Type_2_M_PlasticWhite_0",
-        "Gearbox_Type_2_M_Steel_0"
-      ]
-    },
-    {
-      "component_id": "oil_tank",
-      "subsystem": "lubrication",
-      "cylinder": null,
-      "nodes": [
-        "Oil_Tank_M_Cobalt_0",
-        "Oil_Tank_M_Labels_0",
-        "Oil_Tank_M_PlasticBlack_0",
-        "Oil_Tank_M_Steel_0"
-      ]
-    },
-    {
-      "component_id": "engine_mount",
-      "subsystem": "structure",
-      "cylinder": null,
-      "nodes": [
-        "Engine_Suspension_Frame_M_Cobalt_0",
-        "Engine_Suspension_Frame_M_PlasticWhite_0"
       ]
     },
     {
@@ -531,12 +77,117 @@
       ]
     },
     {
+      "component_id": "fuel_pump",
+      "subsystem": "fuel",
+      "cylinder": null,
+      "nodes": [
+        "Fuel_Pump_M_Chrome_0",
+        "Fuel_Pump_M_Cobalt_0",
+        "Fuel_Pump_M_PlasticBlack_0",
+        "Fuel_Pump_M_Rubber_0",
+        "Fuel_Pump_M_SteelDark_0",
+        "Fuel_Pump_M_Steel_0"
+      ]
+    },
+    {
+      "component_id": "oil_tank",
+      "subsystem": "lubrication",
+      "cylinder": null,
+      "nodes": [
+        "Oil_Tank_M_Cobalt_0",
+        "Oil_Tank_M_Labels_0",
+        "Oil_Tank_M_PlasticBlack_0",
+        "Oil_Tank_M_Steel_0"
+      ]
+    },
+    {
+      "component_id": "gearbox",
+      "subsystem": "drivetrain",
+      "cylinder": null,
+      "nodes": [
+        "Gearbox_Type_2_M_Cobalt_0",
+        "Gearbox_Type_2_M_MetalPaintedBlack_0",
+        "Gearbox_Type_2_M_PlasticBlack_0",
+        "Gearbox_Type_2_M_PlasticWhite_0",
+        "Gearbox_Type_2_M_Steel_0"
+      ]
+    },
+    {
+      "component_id": "exhaust",
+      "subsystem": "exhaust",
+      "cylinder": null,
+      "nodes": [
+        "Exhaust_System_M_Chrome_0",
+        "Exhaust_System_M_Cobalt_0",
+        "Exhaust_System_M_PlasticBlack_0",
+        "Exhaust_System_M_SteelDark_0",
+        "Exhaust_System_M_Steel_0"
+      ]
+    },
+    {
+      "component_id": "coolant_hoses",
+      "subsystem": "cooling",
+      "cylinder": null,
+      "nodes": [
+        "Water_Hoses_M_Chrome_0",
+        "Water_Hoses_M_Cobalt_0",
+        "Water_Hoses_M_Labels_0",
+        "Water_Hoses_M_PlasticBlack_0",
+        "Water_Hoses_M_Rubber_0",
+        "Water_Hoses_M_SteelDark_0",
+        "Water_Hoses_M_Steel_0"
+      ]
+    },
+    {
+      "component_id": "cooling_air_baffle",
+      "subsystem": "cooling",
+      "cylinder": null,
+      "nodes": [
+        "Cooling_Air_Baffle_M_PlasticWhite_0"
+      ]
+    },
+    {
+      "component_id": "engine_mount",
+      "subsystem": "structure",
+      "cylinder": null,
+      "nodes": [
+        "Engine_Suspension_Frame_M_Cobalt_0",
+        "Engine_Suspension_Frame_M_PlasticWhite_0"
+      ]
+    },
+    {
       "component_id": "vacuum_pump",
       "subsystem": "accessories",
       "cylinder": null,
       "nodes": [
         "Vacuum_Pump_Drive_M_Chrome_0",
         "Vacuum_Pump_Drive_M_Rubber_0"
+      ]
+    },
+    {
+      "component_id": "covers",
+      "subsystem": "structure",
+      "cylinder": null,
+      "nodes": [
+        "Covers_Theme_M_Chrome_0",
+        "Covers_Theme_M_Cobalt_0",
+        "Covers_Theme_M_PlasticBlack_0",
+        "Covers_Theme_M_PlasticCable_0",
+        "Covers_Theme_M_PlasticGreen_0",
+        "Covers_Theme_M_PlasticTheme_0",
+        "Covers_Theme_M_PlasticWhite_0",
+        "Covers_Theme_M_SteelDark_0",
+        "Covers_Theme_M_Steel_0",
+        "Covers_Theme_M_Steel_0.001"
+      ]
+    },
+    {
+      "component_id": "cert_plate",
+      "subsystem": "structure",
+      "cylinder": null,
+      "nodes": [
+        "Cert_912iSSport_M_Chrome_0",
+        "Cert_912iSSport_M_Labels_0"
       ]
     },
     {
@@ -552,6 +203,36 @@
         "Fittings_UNF_Rotax915_A12_0",
         "Fittings_UNF_Rotax915_Extras_0"
       ]
+    },
+    {
+      "component_id": "crankcase_cylinders_base",
+      "subsystem": "core",
+      "cylinder": null,
+      "nodes": [
+        "Rotax_912i_Base_M_Black_0",
+        "Rotax_912i_Base_M_Chrome_0",
+        "Rotax_912i_Base_M_Chrome_0.001",
+        "Rotax_912i_Base_M_Cobalt_0",
+        "Rotax_912i_Base_M_Cobalt_0.001",
+        "Rotax_912i_Base_M_Copper_0",
+        "Rotax_912i_Base_M_Labels_0",
+        "Rotax_912i_Base_M_Motherboard_0",
+        "Rotax_912i_Base_M_PlasticBlack_0",
+        "Rotax_912i_Base_M_PlasticBlack_0.001",
+        "Rotax_912i_Base_M_PlasticCable_0",
+        "Rotax_912i_Base_M_PlasticCable_0.001",
+        "Rotax_912i_Base_M_PlasticGreen_0",
+        "Rotax_912i_Base_M_Rubber_0",
+        "Rotax_912i_Base_M_SteelBlack_0",
+        "Rotax_912i_Base_M_SteelBlack_0.001",
+        "Rotax_912i_Base_M_SteelDark_0",
+        "Rotax_912i_Base_M_Steel_0",
+        "Rotax_912i_Base_M_Steel_0.001",
+        "Rotax_912i_Base_M_Steel_0.002",
+        "Rotax_912i_Base_M_Steel_0.003",
+        "Rotax_912i_Base_M_Steel_0.004"
+      ],
+      "note": "crankcase, barrels and heads merged; split per cylinder in Phase 7 (A section 4)"
     }
   ],
   "unassigned_nodes": []

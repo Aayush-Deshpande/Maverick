@@ -1,10 +1,18 @@
 {
   "engine_id": "rotax_914",
   "glb": "assets/web/engines/rotax_914.glb",
-  "mesh_nodes": 304,
+  "mesh_nodes": 276,
   "representative_geometry": null,
-  "generated_by": "scripts/blender/build_914_manifest.py (Card B-03)",
+  "generated_by": "scripts/assets/build_component_manifests.py (card M0-03; patterns from addendum section 3)",
   "components": [
+    {
+      "component_id": "crankcase",
+      "subsystem": "core",
+      "cylinder": null,
+      "nodes": [
+        "Rotax914_Crankcase_Block"
+      ]
+    },
     {
       "component_id": "cylinder_head_1",
       "subsystem": "combustion",
@@ -70,243 +78,11 @@
       ]
     },
     {
-      "component_id": "spark_plug_1",
-      "subsystem": "ignition",
-      "cylinder": 1,
-      "nodes": [
-        "Spark_Plug_1.001"
-      ]
-    },
-    {
-      "component_id": "spark_plug_2",
-      "subsystem": "ignition",
-      "cylinder": 2,
-      "nodes": [
-        "Spark_Plug_2.001"
-      ]
-    },
-    {
-      "component_id": "spark_plug_3",
-      "subsystem": "ignition",
-      "cylinder": 3,
-      "nodes": [
-        "Spark_Plug_3.001"
-      ]
-    },
-    {
-      "component_id": "spark_plug_4",
-      "subsystem": "ignition",
-      "cylinder": 4,
-      "nodes": [
-        "Spark_Plug_4.001"
-      ]
-    },
-    {
-      "component_id": "sensor_cht_1",
-      "subsystem": "sensors",
-      "cylinder": 1,
-      "nodes": [
-        "Sensor_CHT_1.001"
-      ]
-    },
-    {
-      "component_id": "sensor_cht_2",
-      "subsystem": "sensors",
-      "cylinder": 2,
-      "nodes": [
-        "Sensor_CHT_2.001"
-      ]
-    },
-    {
-      "component_id": "sensor_cht_3",
-      "subsystem": "sensors",
-      "cylinder": 3,
-      "nodes": [
-        "Sensor_CHT_3.001"
-      ]
-    },
-    {
-      "component_id": "sensor_cht_4",
-      "subsystem": "sensors",
-      "cylinder": 4,
-      "nodes": [
-        "Sensor_CHT_4.001"
-      ]
-    },
-    {
-      "component_id": "sensor_egt_1",
-      "subsystem": "sensors",
-      "cylinder": 1,
-      "nodes": [
-        "Sensor_EGT_1.001"
-      ]
-    },
-    {
-      "component_id": "sensor_egt_2",
-      "subsystem": "sensors",
-      "cylinder": 2,
-      "nodes": [
-        "Sensor_EGT_2.001"
-      ]
-    },
-    {
-      "component_id": "sensor_egt_3",
-      "subsystem": "sensors",
-      "cylinder": 3,
-      "nodes": [
-        "Sensor_EGT_3.001"
-      ]
-    },
-    {
-      "component_id": "sensor_egt_4",
-      "subsystem": "sensors",
-      "cylinder": 4,
-      "nodes": [
-        "Sensor_EGT_4.001"
-      ]
-    },
-    {
-      "component_id": "carburettor_1",
-      "subsystem": "fuel",
-      "cylinder": 1,
-      "nodes": [
-        "Carburettor_1"
-      ]
-    },
-    {
-      "component_id": "carburettor_2",
-      "subsystem": "fuel",
-      "cylinder": 2,
-      "nodes": [
-        "Carburettor_2"
-      ]
-    },
-    {
-      "component_id": "airbox_filter",
-      "subsystem": "intake",
-      "cylinder": null,
-      "nodes": [
-        "Airbox_Filter.001"
-      ]
-    },
-    {
-      "component_id": "tcu",
-      "subsystem": "control",
-      "cylinder": null,
-      "nodes": [
-        "TCU_Control_Unit"
-      ]
-    },
-    {
       "component_id": "wastegate",
       "subsystem": "turbo",
       "cylinder": null,
       "nodes": [
         "Wastegate_Flapper_Assembly"
-      ]
-    },
-    {
-      "component_id": "wastegate_actuator",
-      "subsystem": "turbo",
-      "cylinder": null,
-      "nodes": [
-        "Wastegate_Actuator.001"
-      ]
-    },
-    {
-      "component_id": "ignition_cdi",
-      "subsystem": "ignition",
-      "cylinder": null,
-      "nodes": [
-        "Ignition_CDI"
-      ]
-    },
-    {
-      "component_id": "oil_tank",
-      "subsystem": "lubrication",
-      "cylinder": null,
-      "nodes": [
-        "Oil_Tank"
-      ]
-    },
-    {
-      "component_id": "oil_cooler",
-      "subsystem": "lubrication",
-      "cylinder": null,
-      "nodes": [
-        "Oil_Cooler.001"
-      ]
-    },
-    {
-      "component_id": "oil_pump",
-      "subsystem": "lubrication",
-      "cylinder": null,
-      "nodes": [
-        "Oil_Pump.001"
-      ]
-    },
-    {
-      "component_id": "water_pump",
-      "subsystem": "cooling",
-      "cylinder": null,
-      "nodes": [
-        "Water_Pump.001"
-      ]
-    },
-    {
-      "component_id": "radiator",
-      "subsystem": "cooling",
-      "cylinder": null,
-      "nodes": [
-        "Radiator.001"
-      ]
-    },
-    {
-      "component_id": "alternator",
-      "subsystem": "electrical",
-      "cylinder": null,
-      "nodes": [
-        "Alternator.001"
-      ]
-    },
-    {
-      "component_id": "fuel_pump",
-      "subsystem": "fuel",
-      "cylinder": null,
-      "nodes": [
-        "Fuel_Pump"
-      ]
-    },
-    {
-      "component_id": "sensor_map",
-      "subsystem": "sensors",
-      "cylinder": null,
-      "nodes": [
-        "Sensor_MAP.001"
-      ]
-    },
-    {
-      "component_id": "sensor_oil_press",
-      "subsystem": "sensors",
-      "cylinder": null,
-      "nodes": [
-        "Sensor_Oil_Press.001"
-      ]
-    },
-    {
-      "component_id": "sensor_oil_temp",
-      "subsystem": "sensors",
-      "cylinder": null,
-      "nodes": [
-        "Sensor_Oil_Temp"
-      ]
-    },
-    {
-      "component_id": "crankcase",
-      "subsystem": "core",
-      "cylinder": null,
-      "nodes": [
-        "Rotax914_Crankcase_Block"
       ]
     },
     {
@@ -338,7 +114,7 @@
     },
     {
       "component_id": "intake_manifold",
-      "subsystem": "intake",
+      "subsystem": "induction",
       "cylinder": null,
       "nodes": [
         "Rotax914_Intake_Manifold_18",

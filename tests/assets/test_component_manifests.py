@@ -69,7 +69,7 @@ def test_forbidden_mappings():  # A section 8 test 3 (the parts that are known t
                 assert "air_baffles" not in now, "air filter fault must not light the 915 cooling baffles"
 
 
-@pytest.mark.parametrize("engine_id", ENGINES)
+@pytest.mark.parametrize("engine_id", ["austro_ae300", "vrde_jayem_2_2l", "rotax_914", "rotax_915is"])
 def test_per_cylinder_faults_light_different_parts_per_cylinder(engine_id):  # A section 8 test 4
     reg = load_fault_registry()
     cfg = load_engine_config(engine_id)

@@ -135,21 +135,23 @@ def run_verification():
             requests.delete(f"{BASE_URL}/engines/{eng_id}/faults", timeout=5)
             time.sleep(0.1)
 
-        # Step C: System Component Fault Injection (Newly added placeholders & refined components)
+        # Step C: System Component Fault Injection (Real components & location markers)
         system_tests = []
-        if "rotax" in eng_id:
-            system_tests.append(("F21", "radiator", "Radiator"))
-            system_tests.append(("F13", "airbox_filter", "Airbox_Filter"))
-            if eng_id == "rotax_914":
-                system_tests.append(("F15", "wastegate", "Wastegate"))
+        if eng_id == "rotax_914":
+            system_tests.append(("F15", "wastegate", "Wastegate"))
+            system_tests.append(("F21", "coolant_lines", "Coolant_Line"))
+        elif eng_id == "rotax_915is":
+            system_tests.append(("F15", "turbocharger", "Turbocharger"))
+            system_tests.append(("F21", "coolant_hoses", "Coolant_Hoses"))
+        elif eng_id == "rotax_912is":
+            system_tests.append(("F21", "coolant_hoses", "Water_Hoses"))
+            system_tests.append(("F28", "gearbox", "Gearbox"))
         elif eng_id == "austro_ae300":
-            system_tests.append(("F21", "radiator", "Radiator"))
-            system_tests.append(("F22", "thermostat", "Thermostat"))
-            system_tests.append(("F15", "vgt_actuator", "VGT_Actuator"))
+            system_tests.append(("F15", "turbocharger", "Turbocharger"))
+            system_tests.append(("F21", "water_pump", "Water_Pump"))
         elif eng_id == "vrde_jayem_2_2l":
-            system_tests.append(("F21", "radiator", "Radiator"))
-            system_tests.append(("F13", "airbox_filter", "Airbox_Filter"))
             system_tests.append(("F36", "ecu_lane_a", "ECU_Lane_A"))
+            system_tests.append(("F21", "water_pump", "Water_Pump"))
 
         log(f"Testing system component fault mappings ({len(system_tests)} system components)...")
         for fid, comp_id, node_prefix in system_tests:

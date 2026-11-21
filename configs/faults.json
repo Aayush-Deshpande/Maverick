@@ -76,25 +76,20 @@
       "components": {
         "rotax_912is": {
           "now": [
-            "spark_plug_{cyl}",
-            "ignition_coil_{cyl}",
-            "cylinder_head_{cyl}"
+            "wiring_harness"
           ],
-          "marker": false,
-          "marker_for": null
+          "marker": true,
+          "marker_for": "spark plug / coil of cylinder {cyl}"
         },
         "rotax_914": {
           "now": [
-            "spark_plug_{cyl}",
-            "cylinder_head_{cyl}",
-            "ignition_cdi"
+            "cylinder_head_{cyl}"
           ],
           "marker": false,
           "marker_for": null
         },
         "rotax_915is": {
           "now": [
-            "spark_plug_{cyl}",
             "cylinder_head_{cyl}"
           ],
           "marker": false,
@@ -154,25 +149,20 @@
       "components": {
         "rotax_912is": {
           "now": [
-            "spark_plug_{cyl}",
-            "ignition_coil_{cyl}",
-            "cylinder_head_{cyl}"
+            "wiring_harness"
           ],
-          "marker": false,
-          "marker_for": null
+          "marker": true,
+          "marker_for": "spark plug / coil of cylinder {cyl}"
         },
         "rotax_914": {
           "now": [
-            "spark_plug_{cyl}",
-            "cylinder_head_{cyl}",
-            "ignition_cdi"
+            "cylinder_head_{cyl}"
           ],
           "marker": false,
           "marker_for": null
         },
         "rotax_915is": {
           "now": [
-            "spark_plug_{cyl}",
             "cylinder_head_{cyl}"
           ],
           "marker": false,
@@ -256,13 +246,10 @@
       "components": {
         "rotax_912is": {
           "now": [
-            "cylinder_head_1",
-            "cylinder_head_2",
-            "cylinder_head_3",
-            "cylinder_head_4"
+            "covers"
           ],
-          "marker": false,
-          "marker_for": null
+          "marker": true,
+          "marker_for": "cylinder {cyl}"
         },
         "rotax_914": {
           "now": [
@@ -452,19 +439,17 @@
       "components": {
         "rotax_912is": {
           "now": [
-            "injector_{cyl}",
-            "fuel_rail"
+            "fuel_pump"
           ],
-          "marker": false,
-          "marker_for": null
+          "marker": true,
+          "marker_for": "injector of cylinder {cyl}"
         },
         "rotax_915is": {
           "now": [
-            "injector_{cyl}",
-            "fuel_rail"
+            "intake_manifold"
           ],
-          "marker": false,
-          "marker_for": null
+          "marker": true,
+          "marker_for": "injector of cylinder {cyl}"
         }
       },
       "channel_scope": null
@@ -651,19 +636,17 @@
         },
         "rotax_912is": {
           "now": [
-            "injector_{cyl}",
-            "fuel_rail"
+            "fuel_pump"
           ],
-          "marker": false,
-          "marker_for": null
+          "marker": true,
+          "marker_for": "injector of cylinder {cyl}"
         },
         "rotax_915is": {
           "now": [
-            "injector_{cyl}",
-            "fuel_rail"
+            "intake_manifold"
           ],
-          "marker": false,
-          "marker_for": null
+          "marker": true,
+          "marker_for": "injector of cylinder {cyl}"
         }
       },
       "channel_scope": null,
@@ -1151,25 +1134,23 @@
       "description": "air filter blockage",
       "components": {
         "rotax_912is": {
-          "now": [
-            "airbox_filter"
-          ],
-          "marker": false,
-          "marker_for": null
+          "now": [],
+          "marker": true,
+          "marker_for": "airbox / air filter"
         },
         "rotax_914": {
           "now": [
-            "airbox_filter"
+            "intake_manifold"
           ],
-          "marker": false,
-          "marker_for": null
+          "marker": true,
+          "marker_for": "air filter"
         },
         "rotax_915is": {
           "now": [
-            "airbox_filter"
+            "intake_manifold"
           ],
-          "marker": false,
-          "marker_for": null
+          "marker": true,
+          "marker_for": "air filter"
         },
         "austro_ae300": {
           "now": [
@@ -1180,10 +1161,10 @@
         },
         "vrde_jayem_2_2l": {
           "now": [
-            "airbox_filter"
+            "intake_manifold"
           ],
-          "marker": false,
-          "marker_for": null
+          "marker": true,
+          "marker_for": "air filter"
         }
       },
       "channel_scope": null
@@ -1336,27 +1317,24 @@
       "components": {
         "rotax_914": {
           "now": [
-            "wastegate",
-            "wastegate_actuator"
+            "wastegate"
           ],
           "marker": false,
           "marker_for": null
         },
         "rotax_915is": {
           "now": [
-            "overboost_valve",
-            "magneto_valve_block"
+            "turbocharger"
           ],
           "marker": false,
           "marker_for": null
         },
         "austro_ae300": {
           "now": [
-            "vgt_actuator",
             "turbocharger"
           ],
-          "marker": false,
-          "marker_for": null
+          "marker": true,
+          "marker_for": "VGT actuator"
         },
         "vrde_jayem_2_2l": {
           "now": [
@@ -1421,27 +1399,24 @@
       "components": {
         "rotax_914": {
           "now": [
-            "wastegate",
-            "wastegate_actuator"
+            "wastegate"
           ],
           "marker": false,
           "marker_for": null
         },
         "rotax_915is": {
           "now": [
-            "overboost_valve",
-            "magneto_valve_block"
+            "turbocharger"
           ],
           "marker": false,
           "marker_for": null
         },
         "austro_ae300": {
           "now": [
-            "vgt_actuator",
             "turbocharger"
           ],
-          "marker": false,
-          "marker_for": null
+          "marker": true,
+          "marker_for": "VGT actuator"
         },
         "vrde_jayem_2_2l": {
           "now": [
@@ -1687,23 +1662,21 @@
       "components": {
         "rotax_912is": {
           "now": [
-            "cooling_air_baffle",
-            "cylinder_barrel_{cyl}"
+            "coolant_hoses"
           ],
-          "marker": false,
-          "marker_for": null
+          "marker": true,
+          "marker_for": "cylinder {cyl} head cooling"
         },
         "rotax_914": {
           "now": [
-            "cylinder_barrel_{cyl}"
+            "cylinder_head_{cyl}"
           ],
           "marker": false,
           "marker_for": null
         },
         "rotax_915is": {
           "now": [
-            "air_baffles",
-            "cylinder_barrel_{cyl}"
+            "cylinder_head_{cyl}"
           ],
           "marker": false,
           "marker_for": null
@@ -1763,11 +1736,10 @@
       "components": {
         "rotax_912is": {
           "now": [
-            "coolant_hoses",
-            "water_pump"
+            "coolant_hoses"
           ],
-          "marker": false,
-          "marker_for": null
+          "marker": true,
+          "marker_for": "water pump"
         },
         "rotax_914": {
           "now": [
@@ -1848,38 +1820,38 @@
       "components": {
         "rotax_912is": {
           "now": [
-            "radiator"
+            "coolant_hoses"
           ],
-          "marker": false,
-          "marker_for": null
+          "marker": true,
+          "marker_for": "radiator"
         },
         "rotax_914": {
           "now": [
-            "radiator"
+            "coolant_lines"
           ],
-          "marker": false,
-          "marker_for": null
+          "marker": true,
+          "marker_for": "radiator"
         },
         "rotax_915is": {
           "now": [
-            "radiator"
+            "coolant_hoses"
           ],
-          "marker": false,
-          "marker_for": null
+          "marker": true,
+          "marker_for": "radiator"
         },
         "austro_ae300": {
           "now": [
-            "radiator"
+            "water_pump"
           ],
-          "marker": false,
-          "marker_for": null
+          "marker": true,
+          "marker_for": "radiator"
         },
         "vrde_jayem_2_2l": {
           "now": [
-            "radiator"
+            "water_pump"
           ],
-          "marker": false,
-          "marker_for": null
+          "marker": true,
+          "marker_for": "radiator"
         }
       },
       "channel_scope": null
@@ -1936,10 +1908,10 @@
       "components": {
         "austro_ae300": {
           "now": [
-            "thermostat"
+            "water_pump"
           ],
-          "marker": false,
-          "marker_for": null
+          "marker": true,
+          "marker_for": "thermostat"
         },
         "vrde_jayem_2_2l": {
           "now": [
@@ -2179,10 +2151,10 @@
       "components": {
         "rotax_912is": {
           "now": [
-            "oil_cooler"
+            "oil_tank"
           ],
-          "marker": false,
-          "marker_for": null
+          "marker": true,
+          "marker_for": "oil cooler"
         },
         "rotax_914": {
           "now": [],
@@ -2265,10 +2237,10 @@
       "components": {
         "rotax_912is": {
           "now": [
-            "crankcase"
+            "engine_mount"
           ],
-          "marker": false,
-          "marker_for": null
+          "marker": true,
+          "marker_for": "crankcase"
         },
         "rotax_914": {
           "now": [
@@ -2440,10 +2412,10 @@
       "components": {
         "rotax_912is": {
           "now": [
-            "prop_flange"
+            "gearbox"
           ],
-          "marker": false,
-          "marker_for": null
+          "marker": true,
+          "marker_for": "prop flange"
         },
         "rotax_914": {
           "now": [
@@ -2596,23 +2568,20 @@
       "components": {
         "rotax_912is": {
           "now": [
-            "cylinder_head_{cyl}",
-            "cylinder_barrel_{cyl}"
+            "wiring_harness"
           ],
-          "marker": false,
-          "marker_for": null
+          "marker": true,
+          "marker_for": "spark plug / coil of cylinder {cyl}"
         },
         "rotax_914": {
           "now": [
-            "cylinder_head_{cyl}",
-            "cylinder_barrel_{cyl}"
+            "cylinder_head_{cyl}"
           ],
           "marker": false,
           "marker_for": null
         },
         "rotax_915is": {
           "now": [
-            "spark_plug_{cyl}",
             "cylinder_head_{cyl}"
           ],
           "marker": false,
@@ -2683,24 +2652,21 @@
       "components": {
         "rotax_912is": {
           "now": [
-            "exhaust",
-            "sensor_egt_{cyl}"
+            "wiring_harness"
           ],
-          "marker": false,
-          "marker_for": null
+          "marker": true,
+          "marker_for": "spark plug / coil of cylinder {cyl}"
         },
         "rotax_914": {
           "now": [
-            "exhaust",
-            "sensor_egt_{cyl}"
+            "cylinder_head_{cyl}"
           ],
           "marker": false,
           "marker_for": null
         },
         "rotax_915is": {
           "now": [
-            "exhaust",
-            "sensor_egt_{cyl}"
+            "cylinder_head_{cyl}"
           ],
           "marker": false,
           "marker_for": null

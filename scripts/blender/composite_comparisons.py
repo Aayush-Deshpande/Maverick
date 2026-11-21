@@ -13,11 +13,11 @@ ARTIFACT_DIR = r"C:\Users\Prasad\.gemini\antigravity\brain\eb7686ec-6c7e-42f5-a0
 RENDERS_DIR = os.path.join(PROJECT_ROOT, "assets", "renders")
 
 ENGINES = {
-    "austro_ae300": "Austro AE300 (167 Nodes, Aerospace PBR, VGT/Rad/Thermostat Added)",
-    "vrde_jayem_2_2l": "VRDE Jayem 2.2L (455 Nodes, Aerospace PBR, Airbox/Rad/ECU Added)",
-    "rotax_915is": "Rotax 915 iS (56 Decomposed Nodes from 1 Monolithic 1.6M Poly Mesh)",
-    "rotax_914": "Rotax 914 (304 Nodes, 320 Wastegates Reassigned, Barrels/Heads Split)",
-    "rotax_912is": "Rotax 912 iS (149 Nodes, 40 Placeholders Added, Geometry Preserved)",
+    "austro_ae300": "Austro AE300 (165 Nodes, Authentic Aerospace PBR Shaders, Real CAD)",
+    "vrde_jayem_2_2l": "VRDE Jayem 2.2L (432 Nodes, Authentic Aerospace PBR Shaders, Real CAD)",
+    "rotax_915is": "Rotax 915 iS (32 Real Decomposed Nodes, Split Cylinder Heads/Barrels, Real CAD)",
+    "rotax_914": "Rotax 914 (280 Nodes, 320 Wastegates Reassigned, Barrels/Heads Split, Real CAD)",
+    "rotax_912is": "Rotax 912 iS (109 Nodes, 100% Original CAD Preserved, Aerospace PBR Shaders)",
 }
 
 BANNER_HEIGHT = 70

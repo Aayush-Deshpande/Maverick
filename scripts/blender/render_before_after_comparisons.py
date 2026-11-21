@@ -15,12 +15,14 @@ ENGINES = ["austro_ae300", "vrde_jayem_2_2l", "rotax_915is", "rotax_914", "rotax
 def setup_camera_and_lighting(scene, center, diag):
     # Remove existing cameras and lights
     for o in list(scene.objects):
-        if o.type in ('CAMERA', 'LIGHT'):
+        if o.type in ('CAMERA', 'LIGHT') or o.name.startswith("CompCam") or o.name.startswith("KeyLight") or o.name.startswith("FillLight") or o.name.startswith("RimLight"):
             bpy.data.objects.remove(o, do_unlink=True)
             
     # Create Camera
     cam_data = bpy.data.cameras.new("CompCam")
     cam_data.lens = 45.0
+    cam_data.clip_start = max(0.01, diag * 0.001)
+    cam_data.clip_end = max(50000.0, diag * 20.0)
     cam_obj = bpy.data.objects.new("CompCam", cam_data)
     scene.collection.objects.link(cam_obj)
     scene.camera = cam_obj
@@ -32,10 +34,19 @@ def setup_camera_and_lighting(scene, center, diag):
     rot_quat = direction.to_track_quat('-Z', 'Y')
     cam_obj.rotation_euler = rot_quat.to_euler()
     
-    # Neutral Studio Lighting
+    # Ensure World exists with ambient lighting
+    if not scene.world:
+        scene.world = bpy.data.worlds.new("CompWorld")
+    scene.world.use_nodes = True
+    bg_node = scene.world.node_tree.nodes.get("Background")
+    if bg_node:
+        bg_node.inputs[0].default_value = (0.04, 0.05, 0.07, 1.0)
+        bg_node.inputs[1].default_value = 0.8
+        
+    # Neutral Studio Lighting (Sun lights)
     # Key light
     key_data = bpy.data.lights.new("KeyLight", type='SUN')
-    key_data.energy = 3.5
+    key_data.energy = 4.0
     key_data.color = (1.0, 0.98, 0.95)
     key_obj = bpy.data.objects.new("KeyLight", key_data)
     scene.collection.objects.link(key_obj)
@@ -44,7 +55,7 @@ def setup_camera_and_lighting(scene, center, diag):
     
     # Fill light
     fill_data = bpy.data.lights.new("FillLight", type='SUN')
-    fill_data.energy = 1.5
+    fill_data.energy = 2.0
     fill_data.color = (0.92, 0.95, 1.0)
     fill_obj = bpy.data.objects.new("FillLight", fill_data)
     scene.collection.objects.link(fill_obj)
@@ -53,7 +64,7 @@ def setup_camera_and_lighting(scene, center, diag):
     
     # Rim light
     rim_data = bpy.data.lights.new("RimLight", type='SUN')
-    rim_data.energy = 2.0
+    rim_data.energy = 2.5
     rim_data.color = (0.95, 0.98, 1.0)
     rim_obj = bpy.data.objects.new("RimLight", rim_data)
     scene.collection.objects.link(rim_obj)
