@@ -1178,10 +1178,10 @@
         },
         "vrde_jayem_2_2l": {
           "now": [
-            "intake_manifold"
+            "airbox_filter"
           ],
-          "marker": true,
-          "marker_for": "airbox / air filter"
+          "marker": false,
+          "marker_for": null
         }
       },
       "channel_scope": null
@@ -1349,10 +1349,11 @@
         },
         "austro_ae300": {
           "now": [
+            "vgt_actuator",
             "turbocharger"
           ],
-          "marker": true,
-          "marker_for": "VGT actuator"
+          "marker": false,
+          "marker_for": null
         },
         "vrde_jayem_2_2l": {
           "now": [
@@ -1432,10 +1433,11 @@
         },
         "austro_ae300": {
           "now": [
+            "vgt_actuator",
             "turbocharger"
           ],
-          "marker": true,
-          "marker_for": "VGT actuator"
+          "marker": false,
+          "marker_for": null
         },
         "vrde_jayem_2_2l": {
           "now": [
@@ -1856,14 +1858,18 @@
           "marker_for": "radiator"
         },
         "austro_ae300": {
-          "now": [],
-          "marker": true,
-          "marker_for": "radiator"
+          "now": [
+            "radiator"
+          ],
+          "marker": false,
+          "marker_for": null
         },
         "vrde_jayem_2_2l": {
-          "now": [],
-          "marker": true,
-          "marker_for": "radiator"
+          "now": [
+            "radiator"
+          ],
+          "marker": false,
+          "marker_for": null
         }
       },
       "channel_scope": null
@@ -1919,9 +1925,11 @@
       "description": "thermostat stuck",
       "components": {
         "austro_ae300": {
-          "now": [],
-          "marker": true,
-          "marker_for": "thermostat"
+          "now": [
+            "thermostat"
+          ],
+          "marker": false,
+          "marker_for": null
         },
         "vrde_jayem_2_2l": {
           "now": [
@@ -3105,7 +3113,8 @@
         },
         "vrde_jayem_2_2l": {
           "now": [
-            "ecu_lane_a"
+            "ecu_lane_a",
+            "ecu_lane_b"
           ],
           "marker": false,
           "marker_for": null

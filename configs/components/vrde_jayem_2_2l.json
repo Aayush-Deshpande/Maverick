@@ -1,8 +1,8 @@
 {
   "engine_id": "vrde_jayem_2_2l",
   "glb": "assets/web/engines/vrde_jayem_2_2l.glb",
-  "mesh_nodes": 452,
-  "representative_geometry": "TEI PD170 geometry (representative)",
+  "mesh_nodes": 455,
+  "representative_geometry": "representative 2.2 L CRDI geometry",
   "generated_by": "scripts/assets/build_component_manifests.py (card M0-03; patterns from addendum section 3)",
   "components": [
     {
@@ -946,6 +946,30 @@
         "Retainer_Bolt_7",
         "Retainer_Bolt_8",
         "Torque_Seal_Marks"
+      ]
+    },
+    {
+      "component_id": "airbox_filter",
+      "subsystem": "intake",
+      "cylinder": null,
+      "nodes": [
+        "Airbox_Filter.003"
+      ]
+    },
+    {
+      "component_id": "radiator",
+      "subsystem": "cooling",
+      "cylinder": null,
+      "nodes": [
+        "Radiator.004"
+      ]
+    },
+    {
+      "component_id": "ecu",
+      "subsystem": "control",
+      "cylinder": null,
+      "nodes": [
+        "ECU_Main"
       ]
     }
   ],

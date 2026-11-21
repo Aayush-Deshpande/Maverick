@@ -3,15 +3,15 @@ Rules: AGENTS.md ("If the context resets"), DECISIONS.md D22/D23. Entry format: 
 section 19.1. Update the RESUME HERE block at every commit and at the end of every session.
 
 =====================================================================================================================
-RESUME HERE  (last updated 21 Nov 2026, Phase 7 Card B-04: Rotax 912 iS Grouping & Placeholders)
+RESUME HERE  (last updated 22 Nov 2026, Phase 7 Card B-05: Diesels AE300 & VRDE 2.2L Placeholders)
 =====================================================================================================================
-Phase:        Phase 7 (Blender Model Refinement) Card B-04 completed.
-Card:         B-04: Rotax 912 iS grouping & placeholders (D47 geometry preserved): 40 discrete placeholders added across all 4 cylinders (heads, barrels, injectors, plugs, coils, CHT/EGT sensors) and subsystems (fuel rail, intake manifold, airbox, oil/water pumps, oil cooler, radiator, prop flange, pressure/temp sensors); master twin updated; 15.39 MB GLB re-exported and verified (T-REPO-2 5/5 PASS, 13/13 manifest tests pass, crankcase_cylinders_base eliminated).
+Phase:        Phase 7 (Blender Model Refinement) Card B-05 completed.
+Card:         B-05: Diesels (Austro AE300 & VRDE Jayem 2.2L): added missing placeholders (radiator, thermostat, VGT actuator on AE300; radiator, airbox filter, ECU on VRDE); updated representative geometry labels in manifests; master twin collections updated; GLBs re-exported (AE300 1.85 MB, VRDE 0.86 MB) and verified (T-REPO-2 5/5 PASS, 13/13 manifest tests pass).
 Branch:       Beta
-Last commit:  5b3aa08 M7-B04: Rotax 912 iS grouping, placeholders, and manifest update
-State:        All 5 engine GLBs under 20 MB budget. T-REPO-2 node validator PASS (149/149, 304/304, 56/56, 164/164, 452/452). tests/assets/test_component_manifests.py 13 passed. Vitest 32 passed, tsc clean.
-Latest:       B-04 done. B-03 done. B-02 done. B-01 done.
-Next step:    Card B-05: Diesels (Austro AE300 & VRDE 2.2L): add missing placeholders (radiator, thermostat, VGT actuator, airbox, ECU), label representative geometry.
+Last commit:  (pending commit for B-05)
+State:        All 5 engine GLBs under 20 MB budget (1.85 MB, 15.39 MB, 5.30 MB, 18.83 MB, 0.86 MB). T-REPO-2 node validator PASS across all 5 engines (149/149, 304/304, 56/56, 167/167, 455/455). tests/assets/test_component_manifests.py 13 passed. Vitest 32 passed, tsc clean.
+Latest:       B-05 done. B-04 done. B-03 done. B-02 done. B-01 done.
+Next step:    Card B-06: Phase 7 final checkpoint and sync (sync web models to frontend/public/models, full test suite verification, enforce A section 8 tests 1-6).
 Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produce yet (lambda, timing, BSFC, power,
               vibration, GO/NO-GO); some may show blanks or crash on .toFixed(null) until M0-09. Beta only.
               (2) STOP/START return 422 until the engine state machine (M1-12).
@@ -1218,6 +1218,30 @@ Checked against frontend/AGENTS.md and D5/D49/D57:
   * scripts/blender/validate_nodes.py: ALL 5 ENGINES PASS T-REPO-2 (149/149, 304/304, 56/56, 164/164, 452/452).
   * tests/assets/test_component_manifests.py: 13/13 passed.
   * Frontend tsc: 0 errors.
+
+=== 22 Nov 2026 Phase 7 Card B-05: Diesels (Austro AE300 & VRDE 2.2L) Placeholders & Manifests (AI: Antigravity)
+- Rule D1 & D53 Safe Archival & Promotion:
+  * Safely git mv assets/blender/engines/austro_ae300/austro_ae300.blend -> assets/blender/engines/austro_ae300/variants/austro_ae300_original.blend.
+  * Promoted austro_ae300_work.blend to assets/blender/engines/austro_ae300/austro_ae300.blend.
+  * Safely git mv assets/blender/engines/vrde_jayem_2_2l/vrde_jayem_2_2l.blend -> assets/blender/engines/vrde_jayem_2_2l/variants/vrde_jayem_2_2l_original.blend.
+  * Promoted vrde_jayem_2_2l_work.blend to assets/blender/engines/vrde_jayem_2_2l/vrde_jayem_2_2l.blend.
+  * Updated Collection_Austro_AE300 and Collection_VRDE_2_2L in assets/blender/scenes/anumaan_master_twin.blend.
+- Added Placeholders:
+  * Austro AE300: Radiator, Thermostat, VGT_Actuator (with placeholder=True and component_id).
+  * VRDE Jayem 2.2L: Radiator, Airbox_Filter, ECU_Main (with placeholder=True and component_id).
+- Updated Manifests & Metadata:
+  * Austro AE300: representative_geometry = "representative geometry (AE330 shape)", 167 nodes across 72 components.
+  * VRDE Jayem 2.2L: representative_geometry = "representative 2.2 L CRDI geometry", 455 nodes across 73 components.
+- Re-exported Web GLBs:
+  * assets/web/engines/austro_ae300.glb: 1.85 MB.
+  * assets/web/engines/vrde_jayem_2_2l.glb: 0.86 MB.
+- Updated configs/faults.json:
+  * AE300: F15/F16 switched to vgt_actuator + turbocharger, F21 to radiator, F22 to thermostat.
+  * VRDE: F13 switched to airbox_filter, F21 to radiator, F36 to ecu_lane_a + ecu_lane_b.
+- Tests & Validation:
+  * scripts/blender/validate_nodes.py: ALL 5 ENGINES PASS T-REPO-2 (149/149, 304/304, 56/56, 167/167, 455/455).
+  * tests/assets/test_component_manifests.py: 13/13 passed.
+
 
 
 
