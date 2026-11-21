@@ -343,6 +343,15 @@ export const DiagnosticCard: React.FC<DiagnosticCardProps> = ({
             </button>
           </form>
 
+          {isCopilotAsking && (
+            <div className="p-4 rounded-sm surface-panel surface-panel-ai border border-surface-border flex items-center gap-3 animate-pulse">
+              <Loader2 className="w-4 h-4 animate-spin text-ai-accent shrink-0" />
+              <span className="text-xs font-mono text-slate-300">
+                Mission Copilot analyzing propulsion state, physical limits &amp; ATA manual procedures...
+              </span>
+            </div>
+          )}
+
           {copilotAnswer && (
             <div className="p-4 rounded-sm surface-panel surface-panel-ai animate-fade-in">
               <AerospaceMarkdown

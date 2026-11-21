@@ -887,6 +887,29 @@ export const VoiceCopilot: React.FC<VoiceCopilotProps> = ({
               </div>
             )
           )}
+          {micState === 'processing' && (
+            <div className="flex items-start gap-2.5 animate-pulse">
+              <div className="w-7 h-7 rounded-sm bg-ai-accent-dim flex items-center justify-center text-ai-accent shrink-0">
+                <Bot className="w-3.5 h-3.5" />
+              </div>
+              <div className="max-w-[80%] bg-white/[0.02] border border-surface-border rounded-sm px-3.5 py-2.5 space-y-1.5">
+                <div className="flex items-center gap-2 text-xs font-mono text-ai-accent">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>MAVERICK synthesizing tactical response...</span>
+                </div>
+                {thinkingText ? (
+                  <p className="text-xs font-mono text-slate-400 whitespace-pre-wrap leading-relaxed">
+                    {thinkingText}
+                    <span className="animate-pulse">▋</span>
+                  </p>
+                ) : (
+                  <p className="text-xs font-mono text-slate-500">
+                    Cross-referencing live sensor readings against DRDO propulsion envelope...
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

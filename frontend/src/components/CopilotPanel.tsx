@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { MessageSquareText } from 'lucide-react';
+import { MessageSquareText, Loader2, Sparkles } from 'lucide-react';
 
 type Section = { key: string; title: string; text: string };
 type Answer = { mode: 'llm' | 'deterministic'; provider: string; provider_error: string | null; sections: Section[];
@@ -40,16 +40,45 @@ export default function CopilotPanel({ engineId, api }: Props) {
       </div>
       <div className="mt-3 flex flex-wrap gap-2">
         {QUICK.map((q) => <button key={q} type="button" disabled={busy || !engineId} onClick={() => void ask(q)}
-          className="rounded-sm border border-surface-border px-3 py-1.5 text-xs text-slate-200 hover:border-surface-border-strong disabled:opacity-50">{q}</button>)}
+          className="rounded-sm border border-surface-border px-3 py-1.5 text-xs text-slate-200 hover:border-surface-border-strong disabled:opacity-50 transition-colors">{q}</button>)}
       </div>
       <form className="mt-2 flex gap-2" onSubmit={(e) => { e.preventDefault(); void ask(question); }}>
         <input value={question} onChange={(e) => setQuestion(e.target.value)} maxLength={500} placeholder="Or type your own question…"
-          className="min-w-0 flex-1 rounded-sm border border-surface-border bg-transparent px-3 py-2 text-xs text-white outline-none" />
+          disabled={busy || !engineId}
+          className="min-w-0 flex-1 rounded-sm border border-surface-border bg-transparent px-3 py-2 text-xs text-white outline-none disabled:opacity-50" />
         <button type="submit" disabled={busy || !question.trim() || !engineId}
-          className="rounded-sm border border-surface-border px-3 py-2 text-xs text-white disabled:opacity-50">Ask</button>
+          className="rounded-sm border border-surface-border px-3.5 py-2 text-xs text-white disabled:opacity-50 flex items-center gap-1.5 transition-colors bg-white/[0.03] hover:bg-white/[0.08]">
+          {busy ? <Loader2 size={13} className="animate-spin text-accent" /> : <Sparkles size={13} />}
+          <span>{busy ? 'Evaluating…' : 'Ask'}</span>
+        </button>
       </form>
-      {busy && <p className="mt-3 text-xs font-mono text-slate-400" aria-live="polite">Reading the live engine and the fault knowledge…</p>}
-      {error && <p className="mt-3 text-xs font-mono text-slate-300">{error}</p>}
+      {busy && (
+        <div className="mt-3 space-y-3" aria-live="polite">
+          <div className="flex items-center gap-2 text-xs font-mono text-slate-300 bg-white/[0.02] border border-surface-border px-3 py-2 rounded-sm">
+            <Loader2 size={14} className="animate-spin text-accent shrink-0" />
+            <span>Reading live engine telemetry, physical limits, and ATA manual procedures…</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 animate-pulse">
+            <div className="md:col-span-2 rounded-sm border border-surface-border/50 bg-white/[0.01] p-3 space-y-2">
+              <div className="h-3 w-32 bg-slate-700/50 rounded-sm"></div>
+              <div className="h-4 w-5/6 bg-slate-800/40 rounded-sm"></div>
+            </div>
+            <div className="rounded-sm border border-surface-border/50 bg-white/[0.01] p-3 space-y-2">
+              <div className="h-3 w-28 bg-slate-700/50 rounded-sm"></div>
+              <div className="h-4 w-4/5 bg-slate-800/40 rounded-sm"></div>
+            </div>
+            <div className="rounded-sm border border-surface-border/50 bg-white/[0.01] p-3 space-y-2">
+              <div className="h-3 w-36 bg-slate-700/50 rounded-sm"></div>
+              <div className="h-4 w-4/5 bg-slate-800/40 rounded-sm"></div>
+            </div>
+            <div className="md:col-span-2 rounded-sm border border-surface-border/50 bg-white/[0.01] p-3 space-y-2">
+              <div className="h-3 w-40 bg-slate-700/50 rounded-sm"></div>
+              <div className="h-3 w-2/3 bg-slate-800/30 rounded-sm"></div>
+            </div>
+          </div>
+        </div>
+      )}
+      {error && <p className="mt-3 text-xs font-mono text-critical bg-critical-dim border border-critical-muted px-3 py-2 rounded-sm">{error}</p>}
       {answer && !busy && <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2">
         {answer.sections.filter((s) => s.text).map((s) => (
           <div key={s.key} className={`rounded-sm border border-surface-border p-3 ${s.key === 'what' || s.key === 'sources' ? 'md:col-span-2' : ''}`}>
