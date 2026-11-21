@@ -5,17 +5,16 @@ import { RuntimeGuideModal } from './RuntimeGuideModal';
 describe('RuntimeGuideModal', () => {
   it('renders complete analytical architecture sections when open', () => {
     const html = renderToStaticMarkup(<RuntimeGuideModal open={true} onClose={() => {}} />);
-    expect(html).toContain('ANUMAAN Analytical Pipeline &amp; Mathematical Foundations');
-    expect(html).toContain('Zero-Falsification Dynamic Simulation (20 Hz)');
-    expect(html).toContain('Sensor FDI &amp; Quarantine Shielding');
-    expect(html).toContain('Unscented Kalman Filter (UKF) State Observer');
-    expect(html).toContain('Virtual Sensor Synthesis');
-    expect(html).toContain('Multi-Channel Residual Anomaly Detection');
-    expect(html).toContain('Bayesian Fault Isolation');
-    expect(html).toContain('Fatigue Damage Accumulation &amp; Conformal RUL');
-    expect(html).toContain('Mission Reliability &amp; Forward Monte Carlo');
-    expect(html).toContain('Automated ATA Work Orders');
-    expect(html).toContain('dT_i / dt = (Q̇_in,i - Q̇_out,i) / (m_i · C_p,i)');
+    expect(html).toContain('How ANUMAAN Monitors Engine Health, Detects Faults, and Protects Aircraft');
+    expect(html).toContain('Real Engine Physics (20 Times Every Second)');
+    expect(html).toContain('Smart Sensor Health Check');
+    expect(html).toContain('Background Digital Twin Observer');
+    expect(html).toContain('Virtual Sensors (Seeing Deep Inside the Engine)');
+    expect(html).toContain('Instant Anomaly Detection');
+    expect(html).toContain('Pinpoint Root-Cause Diagnosis');
+    expect(html).toContain('Remaining Useful Life &amp; Danger Warnings');
+    expect(html).toContain('Mission Reliability &amp; Risk Forecasting');
+    expect(html).toContain('Automated Ground Crew Work Orders');
   });
 
   it('renders nothing when closed', () => {

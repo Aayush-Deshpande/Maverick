@@ -157,8 +157,8 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
             <span className="text-slate-600">/</span>
             <span>Multi-engine runtime</span>
             <InfoTooltip
-              title="Multi-Engine Runtime"
-              content="20 Hz continuous simulation hub executing multi-engine digital twins. Telemetry, state estimation, and analytical residuals run in real time with zero mock numbers."
+              title="Multi-Engine Digital Twin"
+              content="A live physical simulation running 20 updates per second across all engines. Every reading reacts genuinely to throttle and altitude changes with zero fake numbers."
               width={280}
             />
           </div>
@@ -170,7 +170,7 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
             type="button"
             onClick={() => setShowGuide(true)}
             className="flex items-center gap-1.5 px-3 py-2 rounded-sm border border-surface-border bg-surface-card text-xs font-mono text-slate-300 hover:text-white hover:border-surface-border-strong transition-colors cursor-pointer"
-            title="Avionics Architecture & Analytical Pipeline Guide (Press ?)"
+            title="Avionics Architecture & Digital Twin Guide (Press ?)"
           >
             <Info className="w-3.5 h-3.5 text-accent" />
             <span className="font-semibold text-slate-200">Pipeline Guide</span>
@@ -180,8 +180,8 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
             <span className="text-xs uppercase tracking-wider text-slate-400 font-mono flex items-center gap-1">
               <span>Powerplant</span>
               <InfoTooltip
-                title="Powerplant Configuration"
-                content="Selects active powerplant (Rotax 912 iSc, 914, 915 iSc, Austro AE300, VRDE 2.2L). Loads verified displacement, stroke, compression ratio, and operational limits."
+                title="Select Powerplant"
+                content="Switch between 5 supported UAV engines (Rotax 912 iSc, 914 Turbo, 915 iSc, Austro AE300 Diesel, and VRDE 2.2L). Loads certified cylinder counts, displacements, and limits."
                 width={280}
               />
             </span>
@@ -195,16 +195,16 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
         <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border ${live ? 'text-success border-success-muted bg-success-dim' : 'text-slate-300 border-surface-border'}`}>
           <span>{badge}</span>
           <InfoTooltip
-            title="Telemetry Stream Health"
-            content="Real-time WebSocket stream health at 20 Hz (50 ms frame interval). Data age tracks transmission latency from the physics hub to browser."
+            title="Live Data Feed"
+            content="Connected directly to the 20 Hz engine simulation. Age shows the network latency in milliseconds between the physics engine and your screen."
             width={260}
           />
         </span>
         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border border-surface-border text-slate-300">
           <span>{state?.source ?? NO_DATA} SOURCE</span>
           <InfoTooltip
-            title="Telemetry Source"
-            content="Origin of telemetry frames: SIMULATION (numerical ODE integration), REPLAY (black-box flight sortie), or HARDWARE_IN_LOOP."
+            title="Data Source"
+            content="Shows where telemetry originates: live physical simulation, a recorded flight playback, or hardware-in-the-loop test benches."
             width={260}
           />
         </span>
@@ -212,15 +212,15 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
           <span>{state?.evidence_class ?? NO_DATA} EVIDENCE</span>
           <InfoTooltip
             title="Evidence Classification"
-            content="Strict truthfulness taxonomy (SIMULATION, PUBLIC_PROXY, REAL_FLIGHT). Prohibits presenting simulator accuracy as field performance."
+            content="Ensures honesty in reporting: distinguishes whether data comes from physical simulation, public flight proxies, or verified flight tests."
             width={260}
           />
         </span>
         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border border-surface-border text-slate-300">
           <span>STATUS {state?.status.level ?? NO_DATA}</span>
           <InfoTooltip
-            title="Status Assessment"
-            content="System status hierarchy: NOMINAL (green), ADVISORY (blue), CAUTION (amber), or WARNING (red) evaluated from confirmed alarms and redline proximity."
+            title="Engine Health Status"
+            content="Overall condition: Green (Nominal/healthy), Blue (Advisory/info), Amber (Caution/degraded), or Red (Warning/immediate danger)."
             width={260}
           />
         </span>
@@ -236,7 +236,7 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
             className={`px-3 py-1.5 rounded-sm border ${training ? 'border-surface-border-strong bg-white/10 text-white' : 'border-surface-border text-slate-400 hover:bg-white/5'}`}>Training mode: {training ? 'on' : 'off'}</button>
           <InfoTooltip
             title="Training Mode"
-            content="When enabled, highlights the injected fault directly on the 3D powerplant. When disabled (operational flight mode), 3D highlights strictly follow isolated evidence without reading the fault list."
+            content="When turned on, marks the injected fault directly on the 3D engine for practice and demonstration. In flight mode, parts only highlight if the diagnostic AI independently detects the issue."
             width={280}
           />
         </div>
@@ -263,10 +263,10 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
 
     {show('OPERATOR', 'ENGINEER') && <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
       {[
-        ['Engine speed', `${num(state?.readings?.rpm?.value, 0)} RPM`, 'CRANK SPEED', 'Crankshaft Rotational Speed', 'Rotational frequency from flywheel 60-2 pulse trigger wheel. Directly drives slider-crank kinematics and induction air mass flow.'],
-        ['Cylinder head', `${num(maxOf(readings.filter(([k]) => k.startsWith('cht[')).map(([, r]) => r.value)))} °C`, `MAX OF ${profile?.cylinders ?? '—'} CYLINDERS`, 'Cylinder Head Temperature (CHT)', 'Peak thermocouple reading across cylinders (°C). Governed by in-cylinder combustion heat transfer and cooling convection.'],
-        ['Exhaust gas', `${num(maxOf(readings.filter(([k]) => k.startsWith('egt[')).map(([, r]) => r.value)))} °C`, 'MAX CYLINDER', 'Exhaust Gas Temperature (EGT)', 'Runner gas temperature (°C). Highly responsive indicator of fuel mixture stoichiometry (AFR) and ignition combustion phasing.'],
-        ['Fault detector', !det ? 'Starting up' : det.confirmed ? 'Fault confirmed' : det.raw_alarm ? 'Checking an anomaly' : 'No anomaly', 'READINGS VS ENGINE MODEL', 'Residual Anomaly Detector', 'Ratio of multi-channel residual vector z to calibrated false-alarm threshold. >1.0 indicates anomaly; persistence gate confirms true faults.'],
+        ['Engine speed', `${num(state?.readings?.rpm?.value, 0)} RPM`, 'CRANK SPEED', 'Crankshaft Speed (RPM)', 'How fast the engine crankshaft is spinning in revolutions per minute. Tells you throttle response and power output.'],
+        ['Cylinder head', `${num(maxOf(readings.filter(([k]) => k.startsWith('cht[')).map(([, r]) => r.value)))} °C`, `MAX OF ${profile?.cylinders ?? '—'} CYLINDERS`, 'Peak Cylinder Temperature', 'The hottest temperature across all cylinder heads (°C). Shows if cooling airflow and coolant are keeping combustion temperatures safe.'],
+        ['Exhaust gas', `${num(maxOf(readings.filter(([k]) => k.startsWith('egt[')).map(([, r]) => r.value)))} °C`, 'MAX CYLINDER', 'Exhaust Gas Temperature (EGT)', 'Temperature of burning gases exiting the cylinders (°C). Key indicator of whether the fuel mixture is burning too rich or too lean.'],
+        ['Fault detector', !det ? 'Starting up' : det.confirmed ? 'Fault confirmed' : det.raw_alarm ? 'Checking an anomaly' : 'No anomaly', 'READINGS VS ENGINE MODEL', 'Anomaly Detector', 'Compares live sensor readings against the healthy digital twin. A score above 1.0 means readings are behaving abnormally, triggering deeper diagnosis.'],
       ].map(([label, value, caption, tipTitle, tipContent], index) => <div key={label} className={`surface-panel p-4 rounded-sm ${index === 3 && det?.confirmed ? 'surface-panel-critical' : ''}`}>
         <div className="flex items-center justify-between text-xs uppercase tracking-wider font-mono text-slate-400">
           <span>{label}</span>
@@ -287,8 +287,8 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
       <div className="flex items-center gap-2">
         <h3 className="text-sm font-semibold text-white tracking-tight">Prognosis and maintenance</h3>
         <InfoTooltip
-          title="Prognostics & Health Management"
-          content="Continuous trend forecasting, conformal remaining useful life (RUL) estimation, and Monte Carlo mission reliability based on live residual evidence."
+          title="Health Forecasting & Maintenance"
+          content="Predicts future engine wear, estimating how many flight hours remain before parts need service and whether the engine can safely complete planned flights."
           width={280}
         />
       </div>
@@ -297,8 +297,8 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
           <div className="flex items-center justify-between text-slate-300">
             <span>Time to limit</span>
             <InfoTooltip
-              title="Time to Limit (TTL)"
-              content="Theil-Sen robust slope and quadratic acceleration projecting minutes until residuals reach operational redline limits under the current flight condition."
+              title="Time to Redline Limit"
+              content="Forecasts how many minutes remain before a rising temperature or dropping pressure crosses dangerous operational safety limits."
               width={260}
             />
           </div>
@@ -308,7 +308,7 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
             <span>Remaining useful life</span>
             <InfoTooltip
               title="Remaining Useful Life (RUL)"
-              content="Dual-path conformal prediction model (Physics-of-Failure damage + data-driven trend) providing hours to overhaul with guaranteed statistical coverage."
+              content="Estimates operating flight hours remaining before internal engine components require scheduled overhaul or replacement."
               width={280}
             />
           </div>
@@ -321,8 +321,8 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
           <div className="flex items-center justify-between text-slate-300">
             <span>Mission reliability</span>
             <InfoTooltip
-              title="Mission Reliability (10k Monte Carlo)"
-              content="Probability of completing the planned sortie without engine abort. Evaluates 10,000 trials across flight phases, component Weibull hazards, and accumulated wear."
+              title="Mission Success Probability"
+              content="Simulates 10,000 flight scenarios based on current engine wear to calculate the statistical chance of finishing the mission without an engine failure."
               width={280}
             />
           </div>
@@ -335,7 +335,7 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
             <span>Work orders</span>
             <InfoTooltip
               title="Automated Work Orders"
-              content="Evidence-triggered maintenance orders mapped to Air Transport Association (ATA) chapters. Tracked in SQLite through OPEN -> IN_WORK -> SIGNED_OFF."
+              content="Automatically drafts official aviation maintenance tasks for ground technicians when problems are diagnosed, tracking repairs until signed off."
               width={260}
             />
           </div>
@@ -353,8 +353,8 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
             <div className="flex items-center gap-2">
               <h3 className="text-sm font-semibold text-white tracking-tight">Detector evidence</h3>
               <InfoTooltip
-                title="Detector Evidence"
-                content="Live tier-0 score relative to calibrated threshold. Scores > 1.0 flag raw anomalies; multi-frame persistence gate confirms true faults."
+                title="Anomaly Evidence"
+                content="Shows which specific sensors are drifting away from normal healthy behavior. Scores above 1.0 indicate anomalous readings."
                 width={260}
               />
             </div>
@@ -371,8 +371,8 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
           <div className="flex items-center justify-between text-xs font-medium font-mono text-slate-200">
             <span>Fault isolation <span className="font-normal text-slate-500">(Bayesian posterior over registry faults and sensor offsets)</span></span>
             <InfoTooltip
-              title="Bayesian Fault Isolation"
-              content="Evaluates continuous posterior P(Fault | z). Process faults couple multiple channels together; sensor offsets move only one channel. Priors derived from FMECA occurrence rates."
+              title="Root-Cause Diagnosis"
+              content="Analyzes which mechanical failure is most likely (such as a spark misfire, clogged injector, or coolant leak) versus an innocent sensor wire issue."
               width={300}
             />
           </div>
@@ -387,7 +387,7 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
             </div>;
           })}</div>
         </div>}
-        {det?.candidate && <div className="mt-4 rounded-sm border border-accent/40 bg-accent/5 p-3"><div className="flex items-center justify-between"><div className="flex items-center gap-1.5 text-xs font-medium font-mono text-accent"><span>Selected-engine reservoir · tier 1 <span className="font-normal opacity-70">(readout scores, not probabilities)</span></span><InfoTooltip title="Echo State Reservoir" content="500-node sparse recurrent neural network (spectral radius 0.95) scoring dynamic temporal patterns across multivariate time series." width={260} /></div><span className="text-xs font-mono text-accent font-semibold">Candidate: {title(det.candidate.label)}</span></div><div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2">{det.candidate.classes.map((label, i) => <div key={label} className="rounded-sm bg-black/30 border border-surface-border p-2"><div className="truncate text-xs font-mono text-slate-400">{title(label)}</div><div className="mt-1 text-xs font-mono font-medium text-white tabular-nums">{num(det.candidate?.scores[i], 3)}</div></div>)}</div></div>}
+        {det?.candidate && <div className="mt-4 rounded-sm border border-accent/40 bg-accent/5 p-3"><div className="flex items-center justify-between"><div className="flex items-center gap-1.5 text-xs font-medium font-mono text-accent"><span>Selected-engine reservoir · tier 1 <span className="font-normal opacity-70">(readout scores, not probabilities)</span></span><InfoTooltip title="Dynamic Pattern Classifier" content="An AI neural network trained to recognize complex vibration and temperature wave patterns to classify tricky, developing faults." width={260} /></div><span className="text-xs font-mono text-accent font-semibold">Candidate: {title(det.candidate.label)}</span></div><div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2">{det.candidate.classes.map((label, i) => <div key={label} className="rounded-sm bg-black/30 border border-surface-border p-2"><div className="truncate text-xs font-mono text-slate-400">{title(label)}</div><div className="mt-1 text-xs font-mono font-medium text-white tabular-nums">{num(det.candidate?.scores[i], 3)}</div></div>)}</div></div>}
       </section>}
 
       {show('OPERATOR', 'MISSION') && <section className="surface-panel p-4 sm:p-5 rounded-sm">
@@ -396,8 +396,8 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
             <div className="flex items-center gap-2">
               <h3 className="text-sm font-semibold text-white tracking-tight">Scenario controls</h3>
               <InfoTooltip
-                title="Dynamic Scenario Controls"
-                content="Modifies physical operating conditions in continuous time. Levers alter atmospheric and throttle inputs; fault injections modify internal plant parameters."
+                title="Flight Controls & Scenarios"
+                content="Adjust flight conditions or inject realistic mechanical faults to test how the engine twin and diagnostic systems respond."
                 width={280}
               />
             </div>
@@ -414,8 +414,8 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
           <div className="flex items-center justify-between text-xs font-medium font-mono text-slate-200 uppercase tracking-wider">
             <span>Mission and recording</span>
             <InfoTooltip
-              title="Mission Execution & Sortie Recorder"
-              content="Executes pre-planned waypoint sorties and logs complete high-rate CAN telemetry frames to disk for post-mission playback and verification."
+              title="Flight Mission & Black-Box"
+              content="Fly automated waypoint mission routes and record complete sensor telemetry into a flight log for later review."
               width={260}
             />
           </div>
@@ -434,8 +434,8 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
           <div className="flex items-center justify-between text-xs font-medium font-mono text-slate-200 uppercase tracking-wider">
             <span>Inject a fault valid for this engine</span>
             <InfoTooltip
-              title="Physical Fault Injection"
-              content="Alters underlying physical plant equations (injector orifice flow area, valve leakage, cooling jacket conductance) without forcing synthetic outputs."
+              title="Inject a Fault Scenario"
+              content="Select a realistic failure (like a spark plug misfire or cooling radiator leak) to watch the system detect, isolate, and highlight the issue in real time."
               width={280}
             />
           </div>
@@ -458,8 +458,8 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
       <div className="flex items-center gap-2">
         <h3 className="text-sm font-semibold text-white">Efficiency</h3>
         <InfoTooltip
-          title="Thermodynamic Efficiency"
-          content="Combines physical fuel mass flow rate with twin-estimated indicated cycle power. Computes Brake Specific Fuel Consumption (BSFC) and thermal conversion efficiency."
+          title="Engine Efficiency"
+          content="Shows how effectively the engine turns fuel into mechanical thrust, displaying thermal efficiency percentage and fuel consumption per kilowatt."
           width={280}
         />
       </div>
@@ -480,8 +480,8 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
         <div className="flex items-center gap-2">
           <h3 className="font-semibold text-white">Live engine channels</h3>
           <InfoTooltip
-            title="Telemetry Channel Bus"
-            content="20 Hz calibrated telemetry frames from physical CAN/ECU bus. Quality flags: OK (nominal), SHIELDED (sensor quarantined by FDI), INTERPOLATED (UKF virtual estimate)."
+            title="Live Sensor Bus"
+            content="Continuous 20 Hz readings from all onboard engine sensors, including temperature, pressure, fuel flow, and sensor reliability status."
             width={280}
           />
         </div>

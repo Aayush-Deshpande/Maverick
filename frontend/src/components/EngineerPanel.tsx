@@ -34,8 +34,8 @@ export default function EngineerPanel({ residuals, twin, virtualSensors, vibrati
       <div className="flex items-center gap-2">
         <h3 className="text-sm font-semibold text-white tracking-tight">Twin and residuals</h3>
         <InfoTooltip
-          title="State Observer & Residuals"
-          content="Compares live 20 Hz telemetry against the UKF thermofluid engine model. Innovation z-scores highlight anomalous deviations while health parameters track degradation."
+          title="Engine Twin & Mismatch Tracking"
+          content="Compares live sensor measurements against what our healthy digital engine expects. If a reading drifts unusually far from normal, it highlights the mismatch so engineers can catch hidden problems early."
           width={280}
         />
       </div>
@@ -44,9 +44,9 @@ export default function EngineerPanel({ residuals, twin, virtualSensors, vibrati
           <div className="flex items-center gap-1.5 text-slate-300">
             <span>Residuals, measured minus engine model (σ)</span>
             <InfoTooltip
-              title="Normalized Residuals (z-score)"
-              content="Innovation vector z = (y_meas - y_model) / σ_noise in sensor standard deviations. Magnitudes |z| > 3.0 indicate statistically significant plant deviation."
-              width={260}
+              title="Sensor Deviation from Expected"
+              content="Shows how many steps away each sensor reading is from what a healthy engine should show. A small bar means normal operation; a bar stretching past 3 indicates an unusual reading that deserves attention."
+              width={280}
             />
           </div>
           {shown.length ? <ul className="mt-2 space-y-1.5">{shown.map(([ch, z]) => (
@@ -67,8 +67,8 @@ export default function EngineerPanel({ residuals, twin, virtualSensors, vibrati
           <div className="flex items-center gap-1.5 text-slate-300">
             <span>Health parameters (twin estimate, 1 = nominal) · NIS {twin?.nis == null ? NO_DATA : num(twin.nis, 2)}</span>
             <InfoTooltip
-              title="UKF Health Parameters & NIS"
-              content="Unscented Kalman Filter estimates for cooling efficiency (1.0 = nominal, <0.75 outside nominal). Normalized Innovation Squared (NIS = νᵀ S⁻¹ ν) tests model-sensor consistency."
+              title="Internal Health & Model Match"
+              content="Estimates the internal health of the cooling system and cylinders. A value near 1.0 means brand new condition; values below 0.75 indicate wear or cooling loss. The match score confirms whether the digital twin and real engine are in agreement."
               width={280}
             />
           </div>
@@ -85,8 +85,8 @@ export default function EngineerPanel({ residuals, twin, virtualSensors, vibrati
           <div className="mt-4 flex items-center gap-1.5 text-slate-300">
             <span>Virtual sensors <span className="text-slate-500">(VIRTUAL: model estimates, not measured)</span></span>
             <InfoTooltip
-              title="Virtual Sensor Synthesis"
-              content="Physical variables computed from thermodynamic equations: P_max (combustion peak pressure), h_min (journal bearing oil film via Reynolds equation), P_ind (indicated power), and TIT (turbine inlet temp)."
+              title="Calculated Hidden Sensors"
+              content="Key engine variables that physical sensors cannot measure directly without damaging the engine. Our digital twin calculates them in real time: peak cylinder firing pressure, bearing oil thickness, total engine power, and turbocharger heat."
               width={280}
             />
           </div>
@@ -96,8 +96,8 @@ export default function EngineerPanel({ residuals, twin, virtualSensors, vibrati
           <div className="mt-4 flex items-center gap-1.5 text-slate-300">
             <span>Vibration orders (mm/s)</span>
             <InfoTooltip
-              title="Tach-Synchronous Vibration Orders"
-              content="Order-domain spectral harmonics: 0.5X (camshaft/valves/single-cylinder anomaly), 1.0X (crankshaft mechanical imbalance), 2.0X (4-cylinder firing harmonic)."
+              title="Engine Vibration Patterns"
+              content="Tracks vibration pulses matched to engine rotation speed: 0.5X reveals valve or camshaft issues, 1.0X points to an unbalanced spinning shaft or propeller, and 2.0X monitors the smooth firing pulse of the engine cylinders."
               width={280}
             />
           </div>
