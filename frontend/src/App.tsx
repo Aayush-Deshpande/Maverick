@@ -41,7 +41,15 @@ import {
 } from 'lucide-react';
 
 export function App() {
-  const [workspace, setWorkspace] = useState<'landing' | 'runtime' | 'twin' | 'legacy'>('landing');
+  const [workspace, setWorkspace] = useState<'landing' | 'runtime' | 'twin' | 'legacy'>(() => {
+    try {
+      const p = new URLSearchParams(window.location.search).get('workspace');
+      if (p === 'twin' || p === 'runtime' || p === 'legacy' || p === 'landing') return p;
+      const h = window.location.hash.replace('#', '');
+      if (h === 'twin' || h === 'runtime' || h === 'legacy' || h === 'landing') return h;
+    } catch {}
+    return 'landing';
+  });
 
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }); }, [workspace]);
 

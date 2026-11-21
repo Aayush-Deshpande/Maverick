@@ -27,7 +27,7 @@ const EMISSIVE_INTENSITY = 0.9;
 const PULSE_PEAK = 2.2;                                  // peak glow of a highlighted part while it pulses
 const PULSE_HZ = 1.2;                                    // highlighted parts breathe at this rate (P Part 6 X2)
 const PULSE_MIN = 0.1;                                   // ...between this share of the peak glow and the peak
-const ORBIT_DISTANCE = 1.4;                               // fault view: comfortable distance keeping the engine in view
+const ORBIT_DISTANCE = 3.2;                               // fault view: comfortable distance keeping the engine in view
 const ORBIT_LIFT = 0.35;                                 // ...seen slightly from above
 const AIM_TOWARD_PART = 0.35;                            // ...looking from the engine centre this far toward the part
 const LOOP_SPEED = 0.6;                                  // then a slow loop around the engine (OrbitControls units)
@@ -50,6 +50,19 @@ function RoomEnv() {
 
 /** Own copies of the materials (the cached GLB stays untouched), with the shared engine material treatment. */
 function prepare(root: Object3D): void {
+  // Normalize scale and center to match docs_site / standard CAD presentation
+  const box = new Box3().setFromObject(root);
+  const center = box.getCenter(new Vector3());
+  const size = box.getSize(new Vector3());
+  const maxDim = Math.max(size.x, size.y, size.z);
+  const scale = 1.8 / (maxDim || 1);
+
+  root.scale.setScalar(scale);
+  root.position.x = -center.x * scale;
+  root.position.y = -center.y * scale + 0.05;
+  root.position.z = -center.z * scale;
+  root.updateWorldMatrix(true, true);
+
   root.traverse((o) => {
     if (!(o instanceof Mesh) || Array.isArray(o.material)) return;
     o.material = (o.material as MeshStandardMaterial).clone();
@@ -102,23 +115,24 @@ function Model({ url, levels, onLit, focusRequest, autoRotateEnabled }: { url: s
     const names = new Set(target ? target.split('|') : []);
     const box = new Box3();
     root.traverse((o) => { if (names.has(o.name)) box.expandByObject(o); });
-    const controls = get().controls as unknown as { autoRotate: boolean; autoRotateSpeed: number } | null;
+    const controls = get().controls as unknown as { autoRotate: boolean; autoRotateSpeed: number; target: Vector3 } | null;
     if (box.isEmpty()) {
-      if (framed.current !== root) bounds.refresh(root).fit().clip();     // fit whole engine with comfortable margin
       if (controls) {
         controls.autoRotate = autoRotateEnabled;
         controls.autoRotateSpeed = 0.8;
       }
+      if (framed.current !== root) {
+        bounds.moveTo([2.8, 1.8, 3.4]).lookAt({ target: [0, 0.05, 0] });
+      }
     } else {
       // stay outside the engine: orbit to the side where the part faces the viewer, whole engine still in frame,
       // aim a little toward the part, then loop slowly around it (P Part 6 X2)
-      const { center, distance } = bounds.refresh(root).getSize();
       const part = box.getCenter(new Vector3());
-      const out = part.clone().sub(center);
-      if (out.lengthSq() < 1e-9) out.copy(get().camera.position).sub(center);
+      const out = part.clone().sub(new Vector3(0, 0.05, 0));
+      if (out.lengthSq() < 1e-9) out.set(1, 0.4, 1);
       out.normalize().add(new Vector3(0, ORBIT_LIFT, 0)).normalize();
-      bounds.moveTo(center.clone().addScaledVector(out, distance * ORBIT_DISTANCE))
-        .lookAt({ target: center.clone().lerp(part, AIM_TOWARD_PART) });
+      bounds.moveTo(new Vector3(0, 0.05, 0).addScaledVector(out, ORBIT_DISTANCE))
+        .lookAt({ target: new Vector3(0, 0.05, 0).lerp(part, AIM_TOWARD_PART) });
       if (controls) {
         controls.autoRotate = false;
         if (autoRotateEnabled) {
@@ -206,23 +220,24 @@ export default function EngineViewer3D({ engineId, highlights: detected, injecte
         {error ? <div className="p-4 text-xs font-mono text-slate-300">{error}</div>
           : !manifest ? <div className="p-4 text-xs font-mono text-slate-400">Loading component manifest…</div>
           : <ModelBoundary resetKey={manifest.model_url}>
-              <Canvas camera={{ position: [3.6, 2.2, 3.6], fov: 42 }} dpr={[1, 2]}>
+              <Canvas camera={{ position: [2.8, 1.8, 3.4], fov: 42 }} dpr={[1, 2]}>
                 <RoomEnv />
                 <directionalLight position={[3, 4, 3]} intensity={1.4} />
                 <Suspense fallback={null}>
-                  <Bounds fit clip margin={2.4}>
+                  <Bounds maxDuration={0.9}>
                     <Model url={manifest.model_url} levels={levels} onLit={setLit} focusRequest={focusRequest + focusSignal} autoRotateEnabled={autoRotate} />
                   </Bounds>
                 </Suspense>
                 <OrbitControls
                   makeDefault
+                  target={[0, 0.05, 0]}
                   enableDamping
                   dampingFactor={0.05}
                   autoRotate={autoRotate}
                   autoRotateSpeed={0.8}
                   maxPolarAngle={Math.PI / 2 + 0.15}
                   minPolarAngle={0.15}
-                  minDistance={0.8}
+                  minDistance={1.0}
                   maxDistance={12}
                 />
               </Canvas>
