@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
-import { Activity, AlertTriangle, CheckCircle2, Clock, Info, Lock, Sparkles, X } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { Activity, AlertTriangle, ArrowDown, ArrowRight, CheckCircle2, Clock, Info, Lock, Sparkles, X } from 'lucide-react';
 
 const EngineViewer3D = lazy(() => import('./viewer3d/EngineViewer3D'));
 
@@ -23,6 +24,7 @@ type Props = {
   command: (path: string, method: string, body?: unknown) => Promise<any>;
   training: boolean;
   onTraining: (on: boolean) => void;
+  onNavigateToRuntime?: () => void;
 };
 
 const PAGE = 9; // keys 1-9 pick a fault on the current page
@@ -260,6 +262,15 @@ export default function TwinStage(p: Props) {
       });
   };
 
+  const cycleCylinder = () => {
+    const n = p.cylinders;
+    if (n) setCyl((c) => (c % n) + 1);
+  };
+
+  const scrollToTelemetry = () => {
+    window.scrollBy({ top: 400, behavior: 'smooth' });
+  };
+
   return (
     <div className="relative left-1/2 w-[calc(100vw-2.5rem)] -translate-x-1/2 h-[calc(100vh-11rem)] min-h-[480px] overflow-hidden rounded-sm border border-surface-border bg-[#e8e7df]">
       <Suspense fallback={<div className="p-6 text-xs font-mono text-slate-400">Loading 3D view…</div>}>
@@ -344,7 +355,7 @@ export default function TwinStage(p: Props) {
           </div>
         </div>
 
-        {/* Fault List: Clean, High-Density Rows (Original Aesthetic, Clickable & Locked) */}
+        {/* Fault List: Clean, High-Density Rows */}
         <ol className="mt-1.5 space-y-0.5">
           {shown.map((f, i) => {
             const isActive = active.some((a) => a.fault_id === f.id);
@@ -399,9 +410,16 @@ export default function TwinStage(p: Props) {
             <kbd className={key}>Q</kbd>
             <kbd className={key}>E</kbd> page
           </span>
-          <span className="flex items-center gap-1">
-            <kbd className={key}>C</kbd> cyl {cyl}
-          </span>
+          <button
+            type="button"
+            onClick={cycleCylinder}
+            className="flex items-center gap-1 text-left hover:text-slate-900 transition-colors cursor-pointer"
+            title="Click or press C to switch target cylinder (1-4) for cylinder-specific faults"
+          >
+            <kbd className={key}>C</kbd>
+            <span>cyl {cyl}</span>
+            <span className="text-[9px] text-slate-400 font-sans">(cycle)</span>
+          </button>
           <span className="flex items-center gap-1">
             <kbd className={key}>F</kbd> focus
           </span>
@@ -414,7 +432,7 @@ export default function TwinStage(p: Props) {
         </div>
       </aside>
 
-      {/* Bottom: Annunciator Strip */}
+      {/* Bottom: Annunciator Strip with quick navigation */}
       <div
         className={`surface-panel absolute inset-x-4 bottom-4 rounded-sm border-l-4 px-4 py-2 z-10 ${
           status && STRIP[status] ? STRIP[status] : 'border-l-surface-border text-slate-800'
@@ -440,7 +458,33 @@ export default function TwinStage(p: Props) {
               injected {active.map((f) => `${f.fault_id}${f.cylinder ? `·c${f.cylinder}` : ''}`).join('  ')}
             </span>
           )}
-          {notice && <span className="ml-auto text-xs opacity-90 font-mono text-slate-600">{notice}</span>}
+
+          {/* Quick links to live telemetry stream and full console */}
+          <div className="ml-auto flex items-center gap-2">
+            <button
+              type="button"
+              onClick={scrollToTelemetry}
+              className="inline-flex items-center gap-1 text-xs font-mono text-slate-600 hover:text-slate-900 transition-colors"
+              title="Scroll down to view live 20 Hz telemetry numbers and thermodynamic equations"
+            >
+              <ArrowDown className="w-3 h-3 text-accent" />
+              <span>Live Telemetry Numbers ↓</span>
+            </button>
+            {p.onNavigateToRuntime && (
+              <>
+                <span className="text-slate-300">|</span>
+                <button
+                  type="button"
+                  onClick={p.onNavigateToRuntime}
+                  className="inline-flex items-center gap-1 text-xs font-mono text-accent hover:underline font-medium"
+                >
+                  <span>Engine Runtime Console</span>
+                  <ArrowRight className="w-3 h-3" />
+                </button>
+              </>
+            )}
+            {notice && <span className="text-xs opacity-90 font-mono text-slate-600 ml-2">{notice}</span>}
+          </div>
         </div>
         {highlights.length > 0 && (
           <div className="mt-1 font-mono text-[11px] text-slate-600">
@@ -449,20 +493,21 @@ export default function TwinStage(p: Props) {
         )}
       </div>
 
-      {/* System Guide Modal */}
-      {showGuide && (
+      {/* System Guide Modal - rendered via createPortal so it escapes container bounds & transforms */}
+      {showGuide && typeof document !== 'undefined' && createPortal(
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in"
           onClick={() => setShowGuide(false)}
           role="dialog"
           aria-modal="true"
           aria-labelledby="guide-title"
         >
           <div
-            className="surface-panel w-full max-w-xl max-h-[85vh] overflow-y-auto rounded-sm p-5 shadow-card-lg border border-surface-border-strong text-slate-800"
+            className="surface-panel w-full max-w-xl max-h-[85vh] flex flex-col rounded-sm shadow-card-lg border border-surface-border-strong text-slate-800 bg-[#f7f6f0] overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-start justify-between border-b border-surface-border pb-3">
+            {/* Modal Header - pinned at top */}
+            <div className="flex items-start justify-between border-b border-surface-border p-4 shrink-0 bg-[#f7f6f0]">
               <div>
                 <div className="flex items-center gap-2">
                   <Info className="w-4 h-4 text-accent" />
@@ -480,14 +525,15 @@ export default function TwinStage(p: Props) {
               <button
                 type="button"
                 onClick={() => setShowGuide(false)}
-                className="rounded-sm p-1 text-slate-400 hover:text-slate-800 hover:bg-black/10 transition-colors"
+                className="rounded-sm p-1.5 text-slate-400 hover:text-slate-800 hover:bg-black/10 transition-colors"
                 title="Close guide (Esc)"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="mt-4 space-y-3 text-xs font-mono leading-relaxed">
+            {/* Modal Scrollable Body */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 text-xs font-mono leading-relaxed">
               <div className="rounded-sm border border-surface-border bg-black/[0.02] p-3">
                 <div className="flex items-center gap-1.5 text-accent font-semibold uppercase tracking-wider text-[11px]">
                   <Activity className="w-3.5 h-3.5" />
@@ -546,7 +592,7 @@ export default function TwinStage(p: Props) {
                   <div className="flex items-center gap-1.5"><kbd className={key}>1-9</kbd><span>Inject fault</span></div>
                   <div className="flex items-center gap-1.5"><kbd className={key}>0</kbd><span>Clear all faults</span></div>
                   <div className="flex items-center gap-1.5"><kbd className={key}>Q/E</kbd><span>Page switch</span></div>
-                  <div className="flex items-center gap-1.5"><kbd className={key}>C</kbd><span>Cycle cylinder (1-4)</span></div>
+                  <div className="flex items-center gap-1.5"><kbd className={key}>C</kbd><span>Cycle target cylinder (1-4)</span></div>
                   <div className="flex items-center gap-1.5"><kbd className={key}>F</kbd><span>Refocus camera</span></div>
                   <div className="flex items-center gap-1.5"><kbd className={key}>T</kbd><span>Training highlight</span></div>
                   <div className="flex items-center gap-1.5"><kbd className={key}>R</kbd><span>Reset & restart</span></div>
@@ -555,8 +601,9 @@ export default function TwinStage(p: Props) {
               </div>
             </div>
 
-            <div className="mt-4 flex items-center justify-between border-t border-surface-border pt-3">
-              <span className="text-[11px] font-mono text-slate-400">ANUMAAN · SIH PS-26054</span>
+            {/* Modal Footer - pinned at bottom */}
+            <div className="flex items-center justify-between border-t border-surface-border p-3.5 shrink-0 bg-[#f7f6f0]">
+              <span className="text-[11px] font-mono text-slate-500">ANUMAAN · SIH PS-26054</span>
               <button
                 type="button"
                 onClick={() => setShowGuide(false)}
@@ -566,7 +613,8 @@ export default function TwinStage(p: Props) {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
