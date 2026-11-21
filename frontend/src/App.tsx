@@ -151,7 +151,7 @@ export function App() {
           // The 3D twin tab is only the engine (keyboard-driven): same store, same fault API, highlights from
           // state.highlights and the component manifests, so console, twin and GCS always agree. The old apps/threejs_twin page
           // (own fault-to-part table, three engines) stays reachable at {serverUrl}/app until it is archived (D10).
-          <TwinWorkspace serverUrl={serverUrl} />
+          <TwinWorkspace serverUrl={serverUrl} onNavigateToRuntime={() => setWorkspace('runtime')} />
         ) : (
           <>
             {workspace === 'legacy' && !isConnected && (
