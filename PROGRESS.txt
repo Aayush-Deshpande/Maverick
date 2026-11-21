@@ -8,7 +8,7 @@ RESUME HERE  (last updated 22 Nov 2026, Phase 7 Card B-05: Diesels AE300 & VRDE 
 Phase:        Phase 7 (Blender Model Refinement) Card B-05 completed.
 Card:         B-05: Diesels (Austro AE300 & VRDE Jayem 2.2L): added missing placeholders (radiator, thermostat, VGT actuator on AE300; radiator, airbox filter, ECU on VRDE); updated representative geometry labels in manifests; master twin collections updated; GLBs re-exported (AE300 1.85 MB, VRDE 0.86 MB) and verified (T-REPO-2 5/5 PASS, 13/13 manifest tests pass).
 Branch:       Beta
-Last commit:  (pending commit for B-05)
+Last commit:  bc8d561 M7-B05: Diesel placeholders, representative labels, and manifest updates
 State:        All 5 engine GLBs under 20 MB budget (1.85 MB, 15.39 MB, 5.30 MB, 18.83 MB, 0.86 MB). T-REPO-2 node validator PASS across all 5 engines (149/149, 304/304, 56/56, 167/167, 455/455). tests/assets/test_component_manifests.py 13 passed. Vitest 32 passed, tsc clean.
 Latest:       B-05 done. B-04 done. B-03 done. B-02 done. B-01 done.
 Next step:    Card B-06: Phase 7 final checkpoint and sync (sync web models to frontend/public/models, full test suite verification, enforce A section 8 tests 1-6).
