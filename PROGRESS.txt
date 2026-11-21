@@ -8,7 +8,7 @@ RESUME HERE  (last updated 21 Nov 2026, Phase 7 Card B-03: Rotax 914 Resegmentat
 Phase:        Phase 7 (Blender Model Refinement) Card B-03 completed.
 Card:         B-03: Rotax 914 resegmentation: 320 wastegate objects reassigned (294 fasteners to fasteners, 23 turbo exhaust plumbing to turbo_turbine, 3 flapper parts to wastegate), cylinder barrels 1-4 and heads 1-4 cleanly split and identified, missing placeholders added (carburettors, airbox, TCU, wastegate actuator, oil/cooling, sensors), master blend updated, 5.30 MB GLB exported and verified (T-REPO-2 5/5 PASS, 13/13 manifest tests pass, forbidden mappings verified clean).
 Branch:       Beta
-Last commit:  (pending commit for B-03)
+Last commit:  5f5d0d3 M7-B03: Rotax 914 resegmentation, wastegate reassignment, and placeholders
 State:        All 5 engine GLBs under 20 MB budget. T-REPO-2 node validator PASS (109/109, 304/304, 56/56, 164/164, 452/452). tests/assets/test_component_manifests.py 13 passed. Vitest 32 passed, tsc clean.
 Latest:       B-03 done. B-02 done. B-01 done.
 Next step:    Card B-04: Rotax 912 iS grouping & placeholders (geometry confirmed correct per D47; group 21 base parts into crankcase/barrels/heads/intake, add component empties and standard placeholders).
