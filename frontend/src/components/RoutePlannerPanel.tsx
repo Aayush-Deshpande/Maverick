@@ -163,18 +163,20 @@ export default function RoutePlannerPanel({ engineId, api }: Props) {
             L/D {num(glide.glide_ratio, 1)} ({glide.propeller_feathered ? 'feathered' : 'windmilling'}) · best glide {num(glide.speed_best_glide_kt, 0)} kt TAS · sink {num(glide.sink_rate_fpm, 0)} fpm
             {' · '}footprint {ranges.length ? `${num(ranges[0], 1)}–${num(ranges[ranges.length - 1], 1)} km (median ${num(ranges[Math.floor(ranges.length / 2)], 1)})` : `${NO_DATA} (no terrain)`}
           </div>
-          <table className="w-full text-left">
-            <thead className="text-slate-500"><tr><th className="px-2 py-1">Airfield</th><th className="px-2">km</th><th className="px-2">Margin ft</th><th className="px-2">Terrain clear ft</th><th className="px-2">Status</th><th /></tr></thead>
-            <tbody>{glide.reachable_airfields.map((a) => (
-              <tr key={a.airfield_id} className="text-slate-300 tabular-nums">
-                <td className="px-2">{a.name}</td><td className="px-2">{num(a.distance_km, 1)}</td><td className="px-2">{num(a.alt_margin_ft, 0)}</td>
-                <td className="px-2">{a.terrain_checked && a.min_terrain_clearance_ft != null ? num(a.min_terrain_clearance_ft, 0) : 'not checked'}</td>
-                <td className="px-2">{a.status}</td>
-                <td className="px-2"><button type="button" disabled={busy || !engineId} onClick={() => runDivert(a.airfield_id)}
-                  className="px-2 rounded-sm border border-surface-border hover:bg-white/5 disabled:opacity-50">Divert</button></td>
-              </tr>
-            ))}</tbody>
-          </table>
+          <div className="overflow-x-auto -mx-1 px-1">
+            <table className="w-full text-left whitespace-nowrap">
+              <thead className="text-slate-500"><tr><th className="px-2 py-1">Airfield</th><th className="px-2">km</th><th className="px-2">Margin ft</th><th className="px-2">Terrain clear ft</th><th className="px-2">Status</th><th /></tr></thead>
+              <tbody>{glide.reachable_airfields.map((a) => (
+                <tr key={a.airfield_id} className="text-slate-300 tabular-nums">
+                  <td className="px-2">{a.name}</td><td className="px-2">{num(a.distance_km, 1)}</td><td className="px-2">{num(a.alt_margin_ft, 0)}</td>
+                  <td className="px-2">{a.terrain_checked && a.min_terrain_clearance_ft != null ? num(a.min_terrain_clearance_ft, 0) : 'not checked'}</td>
+                  <td className="px-2">{a.status}</td>
+                  <td className="px-2"><button type="button" disabled={busy || !engineId} onClick={() => runDivert(a.airfield_id)}
+                    className="px-2 rounded-sm border border-surface-border hover:bg-white/5 disabled:opacity-50">Divert</button></td>
+                </tr>
+              ))}</tbody>
+            </table>
+          </div>
         </div>
       )}
       {(plan || glide) && (

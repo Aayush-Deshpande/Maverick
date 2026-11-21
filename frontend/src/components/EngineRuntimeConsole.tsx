@@ -228,19 +228,21 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
         {notice && <span className="ml-auto text-accent font-medium">{notice}</span>}
       </div>
       {runtime.error && <div className="mt-3 rounded-sm border border-surface-border bg-white/[0.03] p-3 text-xs font-mono text-slate-200">{runtime.error}. Check the backend connection in Settings.</div>}
-      <nav aria-label="Console view" className="mt-3 flex flex-wrap items-center gap-1 text-xs font-mono">
-        <div className="flex items-center gap-1">
+      <nav aria-label="Console view" className="mt-3 flex items-center justify-between gap-2 text-xs font-mono overflow-x-auto no-scrollbar py-0.5">
+        <div className="flex items-center gap-1 shrink-0">
           {VIEWS.map((v) => <button key={v.id} type="button" aria-pressed={view === v.id} onClick={() => setView(v.id)}
-            className={`px-3 py-1.5 rounded-sm border ${view === v.id ? 'border-surface-border-strong bg-white/10 text-white' : 'border-surface-border text-slate-400 hover:bg-white/5'}`}>{v.label}</button>)}
+            className={`px-2.5 sm:px-3 py-1.5 rounded-sm border whitespace-nowrap ${view === v.id ? 'border-surface-border-strong bg-white/10 text-white' : 'border-surface-border text-slate-400 hover:bg-white/5'}`}>{v.label}</button>)}
           <InfoTooltip
             title="Role-Based Console Views"
             content="Tailors dashboard panels to operational roles: Operator shows primary flight gauges and warnings; Propulsion engineer displays physics equations, digital twin residuals, and virtual sensors; Maintenance shows component wear, remaining life, and repair orders; Mission manages flight routes; All panels displays everything simultaneously."
             width={320}
           />
         </div>
-        <div className="ml-auto inline-flex items-center gap-1">
+        <div className="ml-auto inline-flex items-center gap-1 shrink-0">
           <button type="button" aria-pressed={training} onClick={() => setTraining(!training)} title="Training mode also draws the injected fault on the 3D engine"
-            className={`px-3 py-1.5 rounded-sm border ${training ? 'border-surface-border-strong bg-white/10 text-white' : 'border-surface-border text-slate-400 hover:bg-white/5'}`}>Training mode: {training ? 'on' : 'off'}</button>
+            className={`px-2.5 sm:px-3 py-1.5 rounded-sm border whitespace-nowrap ${training ? 'border-surface-border-strong bg-white/10 text-white' : 'border-surface-border text-slate-400 hover:bg-white/5'}`}>
+            <span className="hidden sm:inline">Training mode: </span>{training ? 'on' : 'off'}
+          </button>
           <InfoTooltip
             title="Training Mode"
             content="When turned on, marks the injected fault directly on the 3D engine for practice and demonstration. In flight mode, parts only highlight if the diagnostic AI independently detects the issue."
@@ -289,7 +291,7 @@ export function EngineRuntimeConsole({ serverUrl }: { serverUrl: string }) {
           <span>{label}</span>
           <InfoTooltip title={tipTitle} content={tipContent} width={260} />
         </div>
-        <div className="mt-2 text-xl sm:text-2xl font-mono font-semibold tabular-nums text-white">{value}</div>
+        <div className="mt-2 text-lg sm:text-2xl font-mono font-semibold tabular-nums text-white truncate">{value}</div>
         <div className="mt-1 text-xs font-mono text-slate-500">{caption}</div>
       </div>)}
     </div>}

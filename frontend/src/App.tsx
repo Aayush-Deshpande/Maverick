@@ -117,17 +117,17 @@ export function App() {
               width={280}
             />
           </div>
-          <div className="flex rounded-sm border border-surface-border bg-surface-card p-0.5 text-xs font-mono">
+          <div className="flex rounded-sm border border-surface-border bg-surface-card p-0.5 text-xs font-mono max-w-full overflow-x-auto no-scrollbar">
             <button
               onClick={() => setWorkspace('landing')}
-              className="rounded-sm px-2.5 py-1 text-slate-400 hover:text-white flex items-center gap-1 transition-colors"
+              className="rounded-sm px-2.5 py-1 text-slate-400 hover:text-white flex items-center gap-1 transition-colors shrink-0 whitespace-nowrap"
               title="Return to Platform Overview"
             >
               <span className="text-xs">&larr;</span> Overview
             </button>
             <button
               onClick={() => setWorkspace('runtime')}
-              className={`rounded-sm px-3 py-1 transition-colors ${
+              className={`rounded-sm px-2.5 sm:px-3 py-1 transition-colors shrink-0 whitespace-nowrap ${
                 workspace === 'runtime'
                   ? 'bg-accent text-white font-medium shadow-sm'
                   : 'text-slate-400 hover:text-white'
@@ -137,7 +137,7 @@ export function App() {
             </button>
             <button
               onClick={() => setWorkspace('twin')}
-              className={`rounded-sm px-3 py-1 transition-colors ${
+              className={`rounded-sm px-2.5 sm:px-3 py-1 transition-colors shrink-0 whitespace-nowrap ${
                 workspace === 'twin'
                   ? 'bg-accent text-white font-medium shadow-sm'
                   : 'text-slate-400 hover:text-white'
@@ -147,7 +147,7 @@ export function App() {
             </button>
             <button
               onClick={() => setWorkspace('legacy')}
-              className={`rounded-sm px-3 py-1 transition-colors ${
+              className={`rounded-sm px-2.5 sm:px-3 py-1 transition-colors shrink-0 whitespace-nowrap ${
                 workspace === 'legacy'
                   ? 'bg-accent text-white font-medium shadow-sm'
                   : 'text-slate-400 hover:text-white'

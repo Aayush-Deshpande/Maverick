@@ -3,21 +3,20 @@ Rules: AGENTS.md ("If the context resets"), DECISIONS.md D22/D23. Entry format: 
 section 19.1. Update the RESUME HERE block at every commit and at the end of every session.
 
 =====================================================================================================================
-RESUME HERE  (last updated 21 Nov 2026, Engine Runtime Architecture & Info Popovers session)
+RESUME HERE  (last updated 21 Nov 2026, Production Deployment of Natural Language Info Popovers & 3D Framing)
 =====================================================================================================================
 Phase:        Phases 0-3, 5 done; Phase 6 (M5) done except M5-10 (D54: do not touch); Phase 4 (M6) M6-01..05 done,
-              M6-06 in progress. Not started: Phase 7 (D53 workflow), 8, 8b, 9, 10.
-Card:         D68 (Avionics architecture guide modal & comprehensive info popovers): Added detailed pipeline architecture
-              modal in EngineRuntimeConsole explaining continuous 20 Hz thermodynamic ODE integration, sensor FDI, UKF
-              thermal state observer, virtual sensor synthesis, multi-channel residual detection, Bayesian fault isolation,
-              conformal RUL intervals, 10k Monte Carlo mission reliability, and automated ATA work orders. Added non-clipping
-              portal-based InfoTooltip popovers across all KPI cards, badges, fleet overview, scenario controls, and
-              engineer twin & vibration order panels.
-Branch:       Beta (committed and pushed to origin/Beta: 241456c). main untouched (waiting for Prasad's explicit "Deploy").
-Last commit:  241456c M6-06: D68 avionics architecture guide modal and comprehensive info tooltips across engine runtime console
-State:        vitest 32 passed (10 files), tsc OK, frontend build OK (12.83s).
-Latest:       D68 done (Engine Runtime architecture modal + full InfoTooltip coverage grounded in repository physics). D67 done (3D Twin anti-spam telemetry interlock + architecture guide modal). D66 (violet injected highlight). D65 (canonical compressed models).
-Next step:    Wait for Prasad's review. When approved and Prasad says "Deploy", merge Beta into main, push to origin/main, and deploy to Vercel production. Until then, keep strictly on Beta.
+              M6-06 done and deployed to production. Not started: Phase 7 (D53 workflow), 8, 8b, 9, 10.
+Card:         D68: Comprehensive natural-language [i] InfoTooltips across navigation, cockpit status alerts, audio warning
+              tones, console view filters, and fleet engine selectors. Telemetry Data Link connection modal refactored to
+              defense-grade avionics datalink gateway. 3D engine CAD digital twin scale and position normalized (1.8 size
+              centered at (0, 0.05, 0)) with camera calibrated to 2.81 distance, perfectly framing ~75% viewport fill
+              without over-zoom or clipping. Merged cleanly to main and deployed live to production.
+Branch:       Beta (synced with main: 18dc560 on main, e4d15c7 on Beta).
+Last commit:  e4d15c7 M6-06: D68 calibrate 3D camera distance to 2.81 for optimal 70% viewport filling
+State:        Production live at https://www.midnight-ciphers.in and https://anumaan-7421-3iah10cgg-prasads-projects-b60fa4b6.vercel.app. Vitest 32 passed (10 files), tsc clean.
+Latest:       D68 done & deployed to production. D67 done. D66 done. D65 done.
+Next step:    Ready for user verification or proceeding to next backlog card in Course of Action.
 Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produce yet (lambda, timing, BSFC, power,
               vibration, GO/NO-GO); some may show blanks or crash on .toFixed(null) until M0-09. Beta only.
               (2) STOP/START return 422 until the engine state machine (M1-12).

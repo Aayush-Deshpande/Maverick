@@ -50,7 +50,7 @@ export default function EngineerPanel({ residuals, twin, virtualSensors, vibrati
             />
           </div>
           {shown.length ? <ul className="mt-2 space-y-1.5">{shown.map(([ch, z]) => (
-            <li key={ch} className="grid grid-cols-[minmax(7rem,14rem)_1fr_3.5rem] items-center gap-2">
+            <li key={ch} className="grid grid-cols-[minmax(5.5rem,14rem)_1fr_2.5rem] sm:grid-cols-[minmax(7rem,14rem)_1fr_3.5rem] items-center gap-2">
               <span className="truncate text-slate-400" title={ch}>{channelLabel(labels, ch)}</span>
               <span className="relative h-1.5 bg-surface border border-surface-border rounded-full overflow-hidden">
                 <span className="absolute top-0 bottom-0 left-1/2 w-px bg-slate-500" />
@@ -72,16 +72,20 @@ export default function EngineerPanel({ residuals, twin, virtualSensors, vibrati
               width={280}
             />
           </div>
-          {params.length ? <table className="mt-2 w-full text-left">
-            <thead className="text-slate-500"><tr><th className="py-0.5">Parameter</th><th>Estimate</th><th>Interval</th><th /></tr></thead>
-            <tbody>{params.map((p) => (
-              <tr key={`${p.name}-${p.location}`} className="text-slate-300 tabular-nums">
-                <td className="py-0.5">{p.name} · {p.location}</td><td>{num(p.mean, 3)}</td>
-                <td className="text-slate-500">{num(p.ci[0], 2)}–{num(p.ci[1], 2)}</td>
-                <td>{p.healthy ? '' : 'outside nominal'}</td>
-              </tr>
-            ))}</tbody>
-          </table> : <div className="mt-2 text-slate-500">{NO_DATA}</div>}
+          {params.length ? (
+            <div className="overflow-x-auto -mx-1 px-1">
+              <table className="mt-2 w-full text-left min-w-[280px]">
+                <thead className="text-slate-500"><tr><th className="py-0.5">Parameter</th><th>Estimate</th><th>Interval</th><th /></tr></thead>
+                <tbody>{params.map((p) => (
+                  <tr key={`${p.name}-${p.location}`} className="text-slate-300 tabular-nums">
+                    <td className="py-0.5">{p.name} · {p.location}</td><td>{num(p.mean, 3)}</td>
+                    <td className="text-slate-500">{num(p.ci[0], 2)}–{num(p.ci[1], 2)}</td>
+                    <td>{p.healthy ? '' : 'outside nominal'}</td>
+                  </tr>
+                ))}</tbody>
+              </table>
+            </div>
+          ) : <div className="mt-2 text-slate-500">{NO_DATA}</div>}
           <div className="mt-4 flex items-center gap-1.5 text-slate-300">
             <span>Virtual sensors <span className="text-slate-500">(VIRTUAL: model estimates, not measured)</span></span>
             <InfoTooltip
