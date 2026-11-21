@@ -128,10 +128,12 @@ async def run_audit():
         print(f"  Palette Input Visible: {palette_visible}")
         await client.screenshot("webview_audit_02_runtime_command_palette.png")
 
-        # Close palette via Escape key
-        await client.send("Input.dispatchKeyEvent", {"type": "keyDown", "key": "Escape", "code": "Escape"})
-        await client.send("Input.dispatchKeyEvent", {"type": "keyUp", "key": "Escape", "code": "Escape"})
-        await asyncio.sleep(0.5)
+        # Close palette by clicking backdrop
+        await client.evaluate("""(() => {
+            const backdrop = document.getElementById('command-palette-backdrop');
+            if (backdrop) backdrop.click();
+        })()""")
+        await asyncio.sleep(0.8)
 
         # Test 1.2: Click SOURCE button (CAN Bus Inspector)
         print("  -> Testing CAN Bus Source modal...")
@@ -161,10 +163,10 @@ async def run_audit():
 
         # Close CAN Modal
         await client.evaluate("""(() => {
-            const closeBtn = document.querySelector('button[title*=\"Close\"]');
-            if (closeBtn) closeBtn.click();
+            const backdrop = document.getElementById('can-inspector-backdrop');
+            if (backdrop) backdrop.click();
         })()""")
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(0.8)
 
         # Test 1.3: Click Pipeline Guide (?) button
         print("  -> Testing Pipeline Guide modal...")

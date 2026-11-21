@@ -6,14 +6,14 @@ Update the RESUME HERE block at every commit and at the end of every session.
 Part 1 historical session log (Phases 0 through 7, 19 Nov - 22 Nov 2026) is preserved in PROGRESS.txt.
 
 =====================================================================================================================
-RESUME HERE  (last updated 22 Nov 2026, Phase 9 M7-01/02/04 CAN BUS, Phase 8 UX-03b/04 COMMAND PALETTE, Phase 10 M8-01 DOCKER)
+RESUME HERE  (last updated 22 Nov 2026, Phase 8 UX-06 Command Palette & CAN Bus Inspector Editorial Redesign)
 =====================================================================================================================
-Phase:        Phase 9 (Avionics & CAN Bus) / Phase 8 (Command Palette & QR Remote) / Phase 10 (Production Packaging).
-Card:         M7-M8 (Avionics CAN Bus Link, Tactical Command Palette & Production Docker Packaging): Implemented dynamic runtime data source switching (DIRECT vs CAN FADEC J1939) with zero restart; live J1939 29-bit arbitration telemetry stream with rolling sequence counters; CAN IDS threat injection & real-time anomaly detection; global Ctrl+K Command Palette with fuzzy search across 6 tactical categories; phone QR secondary screen pairing; production multi-stage Dockerfile and docker-compose.yml with Kubernetes /health and /ready probes; 52/52 Vitest passed, backend ops tests 100% PASS.
+Phase:        Phase 8 (Operator UX / Editorial Design System Alignment).
+Card:         UX-06 (Editorial Design System Polish & De-Slop for Command Palette & CAN Bus Inspector): Purged generic AI-generated dark sci-fi tropes, electric cyan glows, and unreadable black-on-dark contrast inversions; redesigned both overlays into ANUMAAN's warm paper / ink editorial design system (surface-panel bg-[#f7f6f0], crisp white card containers, sharp 1px borders, terracotta accents, high-contrast readable typography); real domain copy for SAE J1939 telemetry, CAN IDS attack simulation, and tactical power levers; verified with Chrome CDP audit, 52/52 Vitest passed, tsc clean.
 Branch:       Beta
-Last commit:  e3e7093 M7-M8: avionics CAN bus link, tactical command palette and production docker packaging
-State:        M7-01/02/04, UX-03b/04, M8-01 verified. CAN link switching, Command Palette, and container probes live. 52/52 Vitest passed.
-Latest:       CAN bus inspector with threat injection, global Ctrl+K command palette, mobile QR remote pairing, and production Docker containerization complete.
+Last commit:  58d7d04 UX-05: webview flow audit, operator guidance tooltips and production documentation alignment
+State:        Command Palette and CAN Bus Inspector fully aligned with editorial design system. 52/52 Vitest, 3/3 Pytest passed.
+Latest:       Command Palette & CAN Bus Inspector de-slopped and redesigned to native paper/ink design tokens.
 Next step:    Phase 8 UX-02 (Time Machine mission timeline scrubber & historical replay).
 Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produce yet (lambda, timing, BSFC, power,
               vibration, GO/NO-GO); some may show blanks or crash on .toFixed(null) until M0-09. Beta only.
@@ -139,3 +139,19 @@ Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produ
   * Frontend Vitest: 52/52 tests passed across 16 test files (100% PASS).
   * TypeScript Check: Clean (0 errors via `npx tsc --noEmit`).
   * Backend Pytest: 100% PASS.
+
+=== 22 Nov 2026 Phase 8 Card UX-06 (Editorial Design System Polish & De-Slop for Command Palette & CAN Bus Inspector) (AI: Antigravity)
+- Purged AI-Generated Dark Sci-Fi Slop & Restored Design Consistency:
+  * Identified root cause of contrast and visual degradation: `.workspace-shell` in `index.css` forced `.text-white` to `#101b20 !important`, causing black-on-black unreadable text inside dark containers, combined with generic neon electric cyan styling.
+  * Completely rebuilt `CommandPalette.tsx` using ANUMAAN's authentic paper/ink design tokens: `surface-panel bg-[#f7f6f0]`, crisp white item containers, subtle borders (`border-surface-border`), deep navy ink typography, and terracotta rust (`#bd4b2b`) focus indicators.
+  * Completely rebuilt `CanBusInspector.tsx` using `surface-panel bg-[#f7f6f0]`, high-density J1939 telemetry table on clean white backgrounds, and clear human-written engineering labels.
+- Domain Accuracy & Copy Rewrite:
+  * Replaced cliché sci-fi placeholders with real aerospace descriptions: e.g. "Rotax 912 iSc Sport: 100 hp Naturally Aspirated · Dual EFI (Baseline Platform)", "Take-off Power (100% Throttle): Advance power lever to maximum rated climb throttle".
+  * CAN Bus threat injection testing clearly articulated: Rogue ID (0x18FF99FF), Sequence Gap (+5 counter jump), Out-Of-Range Payload (Corrupted value) with direct Merkle ledger verification.
+- Event Propagation & Overlay Usability:
+  * Fixed backdrop click handling by assigning explicit container IDs (`#command-palette-backdrop`, `#can-inspector-backdrop`) and stopping event propagation on inner modal panels.
+- Verification & Test Suite:
+  * Frontend Vitest: 52/52 tests passed across 16 test files (100% PASS).
+  * TypeScript Check: Clean (0 errors via `npx tsc --noEmit`).
+  * Backend Pytest: 100% PASS (`tests/can/test_can_endpoints.py`, `tests/test_production_ops.py`).
+  * Webview Automated Verification: `scripts/tools/verify_webview_flow.py` executed cleanly with 0 console errors/warnings in Chrome CDP headless, capturing crisp screenshots of both redesigned modals.
