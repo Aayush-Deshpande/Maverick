@@ -80,7 +80,7 @@ export const UnifiedCopilot: React.FC<UnifiedCopilotProps> = ({ state, serverUrl
     return sid;
   });
 
-  const chatBottomRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
   const convRecRef = useRef<any>(null);
   const continuousActiveRef = useRef(false);
   continuousActiveRef.current = continuousMode;
@@ -88,9 +88,15 @@ export const UnifiedCopilot: React.FC<UnifiedCopilotProps> = ({ state, serverUrl
   // Mutable ref to prevent React state closure bugs in SpeechRecognition callbacks
   const convTranscriptRef = useRef('');
 
+  // Scroll ONLY the inner chat messages container when new messages arrive (never scrolls the outer window or page)
   useEffect(() => {
-    chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isLoading, convState]);
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTo({
+        top: chatContainerRef.current.scrollHeight,
+        behavior: 'smooth',
+      });
+    }
+  }, [messages.length]);
 
   // Clean speech synthesis text (remove markdown markup)
   const cleanSpeechText = (text: string) => {
@@ -603,8 +609,8 @@ export const UnifiedCopilot: React.FC<UnifiedCopilotProps> = ({ state, serverUrl
           </div>
         </div>
 
-        {/* Messages Stream (Normal Chat Rendering) */}
-        <div className="space-y-3 max-h-[460px] overflow-y-auto pr-1">
+        {/* Messages Stream (Normal Chat Rendering — inner scroll only) */}
+        <div ref={chatContainerRef} className="space-y-3 max-h-[460px] overflow-y-auto pr-1">
           {messages.map((m) =>
             m.sender === 'user' ? (
               <div key={m.id} className="flex items-start gap-2.5 justify-end">
@@ -694,8 +700,6 @@ export const UnifiedCopilot: React.FC<UnifiedCopilotProps> = ({ state, serverUrl
               </div>
             </div>
           )}
-
-          <div ref={chatBottomRef} />
         </div>
 
         {/* Quick Suggestion Chips */}
