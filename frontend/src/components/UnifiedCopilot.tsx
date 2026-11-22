@@ -10,12 +10,13 @@ import {
   Database,
   Radio,
   Loader2,
-  Ear,
-  EarOff,
   User,
   Bot,
   Power,
-  Trash2,
+  RotateCcw,
+  Headphones,
+  ShieldCheck,
+  Activity,
 } from 'lucide-react';
 import { UnifiedTelemetryState } from '../types/telemetry';
 import { AerospaceMarkdown } from './AerospaceMarkdown';
@@ -99,29 +100,31 @@ export const UnifiedCopilot: React.FC<UnifiedCopilotProps> = ({ state, serverUrl
     }
   }, [messages.length]);
 
-  // Clean speech synthesis text (remove markdown markup)
+  // Clean speech synthesis text (remove markdown markup and diagnostic blocks)
   const cleanSpeechText = (text: string) => {
     return text
-      .replace(/\*\*/g, '')
-      .replace(/#{1,6}\s*/g, '')
-      .replace(/`[^`]+`/g, '')
-      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-      .slice(0, 320);
+      .replace(/\[DIAGNOSTIC ADVISORY:.*?\]/g, '')
+      .replace(/\[TECHNICAL MANUAL DIRECTIVE:.*?\]/g, '')
+      .replace(/\[ATA.*?:.*?\]/g, '')
+      .replace(/[*_#`~[\]]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
   };
 
-  // Speaks text with an optional onEnd callback
+  // Browser speech synthesis (TTS)
   const speakText = useCallback(
     (text: string, onEnd?: () => void) => {
       if (!isSpeakingEnabled || typeof window === 'undefined' || !('speechSynthesis' in window)) {
         if (onEnd) onEnd();
         return;
       }
+
       try {
         window.speechSynthesis.cancel();
         const clean = cleanSpeechText(text);
         const utterance = new SpeechSynthesisUtterance(clean);
         utterance.rate = 1.05;
-        utterance.pitch = 0.95;
+        utterance.pitch = 1.0;
         utterance.onend = () => {
           if (onEnd) onEnd();
         };
@@ -143,9 +146,7 @@ export const UnifiedCopilot: React.FC<UnifiedCopilotProps> = ({ state, serverUrl
     }
   };
 
-  // ────────────────────────────────────────────────────────────────────────────
-  // Core Query Dispatcher
-  // ────────────────────────────────────────────────────────────────────────────
+  // Send query to backend Mission Copilot (/api/ai/ask)
   const handleSendQuery = async (queryText?: string): Promise<string> => {
     const rawQ = queryText ?? inputQuery;
     const cleanQ = rawQ.trim();
@@ -197,7 +198,7 @@ export const UnifiedCopilot: React.FC<UnifiedCopilotProps> = ({ state, serverUrl
 
       setMessages((prev) => [...prev, aiMsg]);
       return replyText;
-    } catch (err: any) {
+    } catch {
       const errMsg: ChatMessage = {
         id: 'err-' + Date.now(),
         sender: 'assistant',
@@ -241,10 +242,10 @@ export const UnifiedCopilot: React.FC<UnifiedCopilotProps> = ({ state, serverUrl
       rec.onresult = (event: any) => {
         let full = '';
         for (let i = 0; i < event.results.length; ++i) {
-          full += event.results[i][0]?.transcript || '';
+          full += event.results[i][0].transcript;
         }
+        setInterimTranscript(full);
         convTranscriptRef.current = full.trim();
-        setInterimTranscript(full.trim());
       };
 
       rec.onend = async () => {
@@ -299,10 +300,10 @@ export const UnifiedCopilot: React.FC<UnifiedCopilotProps> = ({ state, serverUrl
     }
   }, [isSpeakingEnabled, speakText]);
 
-  // Handle center mic button click
+  // Handle dynamic mic button click
   const handleMicClick = () => {
     if (convState === 'SPEAKING') {
-      // If speaking, clicking the mic interrupts playback
+      // If speaking, clicking interrupts playback
       handleInterruptSpeaking();
       return;
     }
@@ -368,15 +369,18 @@ export const UnifiedCopilot: React.FC<UnifiedCopilotProps> = ({ state, serverUrl
           question: 'What is the current engine status?',
         }),
       });
-    } catch {}
-    setIsWarmingUp(false);
+    } catch {
+      // Soft fail
+    } finally {
+      setIsWarmingUp(false);
+    }
   };
 
   const handleClearConversation = () => {
     stopSpeaking();
     setMessages([
       {
-        id: 'reset-' + Date.now(),
+        id: 'init-cleared',
         sender: 'assistant',
         text: 'Conversation buffer cleared. Standing by for propulsion telemetry inquiries.',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -401,246 +405,227 @@ export const UnifiedCopilot: React.FC<UnifiedCopilotProps> = ({ state, serverUrl
   const healthPct = Math.round((state.analytics.health_index || 1.0) * 100);
 
   return (
-    <div className="space-y-4">
+    <div className="surface-panel surface-panel-ai rounded-sm p-4 sm:p-5 border border-surface-border space-y-3.5 shadow-xs">
       {/* ──────────────────────────────────────────────────────────────────── */}
-      {/* 1. Voice Mission Copilot Console (Status, Continuous Mode & Center Mic) */}
+      {/* 1. Header Bar: Identity, Telemetry, and Tactical Controls            */}
       {/* ──────────────────────────────────────────────────────────────────── */}
-      <div className="surface-panel rounded-sm p-4 sm:p-5 space-y-4 border border-surface-border">
-        {/* Top Header + Engine Status Badges */}
-        <div className="flex items-center justify-between flex-wrap gap-2 border-b border-surface-border pb-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-sm bg-accent-dim flex items-center justify-center text-accent shadow-xs">
-              <Sparkles className="w-4 h-4" />
+      <div className="flex items-center justify-between flex-wrap gap-2.5 border-b border-surface-border pb-3">
+        {/* Left: Identity & Badges */}
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-sm bg-accent-dim flex items-center justify-center text-accent shadow-xs shrink-0">
+            <Bot className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="text-xs font-semibold text-white tracking-wide font-mono">
+                MAVERICK · Tactical AI Mission Copilot
+              </h2>
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-sm bg-accent-dim text-accent border border-accent-muted">
+                Local LLM / Gemini Cloud Demo
+              </span>
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-xs font-semibold text-white font-mono uppercase tracking-wide">
-                  VOICE MISSION COPILOT
-                </h2>
-                <PanelInfoModal
-                  title="MAVERICK Tactical AI Copilot"
-                  subtitle="Conversational RAG Grounding & Local Tool Calling"
-                  description="Autonomous military flight copilot powered by a local Ollama Qwen2.5 LLM with semantic Retrieval-Augmented Generation (RAG) over official Rotax 912 iSc Operator & Maintenance Manuals. Executes live telemetry tool-calls (tool:get_engine_state, tool:get_hypotheses, tool:get_prognosis) with zero cloud network leakage."
-                  formula={`Semantic Similarity: CosineSim(q, d_i) = (q · d_i) / (||q|| · ||d_i||)
+            <p className="text-xs text-slate-400 font-sans mt-0.5">
+              Conversational RAG Grounding · Multi-Turn Dialogue Memory · Continuous Voice Mode
+            </p>
+          </div>
+        </div>
+
+        {/* Right: Telemetry & Tactical Controls */}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {/* Telemetry Status Badges */}
+          <span className="text-[11px] font-mono px-2 py-0.5 rounded-sm bg-surface-card text-slate-300 border border-surface-border flex items-center gap-1">
+            <Activity className="w-3 h-3 text-accent" /> RPM: {rpm}
+          </span>
+          <span className="text-[11px] font-mono px-2 py-0.5 rounded-sm bg-success-dim text-success border border-success-muted flex items-center gap-1">
+            <ShieldCheck className="w-3 h-3 text-success" /> Health: {healthPct}%
+          </span>
+
+          {/* (i) Physics & Grounding Info Modal */}
+          <PanelInfoModal
+            title="MAVERICK Tactical AI Copilot"
+            subtitle="Conversational RAG Grounding & Local Tool Calling"
+            description="Autonomous military flight copilot powered by a local Ollama Qwen2.5 LLM with semantic Retrieval-Augmented Generation (RAG) over official Rotax 912 iSc Operator & Maintenance Manuals. Executes live telemetry tool-calls (tool:get_engine_state, tool:get_hypotheses, tool:get_prognosis) with zero cloud network leakage."
+            formula={`Semantic Similarity: CosineSim(q, d_i) = (q · d_i) / (||q|| · ||d_i||)
 Prompt Context: Context = [Top-3 Manual Chunks] + [20 Hz Live Telemetry JSON]
 Local Synthesis: P(token_t | prompt, tools, context) ~ Ollama Qwen2.5 7B
 Decision Posterior: Confidence = α · RAG_Score + (1 - α) · Diagnostic_Posterior`}
-                  calculationSteps={[
-                    { label: 'Voice STT Ingestion', detail: 'Transcribes operator speech via browser Web Speech API / local Whisper.cpp.' },
-                    { label: 'Manual RAG Retrieval', detail: 'Performs vector cosine search over Rotax Line/Heavy manuals to extract pertinent ATA procedures.' },
-                    { label: 'Telemetry Grounding', detail: 'Injects real-time 20 Hz engine state, active faults, and p10 RUL estimates into LLM context window.' },
-                    { label: 'Tactical Voice Synthesis', detail: 'Synthesizes concise, actionable aeronautical directives and emergency checklist responses.' },
-                  ]}
-                  sensorInputs={['20 Hz Telemetry State', 'Active Fault IDs', 'RUL Predictions', 'Rotax Manual Vector Store']}
-                  thresholds="Inference Latency: < 250ms streaming | Top-K Chunks: 3 | Local Security: 100% offline (127.0.0.1:11434)"
-                  provenance="Rotax 912 iSc Sport OM/MM, DRDO PS-26054 System Architecture, and Ollama Qwen2.5"
-                />
-                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-sm bg-success-dim text-success border border-success-muted">
-                  RPM: {rpm} · Health: {healthPct}%
-                </span>
-              </div>
-              <p className="text-xs text-slate-400 font-mono">
-                Web Speech STT + Local Ollama Qwen2.5 + Speech Synthesis — Fully Local &amp; Grounded
-              </p>
-            </div>
-          </div>
+            calculationSteps={[
+              { label: 'Voice STT Ingestion', detail: 'Transcribes operator speech via browser Web Speech API / local Whisper.cpp.' },
+              { label: 'Manual RAG Retrieval', detail: 'Performs vector cosine search over Rotax Line/Heavy manuals to extract pertinent ATA procedures.' },
+              { label: 'Telemetry Grounding', detail: 'Injects real-time 20 Hz engine state, active faults, and p10 RUL estimates into LLM context window.' },
+              { label: 'Tactical Voice Synthesis', detail: 'Synthesizes concise, actionable aeronautical directives and emergency checklist responses.' },
+            ]}
+            sensorInputs={['20 Hz Telemetry State', 'Active Fault IDs', 'RUL Predictions', 'Rotax Manual Vector Store']}
+            thresholds="Inference Latency: < 250ms streaming | Top-K Chunks: 3 | Local Security: 100% offline (127.0.0.1:11434)"
+            provenance="Rotax 912 iSc Sport OM/MM, DRDO PS-26054 System Architecture, and Ollama Qwen2.5"
+          />
 
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs font-mono px-2 py-0.5 rounded-sm border bg-success-dim text-success border-success-muted">
-              STT: READY
-            </span>
-            <span
-              className={`text-xs font-mono px-2 py-0.5 rounded-sm border ${
-                isSpeakingEnabled
-                  ? 'bg-success-dim text-success border-success-muted'
-                  : 'bg-surface-card text-slate-400 border-surface-border'
-              }`}
-            >
-              TTS: {isSpeakingEnabled ? 'READY' : 'MUTED'}
-            </span>
-            <span className="text-xs font-mono px-2 py-0.5 rounded-sm border bg-success-dim text-success border-success-muted">
-              LLM: READY (Ollama)
-            </span>
-
-            {/* Warm up button */}
-            <button
-              onClick={handleWarmup}
-              disabled={isWarmingUp}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-surface-card border border-surface-border text-slate-300 text-xs font-medium hover:text-white hover:border-accent disabled:opacity-40 transition-colors font-mono"
-              title="Test backend LLM & pipeline"
-            >
-              {isWarmingUp ? <Loader2 className="w-3 h-3 animate-spin" /> : <Power className="w-3 h-3 text-accent" />}
-              <span>Warm up</span>
-            </button>
-
-            {/* Clear button */}
-            <button
-              onClick={handleClearConversation}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-surface-card border border-surface-border text-slate-400 text-xs font-medium hover:text-white hover:border-slate-500 transition-colors font-mono"
-              title="Clear conversation history"
-            >
-              <Trash2 className="w-3 h-3" />
-              <span>Clear</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Continuous mode card with toggle switch */}
-        <div className="flex items-center justify-between gap-3 bg-surface-card border border-surface-border rounded-sm px-4 py-2.5">
-          <div className="flex items-center gap-2.5">
-            {continuousMode ? (
-              <Ear className="w-4 h-4 text-success" />
-            ) : (
-              <EarOff className="w-4 h-4 text-slate-500" />
-            )}
-            <div>
-              <span className="text-xs font-medium text-slate-200 font-mono">Continuous mode</span>
-              <p className="text-xs text-slate-400 font-mono">
-                {continuousMode
-                  ? 'Always listening and responding — no need to tap the mic between turns.'
-                  : 'Off — press the mic in the center to talk, one turn at a time.'}
-              </p>
-            </div>
-          </div>
+          {/* Hands-Free Voice Mode Toggle Pill (Image 1 & 3) */}
           <button
+            type="button"
             onClick={toggleContinuousMode}
-            className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${
-              continuousMode ? 'bg-success' : 'bg-surface-border'
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-sm border font-mono text-xs transition-all cursor-pointer ${
+              continuousMode
+                ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400 shadow-xs'
+                : 'bg-surface-card border-surface-border text-slate-300 hover:text-white hover:border-accent'
             }`}
-            title={continuousMode ? 'Turn off continuous mode' : 'Turn on continuous mode'}
+            title={continuousMode ? 'Disable continuous hands-free voice mode' : 'Enable continuous hands-free voice mode'}
           >
-            <span
-              className={`absolute top-0.5 w-5 h-5 rounded-full bg-white transition-transform ${
-                continuousMode ? 'translate-x-5' : 'translate-x-0.5'
-              }`}
-            />
+            <Headphones className={`w-3.5 h-3.5 ${continuousMode ? 'text-emerald-400 animate-pulse' : 'text-slate-400'}`} />
+            <span>{continuousMode ? 'Hands-Free: ON' : 'Hands-Free Voice'}</span>
           </button>
-        </div>
 
-        {/* Center Mic Stage: State-Aware Dynamic Mic Control */}
-        <div className="flex flex-col items-center justify-center gap-3 py-4">
-          <div className="relative flex items-center justify-center">
-            {/* Pulsing indicator when listening or speaking */}
-            {convState === 'LISTENING' && (
-              <span className="absolute inline-flex w-32 h-32 rounded-full opacity-25 animate-ping bg-emerald-500" />
-            )}
-            {convState === 'SPEAKING' && (
-              <span className="absolute inline-flex w-32 h-32 rounded-full opacity-25 animate-pulse bg-accent" />
-            )}
+          {/* TTS Audio Mute/Unmute */}
+          <button
+            type="button"
+            onClick={() => {
+              stopSpeaking();
+              setIsSpeakingEnabled(!isSpeakingEnabled);
+            }}
+            className={`p-1.5 rounded-sm border text-xs transition-colors cursor-pointer ${
+              isSpeakingEnabled
+                ? 'bg-surface-card border-surface-border text-slate-300 hover:text-white hover:border-accent'
+                : 'bg-critical-dim border-critical-muted text-critical'
+            }`}
+            title={isSpeakingEnabled ? 'Mute AI voice output' : 'Unmute AI voice output'}
+          >
+            {isSpeakingEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
+          </button>
 
-            <button
-              onClick={handleMicClick}
-              disabled={convState === 'THINKING'}
-              className={`relative z-10 w-24 h-24 rounded-full flex items-center justify-center border transition-all duration-200 shadow-md cursor-pointer active:scale-95 hover:scale-102 ${
-                convState === 'LISTENING'
-                  ? 'bg-emerald-500/10 border-emerald-500 text-emerald-400 shadow-emerald-500/20'
-                  : convState === 'SPEAKING'
-                  ? 'bg-accent/10 border-accent text-accent shadow-accent/20'
-                  : convState === 'THINKING'
-                  ? 'bg-warning/10 border-warning text-warning shadow-warning/20'
-                  : 'bg-surface-card border-surface-border text-accent hover:border-accent hover:bg-surface-card-hover'
-              }`}
-              title={
-                convState === 'SPEAKING'
-                  ? 'Click to Interrupt Playback'
-                  : convState === 'LISTENING'
-                  ? 'Click to Stop & Send'
-                  : 'Click to Speak'
-              }
-            >
-              {convState === 'LISTENING' ? (
-                continuousMode ? (
-                  <Ear className="w-9 h-9 text-emerald-400 animate-pulse" />
-                ) : (
-                  <Radio className="w-8 h-8 text-emerald-400 animate-pulse" />
-                )
-              ) : convState === 'THINKING' ? (
-                <Loader2 className="w-9 h-9 text-warning animate-spin" />
-              ) : convState === 'SPEAKING' ? (
-                <Volume2 className="w-9 h-9 text-accent animate-pulse" />
-              ) : (
-                <Mic className="w-9 h-9 text-accent" />
-              )}
-            </button>
+          {/* Clear Conversation History */}
+          <button
+            type="button"
+            onClick={handleClearConversation}
+            className="p-1.5 rounded-sm bg-surface-card border border-surface-border text-slate-400 hover:text-white hover:border-slate-500 transition-colors cursor-pointer"
+            title="Clear conversation history"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+          </button>
 
-            {/* Microanimation: dynamic audio equalizer wave bars */}
-            {(convState === 'LISTENING' || convState === 'SPEAKING') && (
-              <div className="absolute -bottom-3 flex items-center justify-center gap-1 z-20 pointer-events-none">
-                <span className={`w-1 rounded-full ${convState === 'LISTENING' ? 'bg-emerald-500' : 'bg-accent'} animate-wave-bar-1`} />
-                <span className={`w-1 rounded-full ${convState === 'LISTENING' ? 'bg-emerald-500' : 'bg-accent'} animate-wave-bar-2`} />
-                <span className={`w-1 rounded-full ${convState === 'LISTENING' ? 'bg-emerald-500' : 'bg-accent'} animate-wave-bar-3`} />
-                <span className={`w-1 rounded-full ${convState === 'LISTENING' ? 'bg-emerald-500' : 'bg-accent'} animate-wave-bar-4`} />
-                <span className={`w-1 rounded-full ${convState === 'LISTENING' ? 'bg-emerald-500' : 'bg-accent'} animate-wave-bar-5`} />
-              </div>
-            )}
-          </div>
-
-          {/* Dynamic Status Label under Center Mic */}
-          <div className="text-center space-y-1">
-            <span className="text-xs font-mono font-medium text-slate-300 flex items-center justify-center gap-1.5">
-              {convState === 'LISTENING' && <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />}
-              {convState === 'THINKING' && <span className="w-2 h-2 rounded-full bg-warning animate-spin" />}
-              {convState === 'SPEAKING' && <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />}
-
-              {convState === 'LISTENING' && (interimTranscript ? `Hearing: "${interimTranscript}"` : 'Listening... Speak naturally')}
-              {convState === 'THINKING' && 'Synthesizing response with Ollama Qwen2.5 & telemetry...'}
-              {convState === 'SPEAKING' && 'MAVERICK speaking response aloud...'}
-              {convState === 'IDLE' && (continuousMode ? 'Continuous mode active — start speaking anytime' : 'Tap the mic to talk, or flip on continuous mode above for hands-free')}
-            </span>
-
-            {/* Quick Actions in Mic Center: Interrupt & Mute Audio */}
-            <div className="flex items-center justify-center gap-2 pt-1">
-              {convState === 'SPEAKING' && (
-                <button
-                  onClick={handleInterruptSpeaking}
-                  className="flex items-center gap-1.5 px-3 py-1 rounded-sm bg-critical-dim border border-critical-muted text-critical hover:bg-critical hover:text-white transition-colors text-xs font-mono font-medium"
-                >
-                  <Square className="w-3.5 h-3.5" />
-                  <span>Interrupt / Stop Speaking</span>
-                </button>
-              )}
-
-              <button
-                onClick={() => {
-                  stopSpeaking();
-                  setIsSpeakingEnabled(!isSpeakingEnabled);
-                }}
-                className={`flex items-center gap-1 px-2.5 py-1 rounded-sm border text-xs font-mono transition-colors ${
-                  isSpeakingEnabled
-                    ? 'bg-surface-card border-surface-border text-slate-400 hover:text-white hover:border-accent'
-                    : 'bg-critical-dim border-critical-muted text-critical'
-                }`}
-                title={isSpeakingEnabled ? 'Mute AI voice output' : 'Unmute AI voice output'}
-              >
-                {isSpeakingEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
-                <span>{isSpeakingEnabled ? 'Audio Mute' : 'Audio Muted'}</span>
-              </button>
-            </div>
-          </div>
+          {/* Pipeline Warmup / Health Test */}
+          <button
+            type="button"
+            onClick={handleWarmup}
+            disabled={isWarmingUp}
+            className="p-1.5 rounded-sm bg-surface-card border border-surface-border text-slate-400 hover:text-accent hover:border-accent disabled:opacity-40 transition-colors cursor-pointer"
+            title="Warmup / Test LLM and RAG pipeline"
+          >
+            {isWarmingUp ? <Loader2 className="w-3.5 h-3.5 animate-spin text-accent" /> : <Power className="w-3.5 h-3.5" />}
+          </button>
         </div>
       </div>
 
       {/* ──────────────────────────────────────────────────────────────────── */}
-      {/* 2. Conversation Transcript (Normal Full Chat Interface)               */}
+      {/* 2. Dual Engine Architecture Notice Banner                            */}
       {/* ──────────────────────────────────────────────────────────────────── */}
-      <div className="surface-panel surface-panel-ai rounded-sm p-4 sm:p-5 border border-surface-border space-y-3">
-        <div className="flex items-center justify-between border-b border-surface-border pb-2">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-ai-accent font-mono uppercase tracking-wider">
-              CONVERSATION
-            </span>
-            <span className="text-xs text-slate-500 font-mono">
-              (Context preserved across follow-ups — active fault: {faultName})
-            </span>
+      <div className="flex items-center justify-between gap-2 px-3 py-1.5 rounded-sm bg-black/[0.02] border border-surface-border text-[11px] font-sans text-slate-400">
+        <div className="flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse shrink-0" />
+          <span>Dual Engine: Operates on local LLM (Ollama / Qwen2.5 / Sarvam) for edge defense deployments; powered by Google Gemini for cloud demonstration.</span>
+        </div>
+        <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500 shrink-0 font-medium">
+          Demo Ready
+        </span>
+      </div>
+
+      {/* ──────────────────────────────────────────────────────────────────── */}
+      {/* 3. Live Voice Interaction Hub (Active in voice mode or speaking)     */}
+      {/* ──────────────────────────────────────────────────────────────────── */}
+      {(continuousMode || convState !== 'IDLE') && (
+        <div className="flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-sm bg-surface-card border border-surface-border/80 transition-all">
+          <div className="flex items-center gap-3">
+            {/* Dynamic Mic Orb / Control */}
+            <button
+              type="button"
+              onClick={handleMicClick}
+              className={`relative w-8 h-8 rounded-full flex items-center justify-center border transition-all active:scale-95 cursor-pointer ${
+                convState === 'LISTENING'
+                  ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400 shadow-xs shadow-emerald-500/30'
+                  : convState === 'SPEAKING'
+                  ? 'bg-accent/20 border-accent text-accent shadow-xs shadow-accent/30'
+                  : convState === 'THINKING'
+                  ? 'bg-warning/20 border-warning text-warning shadow-xs shadow-warning/30'
+                  : 'bg-surface-panel border-surface-border text-slate-300 hover:text-white hover:border-accent'
+              }`}
+              title={
+                convState === 'SPEAKING'
+                  ? 'Click to interrupt playback'
+                  : convState === 'LISTENING'
+                  ? 'Click to stop & send'
+                  : 'Click to speak'
+              }
+            >
+              {convState === 'LISTENING' ? (
+                <Radio className="w-4 h-4 text-emerald-400 animate-pulse" />
+              ) : convState === 'THINKING' ? (
+                <Loader2 className="w-4 h-4 text-warning animate-spin" />
+              ) : convState === 'SPEAKING' ? (
+                <Volume2 className="w-4 h-4 text-accent animate-pulse" />
+              ) : (
+                <Mic className="w-4 h-4 text-accent" />
+              )}
+            </button>
+
+            {/* Voice Status & Equalizer / Interim Preview */}
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-mono font-medium text-slate-200">
+                  {convState === 'LISTENING' && 'Listening to operator...'}
+                  {convState === 'THINKING' && 'Synthesizing response with Gemini / Local LLM...'}
+                  {convState === 'SPEAKING' && 'MAVERICK speaking directive aloud...'}
+                  {convState === 'IDLE' && 'Continuous voice active — speak naturally'}
+                </span>
+
+                {/* Equalizer Wave bars */}
+                {(convState === 'LISTENING' || convState === 'SPEAKING') && (
+                  <div className="flex items-center gap-0.5">
+                    <span className={`w-0.5 h-3 rounded-full ${convState === 'LISTENING' ? 'bg-emerald-400' : 'bg-accent'} animate-wave-bar-1`} />
+                    <span className={`w-0.5 h-4 rounded-full ${convState === 'LISTENING' ? 'bg-emerald-400' : 'bg-accent'} animate-wave-bar-2`} />
+                    <span className={`w-0.5 h-2 rounded-full ${convState === 'LISTENING' ? 'bg-emerald-400' : 'bg-accent'} animate-wave-bar-3`} />
+                    <span className={`w-0.5 h-4 rounded-full ${convState === 'LISTENING' ? 'bg-emerald-400' : 'bg-accent'} animate-wave-bar-4`} />
+                    <span className={`w-0.5 h-2.5 rounded-full ${convState === 'LISTENING' ? 'bg-emerald-400' : 'bg-accent'} animate-wave-bar-5`} />
+                  </div>
+                )}
+              </div>
+
+              {/* Interim speech transcript preview */}
+              {interimTranscript && (
+                <p className="text-xs text-slate-300 italic font-sans mt-0.5">
+                  "{interimTranscript}"
+                </p>
+              )}
+            </div>
           </div>
 
-          <div className="flex items-center gap-1.5 text-xs font-mono text-slate-400">
-            <span>Phrased by Ollama / Qwen2.5 Local</span>
-          </div>
+          {/* Interrupt Button (Visible during SPEAKING) */}
+          {convState === 'SPEAKING' && (
+            <button
+              type="button"
+              onClick={handleInterruptSpeaking}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-sm bg-critical-dim border border-critical-muted text-critical hover:bg-critical hover:text-white transition-colors text-xs font-mono cursor-pointer"
+            >
+              <Square className="w-3 h-3" />
+              <span>Interrupt</span>
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* ──────────────────────────────────────────────────────────────────── */}
+      {/* 4. Conversation Stream: Normal Chat Reflection                        */}
+      {/* ──────────────────────────────────────────────────────────────────── */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between border-b border-surface-border/60 pb-1.5">
+          <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400">
+            CONVERSATION <span className="text-slate-500 font-sans font-normal">(context preserved across follow-ups — active fault: {faultName})</span>
+          </span>
+          <span className="text-[11px] font-mono text-slate-500">
+            Grounding: ATA 72-00 + 20 Hz Bus
+          </span>
         </div>
 
-        {/* Messages Stream (Normal Chat Rendering — inner scroll only) */}
-        <div ref={chatContainerRef} className="space-y-3 max-h-[460px] overflow-y-auto pr-1">
+        {/* Messages Stream (Inner Scroll Only — Never scrolls browser window) */}
+        <div ref={chatContainerRef} className="space-y-3.5 max-h-[460px] overflow-y-auto pr-1">
           {messages.map((m) =>
             m.sender === 'user' ? (
               <div key={m.id} className="flex items-start gap-2.5 justify-end">
@@ -648,28 +633,37 @@ Decision Posterior: Confidence = α · RAG_Score + (1 - α) · Diagnostic_Poster
                   <div className="text-[10px] font-mono text-white/70 mb-1">
                     OPERATOR · {m.timestamp}
                   </div>
-                  <p className="text-xs leading-relaxed whitespace-pre-wrap">{m.text}</p>
+                  <p className="text-xs font-sans leading-relaxed whitespace-pre-wrap">{m.text}</p>
                 </div>
-                <div className="w-7 h-7 rounded-sm bg-accent flex items-center justify-center text-white shrink-0 mt-0.5">
+                <div className="w-7 h-7 rounded-sm bg-accent flex items-center justify-center text-white shrink-0 mt-0.5 shadow-xs">
                   <User className="w-3.5 h-3.5" />
                 </div>
               </div>
             ) : (
               <div key={m.id} className="flex items-start gap-2.5">
-                <div className="w-7 h-7 rounded-sm bg-ai-accent-dim flex items-center justify-center text-ai-accent shrink-0 mt-0.5">
+                <div className="w-7 h-7 rounded-sm bg-ai-accent-dim flex items-center justify-center text-ai-accent shrink-0 mt-0.5 shadow-xs">
                   <Bot className="w-3.5 h-3.5" />
                 </div>
-                <div className="max-w-[85%] bg-surface-card border border-surface-border rounded-sm p-3.5 space-y-2 shadow-xs">
-                  <div className="text-[10px] font-mono text-slate-500 flex items-center justify-between">
+                <div className="max-w-[85%] bg-surface-card border border-surface-border rounded-sm p-3.5 space-y-2.5 shadow-xs">
+                  <div className="text-[10px] font-mono text-slate-400 flex items-center justify-between">
                     <span>MAVERICK AI · {m.timestamp}</span>
+                    <button
+                      type="button"
+                      onClick={() => speakText(m.text)}
+                      className="hover:text-accent transition-colors flex items-center gap-1 cursor-pointer"
+                      title="Read aloud"
+                    >
+                      <Volume2 className="w-3 h-3" />
+                      <span className="text-[10px]">Speak</span>
+                    </button>
                   </div>
 
-                  {/* Rich Markdown Assistant Output */}
-                  <AerospaceMarkdown content={m.text} citations={m.citations} title="Spoken Telemetry Brief" />
+                  {/* Assistant Content in Clean Sans-Serif Typography */}
+                  <AerospaceMarkdown content={m.text} citations={m.citations} title="Mission Intelligence Synthesis" />
 
                   {/* ATA Diagnostics Footer */}
                   {m.diagnostics && (
-                    <div className="mt-2.5 pt-2 border-t border-surface-border/60 text-[11px] font-mono space-y-1 text-slate-300">
+                    <div className="mt-2 pt-2 border-t border-surface-border/60 text-[11px] font-mono space-y-1 text-slate-300">
                       <div className="flex items-center gap-2">
                         <span className="text-accent font-semibold">ATA:</span>
                         <span>{m.diagnostics.ata_chapter || 'ATA 72-00'}</span>
@@ -678,18 +672,18 @@ Decision Posterior: Confidence = α · RAG_Score + (1 - α) · Diagnostic_Poster
                         <span>{m.diagnostics.severity || 'NOMINAL'}</span>
                       </div>
                       {m.diagnostics.prescriptive_action && (
-                        <div className="text-slate-400">
-                          <span className="text-slate-500">Action:</span> {m.diagnostics.prescriptive_action}
+                        <div className="text-slate-400 font-sans text-xs">
+                          <span className="font-mono text-slate-500">Action:</span> {m.diagnostics.prescriptive_action}
                         </div>
                       )}
                     </div>
                   )}
 
-                  {/* Sources & Tools Footer */}
-                  <div className="mt-2 pt-2 border-t border-surface-border/40 text-[10px] font-mono space-y-1 text-slate-400">
+                  {/* Sources, Tools & Provider Footer */}
+                  <div className="mt-2 pt-2 border-t border-surface-border/40 text-[10px] font-mono space-y-1.5 text-slate-400">
                     <div className="flex flex-wrap items-center gap-1.5">
                       <span className="text-slate-500 uppercase tracking-wider font-semibold flex items-center gap-1">
-                        <FileText className="w-3 h-3 text-accent" /> Sources:
+                        <FileText className="w-3 h-3 text-accent" /> SOURCES:
                       </span>
                       {(m.sources && m.sources.length > 0
                         ? m.sources
@@ -700,18 +694,23 @@ Decision Posterior: Confidence = α · RAG_Score + (1 - α) · Diagnostic_Poster
                         </span>
                       ))}
                     </div>
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <span className="text-slate-500 uppercase tracking-wider font-semibold flex items-center gap-1">
-                        <Database className="w-3 h-3 text-accent" /> Tools:
-                      </span>
-                      {(m.tools && m.tools.length > 0
-                        ? m.tools
-                        : ['tool:get_engine_state', 'tool:get_hypotheses', 'tool:get_prognosis']
-                      ).map((t, idx) => (
-                        <span key={idx} className="px-1.5 py-0.5 rounded-sm bg-accent/10 border border-accent/20 text-accent">
-                          {t}
+                    <div className="flex flex-wrap items-center justify-between gap-1.5">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="text-slate-500 uppercase tracking-wider font-semibold flex items-center gap-1">
+                          <Database className="w-3 h-3 text-accent" /> TOOLS:
                         </span>
-                      ))}
+                        {(m.tools && m.tools.length > 0
+                          ? m.tools
+                          : ['tool:get_engine_state', 'tool:get_hypotheses', 'tool:get_prognosis']
+                        ).map((t, idx) => (
+                          <span key={idx} className="px-1.5 py-0.5 rounded-sm bg-accent/10 border border-accent/20 text-accent">
+                            {t}
+                          </span>
+                        ))}
+                      </div>
+                      <span className="text-slate-500">
+                        {m.provider ? `Phrased by ${m.provider}` : 'Phrased by Ollama / Qwen2.5 Local'}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -726,31 +725,37 @@ Decision Posterior: Confidence = α · RAG_Score + (1 - α) · Diagnostic_Poster
               </div>
               <div className="bg-surface-card border border-surface-border rounded-sm p-3.5 flex items-center gap-2 text-slate-400">
                 <Loader2 className="w-4 h-4 animate-spin text-ai-accent" />
-                <span className="font-mono text-xs">MAVERICK synthesizing response with Ollama Qwen2.5...</span>
+                <span className="font-sans text-xs">MAVERICK synthesizing response with Gemini / Local LLM...</span>
               </div>
             </div>
           )}
         </div>
+      </div>
 
-        {/* Quick Suggestion Chips */}
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-2 border-t border-surface-border/50">
+      {/* ──────────────────────────────────────────────────────────────────── */}
+      {/* 5. Quick Suggestion Chips & Bottom Input Bar                         */}
+      {/* ──────────────────────────────────────────────────────────────────── */}
+      <div className="space-y-2 pt-2 border-t border-surface-border/50">
+        {/* Suggestion Chips */}
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
           <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider shrink-0 mr-1 flex items-center gap-1">
-            <Sparkles className="w-3 h-3 text-accent" /> Quick:
+            <Sparkles className="w-3 h-3 text-accent" /> QUICK:
           </span>
           {QUICK_PROMPTS.map((prompt, idx) => (
             <button
               key={idx}
+              type="button"
               disabled={isLoading}
               onClick={() => handleSendQuery(prompt)}
-              className="px-2.5 py-1 rounded-sm text-xs font-mono bg-surface-card border border-surface-border text-slate-300 hover:text-white hover:border-accent transition-colors shrink-0 whitespace-nowrap disabled:opacity-50"
+              className="px-2.5 py-1 rounded-sm text-xs font-sans bg-surface-card border border-surface-border text-slate-300 hover:text-white hover:border-accent transition-colors shrink-0 whitespace-nowrap disabled:opacity-50 cursor-pointer"
             >
               {prompt}
             </button>
           ))}
         </div>
 
-        {/* Bottom Text Input Bar */}
-        <div className="flex items-center gap-2 pt-1">
+        {/* Input Bar */}
+        <div className="flex items-center gap-2">
           <input
             type="text"
             value={inputQuery}
@@ -763,10 +768,44 @@ Decision Posterior: Confidence = α · RAG_Score + (1 - α) · Diagnostic_Poster
             className="flex-1 bg-surface-card border border-surface-border rounded-sm px-3.5 py-2 text-xs text-white placeholder-slate-500 font-sans focus:outline-none focus:border-accent transition-colors"
           />
 
+          {/* Dynamic Mic Control Button */}
           <button
+            type="button"
+            onClick={handleMicClick}
+            disabled={convState === 'THINKING'}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-sm border font-mono text-xs transition-all cursor-pointer ${
+              convState === 'LISTENING'
+                ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500 shadow-xs'
+                : convState === 'SPEAKING'
+                ? 'bg-accent/20 text-accent border-accent shadow-xs'
+                : 'bg-surface-card text-slate-300 border-surface-border hover:text-white hover:border-accent'
+            }`}
+            title={
+              convState === 'SPEAKING'
+                ? 'Stop speaking'
+                : convState === 'LISTENING'
+                ? 'Stop listening'
+                : 'Dictate or speak question'
+            }
+          >
+            {convState === 'LISTENING' ? (
+              <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+            ) : convState === 'SPEAKING' ? (
+              <Volume2 className="w-3.5 h-3.5 text-accent animate-pulse" />
+            ) : (
+              <Mic className="w-3.5 h-3.5 text-accent" />
+            )}
+            <span className="text-[11px] hidden sm:inline">
+              {convState === 'LISTENING' ? 'Listening' : convState === 'SPEAKING' ? 'Speaking' : 'Dictate'}
+            </span>
+          </button>
+
+          {/* Ask / Send Button */}
+          <button
+            type="button"
             onClick={() => handleSendQuery()}
             disabled={isLoading || !inputQuery.trim()}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-sm bg-accent text-white text-xs font-mono font-medium hover:bg-accent/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-xs"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-sm bg-accent text-white text-xs font-mono font-medium hover:bg-accent/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-xs cursor-pointer"
           >
             <Send className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Ask</span>

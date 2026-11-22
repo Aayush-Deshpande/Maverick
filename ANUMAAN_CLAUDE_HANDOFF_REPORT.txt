@@ -13,16 +13,17 @@ TABLE OF CONTENTS
 ----------------------------------------------------------------------------------------------------
 1. EXECUTIVE SUMMARY & SYSTEM STATUS
 2. CHRONOLOGICAL COMMIT TIMELINE & MILESTONES (8b9a0bf -> 013a78d)
-3. ARCHITECTURAL DECISIONS (D66 THROUGH D74)
+3. ARCHITECTURAL DECISIONS (D66 THROUGH D78)
 4. DEEP DIVE: METHODOLOGIES, ALGORITHMS & IMPLEMENTATION DETAILS
    4.1 Multi-Mode 3D Engine Viewport & FLIR Pyrometry (UX-01, D71)
-   4.2 Conversational Copilot & Military Voice Agent (AI-05, D69)
+   4.2 Conversational Copilot & Military Voice Agent (AI-05, D69, D76)
    4.3 Virtual CAN Bus & FADEC J1939 Telemetry Link (M7-01, M7-02, M7-04, D72)
    4.4 Tactical Command Palette & QR Cockpit Remote (UX-03b, UX-04, UX-06, D73)
    4.5 Production Containerization & Kubernetes Health Probes (M8-01, D74)
    4.6 3D CAD Master Promotion, Material PBR, & Component Decomposition (M7-B01..B06, D53)
    4.7 Operator Guidance, Tooltip Portals & Anti-Spam Settling Interlock (M6-06, D67, D68)
-   4.8 Editorial Design System Alignment & AI Slop Purge (UX-06)
+   4.8 Editorial Design System Alignment & AI Slop Purge (UX-06, D78)
+   4.9 In-Situ Physics Modals & Dual-Engine Architecture (M0-08i, M0-08j, D76, D77)
 5. INVENTORY OF KEY REPOSITORY FILES CREATED / MODIFIED
 6. COMPREHENSIVE TEST SUITE & VERIFICATION BASELINE
 7. IMAGES CATALOG & CROSS-REFERENCE GUIDE (./images/)
@@ -127,7 +128,7 @@ a86bff0 (DOC-01): Record M7-M8 commit in PROGRESS_2.txt.
 013a78d (DOC-02): Record UX-06 commit in PROGRESS_2.txt.
 
 ====================================================================================================
-3. ARCHITECTURAL DECISIONS (D66 THROUGH D74)
+3. ARCHITECTURAL DECISIONS (D66 THROUGH D78)
 ====================================================================================================
 D66 (2026-11-21) - Violet Injected Highlights:
   Training mode / injected fault highlight changed from white to violet (#8b5cf6). White washed out
@@ -173,6 +174,32 @@ D74 (2026-11-22) - Production Containerization & Standard Probes (M8-01):
   Multi-stage `Dockerfile` (`node:22-alpine` + `python:3.13-slim`) serving unified app on port 8000.
   Single-command `docker-compose.yml`. Standard Kubernetes `/health` (immediate liveness) and `/ready`
   (readiness: 503 during engine initialization, 200 once calibrated) probes.
+
+D75 (2026-11-22) - Modernized Tactical GCS Workspace & Legacy 3D Client Retirement (M0-08c, M0-10):
+  Modernized Tactical GCS workspace (#tactical, workspace: 'tactical') with fast 2.8s interactive fault
+  ramps, dual-keyed physics residuals, dynamic 5-subsystem health metrics (propulsion, fuel_system,
+  electrical, thermal, mechanical), and real-time Blender twin CAD camera swoop and emission shader sync.
+  Retired old standalone Three.js client apps/threejs_twin per D10 and D12 (git mv to archive_tracked/threejs_twin),
+  redirecting /app directly to modern React Three Fiber twin /#twin.
+
+D76 (2026-11-22) - Tactical AI Copilot Unification & Dual-Engine Architecture (M0-08e, M0-08h):
+  Consolidated CopilotPanel and separate voice pages into unified Tactical AI Copilot (AI_COPILOT).
+  Integrates local Ollama Qwen2.5/Sarvam models for edge deployment with Google Gemini live cloud agent for
+  hosted demonstrations. Dynamic state-aware center mic control with speech synthesis interrupt and multi-bar
+  audio wave microanimations. Displays explicit dual-engine transparency in the UI: "Operates on local LLM
+  (Ollama / Qwen2.5 / Sarvam) for edge defense deployments; powered by Google Gemini for cloud demonstration."
+
+D77 (2026-11-22) - Comprehensive In-Situ Physics & Calculation Specification Modals (M0-08i):
+  Strict zero-guesswork rule for UI telemetry: every card, chart, and subsystem across all Tactical GCS subtabs
+  (OPERATOR, PROPULSION, MAINTENANCE, AI_COPILOT, MISSION_REPLAY) and the 3D Twin Workspace provides an
+  accessible, mobile-responsive (i) calculation modal exposing system role, exact mathematical ODE/thermodynamic/statistical
+  formulation, step-by-step pipeline flow, sensor channel badges, operational alert thresholds, and data provenance.
+  All equations and parameters are sourced directly from backend physics and prognostics modules, never guessed.
+
+D78 (2026-11-22) - Anti-AI-Slop Typography & Defense Tactile Microanimations (M0-08h, M0-08j):
+  Eradicated fake monospace typewriter pixel fonts from chat prose in favor of clean modern sans-serif typography
+  (var(--font-sans) Inter / system UI); added smooth cubic-bezier animate-modal-pop dialogs, tactile button
+  click scaling (active:scale-95), view crossfades (animate-fade-in), and dynamic audio visualizer wave animations.
 
 ====================================================================================================
 4. DEEP DIVE: METHODOLOGIES, ALGORITHMS & IMPLEMENTATION DETAILS
@@ -395,6 +422,32 @@ Methodology & Solution:
       * Accents: Terracotta rust (`#bd4b2b` / `text-accent`) active indicators
       * Human Aerospace Copy: Authentic OEM engine parameters, real throttle stops, and J1939 telemetry.
 
+----------------------------------------------------------------------------------------------------
+4.9 In-Situ Physics Modals & Dual-Engine Architecture (M0-08i, M0-08j, D76, D77)
+----------------------------------------------------------------------------------------------------
+Files:
+  - `frontend/src/components/PanelInfoModal.tsx`
+  - `frontend/src/components/UnifiedCopilot.tsx`
+  - `frontend/src/components/OperatorScreen.tsx`
+  - `frontend/src/components/PropulsionScreen.tsx`
+  - `frontend/src/components/MaintenanceScreen.tsx`
+  - `frontend/src/components/MissionReplayScrubber.tsx`
+  - `backend/agent/llm_engine.py`
+  - `backend/agent/copilot.py`
+
+Methodology & Architecture:
+  1. In-Situ Physics Specifications:
+     All 5 subtabs of the Tactical GCS feature in-depth mathematical modals with zero guesswork:
+     - Operator Flight Deck: 1D isentropic nozzle gas dynamics, FADEC PID closed loop, and health degradation weighting.
+     - Propulsion Engineering: 4-stroke Otto cycle thermodynamics, turbocharger pressure ratio, and oil friction models.
+     - Maintenance & Prognostics: Weibull cumulative failure hazard h(t) = (β/η)(t/η)^(β-1) and residual anomaly detection.
+     - Tactical AI Copilot: Semantic cosine similarity CosineSim(q, d_i), ATA procedure extraction, and RAG grounding.
+     - Mission Replay Scrubber: Zero-order hold interpolation, state delta replay, and event indexing.
+  2. Dual-Engine Intelligence Architecture:
+     Supports local offline Ollama Qwen2.5 / Sarvam execution for secure military edge deployments,
+     seamlessly coupled with Google Gemini for hosted cloud demonstrations. The UI explicitly discloses
+     this transparent architecture to the operator.
+
 ====================================================================================================
 5. INVENTORY OF KEY REPOSITORY FILES CREATED / MODIFIED
 ====================================================================================================
@@ -530,14 +583,13 @@ When resuming development with Claude Code, follow this protocol:
 
 1. Read the `RESUME HERE` block at the top of `PROGRESS_2.txt` and review `DECISIONS_2.md`.
 2. Confirm the active git branch (`Beta`) and clean working tree (`git status`).
-3. Recent Card UX-07 Accomplishments:
-   - Integrated 3D viewport mode buttons (SOLID, X-RAY, THERMAL, WIREFRAME) directly into unified top-right toolbar.
-   - Wired keyboard cycling hotkey 'V' with natural-language announcements.
-   - Built uncluttered, high-density InfoTooltip popover with color-coded badges and bottom placement.
-   - Fixed OrbitControls rotation axis centering on Clear All (`controls.target.set(0, 0.05, 0)`).
-   - Fixed Auto-Rotation pause/resume toggle with controlled prop synchronization.
-   - Updated Clear All keybinding to 'X' (with interactive buttons in the sidebar).
-   - Vitest suite passing 100% (52 passed / 16 test files) and `npx tsc --noEmit` passing with 0 errors.
+3. Recent Accomplishments (Cards UX-07 through M0-08k):
+   - Integrated 3D viewport mode buttons (SOLID, X-RAY, THERMAL, WIREFRAME) directly into unified top-right toolbar with 'V' hotkey cycling.
+   - Built comprehensive `(i)` calculation and physics specification modals (`PanelInfoModal.tsx`) across all 5 Tactical GCS subtabs and the 3D twin stage with zero guesswork (M0-08i, D77).
+   - Added defense tactile microanimations (`active:scale-95`), smooth cubic-bezier modal-pop transitions, view crossfades, and dynamic 5-bar audio wave equalizers (M0-08j, D78).
+   - Modernized Tactical AI Copilot into a clean single-card conversational interface with state-aware dynamic mic control, speech synthesis barge-in interrupt, clean sans-serif typography, and explicit dual-engine architecture notice (M0-08k, D76).
+   - Fixed screen jumping / unintended scrolling on mic interaction by scoping scroll behavior strictly to inner chat messages.
+   - Vitest suite passing 100% (52 passed / 16 test files), backend pytest suite passing 100% (28 passed), and `npx tsc --noEmit` passing with 0 errors across both `frontend` and `docs_site`.
 4. Next Immediate Phase & Card:
    - Phase 8 UX-02: Time Machine Mission Timeline Scrubber & Historical Replay
        * Goal: Allow operators to scrub back and forth across recorded flight sorties, inspecting

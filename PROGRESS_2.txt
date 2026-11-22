@@ -6,32 +6,20 @@ Update the RESUME HERE block at every commit and at the end of every session.
 Part 1 historical session log (Phases 0 through 7, 19 Nov - 22 Nov 2026) is preserved in PROGRESS.txt.
 
 =====================================================================================================================
-RESUME HERE  (last updated 22 Nov 2026, Phase 0/8 M0-08i Comprehensive (i) Telemetry & Physics Specification Modals)
+RESUME HERE  (last updated 22 Nov 2026, Phase 0/8 M0-08k Modernized Unified Tactical AI Copilot & Dual-Engine)
 =====================================================================================================================
-Phase:        Phase 0 / Phase 8 (Platform Harmonization & Telemetry Specification Grounding).
-Card:         M0-08i (Comprehensive (i) Calculation & Physics Specification Modals across all GCS Subtabs):
-              1. Created `PanelInfoModal.tsx`: Accessible, mobile-responsive portal modal component with Info icon trigger. Monospace formula rendering, step-by-step pipeline stages, sensor input badges, alert thresholds, and data provenance tags.
-              2. Subtab 1 (Operator Flight Deck):
-                 - `EngineControls.tsx`: Added (i) modal with ISA atmosphere derating formulas (T_amb, P_amb, ρ/ρ_0, effective power).
-                 - `FaultMatrix.tsx`: Added (i) modal with 37-fault FMECA parameter perturbation formulas and zero ground-truth leak rules.
-                 - `ReadingsPanel.tsx`: Added (i) modal with 14-channel physics residual vector, tolerance divisors (σ), and normalized z-scores.
-                 - `CalculationsPanel.tsx`: Added (i) modal with 4-step anomaly detection pipeline (Sanity, Residuals, Autoencoder MSE, NIS Chi-square).
-                 - `MissionReadinessCard.tsx`: Added (i) modal with 500-sample Monte Carlo degradation projection and p10 conservative RUL gate.
-                 - `SubsystemHealthCard.tsx`: Added (i) modal with 5 coupled subsystem health scoring and component weight distributions.
-              3. Subtab 2 (Propulsion Engineer):
-                 - `PropulsionEngineerPanel.tsx`: Added (i) modals across all 5 sections: Brake Power & Envelope, Fuel Efficiency (BSFC), FADEC Timing & Combustion, Conventional Threshold vs. Twin Early Warning Comparator (F13/G03 lead-time advantage), and 2 kHz Vibration Spectral Orders & Bearing Harmonics.
-              4. Subtab 3 (Maintenance & CBM):
-                 - `MaintenanceDashboardPanel.tsx`: Added (i) modals across all 3 sections: Split-Conformal RUL (F12/AIM-05 90% finite-sample coverage), Automated CBM Work Order Dispatch (ATA-100 routing & digital inspector sign-off), and Transducer Sanity Matrix (F14/FDP-06 range, slew, and noise variance clamps).
-              5. Subtab 4 (Tactical AI Copilot):
-                 - `UnifiedCopilot.tsx`: Added (i) modal detailing semantic RAG retrieval over Rotax OM/MM manuals, live telemetry tool calling, and local Ollama Qwen2.5 execution.
-              6. Subtab 5 (Mission Replay) & 3D Twin Workspace:
-                 - `MissionReplayScrubber.tsx`: Added (i) modal explaining 20 Hz synchronized blackbox telemetry interpolation and event marker navigation.
-                 - `TwinWorkspace.tsx`: Added (i) modal detailing 20 Hz 1D thermodynamic differential equations and virtual sensor bus mapping.
-              7. Zero Guesswork: All equations and thresholds derived directly from `backend/physics/`, `backend/prognose/`, and `backend/twin/residual_detector.py`.
+Phase:        Phase 0 / Phase 8 (Platform Harmonization & AI Mission Copilot Modernization).
+Card:         M0-08k (Modernized Single-Card Tactical AI Copilot, Dynamic State-Aware Mic & Dual-Engine Notice):
+              1. Unified Single-Card Layout: Eradicated separate voice console box and error badges in favor of a clean, unified card matching ChatGPT / Gemini / Claude conversational layout with standard chat reflection.
+              2. Dynamic State-Aware Mic: Central mic icon updates dynamically across IDLE, LISTENING, THINKING, and SPEAKING states with live 5-bar equalizer animations and interim speech transcript preview.
+              3. Anti-AI-Slop Typography: Switched assistant output from monospace code typewriter slop to clean, high-density sans-serif prose (`font-sans`), reserving monospace strictly for telemetry metrics and ATA codes.
+              4. Zero Screen Jerk / Auto-Scroll Fix: Fixed bug where mic clicks scrolled the outer page to the footer; scoped scroll behavior strictly to inner chat messages container (`messages.length`).
+              5. Dual-Engine Architecture Notice: Transparently displays: "Dual Engine: Operates on local LLM (Ollama / Qwen2.5 / Sarvam) for edge defense deployments; powered by Google Gemini for cloud demonstration."
+              6. Interactive Voice Controls: Prominent Hands-Free Voice toggle, audio mute/unmute (`Volume2`/`VolumeX`), speech synthesis barge-in interrupt, conversation history clear, and warmup test.
 Branch:       Beta
-Last commit:  20f8cfe M0-08i: add comprehensive (i) calculation and physics specification modals across all GCS subtabs
-State:        52/52 Vitest passed, 0 tsc errors, 28/28 backend adapter/copilot/physics pytest passed. Vite builds clean (frontend 9.2s, docs_site 21.9s).
-Latest:       All GCS subtabs feature comprehensive (i) calculation modals, tactile active-press microanimations, modal-pop transitions, and live dynamic audio equalizer waves.
+Last commit:  95fdd3c M0-08k: modernize unified tactical copilot, dynamic state-aware mic, and dual-engine architecture notice
+State:        52/52 Vitest passed (100%), 0 tsc errors, 28/28 pytest passed. Both `frontend` and `docs_site` build cleanly in production mode.
+Latest:       All GCS subtabs feature comprehensive (i) calculation modals, tactile active-press microanimations, clean sans-serif typography, and unified AI copilot with dual-engine deployment notice.
 Next step:    Phase 8 UX-02 (Time Machine mission timeline scrubber & historical replay).
 =====================================================================================================================
 Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produce yet (lambda, timing, BSFC, power,
@@ -387,3 +375,29 @@ Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produ
   * Frontend Vitest: 52/52 tests passed across 16 test files (100% PASS).
   * Backend Pytest: 28/28 tests passed (`test_legacy_adapter.py`, `test_copilot_and_knowledge.py`, `test_no_truth_leak.py`).
   * Zero Guesswork: All equations verified against `backend/physics/`, `backend/prognose/`, and `backend/twin/residual_detector.py`.
+
+=== 22 Nov 2026 Phase 0/8 Card M0-08j (Tactile Microanimations, Modal-Pop Transitions & Live Audio Equalizer Waves) (AI: Antigravity)
+- Tactile Microanimations & Modal Pop:
+  * Updated `tailwind.config.js` with `animate-modal-pop`, `animate-wave-bar-1..5`, and `pulse-ring`.
+  * Added tactile active scaling (`active:scale-95`, `active:scale-[0.98]`) across interactive buttons, fault matrix pills, engine control levers, and subtab navigation.
+  * Added crossfade transitions (`animate-fade-in`) on subtab switches in `App.tsx`.
+- Verification:
+  * Live Chrome browser inspection via subagent (`09f7a88e-a41b-4f4c-a377-8d8479d7e1ed`): verified modal open/close transitions, 20 Hz telemetry sync, mobile responsiveness at 390x844 with 0 errors.
+
+=== 22 Nov 2026 Phase 0/8 Card M0-08k (Modernized Single-Card AI Copilot, Dynamic State-Aware Mic & Dual-Engine Architecture Notice) (AI: Antigravity)
+- Modernized Conversational Interface (D76, D78):
+  * Unified `UnifiedCopilot.tsx` into a single-card interface matching ChatGPT / Claude / Gemini standards.
+  * Eradicated separate voice console box, error badges, and clutter.
+  * Dynamic state-aware center mic control with states: IDLE, LISTENING, THINKING, SPEAKING.
+  * Live 5-bar animated audio equalizer and real-time interim speech transcript preview.
+  * Fixed bug where mic clicks scrolled the outer window to the footer; scoped scroll behavior strictly to inner chat messages container (`messages.length`).
+  * Replaced typewriter monospace font slop on assistant output with clean, modern sans-serif typography (`font-sans`).
+  * Added prominent controls: Hands-Free Voice toggle, audio mute/unmute (`Volume2`/`VolumeX`), speech synthesis barge-in interrupt, conversation history clear, and warmup test.
+  * Added transparent dual-engine architecture notice:
+    "Dual Engine: Operates on local LLM (Ollama / Qwen2.5 / Sarvam) for edge defense deployments; powered by Google Gemini for cloud demonstration."
+- Full Deploy-Readiness Verification:
+  * Frontend: `cd frontend; npx tsc --noEmit; npm run build` passed cleanly in 14.54s (0 errors).
+  * Frontend Vitest: 52/52 unit tests passed across 16 test files (100% PASS).
+  * Docs Site: `cd docs_site; npx tsc --noEmit; npm run build` passed cleanly in 34.44s (0 errors).
+  * Backend Pytest: 28/28 tests passed (`tests/api/test_legacy_adapter.py`, `tests/test_copilot_and_knowledge.py`, `tests/test_no_truth_leak.py`).
+  * Zero lint, build, or TypeScript errors across the entire repository. Ready for production deployment.
