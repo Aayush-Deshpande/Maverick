@@ -972,7 +972,8 @@ class MissionCopilot:
         self,
         user_query: str,
         current_flight_context: Optional[Dict[str, Any]] = None,
-        active_fault_id: Optional[int] = None
+        active_fault_id: Optional[int] = None,
+        session_id: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Processes a pilot/operator query with guardrails, semantic RAG retrieval, and diagnostic synthesis.
@@ -1106,11 +1107,25 @@ class MissionCopilot:
                     f"them back verbatim."
                 )
 
-            ai_text = self.llm_engine.generate(
-                AI_CONVERSATIONAL_COPILOT_PROMPT,
-                prompt,
-                max_new_tokens=450
-            )
+            prompt_history = []
+            if session_id:
+                raw_history = self.voice_conversations.get_history(session_id)[-4:]
+                for msg in raw_history:
+                    prompt_history.append(dict(msg))
+
+            if prompt_history:
+                ai_text = self.llm_engine.generate_chat(
+                    AI_CONVERSATIONAL_COPILOT_PROMPT,
+                    prompt_history,
+                    prompt,
+                    max_new_tokens=450,
+                )
+            else:
+                ai_text = self.llm_engine.generate(
+                    AI_CONVERSATIONAL_COPILOT_PROMPT,
+                    prompt,
+                    max_new_tokens=450,
+                )
             if ai_text and len(ai_text.strip()) > 20:
                 response_text = _trim_to_complete_sentence(ai_text.strip())
         except Exception:
@@ -1157,12 +1172,17 @@ class MissionCopilot:
             else:
                 response_text = self._synthesize_extractive_answer(user_query, retrieved_chunks)
 
+        if session_id and response_text:
+            self.voice_conversations.append_turn(session_id, "user", user_query)
+            self.voice_conversations.append_turn(session_id, "assistant", response_text)
+
         return {
             "response": response_text,
             "status": "SUCCESS",
             "active_fault": directive.to_dict() if directive else None,
             "citations": citations,
             "retrieved_count": len(retrieved_chunks),
+            "session_id": session_id,
             "local_model_loaded": str(model_file.name) if model_file else "Semantic RAG Engine"
         }
 

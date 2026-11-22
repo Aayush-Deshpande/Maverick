@@ -39,6 +39,18 @@ export const DiagnosticCard: React.FC<DiagnosticCardProps> = ({
   const [copilotCitations, setCopilotCitations] = useState<string[]>([]);
   const [isCopilotAsking, setIsCopilotAsking] = useState(false);
 
+  const [sessionId] = useState(() => {
+    try {
+      const existing = localStorage.getItem('anumaan_copilot_session_id');
+      if (existing) return existing;
+      const fresh = crypto.randomUUID();
+      localStorage.setItem('anumaan_copilot_session_id', fresh);
+      return fresh;
+    } catch {
+      return `session-${Date.now()}`;
+    }
+  });
+
   const [checkedSteps, setCheckedSteps] = useState<Record<number, boolean>>({});
 
   const toggleCheckStep = (idx: number) => {
@@ -63,7 +75,7 @@ export const DiagnosticCard: React.FC<DiagnosticCardProps> = ({
           'Content-Type': 'application/json',
           'ngrok-skip-browser-warning': '69420',
         },
-        body: JSON.stringify({ query }),
+        body: JSON.stringify({ query, session_id: sessionId }),
         signal: controller.signal,
       });
       if (res.ok) {

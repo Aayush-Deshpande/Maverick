@@ -67,6 +67,16 @@ class TestKnowledgeAndCopilot(unittest.TestCase):
         self.assertIn("Step 1", res["response"])
         self.assertIsNotNone(res["active_fault"])
 
+    def test_copilot_conversational_memory(self):
+        """Ensures copilot tracks multi-turn conversational memory when session_id is provided."""
+        session_id = "test-session-mem-101"
+        res1 = self.copilot.ask("What to do about high cylinder head temperature?", active_fault_id=1, session_id=session_id)
+        self.assertEqual(res1["status"], "SUCCESS")
+        history = self.copilot.voice_conversations.get_history(session_id)
+        self.assertGreaterEqual(len(history), 2)
+        self.assertEqual(history[0]["role"], "user")
+        self.assertEqual(history[1]["role"], "assistant")
+
     def test_build_live_state_block(self):
         """Validates that _build_live_state_block formats nominal and fault states cleanly."""
         nominal_ctx = {

@@ -72,6 +72,7 @@ from backend.voice.thinking_stream import THINKING_STREAM
 
 class AIAskRequest(BaseModel):
     query: str
+    session_id: Optional[str] = None
 
 
 class VoiceResetRequest(BaseModel):
@@ -446,6 +447,7 @@ async def ask_ai_copilot(req: AIAskRequest):
         req.query,
         state,
         state["analytics"]["diagnosed_fault_id"],
+        req.session_id,
     )
     return result
 
