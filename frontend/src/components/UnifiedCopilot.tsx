@@ -1,20 +1,21 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
-  Brain,
   Mic,
-  MicOff,
   Volume2,
   VolumeX,
   Send,
   Sparkles,
-  ShieldCheck,
-  AlertTriangle,
-  RotateCcw,
-  Activity,
-  Headphones,
   Square,
   FileText,
   Database,
+  Radio,
+  Loader2,
+  Ear,
+  EarOff,
+  User,
+  Bot,
+  Power,
+  Trash2,
 } from 'lucide-react';
 import { UnifiedTelemetryState } from '../types/telemetry';
 import { AerospaceMarkdown } from './AerospaceMarkdown';
@@ -64,13 +65,11 @@ export const UnifiedCopilot: React.FC<UnifiedCopilotProps> = ({ state, serverUrl
   const [isLoading, setIsLoading] = useState(false);
   const [isSpeakingEnabled, setIsSpeakingEnabled] = useState(true);
 
-  // Mode 1: Dictation (Speech-to-Text into input box)
-  const [isDictating, setIsDictating] = useState(false);
-
-  // Mode 2: Conversational Live Voice Mode (Hands-free continuous voice dialogue)
-  const [isConversationalActive, setIsConversationalActive] = useState(false);
+  // Continuous Hands-Free vs Push-to-Talk Voice Mode
+  const [continuousMode, setContinuousMode] = useState(false);
   const [convState, setConvState] = useState<ConversationalState>('IDLE');
   const [interimTranscript, setInterimTranscript] = useState('');
+  const [isWarmingUp, setIsWarmingUp] = useState(false);
 
   const [sessionId] = useState(() => {
     let sid = localStorage.getItem('anumaan_copilot_session_id');
@@ -82,18 +81,16 @@ export const UnifiedCopilot: React.FC<UnifiedCopilotProps> = ({ state, serverUrl
   });
 
   const chatBottomRef = useRef<HTMLDivElement>(null);
-  const dictationRecRef = useRef<any>(null);
   const convRecRef = useRef<any>(null);
-  const convActiveRef = useRef(false);
-  convActiveRef.current = isConversationalActive;
+  const continuousActiveRef = useRef(false);
+  continuousActiveRef.current = continuousMode;
 
-  // Mutable refs to prevent React state closure capture in speech recognition callbacks
+  // Mutable ref to prevent React state closure bugs in SpeechRecognition callbacks
   const convTranscriptRef = useRef('');
-  const dictTranscriptRef = useRef('');
 
   useEffect(() => {
     chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isLoading, isConversationalActive]);
+  }, [messages, isLoading, convState]);
 
   // Clean speech synthesis text (remove markdown markup)
   const cleanSpeechText = (text: string) => {
@@ -140,78 +137,6 @@ export const UnifiedCopilot: React.FC<UnifiedCopilotProps> = ({ state, serverUrl
   };
 
   // ────────────────────────────────────────────────────────────────────────────
-  // Mode 1: Dictation (Speech-to-Text typing directly into input bar)
-  // ────────────────────────────────────────────────────────────────────────────
-  const startDictation = () => {
-    const SpeechRecognition =
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      alert('Speech recognition is not supported in this browser. Please use Chrome or Edge.');
-      return;
-    }
-
-    try {
-      if (dictationRecRef.current) {
-        try {
-          dictationRecRef.current.abort();
-        } catch {}
-      }
-      const rec = new SpeechRecognition();
-      rec.continuous = true;
-      rec.interimResults = true;
-      rec.lang = 'en-US';
-
-      dictTranscriptRef.current = inputQuery;
-
-      rec.onstart = () => setIsDictating(true);
-      rec.onend = () => setIsDictating(false);
-      rec.onerror = () => setIsDictating(false);
-
-      rec.onresult = (event: any) => {
-        let finalTrans = '';
-        let interimTrans = '';
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          const item = event.results[i];
-          if (item.isFinal) {
-            finalTrans += item[0]?.transcript || '';
-          } else {
-            interimTrans += item[0]?.transcript || '';
-          }
-        }
-        if (finalTrans) {
-          dictTranscriptRef.current = (dictTranscriptRef.current ? dictTranscriptRef.current + ' ' + finalTrans.trim() : finalTrans.trim()).trim();
-          setInputQuery(dictTranscriptRef.current);
-        } else if (interimTrans) {
-          const preview = (dictTranscriptRef.current ? dictTranscriptRef.current + ' ' + interimTrans.trim() : interimTrans.trim()).trim();
-          setInputQuery(preview);
-        }
-      };
-
-      dictationRecRef.current = rec;
-      rec.start();
-    } catch {
-      setIsDictating(false);
-    }
-  };
-
-  const stopDictation = () => {
-    if (dictationRecRef.current) {
-      try {
-        dictationRecRef.current.stop();
-      } catch {}
-    }
-    setIsDictating(false);
-  };
-
-  const toggleDictation = () => {
-    if (isDictating) {
-      stopDictation();
-    } else {
-      startDictation();
-    }
-  };
-
-  // ────────────────────────────────────────────────────────────────────────────
   // Core Query Dispatcher
   // ────────────────────────────────────────────────────────────────────────────
   const handleSendQuery = async (queryText?: string): Promise<string> => {
@@ -220,7 +145,6 @@ export const UnifiedCopilot: React.FC<UnifiedCopilotProps> = ({ state, serverUrl
     if (!cleanQ || isLoading) return '';
 
     if (!queryText) setInputQuery('');
-    if (isDictating) stopDictation();
 
     const userMsg: ChatMessage = {
       id: 'usr-' + Date.now(),
@@ -230,6 +154,7 @@ export const UnifiedCopilot: React.FC<UnifiedCopilotProps> = ({ state, serverUrl
     };
     setMessages((prev) => [...prev, userMsg]);
     setIsLoading(true);
+    setConvState('THINKING');
 
     try {
       const res = await fetch(`${serverUrl}/api/ai/ask`, {
@@ -280,11 +205,9 @@ export const UnifiedCopilot: React.FC<UnifiedCopilotProps> = ({ state, serverUrl
   };
 
   // ────────────────────────────────────────────────────────────────────────────
-  // Mode 2: Conversational Live Voice Loop (Hands-free, seamless inline chat)
+  // Voice Recognition Cycle (Continuous Hands-Free or Push-to-Talk)
   // ────────────────────────────────────────────────────────────────────────────
-  const listenNextConversationalTurn = useCallback(() => {
-    if (!convActiveRef.current) return;
-
+  const listenTurn = useCallback(() => {
     const SpeechRecognition =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) return;
@@ -304,7 +227,6 @@ export const UnifiedCopilot: React.FC<UnifiedCopilotProps> = ({ state, serverUrl
       convTranscriptRef.current = '';
 
       rec.onstart = () => {
-        if (!convActiveRef.current) return;
         setConvState('LISTENING');
         setInterimTranscript('');
       };
@@ -319,7 +241,6 @@ export const UnifiedCopilot: React.FC<UnifiedCopilotProps> = ({ state, serverUrl
       };
 
       rec.onend = async () => {
-        if (!convActiveRef.current) return;
         const finalQ = convTranscriptRef.current.trim();
         if (finalQ) {
           setConvState('THINKING');
@@ -327,100 +248,139 @@ export const UnifiedCopilot: React.FC<UnifiedCopilotProps> = ({ state, serverUrl
           convTranscriptRef.current = '';
 
           const reply = await handleSendQuery(finalQ);
-          if (!convActiveRef.current) return;
 
           if (reply && isSpeakingEnabled) {
             setConvState('SPEAKING');
             speakText(reply, () => {
-              if (convActiveRef.current) {
+              if (continuousActiveRef.current) {
                 setConvState('LISTENING');
-                setTimeout(() => {
-                  listenNextConversationalTurn();
-                }, 300);
+                setTimeout(() => listenTurn(), 300);
+              } else {
+                setConvState('IDLE');
               }
             });
           } else {
-            if (convActiveRef.current) {
+            if (continuousActiveRef.current) {
               setConvState('LISTENING');
-              setTimeout(() => {
-                listenNextConversationalTurn();
-              }, 300);
+              setTimeout(() => listenTurn(), 300);
+            } else {
+              setConvState('IDLE');
             }
           }
         } else {
-          // If silence timeout, restart listening loop immediately
-          if (convActiveRef.current) {
-            setTimeout(() => {
-              listenNextConversationalTurn();
-            }, 250);
+          // Silence timeout: re-arm if continuous mode is on
+          if (continuousActiveRef.current) {
+            setTimeout(() => listenTurn(), 250);
+          } else {
+            setConvState('IDLE');
           }
         }
       };
 
       rec.onerror = () => {
-        if (convActiveRef.current) {
-          setTimeout(() => {
-            listenNextConversationalTurn();
-          }, 500);
+        if (continuousActiveRef.current) {
+          setTimeout(() => listenTurn(), 500);
+        } else {
+          setConvState('IDLE');
         }
       };
 
       convRecRef.current = rec;
       rec.start();
     } catch {
-      if (convActiveRef.current) {
-        setTimeout(() => {
-          listenNextConversationalTurn();
-        }, 800);
-      }
+      setConvState('IDLE');
     }
   }, [isSpeakingEnabled, speakText]);
 
-  const startConversationalMode = () => {
-    stopDictation();
-    stopSpeaking();
-    setIsConversationalActive(true);
-    setConvState('LISTENING');
-    setInterimTranscript('');
-    convTranscriptRef.current = '';
-    setTimeout(() => {
-      listenNextConversationalTurn();
-    }, 200);
+  // Handle center mic button click
+  const handleMicClick = () => {
+    if (convState === 'SPEAKING') {
+      // If speaking, clicking the mic interrupts playback
+      handleInterruptSpeaking();
+      return;
+    }
+
+    if (convState === 'LISTENING') {
+      // If listening, clicking stops listening and processes current speech
+      if (convRecRef.current) {
+        try {
+          convRecRef.current.stop();
+        } catch {}
+      }
+      return;
+    }
+
+    if (convState === 'IDLE') {
+      stopSpeaking();
+      listenTurn();
+    }
   };
 
-  const stopConversationalMode = () => {
-    convActiveRef.current = false;
-    setIsConversationalActive(false);
-    setConvState('IDLE');
-    setInterimTranscript('');
-    convTranscriptRef.current = '';
-    stopSpeaking();
-    if (convRecRef.current) {
-      try {
-        convRecRef.current.abort();
-      } catch {}
+  const toggleContinuousMode = () => {
+    const next = !continuousMode;
+    setContinuousMode(next);
+    continuousActiveRef.current = next;
+
+    if (next) {
+      stopSpeaking();
+      listenTurn();
+    } else {
+      if (convRecRef.current) {
+        try {
+          convRecRef.current.abort();
+        } catch {}
+      }
+      stopSpeaking();
+      setConvState('IDLE');
+      setInterimTranscript('');
     }
   };
 
   const handleInterruptSpeaking = () => {
     stopSpeaking();
-    setConvState('LISTENING');
-    setInterimTranscript('');
-    convTranscriptRef.current = '';
-    setTimeout(() => {
-      listenNextConversationalTurn();
-    }, 200);
+    if (continuousMode) {
+      setConvState('LISTENING');
+      setInterimTranscript('');
+      convTranscriptRef.current = '';
+      setTimeout(() => listenTurn(), 200);
+    } else {
+      setConvState('IDLE');
+      setInterimTranscript('');
+      convTranscriptRef.current = '';
+    }
+  };
+
+  const handleWarmup = async () => {
+    setIsWarmingUp(true);
+    try {
+      await fetch(`${serverUrl}/api/v1/copilot/ask`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          engine_id: state.engine_id || 'rotax_912is',
+          question: 'What is the current engine status?',
+        }),
+      });
+    } catch {}
+    setIsWarmingUp(false);
+  };
+
+  const handleClearConversation = () => {
+    stopSpeaking();
+    setMessages([
+      {
+        id: 'reset-' + Date.now(),
+        sender: 'assistant',
+        text: 'Conversation buffer cleared. Standing by for propulsion telemetry inquiries.',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      },
+    ]);
   };
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       stopSpeaking();
-      if (dictationRecRef.current) {
-        try {
-          dictationRecRef.current.abort();
-        } catch {}
-      }
       if (convRecRef.current) {
         try {
           convRecRef.current.abort();
@@ -429,277 +389,334 @@ export const UnifiedCopilot: React.FC<UnifiedCopilotProps> = ({ state, serverUrl
     };
   }, []);
 
-  const isFaultActive = state.active_commanded_fault_id > 0;
   const faultName = state.active_commanded_fault_name || 'NOMINAL';
   const rpm = Math.round(state.telemetry.ENGINE_RPM || 0);
   const healthPct = Math.round((state.analytics.health_index || 1.0) * 100);
 
   return (
-    <div className="surface-panel p-4 sm:p-5 space-y-4">
-      {/* Top Banner: Status & Context */}
-      <div className="flex items-center justify-between border-b border-surface-border pb-3 flex-wrap gap-2">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-sm bg-accent-dim flex items-center justify-center text-accent shadow-sm">
-            <Brain className="w-4 h-4" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-xs font-semibold text-white">MAVERICK · Tactical AI Mission Copilot</h2>
-              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-sm bg-success-dim text-success border border-success-muted">
-                Ollama / Qwen2.5 Local
-              </span>
-            </div>
-            <p className="text-xs text-slate-400">
-              Conversational RAG Grounding · Multi-Turn Dialogue Memory · Continuous Voice Mode
-            </p>
-          </div>
-        </div>
-
-        {/* Live Grounding Badges & Mode Controls */}
-        <div className="flex items-center gap-2 text-xs font-mono">
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-surface-card border border-surface-border text-slate-300">
-            <Activity className="w-3.5 h-3.5 text-accent" />
-            <span>RPM: {rpm}</span>
-          </div>
-          <div
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-sm border ${
-              isFaultActive
-                ? 'bg-critical-dim text-critical border-critical-muted'
-                : 'bg-success-dim text-success border-success-muted'
-            }`}
-          >
-            {isFaultActive ? <AlertTriangle className="w-3.5 h-3.5" /> : <ShieldCheck className="w-3.5 h-3.5" />}
-            <span>Health: {healthPct}% {isFaultActive ? `· ${faultName}` : ''}</span>
-          </div>
-
-          {/* Hands-Free Conversational Voice Mode Toggle Pill */}
-          <button
-            onClick={isConversationalActive ? stopConversationalMode : startConversationalMode}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-sm border font-mono text-xs transition-all shadow-xs ${
-              isConversationalActive
-                ? 'bg-critical-dim text-critical border-critical-muted hover:bg-critical hover:text-white'
-                : 'bg-accent-dim text-accent border-accent-muted hover:bg-accent hover:text-white'
-            }`}
-            title={isConversationalActive ? 'Exit continuous hands-free voice mode' : 'Start continuous hands-free voice mode'}
-          >
-            <Headphones className={`w-3.5 h-3.5 ${isConversationalActive ? 'animate-pulse' : ''}`} />
-            <span>{isConversationalActive ? 'Exit Voice Mode' : 'Hands-Free Voice'}</span>
-          </button>
-
-          {/* Audio Output Mute / Unmute Toggle */}
-          <button
-            onClick={() => {
-              stopSpeaking();
-              setIsSpeakingEnabled(!isSpeakingEnabled);
-            }}
-            className={`p-1.5 rounded-sm border transition-colors ${
-              isSpeakingEnabled
-                ? 'bg-accent-dim text-accent border-accent-muted'
-                : 'bg-surface-card text-slate-500 border-surface-border'
-            }`}
-            title={isSpeakingEnabled ? 'Audio Output: Active (Click to mute)' : 'Audio Output: Muted (Click to unmute)'}
-          >
-            {isSpeakingEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-          </button>
-
-          {/* Clear Chat Button */}
-          <button
-            onClick={() => {
-              stopSpeaking();
-              setMessages([
-                {
-                  id: 'reset-' + Date.now(),
-                  sender: 'assistant',
-                  text: 'Conversation buffer cleared. Standing by for propulsion telemetry inquiries.',
-                  timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                },
-              ]);
-            }}
-            className="p-1.5 rounded-sm bg-surface-card border border-surface-border text-slate-400 hover:text-white transition-colors"
-            title="Clear conversation history"
-          >
-            <RotateCcw className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-
+    <div className="space-y-4">
       {/* ──────────────────────────────────────────────────────────────────── */}
-      {/* Inline Hands-Free Voice Status Bar (Visible only when voice is active) */}
+      {/* 1. Voice Mission Copilot Console (Status, Continuous Mode & Center Mic) */}
       {/* ──────────────────────────────────────────────────────────────────── */}
-      {isConversationalActive && (
-        <div className="flex items-center justify-between px-3.5 py-2 rounded-sm bg-surface-card border border-accent/40 text-xs font-mono shadow-xs transition-all">
+      <div className="surface-panel rounded-sm p-4 sm:p-5 space-y-4 border border-surface-border">
+        {/* Top Header + Engine Status Badges */}
+        <div className="flex items-center justify-between flex-wrap gap-2 border-b border-surface-border pb-3">
           <div className="flex items-center gap-2.5">
-            <span
-              className={`w-2.5 h-2.5 rounded-full ${
-                convState === 'SPEAKING'
-                  ? 'bg-accent animate-ping'
-                  : convState === 'THINKING'
-                  ? 'bg-warning animate-spin'
-                  : 'bg-emerald-500 animate-pulse'
-              }`}
-            />
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-semibold text-white uppercase tracking-wider text-[11px]">
-                {convState === 'SPEAKING' && 'MAVERICK TRANSMITTING'}
-                {convState === 'THINKING' && 'REASONING OVER TELEMETRY'}
-                {convState === 'LISTENING' && 'LISTENING TO OPERATOR'}
-                {convState === 'IDLE' && 'VOICE STANDBY'}
-              </span>
-              <span className="text-slate-400 text-[11px]">
-                {convState === 'SPEAKING' && '— Speaking response aloud (transcript below)'}
-                {convState === 'THINKING' && '— Synthesizing with local Qwen2.5 & telemetry tools'}
-                {convState === 'LISTENING' &&
-                  (interimTranscript
-                    ? `— Hearing: "${interimTranscript}"`
-                    : '— Speak naturally; transcript posts to chat')}
-              </span>
+            <div className="w-8 h-8 rounded-sm bg-accent-dim flex items-center justify-center text-accent shadow-xs">
+              <Sparkles className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-xs font-semibold text-white font-mono uppercase tracking-wide">
+                  VOICE MISSION COPILOT
+                </h2>
+                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-sm bg-success-dim text-success border border-success-muted">
+                  RPM: {rpm} · Health: {healthPct}%
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 font-mono">
+                Web Speech STT + Local Ollama Qwen2.5 + Speech Synthesis — Fully Local &amp; Grounded
+              </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
-            {convState === 'SPEAKING' && (
-              <button
-                onClick={handleInterruptSpeaking}
-                className="flex items-center gap-1 px-2.5 py-1 rounded-sm bg-critical-dim border border-critical-muted text-critical hover:bg-critical hover:text-white transition-colors text-[11px] font-semibold"
-                title="Interrupt audio playback and listen again"
-              >
-                <Square className="w-3 h-3" />
-                <span>Interrupt / Mute</span>
-              </button>
-            )}
-
-            <button
-              onClick={stopConversationalMode}
-              className="px-2.5 py-1 rounded-sm bg-surface-card border border-surface-border text-slate-300 hover:text-white hover:border-slate-400 transition-colors text-[11px]"
-              title="Stop continuous voice mode"
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs font-mono px-2 py-0.5 rounded-sm border bg-success-dim text-success border-success-muted">
+              STT: READY
+            </span>
+            <span
+              className={`text-xs font-mono px-2 py-0.5 rounded-sm border ${
+                isSpeakingEnabled
+                  ? 'bg-success-dim text-success border-success-muted'
+                  : 'bg-surface-card text-slate-400 border-surface-border'
+              }`}
             >
-              Exit Voice
+              TTS: {isSpeakingEnabled ? 'READY' : 'MUTED'}
+            </span>
+            <span className="text-xs font-mono px-2 py-0.5 rounded-sm border bg-success-dim text-success border-success-muted">
+              LLM: READY (Ollama)
+            </span>
+
+            {/* Warm up button */}
+            <button
+              onClick={handleWarmup}
+              disabled={isWarmingUp}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-surface-card border border-surface-border text-slate-300 text-xs font-medium hover:text-white hover:border-accent disabled:opacity-40 transition-colors font-mono"
+              title="Test backend LLM & pipeline"
+            >
+              {isWarmingUp ? <Loader2 className="w-3 h-3 animate-spin" /> : <Power className="w-3 h-3 text-accent" />}
+              <span>Warm up</span>
+            </button>
+
+            {/* Clear button */}
+            <button
+              onClick={handleClearConversation}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-surface-card border border-surface-border text-slate-400 text-xs font-medium hover:text-white hover:border-slate-500 transition-colors font-mono"
+              title="Clear conversation history"
+            >
+              <Trash2 className="w-3 h-3" />
+              <span>Clear</span>
             </button>
           </div>
         </div>
-      )}
 
-      {/* ────────────────────────────────────────────────────────────────── */}
-      {/* Normal Chat Feed Mode (Rich Markdown Rendered)                     */}
-      {/* ────────────────────────────────────────────────────────────────── */}
-      <div className="h-[430px] overflow-y-auto space-y-3 p-3 bg-black/10 rounded-sm border border-surface-border font-sans text-xs">
-        {messages.map((m) => (
-          <div
-            key={m.id}
-            className={`flex flex-col ${m.sender === 'user' ? 'items-end' : 'items-start'} space-y-1`}
-          >
-            <div className="flex items-center gap-1.5 text-[10px] font-mono text-slate-500 px-1">
-              <span>{m.sender === 'user' ? 'OPERATOR' : 'MAVERICK AI'}</span>
-              <span>·</span>
-              <span>{m.timestamp}</span>
+        {/* Continuous mode card with toggle switch */}
+        <div className="flex items-center justify-between gap-3 bg-surface-card border border-surface-border rounded-sm px-4 py-2.5">
+          <div className="flex items-center gap-2.5">
+            {continuousMode ? (
+              <Ear className="w-4 h-4 text-success" />
+            ) : (
+              <EarOff className="w-4 h-4 text-slate-500" />
+            )}
+            <div>
+              <span className="text-xs font-medium text-slate-200 font-mono">Continuous mode</span>
+              <p className="text-xs text-slate-400 font-mono">
+                {continuousMode
+                  ? 'Always listening and responding — no need to tap the mic between turns.'
+                  : 'Off — press the mic in the center to talk, one turn at a time.'}
+              </p>
             </div>
-            <div
-              className={`max-w-[88%] rounded-sm p-3.5 leading-relaxed font-sans text-xs shadow-sm ${
-                m.sender === 'user'
-                  ? 'bg-accent text-white font-medium self-end'
-                  : 'bg-surface-card border border-surface-border text-slate-200'
+          </div>
+          <button
+            onClick={toggleContinuousMode}
+            className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${
+              continuousMode ? 'bg-success' : 'bg-surface-border'
+            }`}
+            title={continuousMode ? 'Turn off continuous mode' : 'Turn on continuous mode'}
+          >
+            <span
+              className={`absolute top-0.5 w-5 h-5 rounded-full bg-white transition-transform ${
+                continuousMode ? 'translate-x-5' : 'translate-x-0.5'
               }`}
+            />
+          </button>
+        </div>
+
+        {/* Center Mic Stage: State-Aware Dynamic Mic Control */}
+        <div className="flex flex-col items-center justify-center gap-3 py-4">
+          <div className="relative flex items-center justify-center">
+            {/* Pulsing indicator when listening or speaking */}
+            {convState === 'LISTENING' && (
+              <span className="absolute inline-flex w-32 h-32 rounded-full opacity-25 animate-ping bg-emerald-500" />
+            )}
+            {convState === 'SPEAKING' && (
+              <span className="absolute inline-flex w-32 h-32 rounded-full opacity-25 animate-pulse bg-accent" />
+            )}
+
+            <button
+              onClick={handleMicClick}
+              disabled={convState === 'THINKING'}
+              className={`relative z-10 w-24 h-24 rounded-full flex items-center justify-center border transition-all shadow-md cursor-pointer ${
+                convState === 'LISTENING'
+                  ? 'bg-emerald-500/10 border-emerald-500 text-emerald-400 shadow-emerald-500/20'
+                  : convState === 'SPEAKING'
+                  ? 'bg-accent/10 border-accent text-accent shadow-accent/20'
+                  : convState === 'THINKING'
+                  ? 'bg-warning/10 border-warning text-warning shadow-warning/20'
+                  : 'bg-surface-card border-surface-border text-accent hover:border-accent hover:bg-surface-card-hover'
+              }`}
+              title={
+                convState === 'SPEAKING'
+                  ? 'Click to Interrupt Playback'
+                  : convState === 'LISTENING'
+                  ? 'Click to Stop & Send'
+                  : 'Click to Speak'
+              }
             >
-              {/* User messages render as clean plain text; Assistant renders via AerospaceMarkdown */}
-              {m.sender === 'user' ? (
-                <div className="whitespace-pre-wrap">{m.text}</div>
+              {convState === 'LISTENING' ? (
+                continuousMode ? (
+                  <Ear className="w-9 h-9 text-emerald-400 animate-pulse" />
+                ) : (
+                  <Radio className="w-8 h-8 text-emerald-400 animate-pulse" />
+                )
+              ) : convState === 'THINKING' ? (
+                <Loader2 className="w-9 h-9 text-warning animate-spin" />
+              ) : convState === 'SPEAKING' ? (
+                <Volume2 className="w-9 h-9 text-accent animate-pulse" />
               ) : (
-                <AerospaceMarkdown content={m.text} citations={m.citations} />
+                <Mic className="w-9 h-9 text-accent" />
+              )}
+            </button>
+          </div>
+
+          {/* Dynamic Status Label under Center Mic */}
+          <div className="text-center space-y-1">
+            <span className="text-xs font-mono font-medium text-slate-300 flex items-center justify-center gap-1.5">
+              {convState === 'LISTENING' && <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />}
+              {convState === 'THINKING' && <span className="w-2 h-2 rounded-full bg-warning animate-spin" />}
+              {convState === 'SPEAKING' && <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />}
+
+              {convState === 'LISTENING' && (interimTranscript ? `Hearing: "${interimTranscript}"` : 'Listening... Speak naturally')}
+              {convState === 'THINKING' && 'Synthesizing response with Ollama Qwen2.5 & telemetry...'}
+              {convState === 'SPEAKING' && 'MAVERICK speaking response aloud...'}
+              {convState === 'IDLE' && (continuousMode ? 'Continuous mode active — start speaking anytime' : 'Tap the mic to talk, or flip on continuous mode above for hands-free')}
+            </span>
+
+            {/* Quick Actions in Mic Center: Interrupt & Mute Audio */}
+            <div className="flex items-center justify-center gap-2 pt-1">
+              {convState === 'SPEAKING' && (
+                <button
+                  onClick={handleInterruptSpeaking}
+                  className="flex items-center gap-1.5 px-3 py-1 rounded-sm bg-critical-dim border border-critical-muted text-critical hover:bg-critical hover:text-white transition-colors text-xs font-mono font-medium"
+                >
+                  <Square className="w-3.5 h-3.5" />
+                  <span>Interrupt / Stop Speaking</span>
+                </button>
               )}
 
-              {/* ATA Diagnostic Directives Footer */}
-              {m.diagnostics && (
-                <div className="mt-2.5 pt-2.5 border-t border-surface-border/60 text-[11px] font-mono space-y-1 text-slate-300">
-                  <div className="flex items-center gap-2">
-                    <span className="text-accent font-semibold">ATA:</span>
-                    <span>{m.diagnostics.ata_chapter || 'ATA 72-00'}</span>
-                    <span className="text-slate-600">|</span>
-                    <span className="text-accent font-semibold">Directive:</span>
-                    <span>{m.diagnostics.severity || 'NOMINAL'}</span>
+              <button
+                onClick={() => {
+                  stopSpeaking();
+                  setIsSpeakingEnabled(!isSpeakingEnabled);
+                }}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-sm border text-xs font-mono transition-colors ${
+                  isSpeakingEnabled
+                    ? 'bg-surface-card border-surface-border text-slate-400 hover:text-white hover:border-accent'
+                    : 'bg-critical-dim border-critical-muted text-critical'
+                }`}
+                title={isSpeakingEnabled ? 'Mute AI voice output' : 'Unmute AI voice output'}
+              >
+                {isSpeakingEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
+                <span>{isSpeakingEnabled ? 'Audio Mute' : 'Audio Muted'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ──────────────────────────────────────────────────────────────────── */}
+      {/* 2. Conversation Transcript (Normal Full Chat Interface)               */}
+      {/* ──────────────────────────────────────────────────────────────────── */}
+      <div className="surface-panel surface-panel-ai rounded-sm p-4 sm:p-5 border border-surface-border space-y-3">
+        <div className="flex items-center justify-between border-b border-surface-border pb-2">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-medium text-ai-accent font-mono uppercase tracking-wider">
+              CONVERSATION
+            </span>
+            <span className="text-xs text-slate-500 font-mono">
+              (Context preserved across follow-ups — active fault: {faultName})
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1.5 text-xs font-mono text-slate-400">
+            <span>Phrased by Ollama / Qwen2.5 Local</span>
+          </div>
+        </div>
+
+        {/* Messages Stream (Normal Chat Rendering) */}
+        <div className="space-y-3 max-h-[460px] overflow-y-auto pr-1">
+          {messages.map((m) =>
+            m.sender === 'user' ? (
+              <div key={m.id} className="flex items-start gap-2.5 justify-end">
+                <div className="max-w-[85%] bg-accent text-white rounded-sm p-3 shadow-xs">
+                  <div className="text-[10px] font-mono text-white/70 mb-1">
+                    OPERATOR · {m.timestamp}
                   </div>
-                  {m.diagnostics.prescriptive_action && (
-                    <div className="text-slate-400">
-                      <span className="text-slate-500">Action:</span> {m.diagnostics.prescriptive_action}
+                  <p className="text-xs leading-relaxed whitespace-pre-wrap">{m.text}</p>
+                </div>
+                <div className="w-7 h-7 rounded-sm bg-accent flex items-center justify-center text-white shrink-0 mt-0.5">
+                  <User className="w-3.5 h-3.5" />
+                </div>
+              </div>
+            ) : (
+              <div key={m.id} className="flex items-start gap-2.5">
+                <div className="w-7 h-7 rounded-sm bg-ai-accent-dim flex items-center justify-center text-ai-accent shrink-0 mt-0.5">
+                  <Bot className="w-3.5 h-3.5" />
+                </div>
+                <div className="max-w-[85%] bg-surface-card border border-surface-border rounded-sm p-3.5 space-y-2 shadow-xs">
+                  <div className="text-[10px] font-mono text-slate-500 flex items-center justify-between">
+                    <span>MAVERICK AI · {m.timestamp}</span>
+                  </div>
+
+                  {/* Rich Markdown Assistant Output */}
+                  <AerospaceMarkdown content={m.text} citations={m.citations} title="Spoken Telemetry Brief" />
+
+                  {/* ATA Diagnostics Footer */}
+                  {m.diagnostics && (
+                    <div className="mt-2.5 pt-2 border-t border-surface-border/60 text-[11px] font-mono space-y-1 text-slate-300">
+                      <div className="flex items-center gap-2">
+                        <span className="text-accent font-semibold">ATA:</span>
+                        <span>{m.diagnostics.ata_chapter || 'ATA 72-00'}</span>
+                        <span className="text-slate-600">|</span>
+                        <span className="text-accent font-semibold">Directive:</span>
+                        <span>{m.diagnostics.severity || 'NOMINAL'}</span>
+                      </div>
+                      {m.diagnostics.prescriptive_action && (
+                        <div className="text-slate-400">
+                          <span className="text-slate-500">Action:</span> {m.diagnostics.prescriptive_action}
+                        </div>
+                      )}
                     </div>
                   )}
-                </div>
-              )}
 
-              {/* Grounding Sources & Tools Footer */}
-              {m.sender === 'assistant' && (
-                <div className="mt-3 pt-2 border-t border-surface-border/40 text-[10px] font-mono space-y-1.5 text-slate-400">
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="text-slate-500 uppercase tracking-wider font-semibold flex items-center gap-1">
-                      <FileText className="w-3 h-3 text-accent" /> Sources:
-                    </span>
-                    {(m.sources && m.sources.length > 0
-                      ? m.sources
-                      : ['Rotax 912 iSc Maintenance Manual (Line / Heavy)', 'DRDO PS-26054 FMECA Diagnostic Registry (ATA 72-00)']
-                    ).map((s, idx) => (
-                      <span key={idx} className="px-1.5 py-0.5 rounded-sm bg-white/5 border border-surface-border text-slate-300">
-                        {s}
+                  {/* Sources & Tools Footer */}
+                  <div className="mt-2 pt-2 border-t border-surface-border/40 text-[10px] font-mono space-y-1 text-slate-400">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="text-slate-500 uppercase tracking-wider font-semibold flex items-center gap-1">
+                        <FileText className="w-3 h-3 text-accent" /> Sources:
                       </span>
-                    ))}
-                  </div>
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="text-slate-500 uppercase tracking-wider font-semibold flex items-center gap-1">
-                      <Database className="w-3 h-3 text-accent" /> Tools:
-                    </span>
-                    {(m.tools && m.tools.length > 0
-                      ? m.tools
-                      : ['tool:get_engine_state', 'tool:get_hypotheses', 'tool:get_prognosis']
-                    ).map((t, idx) => (
-                      <span key={idx} className="px-1.5 py-0.5 rounded-sm bg-accent/10 border border-accent/20 text-accent">
-                        {t}
+                      {(m.sources && m.sources.length > 0
+                        ? m.sources
+                        : ['Rotax 912 iSc Maintenance Manual (Line / Heavy)', 'DRDO PS-26054 FMECA Diagnostic Registry (ATA 72-00)']
+                      ).map((s, idx) => (
+                        <span key={idx} className="px-1.5 py-0.5 rounded-sm bg-white/5 border border-surface-border text-slate-300">
+                          {s}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="text-slate-500 uppercase tracking-wider font-semibold flex items-center gap-1">
+                        <Database className="w-3 h-3 text-accent" /> Tools:
                       </span>
-                    ))}
-                    <span className="ml-auto text-slate-500 text-[10px]">
-                      Phrased by {m.provider || 'Ollama / Qwen2.5 Local'}
-                    </span>
+                      {(m.tools && m.tools.length > 0
+                        ? m.tools
+                        : ['tool:get_engine_state', 'tool:get_hypotheses', 'tool:get_prognosis']
+                      ).map((t, idx) => (
+                        <span key={idx} className="px-1.5 py-0.5 rounded-sm bg-accent/10 border border-accent/20 text-accent">
+                          {t}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              )}
+              </div>
+            )
+          )}
+
+          {isLoading && (
+            <div className="flex items-start gap-2.5 animate-pulse">
+              <div className="w-7 h-7 rounded-sm bg-ai-accent-dim flex items-center justify-center text-ai-accent shrink-0">
+                <Bot className="w-3.5 h-3.5" />
+              </div>
+              <div className="bg-surface-card border border-surface-border rounded-sm p-3.5 flex items-center gap-2 text-slate-400">
+                <Loader2 className="w-4 h-4 animate-spin text-ai-accent" />
+                <span className="font-mono text-xs">MAVERICK synthesizing response with Ollama Qwen2.5...</span>
+              </div>
             </div>
-          </div>
-        ))}
+          )}
 
-        {isLoading && (
-          <div className="flex flex-col items-start space-y-1">
-            <div className="flex items-center gap-1.5 text-[10px] font-mono text-slate-500 px-1">
-              <span>MAVERICK AI</span>
-              <span>·</span>
-              <span>Synthesizing...</span>
-            </div>
-            <div className="bg-surface-card border border-surface-border rounded-sm p-3 flex items-center gap-2 text-slate-400">
-              <div className="w-2 h-2 rounded-full bg-accent animate-ping" />
-              <span className="font-mono text-xs">Querying local Qwen2.5 &amp; telemetry grounding...</span>
-            </div>
-          </div>
-        )}
+          <div ref={chatBottomRef} />
+        </div>
 
-        <div ref={chatBottomRef} />
-      </div>
+        {/* Quick Suggestion Chips */}
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-2 border-t border-surface-border/50">
+          <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider shrink-0 mr-1 flex items-center gap-1">
+            <Sparkles className="w-3 h-3 text-accent" /> Quick:
+          </span>
+          {QUICK_PROMPTS.map((prompt, idx) => (
+            <button
+              key={idx}
+              disabled={isLoading}
+              onClick={() => handleSendQuery(prompt)}
+              className="px-2.5 py-1 rounded-sm text-xs font-mono bg-surface-card border border-surface-border text-slate-300 hover:text-white hover:border-accent transition-colors shrink-0 whitespace-nowrap disabled:opacity-50"
+            >
+              {prompt}
+            </button>
+          ))}
+        </div>
 
-      {/* Quick Action Suggestion Chips */}
-      <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
-        <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider shrink-0 mr-1 flex items-center gap-1">
-          <Sparkles className="w-3 h-3 text-accent" /> Quick:
-        </span>
-        {QUICK_PROMPTS.map((prompt, idx) => (
-          <button
-            key={idx}
-            disabled={isLoading}
-            onClick={() => handleSendQuery(prompt)}
-            className="px-2.5 py-1 rounded-sm text-xs font-mono bg-surface-card border border-surface-border text-slate-300 hover:text-white hover:border-accent transition-colors shrink-0 whitespace-nowrap disabled:opacity-50"
-          >
-            {prompt}
-          </button>
-        ))}
-      </div>
-
-      {/* Input Bar: Text Query + Dictation Mode Button */}
-      <div className="flex items-center gap-2">
-        <div className="relative flex-1">
+        {/* Bottom Text Input Bar */}
+        <div className="flex items-center gap-2 pt-1">
           <input
             type="text"
             value={inputQuery}
@@ -708,47 +725,19 @@ export const UnifiedCopilot: React.FC<UnifiedCopilotProps> = ({ state, serverUrl
             onKeyDown={(e) => {
               if (e.key === 'Enter') handleSendQuery();
             }}
-            placeholder={
-              isDictating
-                ? 'Listening to your speech... words will appear here.'
-                : 'Ask MAVERICK any technical question, diagnostic check, or emergency procedure...'
-            }
-            className={`w-full bg-surface-card border rounded-sm px-3.5 py-2 text-xs text-white placeholder-slate-500 font-sans focus:outline-none focus:border-accent transition-colors ${
-              isDictating ? 'border-accent bg-accent-dim/20' : 'border-surface-border'
-            }`}
+            placeholder="Ask MAVERICK any technical question, diagnostic check, or emergency procedure..."
+            className="flex-1 bg-surface-card border border-surface-border rounded-sm px-3.5 py-2 text-xs text-white placeholder-slate-500 font-sans focus:outline-none focus:border-accent transition-colors"
           />
-          {isDictating && (
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5 text-[10px] font-mono text-accent">
-              <span className="w-1.5 h-1.5 rounded-full bg-accent animate-ping" />
-              <span>Recording</span>
-            </span>
-          )}
+
+          <button
+            onClick={() => handleSendQuery()}
+            disabled={isLoading || !inputQuery.trim()}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-sm bg-accent text-white text-xs font-mono font-medium hover:bg-accent/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-xs"
+          >
+            <Send className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Ask</span>
+          </button>
         </div>
-
-        {/* Mode 1: Dictation Mic Button (Writes what you speak into input bar) */}
-        <button
-          onClick={toggleDictation}
-          disabled={isLoading}
-          className={`flex items-center gap-1.5 px-3 py-2 rounded-sm border font-mono text-xs transition-all ${
-            isDictating
-              ? 'bg-critical-dim text-critical border-critical-muted shadow-sm shadow-red-500/20'
-              : 'bg-surface-card text-slate-400 border-surface-border hover:text-white hover:border-accent'
-          }`}
-          title={isDictating ? 'Stop dictation' : 'Dictate into input box'}
-        >
-          {isDictating ? <MicOff className="w-4 h-4 text-critical animate-pulse" /> : <Mic className="w-4 h-4" />}
-          <span className="text-[11px] hidden sm:inline">{isDictating ? 'Stop' : 'Dictate'}</span>
-        </button>
-
-        {/* Send Text Query Button */}
-        <button
-          onClick={() => handleSendQuery()}
-          disabled={isLoading || !inputQuery.trim()}
-          className="flex items-center gap-1.5 px-3.5 py-2 rounded-sm bg-accent text-white text-xs font-mono font-medium hover:bg-accent/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
-        >
-          <Send className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">Ask</span>
-        </button>
       </div>
     </div>
   );
