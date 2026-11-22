@@ -531,7 +531,7 @@ Decision Posterior: Confidence = α · RAG_Score + (1 - α) · Diagnostic_Poster
             <button
               onClick={handleMicClick}
               disabled={convState === 'THINKING'}
-              className={`relative z-10 w-24 h-24 rounded-full flex items-center justify-center border transition-all shadow-md cursor-pointer ${
+              className={`relative z-10 w-24 h-24 rounded-full flex items-center justify-center border transition-all duration-200 shadow-md cursor-pointer active:scale-95 hover:scale-102 ${
                 convState === 'LISTENING'
                   ? 'bg-emerald-500/10 border-emerald-500 text-emerald-400 shadow-emerald-500/20'
                   : convState === 'SPEAKING'
@@ -562,6 +562,17 @@ Decision Posterior: Confidence = α · RAG_Score + (1 - α) · Diagnostic_Poster
                 <Mic className="w-9 h-9 text-accent" />
               )}
             </button>
+
+            {/* Microanimation: dynamic audio equalizer wave bars */}
+            {(convState === 'LISTENING' || convState === 'SPEAKING') && (
+              <div className="absolute -bottom-3 flex items-center justify-center gap-1 z-20 pointer-events-none">
+                <span className={`w-1 rounded-full ${convState === 'LISTENING' ? 'bg-emerald-500' : 'bg-accent'} animate-wave-bar-1`} />
+                <span className={`w-1 rounded-full ${convState === 'LISTENING' ? 'bg-emerald-500' : 'bg-accent'} animate-wave-bar-2`} />
+                <span className={`w-1 rounded-full ${convState === 'LISTENING' ? 'bg-emerald-500' : 'bg-accent'} animate-wave-bar-3`} />
+                <span className={`w-1 rounded-full ${convState === 'LISTENING' ? 'bg-emerald-500' : 'bg-accent'} animate-wave-bar-4`} />
+                <span className={`w-1 rounded-full ${convState === 'LISTENING' ? 'bg-emerald-500' : 'bg-accent'} animate-wave-bar-5`} />
+              </div>
+            )}
           </div>
 
           {/* Dynamic Status Label under Center Mic */}

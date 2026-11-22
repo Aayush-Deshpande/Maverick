@@ -48,14 +48,14 @@ export const PanelInfoModal: React.FC<PanelInfoModalProps> = ({
       aria-labelledby={`info-title-${title.replace(/\s+/g, '-').toLowerCase()}`}
     >
       <div
-        className="surface-panel w-full max-w-xl max-h-[85vh] flex flex-col rounded-sm shadow-card-lg border border-surface-border text-slate-800 bg-[#f7f6f0] overflow-hidden"
+        className="surface-panel w-full max-w-xl max-h-[85vh] flex flex-col rounded-sm shadow-card-lg border border-surface-border text-slate-800 bg-[#f7f6f0] overflow-hidden animate-modal-pop"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Pinned Header */}
         <div className="flex items-start justify-between border-b border-surface-border p-3.5 sm:p-4 shrink-0 bg-[#f7f6f0]">
           <div>
             <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-[#68757a] font-mono">
-              <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+              <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
               <span>DRDO PS-26054 Telemetry &amp; Physics Specification</span>
             </div>
             <h3
@@ -73,7 +73,7 @@ export const PanelInfoModal: React.FC<PanelInfoModalProps> = ({
           <button
             type="button"
             onClick={() => setOpen(false)}
-            className="rounded-sm p-1.5 text-slate-400 hover:text-slate-800 hover:bg-black/10 transition-colors"
+            className="rounded-sm p-1.5 text-slate-400 hover:text-slate-800 hover:bg-black/10 active:scale-90 transition-all cursor-pointer"
             title="Close explanation (Esc)"
           >
             <X className="w-4 h-4" />
@@ -178,7 +178,7 @@ export const PanelInfoModal: React.FC<PanelInfoModalProps> = ({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="p-1 rounded-sm text-slate-400 hover:text-accent hover:bg-black/5 transition-colors"
+        className="p-1 rounded-sm text-slate-400 hover:text-accent hover:bg-black/5 active:scale-95 transition-all duration-150 inline-flex items-center justify-center cursor-pointer"
         title={`Specification & Calculation: ${title}`}
       >
         <Info className="w-3.5 h-3.5" />

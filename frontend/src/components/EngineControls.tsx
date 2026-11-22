@@ -69,7 +69,7 @@ Effective Power: P_avail = P_rated · δ · (TPS / 100)`}
               action: isEngineOn ? 'STOP_ENGINE' : 'START_ENGINE',
             })
           }
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-sm text-xs font-medium transition-colors ${
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-sm text-xs font-medium transition-all duration-150 active:scale-95 cursor-pointer ${
             isEngineOn
               ? 'bg-critical-dim text-critical border border-critical-muted hover:bg-critical-dim/70'
               : 'bg-success-dim text-success border border-success-muted hover:bg-success-dim/70'

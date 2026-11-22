@@ -101,9 +101,9 @@ Gearbox Harmonic: a_vib(t) = a_0 + α · sin(3 · ω_crank · t + φ)`}
             <button
               key={f.id}
               onClick={() => onCommand({ action: 'SET_FAULT', fault_id: f.id, ramp_duration_sec: 2.8, severity: 0.85 })}
-              className={`p-3 rounded-sm text-left transition-colors border relative flex flex-col justify-between group ${
+              className={`p-3 rounded-sm text-left transition-all duration-150 active:scale-[0.98] cursor-pointer border relative flex flex-col justify-between group ${
                 isTriggered
-                  ? 'bg-critical-dim border-critical-muted'
+                  ? 'bg-critical-dim border-critical-muted shadow-xs'
                   : 'bg-white/[0.02] border-surface-border hover:border-surface-border-strong hover:bg-white/[0.04]'
               }`}
             >

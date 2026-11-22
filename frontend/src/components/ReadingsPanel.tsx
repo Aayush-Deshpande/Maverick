@@ -39,7 +39,7 @@ interface ChannelSpec {
 const fmt = (v: number, d = 1) => (Number.isFinite(v) ? v.toFixed(d) : '--');
 
 const StatChip: React.FC<{ label: string; value: string; sub?: string }> = ({ label, value, sub }) => (
-  <div className="border border-surface-border bg-surface-card px-3 py-2 flex flex-col gap-0.5 min-w-0">
+  <div className="border border-surface-border bg-surface-card px-3 py-2 flex flex-col gap-0.5 min-w-0 hover:border-surface-border-strong hover:bg-surface-card-hover transition-all duration-150 rounded-xs">
     <span className="text-xs uppercase tracking-wider text-slate-500 truncate">{label}</span>
     <span className="text-sm font-mono font-semibold text-slate-100 truncate">{value}</span>
     {sub && <span className="text-xs font-mono text-slate-500 truncate">{sub}</span>}
@@ -134,7 +134,7 @@ export const ReadingsPanel: React.FC<ReadingsPanelProps> = ({ state }) => {
         </thead>
         <tbody>
           {list.map((r) => (
-            <tr key={r.key} className="border-b border-surface-border/60 last:border-0 hover:bg-white/[0.02]">
+            <tr key={r.key} className="border-b border-surface-border/60 last:border-0 hover:bg-black/[0.03] transition-colors">
               <td className="py-1.5 pr-2 font-medium text-slate-300">
                 {r.label}
                 <span className="text-slate-600 font-mono text-xs ml-1">({r.nominalRange} {r.unit})</span>

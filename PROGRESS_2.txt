@@ -29,9 +29,9 @@ Card:         M0-08i (Comprehensive (i) Calculation & Physics Specification Moda
                  - `TwinWorkspace.tsx`: Added (i) modal detailing 20 Hz 1D thermodynamic differential equations and virtual sensor bus mapping.
               7. Zero Guesswork: All equations and thresholds derived directly from `backend/physics/`, `backend/prognose/`, and `backend/twin/residual_detector.py`.
 Branch:       Beta
-Last commit:  d82b250 M0-08h: prevent page jumping to footer by scoping auto-scroll to inner chat container on new message only
-State:        52/52 Vitest passed, 0 tsc errors, 28/28 backend adapter/copilot/physics pytest passed. Vite build clean in 14.5s.
-Latest:       All GCS subtabs and panels now feature comprehensive, responsive (i) calculation modals explaining role, equations, flow, sensors, thresholds, and provenance.
+Last commit:  20f8cfe M0-08i: add comprehensive (i) calculation and physics specification modals across all GCS subtabs
+State:        52/52 Vitest passed, 0 tsc errors, 28/28 backend adapter/copilot/physics pytest passed. Vite builds clean (frontend 9.2s, docs_site 21.9s).
+Latest:       All GCS subtabs feature comprehensive (i) calculation modals, tactile active-press microanimations, modal-pop transitions, and live dynamic audio equalizer waves.
 Next step:    Phase 8 UX-02 (Time Machine mission timeline scrubber & historical replay).
 =====================================================================================================================
 Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produce yet (lambda, timing, BSFC, power,

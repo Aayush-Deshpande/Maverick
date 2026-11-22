@@ -124,37 +124,37 @@ export function App() {
           <div className="flex rounded-sm border border-surface-border bg-surface-card p-0.5 text-xs font-mono max-w-full overflow-x-auto no-scrollbar">
             <button
               onClick={() => setWorkspace('landing')}
-              className="rounded-sm px-2.5 py-1 text-slate-400 hover:text-white flex items-center gap-1 transition-colors shrink-0 whitespace-nowrap"
+              className="rounded-sm px-2.5 py-1 text-slate-400 hover:text-white active:scale-95 transition-all duration-150 flex items-center gap-1 shrink-0 whitespace-nowrap cursor-pointer"
               title="Return to Platform Overview"
             >
               <span className="text-xs">&larr;</span> Overview
             </button>
             <button
               onClick={() => setWorkspace('runtime')}
-              className={`rounded-sm px-2.5 sm:px-3 py-1 transition-colors shrink-0 whitespace-nowrap ${
+              className={`rounded-sm px-2.5 sm:px-3 py-1 transition-all duration-150 active:scale-95 shrink-0 whitespace-nowrap cursor-pointer ${
                 workspace === 'runtime'
                   ? 'bg-accent text-white font-medium shadow-sm'
-                  : 'text-slate-400 hover:text-white'
+                  : 'text-slate-400 hover:text-white hover:bg-surface-card-hover'
               }`}
             >
               Engine runtime
             </button>
             <button
               onClick={() => setWorkspace('twin')}
-              className={`rounded-sm px-2.5 sm:px-3 py-1 transition-colors shrink-0 whitespace-nowrap ${
+              className={`rounded-sm px-2.5 sm:px-3 py-1 transition-all duration-150 active:scale-95 shrink-0 whitespace-nowrap cursor-pointer ${
                 workspace === 'twin'
                   ? 'bg-accent text-white font-medium shadow-sm'
-                  : 'text-slate-400 hover:text-white'
+                  : 'text-slate-400 hover:text-white hover:bg-surface-card-hover'
               }`}
             >
               3D twin
             </button>
             <button
               onClick={() => setWorkspace('tactical')}
-              className={`rounded-sm px-2.5 sm:px-3 py-1 transition-colors shrink-0 whitespace-nowrap ${
+              className={`rounded-sm px-2.5 sm:px-3 py-1 transition-all duration-150 active:scale-95 shrink-0 whitespace-nowrap cursor-pointer ${
                 workspace === 'tactical'
                   ? 'bg-accent text-white font-medium shadow-sm'
-                  : 'text-slate-400 hover:text-white'
+                  : 'text-slate-400 hover:text-white hover:bg-surface-card-hover'
               }`}
             >
               Tactical GCS
@@ -214,9 +214,9 @@ export function App() {
                     <button
                       key={tab.id}
                       onClick={() => handleTabClick(tab.id)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-xs font-medium transition-colors whitespace-nowrap ${
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-xs font-medium transition-all duration-150 active:scale-95 whitespace-nowrap cursor-pointer ${
                         isActive
-                          ? 'bg-accent text-white shadow-sm'
+                          ? 'bg-accent text-white shadow-sm font-semibold'
                           : 'text-slate-400 hover:text-white hover:bg-white/5'
                       }`}
                     >
@@ -228,14 +228,14 @@ export function App() {
               </div>
 
               <div className="flex items-center gap-2 text-xs font-mono text-slate-400">
-                <Radio className="w-3.5 h-3.5 text-accent" />
+                <Radio className="w-3.5 h-3.5 text-accent animate-pulse" />
                 <span>DRDO PS-26054 CYBER-PHYSICAL STACK</span>
               </div>
             </div>
 
         {/* View 1: UAV Operator Tactical Flight Deck (VIS-02) */}
         {activeTab === 'OPERATOR' && (
-          <div className="space-y-4">
+          <div className="space-y-4 animate-fade-in">
             {/* Step 0 — mission parameters, alongside Step 1 — Fault Simulation */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <PanelErrorBoundary label="Engine controls">
@@ -268,30 +268,38 @@ export function App() {
 
         {/* View 2: Propulsion Engineer Console (VIS-03, INT-03, VIS-07, F13) */}
         {activeTab === 'PROPULSION' && (
-          <PanelErrorBoundary label="Propulsion engineer console">
-            <PropulsionEngineerPanel state={state} />
-          </PanelErrorBoundary>
+          <div className="animate-fade-in">
+            <PanelErrorBoundary label="Propulsion engineer console">
+              <PropulsionEngineerPanel state={state} />
+            </PanelErrorBoundary>
+          </div>
         )}
 
         {/* View 3: Ground Crew Maintenance Dashboard (VIS-04, CBM-01, F12, F14) */}
         {activeTab === 'MAINTENANCE' && (
-          <PanelErrorBoundary label="Maintenance dashboard">
-            <MaintenanceDashboardPanel state={state} serverUrl={serverUrl} />
-          </PanelErrorBoundary>
+          <div className="animate-fade-in">
+            <PanelErrorBoundary label="Maintenance dashboard">
+              <MaintenanceDashboardPanel state={state} serverUrl={serverUrl} />
+            </PanelErrorBoundary>
+          </div>
         )}
 
         {/* View 4: Unified Tactical AI Copilot (Conversational + Voice RAG) */}
         {activeTab === 'AI_COPILOT' && (
-          <PanelErrorBoundary label="Tactical AI copilot">
-            <UnifiedCopilot state={state} serverUrl={serverUrl} />
-          </PanelErrorBoundary>
+          <div className="animate-fade-in">
+            <PanelErrorBoundary label="Tactical AI copilot">
+              <UnifiedCopilot state={state} serverUrl={serverUrl} />
+            </PanelErrorBoundary>
+          </div>
         )}
 
-        {/* View 6: Historical Mission Replay */}
+        {/* View 5: Historical Mission Replay */}
         {activeTab === 'MISSION_REPLAY' && (
-          <PanelErrorBoundary label="Mission replay">
-            <MissionReplayScrubber serverUrl={serverUrl} />
-          </PanelErrorBoundary>
+          <div className="animate-fade-in">
+            <PanelErrorBoundary label="Mission replay">
+              <MissionReplayScrubber serverUrl={serverUrl} />
+            </PanelErrorBoundary>
+          </div>
         )}
         </>)}
         </Suspense>

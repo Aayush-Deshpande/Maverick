@@ -52,11 +52,31 @@ export default {
       },
       animation: {
         'fade-in': 'fadeIn 0.2s ease-out',
+        'modal-pop': 'modalPop 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
+        'pulse-ring': 'pulseRing 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite',
+        'wave-bar-1': 'waveBar 0.8s ease-in-out infinite alternate',
+        'wave-bar-2': 'waveBar 0.6s ease-in-out infinite alternate 0.15s',
+        'wave-bar-3': 'waveBar 0.9s ease-in-out infinite alternate 0.3s',
+        'wave-bar-4': 'waveBar 0.7s ease-in-out infinite alternate 0.1s',
+        'wave-bar-5': 'waveBar 0.85s ease-in-out infinite alternate 0.25s',
       },
       keyframes: {
         fadeIn: {
           '0%': { opacity: '0', transform: 'translateY(4px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        modalPop: {
+          '0%': { opacity: '0', transform: 'scale(0.97) translateY(4px)' },
+          '100%': { opacity: '1', transform: 'scale(1) translateY(0)' },
+        },
+        pulseRing: {
+          '0%': { transform: 'scale(0.95)', opacity: '0.8' },
+          '50%': { transform: 'scale(1.15)', opacity: '0.3' },
+          '100%': { transform: 'scale(1.3)', opacity: '0' },
+        },
+        waveBar: {
+          '0%': { height: '4px' },
+          '100%': { height: '18px' },
         },
       },
     },
