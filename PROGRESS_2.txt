@@ -17,7 +17,7 @@ Card:         M0-08c (Tactical GCS Fast Interactive Ramps, Dual Residuals, Dynam
               5. Blender standalone digital twin sync: in apps/blender_twin/standalone_digital_twin_app.py, mapped active_faults to client_state.active_commanded_fault_id (1..8) to automatically swoop the CAD camera to the fault station and pulse component emission shaders.
               6. Retired old ThreeJS twin: retired apps/threejs_twin to archive_tracked/threejs_twin per D10, D12, and D75; updated backend /app route to redirect to modern R3F twin (/#twin).
 Branch:       Beta
-Last commit:  be800da M0-08c: modernize tactical GCS with fast ramps, dual residuals, live analytics, and blender twin sync; archive threejs twin per D10
+Last commit:  8d67552 M0-08c: integrate engine copilot orchestrator in tactical GCS and harden redline calculations
 State:        52/52 Vitest passed, 0 tsc errors, 17/17 legacy adapter pytest passed, Uvicorn running on 8000.
 Latest:       Tactical GCS fully live and responsive; fast 2.8s ramps; Blender twin camera and shader auto-sync; apps/threejs_twin safely archived.
 Next step:    Phase 8 UX-02 (Time Machine mission timeline scrubber & historical replay).
