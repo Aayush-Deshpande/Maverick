@@ -90,7 +90,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                                 |
                             </span>
                             <span className="hidden sm:inline">
-                                STANAG 4586 LOI 2
+                                REAL-TIME DIGITAL TWIN
                             </span>
                         </div>
 
@@ -181,17 +181,10 @@ export const HomePage: React.FC<HomePageProps> = ({
                                         TECHNICAL DOCUMENTATION
                                     </h3>
                                     <p className="text-xs font-mono text-stone-500 uppercase tracking-wider">
-                                        Physics Core · FlyHash Novelty ·
-                                        Bayesian Diagnostics · Conformal RUL ·
-                                        Mission R(t)
+                                        Physics Models · Telemetry Ingest · Fault Diagnostics · Prognostics
                                     </p>
                                     <p className="text-sm text-stone-600 leading-relaxed pt-1">
-                                        The engineering architecture,
-                                        crank-angle slider-crank physics, 20 Hz
-                                        neuromorphic novelty detection, exact
-                                        Bayesian fault isolation, degradation
-                                        modeling, split conformal RUL bounds,
-                                        and flight mission reliability.
+                                        Complete architectural reference covering thermodynamic ODE solvers, 20 Hz CAN bus telemetry ingestion, Bayesian fault isolation, RUL estimation, and mission reliability.
                                     </p>
                                 </div>
 
@@ -200,23 +193,19 @@ export const HomePage: React.FC<HomePageProps> = ({
                                     <div className="flex items-center gap-2">
                                         <span className="size-1.5 rounded-full bg-stone-900" />
                                         <span>
-                                            Layer 2: Slider-crank Wiebe
-                                            thermodynamics and Δω(θ) torque
-                                            deficit
+                                            Thermodynamics: Slider-crank kinematics and Wiebe combustion
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <span className="size-1.5 rounded-full bg-stone-900" />
                                         <span>
-                                            Layer 3: 20 Hz continuous FlyHash
-                                            random projections
+                                            Telemetry: 20 Hz synchronous multi-sensor state estimation
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <span className="size-1.5 rounded-full bg-stone-900" />
                                         <span>
-                                            Layer 4 &amp; 5: MIL-STD-1629A exact
-                                            Bayesian network and conformal RUL
+                                            Diagnostics: Bayesian fault isolation and conformal RUL bounds
                                         </span>
                                     </div>
                                 </div>
@@ -248,19 +237,13 @@ export const HomePage: React.FC<HomePageProps> = ({
 
                                 <div className="space-y-2">
                                     <h3 className="text-2xl font-bold text-stone-950 group-hover:text-stone-700 transition-colors tracking-tight">
-                                        OUR SIH JOURNEY
+                                        ENGINEERING LOG &amp; JOURNEY
                                     </h3>
                                     <p className="text-xs font-mono text-stone-500 uppercase tracking-wider">
-                                        27 Research Studies · 66 Verified
-                                        Commits · Comprehensive Verification
-                                        Protocol
+                                        Development Timeline · Architecture Decisions · Field Notes
                                     </p>
                                     <p className="text-sm text-stone-600 leading-relaxed pt-1">
-                                        The engineering evolution of ANUMAAN
-                                        from problem statement analysis to
-                                        plant-model physics, dual-runtime
-                                        architecture, characterization testing,
-                                        and full multi-engine integration.
+                                        The chronological evolution of ANUMAAN: how the thermodynamic plant model was built, how the 20 Hz telemetry pipeline was stabilized, and how each engine was integrated.
                                     </p>
                                 </div>
 
@@ -269,24 +252,19 @@ export const HomePage: React.FC<HomePageProps> = ({
                                     <div className="flex items-center gap-2">
                                         <span className="size-1.5 rounded-full bg-stone-900" />
                                         <span>
-                                            Research First: 27 foundational
-                                            study documents before production
-                                            code
+                                            First principles: 0D/1D thermodynamics before neural heuristics
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <span className="size-1.5 rounded-full bg-stone-900" />
                                         <span>
-                                            Rigorous Benchmarking:
-                                            First-principles verification across
-                                            every subsystem
+                                            Architecture log: 70+ recorded architectural decisions
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <span className="size-1.5 rounded-full bg-stone-900" />
                                         <span>
-                                            Adversarial Scrutiny: Pytest
-                                            characterization regression suite
+                                            Automated test suite: 430+ unit, physics, and integration tests
                                         </span>
                                     </div>
                                 </div>
@@ -344,7 +322,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                                 {
                                     label: "FMECA TAXONOMY",
                                     val: "20 Modes",
-                                    sub: "MIL-STD-1629A RPN scored",
+                                    sub: "Critical failure effects",
                                 },
                                 {
                                     label: "MISSION RISK",
@@ -352,9 +330,9 @@ export const HomePage: React.FC<HomePageProps> = ({
                                     sub: "Monte Carlo hazard rate",
                                 },
                                 {
-                                    label: "INTEROPERABILITY",
-                                    val: "STANAG 4586",
-                                    sub: "Level of Interoperability 2",
+                                    label: "DATA INGEST",
+                                    val: "20 Hz Real-Time",
+                                    sub: "Synchronous CAN bus stream",
                                 },
                             ].map((stat, i) => (
                                 <div
@@ -508,28 +486,30 @@ export const HomePage: React.FC<HomePageProps> = ({
                             </div>
                         </div>
 
-                        <div className="lg:col-span-5 relative bg-stone-100 border border-stone-200 rounded-[2px] overflow-hidden">
-                            <img
-                                src="/assets/lineup/rotax_912is_sport.jpg"
-                                alt="Rotax 912 iS Sport engine, Blender render"
-                                className="w-full h-auto object-cover border-b border-stone-200"
-                            />
-                            <div className="p-3 bg-stone-50 border-b border-stone-200 text-[11px] font-mono text-stone-500 flex items-center justify-between">
-                                <span>Rotax 912 iS Sport · 100 hp Flat-4</span>
-                                <span className="uppercase text-stone-400">
-                                    Blender Render
-                                </span>
+                        <div className="lg:col-span-5 relative bg-stone-100 border border-stone-200 rounded-[2px] overflow-hidden shadow-xs group">
+                            <div className="relative overflow-hidden bg-stone-900">
+                                <img
+                                    src="/assets/lineup/rotax_912is_sport.jpg"
+                                    alt="Rotax 912 iS Sport aero-piston digital twin"
+                                    className="w-full h-auto object-cover group-hover:scale-[1.02] transition-transform duration-500 ease-out"
+                                />
+                                <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2 py-1 bg-stone-900/80 backdrop-blur-xs border border-white/20 rounded-[2px] text-white font-mono text-[10px] uppercase tracking-wider">
+                                    <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                    <span>Primary Twin Ref</span>
+                                </div>
                             </div>
-                            <img
-                                src="/assets/blender/engine_master_hero.png"
-                                alt="ANUMAAN Master Engine Twin CAD Model"
-                                className="w-full h-auto object-cover hover:scale-102 transition-transform duration-300"
-                            />
-                            <div className="p-3 bg-stone-50 border-t border-stone-200 text-[11px] font-mono text-stone-500 flex items-center justify-between">
-                                <span>Blender Master Model: Rotax 912 iS</span>
-                                <span className="uppercase text-stone-400">
-                                    Draco GLB
-                                </span>
+                            <div className="p-3.5 bg-stone-50 border-t border-stone-200 text-[11px] font-mono text-stone-600 flex items-center justify-between">
+                                <div>
+                                    <span className="font-bold text-stone-900 block">Rotax 912 iS Sport · 100 hp Flat-4</span>
+                                    <span className="text-[10px] text-stone-500">1,352 cm³ · Dual FADEC EFI · Boxer Layout</span>
+                                </div>
+                                <button
+                                    onClick={onOpenModelViewer}
+                                    className="px-2.5 py-1 bg-stone-900 hover:bg-stone-800 text-white rounded-[2px] text-[10px] uppercase tracking-wider font-semibold transition-colors flex items-center gap-1"
+                                >
+                                    <Box size={12} />
+                                    <span>Inspect 3D</span>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -652,7 +632,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                             specs={[
                                 {
                                     label: "Taxonomy",
-                                    value: "MIL-STD-1629A Failure Modes",
+                                    value: "Ranked Failure Modes",
                                 },
                                 {
                                     label: "Evidence Input",
@@ -1058,7 +1038,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                                     CHAPTER 01 // GENESIS
                                 </span>
                                 <span className="font-mono text-xs text-stone-400">
-                                    66 COMMITS ANALYZED
+                                    DEVELOPMENT CHRONICLE
                                 </span>
                             </div>
                             <h3 className="text-xl font-bold text-stone-950 tracking-tight">

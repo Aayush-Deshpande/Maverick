@@ -112,7 +112,7 @@ export const DocArticlePage: React.FC<DocArticlePageProps> = ({ slug, onNavigate
 
   return (
     <div className="min-h-screen bg-[#f6f5f3] text-[#1c1917] font-sans">
-      <div className="max-w-[1280px] mx-auto bg-[#fafaf9] sm:border-x border-stone-200/90 shadow-xs relative">
+      <div className="max-w-[1400px] mx-auto bg-[#fafaf9] sm:border-x border-stone-200/90 shadow-xs relative">
         {/* Mobile Navigation Drawer Overlay */}
         {mobileNavOpen && (
           <div className="lg:hidden fixed inset-0 z-50 bg-stone-900/40 backdrop-blur-xs flex">
@@ -218,7 +218,7 @@ export const DocArticlePage: React.FC<DocArticlePageProps> = ({ slug, onNavigate
           </aside>
 
           {/* MAIN ARTICLE AREA */}
-          <main className="lg:col-span-9 xl:col-span-6 min-w-0 max-w-full overflow-x-clip py-2">
+          <main className="lg:col-span-9 xl:col-span-7 min-w-0 max-w-full overflow-visible py-2 animate-fade-in">
             {/* Mobile Nav Trigger Bar */}
             <div className="lg:hidden flex items-center justify-between p-2.5 mb-6 bg-white border border-stone-200 rounded-[2px] font-mono text-xs">
               <span className="text-stone-600 font-semibold uppercase text-[11px] truncate mr-2">
@@ -300,8 +300,8 @@ export const DocArticlePage: React.FC<DocArticlePageProps> = ({ slug, onNavigate
                   <span className="font-bold text-stone-900">VERIFIED CODE</span>
                 </div>
                 <div className="p-2.5 border border-stone-200 rounded-[2px] bg-stone-50">
-                  <span className="block text-[9px] uppercase tracking-wider text-stone-500 font-semibold">Architecture</span>
-                  <span className="font-bold text-stone-900 truncate block">{article.osacbmLayer}</span>
+                  <span className="block text-[9px] uppercase tracking-wider text-stone-500 font-semibold">Subsystem</span>
+                  <span className="font-bold text-stone-900 truncate block">{article.osacbmLayer || 'Digital Twin Core'}</span>
                 </div>
                 <div className="p-2.5 border border-stone-200 rounded-[2px] bg-stone-50">
                   <span className="block text-[9px] uppercase tracking-wider text-stone-500 font-semibold">Engine Scope</span>
@@ -320,6 +320,8 @@ export const DocArticlePage: React.FC<DocArticlePageProps> = ({ slug, onNavigate
                 remarkPlugins={[remarkGfm, remarkMath]}
                 rehypePlugins={[rehypeKatex]}
                 components={{
+                  // Prevent outer <pre> from wrapping custom code & diagram containers
+                  pre: ({ children }: any) => <>{children}</>,
                   // Custom heading IDs for on-page table of contents
                   h2: ({ children }) => {
                     const text = React.Children.toArray(children).join('');
@@ -345,12 +347,12 @@ export const DocArticlePage: React.FC<DocArticlePageProps> = ({ slug, onNavigate
                     if (!inline && match) {
                       const codeId = `code-${Math.random().toString(36).substring(2, 7)}`;
                       return (
-                        <div className="relative group/code my-4">
-                          <div className="flex items-center justify-between px-3 py-1.5 bg-stone-900 text-stone-400 font-mono text-[10px] uppercase border-b border-stone-800 rounded-t-sm">
+                        <div className="relative group/code my-5 rounded-lg border border-stone-800 bg-stone-950 overflow-hidden shadow-xs">
+                          <div className="flex items-center justify-between px-3.5 py-1.5 bg-stone-900 text-stone-400 font-mono text-[10px] uppercase border-b border-stone-800">
                             <span>{match[1]}</span>
                             <button
                               onClick={() => handleCopyCode(codeText, codeId)}
-                              className="hover:text-white transition-colors flex items-center gap-1"
+                              className="hover:text-white transition-colors flex items-center gap-1 font-mono"
                               title="Copy code"
                             >
                               {copiedCodeId === codeId ? (
@@ -366,7 +368,7 @@ export const DocArticlePage: React.FC<DocArticlePageProps> = ({ slug, onNavigate
                               )}
                             </button>
                           </div>
-                          <pre className="!mt-0 !rounded-t-none">
+                          <pre className="!m-0 p-4 overflow-x-auto text-[13px] leading-relaxed text-stone-200 font-mono bg-stone-950 custom-scrollbar">
                             <code className={className} {...props}>
                               {children}
                             </code>
@@ -401,36 +403,47 @@ export const DocArticlePage: React.FC<DocArticlePageProps> = ({ slug, onNavigate
                       </a>
                     );
                   },
-                  // Custom Table Component
+                  // Custom Table Component with custom scrollbar
                   table: ({ children }: any) => (
-                    <div className="my-6 w-full max-w-full overflow-x-auto border border-stone-300 rounded-[2px] shadow-xs bg-white">
-                      <table className="w-full text-left border-collapse text-xs whitespace-normal table-auto min-w-[620px]">
+                    <div className="my-6 w-full max-w-full overflow-x-auto rounded-lg border border-stone-200 bg-white shadow-xs custom-scrollbar">
+                      <table className="w-full text-left border-collapse text-xs whitespace-normal table-auto min-w-[660px]">
                         {children}
                       </table>
                     </div>
                   ),
                   // Custom Table Header
                   th: ({ children }: any) => (
-                    <th className="p-3 bg-stone-100 font-mono text-[10px] text-stone-800 uppercase tracking-wider font-semibold border-b border-stone-200">
+                    <th className="p-3.5 bg-stone-100/90 font-mono text-[10px] text-stone-800 uppercase tracking-wider font-semibold border-b border-stone-200">
                       {children}
                     </th>
                   ),
                   // Custom Table Cell
                   td: ({ children }: any) => (
-                    <td className="p-3 border-b border-stone-100 text-stone-700 font-sans">
+                    <td className="p-3.5 border-b border-stone-100 text-stone-700 font-sans hover:bg-stone-50/60 transition-colors">
                       {children}
                     </td>
                   ),
-                  // Images
+                  // Images with application window styling
                   img: ({ src, alt }: any) => (
-                    <figure className="my-6 border border-stone-200 bg-white rounded-[2px] overflow-hidden">
-                      <img src={src} alt={alt} className="w-full h-auto object-cover max-h-[460px]" />
+                    <span className="block my-6 rounded-lg border border-stone-200 bg-white overflow-hidden shadow-xs">
+                      <span className="flex items-center justify-between px-3.5 py-2 bg-stone-50 border-b border-stone-200 font-mono text-[11px] text-stone-600">
+                        <span className="flex items-center gap-1.5">
+                          <span className="size-2 rounded-full bg-stone-300 inline-block" />
+                          <span className="size-2 rounded-full bg-stone-300 inline-block" />
+                          <span className="size-2 rounded-full bg-stone-300 inline-block" />
+                          <span className="ml-2 font-medium text-stone-800 truncate max-w-md inline-block">{alt || 'Telemetry & Diagnostics View'}</span>
+                        </span>
+                        <span className="text-[10px] text-stone-600 uppercase font-semibold">Live System Capture</span>
+                      </span>
+                      <span className="bg-stone-900 flex items-center justify-center p-1 block">
+                        <img src={src} alt={alt} className="w-full h-auto object-contain max-h-[600px] rounded-xs" />
+                      </span>
                       {alt && (
-                        <figcaption className="p-2.5 bg-stone-50 border-t border-stone-200 text-xs text-stone-600 font-mono text-center">
+                        <span className="p-2.5 bg-stone-50 border-t border-stone-200 text-xs text-stone-600 font-sans text-center block">
                           {alt}
-                        </figcaption>
+                        </span>
                       )}
-                    </figure>
+                    </span>
                   ),
                 }}
               >

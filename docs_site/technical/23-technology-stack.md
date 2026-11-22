@@ -191,25 +191,39 @@ $$\mathbf{w}_{\text{global}}^{t+1} = \mathbf{w}_{\text{global}}^t + \sum_{k=1}^K
 
 Where $\mathbf{M}_k^t$ is a pseudo-random binary subnet mask synchronized via a shared cryptographic seed. Transmitting only low-rank matrices ($r=8$) reduces the payload to **$< 120\text{ Kilobytes}$ per round**, achieving a $75\%$ communication reduction compared to full-model federation.
 
-### Differential Privacy & Anti-Reconstruction Guarantees
+### Differential Privacy and Anti-Reconstruction Guarantees
 
-To ensure an adversary capturing network traffic cannot reconstruct operational flight routes, the local depot training pipeline enforces $(\epsilon, \delta)$-Differential Privacy via Gaussian perturbation:
+To ensure an adversary capturing network traffic cannot reconstruct operational flight routes, the local depot training pipeline enforces $(\epsilon, \delta)$-Differential Privacy via Gaussian perturbation.
 
-1. **L2 Gradient Clipping:** $\Delta \mathbf{w}_k^{\text{clip}} = \frac{\Delta \mathbf{w}_k}{\max\left(1, \frac{\|\Delta \mathbf{w}_k\|_2}{C}\right)}$ with clipping bound $C = 1.0$.
-2. **Gaussian Noise Addition:** $\Delta \mathbf{w}_k^{\text{priv}} = \Delta \mathbf{w}_k^{\text{clip}} + \mathcal{N}\left(\mathbf{0}, \sigma^2 \mathbf{I}\right)$, where:
+#### 1. L2 Gradient Clipping
+Local gradient updates are clipped to a deterministic L2 sphere with clipping bound $C = 1.0$:
+
+$$\Delta \mathbf{w}_k^{\text{clip}} = \frac{\Delta \mathbf{w}_k}{\max\left(1, \; \frac{\|\Delta \mathbf{w}_k\|_2}{C}\right)}$$
+
+#### 2. Gaussian Noise Addition
+Calibrated Gaussian noise is injected into the bounded updates:
+
+$$\Delta \mathbf{w}_k^{\text{priv}} = \Delta \mathbf{w}_k^{\text{clip}} + \mathcal{N}\left(\mathbf{0}, \; \sigma^2 \mathbf{I}\right)$$
+
+where the calibrated standard deviation $\sigma$ is computed from privacy parameters:
+
 $$\sigma = \frac{C \sqrt{2 \ln(1.25 / \delta)}}{\epsilon}, \quad \epsilon = 1.0, \quad \delta = 10^{-5}$$
 
-This provides a formal mathematical guarantee:
+This guarantees mathematical differential privacy across all federated aggregations:
+
 $$\mathbb{P}(\mathcal{M}(\mathcal{D}) \in \mathcal{S}) \le e^{\epsilon} \cdot \mathbb{P}(\mathcal{M}(\mathcal{D}') \in \mathcal{S}) + \delta$$
-**No intelligence regarding combat patrol altitudes, maneuvers, or mission tempo can be reverse-engineered from the shared weights.**
+
+No operational intelligence regarding combat patrol altitudes, sortie maneuvers, or loiter tempo can be reverse-engineered from shared model weights.
 
 ### Fleet Population Survival Analytics
 
-At the DRDO Central Fleet Repository, aggregated flight hours update non-parametric and parametric component survival curves:
+At the DRDO Central Fleet Repository, aggregated flight hours update non-parametric and parametric component survival curves via proportional hazards:
+
 $$S(t \mid \mathbf{z}) = \left[ S_0(t) \right]^{\exp(\boldsymbol{\beta}^T \mathbf{z})}$$
 
-Where $\mathbf{z}$ represents operational environmental covariates:
-$$\mathbf{z} = \begin{bmatrix} \text{Mean Turbine Inlet Temp } \overline{TIT} & \text{High-Hot Takeoff Cycles} & \text{Silica Dust Index} \end{bmatrix}^T$$
+where $\mathbf{z}$ represents operational environmental covariates:
+
+$$\mathbf{z} = \begin{bmatrix} \overline{TIT} \\ N_{\text{high-hot}} \\ I_{\text{silica}} \end{bmatrix} = \begin{bmatrix} \text{Mean Turbine Inlet Temperature} \\ \text{High-Hot Takeoff Cycles} \\ \text{Silica Dust Ingestion Index} \end{bmatrix}$$
 
 If airframe units operating from AFS Jodhpur accumulate high-heat cycles, their component survival curves derate automatically, scheduling predictive depot inspections before mechanical degradation manifests in flight.
 
