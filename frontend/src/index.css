@@ -302,7 +302,6 @@ input[type="range"] {
   font-family: var(--font-mono);
   color: #101b20;
 }
-}
 
 .assistant-markdown pre code {
   background: transparent;
