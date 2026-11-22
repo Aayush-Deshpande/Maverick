@@ -6,18 +6,20 @@ Update the RESUME HERE block at every commit and at the end of every session.
 Part 1 historical session log (Phases 0 through 7, 19 Nov - 22 Nov 2026) is preserved in PROGRESS.txt.
 
 =====================================================================================================================
-RESUME HERE  (last updated 22 Nov 2026, Phase 0/8 M0-08g Inline Aerospace Voice UX & AI Slop Removal)
+RESUME HERE  (last updated 22 Nov 2026, Phase 0/8 M0-08h Modern Sans-Serif Typography & Dynamic Center Mic Copilot)
 =====================================================================================================================
 Phase:        Phase 0 / Phase 8 (Platform Harmonization, Tactical AI Copilot & Voice UX).
-Card:         M0-08g (Remove Voice Orb Slop, Eliminate Separate Voice Modal, Fix Web Speech Closure Bug, and Restore Inline Conversation Transcript):
-              1. Removed AI Slop: Completely eliminated the dark modal overlay, glowing neon orb, and fake animated equalizer bars (`|||||||`).
-              2. Seamless Inline Chat Integration: Conversational Voice Mode now operates directly within the primary flight deck chat feed. Operator queries and assistant responses post as standard, rich transcript bubbles with `AerospaceMarkdown`, ATA diagnostic tags, citations, live telemetry tools (`tool:get_engine_state`, etc.), and model attribution (`Ollama / Qwen2.5 Local`).
-              3. Web Speech Recognition Bug Fix: Fixed stale closure bug in `listenNextConversationalTurn` by utilizing mutable `turnTranscriptRef` and `dictTranscriptRef`. Recognition now captures spoken queries without dropping audio or freezing.
-              4. Quality of Life & State Controls: Added an inline voice status bar with real-time state feedback (LISTENING, THINKING, SPEAKING, with live transcript previews), an instant Interrupt/Mute button, audio output mute/unmute toggle, and dictation mic button.
+Card:         M0-08h (Eradicate Pixel Code Font Slop, Restore Clean Sans-Serif Typography, and Adopt Central Dynamic Mic Voice Copilot Layout):
+              1. Removed Pixel Font Slop: Eradicated `'Pixel Code', monospace` from `.assistant-markdown` in `index.css`. All assistant markdown prose, headings, bullet lists, and paragraphs now render in clean, modern, high-legibility sans-serif (`var(--font-sans)` Inter / system-ui), with monospace strictly reserved for actual code tokens and numeric tables.
+              2. Adopted Center Dynamic Mic Layout: Overhauled `UnifiedCopilot.tsx` to use the purposeful Voice Mission Copilot design requested by the user:
+                 - Top control bar: `STT: READY`, `TTS: READY`, `LLM: READY (Ollama)`, `Warm up`, and `Clear`.
+                 - Continuous mode toggle card with explanatory subtext and state toggle.
+                 - Dynamic center circular mic button with distinct visual states: Idle (`Tap the mic to talk`), Listening (pulsing green with live hearing preview), Thinking (amber spinner), and Speaking (cyan waves with an instant `[Interrupt / Stop Speaking]` button), alongside an Audio Mute toggle.
+              3. Full Normal Chat Transcript Below: The lower stage houses the full, normal multi-turn chat feed with rich `AerospaceMarkdown`, ATA diagnostic tags, sources, tools, quick prompt chips, and a text input bar for operator typing.
 Branch:       Beta
-Last commit:  177739a M0-08g: remove voice orb slop, eliminate separate voice modal, fix Web Speech closure bug, and restore inline conversation transcript
+Last commit:  538357b M0-08h: eradicate pixel code font slop, restore clean sans-serif typography, and adopt central dynamic mic voice copilot layout
 State:        52/52 Vitest passed, 0 tsc errors, 26/26 backend adapter/copilot pytest passed. Backend on :8000, Frontend on :5173, Docs on :5174, Ollama on :11434.
-Latest:       Tactical AI Copilot features clean inline voice modes (Dictation & Hands-Free continuous conversation) fully adhering to the light-mode aerospace telemetry design system.
+Latest:       Tactical AI Copilot layout matches the desired Voice Mission Copilot architecture with clean sans-serif typography, dynamic center mic state management, and full multi-turn chat streaming.
 Next step:    Phase 8 UX-02 (Time Machine mission timeline scrubber & historical replay).
 =====================================================================================================================
 Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produce yet (lambda, timing, BSFC, power,
