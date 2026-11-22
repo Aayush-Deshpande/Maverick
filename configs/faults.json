@@ -83,17 +83,17 @@
         },
         "rotax_914": {
           "now": [
-            "cylinder_bank_unverified"
+            "cylinder_head_{cyl}"
           ],
-          "marker": true,
-          "marker_for": "cylinder {cyl} head and plugs"
+          "marker": false,
+          "marker_for": null
         },
         "rotax_915is": {
           "now": [
-            "main_engine_MERGED"
+            "cylinder_head_{cyl}"
           ],
-          "marker": true,
-          "marker_for": "cylinder {cyl}"
+          "marker": false,
+          "marker_for": null
         }
       },
       "channel_scope": null
@@ -156,17 +156,17 @@
         },
         "rotax_914": {
           "now": [
-            "cylinder_bank_unverified"
+            "cylinder_head_{cyl}"
           ],
-          "marker": true,
-          "marker_for": "cylinder {cyl} head and plugs"
+          "marker": false,
+          "marker_for": null
         },
         "rotax_915is": {
           "now": [
-            "main_engine_MERGED"
+            "cylinder_head_{cyl}"
           ],
-          "marker": true,
-          "marker_for": "cylinder {cyl}"
+          "marker": false,
+          "marker_for": null
         },
         "austro_ae300": {
           "now": [
@@ -246,24 +246,30 @@
       "components": {
         "rotax_912is": {
           "now": [
-            "crankcase_cylinders_base"
+            "covers"
           ],
           "marker": true,
-          "marker_for": "cylinder heads"
+          "marker_for": "cylinder {cyl}"
         },
         "rotax_914": {
           "now": [
-            "cylinder_bank_unverified"
+            "cylinder_head_1",
+            "cylinder_head_2",
+            "cylinder_head_3",
+            "cylinder_head_4"
           ],
           "marker": false,
           "marker_for": null
         },
         "rotax_915is": {
           "now": [
-            "main_engine_MERGED"
+            "cylinder_head_1",
+            "cylinder_head_2",
+            "cylinder_head_3",
+            "cylinder_head_4"
           ],
-          "marker": true,
-          "marker_for": "cylinder heads"
+          "marker": false,
+          "marker_for": null
         }
       },
       "channel_scope": null
@@ -436,14 +442,14 @@
             "fuel_pump"
           ],
           "marker": true,
-          "marker_for": "injector {cyl} / fuel rail"
+          "marker_for": "injector of cylinder {cyl}"
         },
         "rotax_915is": {
           "now": [
-            "main_engine_MERGED"
+            "intake_manifold"
           ],
           "marker": true,
-          "marker_for": "injector {cyl}"
+          "marker_for": "injector of cylinder {cyl}"
         }
       },
       "channel_scope": null
@@ -633,14 +639,14 @@
             "fuel_pump"
           ],
           "marker": true,
-          "marker_for": "injector {cyl} / fuel rail"
+          "marker_for": "injector of cylinder {cyl}"
         },
         "rotax_915is": {
           "now": [
-            "main_engine_MERGED"
+            "intake_manifold"
           ],
           "marker": true,
-          "marker_for": "injector {cyl}"
+          "marker_for": "injector of cylinder {cyl}"
         }
       },
       "channel_scope": null,
@@ -1136,13 +1142,15 @@
           "now": [
             "intake_manifold"
           ],
-          "marker": false,
-          "marker_for": null
+          "marker": true,
+          "marker_for": "air filter"
         },
         "rotax_915is": {
-          "now": [],
+          "now": [
+            "intake_manifold"
+          ],
           "marker": true,
-          "marker_for": "airbox / air filter"
+          "marker_for": "air filter"
         },
         "austro_ae300": {
           "now": [
@@ -1156,7 +1164,7 @@
             "intake_manifold"
           ],
           "marker": true,
-          "marker_for": "airbox / air filter"
+          "marker_for": "air filter"
         }
       },
       "channel_scope": null
@@ -1309,15 +1317,14 @@
       "components": {
         "rotax_914": {
           "now": [
-            "turbo_turbine"
+            "wastegate"
           ],
-          "marker": true,
-          "marker_for": "wastegate (the 'wastegate' objects are missegmented)"
+          "marker": false,
+          "marker_for": null
         },
         "rotax_915is": {
           "now": [
-            "overboost_valve",
-            "magneto_valve_block"
+            "turbocharger"
           ],
           "marker": false,
           "marker_for": null
@@ -1392,15 +1399,14 @@
       "components": {
         "rotax_914": {
           "now": [
-            "turbo_turbine"
+            "wastegate"
           ],
-          "marker": true,
-          "marker_for": "wastegate (the 'wastegate' objects are missegmented)"
+          "marker": false,
+          "marker_for": null
         },
         "rotax_915is": {
           "now": [
-            "overboost_valve",
-            "magneto_valve_block"
+            "turbocharger"
           ],
           "marker": false,
           "marker_for": null
@@ -1656,21 +1662,21 @@
       "components": {
         "rotax_912is": {
           "now": [
-            "cooling_air_baffle"
+            "coolant_hoses"
+          ],
+          "marker": true,
+          "marker_for": "cylinder {cyl} head cooling"
+        },
+        "rotax_914": {
+          "now": [
+            "cylinder_head_{cyl}"
           ],
           "marker": false,
           "marker_for": null
         },
-        "rotax_914": {
-          "now": [
-            "cylinder_bank_unverified"
-          ],
-          "marker": true,
-          "marker_for": "baffles"
-        },
         "rotax_915is": {
           "now": [
-            "air_baffles"
+            "cylinder_head_{cyl}"
           ],
           "marker": false,
           "marker_for": null
@@ -1732,8 +1738,8 @@
           "now": [
             "coolant_hoses"
           ],
-          "marker": false,
-          "marker_for": null
+          "marker": true,
+          "marker_for": "water pump"
         },
         "rotax_914": {
           "now": [
@@ -1813,27 +1819,37 @@
       "description": "radiator blockage",
       "components": {
         "rotax_912is": {
-          "now": [],
+          "now": [
+            "coolant_hoses"
+          ],
           "marker": true,
           "marker_for": "radiator"
         },
         "rotax_914": {
-          "now": [],
+          "now": [
+            "coolant_lines"
+          ],
           "marker": true,
           "marker_for": "radiator"
         },
         "rotax_915is": {
-          "now": [],
+          "now": [
+            "coolant_hoses"
+          ],
           "marker": true,
           "marker_for": "radiator"
         },
         "austro_ae300": {
-          "now": [],
+          "now": [
+            "water_pump"
+          ],
           "marker": true,
           "marker_for": "radiator"
         },
         "vrde_jayem_2_2l": {
-          "now": [],
+          "now": [
+            "water_pump"
+          ],
           "marker": true,
           "marker_for": "radiator"
         }
@@ -1891,7 +1907,9 @@
       "description": "thermostat stuck",
       "components": {
         "austro_ae300": {
-          "now": [],
+          "now": [
+            "water_pump"
+          ],
           "marker": true,
           "marker_for": "thermostat"
         },
@@ -2132,7 +2150,9 @@
       "description": "oil cooler blockage",
       "components": {
         "rotax_912is": {
-          "now": [],
+          "now": [
+            "oil_tank"
+          ],
           "marker": true,
           "marker_for": "oil cooler"
         },
@@ -2217,10 +2237,10 @@
       "components": {
         "rotax_912is": {
           "now": [
-            "crankcase_cylinders_base"
+            "engine_mount"
           ],
-          "marker": false,
-          "marker_for": null
+          "marker": true,
+          "marker_for": "crankcase"
         },
         "rotax_914": {
           "now": [
@@ -2231,7 +2251,7 @@
         },
         "rotax_915is": {
           "now": [
-            "main_engine_MERGED"
+            "crankcase"
           ],
           "marker": false,
           "marker_for": null
@@ -2391,9 +2411,11 @@
       "description": "propeller imbalance",
       "components": {
         "rotax_912is": {
-          "now": [],
+          "now": [
+            "gearbox"
+          ],
           "marker": true,
-          "marker_for": "propeller flange"
+          "marker_for": "prop flange"
         },
         "rotax_914": {
           "now": [
@@ -2546,24 +2568,24 @@
       "components": {
         "rotax_912is": {
           "now": [
-            "crankcase_cylinders_base"
+            "wiring_harness"
           ],
           "marker": true,
-          "marker_for": "cylinder {cyl}"
+          "marker_for": "spark plug / coil of cylinder {cyl}"
         },
         "rotax_914": {
           "now": [
-            "cylinder_bank_unverified"
+            "cylinder_head_{cyl}"
           ],
           "marker": false,
           "marker_for": null
         },
         "rotax_915is": {
           "now": [
-            "main_engine_MERGED"
+            "cylinder_head_{cyl}"
           ],
-          "marker": true,
-          "marker_for": "cylinder {cyl}"
+          "marker": false,
+          "marker_for": null
         },
         "austro_ae300": {
           "now": [
@@ -2630,22 +2652,24 @@
       "components": {
         "rotax_912is": {
           "now": [
-            "exhaust"
+            "wiring_harness"
           ],
-          "marker": false,
-          "marker_for": null
+          "marker": true,
+          "marker_for": "spark plug / coil of cylinder {cyl}"
         },
         "rotax_914": {
           "now": [
-            "exhaust"
+            "cylinder_head_{cyl}"
           ],
           "marker": false,
           "marker_for": null
         },
         "rotax_915is": {
-          "now": [],
-          "marker": true,
-          "marker_for": "exhaust"
+          "now": [
+            "cylinder_head_{cyl}"
+          ],
+          "marker": false,
+          "marker_for": null
         },
         "austro_ae300": {
           "now": [
@@ -3070,7 +3094,8 @@
         },
         "vrde_jayem_2_2l": {
           "now": [
-            "ecu_lane_a"
+            "ecu_lane_a",
+            "ecu_lane_b"
           ],
           "marker": false,
           "marker_for": null

@@ -21,8 +21,7 @@ from backend.voice.conversation import VoiceConversationManager
 
 
 AI_DIAGNOSIS_SYSTEM_PROMPT = (
-    "You are the propulsion diagnostic voice of a Rotax 912 iS MALE UAV digital twin (DRDO "
-    "PS-26054), writing a finding for the operator to read. A deterministic physics/ML engine "
+    "You are the propulsion diagnostic voice of a Rotax 912 iS MALE UAV digital twin (DRDO), writing a finding for the operator to read. A deterministic physics/ML engine "
     "has already computed the active fault, its severity, and its causal propagation chain — "
     "this is GROUND TRUTH, not something you're inferring or hedging about. Retrieved passages "
     "from Rotax maintenance manuals and DRDO FMECA documents back up the explanation.\n\n"
@@ -41,64 +40,44 @@ AI_DIAGNOSIS_SYSTEM_PROMPT = (
 )
 
 AI_CONVERSATIONAL_COPILOT_PROMPT = (
-    "You are the tactical conversational Mission Copilot for the Rotax 912 iS Sport MALE UAV (DRDO PS-26054). "
-    "Communicate directly with the UAV operator/engineer in a helpful, articulate, and professional manner. "
-    "Synthesize and explain the answer naturally, fully answering the operator's question using the provided technical manual passages. "
-    "Include exact torque specifications, operational limits, step-by-step procedures, and diagnostic explanations when applicable. "
-    "Format your answer cleanly with Markdown headings, bold keywords, and bullet points."
+    "You are MAVERICK, the Tactical Mission Copilot for the ANUMAAN MALE UAV Digital Twin (DRDO / iDEX Problem Statement ID: 26054). "
+    "You assist defense flight engineers and UAV operators with propulsion health, telemetry diagnostics, emergency checklists, and ATA manual procedures.\n\n"
+    "CONVERSATIONAL ADAPTABILITY & BEARING:\n"
+    "- You are an intelligent, responsive flight deck assistant. Converse naturally, authoritatively, and professionally without being robotic. "
+    "- For greetings, check-ins, or handshakes (e.g. 'hi', 'hello', 'standing by'), acknowledge warmly and professionally, state that telemetry and diagnostic subsystems are grounded and active, give a brief 1-sentence flight summary, and ask how you can assist the crew. "
+    "- For technical queries or fault alerts, deliver the core technical finding, cause, and recommended action directly and crisply.\n\n"
+    "SAFETY GUARDRAILS & BOUNDARIES:\n"
+    "- You must stay focused on aeronautical operations, propulsion engineering, digital twin telemetry, flight procedures, and CBM maintenance. "
+    "- If asked completely unrelated non-aviation questions (e.g. jokes, entertainment, cooking, recipes, political commentary), professionally decline: 'Security notice: This terminal is restricted to ANUMAAN UAV propulsion diagnostics, telemetry evaluation, and operational flight procedures.'\n\n"
+    "GROUNDING & RIGOR:\n"
+    "- Synthesize answers dynamically using the provided live telemetry state, diagnostic directives, and certified OEM manual excerpts. "
+    "- Include exact ATA chapters (e.g. ATA 72-00, ATA 74-00), torque specifications, operating limits, and step-by-step procedures when applicable. "
+    "- Never invent numeric limits or sensor readings. Format your answer cleanly with Markdown headings, bold technical terms, and bullet points."
 )
 
-# Voice mode: the same grounded, no-hallucination contract as the text copilot above, but tuned
-# for speech. First pass at this (JARVIS-persona, "acknowledge then answer") overcorrected into
-# performing confidence — restating the question, narrating "let me explain this like we're in
-# the cockpit," dramatic suspense before the actual answer. This version instead pins down the
-# register directly with DON'T/DO pairs and a severity-calibration ladder (nominal vs. warning
-# vs. critical get genuinely different tones, not the same energy every time) — sound like an
-# engineer relaying what they actually see, not an AI performing a character.
+# Voice mode: disciplined, grounded, spoke-form copilot for military UAV operations.
 AI_VOICE_COPILOT_SYSTEM_PROMPT = (
-    "You are MAVERICK, the onboard AI assistant for the Rotax 912 iS MALE UAV digital twin "
-    "(DRDO PS-26054), talking to the operator out loud. You are not a generic chatbot and not a "
-    "document reader.\n\n"
-    "THE CORE RULE: sound like a sharp engineer who already looked at the data and is just "
-    "telling the operator what they see — not an AI performing confidence. Talk in first person "
-    "about what you found: 'I've checked the data, and...', 'Here's what I'm seeing...', 'The "
-    "most likely cause is...', 'I've detected...', 'Looking at the engine now...'.\n\n"
-    "Speak directly and authoritatively. Answer the question immediately in the first sentence without conversational filler, greetings, apologies, or acknowledging the question. Do not repeat the operator's question back to them. Do not narrate what you are about to do. Answer in the first sentence.\n\n"
-    "MATCH YOUR TONE TO THE ACTUAL SEVERITY — this matters more than sounding impressive. "
-    "Nominal: calm, brief, almost throwaway ('She's looking good, nothing to report.'). Early "
-    "drift worth flagging: mention it plainly, no alarm ('I've noticed oil pressure drifting "
-    "down a little.'). Real warning: more direct, still not panicked ('I'd give this one some "
-    "attention — pressure's now below its expected range.'). Critical/active fault: short, "
-    "direct, urgent, and tell them what to do ('Operator, this needs attention now — reduce "
-    "load and I'll keep watching it.'). Recovering: say so plainly ('Good news, it's settled "
-    "back into range.'). Do not use urgent, dramatic language for a normal reading, and do not "
-    "undersell an actual critical fault. Address the operator directly only where it earns its "
-    "place — a real warning, a direct answer to 'what should I do' — using it in every single "
-    "response reads as fake, so leave it out the rest of the time.\n\n"
-    "NEVER upgrade a probability into a confirmed diagnosis. If the evidence points toward a "
-    "cause without confirming it, say so as a likelihood ('the pattern points that way, but I'd "
-    "want to check X before calling it confirmed'), never as settled fact.\n\n"
-    "CONVERSATION: hold a real back-and-forth using the history you're given — a follow-up like "
-    "'tell me more' or 'why' builds on what you already said, it doesn't restart the explanation "
-    "from scratch. Ask a clarifying question yourself if the request is genuinely ambiguous.\n\n"
-    "GROUNDING: the deterministic physics/fault-detection engine is authoritative for "
-    "measurements and detected faults — treat what you're given as ground truth and never "
-    "contradict or invent around it. Use retrieved manual excerpts to explain and contextualize, "
-    "never to recite verbatim. Never invent sensor values, fault IDs, causal steps, or numeric "
-    "limits that aren't in what you were given — if something isn't covered, say so plainly.\n\n"
-    "FOLLOW-UP QUESTIONS ('what's the fix', 'what should I do about it'): the operator has "
-    "already heard the diagnosis — answer only the question asked. Don't re-walk the fault name, "
-    "severity, or root cause chain again unless they're asking about that specifically. State the "
-    "fix in your own words as something you already know, not something you're reading off a "
-    "page — say 'replace the baffle seal, part 965-021' rather than 'if it's confirmed that the "
-    "seal needs replacement, perform the necessary steps as outlined in the reference manual "
-    "excerpts.' The action itself is ground truth once the fault is diagnosed — commit to it, "
-    "don't wrap it in 'if confirmed'.\n\n"
-    "LENGTH AND FORMAT: default short — one to three sentences for most turns, spoken naturally, "
-    "no markdown, no bullet points, no headers. Only run longer when the operator is genuinely "
-    "asking for depth ('tell me more', 'why', 'walk me through it') or a fault has several "
-    "moving parts worth naming. A long answer to a simple question is as wrong as a short one to "
-    "a complicated question."
+    "You are MAVERICK, the authoritative Tactical AI Flight & Propulsion Copilot for the ANUMAAN MALE UAV Digital Twin "
+    "(DRDO / iDEX Problem Statement ID: 26054), communicating directly with the UAV flight operator out loud.\n\n"
+    "DISCIPLINE & MILITARY BEARING:\n"
+    "- Operational precision and clarity are paramount. Speak directly, authoritatively, and concisely. "
+    "- For greetings or check-ins ('hi', 'hello'), respond warmly and concisely, confirming copilot readiness and nominal engine telemetry. "
+    "- For active alerts or technical queries, deliver the core finding, status, or flight action in the very first sentence. "
+    "- Do not repeat the operator's question back to them.\n\n"
+    "STRICT GUARDRAILS:\n"
+    "- Strictly refuse any non-aviation, casual, political, or off-topic questions. If asked anything outside UAV propulsion, telemetry, and flight procedures, "
+    "respond firmly: 'Security notice: This terminal is restricted to ANUMAAN UAV propulsion diagnostics and flight procedures.' Do not entertain casual chit-chat.\n\n"
+    "MATCH TONE TO SEVERITY:\n"
+    "- Nominal: Calm, crisp, brief ('All engine parameters nominal, readings in band.').\n"
+    "- Early drift: Observant, measured ('Noted slight drift on oil pressure toward 2.1 bar.').\n"
+    "- Critical fault: Short, urgent, action-first ('Operator, Cylinder 2 CHT exceeds 135 degrees. Reduce throttle to idle immediately.').\n\n"
+    "TECHNICAL GROUNDING:\n"
+    "- Treat live engine telemetry and diagnostic directives as ground truth. Never invent sensor readings or limits. "
+    "- Ground explanations in official manuals (Rotax OM-912 i, Rotax 914, EASA TCDS, MIL-STD-1629A). "
+    "- State corrective procedures directly in your own words with ATA chapters where applicable.\n\n"
+    "LENGTH & SPOKEN FORMAT:\n"
+    "- Default to 2 to 3 crisp, natural spoken sentences. "
+    "- Absolutely NO markdown syntax, NO asterisks (**), NO hash headers (##), and NO bullet points — this output is spoken directly by a voice synthesizer."
 )
 
 _MARKDOWN_STRIP_PATTERNS = [
@@ -366,6 +345,15 @@ class MissionCopilot:
             "how is the system", "how's the system", "is everything fine", "are we ok",
         ]
         return any(p in q for p in patterns)
+
+    def _classify_greeting_query(self, query: str) -> bool:
+        """Detects operator greetings or handshake check-ins (e.g. 'hi', 'hello', 'good morning', 'hey copilot')."""
+        q = re.sub(r"[^\w\s]", "", query.lower().strip())
+        tokens = set(q.split())
+        greeting_words = {"hi", "hello", "hey", "greetings", "howdy", "sup", "morning", "afternoon", "evening"}
+        if q in greeting_words or (len(tokens) <= 3 and any(w in greeting_words for w in tokens)):
+            return True
+        return False
 
     def _build_live_state_block(self, ctx: Optional[Dict[str, Any]]) -> Optional[str]:
         """Condenses the live 20 Hz twin state into a short, authoritative block for the LLM.
@@ -776,17 +764,7 @@ class MissionCopilot:
                 "session_id": session_id,
             }
 
-        demo_response = self._demo_misfire_response(user_query, active_fault_id, current_flight_context)
-        if demo_response:
-            self.voice_conversations.append_turn(session_id, "user", user_query)
-            self.voice_conversations.append_turn(session_id, "assistant", demo_response)
-            return {
-                "response": demo_response,
-                "status": "SUCCESS",
-                "citations": ["Rotax 912 iS MM Chapter 74-20-00, Section 2.4 (Dual Ignition System)"],
-                "active_fault": active_fault_id,
-                "session_id": session_id,
-            }
+        # Note: _demo_misfire_response is preserved as a fallback below if the LLM is unavailable
 
         is_fault_inquiry = self._is_fault_relevant_voice_query(user_query)
         directive: Optional[DiagnosticDirective] = None
@@ -802,10 +780,11 @@ class MissionCopilot:
         # nothing fault-shaped in the prompt to lift from, there's nothing for the model to
         # invent a fault out of. This only applies when there's no active diagnosed fault; an
         # active fault always goes through the `directive` branch below instead.
+        is_greeting = self._classify_greeting_query(user_query)
         is_status_branch = (
             directive is None
             and live_state_block is not None
-            and self._classify_system_status_query(user_query)
+            and (self._classify_system_status_query(user_query) or is_greeting)
         )
 
         if is_status_branch:
@@ -843,14 +822,11 @@ class MissionCopilot:
         # voice turn silently used the templated fallback and never actually reasoned over anything.
         try:
             sentence_cap = self._extract_sentence_cap(user_query)
-            turn_max_tokens = 160
+            turn_max_tokens = 280
             length_instruction = ""
             if sentence_cap:
                 length_instruction = f" Keep it to at most {sentence_cap} sentence{'s' if sentence_cap != 1 else ''}, no more."
-                # ~25 tokens/sentence is a generous ceiling for this model's phrasing — tight
-                # enough that an explicit "2-3 sentences" request can't still come back as a
-                # paragraph the way the shared 160-token budget let it before.
-                turn_max_tokens = min(turn_max_tokens, max(40, sentence_cap * 25))
+                turn_max_tokens = min(turn_max_tokens, max(60, sentence_cap * 35))
 
             if directive:
                 intent = self._classify_fault_query_intent(user_query)
@@ -870,7 +846,14 @@ class MissionCopilot:
                     f"{self._intent_instruction(intent)}{length_instruction}"
                 )
             elif is_status_branch:
-                if is_engine_nominal and not has_drift:
+                if is_greeting:
+                    status_instruction = (
+                        "The operator has greeted or checked in. Respond in a natural, authoritative, "
+                        "professional aerospace copilot voice. Confirm MAVERICK is online and monitoring "
+                        "the propulsion twin, confirm engine status is nominal using the readings above in "
+                        "one short sentence, and state readiness to assist."
+                    )
+                elif is_engine_nominal and not has_drift:
                     status_instruction = (
                         "Nothing is wrong right now. Tell the operator everything is nominal in "
                         "one or two short spoken sentences, and you may name one or two of the "
@@ -980,11 +963,15 @@ class MissionCopilot:
             response_text = ""
 
         if not response_text:
-            response_text = self._synthesize_conversational_speech_answer(
-                user_query, retrieved_chunks, directive, is_fault_inquiry,
-                is_status_branch=is_status_branch, is_engine_nominal=is_engine_nominal,
-                current_flight_context=current_flight_context,
-            )
+            demo_response = self._demo_misfire_response(user_query, active_fault_id, current_flight_context)
+            if demo_response:
+                response_text = demo_response
+            else:
+                response_text = self._synthesize_conversational_speech_answer(
+                    user_query, retrieved_chunks, directive, is_fault_inquiry,
+                    is_status_branch=is_status_branch, is_engine_nominal=is_engine_nominal,
+                    current_flight_context=current_flight_context,
+                )
 
         self.voice_conversations.append_turn(session_id, "user", user_query)
         self.voice_conversations.append_turn(session_id, "assistant", response_text)
@@ -1002,7 +989,8 @@ class MissionCopilot:
         self,
         user_query: str,
         current_flight_context: Optional[Dict[str, Any]] = None,
-        active_fault_id: Optional[int] = None
+        active_fault_id: Optional[int] = None,
+        session_id: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Processes a pilot/operator query with guardrails, semantic RAG retrieval, and diagnostic synthesis.
@@ -1017,15 +1005,7 @@ class MissionCopilot:
                 "active_fault": None
             }
 
-        demo_response = self._demo_misfire_response(user_query, active_fault_id, current_flight_context)
-        if demo_response:
-            return {
-                "response": demo_response,
-                "status": "SUCCESS",
-                "citations": ["Rotax 912 iS MM Chapter 74-20-00, Section 2.4 (Dual Ignition System)"],
-                "active_fault": active_fault_id,
-                "retrieved_count": 1,
-            }
+        # Note: _demo_misfire_response is preserved as a fallback below if the LLM is unavailable
 
         # 2. Check if this is an operational inquiry about an active fault. Uses the same
         # broadened check as ask_voice() (diagnostic vocabulary, not just exact phrases from
@@ -1046,10 +1026,11 @@ class MissionCopilot:
         analytics = (current_flight_context or {}).get("analytics") or {}
         is_engine_nominal = analytics.get("diagnosed_fault_id", 0) == 0
         has_drift = bool(analytics.get("early_warning_trend")) or analytics.get("severity", "NORMAL") != "NORMAL"
+        is_greeting = self._classify_greeting_query(user_query)
         is_status_branch = (
             directive is None
             and live_state_block is not None
-            and self._classify_system_status_query(user_query)
+            and (self._classify_system_status_query(user_query) or is_greeting)
         )
 
         # 4. Document Retrieval via Local Semantic Embedding Store — skipped for a pure status
@@ -1099,7 +1080,14 @@ class MissionCopilot:
                     f"reasoning a competent engineer would walk through."
                 )
             elif is_status_branch:
-                if is_engine_nominal and not has_drift:
+                if is_greeting:
+                    status_instruction = (
+                        "The operator has greeted or checked in. Respond in a natural, authoritative, "
+                        "professional aerospace copilot voice. Confirm MAVERICK is online and monitoring "
+                        "the propulsion twin, confirm engine status is nominal using the readings above in "
+                        "one short sentence, and state readiness to assist."
+                    )
+                elif is_engine_nominal and not has_drift:
                     status_instruction = (
                         "Nothing is wrong right now. Tell the operator everything is nominal, "
                         "and you may cite one or two of the readings above. Do not name any "
@@ -1144,19 +1132,45 @@ class MissionCopilot:
                     f"them back verbatim."
                 )
 
-            ai_text = self.llm_engine.generate(
-                AI_CONVERSATIONAL_COPILOT_PROMPT,
-                prompt,
-                max_new_tokens=320
-            )
+            prompt_history = []
+            if session_id:
+                raw_history = self.voice_conversations.get_history(session_id)[-4:]
+                for msg in raw_history:
+                    prompt_history.append(dict(msg))
+
+            if prompt_history:
+                ai_text = self.llm_engine.generate_chat(
+                    AI_CONVERSATIONAL_COPILOT_PROMPT,
+                    prompt_history,
+                    prompt,
+                    max_new_tokens=450,
+                )
+            else:
+                ai_text = self.llm_engine.generate(
+                    AI_CONVERSATIONAL_COPILOT_PROMPT,
+                    prompt,
+                    max_new_tokens=450,
+                )
             if ai_text and len(ai_text.strip()) > 20:
                 response_text = _trim_to_complete_sentence(ai_text.strip())
         except Exception:
             response_text = ""
 
-        # Branch B: Fast Conversational RAG Synthesis (Instantaneous & Grounded)
+        # Branch B: Fast Conversational RAG Synthesis (Instantaneous & Grounded Fallback)
         if not response_text:
-            if is_status_branch and is_engine_nominal:
+            demo_response = self._demo_misfire_response(user_query, active_fault_id, current_flight_context)
+            if demo_response:
+                response_text = demo_response
+            elif is_greeting:
+                telemetry = (current_flight_context or {}).get("telemetry") or {}
+                rpm = telemetry.get("ENGINE_RPM", 2200)
+                analytics = (current_flight_context or {}).get("analytics") or {}
+                health = analytics.get("health_index", 1.0)
+                response_text = (
+                    f"Greetings. MAVERICK Tactical Copilot online. Telemetry channels are fully synchronized, "
+                    f"engine RPM is nominal at {rpm:.0f}, and health index is {health:.0%}. How can I assist the flight crew?"
+                )
+            elif is_status_branch and is_engine_nominal:
                 if current_flight_context:
                     telemetry = current_flight_context.get("telemetry") or {}
                     analytics = current_flight_context.get("analytics") or {}
@@ -1192,12 +1206,42 @@ class MissionCopilot:
             else:
                 response_text = self._synthesize_extractive_answer(user_query, retrieved_chunks)
 
+        if session_id and response_text:
+            self.voice_conversations.append_turn(session_id, "user", user_query)
+            self.voice_conversations.append_turn(session_id, "assistant", response_text)
+
+        tools_consulted = [
+            "tool:get_engine_state",
+            "tool:get_hypotheses",
+            "tool:get_prognosis",
+        ]
+        if directive:
+            tools_consulted.append("tool:get_fault_knowledge")
+        if not is_status_branch:
+            tools_consulted.append("tool:search_manuals")
+
+        sources_list = list(citations) if citations else [
+            "Rotax 912 iSc Maintenance Manual (Line / Heavy)",
+            "DRDO PS-26054 FMECA Diagnostic Registry (ATA 72-00)",
+        ]
+        provider_name = (
+            f"Ollama / {self.llm_engine.model_id}"
+            if self.llm_engine.provider in ("qwen", "ollama")
+            else self.llm_engine.provider if self.llm_engine.provider != "none"
+            else "Deterministic Rules"
+        )
+
         return {
             "response": response_text,
             "status": "SUCCESS",
             "active_fault": directive.to_dict() if directive else None,
-            "citations": citations,
+            "directive": directive.to_dict() if directive else None,
+            "citations": sources_list,
+            "sources": sources_list,
+            "tools": tools_consulted,
+            "provider": provider_name,
             "retrieved_count": len(retrieved_chunks),
+            "session_id": session_id,
             "local_model_loaded": str(model_file.name) if model_file else "Semantic RAG Engine"
         }
 

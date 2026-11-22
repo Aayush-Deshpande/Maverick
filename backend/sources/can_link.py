@@ -88,6 +88,7 @@ class CanLink:
         self.ids = CANIntrusionDetector.from_dbc(self.db, self.counter_name)
         self.alerts: List[CANAlert] = []
         self.bytes_sent = 0
+        self.recent_frames: List[Dict[str, Any]] = []
 
     def encode(self, frame: Any) -> List[Tuple[Any, bytes]]:
         out = []
@@ -101,10 +102,21 @@ class CanLink:
     def roundtrip(self, frame: Any) -> Any:
         """Send the frame's messages on the bus, receive them, and return the frame rebuilt from what arrived."""
         import can
-        for msg, data in self.encode(frame):
+        encoded = self.encode(frame)
+        recent = []
+        for msg, data in encoded:
             self.tx.send(can.Message(arbitration_id=msg.frame_id, is_extended_id=msg.is_extended_frame, data=data,
                                      timestamp=float(frame.t)))
             self.bytes_sent += len(data)
+            recent.append({
+                "name": msg.name,
+                "arbitration_id": f"0x{msg.frame_id:08X}",
+                "cycle_time_ms": msg.cycle_time or 50,
+                "dlc": len(data),
+                "data_hex": data.hex().upper(),
+                "counter": (self.counters[msg.name] - 1) % 16
+            })
+        self.recent_frames = recent
         received: Dict[int, bytes] = {}
         for _ in range(len(self.db.messages)):
             m = self.rx.recv(timeout=1.0)
@@ -119,6 +131,38 @@ class CanLink:
             raws = s.message.decode(data, scaling=False, decode_choices=False) if data is not None else None
             _set(out, s.path, s.physical(int(raws[s.signal.name])) if raws is not None else None)
         return out
+
+    def inject_spoof(self, kind: str = "UNKNOWN_ID", t_sec: float = 0.0) -> List[CANAlert]:
+        """Inject an anomalous or rogue CAN frame on the bus to test CAN IDS in real time (M7-04)."""
+        import can
+        new_alerts: List[CANAlert] = []
+        if kind == "UNKNOWN_ID":
+            fake_id = 0x18FF99FF  # Rogue 29-bit sender ID not in DBC
+            data = bytes([0xDE, 0xAD, 0xBE, 0xEF, 0x00, 0x00, 0x00, 0x00])
+            self.tx.send(can.Message(arbitration_id=fake_id, is_extended_id=True, data=data, timestamp=t_sec))
+            m = self.rx.recv(timeout=0.2)
+            if m is not None:
+                new_alerts = self.ids.inspect_frame(m.arbitration_id, m.dlc, bytes(m.data), t_sec)
+        elif kind == "SEQUENCE_GAP":
+            msg = self.db.get_message_by_name("ANU_SPEED")
+            curr_c = self.counters[msg.name]
+            skipped = msg.encode({"EngineSpeed": 5000, "PropSpeed": 2500, "ManifoldPressure": 100, "Throttle": 80,
+                                  self.counter_name: (curr_c + 5) % 16}, scaling=False)
+            self.tx.send(can.Message(arbitration_id=msg.frame_id, is_extended_id=msg.is_extended_frame, data=skipped, timestamp=t_sec))
+            m = self.rx.recv(timeout=0.2)
+            if m is not None:
+                new_alerts = self.ids.inspect_frame(m.arbitration_id, m.dlc, bytes(m.data), t_sec)
+        elif kind == "OUT_OF_RANGE":
+            msg = self.db.get_message_by_name("ANU_FLUID")
+            curr_c = self.counters[msg.name]
+            impossible = msg.encode({"OilPressure": 300, "OilTemperature": 1300, "CoolantTemperature": 4000, "FuelFlow": 1742,
+                                     self.counter_name: curr_c}, scaling=False, strict=False)
+            self.tx.send(can.Message(arbitration_id=msg.frame_id, is_extended_id=msg.is_extended_frame, data=impossible, timestamp=t_sec))
+            m = self.rx.recv(timeout=0.2)
+            if m is not None:
+                new_alerts = self.ids.inspect_frame(m.arbitration_id, m.dlc, bytes(m.data), t_sec)
+        self.alerts += new_alerts
+        return new_alerts
 
     def close(self) -> None:
         self.tx.shutdown()

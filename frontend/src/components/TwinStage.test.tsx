@@ -55,8 +55,10 @@ describe('TwinStage 3D View & Telemetry Interlock', () => {
     expect(html).toContain('Rotax 912 iSc Sport');
     expect(html).toContain('Austro Engine AE300');
 
-    // Verify Guide button on top right
+    // Verify Guide and Command Palette buttons on top right
     expect(html).toContain('Twin Guide');
+    expect(html).toContain('Commands');
+    expect(html).toContain('Ctrl+K');
     expect(html).toContain('title="Digital Twin &amp; Telemetry Architecture Guide (Press ?)"');
 
     // Verify Telemetry Bus HUD in the fault aside panel

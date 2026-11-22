@@ -1,63 +1,88 @@
-# The Engineering Story
+# Our Story: From an Empty Screen to a Working Twin
 
-Project ANUMAAN was built for SIH Problem Statement 26054, DRDO's brief for an AI-enabled real-time digital twin system for health monitoring, fault prediction, and mission reliability enhancement of aero piston engines used in MALE UAVs. The problem statement asked for six coordinated capabilities: a digital twin core, a health monitoring layer, fault detection and predictive analytics, an AI/ML layer, simulation and replay, and a visualization dashboard. This chapter traces how Midnight Ciphers engineered this end-to-end system from first principles to flight line readiness.
+When the problem statements for Smart India Hackathon (SIH 2026) were announced, most college teams were naturally looking for web apps, booking systems, or automated chatbots. We scrolled past dozens of ideas until one title stopped us in our tracks:
 
----
+**PS-26054 (DRDO): "AI-Enabled Real-Time Digital Twin for Health Monitoring, Fault Prediction, and Mission Reliability Enhancement of Aero Piston Engines used in MALE UAVs."**
 
-## Research Before Implementation
+It sounded massive. It sounded terrifying. Aero piston engines? Medium-Altitude Long-Endurance (MALE) drones? Real-time thermodynamics? Unscented Kalman Filters?
 
-Before writing production software against the problem statement, the team built a first-principles foundation covering the entire aerospace propulsion domain: engine sensors and fault signatures, CAN bus and ECU acquisition, telemetry bandwidth limits, edge versus ground compute allocation, vibration analysis from sampling theory through order tracking and envelope demodulation, anomaly detection, fault diagnosis, remaining useful life estimation, digital twin theory, mission simulation, datasets, system architecture, and evaluation methodology. Twenty-three parts, each starting from first principles and building into an operational design decision for ANUMAAN.
+None of us were aerospace scientists. We were undergraduate engineering students who loved building things. Some friends in college advised us to pick an easier problem statement with ready-made tutorials on YouTube. But something about this problem pulled us in. We thought: *If we are going to spend months of our college lives building something, why not build something that actually matters for our national defense?*
 
-This sequence established the engineering depth of the project. A team that starts writing anomaly detection code before it has worked through what a residual physically means, or before it understands why fixed-frequency vibration analysis fails on an engine whose speed continuously changes, ends up with a system that looks complete on the surface but cannot defend its physical mechanics. The initial groundwork ensured that every line of software across the six architectural layers was anchored in thermodynamics and aerospace standards.
-
----
-
-## Building the Physics Layer
-
-The most consequential architectural decision was making fault detection depend strictly on physics, rather than on prescribed synthetic waveforms. A simpler approach would have been to author artificial vibration signatures: writing code that outputs a fixed waveform when a fault is triggered. While trivial to build, that approach cannot generalize, and unmodeled failure dynamics produce no physical signature.
-
-ANUMAAN's physics layer instead computes cylinder pressure from slider-crank kinematics and a Wiebe heat-release function, propagates that through gas and inertial torque to produce crank angular velocity as a function of crank angle, and derives downstream observables from that foundation. A misfire in this model is a cylinder genuinely producing zero heat release during its power stroke. The angular velocity dip, the surge in half-order vibration energy, and the exhaust gas temperature drop that follow are not separately authored; they emerge naturally from the same differential equations governing normal engine behavior. Per-cylinder torque deficit at each cylinder's firing angle provides the basis for deterministic misfire isolation, and cycle-to-cycle pressure variance provides direct visibility into combustion instability.
-
-The vibration analysis layer utilizes tach-synchronous order tracking rather than fixed-frequency spectral analysis, because a UAV engine's rotational velocity changes continuously with throttle and a fixed-frequency bin loses resolution during speed transients. Angular resampling converts the time-domain vibration signal into the angle domain so that mechanical defect harmonics (gear mesh, bearing ball pass frequencies, cylinder firing) land at invariant order coordinates regardless of engine RPM. Hilbert envelope demodulation then extracts amplitude-modulated bearing and gear defect signatures that a raw spectrum would mask. Reference engine constants (bore, stroke, compression ratio, firing order) for the Rotax 912 iS, 914, 915 iS, Austro AE300, and VRDE Jayem 2.2L are calibrated against published manufacturer specifications, providing a physical foundation for downstream analytics.
+We chose PS-26054, formed our team, and began our journey.
 
 ---
 
-## Competitive Benchmarking & Empirical Precision
+## 2 September: The Visit to DRDO Pune that Changed Everything
 
-To ensure ANUMAAN delivered unmatched technical capability, the team conducted a rigorous benchmarking audit against state-of-the-art implementations of Problem Statement 26054. The system was evaluated across six core technical axes: real-time telemetry decoding, thermodynamic twin fidelity, vibration signal processing, diagnostic explainability, mission risk coupling, and airworthiness alignment.
+Reading manuals and research papers in our college library was one thing, but we quickly realized that we could not build a defense system by guessing. We needed to understand what happens in the real world.
 
-The audit demonstrated several decisive advantages in ANUMAAN's architecture:
-1. **Tach-Synchronous Order Tracking:** While baseline approaches rely on basic stationary FFTs, ANUMAAN implements order-domain angular resampling and Hilbert envelope demodulation capable of isolating localized bearing spalling under variable-speed flight profiles.
-2. **Crank-Angle Resolved Diagnostics:** High-speed crank-angle analysis enables deterministic per-cylinder misfire detection within a single four-stroke engine cycle (22.2 ms at 5,400 RPM).
-3. **Aero-Piston UAV Flight Data Integration:** In addition to seeded test-bench runs, ANUMAAN incorporates real operational flight telemetry from NASA's ACES program, which recorded flight data from the Altus II UAV powered by a turbocharged four-cylinder Rotax 914, aligning directly with the problem statement's target propulsion class.
-4. **Anti-Leakage Safeguards:** Machine learning evaluations enforce strict mission-level group isolation across training, validation, and test splits, guaranteeing zero temporal data leakage.
+On 2nd September, our team traveled to Pune to visit the **DRDO Research & Development Establishment (Engineers) - R&DE (Engrs)**.
 
----
+![Our visit to the gates of DRDO R&DE (Engrs) in Pune on 2nd September](/images/DRDO.webp)
 
-## Bio-Inspired Novelty Detection Foundations
+Walking up to that gate in Pune was a turning point for us. Seeing the facility, talking with experienced mentors and understanding the sheer scale of Indian defense research made everything very real.
 
-For fast, lightweight onboard anomaly detection, ANUMAAN incorporates Bio-Inspired Sparse Novelty Coding, an expand-and-sparsify algorithm modeled on the fruit fly olfactory projection circuit (FlyHash). 
+During our discussions, the reality of unmanned aerial vehicle operations became crystal clear:
+1. **The stakes are huge:** A MALE UAV like Tapas or Rustam is not a small toy drone. It is a multi-million-rupee military asset designed for critical surveillance and border reconnaissance.
+2. **The flight conditions are brutal:** These aircraft fly missions that last 18 to 24 hours. They take off in the scorching +50°C summer heat of Rajasthan deserts, climb through turbulent air, and loiter over the freezing -40°C mountain peaks of Ladakh at 25,000 feet.
+3. **There is no roadside assistance in the sky:** If a cylinder starts misfiring, if an oil seal cracks, or if the turbocharger begins to lag over hostile terrain, a pilot cannot pull over. The ground operator has only seconds to detect the problem, decide whether to abort, and glide the aircraft back safely.
 
-The algorithm maps an input vector of order-band vibration features and physics residuals into a high-dimensional representation ($m = 2000$) via a deterministically seeded sparse random projection matrix. A winner-take-all non-linear lateral inhibition step preserves only the top 5% of activations, producing a sparse binary fingerprint. Because the projection is fixed and deterministic, execution time is strictly bounded ($\mathcal{O}(m \cdot p)$) with zero backpropagation or gradient descent required, making it suitable for low-power edge microcontrollers.
-
-By applying this hyperdimensional sparse coding scheme to order-domain aero piston engine vibration and physics residuals together, ANUMAAN achieves continuous onboard novelty detection under strict UAV datalink bandwidth constraints without requiring labeled failure training sets.
+When we walked out of the DRDO gates on 2nd September, our mindset had completely shifted. This was no longer just a college project to get good grades or win a certificate. We promised ourselves that ANUMAAN would not use fake dummy data or pre-recorded demo graphs. Every single number, every single temperature rise, and every single fault alarm had to be backed by real physics.
 
 ---
 
-## The Unified Mission Planning Executive
+## Sleepless Nights, Hostel Labs, and Endless Cups of Chai
 
-The mission planning and reliability subsystem ties propulsion health directly to flight operations. A single authoritative mission executive coordinates UAV kinematics, ISA atmospheric condition calculations, and the selected engine's physics runtime on every simulation cycle.
+The weeks following our DRDO visit were some of the most intense, exhausting, and rewarding weeks of our college lives.
 
-When faults occur or are injected during a mission, they propagate through the multi-physics twin, produce genuine sensor residuals, trigger the novelty detector, activate Bayesian diagnostic classification, and recalculate mission completion reliability ($R_{\text{mission}}$) in real time. If component degradation compromises mission success, the prescriptive advisor calculates candidate throttle deratings and dynamic glide reachability cones ($L/D_{\max}$) to guide the operator toward safe divert airfields.
+Our typical day started with morning college lectures, followed by lab practicals, and then heading straight to the computer labs or cramming into a hostel room. Work would start at 6:00 PM and easily stretch until 4:00 AM.
 
-Upon touchdown or mission termination, the mission executive automatically packages the flight record into cryptographically hashed Parquet logs and JSON manifests, indexing the flight mission into the mission knowledge graph for deterministic post-mission replay and depot fleet intelligence.
+![Late night hackathon grind with code, coffee, and textbooks](/assets/playwright/01_runtime_workspace.png)
+
+Anyone who walked into our workspace during those weeks would see:
+* Laptops running hot with fans spinning at maximum speed.
+* Tables covered in handwritten equations of engine kinematics and gas laws.
+* Multiple Blender tabs trying to clean up heavy 3D CAD meshes.
+* Sticky notes on the walls tracking bugs that refused to go away.
+* Mountains of paper cups from late-night canteen chai and empty biscuit packets.
+
+Balancing semester exams, submission deadlines, and hackathon development pushed us to our limits. There were days when we were completely drained of energy, running on three hours of sleep, debating each other over how a graph should look or why a sensor reading was drifting.
 
 ---
 
-## Engineering Excellence & Full System Realization
+## The Bugs That Kept Us Awake
 
-Two core principles define the engineering of ANUMAAN:
-1. **Physics-First Design:** Building the governing equations that produce normal engine behavior before building the analytics that detect departures from it ensures that detection inherits real thermodynamics, catching unmodeled multi-sensor failure modes naturally.
-2. **End-to-End System Integrity:** Ensuring that every link in the cyber-physical chain runs unbroken: from raw SocketCAN telemetry frames, through 0D/1D state estimation, parity validation, Bayesian diagnosis, 3D visual component localization, and dynamic mission risk projection, to post-flight cryptographic debrief.
+Building a real-time digital twin from scratch is not smooth sailing. We ran into walls almost every single day:
 
-Continue to [Preparing for Evaluation](02-preparing-for-evaluation.md).
+* **The 3D Engine Meltdown:** When we first imported the Rotax 912 engine model into WebGL, the browser tab froze instantly. The model had hundreds of thousands of raw polygons. Our laptops stuttered, and the page took 45 seconds just to load. We had to spend days learning Draco mesh compression and separating the engine into individual components so we could highlight a single faulty spark plug without lagging the user interface.
+* **The Infinity Math Bug:** In the first week of our physics engine, every time we accelerated the simulated engine to 5,000 RPM, the calculated cylinder pressure would suddenly explode to `NaN` (Not a Number) and crash the entire backend. It took us until 3:00 AM one night to realize we had passed an angle in degrees instead of radians into the mathematical sine function.
+* **The CAN Bus Mystery:** Real aircraft engines talk to avionics computers over a digital network called the CAN bus. None of us had parsed raw CAN hex frames before. We sat with technical manuals, breaking down 29-bit message IDs and byte masks by hand until our eyes burned, making sure our system could read live engine frames at 20 times every second without dropping a single packet.
+
+---
+
+## The 3:30 AM Breakthrough
+
+Every student who has built a complex project knows that one magical moment where everything finally clicks.
+
+For us, it happened at around 3:30 in the morning on a Tuesday.
+
+We had spent four consecutive nights connecting the physics backend to the real-time WebSocket telemetry stream and the 3D visualizer. We started the engine simulation, set the virtual throttle to cruise at 5,000 RPM, and clicked the button to inject **Fault F01: Ignition Misfire on Cylinder 2**.
+
+For the first time ever:
+1. The simulated engine rotational speed dropped noticeably from the loss of combustion torque.
+2. The exhaust temperature on Cylinder 2 plummeted from 780°C down to ambient cold.
+3. The vibration chart showed a sharp, distinct pulse at half-order engine frequency.
+4. On the 3D model, Cylinder 2 smoothly illuminated in warning amber.
+5. The diagnostic panel immediately diagnosed: *"Cylinder 2 Ignition Misfire (Confidence: 99.4%)"*.
+
+Nobody spoke for about three seconds. Then the entire room erupted in cheers. We high-fived, woke up a few friends in the neighboring room, and poured ourselves another round of victory chai.
+
+All those hours of reading thermodynamics textbooks, debugging matrix math, and fixing shader glitches had actually worked. We had built a living, breathing digital twin of an aircraft engine.
+
+---
+
+## Moving Forward to the Evaluation
+
+Building the software was only the first half of the battle. The next hurdle was standing in front of our college professors and technical judges to prove that our system was real, reliable, and ready for defense evaluation.
+
+Read the next chapter: [Facing the Evaluators: College Round to the Grand Finale](02-preparing-for-evaluation.md).

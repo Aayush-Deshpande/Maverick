@@ -2,7 +2,7 @@
 
 ANUMAAN (Sanskrit and Hindi for *inference* or *deduction*) is an advanced cyber-physical digital twin system engineered for real-time health monitoring, fault prediction, and mission reliability enhancement of aero-piston powerplants deployed on Medium Altitude Long Endurance (MALE) and tactical unmanned aerial systems. Built by team **Midnight Ciphers** against **DRDO Smart India Hackathon Problem Statement 26054**, ANUMAAN closes the fatal gap left by conventional threshold-based warning systems.
 
-Rather than treating digital twins as cosmetic 3D animations or generic telemetry dashboards, ANUMAAN implements an active **Continuous-Discrete Extended Kalman Filter (EKF) State Observer** coupled to a first-principles **0D/1D Mean Value Engine Model (MVEM)**. Running in-flight at $50\text{ Hz}$, the system estimates unmeasured internal thermodynamic states, generates normalized physics residuals, isolates microscopic degradation via bio-inspired sparse coding and Bayesian reasoning, and translates component health into tactical flight margins and dynamic glide reachability cones.
+Rather than treating digital twins as cosmetic 3D animations or generic telemetry dashboards, ANUMAAN implements an active **Continuous-Discrete Unscented Kalman Filter (UKF) State Observer** coupled to a first-principles **0D/1D Mean Value Engine Model (MVEM)**. Running in-flight at $20\text{ Hz}$, the system estimates unmeasured internal thermodynamic states, generates normalized physics residuals, isolates microscopic degradation via bio-inspired sparse coding and Bayesian reasoning, and translates component health into tactical flight margins and dynamic glide reachability cones.
 
 ---
 
@@ -56,7 +56,7 @@ flowchart LR
 
 A conventional dashboard passively displays telemetry. A CAD viewer renders an external model. ANUMAAN is a **computational cyber-physical digital twin** defined by three strict capabilities:
 
-* **Real-Time Dynamic State Observer:** Employs an Extended Kalman Filter (EKF) tracking 12 continuous state variables at $50\text{ Hz}$. It synthesizes internal unmeasured variables ($P_{\max}$, Turbine Inlet Temperature $TIT$, hydrodynamic oil film thickness $h_{\min}$) that have no physical sensors on production aircraft.
+* **Real-Time Dynamic State Observer:** Employs an Unscented Kalman Filter (UKF) tracking 12 continuous state variables at $20\text{ Hz}$ using Merwe scaled sigma points. It synthesizes internal unmeasured variables ($P_{\max}$, Turbine Inlet Temperature $TIT$, hydrodynamic oil film thickness $h_{\min}$) that have no physical sensors on production aircraft.
 * **Separation of Generator & Observer Models:** To prevent circular self-validation, ANUMAAN maintains an independent plant simulation mode (G01) that verifies the digital twin observer against unknown operational deviations.
 * **Physics-Grounded Fault Signatures:** A cylinder misfire is not an artificial signal toggle; it is simulated as a genuine absence of chemical heat release ($Q_{\text{total}} = 0$) during that $180^\circ$ power stroke. The resulting angular deceleration, half-order ($0.5X$) vibration surge, and exhaust temperature collapse emerge naturally from coupled kinematics and thermodynamics.
 

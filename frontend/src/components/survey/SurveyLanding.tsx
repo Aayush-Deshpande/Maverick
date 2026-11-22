@@ -8,7 +8,7 @@ import { requestDemo } from '../../demoIntent';
 import { SortieFilm } from '../sortie/SortieFilm';
 import './survey.css';
 
-type Workspace = 'runtime' | 'twin' | 'legacy';
+type Workspace = 'runtime' | 'twin' | 'legacy' | 'tactical';
 interface Props { serverUrl: string; onLaunchConsole?: (target?: Workspace) => void }
 
 const ENGINES = [
@@ -32,7 +32,7 @@ const fmt = (v: number | undefined, d = 0) => (typeof v === 'number' && Number.i
 const titleCase = (s: string) => s.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
 
 export function SurveyLanding({ serverUrl, onLaunchConsole }: Props) {
-  const { frame, status } = useLiveEngine(serverUrl);
+  const { frame } = useLiveEngine(serverUrl);
   const [engineIdx, setEngineIdx] = useState(0);
   // ?sortie=<seconds> opens the film paused at that moment, with no intro (for previews and stills)
   const [previewAt] = useState<number | null>(() => {
@@ -47,8 +47,6 @@ export function SurveyLanding({ serverUrl, onLaunchConsole }: Props) {
   }, []);
   const [menu, setMenu] = useState(false);
   const engine = ENGINES[engineIdx];
-  const det = frame?.detection;
-  const detLabel = !det ? '—' : det.confirmed ? 'Fault confirmed' : det.raw_alarm ? 'Anomaly' : 'Nominal';
 
   const runDemo = () => { requestDemo(); onLaunchConsole?.('runtime'); };
   const openConsole = () => onLaunchConsole?.('runtime');
@@ -71,20 +69,6 @@ export function SurveyLanding({ serverUrl, onLaunchConsole }: Props) {
       <div id="top">
         <SortieFilm onRunDemo={runDemo} onOpenConsole={openConsole} onOpenTwin={() => onLaunchConsole?.('twin')} evidenceHref="#why" armed={introDone} previewAt={previewAt} />
       </div>
-
-      <section className="sv-band sv-band-ice sv-band-tight sv-live-strip" aria-label="The deployed twin, right now">
-        <div className="sv-wrap sv-live-row">
-          <p className="sv-live"><span className={`sv-live-dot is-${status}`} aria-hidden />{status === 'live' ? 'The deployed twin, live right now · Rotax 912 iS' : status === 'offline' ? 'Twin offline · showing last known state' : 'Connecting to the deployed twin…'}</p>
-          <dl className="sv-readouts sv-readouts-row">
-            <div><dt>Engine speed</dt><dd>{fmt(frame?.channels?.rpm)}<small> rpm</small></dd></div>
-            <div><dt>Hottest cylinder</dt><dd>{fmt(frame?.cht?.length ? Math.max(...frame.cht) : undefined, 1)}<small> °C</small></dd></div>
-            <div><dt>Oil pressure</dt><dd>{fmt(frame?.channels?.oil_p, 2)}<small> bar</small></dd></div>
-            <div><dt>Detector</dt><dd className={det?.confirmed ? 'is-alarm' : det?.raw_alarm ? 'is-warn' : undefined}>{detLabel}</dd></div>
-            <div><dt>Glide reach</dt><dd>{fmt(frame?.glide?.glide_range_nm)}<small> nm</small></dd></div>
-          </dl>
-          <p className="sv-imprint">DRDO SIH · PS-26054 · Team Midnight Ciphers</p>
-        </div>
-      </section>
 
       <section id="why" className="sv-band sv-band-ice" aria-labelledby="sv-why">
         <div className="sv-wrap sv-split">
@@ -200,11 +184,25 @@ export function SurveyLanding({ serverUrl, onLaunchConsole }: Props) {
           </div>
         </div>
       </section>
-
-      <p className="sv-boundary"><strong>Prototype boundary.</strong> A software digital twin running a virtual plant in simulated time. Outputs are advisory; no aircraft bus connection or flight validation is claimed.</p>
     </main>
 
     <footer className="sv-footer">
+      <div className="sv-footer-video-strip">
+        <a
+          href="https://youtu.be/L97JAlS9Z7c"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="sv-footer-video-btn"
+        >
+          <span className="sv-video-badge">
+            <Play size={12} fill="currentColor" />
+          </span>
+          <span className="sv-video-label">DEMONSTRATION VIDEO</span>
+          <span className="sv-video-text">Watch the full ANUMAAN 3D digital twin &amp; flight deck walkthrough</span>
+          <ArrowUpRight size={14} className="sv-video-arrow" />
+        </a>
+      </div>
+
       <span className="sv-brand-word">ANUMAAN</span>
       <span>Team Midnight Ciphers · DRDO SIH PS-26054</span>
       <a href="https://anumaan-doc-1797.vercel.app/" target="_blank" rel="noreferrer">Engineering notes <ArrowUpRight size={13} aria-hidden /></a>

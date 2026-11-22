@@ -12,8 +12,7 @@ const ReadingsPanel = lazy(() => import('./components/ReadingsPanel').then((m) =
 const CalculationsPanel = lazy(() => import('./components/CalculationsPanel').then((m) => ({ default: m.CalculationsPanel })));
 const MissionReadinessCard = lazy(() => import('./components/MissionReadinessCard').then((m) => ({ default: m.MissionReadinessCard })));
 const SubsystemHealthCard = lazy(() => import('./components/SubsystemHealthCard').then((m) => ({ default: m.SubsystemHealthCard })));
-const DiagnosticCard = lazy(() => import('./components/DiagnosticCard').then((m) => ({ default: m.DiagnosticCard })));
-const VoiceCopilot = lazy(() => import('./components/VoiceCopilot').then((m) => ({ default: m.VoiceCopilot })));
+const UnifiedCopilot = lazy(() => import('./components/UnifiedCopilot').then((m) => ({ default: m.UnifiedCopilot })));
 const MissionReplayScrubber = lazy(() => import('./components/MissionReplayScrubber').then((m) => ({ default: m.MissionReplayScrubber })));
 const PropulsionEngineerPanel = lazy(() => import('./components/PropulsionEngineerPanel').then((m) => ({ default: m.PropulsionEngineerPanel })));
 const MaintenanceDashboardPanel = lazy(() => import('./components/MaintenanceDashboardPanel').then((m) => ({ default: m.MaintenanceDashboardPanel })));
@@ -33,20 +32,23 @@ import {
   Radio,
   Shield,
   Brain,
-  Mic,
   History,
   Cpu,
   Wrench,
   User,
+  Play,
+  ArrowUpRight,
 } from 'lucide-react';
 
 export function App() {
-  const [workspace, setWorkspace] = useState<'landing' | 'runtime' | 'twin' | 'legacy'>(() => {
+  const [workspace, setWorkspace] = useState<'landing' | 'runtime' | 'twin' | 'tactical'>(() => {
     try {
       const p = new URLSearchParams(window.location.search).get('workspace');
-      if (p === 'twin' || p === 'runtime' || p === 'legacy' || p === 'landing') return p;
+      if (p === 'twin' || p === 'runtime' || p === 'tactical' || p === 'landing') return p;
+      if (p === 'legacy') return 'tactical';
       const h = window.location.hash.replace('#', '');
-      if (h === 'twin' || h === 'runtime' || h === 'legacy' || h === 'landing') return h;
+      if (h === 'twin' || h === 'runtime' || h === 'tactical' || h === 'landing') return h;
+      if (h === 'legacy') return 'tactical';
     } catch {}
     return 'landing';
   });
@@ -67,7 +69,7 @@ export function App() {
 
   const [activeRole, setActiveRole] = useState<GCSRole>('OPERATOR');
   const [activeTab, setActiveTab] = useState<
-    'OPERATOR' | 'PROPULSION' | 'MAINTENANCE' | 'AI_DIAGNOSTICS' | 'VOICE_COPILOT' | 'MISSION_REPLAY'
+    'OPERATOR' | 'PROPULSION' | 'MAINTENANCE' | 'AI_COPILOT' | 'MISSION_REPLAY'
   >('OPERATOR');
 
   // The role is a client-side view setting; it is never sent to the server (audit #42, M0-09).
@@ -89,8 +91,9 @@ export function App() {
     }
   };
 
+
   if (workspace === 'landing') {
-    return <LandingPage serverUrl={serverUrl} onLaunchConsole={(target) => setWorkspace(target || 'runtime')} />;
+    return <LandingPage serverUrl={serverUrl} onLaunchConsole={(target) => setWorkspace(target === 'legacy' ? 'tactical' : (target || 'runtime'))} />;
   }
 
   return (
@@ -102,7 +105,8 @@ export function App() {
         activeRole={activeRole}
         onSelectRole={handleSelectRole}
         onOpenSettings={() => setIsModalOpen(true)}
-        runtimeMode={workspace !== 'legacy'}
+        runtimeMode={workspace !== 'tactical'}
+        showRoleSelector={false}
         onGoLanding={() => setWorkspace('landing')}
       />
 
@@ -120,37 +124,37 @@ export function App() {
           <div className="flex rounded-sm border border-surface-border bg-surface-card p-0.5 text-xs font-mono max-w-full overflow-x-auto no-scrollbar">
             <button
               onClick={() => setWorkspace('landing')}
-              className="rounded-sm px-2.5 py-1 text-slate-400 hover:text-white flex items-center gap-1 transition-colors shrink-0 whitespace-nowrap"
+              className="rounded-sm px-2.5 py-1 text-slate-400 hover:text-white active:scale-95 transition-all duration-150 flex items-center gap-1 shrink-0 whitespace-nowrap cursor-pointer"
               title="Return to Platform Overview"
             >
               <span className="text-xs">&larr;</span> Overview
             </button>
             <button
               onClick={() => setWorkspace('runtime')}
-              className={`rounded-sm px-2.5 sm:px-3 py-1 transition-colors shrink-0 whitespace-nowrap ${
+              className={`rounded-sm px-2.5 sm:px-3 py-1 transition-all duration-150 active:scale-95 shrink-0 whitespace-nowrap cursor-pointer ${
                 workspace === 'runtime'
                   ? 'bg-accent text-white font-medium shadow-sm'
-                  : 'text-slate-400 hover:text-white'
+                  : 'text-slate-400 hover:text-white hover:bg-surface-card-hover'
               }`}
             >
               Engine runtime
             </button>
             <button
               onClick={() => setWorkspace('twin')}
-              className={`rounded-sm px-2.5 sm:px-3 py-1 transition-colors shrink-0 whitespace-nowrap ${
+              className={`rounded-sm px-2.5 sm:px-3 py-1 transition-all duration-150 active:scale-95 shrink-0 whitespace-nowrap cursor-pointer ${
                 workspace === 'twin'
                   ? 'bg-accent text-white font-medium shadow-sm'
-                  : 'text-slate-400 hover:text-white'
+                  : 'text-slate-400 hover:text-white hover:bg-surface-card-hover'
               }`}
             >
               3D twin
             </button>
             <button
-              onClick={() => setWorkspace('legacy')}
-              className={`rounded-sm px-2.5 sm:px-3 py-1 transition-colors shrink-0 whitespace-nowrap ${
-                workspace === 'legacy'
+              onClick={() => setWorkspace('tactical')}
+              className={`rounded-sm px-2.5 sm:px-3 py-1 transition-all duration-150 active:scale-95 shrink-0 whitespace-nowrap cursor-pointer ${
+                workspace === 'tactical'
                   ? 'bg-accent text-white font-medium shadow-sm'
-                  : 'text-slate-400 hover:text-white'
+                  : 'text-slate-400 hover:text-white hover:bg-surface-card-hover'
               }`}
             >
               Tactical GCS
@@ -163,12 +167,11 @@ export function App() {
           <EngineRuntimeConsole serverUrl={serverUrl} />
         ) : workspace === 'twin' ? (
           // The 3D twin tab is only the engine (keyboard-driven): same store, same fault API, highlights from
-          // state.highlights and the component manifests, so console, twin and GCS always agree. The old apps/threejs_twin page
-          // (own fault-to-part table, three engines) stays reachable at {serverUrl}/app until it is archived (D10).
+          // state.highlights and the component manifests, so console, twin and GCS always agree.
           <TwinWorkspace serverUrl={serverUrl} onNavigateToRuntime={() => setWorkspace('runtime')} />
         ) : (
           <>
-            {workspace === 'legacy' && !isConnected && (
+            {workspace === 'tactical' && !isConnected && (
               <div className="surface-panel surface-panel-critical p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-sm bg-critical-dim flex items-center justify-center text-critical shrink-0">
@@ -203,8 +206,7 @@ export function App() {
                   { id: 'OPERATOR' as const, label: 'Operator Flight Deck', icon: <User className="w-3.5 h-3.5" /> },
                   { id: 'PROPULSION' as const, label: 'Propulsion Engineer', icon: <Cpu className="w-3.5 h-3.5" /> },
                   { id: 'MAINTENANCE' as const, label: 'Maintenance & CBM', icon: <Wrench className="w-3.5 h-3.5" /> },
-                  { id: 'AI_DIAGNOSTICS' as const, label: 'AI Reasoning & RAG', icon: <Brain className="w-3.5 h-3.5" /> },
-                  { id: 'VOICE_COPILOT' as const, label: 'Voice Copilot', icon: <Mic className="w-3.5 h-3.5" /> },
+                  { id: 'AI_COPILOT' as const, label: 'Tactical AI Copilot', icon: <Brain className="w-3.5 h-3.5" /> },
                   { id: 'MISSION_REPLAY' as const, label: 'Mission Replay', icon: <History className="w-3.5 h-3.5" /> },
                 ].map((tab) => {
                   const isActive = activeTab === tab.id;
@@ -212,9 +214,9 @@ export function App() {
                     <button
                       key={tab.id}
                       onClick={() => handleTabClick(tab.id)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-xs font-medium transition-colors whitespace-nowrap ${
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-xs font-medium transition-all duration-150 active:scale-95 whitespace-nowrap cursor-pointer ${
                         isActive
-                          ? 'bg-accent text-white shadow-sm'
+                          ? 'bg-accent text-white shadow-sm font-semibold'
                           : 'text-slate-400 hover:text-white hover:bg-white/5'
                       }`}
                     >
@@ -226,14 +228,14 @@ export function App() {
               </div>
 
               <div className="flex items-center gap-2 text-xs font-mono text-slate-400">
-                <Radio className="w-3.5 h-3.5 text-accent" />
+                <Radio className="w-3.5 h-3.5 text-accent animate-pulse" />
                 <span>DRDO PS-26054 CYBER-PHYSICAL STACK</span>
               </div>
             </div>
 
         {/* View 1: UAV Operator Tactical Flight Deck (VIS-02) */}
         {activeTab === 'OPERATOR' && (
-          <div className="space-y-4">
+          <div className="space-y-4 animate-fade-in">
             {/* Step 0 — mission parameters, alongside Step 1 — Fault Simulation */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <PanelErrorBoundary label="Engine controls">
@@ -266,63 +268,92 @@ export function App() {
 
         {/* View 2: Propulsion Engineer Console (VIS-03, INT-03, VIS-07, F13) */}
         {activeTab === 'PROPULSION' && (
-          <PanelErrorBoundary label="Propulsion engineer console">
-            <PropulsionEngineerPanel state={state} />
-          </PanelErrorBoundary>
+          <div className="animate-fade-in">
+            <PanelErrorBoundary label="Propulsion engineer console">
+              <PropulsionEngineerPanel state={state} />
+            </PanelErrorBoundary>
+          </div>
         )}
 
         {/* View 3: Ground Crew Maintenance Dashboard (VIS-04, CBM-01, F12, F14) */}
         {activeTab === 'MAINTENANCE' && (
-          <PanelErrorBoundary label="Maintenance dashboard">
-            <MaintenanceDashboardPanel state={state} serverUrl={serverUrl} />
-          </PanelErrorBoundary>
+          <div className="animate-fade-in">
+            <PanelErrorBoundary label="Maintenance dashboard">
+              <MaintenanceDashboardPanel state={state} serverUrl={serverUrl} />
+            </PanelErrorBoundary>
+          </div>
         )}
 
-        {/* View 4: AI Diagnostics & Root Cause */}
-        {activeTab === 'AI_DIAGNOSTICS' && (
-          <PanelErrorBoundary label="AI diagnostics">
-            <DiagnosticCard state={state} serverUrl={serverUrl} />
-          </PanelErrorBoundary>
+        {/* View 4: Unified Tactical AI Copilot (Conversational + Voice RAG) */}
+        {activeTab === 'AI_COPILOT' && (
+          <div className="animate-fade-in">
+            <PanelErrorBoundary label="Tactical AI copilot">
+              <UnifiedCopilot state={state} serverUrl={serverUrl} />
+            </PanelErrorBoundary>
+          </div>
         )}
 
-        {/* View 5: Voice Copilot */}
-        {activeTab === 'VOICE_COPILOT' && (
-          <PanelErrorBoundary label="Voice copilot">
-            <VoiceCopilot state={state} serverUrl={serverUrl} />
-          </PanelErrorBoundary>
-        )}
-
-        {/* View 6: Historical Mission Replay */}
+        {/* View 5: Historical Mission Replay */}
         {activeTab === 'MISSION_REPLAY' && (
-          <PanelErrorBoundary label="Mission replay">
-            <MissionReplayScrubber serverUrl={serverUrl} />
-          </PanelErrorBoundary>
+          <div className="animate-fade-in">
+            <PanelErrorBoundary label="Mission replay">
+              <MissionReplayScrubber serverUrl={serverUrl} />
+            </PanelErrorBoundary>
+          </div>
         )}
         </>)}
         </Suspense>
       </main>
 
-      {workspace === 'legacy' ? <footer className="bg-surface/80 border-t border-surface-border py-3 px-4 text-center mt-auto">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
-          <div className="flex items-center gap-2">
-            <Shield className="w-3.5 h-3.5" />
-            <span>DRDO / iDEX PS-26054 — Rotax 912 iS Sport High-Altitude MALE UAV Digital Twin</span>
+      {workspace === 'tactical' ? <footer className="bg-surface/80 border-t border-surface-border py-3 px-4 mt-auto">
+        <div className="max-w-7xl mx-auto flex flex-col gap-2.5 text-xs text-slate-500">
+          <div className="flex items-center justify-between pb-2 border-b border-surface-border/50">
+            <a
+              href="https://youtu.be/L97JAlS9Z7c"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-red-500 hover:text-red-400 font-mono text-xs font-semibold transition-colors"
+            >
+              <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-red-600 text-white"><Play size={9} fill="currentColor" /></span>
+              <span>Watch Demonstration Video: ANUMAAN System Walkthrough (YouTube)</span>
+              <ArrowUpRight size={12} />
+            </a>
           </div>
-          <div>
-            <span>
-              Active Role: <span className="text-accent font-medium">{activeRole}</span>
-            </span>
-            <span className="mx-2 text-slate-700">·</span>
-            <span>
-              FADEC Lane: <span className="text-slate-300 font-medium">{state.telemetry.FADEC_ACTIVE_LANE}</span>
-            </span>
-            <span className="mx-2 text-slate-700">·</span>
-            <span>
-              Sortie: <span className="text-slate-300 font-medium">{state.sortie_id}</span>
-            </span>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Shield className="w-3.5 h-3.5" />
+              <span>DRDO / iDEX PS-26054 · Rotax 912 iS Sport High-Altitude MALE UAV Digital Twin</span>
+            </div>
+            <div>
+              <span>
+                Active Role: <span className="text-accent font-medium">{activeRole}</span>
+              </span>
+              <span className="mx-2 text-slate-700">·</span>
+              <span>
+                FADEC Lane: <span className="text-slate-300 font-medium">{state.telemetry.FADEC_ACTIVE_LANE}</span>
+              </span>
+              <span className="mx-2 text-slate-700">·</span>
+              <span>
+                Sortie: <span className="text-slate-300 font-medium">{state.sortie_id}</span>
+              </span>
+            </div>
           </div>
         </div>
-      </footer> : <footer className="bg-surface/80 border-t border-surface-border py-3 px-4 text-center mt-auto text-xs text-slate-500">DRDO / iDEX PS-26054 · Simulation-backed multi-engine condition monitoring demonstrator</footer>}
+      </footer> : <footer className="bg-surface/80 border-t border-surface-border py-3 px-4 mt-auto text-xs text-slate-500">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2.5">
+          <a
+            href="https://youtu.be/L97JAlS9Z7c"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 text-red-500 hover:text-red-400 font-mono text-xs font-semibold transition-colors order-first"
+          >
+            <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-red-600 text-white"><Play size={9} fill="currentColor" /></span>
+            <span>Watch Demonstration Video: ANUMAAN Walkthrough (YouTube)</span>
+            <ArrowUpRight size={12} />
+          </a>
+          <span>DRDO / iDEX PS-26054 · Simulation-backed multi-engine condition monitoring demonstrator</span>
+        </div>
+      </footer>}
 
       <Suspense fallback={null}>
         <ConnectionModal

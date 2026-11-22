@@ -39,6 +39,18 @@ export const DiagnosticCard: React.FC<DiagnosticCardProps> = ({
   const [copilotCitations, setCopilotCitations] = useState<string[]>([]);
   const [isCopilotAsking, setIsCopilotAsking] = useState(false);
 
+  const [sessionId] = useState(() => {
+    try {
+      const existing = localStorage.getItem('anumaan_copilot_session_id');
+      if (existing) return existing;
+      const fresh = crypto.randomUUID();
+      localStorage.setItem('anumaan_copilot_session_id', fresh);
+      return fresh;
+    } catch {
+      return `session-${Date.now()}`;
+    }
+  });
+
   const [checkedSteps, setCheckedSteps] = useState<Record<number, boolean>>({});
 
   const toggleCheckStep = (idx: number) => {
@@ -63,7 +75,7 @@ export const DiagnosticCard: React.FC<DiagnosticCardProps> = ({
           'Content-Type': 'application/json',
           'ngrok-skip-browser-warning': '69420',
         },
-        body: JSON.stringify({ query }),
+        body: JSON.stringify({ query, session_id: sessionId }),
         signal: controller.signal,
       });
       if (res.ok) {
@@ -342,6 +354,15 @@ export const DiagnosticCard: React.FC<DiagnosticCardProps> = ({
               <span>Send</span>
             </button>
           </form>
+
+          {isCopilotAsking && (
+            <div className="p-4 rounded-sm surface-panel surface-panel-ai border border-surface-border flex items-center gap-3 animate-pulse">
+              <Loader2 className="w-4 h-4 animate-spin text-ai-accent shrink-0" />
+              <span className="text-xs font-mono text-slate-300">
+                Mission Copilot analyzing propulsion state, physical limits &amp; ATA manual procedures...
+              </span>
+            </div>
+          )}
 
           {copilotAnswer && (
             <div className="p-4 rounded-sm surface-panel surface-panel-ai animate-fade-in">

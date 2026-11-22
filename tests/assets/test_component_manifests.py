@@ -62,21 +62,44 @@ def test_forbidden_mappings():  # A section 8 test 3 (the parts that are known t
         for engine_id, entry in spec.raw["components"].items():
             now = entry.get("now", [])
             assert "wastegate_MISSEGMENTED" not in now, f"{spec.id} maps to the missegmented 914 wastegate"
+            assert "main_engine_MERGED" not in now, f"{spec.id} maps to the monolithic 915 main_engine_MERGED"
+            assert "crankcase_cylinders_base" not in now, f"{spec.id} maps to the merged 912 crankcase_cylinders_base"
+            assert "cylinder_bank_unverified" not in now, f"{spec.id} maps to the unverified 914 cylinder bank"
             if spec.name == "AIR_FILTER_BLOCKAGE":
                 assert "air_baffles" not in now, "air filter fault must not light the 915 cooling baffles"
 
 
-@pytest.mark.parametrize("engine_id", ["austro_ae300", "vrde_jayem_2_2l"])
+@pytest.mark.parametrize("engine_id", ["austro_ae300", "vrde_jayem_2_2l", "rotax_914", "rotax_915is"])
 def test_per_cylinder_faults_light_different_parts_per_cylinder(engine_id):  # A section 8 test 4
     reg = load_fault_registry()
     cfg = load_engine_config(engine_id)
+    applicable_ids = {s.id for s in reg.applicable(cfg)}
     nodes_by_comp = {c["component_id"]: set(c["nodes"]) for c in manifest(engine_id)["components"]}
-    for fid in ("F06", "F08"):
-        entry = reg.get(fid).raw["components"][engine_id]
+    
+    # Per-engine applicable per-cylinder faults that map to discrete geometry
+    fids = ["F01", "F02", "F19", "F30", "F31"] if "rotax" in engine_id else ["F06", "F08", "F31"]
+    
+    for fid in fids:
+        if fid not in applicable_ids:
+            continue
+        spec = reg.get(fid)
+        entry = spec.raw["components"].get(engine_id)
+        if not entry or not entry.get("now"):
+            continue
         node_sets = []
         for cyl in range(1, cfg.cylinder_count + 1):
             nodes = set()
             for cid in _resolve(entry["now"], cyl):
-                nodes |= nodes_by_comp[cid]
+                nodes |= nodes_by_comp.get(cid, set())
             node_sets.append(frozenset(nodes))
-        assert len(set(node_sets)) == cfg.cylinder_count, f"{fid} on {engine_id}: cylinders share the same parts"
+        assert len(set(node_sets)) == cfg.cylinder_count, f"{fid} on {engine_id}: cylinders do not light distinct parts"
+
+
+
+@pytest.mark.parametrize("engine_id", ENGINES)
+def test_asset_size_budget_and_loading(engine_id):  # A section 8 test 6
+    glb_path = ROOT / manifest(engine_id)["glb"]
+    assert glb_path.exists(), f"GLB file missing: {glb_path}"
+    size_mb = glb_path.stat().st_size / (1024 * 1024)
+    assert size_mb < 20.0, f"{engine_id} GLB exceeds 20 MB budget: {size_mb:.2f} MB"
+

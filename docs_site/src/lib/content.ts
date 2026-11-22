@@ -284,11 +284,11 @@ export const technicalNavGroups: NavGroup[] = [
 
 export const journeyNavGroups: NavGroup[] = [
   {
-    name: 'Field Notebook',
+    name: 'Our SIH Story',
     items: [
       { title: 'Journey Overview', slug: 'journey' },
-      { title: '01 The Engineering Story', slug: 'journey/01-the-engineering-story' },
-      { title: '02 Demonstration & Verification', slug: 'journey/02-preparing-for-evaluation' },
+      { title: '01 Our Story & DRDO Visit', slug: 'journey/01-the-engineering-story' },
+      { title: '02 College Presentation & Demo', slug: 'journey/02-preparing-for-evaluation' },
     ],
   },
 ];

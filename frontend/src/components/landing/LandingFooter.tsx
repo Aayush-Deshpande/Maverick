@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowUp } from 'lucide-react';
+import { ArrowUp, Play } from 'lucide-react';
 
 interface LandingFooterProps {
   onLaunchConsole?: () => void;
@@ -35,6 +35,7 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({
       <a href="#hero" className="an-footer-brand"><img className="an-footer-logo" src="/images/anumaan-mark-editorial.png" alt="" /><span>ANUMAAN<small>Aero-propulsion health</small></span></a>
       <p>Team Midnight Ciphers · DRDO SIH 26054<br />Simulated propulsion-health prototype.</p>
       <div className="an-footer-links">
+        <button onClick={() => window.open('https://youtu.be/L97JAlS9Z7c', '_blank', 'noopener,noreferrer')} className="text-red-500 font-semibold flex items-center gap-1.5"><Play size={12} fill="currentColor" /> Watch demo video <ArrowUp className="an-footer-arrow" size={14} /></button>
         <button onClick={handleLaunchConsole}>Engine runtime <ArrowUp className="an-footer-arrow" size={14} /></button>
         <button onClick={handleOpenTwin}>3D engine twin <ArrowUp className="an-footer-arrow" size={14} /></button>
         <button onClick={handleOpenLegacy}>Ground console <ArrowUp className="an-footer-arrow" size={14} /></button>

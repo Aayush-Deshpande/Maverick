@@ -72,6 +72,7 @@ from backend.voice.thinking_stream import THINKING_STREAM
 
 class AIAskRequest(BaseModel):
     query: str
+    session_id: Optional[str] = None
 
 
 class VoiceResetRequest(BaseModel):
@@ -148,11 +149,14 @@ _THREEJS_TWIN = _REPO_ROOT / "apps" / "threejs_twin"
 
 @app.get("/app", include_in_schema=False)
 def serve_threejs_twin():
-    """Serve the browser twin from the same local service as its simulation APIs."""
-    return RedirectResponse("/apps/threejs_twin/")
+    """Serve the 3D digital twin (redirects to the modern R3F 3D twin, or legacy threejs if present)."""
+    if _THREEJS_TWIN.exists():
+        return RedirectResponse("/apps/threejs_twin/")
+    return RedirectResponse("/#twin")
 
 
-app.mount("/apps/threejs_twin", StaticFiles(directory=_THREEJS_TWIN, html=True), name="threejs-twin-assets")
+if _THREEJS_TWIN.exists():
+    app.mount("/apps/threejs_twin", StaticFiles(directory=_THREEJS_TWIN, html=True), name="threejs-twin-assets")
 
 # compressed engine models (D49): the synced frontend copy, else the committed canonical folder, so the 3D twin
 # page always loads the same Draco files as the console viewer (never the 80 MB uncompressed exports)
@@ -246,6 +250,29 @@ def root():
             "replay_manifest": "/api/replay/{mission_id}/manifest",
             "replay_frame": "/api/replay/{mission_id}/frame?time_sec=..."
         }
+    }
+
+
+@app.get("/health")
+def root_liveness() -> Dict[str, Any]:
+    """Root container liveness probe (M8-01, T-OPS-1)."""
+    return {
+        "status": "UP",
+        "ready": api_v1_module.services() is not None,
+        "service": "ANUMAAN Digital Twin Server",
+        "loop_frequency_hz": load_runtime_settings()["tick_rate_hz"]
+    }
+
+
+@app.get("/ready")
+def root_readiness() -> Dict[str, Any]:
+    """Root container readiness probe (M8-01, T-OPS-1)."""
+    if api_v1_module._services is None:
+        raise HTTPException(503, "Initializing engine runtimes")
+    return {
+        "ready": True,
+        "selected_engine": api_v1_module._services.hub.selected,
+        "total_engines": len(api_v1_module._services.hub.engines)
     }
 
 
@@ -415,11 +442,13 @@ async def ask_ai_copilot(req: AIAskRequest):
     """Free-text mission copilot query (guardrails + RAG retrieval + optional LLM synthesis)."""
     service = EngineStateService.get_instance()
     state = _copilot_state()
+    kwargs = {"session_id": req.session_id} if req.session_id else {}
     result = await asyncio.to_thread(
         service.copilot.ask,
         req.query,
         state,
         state["analytics"]["diagnosed_fault_id"],
+        **kwargs,
     )
     return result
 

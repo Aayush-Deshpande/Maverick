@@ -19,10 +19,17 @@ echo.
 
 set "PYTHONUTF8=1"
 
-rem 1. Resolve 3D blend model (Rotax 912 iS Sport 109-mesh model)
-set "TARGET_BLEND=%ROOT%assets\blender\engines\rotax_912is\rotax_912is.blend"
-if not exist "%TARGET_BLEND%" set "TARGET_BLEND=%ROOT%assets\blender\engines\rotax_912is\variants\rotax_912is_showcase.blend"
+rem 1. Resolve Engine ID and 3D blend model
+set "ENGINE_ARG=%~1"
+if not defined ENGINE_ARG set "ENGINE_ARG=%ANUMAAN_ENGINE_ID%"
+if not defined ENGINE_ARG set "ENGINE_ARG=rotax_912is"
+set "ANUMAAN_ENGINE_ID=%ENGINE_ARG%"
+
+rem Prefer unified 5-engine master twin (work or master), then per-engine blend
+set "TARGET_BLEND=%ROOT%assets\blender\scenes\anumaan_master_twin_work.blend"
 if not exist "%TARGET_BLEND%" set "TARGET_BLEND=%ROOT%assets\blender\scenes\anumaan_master_twin.blend"
+if not exist "%TARGET_BLEND%" set "TARGET_BLEND=%ROOT%assets\blender\engines\%ENGINE_ARG%\%ENGINE_ARG%.blend"
+if not exist "%TARGET_BLEND%" set "TARGET_BLEND=%ROOT%assets\blender\engines\rotax_912is\rotax_912is.blend"
 
 if not exist "%TARGET_BLEND%" (
     echo [ERROR] No 3D model file found!
@@ -31,6 +38,7 @@ if not exist "%TARGET_BLEND%" (
 )
 
 echo [3D ASSET]  Model: %TARGET_BLEND%
+echo [ENGINE]    Active: %ANUMAAN_ENGINE_ID%
 echo.
 
 set "BLENDER_EXE="
@@ -62,7 +70,7 @@ if errorlevel 1 (
     echo [OK] Backend connected - 20 Hz live telemetry active.
 )
 
-set "SCRIPT_PATH=%ROOT%apps\blender_twin\standalone_fault_diagnostic_app.py"
+set "SCRIPT_PATH=%ROOT%apps\blender_twin\standalone_digital_twin_app.py"
 if not exist "%SCRIPT_PATH%" (
     echo [ERROR] Python script not found: %SCRIPT_PATH%
     pause
@@ -74,7 +82,7 @@ echo.
 echo   Console stays open. Close Blender to exit.
 echo.
 
-"%BLENDER_EXE%" "%TARGET_BLEND%" --python "%SCRIPT_PATH%"
+"%BLENDER_EXE%" "%TARGET_BLEND%" --python "%SCRIPT_PATH%" -- --engine "%ANUMAAN_ENGINE_ID%"
 
 echo.
 echo Blender exited. Check output above for errors.

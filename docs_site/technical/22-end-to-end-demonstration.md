@@ -6,11 +6,21 @@ The scenario below uses a cylinder CHT overheat on the Rotax 912 iS as a concret
 
 ---
 
+## Live System Demonstration Video
+
+A video walkthrough of ANUMAAN in action across the complete flight deck pipeline, demonstrating real-time 20 Hz multi-physics telemetry, 3D digital twin viewport modes, live failure injection, and tactical glide cone derate advisories:
+
+[![ANUMAAN System Demonstration Walkthrough](https://img.youtube.com/vi/L97JAlS9Z7c/maxresdefault.jpg)](https://youtu.be/L97JAlS9Z7c)
+
+Watch the complete demonstration on YouTube: [https://youtu.be/L97JAlS9Z7c](https://youtu.be/L97JAlS9Z7c)
+
+---
+
 ## The 6-Stage Operational Flight Demonstration
 
 ```mermaid
 flowchart TB
-    T1["Stage 1: Pre-Flight Initialization (T+00:00)<br/>Cold soak at AFS Leh (-20°C, 10,682 ft AMSL); SocketCAN 20 Hz sync"] --> T2["Stage 2: High-Power Climb (T+00:15)<br/>5,500 RPM, MAP 29.8 inHg; EKF tracks manifold filling & thermal lag"]
+    T1["Stage 1: Pre-Flight Initialization (T+00:00)<br/>Cold soak at AFS Leh (-20°C, 10,682 ft AMSL); SocketCAN 20 Hz sync"] --> T2["Stage 2: High-Power Climb (T+00:15)<br/>5,500 RPM, MAP 29.8 inHg; UKF tracks manifold filling & thermal lag"]
     T2 --> T3["Stage 3: High-Altitude Loiter (T+00:45)<br/>22,000 ft AMSL, 4,800 RPM; Normalized physics residuals r*(t) ≈ 0"]
     T3 --> T4["Stage 4: Seeded Degradation (T+01:10)<br/>Cylinder #2 cooling blockage injected; CHT_2 climbs toward 138°C"]
     T4 --> T5["Stage 5: Detection & Bayesian Diagnosis (T+01:12)<br/>Parity space confirms valid sensor; EVT POT triggers; ATA 72-00 directive"]
@@ -20,7 +30,7 @@ flowchart TB
 ### Stage 1: Pre-Flight Initialization & Calibration (T+00:00)
 1. **Airbase Environment Selection:** The operator initializes the flight test mission at **AFS Leh (Northern Sector)**, with ambient static pressure $P_{\text{amb}} = 68.5\text{ kPa}$ (elevation 10,682 ft AMSL) and temperature $T_{\text{amb}} = -20^\circ\text{C}$.
 2. **Avionics Synchronization:** The ground control station connects to the simulated or physical CAN bus (`can0`, 500 kbps) via Linux SocketCAN. Telemetry frames are decoded at $20\text{ Hz}$ using standard DBC schemas.
-3. **EKF Observer Convergence:** The 12-state Continuous-Discrete Extended Kalman Filter converges its state covariance $\mathbf{P}(0)$ within $800\text{ ms}$, establishing healthy baseline temperatures for intake air, coolant, and oil galleries.
+3. **UKF Observer Convergence:** The 12-state Continuous-Discrete Unscented Kalman Filter converges its state covariance $\mathbf{P}(0)$ within $800\text{ ms}$, establishing healthy baseline temperatures for intake air, coolant, and oil galleries.
 
 ### Stage 2: High-Power Takeoff & Climb Phase (T+00:15)
 1. **Dynamic Engine Loading:** Commanded throttle advances to 100%, propeller governor requests 5,500 RPM, and intake manifold pressure rises to 29.8 inHg.
@@ -38,7 +48,7 @@ flowchart TB
 
 ### Stage 5: Detection, Parity Validation & Bayesian Diagnosis (T+01:12)
 1. **Sensor Validation Shield:** The analytical parity space validator checks the consistency matrix $\mathbf{V}_p \mathbf{C}_s = \mathbf{0}$. The parity residual remains within healthy bounds ($\|\mathbf{r}_p\| < \tau_p$), mathematically proving that the thermocouple is intact and that the temperature rise reflects true engine degradation.
-2. **Novelty Coding & EVT Trigger:** Bio-Inspired Sparse Novelty Coding projects the order-band and residual features into sparse Kenyon-cell space ($m = 2000$), detecting an overlap drop against nominal memory. In parallel, the VAE reconstruction error exceeds the dynamic Generalized Pareto Distribution threshold $z_q$ for $\ge 3.0\text{ seconds}$ (150 consecutive cycles at 50 Hz).
+2. **Novelty Coding & EVT Trigger:** Bio-Inspired Sparse Novelty Coding projects the order-band and residual features into sparse Kenyon-cell space ($m = 2000$), detecting an overlap drop against nominal memory. In parallel, the VAE reconstruction error exceeds the dynamic Generalized Pareto Distribution threshold $z_q$ for $\ge 3.0\text{ seconds}$ (60 consecutive cycles at 20 Hz).
 3. **Bayesian Hypothesis Isolation:** The Bayesian belief network evaluates conditional probabilities across all ten FMECA modes. It isolates **Mode 01: Cylinder CHT Overheat** with 96.4% posterior probability.
 4. **3D Visualizer Synchronization:** The Three.js interactive 3D digital twin pulses Cylinder #2 in amber, directing the operator visual attention directly to the affected hardware.
 

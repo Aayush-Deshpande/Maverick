@@ -74,6 +74,7 @@ class ReplayEngine:
                     m = json.load(f)
             except Exception:
                 continue  # a corrupt/partial bundle must not break the whole listing
+            has_telemetry = os.path.isfile(os.path.join(self.report_dump_dir, name, "readings", "telemetry_log.csv"))
             out.append({
                 "mission_id": m.get("mission_id", name),
                 "sortie_id": m.get("sortie_id"),
@@ -88,6 +89,7 @@ class ReplayEngine:
                 "fault_count": m.get("fault_count"),
                 "health_index_start": m.get("health_index_start"),
                 "health_index_end": m.get("health_index_end"),
+                "has_telemetry": has_telemetry,
             })
         return out
 
@@ -140,6 +142,7 @@ class ReplayEngine:
             ),
             "start_epoch": start_epoch,
             "event_markers": event_markers,
+            "has_telemetry": os.path.isfile(os.path.join(mission_dir, "readings", "telemetry_log.csv")),
         }
         self._manifest_cache[mission_id] = manifest
         return manifest

@@ -90,7 +90,7 @@ flowchart LR
 
 1. **Click 1:** Clicking the flashing RED/AMBER alert banner immediately isolates and filters the Subsystem Diagnostic Panel to the offending engine assembly.
 2. **Click 2:** Clicking the highlighted affected subsystem (e.g., `TURBOCHARGING SYSTEM`) opens the Physics Residual & Virtual Sensor view, displaying wastegate duty cycle, compressor pressure ratio, and $TIT$.
-3. **Click 3:** Clicking the failing parameter (e.g., $\Delta MAP$) displays the 10-minute historical trend overlaid with the 0D/1D MVEM physics expectation, EKF innovation bounds, and raw SocketCAN frame timestamps.
+3. **Click 3:** Clicking the failing parameter (e.g., $\Delta MAP$) displays the 10-minute historical trend overlaid with the 0D/1D MVEM physics expectation, UKF innovation bounds, and raw SocketCAN frame timestamps.
 
 ---
 
@@ -143,9 +143,21 @@ This asymmetry is deliberate rather than incidental. The multi-engine runtime de
 
 Both workspaces carry the same labeling discipline into every panel that shows evidence. Tier-0 residuals, tier-1 classifier scores, Bayesian hypothesis rankings, and RUL intervals are all presented as simulation-derived quantities, computed from the current telemetry and the physics or statistical model behind them, not asserted as a certified determination of airworthiness. This distinction matters because ANUMAAN's physics is grounded in published manufacturer specifications and its methods are validated through simulation and testing, as described in [Validation and Experiments](21-validation-and-experiments.md), rather than against flight data from an instrumented real airframe. An operator reading the interface should always be able to tell which of those two things they are looking at.
 
-### The Voice Copilot
+### The Voice Copilot & Conversational Triage
+The conversational copilot answers operator questions by querying real-time telemetry directly from the in-memory simulation channel in RAM (`ServicesSource.state()`), achieving sub-millisecond access time with zero disk I/O. Speech recognition runs via local Whisper STT, while speech synthesis is generated via Kokoro neural TTS. When network connectivity is severed or cloud LLMs are unavailable, a deterministic offline rule engine handles diagnostic triage, ensuring the copilot remains operational during complete radio silence.
 
-The conversational copilot in the Rotax workspace answers operator questions by retrieving from a local index of Rotax and DRDO reference material, paired with a local language model that is disabled by default; when no language model is enabled, a deterministic fallback still covers diagnosis and explanation, so the copilot never goes silent. A voice interface sits on top of this text channel, using local speech recognition and local speech synthesis where available. Where the local voice engines are not available, the interface falls back to the browser's own speech APIs and shows a visible status indicator naming which mode is active, so the operator is never left guessing whether they are talking to the local engine or the browser fallback.
+### Tactical Command Palette (`Ctrl+K`)
+For rapid keyboard-first control during high-tempo operations, ANUMAAN incorporates an aerospace command palette (`CommandPalette.tsx`) triggered via `Ctrl+K` or `/`:
+* **Instant Engine Switching**: Switch between Rotax 912 iSc, 914, 915 iSc, Austro AE300, and VRDE Jayem 2.2L.
+* **3D Render Mode Cycling**: Jump directly to `SOLID`, `X-RAY`, `THERMAL`, or `WIREFRAME` modes.
+* **Tactical Power Levers**: Select predefined throttle steps (Idle 10%, Cruise 75%, Takeoff Climb 100%).
+* **Rapid Fault Injection**: Instantly trigger simulated scenarios (misfires, leaks, sensor drift) with real-time feedback.
+
+### Mobile Remote Cockpit Companion
+The Ground Control Station includes a zero-install mobile companion (`ConnectionModal.tsx`):
+* **QR Code Pairing**: Operators scan a secure QR code from any tablet or mobile device on the local network.
+* **Low-Latency WebSockets**: Connects directly to the live 20 Hz telemetry stream without requiring app store installations.
+* **Tactical Field Monitoring**: Line maintenance crew can walk around the airframe with a ruggedized tablet inspecting live temperatures, pressures, and diagnostic alerts.
 
 ---
 
@@ -154,7 +166,7 @@ The conversational copilot in the Rotax workspace answers operator questions by 
 Post-incident airworthiness investigations demand 100% deterministic reconstruction of the aircraft state:
 
 * **Append-Only Flight Blackbox:** Incoming raw CAN frames and MAVLink telemetry are continuously streamed to an encrypted, timestamped Apache Parquet / SQLite container. Every record includes monotonic microsecond hardware timestamps, cyclic redundancy check (CRC) verification, and bus error counters.
-* **Deterministic EKF Re-Execution:** The replay engine can re-run the 0D/1D MVEM physics model and 12-state EKF observer through recorded flight telemetry. This allows propulsion engineers to vary filter covariances ($\mathbf{Q}, \mathbf{R}$), evaluate alternate diagnostic thresholds, or benchmark new neural network models against identical historical flight data without flight risk.
+* **Deterministic UKF Re-Execution:** The replay engine can re-run the 0D/1D MVEM physics model and 12-state UKF observer through recorded flight telemetry. This allows propulsion engineers to vary filter covariances ($\mathbf{Q}, \mathbf{R}$), evaluate alternate diagnostic thresholds, or benchmark new neural network models against identical historical flight data without flight risk.
 * **Synchronous Multi-Track Playback:** A master scrubber bar controls simultaneous playback across all GCS subsystems at $0.25\times, 1.0\times, 2.0\times, 5.0\times$, and $10.0\times$ speeds:
   1. 3D CAD engine kinematics and thermal stress color mapping (Three.js WebGL).
   2. 4-cylinder $EGT/CHT$ spreads and thermodynamic telemetry graphs.
@@ -173,7 +185,7 @@ flowchart LR
     B --> C["Edge Parity & FFT<br/>(15 ms)"]
     C --> D["Air-Ground Datalink<br/>(80 ms)"]
     D --> E["FastAPI Ingestion Hub<br/>(10 ms)"]
-    E --> F["EKF State Observer<br/>(15 ms)"]
+    E --> F["UKF State Observer<br/>(15 ms)"]
     F --> G["VAE / FMECA Inference<br/>(10 ms)"]
     G --> H["GCS WebGL Render<br/>(25 ms)"]
 ```

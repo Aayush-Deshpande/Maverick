@@ -14,13 +14,13 @@ A defence-grade digital twin cannot rely on superficial unit testing. ANUMAAN es
 flowchart TD
     L10["Level 10: Operational Deployment & HIL Bench<br/>(Dynamometer test-rig & SocketCAN hardware bridge; 24-hr stability)"]
     L9["Level 9: Robustness, Noise & Domain Shift<br/>(Sensor dropout, EMI noise, -40°C to +50°C shifts; SNR down to 18 dB)"]
-    L8["Level 8: Real-Time Determinism & Latency Budget<br/>(<= 170 ms end-to-end latency; EKF step < 0.8 ms on ARM Cortex)"]
+    L8["Level 8: Real-Time Determinism & Latency Budget<br/>(<= 170 ms end-to-end latency; UKF step < 0.8 ms on ARM Cortex)"]
     L7["Level 7: Mission Coupling & Aerodynamic Reachability<br/>(Glide polar L/D cone boundary error < 3.5%; 100% reachability precision)"]
     L6["Level 6: Prognostics & Conformal Prediction Coverage<br/>(Empirical coverage >= 95% guaranteed; mean interval width <= 0.25 * RUL)"]
     L5["Level 5: Fault Diagnosis & FMECA Classification Accuracy<br/>(Macro F1 >= 0.94 across 6 fault classes; top-2 XAI SHAP features match FMECA)"]
     L4["Level 4: Anomaly Detection & EVT False Alarm Rate<br/>(True Positive Rate >= 98%; False Alarm Rate alpha <= 10^-4 via EVT POT)"]
-    L3["Level 3: Digital Twin State Observer Tracking Accuracy<br/>(EKF innovation whiteness p > 0.05; unmeasured state error < 2.5%)"]
-    L2["Level 2: Telemetry Ingestion, Ring-Buffering & Parity Space<br/>(Zero frame loss @ 50 Hz CAN stream; parity sensor fault recall > 99.2%)"]
+    L3["Level 3: Digital Twin State Observer Tracking Accuracy<br/>(UKF innovation whiteness p > 0.05; unmeasured state error < 2.5%)"]
+    L2["Level 2: Telemetry Ingestion, Ring-Buffering & Parity Space<br/>(Zero frame loss @ 20 Hz CAN stream; parity sensor fault recall > 99.2%)"]
     L1["Level 1: Physics Engine Thermodynamic & Conservation Laws<br/>(Mass & energy deficit < 0.5%; Seiliger cycle indicated power error < 2.0%)"]
 
     L1 --> L2 --> L3 --> L4 --> L5 --> L6 --> L7 --> L8 --> L9 --> L10
@@ -35,8 +35,8 @@ Every level of the pyramid is governed by strict quantitative thresholds pinned 
 | **L1: Thermodynamic Physics** | Mass & Energy Balance Deficit | $\frac{\lvert\Delta \dot{E}_{\text{in}} - \Delta \dot{E}_{\text{out}}\rvert}{\dot{E}_{\text{total}}}$ | $< 0.005$ ($< 0.5\%$ error) |
 | | Seiliger Indicated Power Error | $\text{RMSE}(P_{\text{ind, sim}}, P_{\text{ind, dyno}})$ | $< 2.0\%$ vs. dyno baseline |
 | **L2: Sensor Validation** | Parity Space Fault Recall | $\frac{TP}{TP + FN}$ on simulated drifts | $> 99.2\%$ on sensor bias $\ge 3\sigma$ |
-| | Frame Drop Rate @ 50 Hz | $\frac{\text{Frames Dropped}}{\text{Frames Transmitted}}$ | $0.000\%$ over 10-hour stress run |
-| **L3: Digital Twin EKF** | Innovation Whiteness | Ljung-Box Q-test on $\boldsymbol{\nu}(t)$ | $p\text{-value} > 0.05$ (Zero-mean white noise) |
+| | Frame Drop Rate @ 20 Hz | $\frac{\text{Frames Dropped}}{\text{Frames Transmitted}}$ | $0.000\%$ over 10-hour stress run |
+| **L3: Digital Twin UKF** | Innovation Whiteness | Ljung-Box Q-test on $\boldsymbol{\nu}(t)$ | $p\text{-value} > 0.05$ (Zero-mean white noise) |
 | | Tracking Convergence Time | $t_{\text{conv}}$ from cold initialization | $< 150\text{ ms}$ ($< 8$ sample ticks) |
 | **L4: Anomaly Detection** | False Alarm Rate ($\alpha$) | Extreme Value Theory POT $u_{\alpha}$ | $\alpha \le 10^{-4}$ (Zero nuisance alerts) |
 | | Detection Latency on Injection | Time to persistence confirmation | $< 3.0\text{ seconds}$ |
@@ -47,7 +47,7 @@ Every level of the pyramid is governed by strict quantitative thresholds pinned 
 | **L7: Mission Glide Coupling** | Glide Cone Boundary Error | $\frac{\lvert R_{\text{glide, est}} - R_{\text{glide, 6DOF}}\rvert}{R_{\text{glide, 6DOF}}}$ | $< 3.5\%$ vs. 6-DOF aerodynamic model |
 | | Runway Reachability Precision | False Divert Rate | $0.0\%$ (Zero unreachable airfield picks) |
 | **L8: Latency & Determinism** | Ingestion-to-Render Latency | End-to-end P99.9 latency | $\le 170\text{ ms}$ |
-| | EKF Step Execution Duration | Runge-Kutta 4th-order tick | $< 0.80\text{ ms}$ on ARM Cortex-A78AE |
+| | UKF Step Execution Duration | Runge-Kutta 4th-order tick | $< 0.80\text{ ms}$ on ARM Cortex-A78AE |
 | **L9: Robustness & Noise** | Gaussian Sensor Noise Tolerance | Minimum Signal-to-Noise Ratio (SNR) | Stable down to $18\text{ dB}$ |
 | | Sustained Datalink Dropout | State covariance $\mathbf{P}(t)$ bounding | Stable through $2.0\text{ s}$ total packet loss |
 | **L10: HIL Dynamometer** | SocketCAN Bridge Jitter | Timestamp standard deviation | $< 1.0\text{ ms}$ variance |
@@ -154,7 +154,7 @@ Test coverage in this style spans:
 * **Evaluation & Calibration:** Conformal coverage $\ge 95\%$, nonconformity score monotonicity.
 * **Mission & Reliability:** Glide cone reachability precision, terrain altitude margin verification.
 * **OSA-CBM Layering:** Strict unidirectional data flow from Layer 1 (Sensor Ingestion) to Layer 6 (Decision Support).
-* **Twin Validity & Integrity:** EKF innovation zero-mean test, matrix positive-definiteness checks.
+* **Twin Validity & Integrity:** UKF innovation zero-mean test, matrix positive-definiteness checks.
 * **Physics Modules:** Mass/energy conservation, Sommerfeld lubrication boundary, and compressor map pressure ratio interpolation.
 
 ## Related systems

@@ -1,7 +1,7 @@
 import React from 'react';
 import { FunctionSquare, ChevronRight } from 'lucide-react';
 import { UnifiedTelemetryState } from '../types/telemetry';
-import { pct } from '../utils/format';
+import { PanelInfoModal } from './PanelInfoModal';
 
 interface CalculationsPanelProps {
   state: UnifiedTelemetryState;
@@ -70,16 +70,21 @@ export const CalculationsPanel: React.FC<CalculationsPanelProps> = ({ state }) =
   const t = state.telemetry;
   const a = state.analytics;
   const res = a.residuals || {};
+  const getResidual = (key: string): number => {
+    const raw = res[key] ?? res[key.replace('d_', '').toLowerCase()] ?? res[key.toLowerCase()] ?? 0;
+    return typeof raw === 'number' && Number.isFinite(raw) ? raw : 0;
+  };
 
-  const zScores = Object.entries(DIVISORS).map(([key, div]) => Math.abs(res[key] ?? 0) / div);
+  const zScores = Object.entries(DIVISORS).map(([key, div]) => Math.abs(getResidual(key)) / div);
   const zMax = zScores.length ? Math.max(...zScores) : 0;
   const zRms = zScores.length ? Math.sqrt(zScores.reduce((s, z) => s + z * z, 0) / zScores.length) : 0;
   const zComposite = 0.65 * zMax + 0.35 * zRms;
   const computedAnomaly = 1 - Math.exp(-0.45 * zComposite);
 
-  const anomalyTone = a.anomaly_score >= 0.65 ? 'critical' : a.anomaly_score >= 0.35 ? 'warning' : 'nominal';
+  const effectiveAnomaly = typeof a.anomaly_score === 'number' && a.anomaly_score > 0 ? Math.min(1.0, a.anomaly_score / 3.0) : computedAnomaly;
+  const anomalyTone = effectiveAnomaly >= 0.65 ? 'critical' : effectiveAnomaly >= 0.35 ? 'warning' : 'nominal';
 
-  const dCht2 = res.d_CHT_2 ?? 0;
+  const dCht2 = getResidual('d_CHT_2');
   const expectedCht2 = t.CHT_2 - dCht2;
 
   const sanity = a.sensor_sanity;
@@ -97,7 +102,29 @@ export const CalculationsPanel: React.FC<CalculationsPanelProps> = ({ state }) =
           <FunctionSquare className="w-3.5 h-3.5" />
         </div>
         <div>
-          <h2 className="text-xs font-semibold text-white">Detection Logic & Prognostic Calculations</h2>
+          <div className="flex items-center gap-1.5">
+            <h2 className="text-xs font-semibold text-white">Detection Logic &amp; Prognostic Calculations</h2>
+            <PanelInfoModal
+              title="Multi-Stage Anomaly Detection & Prognostics Pipeline"
+              subtitle="4-Step Statistical, Physics, & Deep Learning Consensus"
+              description="Implements a 4-step cascaded detection pipeline designed to eliminate false positives while achieving early fault detection with zero ground-truth leakage: (1) Sensor Sanity & Range Validation, (2) Normalized Residual Z-Scores, (3) Neural Autoencoder Reconstruction Error, and (4) Whiteness / Innovation Chi-Square Testing."
+              formula={`Step 1: Sanity Check: y_min ≤ y_i ≤ y_max and |dy_i/dt| ≤ slew_limit
+Step 2: Residual Z-Score: z_i = |y_i - ŷ_i| / σ_i
+Step 3: Autoencoder Score: S_AE = (1/N) · Σ (x_i - x̂_i)²
+Step 4: Whiteness / NIS: χ² = Σ ν_k^T · S_k^(-1) · ν_k ~ χ²_m
+
+Consensus Alarm: Alarm = (z_max ≥ 2.5) ∧ (S_AE ≥ 0.45) ∧ (p_value(χ²) < 0.05)`}
+              calculationSteps={[
+                { label: 'Sensor Sanity', detail: 'Detects stuck, disconnected, or out-of-range sensor channels before running algorithms.' },
+                { label: 'Observer Residuals', detail: 'Evaluates thermodynamic discrepancies against calibrated expectation model.' },
+                { label: 'Autoencoder Reconstruction', detail: 'Deep neural autoencoder reconstructs the 14-channel manifold; anomaly score is MSE between input and latent reconstruction.' },
+                { label: 'Innovation Whiteness', detail: 'Verifies whether residual sequence is zero-mean white Gaussian noise (Kalman filter NIS test).' },
+              ]}
+              sensorInputs={['Residual Vector r_1..14', 'Innovation Sequence ν_k', 'Sensor Range & Slew Clamps']}
+              thresholds="Autoencoder Threshold: S_AE > 0.45 | Z-Score Alarm: z ≥ 2.50 | NIS Chi-Square: p < 0.05"
+              provenance="DRDO PS-26054 Anomaly Detection Architecture & IEEE Aerospace Anomaly Standards"
+            />
+          </div>
           <p className="text-xs text-slate-500">The four calculations that turn raw residuals into the Go/No-Go certification</p>
         </div>
       </div>
@@ -118,7 +145,7 @@ export const CalculationsPanel: React.FC<CalculationsPanelProps> = ({ state }) =
             { label: 'z_composite', value: `${fmt(zComposite)}σ` },
             { label: 'Regime bands', value: '<0.35 / 0.35–0.65 / ≥0.65' },
           ]}
-          result={{ label: 'Composite anomaly score', value: `${pct(a.anomaly_score, 1)} (calc. ${(computedAnomaly * 100).toFixed(1)}%)`, tone: anomalyTone }}
+          result={{ label: 'Composite anomaly score', value: `${effectiveAnomaly.toFixed(3)} (${(effectiveAnomaly * 100).toFixed(1)}%)`, tone: anomalyTone }}
         />
 
         <CalcCard

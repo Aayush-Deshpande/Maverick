@@ -20,10 +20,10 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             <p className="text-xs text-stone-600 leading-relaxed max-w-md">
               AI-Enabled Real-Time Digital Twin System for Health Monitoring, Fault Prediction and Mission Reliability Enhancement of Aero Piston Engines used in MALE UAVs. Built for DRDO under Smart India Hackathon.
             </p>
-            <div className="flex flex-wrap gap-2 pt-1 font-mono text-[10px] text-stone-500 uppercase">
-              <span className="border border-stone-300 px-2 py-0.5 rounded bg-white">ISO 13374 / OSA-CBM</span>
-              <span className="border border-stone-300 px-2 py-0.5 rounded bg-white">STANAG 4586 LOI 2</span>
-              <span className="border border-stone-300 px-2 py-0.5 rounded bg-white">MIL-STD-1629A</span>
+            <div className="flex flex-wrap gap-2 pt-1 font-mono text-[10px] text-stone-600 uppercase">
+              <span className="border border-stone-300 px-2 py-0.5 rounded bg-white">Real-Time 20 Hz Telemetry</span>
+              <span className="border border-stone-300 px-2 py-0.5 rounded bg-white">5 Aero Engines</span>
+              <span className="border border-stone-300 px-2 py-0.5 rounded bg-white">Interactive 3D Digital Twin</span>
             </div>
             <a
               href="https://www.midnight-ciphers.in"
@@ -32,6 +32,14 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               className="inline-block pt-2 font-mono text-[11px] uppercase tracking-wider text-stone-900 font-semibold hover:underline"
             >
               Open the ANUMAAN live console &rarr;
+            </a>
+            <a
+              href="https://youtu.be/L97JAlS9Z7c"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block pt-1 font-mono text-[11px] uppercase tracking-wider text-red-600 font-semibold hover:underline"
+            >
+              Watch system demo video (YouTube) &rarr;
             </a>
           </div>
 
@@ -90,12 +98,12 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               </li>
               <li>
                 <button onClick={() => onNavigate('journey/01-the-engineering-story')} className="hover:text-stone-950 transition-colors">
-                  SIH Journey &amp; Self-Corrections
+                  Our Story &amp; DRDO Visit
                 </button>
               </li>
               <li>
                 <button onClick={() => onNavigate('journey/02-preparing-for-evaluation')} className="hover:text-stone-950 transition-colors">
-                  Judge Defense &amp; Verification
+                  College Presentation &amp; Demo
                 </button>
               </li>
             </ul>
@@ -110,7 +118,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             <span>Defence Research and Development Organisation</span>
           </div>
           <div>
-            <span>Zero Em-Dashes · Verified Repository Ground Truth · Defense-Grade Specs</span>
+            <span>Verified Physics Ground Truth · Full 5-Engine Propulsion Coverage</span>
           </div>
         </div>
       </div>

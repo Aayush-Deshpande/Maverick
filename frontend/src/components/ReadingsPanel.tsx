@@ -2,6 +2,7 @@ import React from 'react';
 import { Activity, Gauge } from 'lucide-react';
 import { UnifiedTelemetryState } from '../types/telemetry';
 import { pct } from '../utils/format';
+import { PanelInfoModal } from './PanelInfoModal';
 
 interface ReadingsPanelProps {
   state: UnifiedTelemetryState;
@@ -38,7 +39,7 @@ interface ChannelSpec {
 const fmt = (v: number, d = 1) => (Number.isFinite(v) ? v.toFixed(d) : '--');
 
 const StatChip: React.FC<{ label: string; value: string; sub?: string }> = ({ label, value, sub }) => (
-  <div className="border border-surface-border bg-surface-card px-3 py-2 flex flex-col gap-0.5 min-w-0">
+  <div className="border border-surface-border bg-surface-card px-3 py-2 flex flex-col gap-0.5 min-w-0 hover:border-surface-border-strong hover:bg-surface-card-hover transition-all duration-150 rounded-xs">
     <span className="text-xs uppercase tracking-wider text-slate-500 truncate">{label}</span>
     <span className="text-sm font-mono font-semibold text-slate-100 truncate">{value}</span>
     {sub && <span className="text-xs font-mono text-slate-500 truncate">{sub}</span>}
@@ -89,13 +90,17 @@ export const ReadingsPanel: React.FC<ReadingsPanelProps> = ({ state }) => {
   ];
 
   const rows = channels.map((c) => {
-    const residual = res[c.key] ?? 0;
-    const expected = c.actual - residual;
-    const z = Math.abs(residual) / c.divisor;
+    const rawResidual = res[c.key] ?? res[c.key.replace('d_', '').toLowerCase()] ?? res[c.key.toLowerCase()] ?? 0;
+    const residual = typeof rawResidual === 'number' && Number.isFinite(rawResidual) ? rawResidual : 0;
+    const hasActual = typeof c.actual === 'number' && Number.isFinite(c.actual);
+    const expected = hasActual ? c.actual - residual : null;
+    const z = hasActual ? Math.abs(residual) / c.divisor : null;
     let status: Status = 'NOMINAL';
-    if (c.criticalTest(c.actual, expected, residual, z)) status = 'CRITICAL';
-    else if (c.warningTest(c.actual, expected, residual, z)) status = 'WARNING';
-    return { ...c, residual, expected, z, status };
+    if (hasActual) {
+      if (c.criticalTest(c.actual, expected!, residual, z!)) status = 'CRITICAL';
+      else if (c.warningTest(c.actual, expected!, residual, z!)) status = 'WARNING';
+    }
+    return { ...c, residual: hasActual ? residual : null, expected, z, status, hasActual };
   });
 
   const thermalRows = rows.filter((r) => r.key.includes('CHT') || r.key.includes('EGT'));
@@ -129,28 +134,39 @@ export const ReadingsPanel: React.FC<ReadingsPanelProps> = ({ state }) => {
         </thead>
         <tbody>
           {list.map((r) => (
-            <tr key={r.key} className="border-b border-surface-border/60 last:border-0 hover:bg-white/[0.02]">
+            <tr key={r.key} className="border-b border-surface-border/60 last:border-0 hover:bg-black/[0.03] transition-colors">
               <td className="py-1.5 pr-2 font-medium text-slate-300">
                 {r.label}
                 <span className="text-slate-600 font-mono text-xs ml-1">({r.nominalRange} {r.unit})</span>
               </td>
-              <td className={`text-right py-1.5 px-2 font-mono font-semibold ${statusColor[r.status]}`}>
-                {fmt(r.actual, r.unit === 'bar' ? 2 : r.unit === 'mm/s' ? 2 : 1)} <span className="text-slate-600 font-normal">{r.unit}</span>
+              <td className={`text-right py-1.5 px-2 font-mono font-semibold ${r.hasActual ? statusColor[r.status] : 'text-slate-500'}`}>
+                {r.hasActual ? (
+                  <>
+                    {fmt(r.actual, r.unit === 'bar' ? 2 : r.unit === 'mm/s' ? 2 : 1)}{' '}
+                    <span className="text-slate-600 font-normal">{r.unit}</span>
+                  </>
+                ) : (
+                  <span className="text-slate-500 font-normal">--</span>
+                )}
               </td>
               <td className="text-right py-1.5 px-2 font-mono text-slate-500">
-                {fmt(r.expected, r.unit === 'bar' ? 2 : r.unit === 'mm/s' ? 2 : 1)}
+                {r.expected !== null ? fmt(r.expected, r.unit === 'bar' ? 2 : r.unit === 'mm/s' ? 2 : 1) : '--'}
               </td>
               <td className="text-right py-1.5 px-2 font-mono text-slate-400">
-                {r.residual > 0 ? '+' : ''}{fmt(r.residual, r.unit === 'bar' ? 2 : r.unit === 'mm/s' ? 2 : 1)}
+                {r.residual !== null ? `${r.residual > 0 ? '+' : ''}${fmt(r.residual, r.unit === 'bar' ? 2 : r.unit === 'mm/s' ? 2 : 1)}` : '--'}
               </td>
               <td className="text-right py-1.5 px-2 font-mono text-slate-400">
-                {r.z.toFixed(2)}σ
+                {r.z !== null ? `${r.z.toFixed(2)}σ` : '--'}
               </td>
               <td className="py-1.5 pl-2">
-                <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${statusColor[r.status]}`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${statusDot[r.status]}`} />
-                  {r.status}
-                </span>
+                {r.hasActual ? (
+                  <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${statusColor[r.status]}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${statusDot[r.status]}`} />
+                    {r.status}
+                  </span>
+                ) : (
+                  <span className="text-slate-500 font-mono text-xs">NO DATA</span>
+                )}
               </td>
             </tr>
           ))}
@@ -167,7 +183,31 @@ export const ReadingsPanel: React.FC<ReadingsPanelProps> = ({ state }) => {
             <Activity className="w-3.5 h-3.5" />
           </div>
           <div>
-            <h2 className="text-xs font-semibold text-white">Live Engine Readings</h2>
+            <div className="flex items-center gap-1.5">
+              <h2 className="text-xs font-semibold text-white">Live Engine Readings &amp; Residuals</h2>
+              <PanelInfoModal
+                title="Live Engine Readings & Physics Residuals"
+                subtitle="20 Hz Telemetry & Analytical Residual Observer"
+                description="Monitors 20 Hz high-frequency telemetry across 14 engine channels and compares each measurement against an independent thermodynamic baseline model (Expectation Model). Computes channel residuals and normalized z-scores to isolate thermal imbalances, pressure decays, and electrical drifts before conventional alarms trip."
+                formula={`Residual Vector: r_i(t) = y_actual,i(t) - y_expected,i(t)
+Normalized Z-Score: z_i(t) = |r_i(t)| / σ_i
+
+Tolerance Divisors (σ_i):
+  σ_CHT = 4.0 °C         σ_EGT = 15.0 °C
+  σ_OIL_PRESS = 0.30 bar  σ_OIL_TEMP = 5.0 °C
+  σ_FUEL_FLOW = 1.5 L/hr  σ_MAP = 3.0 kPa
+  σ_VIB = 0.25 mm/s       σ_BUS_VOLTAGE = 0.35 V`}
+                calculationSteps={[
+                  { label: 'CAN Bus Stream', detail: 'Acquires 20 Hz telemetry frames from ECU CAN 2.0B / MAVLink bus.' },
+                  { label: 'Physics Expectation', detail: 'Calculates expected steady-state and transient physics values conditioned on RPM, MAP, altitude, and OAT.' },
+                  { label: 'Residual Extraction', detail: 'Subtracts expected physics values from actual sensor readings: r = actual - expected.' },
+                  { label: 'Statistical Z-Score', detail: 'Normalizes residuals by factory tolerance divisors (z = |r| / σ) to enable multi-channel comparison.' },
+                ]}
+                sensorInputs={['CHT_1..4', 'EGT_1..4', 'OIL_PRESS', 'OIL_TEMP', 'FUEL_FLOW', 'MAP', 'VIB_RMS', 'BUS_VOLTAGE']}
+                thresholds="Nominal: z < 1.0σ | Caution: 1.0σ ≤ z < 2.5σ | Critical: z ≥ 2.5σ or Absolute Redline Breach"
+                provenance="Rotax 912 iS Sport Thermodynamic Baseline & DRDO PS-26054 Sensor Specification"
+              />
+            </div>
             <p className="text-xs text-slate-500">20 Hz sensor stream against the RotaxThermoModel physics baseline</p>
           </div>
         </div>
@@ -197,9 +237,9 @@ export const ReadingsPanel: React.FC<ReadingsPanelProps> = ({ state }) => {
           <StatChip label="Altitude MSL" value={`${fmt(t.ALTITUDE_FT / 1000, 1)}k ft`} />
           <StatChip label="OAT" value={`${fmt(t.OAT_C, 1)}°C`} />
           <StatChip label="True Airspeed" value={`${fmt(t.TAS_KNOTS, 0)} kt`} />
-          <StatChip label="Fuel Rail Press." value={`${fmt(t.FUEL_RAIL_P, 2)} bar`} />
+          <StatChip label="Fuel Rail Press." value={t.FUEL_RAIL_P != null ? `${fmt(t.FUEL_RAIL_P, 2)} bar` : '-- bar'} />
           <StatChip label="Battery Current" value={`${t.BATTERY_CURRENT > 0 ? '+' : ''}${fmt(t.BATTERY_CURRENT, 1)} A`} />
-          <StatChip label="FADEC Lane" value={t.FADEC_ACTIVE_LANE} />
+          <StatChip label="FADEC Lane" value={t.FADEC_ACTIVE_LANE || 'NO DATA'} />
           <StatChip label="Flight Phase" value={t.FLIGHT_PHASE ? t.FLIGHT_PHASE.replace('_', ' ') : 'NO DATA'} />
         </div>
       </div>

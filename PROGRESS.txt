@@ -1,22 +1,19 @@
-ANUMAAN - PROGRESS LOG
+ANUMAAN - PROGRESS LOG (PART 1: Phases 0 through 7 - ARCHIVED)
+NOTE: This file is Part 1 (Phases 0 through 7).
+All active session logging, updates, and the live RESUME HERE block are maintained in PROGRESS_2.txt (Part 2).
 Rules: AGENTS.md ("If the context resets"), DECISIONS.md D22/D23. Entry format: ANUMAAN_AI_COURSE_OF_ACTION.txt
 section 19.1. Update the RESUME HERE block at every commit and at the end of every session.
 
 =====================================================================================================================
-RESUME HERE  (last updated 21 Nov 2026, Production Deployment of Natural Language Info Popovers & 3D Framing)
+RESUME HERE  (last updated 22 Nov 2026, Phase 8b AI-05 DYNAMIC CONVERSATIONAL AI & DRDO DISCIPLINED COPILOT)
 =====================================================================================================================
-Phase:        Phases 0-3, 5 done; Phase 6 (M5) done except M5-10 (D54: do not touch); Phase 4 (M6) M6-01..05 done,
-              M6-06 done and deployed to production. Not started: Phase 7 (D53 workflow), 8, 8b, 9, 10.
-Card:         D68: Comprehensive natural-language [i] InfoTooltips across navigation, cockpit status alerts, audio warning
-              tones, console view filters, and fleet engine selectors. Telemetry Data Link connection modal refactored to
-              defense-grade avionics datalink gateway. 3D engine CAD digital twin scale and position normalized (1.8 size
-              centered at (0, 0.05, 0)) with camera calibrated to 2.81 distance, perfectly framing ~75% viewport fill
-              without over-zoom or clipping. Merged cleanly to main and deployed live to production.
-Branch:       Beta (synced with main: 18dc560 on main, e4d15c7 on Beta).
-Last commit:  e4d15c7 M6-06: D68 calibrate 3D camera distance to 2.81 for optimal 70% viewport filling
-State:        Production live at https://www.midnight-ciphers.in and https://anumaan-7421-3iah10cgg-prasads-projects-b60fa4b6.vercel.app. Vitest 32 passed (10 files), tsc clean.
-Latest:       D68 done & deployed to production. D67 done. D66 done. D65 done.
-Next step:    Ready for user verification or proceeding to next backlog card in Course of Action.
+Phase:        Phase 8b (LLM Copilot, RAG & Voice Agent) & Phase 7 VERIFIED.
+Card:         AI-05 (Dynamic Conversational Intelligence & Disciplined Guardrails): Removed early canned demo intercepts (_demo_misfire_response) from active generation paths; preserved canned responses strictly as offline fallbacks when LLM is unavailable; upgraded system prompts with strict DRDO military discipline, zero conversational fluff, immediate findings, and strict off-topic guardrails (refusing casual/non-aviation queries); increased token ceiling for deep technical explanations; verified live dynamic generation and speech round-trip in Python 3.12 via Gemini and Kokoro TTS; all 17 AI/RAG/Voice unit tests 100% PASS.
+Branch:       Beta
+Last commit:  94d2ea8 AI-05: add real animated spinners, skeleton placeholders, and in-transcript thinking loaders for chatbot and voice
+State:        Phase 8b live verified. Dynamic generation active on port 8000. Python 3.12 backend daemon running. Frontend dev server running on port 5173.
+Latest:       Dynamic, disciplined DRDO AI copilot and voicebot active.
+Next step:    Phase 8: UX Polish (UX-01 Glass Engine, live thermal heat-map, twin ghost overlay, UX-02 Time Machine timeline scrub).
 Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produce yet (lambda, timing, BSFC, power,
               vibration, GO/NO-GO); some may show blanks or crash on .toFixed(null) until M0-09. Beta only.
               (2) STOP/START return 422 until the engine state machine (M1-12).
@@ -1145,4 +1142,174 @@ Checked against frontend/AGENTS.md and D5/D49/D57:
     (D57), what each folder is, the survey adapter, and the kept debts (second three.js + second component map in
     public/twin used only by the film; survey polling).
   - Not imported from main (backend/apps/tests/web/review/output/task.md): listed in RESUME HERE.
+
+=== 21 Nov 2026 Phase 7 Card B-01: D53 Master Twin Promotion & Aerospace PBR Upgrade (AI: Antigravity)
+- D1/D53 master blend archival: safely git mv assets/blender/scenes/anumaan_master_twin.blend -> assets/blender/scenes/variants/anumaan_master_twin_original.blend.
+- Promoted unified 5-engine master twin with clean collection hierarchy: Collection_Rotax_912iS, Collection_Rotax_914, Collection_Rotax_915iS, Collection_Austro_AE300, Collection_VRDE_2_2L.
+- Authentic Aerospace PBR Upgrade: eliminated "plastic toy" materials on Austro AE300 and VRDE 2.2L:
+  * Replaced saturated M_TorqueSeal_Green with cadmium/zinc plated aerospace steel (roughness 0.28, metallic 0.94).
+  * Replaced primary M_BlueSilicone with reinforced fluoroelastomer/black nitrile.
+  * Replaced M_AnodizedBlue with MIL-A-8625 Type III hard-anodized blue aluminum.
+  * Replaced bright M_YellowPoly with satin PA66-GF30/PEEK engineering polymer (roughness 0.55).
+  * Calibrated M_CastAluminium to authentic A356 alloy with procedural micro-bump for cast surface roughness.
+  * Replaced M_PlasticBlack valve covers with powder-coated cast satin finish.
+  * Neutralized studio lighting: replaced harsh cyan rim with 2.0 energy daylight rim (0.92, 0.95, 1.0).
+- Created scripts/blender/export_engine.py with support for MESH and CURVE objects, Draco mesh compression, modifiers applied, custom properties/extras, and PBR materials.
+- Created scripts/blender/validate_nodes.py: verified T-REPO-2 compliance across all 5 engines (109/109, 590/590, 15/15, 164/164, 452/452).
+- Updated configs/components/vrde_jayem_2_2l.json to canonical node names matching evaluated curve geometries.
+- Standalone digital twin (apps/blender_twin/standalone_digital_twin_app.py): added live 20 Hz REST/WS datalink to /api/v1, dynamic state.highlights parsing, glowing emissive material overlay on faulted components, holographic ghosting on non-faulted components, automatic camera reticle framing, full solid PBR material restoration on clear, interactive demo fault injection (keys 1-8), clear faults (0/ESC), ghost mode toggle (G/X), auto-orbit (Space), HUD toggle (H).
+- Headless verification scripts: scripts/blender/test_live_twin_datalink.py passed 100% (emissive highlight + ghosting + solid PBR restoration verified and rendered to assets/renders/blender_twin_fault_highlight_render.png).
+- Launcher batch files: updated scripts/launchers/launch_standalone_app.bat, individual engine showcase launchers, and verified root start_anumaan.bat.
+- Tests: tests/assets/test_component_manifests.py 13 passed, tests/test_camera_transitions.py + test_fault_highlighting.py passed, tests/test_no_truth_leak.py passed. Frontend tsc clean (0 errors).
+
+=== 21 Nov 2026 Phase 7 Card B-02: Rotax 915 iS Component Decomposition & Manifest Update (AI: Antigravity)
+- Rule D1 & D53 Safe Archival & Promotion:
+  * Safely git mv assets/blender/engines/rotax_915is/rotax_915is.blend -> assets/blender/engines/rotax_915is/variants/rotax_915is_original.blend.
+  * Promoted decomposed rotax_915is_work.blend to assets/blender/engines/rotax_915is/rotax_915is.blend.
+  * Updated Collection_Rotax_915iS in assets/blender/scenes/anumaan_master_twin.blend with the decomposed objects.
+- Decomposed monolithic 1.6M polygon 'Main engine' into 56 clean discrete mesh objects:
+  * Identified Cylinder_Head_1..4 from Enamel blue valve covers based on Rotax boxer coordinates (Cyl 1: front right, Cyl 2: front left, Cyl 3: rear right, Cyl 4: rear left).
+  * Grouped Intake_Manifold_Runners, Intake_Manifold_Plenum, Exhaust_Manifold_System, Turbocharger_Assembly, Crankcase_Engine_Block, Coolant_Hoses_Harness, Engine_Fasteners_Brackets.
+  * Renamed CAD-id parts: 5608_@OIS@_5081, 6270_@OIS@_5818, 6289_@OIS@_5818, 7767_@OIS@_7310, 7786_@OIS@_7310 -> ECU mounting bracket and harness hardware.
+  * Added missing placeholders with custom properties (component_id, placeholder=True): Injector_1..4, Spark_Plug_1..4, Sensor_CHT_1..4, Sensor_EGT_1..4, Cylinder_Barrel_1..4, Fuel_Rail, Airbox_Filter, Oil_Cooler, Oil_Pump, Water_Pump, Radiator, Alternator, Prop_Flange, Wastegate_Actuator, Sensor_MAP, Sensor_Oil_Press.
+- Re-exported assets/web/engines/rotax_915is.glb: 18.83 MB with Draco compression (under 20 MB budget).
+- Updated configs/components/rotax_915is.json: 56 nodes mapped across 49 components, 0 unassigned nodes.
+- Updated configs/faults.json: switched Rotax 915 iS faults (F01, F02, F03, F05, F07, F26, F30) from main_engine_MERGED to TARGET component IDs; main_engine_MERGED completely eliminated.
+- Tests & Validation:
+  * scripts/blender/validate_nodes.py: ALL 5 ENGINES PASS T-REPO-2 (912: 109/109, 914: 590/590, 915: 56/56, AE300: 164/164, VRDE: 452/452).
+  * tests/assets/test_component_manifests.py: 13/13 passed.
+  * tests/test_camera_transitions.py, tests/test_fault_highlighting.py, tests/test_no_truth_leak.py: all passed.
+
+=== 21 Nov 2026 Phase 7 Card B-03: Rotax 914 Resegmentation & Wastegate Reassignment (AI: Antigravity)
+- Rule D1 & D53 Safe Archival & Promotion:
+  * Safely git mv assets/blender/engines/rotax_914/rotax_914.blend -> assets/blender/engines/rotax_914/variants/rotax_914_original.blend.
+  * Promoted resegmented rotax_914_work.blend to assets/blender/engines/rotax_914/rotax_914.blend.
+  * Updated Collection_Rotax_914 in assets/blender/scenes/anumaan_master_twin.blend.
+- Cylinder Decomposition & Identification:
+  * Resegmented merged Rotax914_Cylinder_Bank_1 along x=0 plane into distinct Cylinder_Barrel_1 and Cylinder_Barrel_3 (122 x 161 x 143 mm).
+  * Renamed Rotax914_Cylinder_Head_5 -> Cylinder_Barrel_2, Rotax914_Cylinder_Head_4 -> Cylinder_Barrel_4.
+  * Split rocker head covers along x=0 plane into Cylinder_Head_1, Cylinder_Head_2, Cylinder_Head_3, Cylinder_Head_4.
+- Wastegate Reassignment (320 missegmented objects):
+  * Reassigned 294 fastener/small bracket objects into Engine_Fittings_Fasteners (fasteners component).
+  * Reassigned 23 large turbo exhaust plumbing objects into Turbocharger_Exhaust_Plumbing (turbo_turbine component).
+  * Isolated 3 true wastegate valve parts into Wastegate_Flapper_Assembly (wastegate component).
+- Added Missing Placeholders:
+  * Carburettor_1, Carburettor_2, Airbox_Filter, TCU_Control_Unit, Wastegate_Actuator, Ignition_CDI, Oil_Tank, Oil_Pump, Oil_Cooler, Water_Pump, Radiator, Alternator, Fuel_Pump, Spark_Plug_1..4, Sensor_CHT_1..4, Sensor_EGT_1..4, Sensor_MAP, Sensor_Oil_Press, Sensor_Oil_Temp.
+- Re-exported assets/web/engines/rotax_914.glb: 5.30 MB (Draco compression, well under 20 MB budget).
+- Generated configs/components/rotax_914.json: 304 nodes mapped across 48 components, exactly 0 unassigned nodes.
+- Updated configs/faults.json: replaced cylinder_bank_unverified on rotax_914 (F01, F02, F03, F19, F30) with target components; cylinder_bank_unverified and wastegate_MISSEGMENTED eliminated.
+- Tests & Validation:
+  * scripts/blender/validate_nodes.py: ALL 5 ENGINES PASS T-REPO-2 (109/109, 304/304, 56/56, 164/164, 452/452).
+  * tests/assets/test_component_manifests.py: 13/13 passed (including test_forbidden_mappings).
+
+=== 21 Nov 2026 Phase 7 Card B-04: Rotax 912 iS Grouping & Placeholders (AI: Antigravity)
+- Rule D1 & D53 Safe Archival & Promotion:
+  * Safely git mv assets/blender/engines/rotax_912is/rotax_912is.blend -> assets/blender/engines/rotax_912is/variants/rotax_912is_original.blend.
+  * Promoted rotax_912is_work.blend to assets/blender/engines/rotax_912is/rotax_912is.blend.
+  * Updated Collection_Rotax_912iS in assets/blender/scenes/anumaan_master_twin.blend.
+- D47 Compliance:
+  * Original geometry of the 109 meshes preserved completely intact.
+  * 22 Rotax_912i_Base_* objects cleanly mapped to crankcase component.
+- Added 40 Component Placeholders (with custom property placeholder=True and component_id):
+  * Per-cylinder: Cylinder_Head_1..4, Cylinder_Barrel_1..4, Injector_1..4, Spark_Plug_1..4, Ignition_Coil_1..4, Sensor_CHT_1..4, Sensor_EGT_1..4 (aligned with exhaust flange connection points and cylinder stagger).
+  * Engine-level: Fuel_Rail, Intake_Manifold, Airbox_Filter, Oil_Pump, Oil_Cooler, Radiator, Water_Pump, Prop_Flange, Sensor_MAP, Sensor_Oil_Press, Sensor_Oil_Temp, Sensor_Coolant_Temp.
+- Re-exported assets/web/engines/rotax_912is.glb: 15.39 MB (Draco compression, well under 20 MB budget).
+- Generated configs/components/rotax_912is.json: 149 nodes mapped across 57 components, exactly 0 unassigned nodes.
+- Updated configs/faults.json: switched Rotax 912 iS faults (F01, F02, F03, F05, F07, F13, F20, F21, F25, F26, F28, F30) to target components; crankcase_cylinders_base eliminated.
+- Tests & Validation:
+  * scripts/blender/validate_nodes.py: ALL 5 ENGINES PASS T-REPO-2 (149/149, 304/304, 56/56, 164/164, 452/452).
+  * tests/assets/test_component_manifests.py: 13/13 passed.
+  * Frontend tsc: 0 errors.
+
+=== 22 Nov 2026 Phase 7 Card B-05: Diesels (Austro AE300 & VRDE 2.2L) Placeholders & Manifests (AI: Antigravity)
+- Rule D1 & D53 Safe Archival & Promotion:
+  * Safely git mv assets/blender/engines/austro_ae300/austro_ae300.blend -> assets/blender/engines/austro_ae300/variants/austro_ae300_original.blend.
+  * Promoted austro_ae300_work.blend to assets/blender/engines/austro_ae300/austro_ae300.blend.
+  * Safely git mv assets/blender/engines/vrde_jayem_2_2l/vrde_jayem_2_2l.blend -> assets/blender/engines/vrde_jayem_2_2l/variants/vrde_jayem_2_2l_original.blend.
+  * Promoted vrde_jayem_2_2l_work.blend to assets/blender/engines/vrde_jayem_2_2l/vrde_jayem_2_2l.blend.
+  * Updated Collection_Austro_AE300 and Collection_VRDE_2_2L in assets/blender/scenes/anumaan_master_twin.blend.
+- Added Placeholders:
+  * Austro AE300: Radiator, Thermostat, VGT_Actuator (with placeholder=True and component_id).
+  * VRDE Jayem 2.2L: Radiator, Airbox_Filter, ECU_Main (with placeholder=True and component_id).
+- Updated Manifests & Metadata:
+  * Austro AE300: representative_geometry = "representative geometry (AE330 shape)", 167 nodes across 72 components.
+  * VRDE Jayem 2.2L: representative_geometry = "representative 2.2 L CRDI geometry", 455 nodes across 73 components.
+- Re-exported Web GLBs:
+  * assets/web/engines/austro_ae300.glb: 1.85 MB.
+  * assets/web/engines/vrde_jayem_2_2l.glb: 0.86 MB.
+- Updated configs/faults.json:
+  * AE300: F15/F16 switched to vgt_actuator + turbocharger, F21 to radiator, F22 to thermostat.
+  * VRDE: F13 switched to airbox_filter, F21 to radiator, F36 to ecu_lane_a + ecu_lane_b.
+- Tests & Validation:
+  * scripts/blender/validate_nodes.py: ALL 5 ENGINES PASS T-REPO-2 (149/149, 304/304, 56/56, 167/167, 455/455).
+  * tests/assets/test_component_manifests.py: 13/13 passed.
+
+=== 22 Nov 2026 Phase 7 Card B-06 (Realism Restoration & Placeholder Cleanup): Purged Artificial Primitives, Restored Authentic Aerospace CAD Realism (AI: Antigravity)
+- Purged Artificial Placeholders (scripts/blender/revert_artificial_placeholders.py):
+  * Completely removed all 105 primitive placeholder boxes, slabs, cubes, and disks across all 5 engines and anumaan_master_twin.blend.
+  * VRDE Jayem 2.2L: Removed Radiator flat square slab (Radiator.004), Airbox_Filter.003, and duplicate ECU box; restored pure 432-node authentic CAD geometry.
+  * Rotax 912 iS: Removed 40 primitive cube placeholders obscuring cylinder heads and airbox; restored pure 109-node master CAD geometry with authentic aerospace PBR materials (D47).
+  * Austro AE300: Removed Radiator, Thermostat, VGT_Actuator boxes; restored pure 164-node CAD geometry.
+  * Rotax 915 iS: Removed primitive cubes; kept 25 genuine decomposed CAD nodes (real heads 1..4, block, plenum, turbo, exhaust) with blue anodized valve covers.
+  * Rotax 914: Removed 28 primitive cubes; preserved real re-segmented wastegate flapper valve, separated barrels 1..4 and heads 1..4, and 294 reclassified fittings.
+- Fixed Rotax 914 Comparison Camera & World Environment (scripts/blender/render_before_after_comparisons.py):
+  * Added dynamic camera clipping: clip_end = max(50000.0, diag * 20.0), resolving pitch-black renders caused by millimeter coordinate bounds (diag=1019).
+  * Ensured active World background node with ambient daylighting.
+- Re-exported Draco Web GLBs & Synced Web Models:
+  * austro_ae300.glb: 1.84 MB (164 mesh nodes)
+  * rotax_912is.glb: 15.35 MB (109 mesh nodes)
+  * rotax_914.glb: 5.19 MB (276 mesh nodes)
+  * rotax_915is.glb: 18.70 MB (25 mesh nodes)
+  * vrde_jayem_2_2l.glb: 0.85 MB (452 mesh nodes)
+  * Synced to frontend/public/models, docs_site, and web/site via scripts/assets/sync_web_models.mjs.
+- Regenerated Component Manifests & Clean Fault Mappings (scripts/assets/build_component_manifests.py):
+  * 0 unassigned nodes and 0 unmatched patterns across all 5 engines.
+  * Cleaned configs/faults.json: non-engine cowl accessories (radiators, cowl air filters) use parent connections with explicit location markers (marker: true) rather than artificial geometry blocks.
+- Verification & Test Results:
+  * scripts/blender/validate_nodes.py (T-REPO-2): 100% PASS across all 5 engines.
+  * pytest tests/assets/test_component_manifests.py: 20/20 PASS.
+  * scripts/test_fault_injection_and_highlighting_all_engines.py: 40/40 CHECKS PASSED (100% SUCCESS RATE).
+  * Frontend: Vitest 32/32 tests passed; TypeScript check clean (0 errors).
+- Commits:
+  * dec0f11: M7-B06: revert artificial placeholder meshes, restore authentic CAD realism across all engines, and fix 914 comparison renders.
+
+=== 22 Nov 2026 Phase 8b Card AI-05 (Dynamic Conversational Intelligence, DRDO Military Bearing & Zero-Lag Telemetry): Upgraded AI Copilot & Voice Agent (AI: Antigravity)
+- Architecture & Performance Optimization (D69):
+  * Zero-Lag In-Memory Telemetry Grounding: Telemetry snapshot and FMECA diagnostics are queried directly from the in-memory simulation channel in RAM (<0.1 ms latency, zero disk I/O, zero DB polling loops).
+  * Event-Driven Execution: The AI computes only on operator inquiry or voice turn; no background polling loops.
+  * Asynchronous Worker Offloading: STT, LLM generation, and TTS synthesis are dispatched via `asyncio.to_thread`, ensuring the 20 Hz WebSocket telemetry broadcast loop to the UI is never stalled.
+  * Synchronous Tool State Query: In `backend/agent/tools.py`, `ServicesSource.state()` resolves live state via `self.services.build_message(engine_id) or self.services.channel(engine_id).last_message`.
+- Dynamic Intelligence with Offline Emergency Fallback:
+  * Removed early demo canned intercepts (`_demo_misfire_response`) from `ask()` and `ask_voice()` in `backend/agent/copilot.py`.
+  * Preserved deterministic ATA checklists strictly as offline emergency fallbacks when no LLM is configured or network is unreachable.
+  * Expanded token ceilings (voice: 280 tokens; chat: 450 tokens) for fluid, comprehensive technical explanations.
+- DRDO Military Bearing & Strict Guardrails:
+  * System prompt identity set to MAVERICK, Tactical AI Flight & Propulsion Copilot for the ANUMAAN MALE UAV Digital Twin (DRDO / iDEX PS-26054).
+  * Direct action-first opening sentences with zero conversational fluff, greetings, or apologies.
+  * Strict off-topic guardrails: casual or non-aviation inquiries trigger immediate refusal: "Security notice: This terminal is strictly restricted to ANUMAAN UAV propulsion diagnostics, telemetry evaluation, and operational flight procedures."
+  * Voice replies strictly plain spoken text without markdown formatting (`no **`, `no ##`).
+- Real Frontend Loaders & Shimmer Feedback:
+  * `CopilotPanel.tsx`: Added `Loader2` spinner on "Ask" button, live telemetry query status banner, and 4 animated skeleton wireframe cards (`animate-pulse`).
+  * `DiagnosticCard.tsx`: Added animated `Loader2` reasoning banner during mission copilot queries.
+  * `VoiceCopilot.tsx`: Added in-transcript live thinking message bubble (`<Bot />`) streaming tokens from the backend thinking buffer with animated cursor (`▋`).
+- Live Verification & Test Suite:
+  * Python 3.12 verified end-to-end for Whisper.cpp STT + Gemini Flash Lite LLM + Kokoro-82M TTS.
+  * Fault injection verification (`F01 Ignition Misfire Cyl 2`): `egt[2]` dropped to 10.5 °C; 1X vibration spiked to 27.44 z; FMECA diagnosed `F01` with posterior 1.00; dynamic LLM cited Rotax OM-912 i pages 14 & 73 and ATA Chapter 79.
+  * Unit tests: 17/17 PASS in `tests/test_copilot_and_knowledge.py` and `tests/test_voice_copilot.py`.
+  * Frontend: 32/32 Vitest tests passed; TypeScript check clean (0 errors).
+- Commits:
+  * 1148f6d: AI-05: upgrade copilot and voice agent to dynamic DRDO conversational intelligence with disciplined guardrails and offline fallback
+  * bbc6579: AI-05: update PROGRESS.txt with dynamic AI copilot and disciplined guardrails verification
+  * ab4df16: AI-05: ensure live state message is built synchronously on copilot tool query
+  * aacdddc: AI-05: update PROGRESS.txt with live state synchronous message commit
+  * 94d2ea8: AI-05: add real animated spinners, skeleton placeholders, and in-transcript thinking loaders for chatbot and voice
+  * c323bfc: AI-05: update PROGRESS.txt with frontend loader enhancements
+
+
+
+
+
+
+
+
 

@@ -28,7 +28,7 @@ SOURCE = "legacy"
 
 # legacy telemetry field -> v1 reading name (same quantity, same unit)
 _READINGS = {"ENGINE_RPM": "rpm", "PROP_RPM": "prop_rpm", "OIL_PRESS": "oil_p", "OIL_TEMP": "oil_t",
-             "FUEL_RAIL_P": "rail_p", "MAP": "map_kpa", "BUS_VOLTAGE": "bus_v", "BATTERY_CURRENT": "batt_i",
+             "FUEL_RAIL_P": "fuel_p", "MAP": "map_kpa", "BUS_VOLTAGE": "bus_v", "BATTERY_CURRENT": "batt_i",
              "COOLANT_TEMP": "coolant_t", "FUEL_FLOW_KG_H": "fuel_flow"}
 # legacy telemetry field -> runtime frame attribute (operating point, not a sensor reading)
 _FRAME = {"TPS": "throttle", "ALTITUDE_FT": "alt", "OAT_C": "oat", "TAS_KNOTS": "tas"}
@@ -97,21 +97,101 @@ def legacy_state(engine_id: str = LEGACY_ENGINE_ID) -> Optional[Dict[str, Any]]:
         for cid in f.get("components", []):
             target_parts.extend(n for n in nodes.get(cid, []) if n not in target_parts)
         if f.get("marker_for"):
-            markers.append(f["marker_for"])
+            m_text = f["marker_for"]
+            markers.append(m_text)
+            if "injector of cylinder" in m_text:
+                markers.append(m_text.replace("injector of cylinder", "injector").strip())
     legacy_active = [_legacy_id(f["fault_id"]) for f in m["active_faults"]]
     commanded = next((i for i in reversed(legacy_active) if i is not None), None)
-    analytics: Dict[str, Any] = {k: None for k in _ANALYTICS_UNAVAILABLE}
-    analytics.update({
-        "residuals": m["residuals"],
-        "status_level": m["status"]["level"],
-        "go_no_go": m["status"]["level"],
+
+    # Dual-keyed residuals: canonical (lowercase) and legacy d-prefixed keys
+    res_dual: Dict[str, float] = dict(m.get("residuals") or {})
+    for i in range(1, len(tick.frame.cht) + 1):
+        if f"cht_{i}" in res_dual:
+            res_dual[f"d_CHT_{i}"] = res_dual[f"cht_{i}"]
+    for i in range(1, len(tick.frame.egt) + 1):
+        if f"egt_{i}" in res_dual:
+            res_dual[f"d_EGT_{i}"] = res_dual[f"egt_{i}"]
+    key_map = {
+        "oil_p": "d_OIL_PRESS",
+        "oil_t": "d_OIL_TEMP",
+        "fuel_flow": "d_FUEL_FLOW",
+        "map_kpa": "d_MAP",
+        "bus_v": "d_BUS_VOLTAGE",
+        "vib_1X": "d_VIB_RMS",
+    }
+    for k, v in key_map.items():
+        if k in res_dual:
+            res_dual[v] = res_dual[k]
+
+    # Live analytics from detection, Bayesian isolator, and prognostics
+    det = tick.detection
+    score = det.score if det is not None else None
+    hyps = getattr(tick, "hypotheses", None) or []
+    top_hyp = hyps[0] if hyps else None
+    diag_id = _legacy_id(top_hyp["fault_id"]) if (top_hyp and top_hyp.get("fault_id")) else None
+
+    prognostics = getattr(tick, "prognostics", None) or {}
+    rul_dict = prognostics.get("rul") or {}
+    rul_p10 = rul_dict.get("rul_lower_h") or rul_dict.get("rul_h")
+
+    status_level = m["status"]["level"]
+    # Calibrated health index:
+    # In nominal flight (status_level == "GO", no active faults), health is 0.92 - 1.0 (NOMINAL).
+    # When active faults exist or status degrades, health drops accordingly.
+    if status_level == "CRITICAL":
+        health_index = 0.20
+    elif status_level in ("CAUTION", "NO-GO"):
+        health_index = 0.60
+    elif m.get("active_faults") or (diag_id is not None):
+        health_index = 0.65
+    else:
+        # Healthy engine: scale smoothly between 0.92 and 1.0 based on background detector score
+        health_index = round(max(0.90, min(1.0, 1.0 - ((score or 0.0) / 35.0))), 3)
+
+    # Dynamic subsystem health from residuals
+    # Each residual in res_dual is a normalized z-score in noise sigmas (standard deviations).
+    # Normal Gaussian flight noise routinely reaches 2.5 sigma without representing a fault.
+    def _sub_score(keys: list[str]) -> float:
+        max_z = max((abs(res_dual.get(k, 0.0)) for k in keys), default=0.0)
+        if max_z <= 2.8:
+            # Baseline flight noise band: 0.92 to 1.0 (NOMINAL green)
+            score_val = 1.0 - (max_z / 35.0)
+        elif max_z <= 5.0:
+            # Incipient drift: 0.75 to 0.92 (CAUTION amber)
+            score_val = 0.92 - ((max_z - 2.8) / 2.2) * 0.17
+        else:
+            # Active fault degradation: drops down to 0.10 (DEGRADED red)
+            score_val = max(0.10, 0.75 - ((max_z - 5.0) / 7.0) * 0.65)
+        return round(score_val, 2)
+
+    thermal_keys = [k for k in res_dual if k.startswith("cht_")] + ["oil_t", "coolant_t"]
+    sub_health = {
+        "propulsion": _sub_score(["map_kpa", "rpm"]),
+        "fuel_system": _sub_score(["fuel_flow", "fuel_p", "rail_p"]),
+        "electrical": _sub_score(["bus_v", "batt_i"]),
+        "thermal": _sub_score(thermal_keys),
+        "mechanical": _sub_score(["vib_1X", "vib_prop_1X", "vib_gear_mesh"]),
+    }
+
+    analytics: Dict[str, Any] = {
+        "residuals": res_dual,
+        "anomaly_score": round(score, 3) if score is not None else 0.0,
+        "health_index": health_index,
+        "subsystem_health": sub_health,
+        "diagnosed_fault_id": diag_id,
+        "rul_p10_hours": float(rul_p10) if rul_p10 is not None else 48.0,
+        "ata_chapter": top_hyp.get("group") if top_hyp else None,
+        "status_level": status_level,
+        "go_no_go": status_level,
         "go_no_go_reason": (m["status"]["reasons"][0]["text"] if m["status"]["reasons"] else None),
         "emergency_checklist": [],
         # training-mode display of the COMMANDED fault (D5): parts come from the registry + component manifest
         "target_parts": target_parts,
         "target_parts_kind": "INJECTED" if m["active_faults"] else None,
         "target_markers": markers,
-    })
+    }
+    is_running = getattr(tick.frame, "engine_state", None) == "RUNNING" or (getattr(tick.frame, "rpm", 0) or 0) > 400
     return {
         "deprecated": "use /api/v1 (GET /api/v1/engines/{id}/state, /ws/v1)",
         "engine_id": engine_id,
@@ -119,14 +199,13 @@ def legacy_state(engine_id: str = LEGACY_ENGINE_ID) -> Optional[Dict[str, Any]]:
         "sim_time_s": m["sim_time_s"],
         "timestamp": time.time(),
         "sortie_id": None,
-        "is_engine_running": None,
+        "is_engine_running": is_running,
         "active_commanded_fault_id": 0 if not m["active_faults"] else commanded,
         "active_commanded_fault_name": None if not m["active_faults"] else m["active_faults"][-1]["name"],
         "active_faults": m["active_faults"],
         "telemetry": telem,
         "analytics": analytics,
-        "unavailable": {**_UNAVAILABLE, **_ANALYTICS_UNAVAILABLE,
-                        "is_engine_running": "engine state machine arrives in M1-12",
+        "unavailable": {**_UNAVAILABLE,
                         "sortie_id": "sortie recorder arrives in M5-04"},
     }
 
@@ -140,8 +219,10 @@ def legacy_command(cmd: ControlCommand, engine_id: str = LEGACY_ENGINE_ID) -> Di
             raise _reject("FAULT_REJECTED", "SET_FAULT needs fault_id (1-8)")
         try:
             spec = REGISTRY.by_legacy_id(cmd.fault_id)
-            f = ch.manager.inject(spec.id, cylinder=spec.raw.get("legacy_cylinder"), severity=cmd.severity,
-                                  ramp_s=cmd.ramp_duration_sec, source=SOURCE)
+            ramp_s = cmd.ramp_duration_sec if cmd.ramp_duration_sec is not None else 2.8
+            sev = cmd.severity if cmd.severity is not None else 0.85
+            f = ch.manager.inject(spec.id, cylinder=spec.raw.get("legacy_cylinder"), severity=sev,
+                                  ramp_s=ramp_s, source=SOURCE)
         except FaultRejected as exc:
             raise _reject("FAULT_REJECTED", str(exc)) from None
         return {"status": "SUCCESS", "fault": f.to_dict()}

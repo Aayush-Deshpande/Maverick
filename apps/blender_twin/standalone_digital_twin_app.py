@@ -698,9 +698,68 @@ DEFAULT_ORBIT_DISTANCE = ENGINE_PROFILE['default_distance']
 DEFAULT_ORBIT_ELEVATION = ENGINE_PROFILE['default_elevation']
 DEFAULT_ORBIT_SPEED = math.radians(18.0)  # Smooth 360-deg turntable orbit: 18 deg/s (20s per full circle)
 
-STATE_ENDPOINT = f"{SERVER_BASE_URL}/api/engines/{ACTIVE_ENGINE_ID}/state"
+# Canonical DRDO PS-26054 Engine-Specific Demo Faults for Interactive Injection
+ENGINE_DEMO_FAULTS = {
+    'rotax_912is': [
+        {'id': 'F01', 'name': 'IGNITION MISFIRE', 'scope': 'CYLINDER', 'default_cyl': 1, 'tag': 'CAUTION'},
+        {'id': 'F05', 'name': 'INJECTOR CLOG', 'scope': 'CYLINDER', 'default_cyl': 1, 'tag': 'CAUTION'},
+        {'id': 'F23', 'name': 'OIL PRESSURE LOSS', 'scope': 'ENGINE', 'default_cyl': None, 'tag': 'NO_GO'},
+        {'id': 'F30', 'name': 'COMPRESSION LOSS', 'scope': 'CYLINDER', 'default_cyl': 3, 'tag': 'NO_GO'},
+        {'id': 'F27', 'name': 'GEARBOX DAMAGE', 'scope': 'ENGINE', 'default_cyl': None, 'tag': 'CAUTION'},
+        {'id': 'F31', 'name': 'EXHAUST EGT LEAK', 'scope': 'CYLINDER', 'default_cyl': 2, 'tag': 'ADVISORY'},
+        {'id': 'F32', 'name': 'ALTERNATOR SAG', 'scope': 'ENGINE', 'default_cyl': None, 'tag': 'ADVISORY'},
+        {'id': 'F36', 'name': 'ECU LANE FAILURE', 'scope': 'ENGINE', 'default_cyl': None, 'tag': 'NO_GO'},
+    ],
+    'rotax_914': [
+        {'id': 'F15', 'name': 'WASTEGATE OPEN', 'scope': 'ENGINE', 'default_cyl': None, 'tag': 'NO_GO'},
+        {'id': 'F14', 'name': 'BOOST LEAK', 'scope': 'ENGINE', 'default_cyl': None, 'tag': 'CAUTION'},
+        {'id': 'F12', 'name': 'CARB ICING', 'scope': 'ENGINE', 'default_cyl': None, 'tag': 'CAUTION'},
+        {'id': 'F01', 'name': 'IGNITION MISFIRE', 'scope': 'CYLINDER', 'default_cyl': 1, 'tag': 'CAUTION'},
+        {'id': 'F23', 'name': 'OIL PRESSURE LOSS', 'scope': 'ENGINE', 'default_cyl': None, 'tag': 'NO_GO'},
+        {'id': 'F27', 'name': 'GEARBOX DAMAGE', 'scope': 'ENGINE', 'default_cyl': None, 'tag': 'CAUTION'},
+        {'id': 'F17', 'name': 'TURBO BEARING WEAR', 'scope': 'ENGINE', 'default_cyl': None, 'tag': 'NO_GO'},
+        {'id': 'F30', 'name': 'COMPRESSION LOSS', 'scope': 'CYLINDER', 'default_cyl': 2, 'tag': 'NO_GO'},
+    ],
+    'rotax_915is': [
+        {'id': 'F18', 'name': 'INTERCOOLER FOULING', 'scope': 'ENGINE', 'default_cyl': None, 'tag': 'CAUTION'},
+        {'id': 'F16', 'name': 'WASTEGATE SHUT', 'scope': 'ENGINE', 'default_cyl': None, 'tag': 'NO_GO'},
+        {'id': 'F14', 'name': 'BOOST LEAK', 'scope': 'ENGINE', 'default_cyl': None, 'tag': 'CAUTION'},
+        {'id': 'F01', 'name': 'IGNITION MISFIRE', 'scope': 'CYLINDER', 'default_cyl': 1, 'tag': 'CAUTION'},
+        {'id': 'F23', 'name': 'OIL PRESSURE LOSS', 'scope': 'ENGINE', 'default_cyl': None, 'tag': 'NO_GO'},
+        {'id': 'F27', 'name': 'GEARBOX DAMAGE', 'scope': 'ENGINE', 'default_cyl': None, 'tag': 'CAUTION'},
+        {'id': 'F17', 'name': 'TURBO BEARING WEAR', 'scope': 'ENGINE', 'default_cyl': None, 'tag': 'NO_GO'},
+        {'id': 'F36', 'name': 'ECU LANE FAILURE', 'scope': 'ENGINE', 'default_cyl': None, 'tag': 'NO_GO'},
+    ],
+    'austro_ae300': [
+        {'id': 'F09', 'name': 'RAIL PRESSURE DECAY', 'scope': 'ENGINE', 'default_cyl': None, 'tag': 'NO_GO'},
+        {'id': 'F06', 'name': 'CRDi INJECTOR COKE', 'scope': 'CYLINDER', 'default_cyl': 1, 'tag': 'CAUTION'},
+        {'id': 'F08', 'name': 'INJECTOR STUCK SHUT', 'scope': 'CYLINDER', 'default_cyl': 2, 'tag': 'NO_GO'},
+        {'id': 'F14', 'name': 'BOOST LEAK', 'scope': 'ENGINE', 'default_cyl': None, 'tag': 'CAUTION'},
+        {'id': 'F23', 'name': 'OIL PRESSURE LOSS', 'scope': 'ENGINE', 'default_cyl': None, 'tag': 'NO_GO'},
+        {'id': 'F27', 'name': 'GEARBOX DAMAGE', 'scope': 'ENGINE', 'default_cyl': None, 'tag': 'CAUTION'},
+        {'id': 'F35', 'name': 'GLOW PLUG FAILURE', 'scope': 'CYLINDER', 'default_cyl': 1, 'tag': 'ADVISORY'},
+        {'id': 'F36', 'name': 'EECU LANE SKEW', 'scope': 'ENGINE', 'default_cyl': None, 'tag': 'NO_GO'},
+    ],
+    'vrde_jayem_2_2l': [
+        {'id': 'F09', 'name': '1800-BAR RAIL DECAY', 'scope': 'ENGINE', 'default_cyl': None, 'tag': 'NO_GO'},
+        {'id': 'F06', 'name': 'CRDi INJECTOR COKE', 'scope': 'CYLINDER', 'default_cyl': 1, 'tag': 'CAUTION'},
+        {'id': 'F08', 'name': 'INJECTOR STUCK SHUT', 'scope': 'CYLINDER', 'default_cyl': 2, 'tag': 'NO_GO'},
+        {'id': 'F14', 'name': 'TWIN TURBO BOOST DROP', 'scope': 'ENGINE', 'default_cyl': None, 'tag': 'CAUTION'},
+        {'id': 'F23', 'name': 'OIL PRESSURE LOSS', 'scope': 'ENGINE', 'default_cyl': None, 'tag': 'NO_GO'},
+        {'id': 'F27', 'name': 'GEARBOX DAMAGE', 'scope': 'ENGINE', 'default_cyl': None, 'tag': 'CAUTION'},
+        {'id': 'F17', 'name': 'TURBO INTERSTAGE LEAK', 'scope': 'ENGINE', 'default_cyl': None, 'tag': 'NO_GO'},
+        {'id': 'F36', 'name': 'DRDO FADEC SKEW', 'scope': 'ENGINE', 'default_cyl': None, 'tag': 'NO_GO'},
+    ]
+}
+
+# Authoritative API v1 Endpoints
+STATE_V1_ENDPOINT = f"{SERVER_BASE_URL}/api/v1/engines/{ACTIVE_ENGINE_ID}/state"
+FAULTS_V1_ENDPOINT = f"{SERVER_BASE_URL}/api/v1/engines/{ACTIVE_ENGINE_ID}/faults"
+SELECT_ENGINE_ENDPOINT = f"{SERVER_BASE_URL}/api/engines/select"
+# Legacy endpoints kept for backward compatibility
+STATE_ENDPOINT = STATE_V1_ENDPOINT
 LEGACY_STATE_ENDPOINT = f"{SERVER_BASE_URL}/api/state"
-CONTROL_ENDPOINT = f"{SERVER_BASE_URL}/api/engines/{ACTIVE_ENGINE_ID}/faults"
+CONTROL_ENDPOINT = FAULTS_V1_ENDPOINT
 LEGACY_CONTROL_ENDPOINT = f"{SERVER_BASE_URL}/api/control"
 
 
@@ -717,6 +776,7 @@ class DigitalTwinClientState:
         self.engine_profile = ENGINE_PROFILE
         
         self.sortie_id = "SORTIE-DRDO-26054"
+        self.engine_state = "RUNNING"
         self.is_engine_running = True
         self.active_commanded_fault_id = 0
         self.active_commanded_fault_name = "NOMINAL"
@@ -728,6 +788,17 @@ class DigitalTwinClientState:
         self.intro_title = ENGINE_PROFILE['title']
         self.intro_subtitle = ENGINE_PROFILE['subtitle']
         self.subsystem_leader_screen_pos = None
+        
+        # Status, Highlights, Hypotheses and Reliability from API v1
+        self.status = {'level': 'NOMINAL', 'reasons': []}
+        self.active_faults = []
+        self.highlights = []
+        self.hypotheses = []
+        self.reliability = {}
+        self.dock_mode = "SUBSYSTEMS"  # "SUBSYSTEMS" or "FAULTS"
+        self.selected_cylinder = 1
+        self.last_highlights_hash = None
+        self.last_highlight_center = None
         
         self.telemetry = {
             'ENGINE_RPM': 4680.0, 'PROP_RPM': 1926.0, 'TPS': 72.0,
@@ -815,7 +886,7 @@ client_state = DigitalTwinClientState()
 
 
 class TelemetryReceiverThread(threading.Thread):
-    """Background daemon thread fetching 20 Hz state from Backend, with smooth offline synthesis."""
+    """Background daemon thread fetching 20 Hz authoritative state from Backend /api/v1."""
     def __init__(self):
         super().__init__(daemon=True)
         self.is_running = True
@@ -824,96 +895,91 @@ class TelemetryReceiverThread(threading.Thread):
         while self.is_running:
             data = None
             active_id = client_state.engine_id
-            dyn_endpoint = f"{SERVER_BASE_URL}/api/engines/{active_id}/state"
+            v1_endpoint = f"{SERVER_BASE_URL}/api/v1/engines/{active_id}/state"
 
-            for endpoint in [dyn_endpoint, LEGACY_STATE_ENDPOINT]:
-                try:
-                    req = urllib.request.Request(
-                        endpoint,
-                        headers={'User-Agent': 'AnumaanBlenderTwinClient/2.0', 'ngrok-skip-browser-warning': 'true'}
-                    )
-                    with urllib.request.urlopen(req, timeout=0.35) as response:
-                        if response.status == 200:
-                            raw = response.read().decode('utf-8')
-                            data = json.loads(raw)
-                            break
-                except Exception:
-                    continue
-
-            # dyn_endpoint's payload (RuntimeHub's own per-engine shape: engine_id/channels/
-            # diagnosis/...) has no active_commanded_fault_id field at all -- that field only
-            # exists on the legacy EngineStateService payload (LEGACY_STATE_ENDPOINT / /api/state).
-            # Since dyn_endpoint is tried first and normally succeeds, the loop above never falls
-            # through to fetch it, so a fault commanded from the GCS (SET_FAULT via /api/control)
-            # was never seen here -- active_commanded_fault_id stayed stuck at its last value and
-            # the fault highlight in apply_fault_highlight() never triggered. rotax_912is is the
-            # only engine this field's numeric DRDO taxonomy applies to (see
-            # backend/server/engine_service.py's active_fault_id), so only fetch it for that engine.
-            if active_id == 'rotax_912is':
-                try:
-                    req = urllib.request.Request(
-                        LEGACY_STATE_ENDPOINT,
-                        headers={'User-Agent': 'AnumaanBlenderTwinClient/2.0', 'ngrok-skip-browser-warning': 'true'}
-                    )
-                    with urllib.request.urlopen(req, timeout=0.35) as response:
-                        if response.status == 200:
-                            legacy_data = json.loads(response.read().decode('utf-8'))
-                            if data is None:
-                                data = legacy_data
-                            else:
-                                cid = legacy_data.get('active_commanded_fault_id')
-                                data['active_commanded_fault_id'] = cid if isinstance(cid, int) else 0
-                                data['active_commanded_fault_name'] = legacy_data.get('active_commanded_fault_name') or 'NOMINAL'
-
-                except Exception:
-                    pass
+            try:
+                req = urllib.request.Request(
+                    v1_endpoint,
+                    headers={'User-Agent': 'AnumaanBlenderTwinClient/2.0', 'ngrok-skip-browser-warning': 'true'}
+                )
+                with urllib.request.urlopen(req, timeout=0.35) as response:
+                    if response.status == 200:
+                        raw = response.read().decode('utf-8')
+                        data = json.loads(raw)
+            except Exception:
+                pass
 
             if data:
                 client_state.is_connected = True
                 client_state.last_packet_time = time.time()
-                client_state.sortie_id = data.get('sortie_id', client_state.sortie_id)
-                running = data.get('is_engine_running')
-                if isinstance(running, bool):
-                    client_state.is_engine_running = running
-                cid = data.get('active_commanded_fault_id', client_state.active_commanded_fault_id)
-                client_state.active_commanded_fault_id = cid if isinstance(cid, int) else 0
-                client_state.active_commanded_fault_name = data.get('active_commanded_fault_name', client_state.active_commanded_fault_name)
-                
-                if 'telemetry' in data and isinstance(data['telemetry'], dict):
-                    # null = no data: stored as NaN so the HUD prints "nan" instead of crashing or inventing a value
-                    client_state.telemetry.update({k: (float('nan') if v is None else v)
-                                                   for k, v in data['telemetry'].items()})
-                elif 'state' in data and isinstance(data['state'], dict):
-                    client_state.telemetry.update(data['state'])
-                    
-                if 'channels' in data and isinstance(data['channels'], dict):
-                    ch = data['channels']
-                    if 'rpm' in ch: client_state.telemetry['ENGINE_RPM'] = float(ch['rpm'])
-                    if 'prop_rpm' in ch: client_state.telemetry['PROP_RPM'] = float(ch['prop_rpm'])
-                    if 'throttle' in ch: client_state.telemetry['TPS'] = float(ch['throttle'])
-                    if 'map_kpa' in ch: client_state.telemetry['MAP'] = float(ch['map_kpa'])
-                    if 'oil_p' in ch: client_state.telemetry['OIL_PRESS'] = float(ch['oil_p'])
-                    if 'oil_t' in ch: client_state.telemetry['OIL_TEMP'] = float(ch['oil_t'])
-                    if 'fuel_flow' in ch: client_state.telemetry['FUEL_FLOW'] = float(ch['fuel_flow'])
-                    if 'rail_p' in ch: client_state.telemetry['FUEL_RAIL_P'] = float(ch['rail_p'])
-                    if 'bus_v' in ch: client_state.telemetry['BUS_VOLTAGE'] = float(ch['bus_v'])
-                    if 'batt_i' in ch: client_state.telemetry['BATTERY_CURRENT'] = float(ch['batt_i'])
-                    if 'alt' in ch: client_state.telemetry['ALTITUDE_FT'] = float(ch['alt'])
-                    if 'oat' in ch: client_state.telemetry['OAT_C'] = float(ch['oat'])
-                    if 'tas' in ch: client_state.telemetry['TAS_KNOTS'] = float(ch['tas'])
-                    for k in range(1, 7):
-                        if f'cht_{k}' in ch: client_state.telemetry[f'CHT_{k}'] = float(ch[f'cht_{k}'])
-                        if f'egt_{k}' in ch: client_state.telemetry[f'EGT_{k}'] = float(ch[f'egt_{k}'])
+                client_state.engine_state = data.get('engine_state', 'RUNNING')
+                client_state.is_engine_running = (client_state.engine_state == 'RUNNING')
+                client_state.status = data.get('status', {'level': 'NOMINAL', 'reasons': []})
+                client_state.active_faults = data.get('active_faults', [])
+                client_state.highlights = data.get('highlights', [])
+                client_state.hypotheses = data.get('hypotheses', [])
+                client_state.reliability = data.get('reliability', {})
+
+                if client_state.active_faults:
+                    f0 = client_state.active_faults[0]
+                    fid = f0.get('fault_id', '')
+                    fname = f0.get('name', '')
+                    cyl = f0.get('cylinder')
+                    cyl_str = f" [CYL {cyl}]" if cyl is not None else ""
+                    client_state.active_commanded_fault_name = f"{fid} {fname}{cyl_str}"
+                    # Map canonical fault ID (F19, F05, etc.) to 1-8 for camera framing and highlighting
+                    fid_map = {
+                        'F19': 1, 'F05': 2, 'F01': 3, 'F23': 4,
+                        'F27': 5, 'F31': 6, 'F32': 7, 'F11': 8, 'F08': 8
+                    }
+                    num_id = fid_map.get(fid, 0)
+                    if num_id > 0 and client_state.active_commanded_fault_id != num_id:
+                        client_state.active_commanded_fault_id = num_id
+                else:
+                    client_state.active_commanded_fault_name = "NOMINAL"
+                    if client_state.active_commanded_fault_id > 0:
+                        client_state.active_commanded_fault_id = 0
+
+                # Telemetry channels from real readings and environment
+                rd = data.get('readings', {})
+                env = data.get('environment', {})
+                def _val(x):
+                    if x is None: return float('nan')
+                    if isinstance(x, dict): x = x.get('value')
+                    try: return float(x) if x is not None else float('nan')
+                    except (ValueError, TypeError): return float('nan')
+
+                if 'rpm' in rd: client_state.telemetry['ENGINE_RPM'] = _val(rd['rpm'])
+                if 'prop_rpm' in rd: client_state.telemetry['PROP_RPM'] = _val(rd['prop_rpm'])
+                if 'map_kpa' in rd: client_state.telemetry['MAP'] = _val(rd['map_kpa'])
+                if 'oil_p' in rd: client_state.telemetry['OIL_PRESS'] = _val(rd['oil_p'])
+                if 'oil_t' in rd: client_state.telemetry['OIL_TEMP'] = _val(rd['oil_t'])
+                if 'fuel_flow' in rd: client_state.telemetry['FUEL_FLOW'] = _val(rd['fuel_flow'])
+                if 'fuel_p' in rd: client_state.telemetry['FUEL_RAIL_P'] = _val(rd['fuel_p'])
+                elif 'rail_p' in rd: client_state.telemetry['FUEL_RAIL_P'] = _val(rd['rail_p'])
+                if 'bus_v' in rd: client_state.telemetry['BUS_VOLTAGE'] = _val(rd['bus_v'])
+                if 'batt_i' in rd: client_state.telemetry['BATTERY_CURRENT'] = _val(rd['batt_i'])
+                if 'altitude_ft' in env: client_state.telemetry['ALTITUDE_FT'] = _val(env['altitude_ft'])
+                if 'oat_c' in env: client_state.telemetry['OAT_C'] = _val(env['oat_c'])
+                if 'tas_kt' in env: client_state.telemetry['TAS_KNOTS'] = _val(env['tas_kt'])
+                for k in range(1, 7):
+                    k_cht = f'cht[{k}]'
+                    k_egt = f'egt[{k}]'
+                    if k_cht in rd: client_state.telemetry[f'CHT_{k}'] = _val(rd[k_cht])
+                    elif f'cht_{k}' in rd: client_state.telemetry[f'CHT_{k}'] = _val(rd[f'cht_{k}'])
+                    if k_egt in rd: client_state.telemetry[f'EGT_{k}'] = _val(rd[k_egt])
+                    elif f'egt_{k}' in rd: client_state.telemetry[f'EGT_{k}'] = _val(rd[f'egt_{k}'])
 
                 if 'analytics' in data and isinstance(data['analytics'], dict):
                     client_state.analytics.update(data['analytics'])
             else:
-                # Offline: no synthesised telemetry (M0-10, P Part 0 D7); the HUD shows the link as offline.
                 now = time.time()
                 if now - client_state.last_packet_time > 1.0:
                     client_state.is_connected = False
-            
-            time.sleep(0.020)
+                    client_state.active_faults.clear()
+                    client_state.highlights.clear()
+
+            time.sleep(0.045)
 
 
 def update_camera_for_backend_fault():
@@ -947,43 +1013,65 @@ def update_camera_for_backend_fault():
         client_state.is_auto_orbit = True
 
 
-def send_server_command(action: str, **kwargs):
-    """Sends a control command to the backend in a background thread."""
+def send_server_fault(fault_id: str, cylinder: int = None, severity: float = None):
+    """Sends authoritative POST /api/v1/engines/{engine_id}/faults in background."""
     def _worker():
-        payload = {"action": action, **kwargs}
+        url = f"{SERVER_BASE_URL}/api/v1/engines/{client_state.engine_id}/faults"
+        payload = {"fault_id": fault_id, "source": "blender"}
+        if cylinder is not None:
+            payload["cylinder"] = cylinder
+        if severity is not None:
+            payload["severity"] = severity
+        try:
+            req = urllib.request.Request(
+                url,
+                data=json.dumps(payload).encode('utf-8'),
+                headers={'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true'}
+            )
+            with urllib.request.urlopen(req, timeout=1.0) as resp:
+                print(f"[BLENDER] Injected fault: {fault_id} (cyl {cylinder})")
+        except urllib.error.HTTPError as e:
+            err_body = e.read().decode('utf-8', errors='ignore')
+            print(f"[BLENDER HTTP {e.code}] {err_body}")
+        except Exception as e:
+            print(f"[BLENDER NET ERR] {e}")
+    threading.Thread(target=_worker, daemon=True).start()
+
+
+def send_clear_server_faults():
+    """Sends authoritative DELETE /api/v1/engines/{engine_id}/faults in background."""
+    def _worker():
+        url = f"{SERVER_BASE_URL}/api/v1/engines/{client_state.engine_id}/faults?source=blender"
+        try:
+            req = urllib.request.Request(url, method='DELETE', headers={'ngrok-skip-browser-warning': 'true'})
+            with urllib.request.urlopen(req, timeout=1.0) as resp:
+                print(f"[BLENDER] Cleared all faults on {client_state.engine_id}")
+        except Exception as e:
+            print(f"[BLENDER NET ERR] Clear faults: {e}")
+    threading.Thread(target=_worker, daemon=True).start()
+
+
+def send_server_command(action: str, **kwargs):
+    """Backward compatibility wrapper for control commands."""
+    if action == "SET_FAULT":
         fid = kwargs.get("fault_id", 0)
-        
-        if action == "SET_FAULT":
-            client_state.active_commanded_fault_id = fid
-            client_state.applied_fault_id = fid
-            f_meta = FAULT_DATABASE.get(fid, {})
-            client_state.active_commanded_fault_name = f_meta.get("short", "UNKNOWN_FAULT")
+        client_state.active_commanded_fault_id = fid
+        client_state.applied_fault_id = fid
+        demo_list = ENGINE_DEMO_FAULTS.get(client_state.engine_id, [])
+        if 1 <= fid <= len(demo_list):
+            f_item = demo_list[fid - 1]
+            send_server_fault(f_item['id'], cylinder=f_item.get('default_cyl'))
+        else:
             update_camera_for_backend_fault()
             apply_fault_highlight(fid)
-                
-        elif action == "CLEAR_FAULT":
-            client_state.active_commanded_fault_id = 0
-            client_state.applied_fault_id = 0
-            client_state.active_commanded_fault_name = "NOMINAL"
-            update_camera_for_backend_fault()
-            if client_state.active_subsystem_id == 0 and not client_state.is_ghost_vision:
-                restore_all_solid_materials()
-
-        for endpoint in [CONTROL_ENDPOINT, LEGACY_CONTROL_ENDPOINT]:
-            try:
-                if action == "CLEAR_FAULT":
-                    req = urllib.request.Request(endpoint, method='DELETE', headers={'ngrok-skip-browser-warning': 'true'})
-                else:
-                    req = urllib.request.Request(
-                        endpoint,
-                        data=json.dumps(payload).encode('utf-8'),
-                        headers={'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true'}
-                    )
-                with urllib.request.urlopen(req, timeout=0.5) as resp:
-                    return
-            except Exception:
-                continue
-    threading.Thread(target=_worker, daemon=True).start()
+    elif action == "CLEAR_FAULT":
+        client_state.active_commanded_fault_id = 0
+        client_state.applied_fault_id = 0
+        client_state.active_commanded_fault_name = "NOMINAL"
+        send_clear_server_faults()
+        update_camera_for_backend_fault()
+        if client_state.active_subsystem_id == 0 and not client_state.is_ghost_vision:
+            restore_all_solid_materials()
 
 
 def get_mw(obj):
@@ -1078,7 +1166,7 @@ def switch_engine(engine_id: str):
 ORIGINAL_PBR_MATERIALS = {}
 
 def ensure_ghost_materials():
-    """Ensure reusable Holographic Ghost Vision and Fault Red materials exist."""
+    """Ensure reusable Holographic Ghost Vision and Level Highlight materials exist."""
     ghost_mat = bpy.data.materials.get('M_GhostVision_XRay')
     if not ghost_mat:
         ghost_mat = bpy.data.materials.new(name='M_GhostVision_XRay')
@@ -1103,6 +1191,31 @@ def ensure_ghost_materials():
         if hasattr(ghost_mat, 'shadow_method'):
             ghost_mat.shadow_method = 'NONE'
 
+    # Level-based Emissive Highlight Materials per DRDO PS-26054 / D66
+    level_colors = {
+        'M_Highlight_INJECTED': ((0.545, 0.361, 0.965, 1.0), 4.5),   # Violet (#8b5cf6)
+        'M_Highlight_NO_GO':    ((0.937, 0.160, 0.160, 1.0), 4.5),   # Red (#ef4444)
+        'M_Highlight_CAUTION':  ((0.961, 0.620, 0.043, 1.0), 3.5),   # Amber (#f59e0b)
+        'M_Highlight_ADVISORY': ((0.024, 0.714, 0.831, 1.0), 3.0),   # Cyan (#06b6d4)
+        'M_Highlight_SENSOR':   ((0.231, 0.510, 0.965, 1.0), 3.0),   # Blue (#3b82f6)
+    }
+    
+    for mat_name, (col, emission_str) in level_colors.items():
+        mat = bpy.data.materials.get(mat_name)
+        if not mat:
+            mat = bpy.data.materials.new(name=mat_name)
+            mat.use_nodes = True
+            mat.use_fake_user = True
+            m_bsdf = mat.node_tree.nodes.get('Principled BSDF')
+            if m_bsdf:
+                m_bsdf.inputs['Base Color'].default_value = col
+                m_bsdf.inputs['Roughness'].default_value = 0.18
+                m_bsdf.inputs['Alpha'].default_value = 1.0
+                if 'Emission Color' in m_bsdf.inputs:
+                    m_bsdf.inputs['Emission Color'].default_value = col
+                    m_bsdf.inputs['Emission Strength'].default_value = emission_str
+
+    # Backward compatibility alias: M_Fault_RedHighlight -> red
     fault_mat = bpy.data.materials.get('M_Fault_RedHighlight')
     if not fault_mat:
         fault_mat = bpy.data.materials.new(name='M_Fault_RedHighlight')
@@ -1121,18 +1234,33 @@ def ensure_ghost_materials():
 
 
 def cache_authentic_materials():
-    """Cache pristine original PBR materials for all mesh objects across all engine collections."""
-    for col in bpy.data.collections:
-        if col.name.startswith("Collection_"):
+    """Cache pristine original PBR materials for all mesh objects in collections and data."""
+    # Check collections first
+    for col in getattr(bpy.data, 'collections', []):
+        if hasattr(col, 'objects'):
             for obj in col.objects:
-                if obj is not None and obj.type == 'MESH' and obj.name not in ORIGINAL_PBR_MATERIALS:
+                if obj is not None and getattr(obj, 'type', None) == 'MESH' and obj.name not in ORIGINAL_PBR_MATERIALS:
                     slots = []
-                    for slot in obj.material_slots:
-                        if slot.material and not slot.material.name.startswith(('M_Ghost', 'M_Fault')):
-                            slots.append(slot.material)
+                    for slot in getattr(obj, 'material_slots', []):
+                        m = getattr(slot, 'material', None)
+                        if m and not getattr(m, 'name', '').startswith(('M_Ghost', 'M_Highlight', 'M_Fault')):
+                            slots.append(m)
                         else:
                             slots.append(None)
                     ORIGINAL_PBR_MATERIALS[obj.name] = slots
+
+    # Also check all objects in data
+    if hasattr(bpy.data, 'objects'):
+        for obj in bpy.data.objects:
+            if obj is not None and getattr(obj, 'type', None) == 'MESH' and obj.name not in ORIGINAL_PBR_MATERIALS:
+                slots = []
+                for slot in getattr(obj, 'material_slots', []):
+                    m = getattr(slot, 'material', None)
+                    if m and not getattr(m, 'name', '').startswith(('M_Ghost', 'M_Highlight', 'M_Fault')):
+                        slots.append(m)
+                    else:
+                        slots.append(None)
+                ORIGINAL_PBR_MATERIALS[obj.name] = slots
 
 
 def restore_all_solid_materials():
@@ -1145,8 +1273,8 @@ def restore_all_solid_materials():
     
     prof = client_state.engine_profile
     col_name = prof.get('collection', '')
-    active_col = bpy.data.collections.get(col_name)
-    target_objs = [o for o in active_col.objects if o is not None and o.type == 'MESH'] if active_col else [o for o in bpy.data.objects if o is not None and o.type == 'MESH' and not o.hide_viewport]
+    active_col = bpy.data.collections.get(col_name) if hasattr(bpy.data, 'collections') else None
+    target_objs = [o for o in active_col.objects if o is not None and getattr(o, 'type', None) == 'MESH'] if active_col and hasattr(active_col, 'objects') else [o for o in getattr(bpy.data, 'objects', []) if o is not None and getattr(o, 'type', None) == 'MESH']
     
     for obj in target_objs:
         orig_slots = ORIGINAL_PBR_MATERIALS.get(obj.name, [])
@@ -1158,11 +1286,32 @@ def restore_all_solid_materials():
         while len(obj.material_slots) > max(1, len(orig_slots)):
             obj.data.materials.pop(index=len(obj.material_slots) - 1)
             
-        # Verify no slot retains ghost material
+        # Verify no slot retains ghost or highlight material
         for slot in obj.material_slots:
-            if slot.material == ghost_mat or (slot.material and slot.material.name.startswith('M_Ghost')):
-                if orig_slots and orig_slots[0] is not None:
-                    slot.material = orig_slots[0]
+            m = getattr(slot, 'material', None)
+            if m is None or getattr(m, 'name', '').startswith(('M_Ghost', 'M_Highlight', 'M_Fault')):
+                restored = False
+                if orig_slots:
+                    for om in orig_slots:
+                        if om is not None and not getattr(om, 'name', '').startswith(('M_Ghost', 'M_Highlight', 'M_Fault')):
+                            slot.material = om
+                            restored = True
+                            break
+                if not restored:
+                    slot_name = getattr(slot, 'name', None)
+                    base_mat = bpy.data.materials.get(slot_name) if slot_name and hasattr(bpy.data, 'materials') and hasattr(bpy.data.materials, 'get') else None
+                    if not base_mat and getattr(obj, 'data', None) and getattr(obj.data, 'materials', None):
+                        first_m = obj.data.materials[0] if len(obj.data.materials) > 0 else None
+                        if first_m and not getattr(first_m, 'name', '').startswith(('M_Ghost', 'M_Highlight', 'M_Fault')):
+                            base_mat = first_m
+                    if base_mat:
+                        slot.material = base_mat
+                    elif hasattr(bpy.data, 'materials') and hasattr(bpy.data.materials, 'get'):
+                        clean_mat = bpy.data.materials.get("M_PBR_Default")
+                        if not clean_mat and hasattr(bpy.data.materials, 'new'):
+                            clean_mat = bpy.data.materials.new(name="M_PBR_Default")
+                            clean_mat.use_nodes = True
+                        slot.material = clean_mat
 
 
 def get_parts_center_and_radius(part_names: list):
@@ -1196,6 +1345,103 @@ def get_parts_center_and_radius(part_names: list):
     center = (min_co + max_co) * 0.5
     radius = max(0.1, (max_co - min_co).length * 0.5)
     return center, radius
+
+
+def apply_highlights(highlights: list):
+    """
+    Applies authoritative dynamic 3D node highlights from Backend state:
+    - Matches exact node names in state.highlights to Blender mesh objects.
+    - Applies color-coded emissive material based on level:
+        INJECTED -> violet (#8b5cf6)
+        NO_GO / CRITICAL -> red (#ef4444)
+        CAUTION -> amber (#f59e0b)
+        ADVISORY -> cyan (#06b6d4)
+        SENSOR -> blue (#3b82f6)
+    - Applies translucent cyan X-ray ghost to non-highlighted components.
+    - Smoothly focuses camera on center of highlighted nodes.
+    - If highlights is empty: restores authentic solid PBR materials.
+    """
+    if client_state.active_subsystem_id > 0:
+        apply_material_state()
+        return
+
+    if not highlights:
+        if not client_state.is_ghost_vision:
+            restore_all_solid_materials()
+        else:
+            apply_material_state()
+        return
+
+    ghost_mat, fault_mat = ensure_ghost_materials()
+    cache_authentic_materials()
+
+    prof = client_state.engine_profile
+    col_name = prof.get('collection', '')
+    active_col = bpy.data.collections.get(col_name)
+    target_objs = [o for o in active_col.objects if o is not None and o.type == 'MESH'] if active_col else [o for o in bpy.data.objects if o is not None and o.type == 'MESH' and not o.hide_viewport]
+
+    # Map node name to appropriate material
+    node_to_mat = {}
+    for h in highlights:
+        lvl = (h.get('level') or 'CAUTION').upper()
+        if lvl in ('INJECTED', 'FAULT', 'COMMANDED'):
+            mat = bpy.data.materials.get('M_Highlight_INJECTED') or fault_mat
+        elif lvl in ('NO_GO', 'CRITICAL', 'ALARM'):
+            mat = bpy.data.materials.get('M_Highlight_NO_GO') or fault_mat
+        elif lvl in ('CAUTION', 'WARNING', 'MAJOR'):
+            mat = bpy.data.materials.get('M_Highlight_CAUTION') or fault_mat
+        elif lvl in ('ADVISORY', 'INFO', 'MINOR'):
+            mat = bpy.data.materials.get('M_Highlight_ADVISORY') or ghost_mat
+        elif lvl in ('SENSOR', 'QUARANTINE'):
+            mat = bpy.data.materials.get('M_Highlight_SENSOR') or ghost_mat
+        else:
+            mat = fault_mat
+
+        for node_name in h.get('nodes', []):
+            node_to_mat[node_name] = mat
+
+    highlighted_objs = []
+    for obj in target_objs:
+        matched_mat = node_to_mat.get(obj.name)
+        if not matched_mat:
+            # Case-insensitive / prefix fallback
+            for n, m in node_to_mat.items():
+                if n.lower() == obj.name.lower() or n.lower() in obj.name.lower():
+                    matched_mat = m
+                    break
+        if matched_mat:
+            highlighted_objs.append(obj)
+            if len(obj.material_slots) == 0:
+                obj.data.materials.append(matched_mat)
+            else:
+                for slot in obj.material_slots:
+                    slot.material = matched_mat
+        else:
+            if len(obj.material_slots) == 0:
+                obj.data.materials.append(ghost_mat)
+            else:
+                for slot in obj.material_slots:
+                    slot.material = ghost_mat
+
+    # Auto-frame camera to highlighted objects
+    if highlighted_objs:
+        min_co = mathutils.Vector((float('inf'), float('inf'), float('inf')))
+        max_co = mathutils.Vector((float('-inf'), float('-inf'), float('-inf')))
+        for obj in highlighted_objs:
+            mw = get_mw(obj)
+            for c in obj.bound_box:
+                w = mw @ mathutils.Vector(c)
+                min_co.x = min(min_co.x, w.x)
+                min_co.y = min(min_co.y, w.y)
+                min_co.z = min(min_co.z, w.z)
+                max_co.x = max(max_co.x, w.x)
+                max_co.y = max(max_co.y, w.y)
+                max_co.z = max(max_co.z, w.z)
+        center = (min_co + max_co) * 0.5
+        radius = max(0.1, (max_co - min_co).length * 0.5)
+        client_state.cam_target = center
+        client_state.target_orbit_distance = max(DEFAULT_ORBIT_DISTANCE * 0.35, min(DEFAULT_ORBIT_DISTANCE * 1.5, radius * 2.2))
+        client_state.is_auto_orbit = False
 
 
 def apply_fault_highlight(fault_id: int):
@@ -1252,18 +1498,23 @@ def apply_material_state():
     1. Subsystem Inspection Mode (active_subsystem_id > 0):
        - Entire engine goes into Holographic Ghost Mode.
        - ONLY inspected subsystem meshes retain authentic NORMAL SOLID RENDERED PBR materials.
-    2. Fault Highlighting Mode (active_commanded_fault_id > 0 or applied_fault_id > 0):
+    2. Dynamic Node Highlight Mode (state.highlights non-empty from backend):
+       - Exact highlighted meshes glow with level colors (INJECTED, NO_GO, CAUTION, ADVISORY), rest ghosted.
+    3. Manual/Legacy Fault Highlighting Mode (active_commanded_fault_id > 0):
        - Faulted component glowing red, rest ghosted.
-    3. Full Engine Mode (active_subsystem_id == 0 and fault_id == 0):
+    4. Full Engine Mode (active_subsystem_id == 0 and fault_id == 0):
        - Restores 100% authentic normal solid PBR materials across all engine meshes.
     """
-    if client_state.active_commanded_fault_id > 0 and client_state.active_subsystem_id == 0:
-        apply_fault_highlight(client_state.active_commanded_fault_id)
-        return
-
-    if client_state.active_subsystem_id == 0 and not client_state.is_ghost_vision:
-        restore_all_solid_materials()
-        return
+    if client_state.active_subsystem_id == 0:
+        if client_state.highlights:
+            apply_highlights(client_state.highlights)
+            return
+        if client_state.active_commanded_fault_id > 0:
+            apply_fault_highlight(client_state.active_commanded_fault_id)
+            return
+        if not client_state.is_ghost_vision:
+            restore_all_solid_materials()
+            return
 
     ghost_mat, fault_mat = ensure_ghost_materials()
     cache_authentic_materials()
@@ -1354,7 +1605,9 @@ def clear_subsystem_inspection():
     client_state.target_orbit_elevation = DEFAULT_ORBIT_ELEVATION
     client_state.is_auto_orbit = True
     client_state.subsystem_leader_screen_pos = None
-    if client_state.active_commanded_fault_id > 0:
+    if client_state.highlights:
+        apply_highlights(client_state.highlights)
+    elif client_state.active_commanded_fault_id > 0:
         apply_fault_highlight(client_state.active_commanded_fault_id)
     else:
         restore_all_solid_materials()
@@ -1534,23 +1787,47 @@ class HUDDrawer:
         is_diesel = ('austro' in state.engine_id or 'vrde' in state.engine_id)
         rail_unit = "bar" if is_diesel else "psi"
         
-        rx = width - 360
+        rx = width - 420
         self.draw_text("ENGINE RPM", rx, top_y + 34, size=8.5, color=(0.50, 0.70, 0.85, 0.85))
-        self.draw_text(f"{rpm:5.0f}", rx, top_y + 14, size=13.0, color=(0.0, 0.95, 0.60, 1.0))
+        rpm_txt = f"{rpm:5.0f}" if (state.is_connected and math.isfinite(rpm)) else "--"
+        self.draw_text(rpm_txt, rx, top_y + 14, size=13.0, color=(0.0, 0.95, 0.60, 1.0) if state.is_connected else (0.6, 0.6, 0.6, 0.8))
 
         rx += 105
         self.draw_text("OIL PRESS", rx, top_y + 34, size=8.5, color=(0.50, 0.70, 0.85, 0.85))
-        self.draw_text(f"{oil_p:4.2f} bar", rx, top_y + 14, size=13.0, color=(0.0, 0.90, 1.0, 1.0))
+        oil_txt = f"{oil_p:4.2f} bar" if (state.is_connected and math.isfinite(oil_p)) else "--"
+        self.draw_text(oil_txt, rx, top_y + 14, size=13.0, color=(0.0, 0.90, 1.0, 1.0) if state.is_connected else (0.6, 0.6, 0.6, 0.8))
 
         rx += 115
         self.draw_text("FUEL RAIL", rx, top_y + 34, size=8.5, color=(0.50, 0.70, 0.85, 0.85))
-        self.draw_text(f"{fuel_p:4.0f} {rail_unit}", rx, top_y + 14, size=13.0, color=(0.95, 0.85, 0.15, 1.0))
+        fuel_txt = f"{fuel_p:4.0f} {rail_unit}" if (state.is_connected and math.isfinite(fuel_p)) else "--"
+        self.draw_text(fuel_txt, rx, top_y + 14, size=13.0, color=(0.95, 0.85, 0.15, 1.0) if state.is_connected else (0.6, 0.6, 0.6, 0.8))
 
         # Status Pill
         rx += 110
-        status_col = (0.0, 0.95, 0.50, 1.0) if not state.active_commanded_fault_id else (1.0, 0.15, 0.15, 1.0)
-        status_txt = "ALL NOMINAL" if not state.active_commanded_fault_id else "FAULT SIM"
-        self.draw_rect(rx - 8, top_y + 15, 100, 24, (0.02, 0.08, 0.05, 0.70) if not state.active_commanded_fault_id else (0.15, 0.02, 0.02, 0.70))
+        if not state.is_connected:
+            status_col = (0.95, 0.40, 0.10, 1.0)
+            status_txt = "▲ OFFLINE"
+            pill_bg = (0.15, 0.05, 0.02, 0.70)
+        else:
+            lvl = state.status.get('level', 'NOMINAL')
+            if lvl == 'NO_GO':
+                status_col = (0.95, 0.15, 0.15, 1.0)
+                status_txt = "✖ NO-GO"
+                pill_bg = (0.20, 0.02, 0.02, 0.70)
+            elif lvl == 'CAUTION':
+                status_col = (0.95, 0.65, 0.05, 1.0)
+                status_txt = "▲ CAUTION"
+                pill_bg = (0.18, 0.10, 0.02, 0.70)
+            elif lvl == 'ADVISORY':
+                status_col = (0.02, 0.75, 0.90, 1.0)
+                status_txt = "◆ ADVISORY"
+                pill_bg = (0.02, 0.12, 0.18, 0.70)
+            else:
+                status_col = (0.0, 0.95, 0.50, 1.0)
+                status_txt = "● NOMINAL"
+                pill_bg = (0.02, 0.08, 0.05, 0.70)
+
+        self.draw_rect(rx - 8, top_y + 15, 100, 24, pill_bg)
         self.draw_rect_outline(rx - 8, top_y + 15, 100, 24, status_col, width=1.0)
         self.draw_text(status_txt, rx, top_y + 22, size=8.5, color=status_col)
 
@@ -1654,24 +1931,54 @@ class HUDDrawer:
                         self.draw_circle(card_x, target_y, 3, (0.0, 1.0, 1.0, 1.0), width=1.0)
 
         # ======================================================================
-        # D. BOTTOM SUBSYSTEM INSPECTOR DOCK (Always visible for easy access)
+        # D. BOTTOM COCKPIT DOCK (Subsystems or Fault Injector)
         # ======================================================================
         dock_h = 36
         dock_y = 16
-        subsystems = prof.get('subsystems', {})
-        
-        dock_items = [
-            (1, subsystems.get(1, {}).get('name', 'STATION 1')[:18]),
-            (2, subsystems.get(2, {}).get('name', 'STATION 2')[:18]),
-            (3, subsystems.get(3, {}).get('name', 'STATION 3')[:18]),
-            (4, subsystems.get(4, {}).get('name', 'STATION 4')[:18]),
-            (5, subsystems.get(5, {}).get('name', 'STATION 5')[:18]),
-            (0, "FULL ASSEMBLY")
-        ]
-        
-        pill_w = min(175, int((width - 60) / len(dock_items)) - 8)
+
+        # Mode switch button & Cylinder selector
+        mode_btn_w = 95
+        mode_btn_x = 20
+        is_mode_hover = (state.hovered_button == "TOGGLE_DOCK_MODE")
+        m_bg = (0.15, 0.35, 0.55, 0.90) if is_mode_hover else (0.06, 0.15, 0.25, 0.80)
+        m_bd = (0.0, 0.95, 1.0, 1.0) if is_mode_hover else (0.15, 0.35, 0.55, 0.60)
+        self.draw_rect(mode_btn_x, dock_y, mode_btn_w, dock_h, m_bg)
+        self.draw_rect_outline(mode_btn_x, dock_y, mode_btn_w, dock_h, m_bd, width=1.0)
+        m_label = "[TAB] " + ("FAULTS" if state.dock_mode == "SUBSYSTEMS" else "STATIONS")
+        self.draw_text(m_label, mode_btn_x + 8, dock_y + 11, size=8.5, color=(1.0, 1.0, 1.0, 1.0))
+        state.button_rects.append((mode_btn_x, dock_y, mode_btn_w, dock_h, "TOGGLE_DOCK_MODE"))
+
+        cyl_btn_w = 70
+        cyl_btn_x = mode_btn_x + mode_btn_w + 6
+        is_cyl_hover = (state.hovered_button == "CYCLE_CYLINDER")
+        c_bg = (0.15, 0.35, 0.55, 0.90) if is_cyl_hover else (0.06, 0.15, 0.25, 0.80)
+        c_bd = (0.0, 0.95, 1.0, 1.0) if is_cyl_hover else (0.15, 0.35, 0.55, 0.60)
+        self.draw_rect(cyl_btn_x, dock_y, cyl_btn_w, dock_h, c_bg)
+        self.draw_rect_outline(cyl_btn_x, dock_y, cyl_btn_w, dock_h, c_bd, width=1.0)
+        self.draw_text(f"[C] CYL {state.selected_cylinder}", cyl_btn_x + 8, dock_y + 11, size=8.5, color=(0.90, 0.95, 1.0, 1.0))
+        state.button_rects.append((cyl_btn_x, dock_y, cyl_btn_w, dock_h, "CYCLE_CYLINDER"))
+
+        if state.dock_mode == "SUBSYSTEMS":
+            subsystems = prof.get('subsystems', {})
+            dock_items = [
+                (1, subsystems.get(1, {}).get('name', 'STATION 1')[:16]),
+                (2, subsystems.get(2, {}).get('name', 'STATION 2')[:16]),
+                (3, subsystems.get(3, {}).get('name', 'STATION 3')[:16]),
+                (4, subsystems.get(4, {}).get('name', 'STATION 4')[:16]),
+                (5, subsystems.get(5, {}).get('name', 'STATION 5')[:16]),
+                (0, "FULL ASSEMBLY")
+            ]
+            item_prefix = "SUBSYS"
+        else:
+            demo_faults = ENGINE_DEMO_FAULTS.get(state.engine_id, [])
+            dock_items = [(idx + 1, f['name'][:16]) for idx, f in enumerate(demo_faults)]
+            dock_items.append((0, "CLEAR FAULTS"))
+            item_prefix = "FAULT"
+
+        avail_w = width - (cyl_btn_x + cyl_btn_w + 40)
+        pill_w = max(110, min(160, int(avail_w / len(dock_items)) - 8))
         total_dock_w = len(dock_items) * (pill_w + 8)
-        dock_x = (width - total_dock_w) // 2
+        dock_x = cyl_btn_x + cyl_btn_w + 16
 
         # Dock Background Bar
         self.draw_gradient_rect(dock_x - 8, dock_y - 4, total_dock_w + 8, dock_h + 8, (0.02, 0.05, 0.10, 0.90), (0.01, 0.02, 0.05, 0.95))
@@ -1679,12 +1986,21 @@ class HUDDrawer:
 
         curr_x = dock_x
         for sid, sname in dock_items:
-            is_active = (state.active_subsystem_id == sid) if sid > 0 else (state.active_subsystem_id == 0)
-            is_hover = (state.hovered_button == f"SUBSYS_{sid}")
-            
+            bid = f"{item_prefix}_{sid}"
+            if item_prefix == "SUBSYS":
+                is_active = (state.active_subsystem_id == sid) if sid > 0 else (state.active_subsystem_id == 0)
+            else:
+                is_active = False
+                if sid > 0 and state.active_faults:
+                    demo_f = ENGINE_DEMO_FAULTS.get(state.engine_id, [])
+                    if sid <= len(demo_f):
+                        is_active = any(af.get('fault_id') == demo_f[sid - 1]['id'] for af in state.active_faults)
+
+            is_hover = (state.hovered_button == bid)
+
             if is_active:
-                p_bg = (0.0, 0.45, 0.75, 0.95) if sid > 0 else (0.05, 0.25, 0.40, 0.90)
-                p_bd = (0.0, 0.95, 1.0, 1.0)
+                p_bg = (0.50, 0.20, 0.80, 0.95) if item_prefix == "FAULT" else ((0.0, 0.45, 0.75, 0.95) if sid > 0 else (0.05, 0.25, 0.40, 0.90))
+                p_bd = (0.85, 0.50, 1.0, 1.0) if item_prefix == "FAULT" else (0.0, 0.95, 1.0, 1.0)
                 p_col = (1.0, 1.0, 1.0, 1.0)
             elif is_hover:
                 p_bg = (0.12, 0.28, 0.45, 0.85)
@@ -1697,12 +2013,12 @@ class HUDDrawer:
 
             self.draw_rect(curr_x, dock_y, pill_w, dock_h, p_bg)
             self.draw_rect_outline(curr_x, dock_y, pill_w, dock_h, p_bd, width=1.0)
-            
+
             p_label = f"[{sid}] {sname}"
-            lbl_w = self.get_text_width(p_label, size=9.0)
-            self.draw_text(p_label, int(curr_x + (pill_w - lbl_w) / 2), dock_y + 11, size=9.0, color=p_col)
-            
-            state.button_rects.append((curr_x, dock_y, pill_w, dock_h, f"SUBSYS_{sid}"))
+            lbl_w = self.get_text_width(p_label, size=8.5)
+            self.draw_text(p_label, int(curr_x + (pill_w - lbl_w) / 2), dock_y + 11, size=8.5, color=p_col)
+
+            state.button_rects.append((curr_x, dock_y, pill_w, dock_h, bid))
             curr_x += pill_w + 8
 
         gpu.state.blend_set('NONE')
@@ -1774,18 +2090,30 @@ class OT_DigitalTwinSimulator(bpy.types.Operator):
             if isinstance(client_state.analytics.get('diagnosed_fault_id'), int) and client_state.analytics['diagnosed_fault_id'] > 0 or client_state.active_commanded_fault_id > 0:
                 update_pulsing_emission()
 
-            # Reactive fault highlight check: detect GCS / backend commanded or diagnosed fault change
-            active_fid = client_state.active_commanded_fault_id
-            if active_fid == 0 and isinstance(client_state.analytics, dict):
-                dfid = client_state.analytics.get('diagnosed_fault_id')   # null until M3-05
-                active_fid = dfid if isinstance(dfid, int) else 0
-
-            if client_state.applied_fault_id != active_fid:
-                client_state.applied_fault_id = active_fid
-                if active_fid > 0:
+            # Reactive backend highlights check: syncs with real multi-physics plant highlights
+            current_hl = client_state.highlights
+            hl_hash = hash(tuple((h.get('component_id'), h.get('level'), tuple(h.get('nodes', []))) for h in current_hl))
+            if client_state.last_highlights_hash != hl_hash:
+                client_state.last_highlights_hash = hl_hash
+                if current_hl:
                     client_state.active_subsystem_id = 0
                     update_camera_for_backend_fault()
-                    apply_fault_highlight(active_fid)
+                    apply_highlights(current_hl)
+                elif client_state.active_commanded_fault_id > 0:
+                    update_camera_for_backend_fault()
+                    apply_fault_highlight(client_state.active_commanded_fault_id)
+                else:
+                    update_camera_for_backend_fault()
+                    if client_state.active_subsystem_id == 0 and not client_state.is_ghost_vision:
+                        restore_all_solid_materials()
+
+            # Fallback check for active_commanded_fault_id when highlights list is empty
+            if not current_hl and client_state.applied_fault_id != client_state.active_commanded_fault_id:
+                client_state.applied_fault_id = client_state.active_commanded_fault_id
+                if client_state.active_commanded_fault_id > 0:
+                    client_state.active_subsystem_id = 0
+                    update_camera_for_backend_fault()
+                    apply_fault_highlight(client_state.active_commanded_fault_id)
                 else:
                     update_camera_for_backend_fault()
                     if client_state.active_subsystem_id == 0 and not client_state.is_ghost_vision:
@@ -1818,7 +2146,6 @@ class OT_DigitalTwinSimulator(bpy.types.Operator):
 
             # 2. Subsystem Inspection Mode: Smooth slerp to hardcoded component angle, with subtle micro-drift
             elif client_state.active_subsystem_id > 0 and not client_state.is_dragging:
-                # Gentle living micro-drift during inspection
                 drift = math.sin(now * 0.45) * 0.008
                 client_state.target_orbit_angle = (client_state.target_orbit_angle + drift * dt) % (2 * math.pi)
 
@@ -1876,6 +2203,22 @@ class OT_DigitalTwinSimulator(bpy.types.Operator):
             if bid.startswith('ENGINE_'):
                 eid = bid.replace('ENGINE_', '')
                 switch_engine(eid)
+            elif bid == 'TOGGLE_DOCK_MODE':
+                client_state.dock_mode = 'FAULTS' if client_state.dock_mode == 'SUBSYSTEMS' else 'SUBSYSTEMS'
+            elif bid == 'CYCLE_CYLINDER':
+                client_state.selected_cylinder = (client_state.selected_cylinder % 4) + 1
+            elif bid.startswith('FAULT_'):
+                fid = int(bid.replace('FAULT_', ''))
+                if fid == 0:
+                    send_clear_server_faults()
+                    client_state.active_commanded_fault_id = 0
+                    clear_subsystem_inspection()
+                else:
+                    demo_f = ENGINE_DEMO_FAULTS.get(client_state.engine_id, [])
+                    if 1 <= fid <= len(demo_f):
+                        f_item = demo_f[fid - 1]
+                        cyl = client_state.selected_cylinder if f_item.get('scope') == 'CYLINDER' else None
+                        send_server_fault(f_item['id'], cylinder=cyl)
             elif bid.startswith('SUBSYS_'):
                 sid = int(bid.replace('SUBSYS_', ''))
                 if sid == 0:
@@ -1943,21 +2286,78 @@ class OT_DigitalTwinSimulator(bpy.types.Operator):
                 switch_engine('austro_ae300')
             elif event.type == 'F5':
                 switch_engine('vrde_jayem_2_2l')
+
+            # Mode toggle & Cylinder selector
+            elif event.type in {'TAB', 'M'}:
+                client_state.dock_mode = 'FAULTS' if client_state.dock_mode == 'SUBSYSTEMS' else 'SUBSYSTEMS'
+            elif event.type == 'C':
+                client_state.selected_cylinder = (client_state.selected_cylinder % 4) + 1
+                print(f"[BLENDER] Selected Cylinder: {client_state.selected_cylinder}")
                 
-            # Subsystem Inspection: [1] to [5]
+            # Number keys [1]-[8]
             elif event.type in {'ONE', 'NUMPAD_1'}:
-                apply_subsystem_inspection(1)
+                if event.shift or client_state.dock_mode == 'FAULTS':
+                    demo_f = ENGINE_DEMO_FAULTS.get(client_state.engine_id, [])
+                    if len(demo_f) >= 1:
+                        f_item = demo_f[0]
+                        cyl = client_state.selected_cylinder if f_item.get('scope') == 'CYLINDER' else None
+                        send_server_fault(f_item['id'], cylinder=cyl)
+                else:
+                    apply_subsystem_inspection(1)
             elif event.type in {'TWO', 'NUMPAD_2'}:
-                apply_subsystem_inspection(2)
+                if event.shift or client_state.dock_mode == 'FAULTS':
+                    demo_f = ENGINE_DEMO_FAULTS.get(client_state.engine_id, [])
+                    if len(demo_f) >= 2:
+                        f_item = demo_f[1]
+                        cyl = client_state.selected_cylinder if f_item.get('scope') == 'CYLINDER' else None
+                        send_server_fault(f_item['id'], cylinder=cyl)
+                else:
+                    apply_subsystem_inspection(2)
             elif event.type in {'THREE', 'NUMPAD_3'}:
-                apply_subsystem_inspection(3)
+                if event.shift or client_state.dock_mode == 'FAULTS':
+                    demo_f = ENGINE_DEMO_FAULTS.get(client_state.engine_id, [])
+                    if len(demo_f) >= 3:
+                        f_item = demo_f[2]
+                        send_server_fault(f_item['id'], cylinder=client_state.selected_cylinder if f_item.get('scope') == 'CYLINDER' else None)
+                else:
+                    apply_subsystem_inspection(3)
             elif event.type in {'FOUR', 'NUMPAD_4'}:
-                apply_subsystem_inspection(4)
+                if event.shift or client_state.dock_mode == 'FAULTS':
+                    demo_f = ENGINE_DEMO_FAULTS.get(client_state.engine_id, [])
+                    if len(demo_f) >= 4:
+                        f_item = demo_f[3]
+                        send_server_fault(f_item['id'], cylinder=client_state.selected_cylinder if f_item.get('scope') == 'CYLINDER' else None)
+                else:
+                    apply_subsystem_inspection(4)
             elif event.type in {'FIVE', 'NUMPAD_5'}:
-                apply_subsystem_inspection(5)
-                
-            # Reset to Full Assembly: [0] or [ESC]
+                if event.shift or client_state.dock_mode == 'FAULTS':
+                    demo_f = ENGINE_DEMO_FAULTS.get(client_state.engine_id, [])
+                    if len(demo_f) >= 5:
+                        f_item = demo_f[4]
+                        send_server_fault(f_item['id'], cylinder=client_state.selected_cylinder if f_item.get('scope') == 'CYLINDER' else None)
+                else:
+                    apply_subsystem_inspection(5)
+            elif event.type in {'SIX', 'NUMPAD_6'}:
+                demo_f = ENGINE_DEMO_FAULTS.get(client_state.engine_id, [])
+                if len(demo_f) >= 6:
+                    f_item = demo_f[5]
+                    send_server_fault(f_item['id'], cylinder=client_state.selected_cylinder if f_item.get('scope') == 'CYLINDER' else None)
+            elif event.type in {'SEVEN', 'NUMPAD_7'}:
+                demo_f = ENGINE_DEMO_FAULTS.get(client_state.engine_id, [])
+                if len(demo_f) >= 7:
+                    f_item = demo_f[6]
+                    send_server_fault(f_item['id'], cylinder=client_state.selected_cylinder if f_item.get('scope') == 'CYLINDER' else None)
+            elif event.type in {'EIGHT', 'NUMPAD_8'}:
+                demo_f = ENGINE_DEMO_FAULTS.get(client_state.engine_id, [])
+                if len(demo_f) >= 8:
+                    f_item = demo_f[7]
+                    send_server_fault(f_item['id'], cylinder=client_state.selected_cylinder if f_item.get('scope') == 'CYLINDER' else None)
+                    
+            # Reset to Full Assembly / Clear: [0] or [ESC]
             elif event.type in {'ZERO', 'NUMPAD_0', 'ESC'}:
+                if event.shift or client_state.dock_mode == 'FAULTS':
+                    send_clear_server_faults()
+                    client_state.active_commanded_fault_id = 0
                 clear_subsystem_inspection()
                 
             # Additional Controls
@@ -1966,7 +2366,7 @@ class OT_DigitalTwinSimulator(bpy.types.Operator):
                 apply_material_state()
             elif event.type == 'SPACE':
                 client_state.is_auto_orbit = not client_state.is_auto_orbit
-            elif event.type in {'H', 'TAB'}:
+            elif event.type == 'H':
                 client_state.is_hud_visible = not client_state.is_hud_visible
 
         safe_tag_redraw(context)
@@ -2027,11 +2427,14 @@ def ensure_studio_lighting():
     rim_light = bpy.data.objects.get("Studio_Rim_Cyan")
     if not rim_light:
         rim_data = bpy.data.lights.new(name="Studio_Rim_Cyan", type="SUN")
-        rim_data.energy = 3.5
-        rim_data.color = (0.0, 0.75, 1.0)
+        rim_data.energy = 2.0
+        rim_data.color = (0.92, 0.95, 1.0)
         rim_obj = bpy.data.objects.new(name="Studio_Rim_Cyan", object_data=rim_data)
         scene.collection.objects.link(rim_obj)
         rim_obj.rotation_euler = (math.radians(-60), math.radians(45), math.radians(150))
+    elif rim_light.data:
+        rim_light.data.energy = 2.0
+        rim_light.data.color = (0.92, 0.95, 1.0)
 
 
 def configure_clean_viewport_workspace():

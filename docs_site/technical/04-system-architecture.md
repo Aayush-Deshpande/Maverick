@@ -33,20 +33,20 @@ flowchart TB
         Encaps --> Link
     end
 
-    subgraph Tier4["4. Digital Twin Core (50 Hz State Observer)"]
+    subgraph Tier4["4. Digital Twin Core (20 Hz State Observer)"]
         MVEM["0D/1D Mean Value Engine Model (MVEM)"]
-        EKF["Continuous-Discrete EKF State Observer"]
+        UKF["Continuous-Discrete UKF State Observer"]
         VirtSens["Virtual Sensors: P_max, TIT, h_min, P_ind"]
-        Link --> EKF
-        MVEM <--> EKF
-        EKF --> VirtSens
+        Link --> UKF
+        MVEM <--> UKF
+        UKF --> VirtSens
     end
 
     subgraph Tier5["5. Health Monitoring & Anomaly Diagnostics"]
         Resid["Normalized Physics Residuals r*(t)"]
         VAE["Deep VAE + Extreme Value Theory (EVT) POT Anomaly"]
         FMECA["Bayesian Network + Deterministic ATA Chapter Directives"]
-        EKF --> Resid
+        UKF --> Resid
         Resid --> VAE
         VAE --> FMECA
     end
@@ -146,7 +146,7 @@ To maintain reactive situation awareness during high-stress flight maneuvers, th
 | **3. On-Board Edge Processing** | Parity space residual check & FFT peak extraction | $15\text{ ms}$ | $30\text{ ms}$ |
 | **4. Air-to-Ground Datalink** | Military C-band LOS / UHF / SATCOM transmission | $80\text{ ms}$ | $110\text{ ms}$ |
 | **5. GCS Ingestion & Ring-Buffer** | Async zero-copy FastAPI gateway & message unmarshalling | $10\text{ ms}$ | $120\text{ ms}$ |
-| **6. EKF State Observer & Residuals** | Continuous-discrete Runge-Kutta 4th-order ODE step | $15\text{ ms}$ | $135\text{ ms}$ |
+| **6. UKF State Observer & Residuals** | Continuous-discrete Runge-Kutta 4th-order ODE step | $15\text{ ms}$ | $135\text{ ms}$ |
 | **7. VAE Anomaly & FMECA Classify** | ONNX Runtime GPU/CPU neural inference | $10\text{ ms}$ | $145\text{ ms}$ |
 | **8. GCS WebGL / React Render** | 60 FPS `requestAnimationFrame` browser loop | $25\text{ ms}$ | $\mathbf{170\text{ ms}}$ |
 
@@ -192,7 +192,7 @@ By contrast, 30 scalar engine channels sampled at $20\text{ Hz}$ with 32-bit flo
 
 Therefore, ANUMAAN establishes a strict edge compute boundary:
 - **Onboard Edge:** Real-time 2048-point Hanning window FFT, spectral order tracking, and parity space sensor checks. The raw $10\text{ kHz}$ stream is condensed into a $12\text{-byte}$ spectral peak packet (1X/2X order peaks, gear-mesh harmonics, bearing defect frequencies BPFI/BPFO).
-- **Ground Control Station:** Hosts the computationally intensive continuous-discrete EKF, Deep VAE anomaly detector, Bayesian FMECA network, Monte Carlo mission reliability solver, and 3D WebGL digital twin.
+- **Ground Control Station:** Hosts the computationally intensive continuous-discrete UKF, Deep VAE anomaly detector, Bayesian FMECA network, Monte Carlo mission reliability solver, and 3D WebGL digital twin.
 
 ```mermaid
 flowchart TB
@@ -209,7 +209,7 @@ flowchart TB
         Scalars --> Link
     end
     subgraph Ground["Ground Control Station Compute"]
-        Twin["0D/1D EKF Digital Twin & Virtual Sensors"]
+        Twin["0D/1D UKF Digital Twin & Virtual Sensors"]
         Diag["Residuals, Bayesian Diagnosis, Conformal RUL"]
         Reach["Glide Polar Reachability Cone & HUD"]
         Link --> Twin

@@ -22,6 +22,7 @@ interface HeaderProps {
   onSelectRole: (role: GCSRole) => void;
   onOpenSettings: () => void;
   runtimeMode?: boolean;
+  showRoleSelector?: boolean;
   onGoLanding?: () => void;
 }
 
@@ -33,6 +34,7 @@ export const Header: React.FC<HeaderProps> = ({
   onSelectRole,
   onOpenSettings,
   runtimeMode = false,
+  showRoleSelector = false,
   onGoLanding,
 }) => {
   const isFaulted = state.analytics.diagnosed_fault_id > 0;
@@ -56,10 +58,12 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 sm:gap-3 flex-wrap">
         {/* Left: Identity */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          <button
+          <div
+            role="button"
+            tabIndex={0}
             onClick={onGoLanding}
-            disabled={!onGoLanding}
-            className="flex items-center gap-2 text-left group transition-opacity hover:opacity-90 disabled:cursor-default"
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onGoLanding?.(); }}
+            className={`flex items-center gap-2 text-left group transition-opacity hover:opacity-90 ${onGoLanding ? 'cursor-pointer' : 'cursor-default'}`}
             title={onGoLanding ? 'Return to Platform Overview' : undefined}
           >
             <span className="w-8 h-8 sm:w-9 sm:h-9 grid place-items-center overflow-hidden rounded-sm bg-surface-card border border-surface-border shadow-sm group-hover:border-accent transition-colors shrink-0">
@@ -88,7 +92,7 @@ export const Header: React.FC<HeaderProps> = ({
                 </>}
               </div>
             </div>
-          </button>
+          </div>
         </div>
 
         {/* Center: Live status badges */}
@@ -187,7 +191,7 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Role Selector (VIS-02..04) - Responsive for both mobile and desktop */}
-        {!runtimeMode && (
+        {!runtimeMode && showRoleSelector && (
           <div className="flex items-center gap-0.5 sm:gap-1 p-0.5 rounded-sm bg-surface-card border border-surface-border text-xs font-mono overflow-x-auto">
             {[
               { id: 'OPERATOR' as GCSRole, label: 'Operator', icon: <User className="w-3 h-3" /> },

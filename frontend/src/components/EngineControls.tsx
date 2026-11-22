@@ -1,6 +1,7 @@
 import React from 'react';
 import { Power, Gauge, Mountain, Thermometer, Compass, Sliders } from 'lucide-react';
 import { UnifiedTelemetryState, ControlCommand } from '../types/telemetry';
+import { PanelInfoModal } from './PanelInfoModal';
 
 interface EngineControlsProps {
   state: UnifiedTelemetryState;
@@ -34,9 +35,30 @@ export const EngineControls: React.FC<EngineControlsProps> = ({ state, onCommand
             <Gauge className="w-3.5 h-3.5" />
           </div>
           <div>
-            <h2 className="text-xs font-semibold text-white">
-              Flight Deck &amp; Propulsion Controls
-            </h2>
+            <div className="flex items-center gap-1.5">
+              <h2 className="text-xs font-semibold text-white">
+                Flight Deck &amp; Propulsion Controls
+              </h2>
+              <PanelInfoModal
+                title="Flight Deck & Propulsion Controls"
+                subtitle="Authoritative ECU FADEC Command & Atmospheric Derating"
+                description="Accepts operator throttle (TPS), altitude (MSL), and outside air temperature (OAT) directives to drive the 4-stroke Otto cycle plant model. Computes International Standard Atmosphere (ISA) derating to dynamically recalculate available air mass, manifold absolute pressure (MAP), and maximum continuous engine power."
+                formula={`ISA Temperature: T_amb = 15.0 - 0.001981 · h_ft (°C)
+ISA Pressure: P_amb = 101.325 · (1 - 2.25577e-5 · h_ft)^5.25588 (kPa)
+Air Density: ρ = (P_amb · 1000) / (R_air · (T_amb + 273.15)) (kg/m³)
+Density Ratio: δ = ρ / ρ_0  [where ρ_0 = 1.225 kg/m³]
+Effective Power: P_avail = P_rated · δ · (TPS / 100)`}
+                calculationSteps={[
+                  { label: 'ISA Environment', detail: 'Calculates ambient air temperature and barometric pressure for input altitude MSL.' },
+                  { label: 'Air Density Ratio', detail: 'Computes density ratio δ relative to Sea Level (1.225 kg/m³) to evaluate intake mass airflow.' },
+                  { label: 'FADEC Command', detail: 'Translates TPS percentage to throttle body butterfly angle and fuel injection pulse duration.' },
+                  { label: 'Ignition Cycle', detail: 'Controls starter cranking sequence, dual FADEC lane synchronization, and master cutoff.' },
+                ]}
+                sensorInputs={['TPS (%)', 'ALTITUDE_FT', 'OAT_C', 'THEATER', 'FADEC_ACTIVE_LANE']}
+                thresholds="Throttle: 0–100% | Max Altitude: 25,000 ft MSL | OAT Range: -40°C to +50°C"
+                provenance="Rotax 912 iSc Sport Operator Manual (OM-912iS §3.2) & ICAO Standard Atmosphere 1993"
+              />
+            </div>
             <p className="text-xs text-slate-500">Authoritative ECU FADEC command</p>
           </div>
         </div>
@@ -47,7 +69,7 @@ export const EngineControls: React.FC<EngineControlsProps> = ({ state, onCommand
               action: isEngineOn ? 'STOP_ENGINE' : 'START_ENGINE',
             })
           }
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-sm text-xs font-medium transition-colors ${
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-sm text-xs font-medium transition-all duration-150 active:scale-95 cursor-pointer ${
             isEngineOn
               ? 'bg-critical-dim text-critical border border-critical-muted hover:bg-critical-dim/70'
               : 'bg-success-dim text-success border border-success-muted hover:bg-success-dim/70'

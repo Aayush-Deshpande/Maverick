@@ -9,6 +9,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { UnifiedTelemetryState } from '../types/telemetry';
+import { PanelInfoModal } from './PanelInfoModal';
 
 interface MaintenanceDashboardPanelProps {
   state: UnifiedTelemetryState;
@@ -185,6 +186,26 @@ export const MaintenanceDashboardPanel: React.FC<MaintenanceDashboardPanelProps>
               <h3 className="text-xs font-semibold text-white uppercase tracking-wider font-mono">
                 Split-Conformal Remaining Useful Life (RUL) with 90% Coverage
               </h3>
+              <PanelInfoModal
+                title="Split-Conformal Remaining Useful Life (RUL)"
+                subtitle="F12 / AIM-05 Finite-Sample Uncertainty Coverage"
+                description="Estimates Remaining Useful Life across 6 safety-critical engine subsystems: Cylinder Head Assembly, Lubrication Oil Circuit, Reduction Gearbox, Alternator Bus, Fuel Injection Rail, and Ignition Harness. Employs Split-Conformal Prediction Intervals to deliver mathematically guaranteed 90% coverage (α = 0.10) with p10 conservative, p50 median, and p90 optimistic bounds."
+                formula={`Physics-of-Failure Path: RUL_pof = (1.0 - D(t)) / Ḋ_wear
+Data-Driven Trajectory Path: RUL_data = (θ_fail - θ(t)) / (dθ/dt)
+Dual-Path Blend: RUL_median = w_pof · RUL_pof + (1 - w_pof) · RUL_data
+Conformal Residuals: s_i = |y_i - ŷ_i| on calibration set
+Quantile Cutoff: q_1-α = Quantile(s, ⌈(n+1)(1-α)⌉ / n)
+Prediction Interval: [RUL_p10, RUL_p90] = [RUL_median - q_1-α, RUL_median + q_1-α]`}
+                calculationSteps={[
+                  { label: 'Cumulative Damage Tracking', detail: 'Integrates continuous thermal cycles, vibration stress, and combustion peak pressure (Miner-Arrhenius model).' },
+                  { label: 'Dual-Path Synthesis', detail: 'Fuses first-principles physics damage accumulation with data-driven ARIMA parameter trend extrapolation.' },
+                  { label: 'Conformal Calibration', detail: 'Evaluates non-conformity scores on calibration flights to guarantee 90% empirical coverage.' },
+                  { label: 'Limiting Subsystem Identification', detail: 'Identifies the minimum p10 RUL subsystem to govern maintenance scheduling and sortie readiness.' },
+                ]}
+                sensorInputs={['CHT_1..4', 'OIL_PRESS', 'OIL_TEMP', 'VIB_RMS', 'BUS_VOLTAGE', 'Cumulative Engine Hours']}
+                thresholds="Coverage: 90% (α = 0.10) | TBO Limits: 800h to 2000h across components | Limiting Alarm: p10 < Sortie Duration"
+                provenance="DRDO PS-26054 Capability AIM-05, Rotax MM-912iS, and MIL-HDBK-701A Reliability Testing"
+              />
             </div>
             <p className="text-xs text-slate-400 mt-0.5 font-mono">
               Finite-sample distribution-free uncertainty intervals: P10 conservative lower bound, P50 median, P90 optimistic upper bound.
@@ -278,6 +299,28 @@ export const MaintenanceDashboardPanel: React.FC<MaintenanceDashboardPanelProps>
             <h3 className="text-xs font-semibold text-white uppercase tracking-wider">
               CBM Work Order Dispatch &amp; Inspector Sign-Off Queue
             </h3>
+            <PanelInfoModal
+              title="Automated Condition-Based Maintenance (CBM) Dispatch"
+              subtitle="VIS-08 / CBM-01 ATA-100 Digital Action Management"
+              description="Automates maintenance action generation from real-time digital twin fault isolations. Mails and logs cryptographically signed work orders directly to appropriate Air Transport Association (ATA) chapters with digital technician sign-off (e.g. DRDO-TECH-01) and immutable audit log preservation."
+              formula={`Work Order Trigger: If (Diagnosed_Fault_ID > 0) ∨ (RUL_p10 < Sortie_Hours)
+ATA Chapter Routing:
+  ATA-24: Electrical Power & Bus Voltage Sags
+  ATA-72: Engine Core & Cylinder Head Thermal Surges
+  ATA-73: Engine Fuel & Injector Clogs
+  ATA-74: Ignition Harness & Spark Misfires
+  ATA-79: Engine Lubrication & Oil Circuit Leaks
+Sign-Off State Transition: Status: OPEN ➔ SIGNED_OFF (Timestamp + Inspector ID)`}
+              calculationSteps={[
+                { label: 'Fault Isolation Mapping', detail: 'Maps confirmed diagnosis hypotheses to prescriptive maintenance repair cards.' },
+                { label: 'Work Order Packaging', detail: 'Attaches snapshot of limiting telemetry, affected ATA chapter, sortie ID, and component RUL bounds.' },
+                { label: 'Technician Action', detail: 'Authorizes certified technician to execute physical inspection or part replacement.' },
+                { label: 'Digital Sign-Off', detail: 'Appends electronic signature and moves task into closed audit history ledger.' },
+              ]}
+              sensorInputs={['Diagnosed Fault ID', 'Limiting Component', 'RUL Predictions', 'Sortie ID', 'Inspector Credentials']}
+              thresholds="Auto-Dispatch: Any confirmed fault hypothesis | Resolution Requirement: Mandatory sign-off before dispatch"
+              provenance="ATA-100 Specification for Manufacturer Technical Data & DRDO CBM-01 Airworthiness Standard"
+            />
           </div>
           <span className="text-xs font-mono text-slate-500">
             {workOrders.filter((w) => w.status === 'OPEN').length} Open Orders
@@ -361,6 +404,25 @@ export const MaintenanceDashboardPanel: React.FC<MaintenanceDashboardPanelProps>
             <h3 className="text-xs font-semibold text-white uppercase tracking-wider">
               Transducer Sanity &amp; Residual Shielding Matrix (F14 / FDP-06)
             </h3>
+            <PanelInfoModal
+              title="Transducer Sanity & Residual Shielding Matrix"
+              subtitle="F14 / FDP-06 Sensor Fault Detection & Isolation (FDI)"
+              description="Continuous real-time sanity checking across 14 analog and digital engine transducer channels. Shields the downstream digital twin and prognostic models by detecting open circuits, stuck sensors, out-of-range ADC clippings, and standing calibration drifts before they pollute anomaly scores."
+              formula={`Range Clamp: y_min,i ≤ y_i(t) ≤ y_max,i
+Slew Rate Limit: |(y_i(t) - y_i(t - Δt)) / Δt| ≤ Slew_max,i
+Noise Variance Check: Var(y_i, window) ≥ σ²_noise_floor (detects frozen values)
+Calibration Drift Offset: δ_drift,i = (1/T_warmup) · ∫ (y_i(t) - ŷ_i(t)) dt
+Quarantine Policy: If channel i fails ➔ isolate channel from Kalman innovation vector`}
+              calculationSteps={[
+                { label: 'Signal Range Gate', detail: 'Verifies sensor voltage/current stays within physical instrumentation bounds (e.g., CHT: -40°C to +200°C).' },
+                { label: 'Derivative Rate Check', detail: 'Validates that signal rate-of-change does not exceed physical thermal inertia or pressure dynamics.' },
+                { label: 'Noise Variance Verification', detail: 'Flags zero-variance static signals as frozen ADC or disconnected bus lines.' },
+                { label: 'Residual Shielding Quarantine', detail: 'Automatically suppresses faulted sensors so downstream neural network and RUL estimators are not misled.' },
+              ]}
+              sensorInputs={['All 14 Raw Transducer Channels', 'Slew Rate Limits', 'ADC Range Clamps', 'Frozen Signal Buffers']}
+              thresholds="Slew Limits: CHT 5°C/s | Oil Press 1.5 bar/s | Drift Tolerance: ±2.0σ frozen baseline"
+              provenance="DRDO PS-26054 Capability F14/FDP-06 & MIL-STD-1553B / ARINC 429 FDI Standards"
+            />
           </div>
 
           <div className="flex items-center gap-2">

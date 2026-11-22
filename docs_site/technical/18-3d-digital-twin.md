@@ -1,97 +1,140 @@
 # The 3D Digital Twin
 
-A fault report is a set of numbers: a channel name, a threshold ratio, a confidence figure. An operator inspecting a real engine does not think in channel names, they think in parts: this cylinder, this injector, this bearing. The 3D digital twin closes that gap by rendering the engine currently selected in the ground control station as an inspectable model, with the specific component associated with an active fault visually distinguished from the rest of the assembly, synchronized live to the same telemetry the operator console displays as numbers.
+A fault report is fundamentally a set of numerical vectors: a sensor channel name, an analytical residual delta, and a posterior probability. An operator inspecting a physical engine does not think in sensor channels, they think in components: this cylinder head, this high-pressure injector, this reduction gearbox bearing. The 3D digital twin bridges that cognitive divide by rendering the active propulsion platform as an interactive, photorealistic model. The specific component identified by Bayesian fault isolation illuminates with alert highlights, synchronized in real time to the same 20 Hz multi-physics telemetry stream powering the operator console.
 
-Three visualization tracks exist in ANUMAAN: a browser-based Three.js engine twin used inside the ground control station itself, a Blender-based master twin used for high-fidelity desktop visualization, and a terrain-based flight simulation environment. All three consume one authoritative runtime state rather than each computing its own physics independently. The engine physics, the fault state, and the telemetry are produced once, by the backend runtime, and every visualization track renders that same state rather than re-deriving it.
+Three visualization tracks operate within ANUMAAN:
+1. **The WebGL 3D Twin**: Running in-browser inside the Ground Control Station (React 18 + Three.js / React Three Fiber), providing hardware-accelerated 60 FPS multi-mode engine inspection.
+2. **The Blender Master Twin**: Authoritative high-fidelity digital twin asset pipeline utilized for photorealistic ray-traced validation and CAD geometry curation.
+3. **The Terrain-Coupled Tactical Visualizer**: Dynamic glide reachability footprints and unpowered emergency divert cones projected over 3D terrain elevation.
 
-## The problem
+All three tracks consume one authoritative runtime state produced by the backend physics engine. Telemetry, fault propagation, and state observer residuals are computed once at 20 Hz, ensuring zero discrepancies between the 3D canvas and numeric flight indicators.
 
-Rendering an engine model is not the hard part. The hard part is making that render mean something: a viewer needs to be able to look at the model and know, without cross-referencing a table, which physical part an active fault actually concerns, and needs that view to update the moment the underlying telemetry changes, not on a manual refresh. A model that looks correct but has no live connection to the detection pipeline is a static render, not a digital twin.
+---
 
-## Why it matters
+## The Four Specialized Viewport Modes
 
-The problem statement calls specifically for a visualization dashboard showing real-time health status and fault alerts. A 3D twin is the form of that visualization best suited to an engineering audience: it lets an evaluator see the actual mechanical relationship between a fault (an EGT delta on cylinder 2, an accelerometer third-harmonic rise on the gearbox) and the physical location on the engine that fault concerns, which a numeric table alone does not convey as directly.
+Rather than offering only a static CAD render, ANUMAAN implements four specialized 3D viewport rendering modes that can be selected from the top-right flight deck toolbar or cycled instantly using keyboard shortcut `V`:
 
-## Our approach
+```mermaid
+flowchart TD
+    VM["3D Viewport Modes (Hotkey: V)"] --> M1["SOLID<br/>(Aerospace PBR Surface)"]
+    VM --> M2["X-RAY<br/>(Borosilicate Optical Glass)"]
+    VM --> M3["THERMAL<br/>(Live 20 Hz Planck Pyrometry)"]
+    VM --> M4["WIREFRAME<br/>(Structural Geometric Grid)"]
+```
 
-Every visualization track binds named mesh components to the same fault-target and telemetry schema the backend detection pipeline already uses. The eight PS-26054 fault modes each carry a designated 3D target part (for example, cylinder #2 head for the cylinder overheat fault, the propeller reduction gearbox for the gearbox vibration fault, the dual-lane ECU module for the FADEC drift fault), and that mapping is what lets an active fault drive a specific mesh element rather than a generic engine-wide indicator. Because all three visualization tracks read this same mapping and the same live runtime state, an engineer sees consistent behavior whether they are looking at the browser twin during a live session or the Blender master twin during a desktop review.
+### 1. SOLID CAD Surface (`solid`)
+Restores authentic aerospace Physically Based Rendering (PBR) engineering materials:
+* **Crankcase & Cylinder Barrels**: Die-cast aluminum alloy with micro-facet roughness and baked ambient occlusion.
+* **Valve Covers & Cylinder Heads**: Anodized finish (signature Rotax green/blue) with metallic sheen.
+* **Exhaust Manifold & Turbo Headers**: Heat-tinted stainless steel alloy with high thermal oxidation roughness.
+* **Intake Runners & Plenums**: Powder-coated cast aluminum with subtle specular roughness.
 
-## How it works
+### 2. Physical X-Ray Glass (`glass`)
+Transforms the exterior engine casing and rocker covers into optical borosilicate transmission glass using Three.js `MeshPhysicalMaterial`:
+* **Transmission Factor**: $0.92$ (genuine optical transmission allowing light transmission through outer walls).
+* **Index of Refraction (IOR)**: $1.48$ (calibrated borosilicate optical glass refraction).
+* **Roughness**: $0.12$, **Metalness**: $0.05$, **Thickness**: $0.8\text{ mm}$, **Clearcoat**: $1.0$.
+* **Mechanical Exposing**: The outer casing becomes transparent while internal reciprocating assemblies (pistons, connecting rods, wrist pins, and the crankshaft) remain opaque PBR, allowing operators to visually inspect reciprocating kinematic motion inside the running engine.
 
-**The Three.js twin.** Running in the browser as part of the ground control station, the Three.js twin renders Draco-compressed GLB models for each of the five supported engine platforms (Rotax 912 iS, Rotax 914, Rotax 915 iS, Austro AE300, VRDE Jayem 2.2L). Draco compression keeps these models small enough to load quickly over a browser connection while preserving the mesh detail needed for component-level identification. The twin subscribes to the same WebSocket path the operator telemetry console uses, so its rendered state updates on the same cadence as the numeric readouts rather than through a separate polling or refresh mechanism. When a fault is active, the target component identified in the fault matrix is highlighted directly on the model, and the camera transitions to it with eased motion rather than a hard cut, so an operator's attention is drawn to the part in question without losing spatial context of the surrounding assembly.
+### 3. Dynamic FLIR Thermal Pyrometry (`thermal`)
+Provides real-time forward-looking infrared (FLIR) thermal incandescence visualization driven directly by 20 Hz thermodynamic telemetry:
+* **Casing Shader**: The exterior engine block transitions to non-emissive smoked obsidian glass (transmission $0.85$, color `#1a1a24`).
+* **Live Telemetry Coupling**: Live Cylinder Head Temperatures ($CHT_1 \dots CHT_4$) and Exhaust Gas Temperatures ($EGT_1 \dots EGT_4$) drive dynamic emissive shaders on individual cylinder heads and exhaust runners.
+* **Mathematical Color-Ramp Mapping**:
+  $$\text{Normalized CHT: } t_{\text{cht}} = \text{clamp}\left(\frac{T_{\text{cht}} - 50}{90},\ 0,\ 1\right) \quad [50^\circ\text{C} \dots 140^\circ\text{C}]$$
+  $$\text{Normalized EGT: } t_{\text{egt}} = \text{clamp}\left(\frac{T_{\text{egt}} - 400}{550},\ 0,\ 1\right) \quad [400^\circ\text{C} \dots 950^\circ\text{C}]$$
+* **Blackbody Incandescence Spectrum**:
+  * $40^\circ\text{C}$ to $60^\circ\text{C}$: Deep Slate / Indigo (`#334155`)
+  * $85^\circ\text{C}$: Cool Teal (`#0d9488`)
+  * $100^\circ\text{C}$: Nominal Green (`#10b981`)
+  * $120^\circ\text{C}$: Elevated Amber (`#f59e0b`)
+  * $\ge 135^\circ\text{C}$: Critical Red (`#ef4444`)
+  * $\ge 900^\circ\text{C}$: Incandescent Thermal White (`#ffffff`)
+* **Real-Time HUD Overlay**: Accompanied by the floating `ThermalLegend` HUD displaying per-cylinder temperature readouts and hot-section exhaust limits.
 
-### The Five-Engine Propulsion Fleet
+### 4. Wireframe Structural Overlay (`ghost`)
+Renders an additive holographic wireframe grid across the engine geometry. This mode enables maintenance technicians to inspect component alignment, identify geometric clearances, and detect structural departure between the nominal CAD model and physical deformation.
 
-The ANUMAAN digital twin supports five distinct aero piston propulsion platforms, each with dedicated physics kinematics, sensor mappings, and Draco-compressed 3D mesh representations:
+---
 
-#### 1. Rotax 912 iS Sport (Baseline Naturally Aspirated)
-Four-cylinder, horizontally opposed four-stroke with redundant electronic fuel injection and dual ignition (FADEC). 1,352 cc displacement, 100 hp at 5,800 RPM. Designated primary evaluation engine for DRDO PS-26054.
+## Flight Deck Controls & Ergonomics
 
-![Rotax 912 iS 3D Digital Twin](/assets/playwright/rotax_912is_3d_twin.png)
-*Figure: Rotax 912 iS Draco GLB twin rendered in the Three.js viewport with component hierarchy targeting.*
+The 3D twin stage integrates aerospace flight deck controls designed for zero latency and rapid keyboard execution:
 
-#### 2. Rotax 914 F Turbo (Turbocharged High-Altitude Patrol)
-Four-cylinder boxer with turbocharger and automatic wastegate control unit (TCU). 1,211 cc displacement, 115 hp max continuous at 5,800 RPM. Designed for sustained MALE UAV operations up to 25,000 ft service ceiling.
+| Keybinding / Control | Action | Operational Function |
+| :--- | :--- | :--- |
+| **`V`** | **Cycle 3D View Modes** | Sequentially toggles between `SOLID`, `X-RAY`, `THERMAL`, and `WIREFRAME` with instant operator feedback notices. |
+| **`X`** | **Clear All Faults** | Removes all operator-injected faults (`DELETE /faults`), invokes `/status/acknowledge`, settles physical transients, and resets the camera rotation axis back to engine center `[0, 0.05, 0]`. |
+| **`R`** | **Reset & Restart Engine** | Complete flight-line reboot: clears faults, resets engine state machine, flushes thermal buffers, and restarts the engine from zero RPM to nominal idle. |
+| **`1` to `9`** | **Inject Fault Scenario** | Instantly injects selected simulated failure (misfire, injector clog, knock, coolant loss) on the targeted cylinder. |
+| **`C`** | **Cycle Target Cylinder** | Cycles target cylinder selection ($1 \dots 4$) for single-cylinder localized anomalies. |
+| **`F`** | **Refocus 3D Camera** | Automatically pivots and zooms the 3D camera directly onto the primary component identified by Bayesian fault isolation. |
+| **`T`** | **Training Mode Toggle** | Toggles purple classroom training highlights on injected parts before the diagnostic AI independently isolates the issue. |
+| **`Ctrl+K`** | **Tactical Command Palette** | Opens keyboard-first launcher to search engines, switch platforms, and command throttle. |
+| **`?`** | **Twin Architecture Guide** | Opens full operator architecture guide and flight controls reference modal. |
+| **Rotating / Paused** | **Auto-Rotation Toggle** | Toggles smooth 360-degree orbit rotation around the engine center coordinates. |
 
-![Rotax 914 Turbo 3D Digital Twin](/assets/playwright/rotax_914_3d_twin.png)
-*Figure: Rotax 914 Turbo twin with turbocharger subassembly and wastegate actuator rigging.*
+---
 
-#### 3. Rotax 915 iS (Turbocharged Intercooled High-Altitude Sprint)
-Four-cylinder boxer combining forced induction, air-to-air intercooling, and redundant dual digital injection. 1,352 cc displacement, 141 hp takeoff rating. Provides full power up to 15,000 ft critical altitude.
+## The Five-Engine Propulsion Fleet
 
-![Rotax 915 iS 3D Digital Twin](/assets/playwright/rotax_915is_3d_twin.png)
-*Figure: Rotax 915 iS 3D model displaying dual intercooler and pressurized intake ducting.*
+ANUMAAN covers five distinct aero-piston powerplants across military and civilian MALE UAV configurations:
 
-#### 4. Austro Engine AE300 (Heavy-Fuel Turbo Diesel)
-Four-cylinder in-line liquid-cooled common rail diesel engine running on Jet-A1 or kerosene (F-34). 1,991 cc displacement, 168 hp at 3,880 RPM with reduction gearbox. High thermal efficiency and maritime logistics compatibility.
+### 1. Rotax 912 iSc Sport (Reference Naturally Aspirated)
+* **Architecture**: 4-cylinder horizontally opposed boxer, 4-stroke, liquid-cooled cylinder heads with air-cooled cylinders.
+* **Displacement**: $1,352\text{ cm}^3$, dry-sump forced lubrication with external oil tank.
+* **Induction & Fuel**: Naturally aspirated, dual redundant electronic fuel injection and digital ignition (FADEC).
+* **Performance**: $100\text{ hp}$ ($73.5\text{ kW}$) at 5,800 RPM.
+* **Operational Application**: Primary evaluation baseline for DRDO PS-26054, tactical reconnaissance UAVs, and line trainers.
 
-![Austro Engine AE300 3D Digital Twin](/assets/playwright/austro_ae300_3d_twin.png)
-*Figure: Austro Engine AE300 common-rail heavy-fuel diesel twin with high-pressure fuel rail targeting.*
+### 2. Rotax 914 F Turbo (Turbocharged High-Altitude Patrol)
+* **Architecture**: 4-cylinder boxer with integrated exhaust turbocharger and automatic Wastegate Turbo Control Unit (TCU).
+* **Displacement**: $1,211\text{ cm}^3$, dual constant-depression carburetors with electronic manifold pressure regulation.
+* **Performance**: $115\text{ hp}$ ($84.6\text{ kW}$) takeoff rating, $1.35\text{ bar}$ max boost pressure.
+* **Operational Application**: High-altitude patrol UAVs (Rustom-I, Searcher-II) with critical altitude capability up to 25,000 ft.
 
-#### 5. VRDE Jayem 2.2L (Indigenized Two-Stroke Heavy Fuel)
-Indian indigenous defense UAV engine platform designed by VRDE (DRDO) and Jayem Automotives. Multi-fuel heavy oil operation, 180 hp rating, lightweight crankcase optimized for long-endurance tactical UAV platforms.
+### 3. Rotax 915 iSc (Turbocharged Intercooled High-Altitude Sprint)
+* **Architecture**: 4-cylinder boxer combining forced induction, air-to-air charge intercooling, and dual redundant digital injection.
+* **Displacement**: $1,352\text{ cm}^3$, stainless steel exhaust system.
+* **Performance**: $141\text{ hp}$ ($104\text{ kW}$) takeoff power, sustained continuous climb power up to 15,000 ft critical altitude.
+* **Operational Application**: Long-endurance tactical surveillance platforms (Archer, Rustom-II).
 
-![VRDE Jayem 2.2L 3D Digital Twin](/assets/playwright/vrde_jayem_2_2l_3d_twin.png)
-*Figure: VRDE Jayem 2.2L indigenized UAV engine 3D twin rendered from the authoritative engineering CAD model.*
+### 4. Austro Engine AE300 (Common-Rail Heavy-Fuel Aero Diesel)
+* **Architecture**: 4-cylinder in-line liquid-cooled compression-ignition engine with reduction gearbox and dual mass flywheel.
+* **Displacement**: $1,991\text{ cm}^3$, high-pressure common rail direct injection (1,800 bar).
+* **Fuel Compatibility**: Aviation kerosene (Jet-A1, Jet-A, JP-8).
+* **Performance**: $168\text{ hp}$ ($123.5\text{ kW}$) at 3,880 RPM crankshaft speed.
+* **Operational Application**: Maritime patrol UAVs and heavy-fuel defense logistics aircraft.
 
-**Runtime state to component state to visualization.** The flow is deliberately one-directional and single-sourced. The backend engine runtime produces one authoritative Frame of telemetry and one TruthRecord of active faults each tick. That frame feeds the detection pipeline, which determines confirmed anomalies and their leading channels. The fault-to-component mapping translates an active, confirmed fault into a specific named mesh element and a highlight state. The Three.js twin then renders that component state, nothing upstream of it is computed independently inside the visualization layer itself.
+### 5. VRDE Jayem 2.2L (Indigenized Defense Heavy-Fuel Powerplant)
+* **Architecture**: 4-cylinder turbocharged compression-ignition diesel indigenously developed by Vehicles Research and Development Establishment (VRDE, DRDO) and Jayem Automotives.
+* **Displacement**: $2,179\text{ cm}^3$, common-rail direct fuel injection with intercooled turbocharging.
+* **Performance**: $180\text{ hp}$ ($132\text{ kW}$) defense rating.
+* **Operational Application**: Indigenous Indian MALE UAV platform (ADE Tapas-BH-201).
 
-**The Blender master twin and canyon flight simulation** are covered in depth in the companion article on the simulation environment; both read from the same underlying runtime state as the browser twin rather than maintaining separate physics.
+---
 
-## Architecture
+## Component Binding & Zero Truth-Leak Architecture
+
+The flow from physics simulation to 3D highlight is strictly unidirectional:
 
 ```mermaid
 flowchart LR
-    RUNTIME["Engine runtime: Frame + TruthRecord"]
-    DETECT["Detection: confirmed faults, leading channels"]
-    MAP["Fault-to-component mapping"]
-    COMPSTATE["Component state: highlighted part"]
-    RENDER["3D visualization: Three.js twin"]
-
-    RUNTIME --> DETECT
-    DETECT --> MAP
-    MAP --> COMPSTATE
-    COMPSTATE --> RENDER
-    RUNTIME -->|"telemetry"| RENDER
+    SIM["20 Hz Simulation<br/>(Wiebe & Slider-Crank)"] --> SENS["Sensor FDI &<br/>Telemetry Bus"]
+    SENS --> UKF["Unscented Kalman Filter<br/>(Observer Residuals)"]
+    UKF --> ISO["Bayesian Isolation<br/>(FMECA Posterior)"]
+    ISO --> HIGHLIGHT["Component Highlight Map<br/>(Level: Critical / Caution / Nominal)"]
+    HIGHLIGHT --> CANVAS["WebGL Three.js Canvas<br/>(Solid, X-Ray, Thermal, Wireframe)"]
 ```
 
-*Runtime state produces detected faults, which map to a specific component, which drives what the 3D visualization highlights, keeping one authoritative state behind every rendered view.*
+Under project airworthiness rules (P Part 0 Rule 4 and tests in `tests/test_no_truth_leak.py`), the 3D twin highlight subsystem never reads the injected fault list or simulator ground truth. Highlights occur only when analytical residuals exceed calibrated thresholds and the Bayesian network confirms component attribution through real telemetry channels.
 
-## Example
+---
 
-If the ignition misfire fault mode is active on cylinder 3, its primary sensor trigger is RPM jitter and an EGT drop, and its designated 3D target part is the ignition harness and spark leads. Once the detection layer confirms this fault from the telemetry, the Three.js twin highlights the ignition harness component on the rendered engine model and eases its camera toward that region, while the operator console simultaneously shows the RPM jitter and EGT drop on the numeric telemetry panel, both views driven from the same confirmed detection event.
+## Related Systems
 
-## Integration
-
-The 3D twin reads its telemetry and fault state over the same WebSocket path (`/ws/engines/{id}` for the multi-engine runtime, or the Rotax-specific telemetry stream for the ground control workspace scoped to that engine) that the rest of the operator console uses. It consumes the fault matrix defined for the eight PS-26054 fault modes to resolve which mesh component an active fault should highlight, and it shares its underlying GLB assets and component naming convention with the Blender-authored scenes described in the simulation environment article, so a component identified in the browser twin corresponds to the same named part in the higher-fidelity desktop model.
-
-## Validation
-
-The Three.js twin is exercised as part of the ground control station's operator workflows, including automated browser-based verification of the mission simulation flow. The honest scope boundary here is straightforward: what is demonstrated is a visually and functionally consistent twin driven by simulated telemetry and physics, validated through the same simulation and testing regime as the rest of the system; connecting this visualization layer to instrumentation on a real airframe is the natural next deployment step rather than something already exercised against flight hardware.
-
-## Related systems
-
-- [Blender and the Simulation Environment](19-blender-and-simulation-environment.md)
-- [Mission Planning](16-mission-planning.md)
-- [Mission Reliability](17-mission-reliability.md)
-- [Dataset Strategy](15-dataset-strategy.md)
+- [Engine Physics and Thermodynamics](06-engine-physics.md)
+- [Telemetry, Avionics Interfaces & Sensor Intelligence](07-telemetry-and-sensors.md)
+- [The Operator Ground Control Station](20-operator-gcs.md)
+- [Technology Stack, Repository Architecture & Fleet Intelligence](23-technology-stack.md)

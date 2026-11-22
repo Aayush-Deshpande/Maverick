@@ -205,6 +205,28 @@ class EngineRuntime:
 
 
 
+    def set_data_source(self, source: str) -> None:
+        """Switch between DIRECT and CAN on the fly (M7-02)."""
+        norm_source = source.strip().upper()
+        if norm_source not in ("DIRECT", "CAN"):
+            raise ValueError(f"Unknown data source {source!r}; expected DIRECT or CAN")
+        if norm_source == self.data_source:
+            return
+        if norm_source == "CAN":
+            if self.can_link is None:
+                rt_cfg = json.loads((Path(__file__).resolve().parents[2] / "configs" / "runtime.json").read_text(encoding="utf-8"))
+                from backend.sources.can_link import CanLink
+                self.can_link = CanLink(channel=f"anumaan-{self.engine_id}-{self.seed}", interface=rt_cfg.get("can_interface", "virtual"))
+            self.data_source = "CAN"
+        else:
+            if self.can_link is not None:
+                try:
+                    self.can_link.close()
+                except Exception:
+                    pass
+                self.can_link = None
+            self.data_source = "DIRECT"
+
     # ---- lifecycle ------------------------------------------------------------------------
     def calibrate(self) -> None:
         """Nominal ground run-up on THIS tail, then fit calibration + conformal thresholds."""
@@ -336,6 +358,8 @@ class EngineRuntime:
             {"START": self.source.start, "STOP": self.source.stop, "RESET": self.source.reset}[command]()
             self.manual_origin = True
             if command in ("START", "RESET"):          # the start-up transient is not a fault: settle, then diagnose
+                if self.source.plant.state != "RUNNING":
+                    self.source.plant.warm_start(self.source.plant.levers.throttle_pct or 75.0)
                 self._reset_inference()
                 self._settle_until = self.source.now() + self._restart_settle_s
             return {"command": command, "engine_state": self.source.plant.state}
@@ -345,7 +369,10 @@ class EngineRuntime:
             self.source.clear_faults()
             self.sensor_levers.clear()
             self.injected.clear()
+            if self.source.plant.state != "RUNNING":
+                self.source.plant.warm_start(self.source.plant.levers.throttle_pct or 75.0)
             self._reset_inference()
+            self._settle_until = self.source.now() + self._restart_settle_s
 
     def complete_repair(self, fault_id: Optional[str]) -> int:
         """A signed-off work order: the simulated repair removes that fault from the plant (a time-to-limit order

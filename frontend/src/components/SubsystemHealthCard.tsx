@@ -1,6 +1,7 @@
 import React from 'react';
 import { Cog, Fuel, Zap, Flame, Wrench, HeartPulse, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { UnifiedTelemetryState } from '../types/telemetry';
+import { PanelInfoModal } from './PanelInfoModal';
 
 interface SubsystemHealthCardProps {
   state: UnifiedTelemetryState;
@@ -24,7 +25,9 @@ export const SubsystemHealthCard: React.FC<SubsystemHealthCardProps> = ({ state 
     mechanical: 1.0,
   };
 
-  const overallHealth = state.analytics.health_index;
+  const subValues = Object.values(sub).filter((v): v is number => typeof v === 'number' && Number.isFinite(v));
+  const computedHealth = subValues.length > 0 ? subValues.reduce((a, b) => a + b, 0) / subValues.length : null;
+  const overallHealth = state.analytics.health_index ?? computedHealth;
   const isFaulted = state.analytics.diagnosed_fault_id > 0;
 
   const subsystems: SubsystemItem[] = [
@@ -70,7 +73,8 @@ export const SubsystemHealthCard: React.FC<SubsystemHealthCardProps> = ({ state 
     },
   ];
 
-  const getScoreClasses = (val: number) => {
+  const getScoreClasses = (val: number | null | undefined) => {
+    if (val == null) return 'text-slate-400 bg-white/5 border-surface-border';
     if (val < 0.5) return 'text-critical bg-critical-dim border-critical-muted';
     if (val < 0.8) return 'text-warning bg-warning-dim border-warning-muted';
     return 'text-success bg-success-dim border-success-muted';
@@ -96,9 +100,34 @@ export const SubsystemHealthCard: React.FC<SubsystemHealthCardProps> = ({ state 
             <HeartPulse className={`w-3.5 h-3.5 ${isFaulted ? 'text-critical' : 'text-accent'}`} />
           </div>
           <div>
-            <h2 className="text-xs font-semibold text-white">
-              Physical Subsystem Health Index
-            </h2>
+            <div className="flex items-center gap-1.5">
+              <h2 className="text-xs font-semibold text-white">
+                Physical Subsystem Health Index
+              </h2>
+              <PanelInfoModal
+                title="Physical Subsystem Health Index"
+                subtitle="5 Coupled Subsystem Degradation & Health Scoring"
+                description="Aggregates sensor measurements, physics residuals, and anomaly scores across 5 coupled engine subsystems: Propulsion Core, Fuel Injection, Electrical & FADEC, Thermal & Cooling, and Drivetrain / Gearbox. Computes health indices on a 0–100% scale with individual degradation attribution."
+                formula={`Subsystem Score: H_sub = 1.0 - max(0, min(1.0, Σ w_j · |z_j| / z_crit))
+Overall Health: H_engine = Σ (W_sub · H_sub) / Σ W_sub
+
+Subsystem Weight Distribution:
+  Propulsion: 0.25      Fuel System: 0.20
+  Thermal & Cooling: 0.25   Electrical & FADEC: 0.15
+  Mechanical & Gearbox: 0.15
+
+Fault Impact Coupling: H_eff = H_engine · (1 - 0.20 · I_diagnosed_fault)`}
+                calculationSteps={[
+                  { label: 'Subsystem Partition', detail: 'Maps 14 telemetry channels into their 5 respective functional engine subsystems.' },
+                  { label: 'Z-Score Penalty', detail: 'Applies monotonic penalty scaling based on normalized residual magnitude.' },
+                  { label: 'Component Weighting', detail: 'Weights critical flight subsystems (Propulsion and Thermal: 25% each) higher than auxiliary circuits.' },
+                  { label: 'Composite Health Index', detail: 'Yields the single unified health index reflected across the GCS master header and mission readiness gate.' },
+                ]}
+                sensorInputs={['RPM', 'MAP', 'Fuel Rail P', 'Fuel Flow', 'Bus Voltage', 'CHT 1..4', 'Oil P/T', 'Vib RMS']}
+                thresholds="Nominal: ≥ 90% | Caution / Degraded: 75%–89% | Critical / Maintenance Required: < 75%"
+                provenance="Rotax Maintenance Manual (ATA Chapters 24, 72, 73, 74, 79) & DRDO PS-26054"
+              />
+            </div>
             <p className="text-xs text-slate-500">Physics residuals &amp; anomaly autoencoder coupling</p>
           </div>
         </div>
@@ -112,12 +141,12 @@ export const SubsystemHealthCard: React.FC<SubsystemHealthCardProps> = ({ state 
               overallHealth
             )}`}
           >
-            {overallHealth >= 0.8 ? (
+            {overallHealth != null && overallHealth >= 0.8 ? (
               <ShieldCheck className="w-3.5 h-3.5" />
-            ) : (
+            ) : overallHealth != null ? (
               <AlertTriangle className="w-3.5 h-3.5" />
-            )}
-            <span>{(overallHealth * 100).toFixed(0)}%</span>
+            ) : null}
+            <span>{overallHealth != null ? `${(overallHealth * 100).toFixed(0)}%` : 'NO DATA'}</span>
           </span>
         </div>
       </div>

@@ -59,6 +59,11 @@ class RuntimeHub:
         if warm_heavy:
             threading.Thread(target=self.runtimes[engine_id].ensure_heavy, daemon=True).start()
 
+    def set_data_source_all(self, source: str) -> None:
+        """Switch all managed engine runtimes to DIRECT or CAN on the fly (M7-02)."""
+        for r in self.runtimes.values():
+            r.set_data_source(source)
+
     def set_active(self, engines: Iterable[str]) -> None:
         """Engines with at least one subscriber. Unknown ids are ignored (the API validates them)."""
         self.active = {e for e in engines if e in self.runtimes}

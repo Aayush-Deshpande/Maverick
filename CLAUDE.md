@@ -1,8 +1,9 @@
 # CLAUDE.md: ANUMAAN
-The rules live in AGENTS.md and the binding decisions in DECISIONS.md. Both are imported below. Edit rules there, not here.
+The rules live in AGENTS.md and the binding decisions in DECISIONS.md (Part 1) and DECISIONS_2.md (Part 2). All are imported below. Edit rules there, not here.
 
 @AGENTS.md
 @DECISIONS.md
+@DECISIONS_2.md
 
 ## Claude Code specifics
 - Each major folder has its own CLAUDE.md, which imports that folder's AGENTS.md. Claude Code loads it when you work in that folder.

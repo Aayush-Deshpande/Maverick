@@ -1,6 +1,8 @@
 import React from "react";
 import {
     ArrowRight,
+    ArrowUpRight,
+    Play,
     Box,
     ShieldCheck,
     Activity,
@@ -90,7 +92,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                                 |
                             </span>
                             <span className="hidden sm:inline">
-                                STANAG 4586 LOI 2
+                                REAL-TIME DIGITAL TWIN
                             </span>
                         </div>
 
@@ -181,17 +183,10 @@ export const HomePage: React.FC<HomePageProps> = ({
                                         TECHNICAL DOCUMENTATION
                                     </h3>
                                     <p className="text-xs font-mono text-stone-500 uppercase tracking-wider">
-                                        Physics Core · FlyHash Novelty ·
-                                        Bayesian Diagnostics · Conformal RUL ·
-                                        Mission R(t)
+                                        Physics Models · Telemetry Ingest · Fault Diagnostics · Prognostics
                                     </p>
                                     <p className="text-sm text-stone-600 leading-relaxed pt-1">
-                                        The engineering architecture,
-                                        crank-angle slider-crank physics, 20 Hz
-                                        neuromorphic novelty detection, exact
-                                        Bayesian fault isolation, degradation
-                                        modeling, split conformal RUL bounds,
-                                        and flight mission reliability.
+                                        Complete architectural reference covering thermodynamic ODE solvers, 20 Hz CAN bus telemetry ingestion, Bayesian fault isolation, RUL estimation, and mission reliability.
                                     </p>
                                 </div>
 
@@ -200,23 +195,19 @@ export const HomePage: React.FC<HomePageProps> = ({
                                     <div className="flex items-center gap-2">
                                         <span className="size-1.5 rounded-full bg-stone-900" />
                                         <span>
-                                            Layer 2: Slider-crank Wiebe
-                                            thermodynamics and Δω(θ) torque
-                                            deficit
+                                            Thermodynamics: Slider-crank kinematics and Wiebe combustion
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <span className="size-1.5 rounded-full bg-stone-900" />
                                         <span>
-                                            Layer 3: 20 Hz continuous FlyHash
-                                            random projections
+                                            Telemetry: 20 Hz synchronous multi-sensor state estimation
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <span className="size-1.5 rounded-full bg-stone-900" />
                                         <span>
-                                            Layer 4 &amp; 5: MIL-STD-1629A exact
-                                            Bayesian network and conformal RUL
+                                            Diagnostics: Bayesian fault isolation and conformal RUL bounds
                                         </span>
                                     </div>
                                 </div>
@@ -239,10 +230,10 @@ export const HomePage: React.FC<HomePageProps> = ({
                             <div className="space-y-5">
                                 <div className="flex items-center justify-between border-b border-stone-100 pb-3">
                                     <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-stone-600 font-bold bg-stone-100 border border-stone-200 px-2.5 py-0.5 rounded-[2px]">
-                                        SECTION 02 // FIELD NOTEBOOK &amp; AUDIT
+                                        SECTION 02 // STUDENT STORY &amp; MEMORIES
                                     </span>
                                     <span className="font-mono text-[10px] text-stone-400 font-medium">
-                                        CHRONICLE &amp; DEFENSE
+                                        SIH 2026 ARCHIVE
                                     </span>
                                 </div>
 
@@ -251,49 +242,38 @@ export const HomePage: React.FC<HomePageProps> = ({
                                         OUR SIH JOURNEY
                                     </h3>
                                     <p className="text-xs font-mono text-stone-500 uppercase tracking-wider">
-                                        27 Research Studies · 66 Verified
-                                        Commits · Comprehensive Verification
-                                        Protocol
+                                        College Lab · DRDO Pune Visit · Sleepless Nights · Live Demo
                                     </p>
                                     <p className="text-sm text-stone-600 leading-relaxed pt-1">
-                                        The engineering evolution of ANUMAAN
-                                        from problem statement analysis to
-                                        plant-model physics, dual-runtime
-                                        architecture, characterization testing,
-                                        and full multi-engine integration.
+                                        The real, human story behind ANUMAAN: from late-night canteen chai and baffling math bugs to walking through the gates of DRDO Pune and defending our live 3D twin in front of college evaluators.
                                     </p>
                                 </div>
 
                                 {/* Subsystem Highlights List */}
                                 <div className="p-3 bg-stone-50 border border-stone-200 rounded-[2px] space-y-1.5 font-mono text-[11px] text-stone-700">
                                     <div className="flex items-center gap-2">
-                                        <span className="size-1.5 rounded-full bg-stone-900" />
+                                        <span className="size-1.5 rounded-full bg-emerald-600" />
                                         <span>
-                                            Research First: 27 foundational
-                                            study documents before production
-                                            code
+                                            2 Sept: Field visit to DRDO R&amp;DE (Engrs) Pune
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <span className="size-1.5 rounded-full bg-stone-900" />
+                                        <span className="size-1.5 rounded-full bg-emerald-600" />
                                         <span>
-                                            Rigorous Benchmarking:
-                                            First-principles verification across
-                                            every subsystem
+                                            Hostel grind: Late-night physics coding until 4 AM
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <span className="size-1.5 rounded-full bg-stone-900" />
+                                        <span className="size-1.5 rounded-full bg-emerald-600" />
                                         <span>
-                                            Adversarial Scrutiny: Pytest
-                                            characterization regression suite
+                                            College round: Selected at RSCOE incubation center
                                         </span>
                                     </div>
                                 </div>
                             </div>
 
                             <div className="pt-6 mt-6 border-t border-stone-100 flex items-center justify-between font-mono text-xs text-stone-900 font-semibold uppercase tracking-wider group-hover:text-stone-700">
-                                <span>Read The Engineering Chronicle</span>
+                                <span>Read Our Student Journey</span>
                                 <ArrowRight
                                     size={15}
                                     className="transition-transform group-hover:translate-x-1"
@@ -303,7 +283,86 @@ export const HomePage: React.FC<HomePageProps> = ({
                     </div>
                 </section>
 
-                {/* 3. TECHNICAL SNAPSHOT (Contiguous Paneled Metrics Bar) */}
+                {/* 3. SYSTEM DEMONSTRATION VIDEO (Embedded Architectural Player) */}
+                <section className="py-16 px-4 sm:px-6 lg:px-12 border-b border-stone-200 bg-stone-100/40">
+                    <div className="max-w-5xl mx-auto space-y-6">
+                        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                            <div>
+                                <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-stone-500 font-semibold block">
+                                    [SYSTEM DEMO // VIDEO WALKTHROUGH]
+                                </span>
+                                <h2 className="text-2xl sm:text-3xl font-bold text-stone-900 mt-1 tracking-tight">
+                                    Watch ANUMAAN in Action
+                                </h2>
+                                <p className="text-xs text-stone-600 mt-1">
+                                    Full flight deck walkthrough, real-time multi-physics fault injection, and 3D digital twin visualization.
+                                </p>
+                            </div>
+                            <a
+                                href="https://youtu.be/L97JAlS9Z7c"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="btn-extend-tactile shrink-0"
+                            >
+                                <Play size={13} className="text-red-600" fill="currentColor" />
+                                <span>Open in YouTube</span>
+                                <ArrowUpRight size={13} />
+                            </a>
+                        </div>
+
+                        {/* Video Window Chrome Frame */}
+                        <div className="rounded-lg border border-stone-300 bg-white overflow-hidden shadow-xs">
+                            {/* Window Title Bar */}
+                            <div className="flex items-center justify-between px-4 py-2.5 bg-stone-100 border-b border-stone-200 font-mono text-[11px] text-stone-600">
+                                <div className="flex items-center gap-2">
+                                    <span className="size-2.5 rounded-full bg-stone-300 inline-block" />
+                                    <span className="size-2.5 rounded-full bg-stone-300 inline-block" />
+                                    <span className="size-2.5 rounded-full bg-stone-300 inline-block" />
+                                    <span className="ml-2 font-medium text-stone-800">ANUMAAN System Demonstration · Flight Deck &amp; 3D Twin Walkthrough (SIH 2026)</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-[10px] text-stone-600 uppercase font-semibold">
+                                    <span className="size-2 rounded-full bg-red-500 animate-pulse inline-block" />
+                                    <span>YouTube 1080p</span>
+                                </div>
+                            </div>
+
+                            {/* 16:9 Video Embed */}
+                            <div className="relative aspect-video w-full bg-stone-950">
+                                <iframe
+                                    className="w-full h-full border-0"
+                                    src="https://www.youtube-nocookie.com/embed/L97JAlS9Z7c?rel=0&amp;modestbranding=1"
+                                    title="ANUMAAN System Demonstration Video"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                    allowFullScreen
+                                />
+                            </div>
+
+                            {/* Video Metadata / Chapter Strip */}
+                            <div className="px-4 py-3 bg-stone-50 border-t border-stone-200 flex flex-wrap items-center justify-between gap-3 text-xs font-mono text-stone-600">
+                                <div className="flex items-center gap-3">
+                                    <span className="font-semibold text-stone-800">Featured Topics:</span>
+                                    <span>20 Hz Multi-Physics Twin</span>
+                                    <span>·</span>
+                                    <span>Draco 3D Viewport Modes</span>
+                                    <span>·</span>
+                                    <span>Live Fault Injection</span>
+                                    <span>·</span>
+                                    <span>Glide Cone &amp; Derate Advisory</span>
+                                </div>
+                                <a
+                                    href="https://youtu.be/L97JAlS9Z7c"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-stone-900 underline font-semibold hover:text-stone-700"
+                                >
+                                    youtu.be/L97JAlS9Z7c ↗
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                {/* 4. TECHNICAL SNAPSHOT (Contiguous Paneled Metrics Bar) */}
                 <section className="py-12 border-b border-stone-200 bg-stone-50/50 px-4 sm:px-6 lg:px-12">
                     <div className="space-y-6">
                         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -344,7 +403,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                                 {
                                     label: "FMECA TAXONOMY",
                                     val: "20 Modes",
-                                    sub: "MIL-STD-1629A RPN scored",
+                                    sub: "Critical failure effects",
                                 },
                                 {
                                     label: "MISSION RISK",
@@ -352,9 +411,9 @@ export const HomePage: React.FC<HomePageProps> = ({
                                     sub: "Monte Carlo hazard rate",
                                 },
                                 {
-                                    label: "INTEROPERABILITY",
-                                    val: "STANAG 4586",
-                                    sub: "Level of Interoperability 2",
+                                    label: "DATA INGEST",
+                                    val: "20 Hz Real-Time",
+                                    sub: "Synchronous CAN bus stream",
                                 },
                             ].map((stat, i) => (
                                 <div
@@ -508,28 +567,30 @@ export const HomePage: React.FC<HomePageProps> = ({
                             </div>
                         </div>
 
-                        <div className="lg:col-span-5 relative bg-stone-100 border border-stone-200 rounded-[2px] overflow-hidden">
-                            <img
-                                src="/assets/lineup/rotax_912is_sport.jpg"
-                                alt="Rotax 912 iS Sport engine, Blender render"
-                                className="w-full h-auto object-cover border-b border-stone-200"
-                            />
-                            <div className="p-3 bg-stone-50 border-b border-stone-200 text-[11px] font-mono text-stone-500 flex items-center justify-between">
-                                <span>Rotax 912 iS Sport · 100 hp Flat-4</span>
-                                <span className="uppercase text-stone-400">
-                                    Blender Render
-                                </span>
+                        <div className="lg:col-span-5 relative bg-stone-100 border border-stone-200 rounded-[2px] overflow-hidden shadow-xs group">
+                            <div className="relative overflow-hidden bg-stone-900">
+                                <img
+                                    src="/assets/lineup/rotax_912is_sport.jpg"
+                                    alt="Rotax 912 iS Sport aero-piston digital twin"
+                                    className="w-full h-auto object-cover group-hover:scale-[1.02] transition-transform duration-500 ease-out"
+                                />
+                                <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2 py-1 bg-stone-900/80 backdrop-blur-xs border border-white/20 rounded-[2px] text-white font-mono text-[10px] uppercase tracking-wider">
+                                    <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                    <span>Primary Twin Ref</span>
+                                </div>
                             </div>
-                            <img
-                                src="/assets/blender/engine_master_hero.png"
-                                alt="ANUMAAN Master Engine Twin CAD Model"
-                                className="w-full h-auto object-cover hover:scale-102 transition-transform duration-300"
-                            />
-                            <div className="p-3 bg-stone-50 border-t border-stone-200 text-[11px] font-mono text-stone-500 flex items-center justify-between">
-                                <span>Blender Master Model: Rotax 912 iS</span>
-                                <span className="uppercase text-stone-400">
-                                    Draco GLB
-                                </span>
+                            <div className="p-3.5 bg-stone-50 border-t border-stone-200 text-[11px] font-mono text-stone-600 flex items-center justify-between">
+                                <div>
+                                    <span className="font-bold text-stone-900 block">Rotax 912 iS Sport · 100 hp Flat-4</span>
+                                    <span className="text-[10px] text-stone-500">1,352 cm³ · Dual FADEC EFI · Boxer Layout</span>
+                                </div>
+                                <button
+                                    onClick={onOpenModelViewer}
+                                    className="px-2.5 py-1 bg-stone-900 hover:bg-stone-800 text-white rounded-[2px] text-[10px] uppercase tracking-wider font-semibold transition-colors flex items-center gap-1"
+                                >
+                                    <Box size={12} />
+                                    <span>Inspect 3D</span>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -652,7 +713,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                             specs={[
                                 {
                                     label: "Taxonomy",
-                                    value: "MIL-STD-1629A Failure Modes",
+                                    value: "Ranked Failure Modes",
                                 },
                                 {
                                     label: "Evidence Input",
@@ -1032,12 +1093,14 @@ export const HomePage: React.FC<HomePageProps> = ({
                     <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
                         <div>
                             <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-stone-500 font-semibold block">
-                                [07 // FIELD NOTEBOOK &amp; AUDIT]
+                                [07 // STUDENT FIELD NOTEBOOK]
                             </span>
                             <h2 className="text-2xl sm:text-3xl font-bold text-stone-900 mt-1 tracking-tight">
-                                Our SIH Journey: Research, Rigor &amp;
-                                Verification
+                                Our SIH Journey: From College Lab to Defense Digital Twin
                             </h2>
+                            <p className="text-xs text-stone-500 mt-1 max-w-2xl">
+                                Late nights, endless canteen chai, the 2 Sept visit to DRDO Pune, and standing before our college evaluators.
+                            </p>
                         </div>
                         <button
                             onClick={() =>
@@ -1045,7 +1108,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                             }
                             className="btn-extend-tactile"
                         >
-                            <span>Read Engineering Story</span>
+                            <span>Read Our Story</span>
                             <ArrowRight size={13} />
                         </button>
                     </div>
@@ -1055,33 +1118,24 @@ export const HomePage: React.FC<HomePageProps> = ({
                         <div className="extend-card-corner-dots p-6 sm:p-7 border border-stone-300 rounded-[2px] bg-white space-y-4">
                             <div className="flex items-center justify-between border-b border-stone-100 pb-3">
                                 <span className="font-mono text-[10px] uppercase tracking-wider bg-stone-100 px-2 py-0.5 rounded-[2px] border border-stone-200 text-stone-700 font-semibold">
-                                    CHAPTER 01 // GENESIS
+                                    CHAPTER 01 // GENESIS &amp; DRDO VISIT
                                 </span>
                                 <span className="font-mono text-xs text-stone-400">
-                                    66 COMMITS ANALYZED
+                                    FIELD MEMOIR
                                 </span>
                             </div>
                             <h3 className="text-xl font-bold text-stone-950 tracking-tight">
-                                The Engineering Story: Research First, Code
-                                Second
+                                From an Empty Screen to a Working Twin
                             </h3>
                             <p className="text-xs text-stone-600 leading-relaxed">
-                                How the project began with a 27-part research
-                                study, evolved into a dual-runtime architecture,
-                                constructed the crank-angle physics chain, and
-                                achieved end-to-end integration across all five
-                                engine platforms.
+                                How six engineering students took on DRDO's toughest UAV propulsion challenge, traveled to DRDO R&amp;DE (Engrs) Pune on 2nd September, and spent weeks of sleepless nights turning textbook math into a living 3D digital twin.
                             </p>
                             <div className="p-3.5 bg-stone-50 border-l-2 border-stone-800 rounded-[2px] text-xs space-y-1">
                                 <span className="font-mono text-[10px] text-stone-600 uppercase font-semibold block">
-                                    Scientific Discipline
+                                    Turning Point at DRDO Pune
                                 </span>
                                 <p className="text-stone-700 italic">
-                                    &ldquo;Bio-Inspired Sparse Novelty Coding
-                                    fuses hyperdimensional olfactory projection
-                                    circuits with order-domain aero piston
-                                    vibration and physics residuals under strict
-                                    UAV datalink bandwidth constraints.&rdquo;
+                                    &ldquo;Walking up to the DRDO gates in Pune made everything real. This was not just a college project for grades; it was about building something that could genuinely safeguard a multi-crore military UAV.&rdquo;
                                 </p>
                             </div>
                             <button
@@ -1092,7 +1146,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                                 }
                                 className="btn-extend-tactile w-full justify-between"
                             >
-                                <span>Read Chapter 01</span>
+                                <span>Read Chapter 01: Our Story &amp; DRDO Visit</span>
                                 <ArrowRight size={13} />
                             </button>
                         </div>
@@ -1101,31 +1155,24 @@ export const HomePage: React.FC<HomePageProps> = ({
                         <div className="extend-card-corner-dots p-6 sm:p-7 border border-stone-300 rounded-[2px] bg-white space-y-4">
                             <div className="flex items-center justify-between border-b border-stone-100 pb-3">
                                 <span className="font-mono text-[10px] uppercase tracking-wider bg-stone-100 px-2 py-0.5 rounded-[2px] border border-stone-200 text-stone-700 font-semibold">
-                                    CHAPTER 02 // DEFENSE
+                                    CHAPTER 02 // DEFENSE &amp; EVALUATION
                                 </span>
                                 <span className="font-mono text-xs text-stone-400">
-                                    CHARACTERIZATION TESTS
+                                    COLLEGE ROUND DEFENSE
                                 </span>
                             </div>
                             <h3 className="text-xl font-bold text-stone-950 tracking-tight">
-                                Demonstration Methodology & Verification
-                                Discipline
+                                Facing the Evaluators: College Round to Grand Finale
                             </h3>
                             <p className="text-xs text-stone-600 leading-relaxed">
-                                Controlled engineering demonstrations,
-                                characterization regression tests pinning
-                                headline numbers, automated browser Playwright
-                                verification, and proving why the system stays
-                                quiet during legitimate throttle transients.
+                                The nervous energy outside the RSCOE incubation center, standing before senior faculty with our laptops open, running live failure simulations instead of static slides, and getting selected to represent our institute.
                             </p>
                             <div className="p-3.5 bg-stone-50 border-l-2 border-stone-800 rounded-[2px] text-xs space-y-1">
                                 <span className="font-mono text-[10px] text-stone-600 uppercase font-semibold block">
-                                    Verification Discipline
+                                    Live Demonstration at RSCOE
                                 </span>
-                                <p className="text-stone-700">
-                                    Characterization tests in pytest pin results
-                                    automatically so numbers quoted to
-                                    evaluators cannot quietly drift over time.
+                                <p className="text-stone-700 italic">
+                                    &ldquo;We skipped the 20-slide PowerPoint. We opened our laptop and told the professors: 'Pick any cylinder and trigger a fault.' Watching their reactions as the 3D model responded live was unforgettable.&rdquo;
                                 </p>
                             </div>
                             <button
@@ -1136,7 +1183,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                                 }
                                 className="btn-extend-tactile w-full justify-between"
                             >
-                                <span>Read Chapter 02</span>
+                                <span>Read Chapter 02: College Presentation &amp; Demo</span>
                                 <ArrowRight size={13} />
                             </button>
                         </div>

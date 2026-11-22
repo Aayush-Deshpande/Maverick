@@ -127,6 +127,20 @@ controls, and fault injection are available in the browser UI; no separate Three
 - `launch_mission_graph.bat` — simulates missions, then opens the mission graph viewer.
 - `launch_public_tunnel.bat` — exposes the backend over a tunnel for off-network access.
 
+### Production containerization (Docker & Kubernetes)
+```bash
+docker compose up --build
+```
+Builds the multi-stage container (`node:22-alpine` frontend build + `python:3.13-slim` runtime) and serves both the unified FastAPI backend and React GCS dashboard on `http://localhost:8000`.
+- Liveness probe: `GET http://localhost:8000/health`
+- Readiness probe: `GET http://localhost:8000/ready` (returns 503 during 900-tick calibration, 200 once calibrated)
+
+### Tactical operator features & avionics link
+- **Tactical Command Palette (`Ctrl+K`)**: Rapid keyboard-first military HUD overlay to switch powerplants (Rotax 912 iSc, 914, 915 iSc, Austro AE300, VRDE 2.2L), switch 3D render modes, trigger throttle detents, and inject certified fault scenarios.
+- **Multi-Mode 3D Viewport**: Live switching between Solid CAD PBR, Physical X-Ray Glass (optical transmission exposing internal reciprocating pistons), Dynamic FLIR Thermal Pyrometry (20 Hz blackbody incandescence driven by thermodynamic CHT/EGT equations), and Holographic Twin Ghost.
+- **Avionics SAE J1939 CAN Bus Link & IDS**: Live switching between in-process direct simulation and virtual SAE J1939 29-bit CAN bus link. Includes a real-time CAN Intrusion Detection System (CAN IDS) detecting rogue IDs (`UNKNOWN_ID`), packet drops (`SEQUENCE_GAP`), and sensor spoofing (`OUT_OF_RANGE`) with Merkle-sealed flight logs.
+- **Mobile Phone / Tablet Secondary Display**: Scan the vector QR code in the top connection toolbar to pair mobile cockpits on the local network (`http://<LAN_IP>:8000/?role=pilot`).
+
 ### Web/mobile dashboard
 ```bash
 launch_backend_server.bat     # start the telemetry backend first

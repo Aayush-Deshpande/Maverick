@@ -1,18 +1,90 @@
 {
   "engine_id": "rotax_915is",
   "glb": "assets/web/engines/rotax_915is.glb",
-  "mesh_nodes": 15,
+  "mesh_nodes": 25,
   "representative_geometry": null,
   "generated_by": "scripts/assets/build_component_manifests.py (card M0-03; patterns from addendum section 3)",
   "components": [
     {
-      "component_id": "main_engine_MERGED",
+      "component_id": "cylinder_head_1",
+      "subsystem": "combustion",
+      "cylinder": 1,
+      "nodes": [
+        "Cylinder_Head_1"
+      ]
+    },
+    {
+      "component_id": "cylinder_head_2",
+      "subsystem": "combustion",
+      "cylinder": 2,
+      "nodes": [
+        "Cylinder_Head_2"
+      ]
+    },
+    {
+      "component_id": "cylinder_head_3",
+      "subsystem": "combustion",
+      "cylinder": 3,
+      "nodes": [
+        "Cylinder_Head_3"
+      ]
+    },
+    {
+      "component_id": "cylinder_head_4",
+      "subsystem": "combustion",
+      "cylinder": 4,
+      "nodes": [
+        "Cylinder_Head_4"
+      ]
+    },
+    {
+      "component_id": "crankcase",
       "subsystem": "core",
       "cylinder": null,
       "nodes": [
-        "Main engine"
-      ],
-      "note": "almost the whole engine in one object; split in Phase 7"
+        "Crankcase_Engine_Block"
+      ]
+    },
+    {
+      "component_id": "intake_manifold",
+      "subsystem": "induction",
+      "cylinder": null,
+      "nodes": [
+        "Intake_Manifold_Plenum",
+        "Intake_Manifold_Runners"
+      ]
+    },
+    {
+      "component_id": "exhaust",
+      "subsystem": "exhaust",
+      "cylinder": null,
+      "nodes": [
+        "Exhaust_Manifold_System"
+      ]
+    },
+    {
+      "component_id": "turbocharger",
+      "subsystem": "turbo",
+      "cylinder": null,
+      "nodes": [
+        "Turbocharger_Assembly"
+      ]
+    },
+    {
+      "component_id": "coolant_hoses",
+      "subsystem": "cooling",
+      "cylinder": null,
+      "nodes": [
+        "Coolant_Hoses_Harness"
+      ]
+    },
+    {
+      "component_id": "fasteners",
+      "subsystem": "structure",
+      "cylinder": null,
+      "nodes": [
+        "Engine_Fasteners_Brackets"
+      ]
     },
     {
       "component_id": "air_baffles",
@@ -60,7 +132,12 @@
       "subsystem": "control",
       "cylinder": null,
       "nodes": [
-        "ECU"
+        "ECU",
+        "ECU_Harness_Clip_1",
+        "ECU_Harness_Clip_2",
+        "ECU_Mount_Bracket",
+        "ECU_Mount_Dowel_1",
+        "ECU_Mount_Dowel_2"
       ]
     },
     {
@@ -86,19 +163,6 @@
       "nodes": [
         "Ambient sensor"
       ]
-    },
-    {
-      "component_id": "unnamed_cad_parts",
-      "subsystem": "unknown",
-      "cylinder": null,
-      "nodes": [
-        "5608_@OIS@_5081",
-        "6270_@OIS@_5818",
-        "6289_@OIS@_5818",
-        "7767_@OIS@_7310",
-        "7786_@OIS@_7310"
-      ],
-      "note": "CAD-id objects; identify in Phase 7"
     }
   ],
   "unassigned_nodes": []

@@ -32,6 +32,7 @@ from backend.maintenance.work_orders import WorkOrderStore
 from backend.mission.executive import list_missions
 from backend.recording.recorder import list_recordings, read_states, recordings_dir
 from backend.recording.replay import compare
+from backend.runtime.hub import load_runtime_settings
 from backend.reports.sortie_report import write_report
 from backend.server.security import COMMAND_LOG, command_guard
 from backend.server.state_builder import build_state
@@ -171,6 +172,16 @@ class WorkOrderCommand(BaseModel):
 class EngineCommand(BaseModel):
     model_config = ConfigDict(extra="forbid")
     command: Literal["START", "STOP", "RESET"]
+
+
+class SourceRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    data_source: Literal["DIRECT", "CAN"]
+
+
+class CanSpoofRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    kind: Literal["UNKNOWN_ID", "SEQUENCE_GAP", "OUT_OF_RANGE"] = "UNKNOWN_ID"
 
 
 class GeoPoint(BaseModel):
@@ -357,6 +368,27 @@ def v1_recording_states(sortie_id: str, offset: int = Query(0, ge=0), limit: int
             "states": read_states(_sortie_dir(sortie_id), offset, limit)}
 
 
+@router.get("/api/v1/runtime/source")
+def v1_get_source() -> Dict[str, Any]:
+    """Get current telemetry source across the runtime hub (M7-02)."""
+    hub = services().hub
+    current_source = hub.runtimes[hub.selected].data_source if hub.selected in hub.runtimes else "DIRECT"
+    rt_cfg = load_runtime_settings()
+    return {
+        "data_source": current_source,
+        "available_sources": ["DIRECT", "CAN"],
+        "can_interface": rt_cfg.get("can_interface", "virtual"),
+    }
+
+
+@router.post("/api/v1/runtime/source")
+def v1_set_source(body: SourceRequest, cmd: Dict[str, Any] = Depends(command_guard)) -> Dict[str, Any]:
+    """Switch runtime telemetry source between DIRECT and CAN (M7-02)."""
+    hub = services().hub
+    hub.set_data_source_all(body.data_source)
+    return {"data_source": body.data_source, "status": "SWITCHED"}
+
+
 @router.get("/api/v1/engines/{engine_id}/can")
 def v1_engine_can(engine_id: str) -> Dict[str, Any]:
     """M7-02/04: is this engine's telemetry crossing the CAN bus (configs/runtime.json data_source), how much has
@@ -364,11 +396,67 @@ def v1_engine_can(engine_id: str) -> Dict[str, Any]:
     services().channel(engine_id)
     rt = services().hub.runtimes[engine_id]
     link = getattr(rt, "can_link", None)
+    rt_cfg = load_runtime_settings()
     if link is None:
-        return {"engine_id": engine_id, "data_source": rt.data_source, "bus": None}
-    return {"engine_id": engine_id, "data_source": rt.data_source,
-            "bus": {"messages_per_frame": len(link.db.messages), "bytes_sent": link.bytes_sent,
-                    "alerts": [vars(a) for a in link.alerts[-20:]], "alert_count": len(link.alerts)}}
+        return {
+            "engine_id": engine_id,
+            "data_source": rt.data_source,
+            "can_interface": rt_cfg.get("can_interface", "virtual"),
+            "bus": None
+        }
+    return {
+        "engine_id": engine_id,
+        "data_source": rt.data_source,
+        "can_interface": rt_cfg.get("can_interface", "virtual"),
+        "bus": {
+            "messages_per_frame": len(link.db.messages),
+            "bytes_sent": link.bytes_sent,
+            "alerts": [vars(a) for a in link.alerts[-20:]],
+            "alert_count": len(link.alerts),
+            "recent_frames": getattr(link, "recent_frames", [])
+        }
+    }
+
+
+@router.post("/api/v1/engines/{engine_id}/can/inject_spoof")
+def v1_engine_can_inject_spoof(engine_id: str, body: CanSpoofRequest, cmd: Dict[str, Any] = Depends(command_guard)) -> Dict[str, Any]:
+    """M7-04: Inject rogue CAN frame / sequence gap / out-of-range payload to demonstrate real-time CAN IDS threat detection."""
+    services().channel(engine_id)
+    rt = services().hub.runtimes[engine_id]
+    if rt.can_link is None:
+        rt.set_data_source("CAN")
+    sim_t = float(rt.buffer[-1].t if rt.buffer else 0.0)
+    alerts = rt.can_link.inject_spoof(body.kind, t_sec=sim_t)
+    return {
+        "engine_id": engine_id,
+        "spoof_kind": body.kind,
+        "alerts_generated": [vars(a) for a in alerts],
+        "total_alerts": len(rt.can_link.alerts)
+    }
+
+
+@router.get("/api/v1/health")
+def v1_health() -> Dict[str, Any]:
+    """Container / cluster health probe (M8-01, T-OPS-1)."""
+    hub = services().hub
+    return {
+        "status": "UP",
+        "ready": True,
+        "engines": len(hub.engines),
+        "tick_rate_hz": hub.tick_rate_hz,
+        "tick_count": hub.tick_count
+    }
+
+
+@router.get("/api/v1/ready")
+def v1_ready() -> Dict[str, Any]:
+    """Container / cluster readiness probe (M8-01, T-OPS-1)."""
+    hub = services().hub
+    return {
+        "ready": True,
+        "selected_engine": hub.selected,
+        "total_engines": len(hub.engines)
+    }
 
 
 @router.get("/api/v1/recordings/{sortie_id}/verify")

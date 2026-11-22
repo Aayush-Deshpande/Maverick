@@ -118,13 +118,14 @@ class SimSource:
         self.faults.clear()
 
     def start(self) -> None:
-        self.plant.start()
+        self.plant.warm_start(self.plant.levers.throttle_pct or 75.0)
 
     def stop(self) -> None:
         self.plant.stop()
 
     def reset(self) -> None:
         self.plant.reset()
+        self.plant.warm_start(self.plant.levers.throttle_pct or 75.0)
 
     # -- stepping ---------------------------------------------------------------------------------------------
     def set_conditions(self, throttle_pct: float, altitude_ft: float, oat_c: Optional[float],

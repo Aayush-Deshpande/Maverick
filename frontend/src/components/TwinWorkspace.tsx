@@ -3,6 +3,7 @@ import { useEngineRuntime } from '../hooks/useEngineRuntime';
 import { channelLabel, LabelsContext, useFetchLabels, useLabels } from '../utils/labels';
 import { Activity, ArrowRight } from 'lucide-react';
 import TwinStage from './TwinStage';
+import { PanelInfoModal } from './PanelInfoModal';
 
 type Props = {
   serverUrl: string;
@@ -44,6 +45,24 @@ export default function TwinWorkspace({ serverUrl, onNavigateToRuntime }: Props)
                 <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-900">
                   Live 20 Hz Multi-Physics Telemetry Stream
                 </h3>
+                <PanelInfoModal
+                  title="3D Twin Live Telemetry Bus & Physics Solution"
+                  subtitle="20 Hz Differential Equation Engine & Virtual Sensor Bus"
+                  description="Real-time multi-physics state estimation running in lockstep with the interactive 3D WebGL/Three.js engine model. Computes 1D thermodynamic differential equations for manifold intake, cylinder combustion, and thermal dissipation, updating visual heatmaps and component fault highlights."
+                  formula={`Cylinder Thermal Balance: m_cyl · c_v · (dT_cyl/dt) = Q_combustion - Q_cooling - W_indicated
+Cooling Heat Transfer: Q_cooling = h_air · A_fin · (T_cyl - T_amb)
+Manifold Mass Flow: dm_air/dt = C_d · A_throttle · P_amb / √(R_air · T_amb) · Φ(P_map/P_amb)
+Component Deformation: σ_vib = E · ε_strain(a_vib(t))`}
+                  calculationSteps={[
+                    { label: 'Kinematic Crankshaft Angle', detail: 'Tracks continuous angular position θ_crank and maps 4-stroke cycle phases.' },
+                    { label: 'Thermodynamic ODE Integration', detail: 'Integrates thermal and pressure differential equations at 20 Hz.' },
+                    { label: 'Virtual Sensor Synthesis', detail: 'Estimates internal temperatures and pressures at un-instrumented mechanical nodes.' },
+                    { label: '3D Mesh Heatmap Mapping', detail: 'Interpolates component temperatures to drive dynamic shader vertex coloring in the Three.js viewport.' },
+                  ]}
+                  sensorInputs={['ENGINE_RPM', 'MAP', 'CHT_1..4', 'EGT_1..4', 'OIL_PRESS', 'OIL_TEMP', 'VIB_RMS']}
+                  thresholds="Frame Rate: 20 Hz sync | Shader Update: 60 FPS interpolation"
+                  provenance="Rotax 912 iSc 1D Lumped-Parameter ODE Model & Three.js WebGL Engine"
+                />
               </div>
               <p className="mt-1 text-xs text-slate-500 font-mono">
                 Real-time differential equation solutions for thermodynamic manifolds, combustion, and fluid dynamics.
