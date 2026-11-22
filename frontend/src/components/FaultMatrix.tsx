@@ -78,7 +78,7 @@ export const FaultMatrix: React.FC<FaultMatrixProps> = ({ state, onCommand }) =>
           return (
             <button
               key={f.id}
-              onClick={() => onCommand({ action: 'SET_FAULT', fault_id: f.id })}
+              onClick={() => onCommand({ action: 'SET_FAULT', fault_id: f.id, ramp_duration_sec: 2.8, severity: 0.85 })}
               className={`p-3 rounded-sm text-left transition-colors border relative flex flex-col justify-between group ${
                 isTriggered
                   ? 'bg-critical-dim border-critical-muted'

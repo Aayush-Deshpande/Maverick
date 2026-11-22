@@ -148,11 +148,14 @@ _THREEJS_TWIN = _REPO_ROOT / "apps" / "threejs_twin"
 
 @app.get("/app", include_in_schema=False)
 def serve_threejs_twin():
-    """Serve the browser twin from the same local service as its simulation APIs."""
-    return RedirectResponse("/apps/threejs_twin/")
+    """Serve the 3D digital twin (redirects to the modern R3F 3D twin, or legacy threejs if present)."""
+    if _THREEJS_TWIN.exists():
+        return RedirectResponse("/apps/threejs_twin/")
+    return RedirectResponse("/#twin")
 
 
-app.mount("/apps/threejs_twin", StaticFiles(directory=_THREEJS_TWIN, html=True), name="threejs-twin-assets")
+if _THREEJS_TWIN.exists():
+    app.mount("/apps/threejs_twin", StaticFiles(directory=_THREEJS_TWIN, html=True), name="threejs-twin-assets")
 
 # compressed engine models (D49): the synced frontend copy, else the committed canonical folder, so the 3D twin
 # page always loads the same Draco files as the console viewer (never the 80 MB uncompressed exports)

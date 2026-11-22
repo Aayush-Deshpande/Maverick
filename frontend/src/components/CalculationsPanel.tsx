@@ -70,16 +70,21 @@ export const CalculationsPanel: React.FC<CalculationsPanelProps> = ({ state }) =
   const t = state.telemetry;
   const a = state.analytics;
   const res = a.residuals || {};
+  const getResidual = (key: string): number => {
+    const raw = res[key] ?? res[key.replace('d_', '').toLowerCase()] ?? res[key.toLowerCase()] ?? 0;
+    return typeof raw === 'number' && Number.isFinite(raw) ? raw : 0;
+  };
 
-  const zScores = Object.entries(DIVISORS).map(([key, div]) => Math.abs(res[key] ?? 0) / div);
+  const zScores = Object.entries(DIVISORS).map(([key, div]) => Math.abs(getResidual(key)) / div);
   const zMax = zScores.length ? Math.max(...zScores) : 0;
   const zRms = zScores.length ? Math.sqrt(zScores.reduce((s, z) => s + z * z, 0) / zScores.length) : 0;
   const zComposite = 0.65 * zMax + 0.35 * zRms;
   const computedAnomaly = 1 - Math.exp(-0.45 * zComposite);
 
-  const anomalyTone = a.anomaly_score >= 0.65 ? 'critical' : a.anomaly_score >= 0.35 ? 'warning' : 'nominal';
+  const effectiveAnomaly = typeof a.anomaly_score === 'number' && a.anomaly_score > 0 ? Math.min(1.0, a.anomaly_score / 3.0) : computedAnomaly;
+  const anomalyTone = effectiveAnomaly >= 0.65 ? 'critical' : effectiveAnomaly >= 0.35 ? 'warning' : 'nominal';
 
-  const dCht2 = res.d_CHT_2 ?? 0;
+  const dCht2 = getResidual('d_CHT_2');
   const expectedCht2 = t.CHT_2 - dCht2;
 
   const sanity = a.sensor_sanity;

@@ -41,3 +41,4 @@ Restore with git mv and record why in DECISIONS.md (archive_tracked/AGENTS.md).
 2026-11-19 | P0-04 | data/documents/ROTAX_912_iS_Service_Bulletins_SB_SI.pdf -> archive_tracked/synthetic_rag_corpus/ROTAX_912_iS_Service_Bulletins_SB_SI.pdf | AI-generated text named as OEM/DRDO manuals; never index (D34, D44)
 2026-11-19 | P0-04 | web/Crazy_Landing -> archive_tracked/crazy_landing | Prasad's separate experiment (was web/usavionix/mirror) (D42)
 2026-11-19 | P0-07 | web/site/assets/models/{rotax_915is,austro_ae300,vrde_jayem_2_2l}.glb -> archive_tracked/web_site_old_models/ | older/wrong exports (the "915" was the 912 file); the site now gets the canonical models via sync_web_models.mjs (D49)
+2026-11-22 | M0-10 | apps/threejs_twin -> archive_tracked/threejs_twin | retired old static three.js client (D10, D12, D75); modern React Three Fiber twin active in web app (/app redirects to /#twin)

@@ -56,10 +56,12 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 sm:gap-3 flex-wrap">
         {/* Left: Identity */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          <button
+          <div
+            role="button"
+            tabIndex={0}
             onClick={onGoLanding}
-            disabled={!onGoLanding}
-            className="flex items-center gap-2 text-left group transition-opacity hover:opacity-90 disabled:cursor-default"
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onGoLanding?.(); }}
+            className={`flex items-center gap-2 text-left group transition-opacity hover:opacity-90 ${onGoLanding ? 'cursor-pointer' : 'cursor-default'}`}
             title={onGoLanding ? 'Return to Platform Overview' : undefined}
           >
             <span className="w-8 h-8 sm:w-9 sm:h-9 grid place-items-center overflow-hidden rounded-sm bg-surface-card border border-surface-border shadow-sm group-hover:border-accent transition-colors shrink-0">
@@ -88,7 +90,7 @@ export const Header: React.FC<HeaderProps> = ({
                 </>}
               </div>
             </div>
-          </button>
+          </div>
         </div>
 
         {/* Center: Live status badges */}

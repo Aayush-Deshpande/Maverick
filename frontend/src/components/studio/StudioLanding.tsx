@@ -11,7 +11,7 @@ export const engines = [
   { id: 'vrde_jayem_2_2l', short: 'VRDE 2.2', name: 'VRDE–Jayem 2.2L', family: 'Heavy fuel · Parameterised profile', power: '180', unit: 'hp', architecture: 'Inline-four', detail: 'An illustrative heavy-fuel engine assembly for investigating a parameterised indigenous propulsion profile.', note: 'Illustrative geometry · assumed profile parameters' },
 ];
 
-type Workspace = 'runtime' | 'twin' | 'legacy';
+type Workspace = 'runtime' | 'twin' | 'legacy' | 'tactical';
 export function StudioLanding({ onLaunchConsole }: { onLaunchConsole?: (target?: Workspace) => void }) {
   const [selected, setSelected] = useState(0);
   const [interactive, setInteractive] = useState(false);

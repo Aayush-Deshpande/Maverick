@@ -184,6 +184,8 @@ export type GCSRole = 'OPERATOR' | 'PROPULSION_ENGINEER' | 'MAINTENANCE_CREW';
 export interface ControlCommand {
   action: 'START_ENGINE' | 'STOP_ENGINE' | 'SET_FAULT' | 'CLEAR_FAULT' | 'SET_THROTTLE' | 'SET_ALTITUDE' | 'SET_OAT' | 'SET_REGIME' | 'SET_ROLE' | 'EXPORT_DEBRIEF';
   fault_id?: number;
+  severity?: number;
+  ramp_duration_sec?: number;
   throttle?: number;
   altitude_ft?: number;
   oat_c?: number;

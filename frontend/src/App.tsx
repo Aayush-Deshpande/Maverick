@@ -43,12 +43,14 @@ import {
 } from 'lucide-react';
 
 export function App() {
-  const [workspace, setWorkspace] = useState<'landing' | 'runtime' | 'twin' | 'legacy'>(() => {
+  const [workspace, setWorkspace] = useState<'landing' | 'runtime' | 'twin' | 'tactical'>(() => {
     try {
       const p = new URLSearchParams(window.location.search).get('workspace');
-      if (p === 'twin' || p === 'runtime' || p === 'legacy' || p === 'landing') return p;
+      if (p === 'twin' || p === 'runtime' || p === 'tactical' || p === 'landing') return p;
+      if (p === 'legacy') return 'tactical';
       const h = window.location.hash.replace('#', '');
-      if (h === 'twin' || h === 'runtime' || h === 'legacy' || h === 'landing') return h;
+      if (h === 'twin' || h === 'runtime' || h === 'tactical' || h === 'landing') return h;
+      if (h === 'legacy') return 'tactical';
     } catch {}
     return 'landing';
   });
@@ -92,7 +94,7 @@ export function App() {
   };
 
   if (workspace === 'landing') {
-    return <LandingPage serverUrl={serverUrl} onLaunchConsole={(target) => setWorkspace(target || 'runtime')} />;
+    return <LandingPage serverUrl={serverUrl} onLaunchConsole={(target) => setWorkspace(target === 'legacy' ? 'tactical' : (target || 'runtime'))} />;
   }
 
   return (
@@ -104,7 +106,7 @@ export function App() {
         activeRole={activeRole}
         onSelectRole={handleSelectRole}
         onOpenSettings={() => setIsModalOpen(true)}
-        runtimeMode={workspace !== 'legacy'}
+        runtimeMode={workspace !== 'tactical'}
         onGoLanding={() => setWorkspace('landing')}
       />
 
@@ -148,9 +150,9 @@ export function App() {
               3D twin
             </button>
             <button
-              onClick={() => setWorkspace('legacy')}
+              onClick={() => setWorkspace('tactical')}
               className={`rounded-sm px-2.5 sm:px-3 py-1 transition-colors shrink-0 whitespace-nowrap ${
-                workspace === 'legacy'
+                workspace === 'tactical'
                   ? 'bg-accent text-white font-medium shadow-sm'
                   : 'text-slate-400 hover:text-white'
               }`}
@@ -165,12 +167,11 @@ export function App() {
           <EngineRuntimeConsole serverUrl={serverUrl} />
         ) : workspace === 'twin' ? (
           // The 3D twin tab is only the engine (keyboard-driven): same store, same fault API, highlights from
-          // state.highlights and the component manifests, so console, twin and GCS always agree. The old apps/threejs_twin page
-          // (own fault-to-part table, three engines) stays reachable at {serverUrl}/app until it is archived (D10).
+          // state.highlights and the component manifests, so console, twin and GCS always agree.
           <TwinWorkspace serverUrl={serverUrl} onNavigateToRuntime={() => setWorkspace('runtime')} />
         ) : (
           <>
-            {workspace === 'legacy' && !isConnected && (
+            {workspace === 'tactical' && !isConnected && (
               <div className="surface-panel surface-panel-critical p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-sm bg-critical-dim flex items-center justify-center text-critical shrink-0">
@@ -304,7 +305,7 @@ export function App() {
         </Suspense>
       </main>
 
-      {workspace === 'legacy' ? <footer className="bg-surface/80 border-t border-surface-border py-3 px-4 mt-auto">
+      {workspace === 'tactical' ? <footer className="bg-surface/80 border-t border-surface-border py-3 px-4 mt-auto">
         <div className="max-w-7xl mx-auto flex flex-col gap-2.5 text-xs text-slate-500">
           <div className="flex items-center justify-between pb-2 border-b border-surface-border/50">
             <a

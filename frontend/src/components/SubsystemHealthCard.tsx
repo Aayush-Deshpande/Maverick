@@ -70,7 +70,8 @@ export const SubsystemHealthCard: React.FC<SubsystemHealthCardProps> = ({ state 
     },
   ];
 
-  const getScoreClasses = (val: number) => {
+  const getScoreClasses = (val: number | null | undefined) => {
+    if (val == null) return 'text-slate-400 bg-white/5 border-surface-border';
     if (val < 0.5) return 'text-critical bg-critical-dim border-critical-muted';
     if (val < 0.8) return 'text-warning bg-warning-dim border-warning-muted';
     return 'text-success bg-success-dim border-success-muted';
@@ -112,12 +113,12 @@ export const SubsystemHealthCard: React.FC<SubsystemHealthCardProps> = ({ state 
               overallHealth
             )}`}
           >
-            {overallHealth >= 0.8 ? (
+            {overallHealth != null && overallHealth >= 0.8 ? (
               <ShieldCheck className="w-3.5 h-3.5" />
-            ) : (
+            ) : overallHealth != null ? (
               <AlertTriangle className="w-3.5 h-3.5" />
-            )}
-            <span>{(overallHealth * 100).toFixed(0)}%</span>
+            ) : null}
+            <span>{overallHealth != null ? `${(overallHealth * 100).toFixed(0)}%` : 'NO DATA'}</span>
           </span>
         </div>
       </div>

@@ -8,7 +8,7 @@ import { requestDemo } from '../../demoIntent';
 import { SortieFilm } from '../sortie/SortieFilm';
 import './survey.css';
 
-type Workspace = 'runtime' | 'twin' | 'legacy';
+type Workspace = 'runtime' | 'twin' | 'legacy' | 'tactical';
 interface Props { serverUrl: string; onLaunchConsole?: (target?: Workspace) => void }
 
 const ENGINES = [

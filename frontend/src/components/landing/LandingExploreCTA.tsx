@@ -5,7 +5,7 @@ interface LandingExploreCTAProps {
   onLaunchConsole?: () => void;
   onOpenTwin?: () => void;
   onOpenLegacy?: () => void;
-  onLaunch?: (target?: 'runtime' | 'twin' | 'legacy') => void;
+  onLaunch?: (target?: 'runtime' | 'twin' | 'legacy' | 'tactical') => void;
 }
 
 export const LandingExploreCTA: React.FC<LandingExploreCTAProps> = ({
@@ -24,7 +24,7 @@ export const LandingExploreCTA: React.FC<LandingExploreCTAProps> = ({
   };
   const handleOpenLegacy = () => {
     if (onOpenLegacy) onOpenLegacy();
-    else if (onLaunch) onLaunch('legacy');
+    else if (onLaunch) onLaunch('tactical');
   };
   return (
     <section id="explore" className="py-24 sm:py-32 px-4 sm:px-6 max-w-7xl mx-auto">

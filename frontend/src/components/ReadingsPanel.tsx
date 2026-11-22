@@ -89,7 +89,8 @@ export const ReadingsPanel: React.FC<ReadingsPanelProps> = ({ state }) => {
   ];
 
   const rows = channels.map((c) => {
-    const residual = res[c.key] ?? 0;
+    const rawResidual = res[c.key] ?? res[c.key.replace('d_', '').toLowerCase()] ?? res[c.key.toLowerCase()] ?? 0;
+    const residual = typeof rawResidual === 'number' && Number.isFinite(rawResidual) ? rawResidual : 0;
     const expected = c.actual - residual;
     const z = Math.abs(residual) / c.divisor;
     let status: Status = 'NOMINAL';

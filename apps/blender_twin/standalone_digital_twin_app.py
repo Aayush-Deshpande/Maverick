@@ -927,8 +927,18 @@ class TelemetryReceiverThread(threading.Thread):
                     cyl = f0.get('cylinder')
                     cyl_str = f" [CYL {cyl}]" if cyl is not None else ""
                     client_state.active_commanded_fault_name = f"{fid} {fname}{cyl_str}"
+                    # Map canonical fault ID (F19, F05, etc.) to 1-8 for camera framing and highlighting
+                    fid_map = {
+                        'F19': 1, 'F05': 2, 'F01': 3, 'F23': 4,
+                        'F27': 5, 'F31': 6, 'F32': 7, 'F11': 8, 'F08': 8
+                    }
+                    num_id = fid_map.get(fid, 0)
+                    if num_id > 0 and client_state.active_commanded_fault_id != num_id:
+                        client_state.active_commanded_fault_id = num_id
                 else:
                     client_state.active_commanded_fault_name = "NOMINAL"
+                    if client_state.active_commanded_fault_id > 0:
+                        client_state.active_commanded_fault_id = 0
 
                 # Telemetry channels from real readings and environment
                 rd = data.get('readings', {})
@@ -2087,6 +2097,7 @@ class OT_DigitalTwinSimulator(bpy.types.Operator):
                 client_state.last_highlights_hash = hl_hash
                 if current_hl:
                     client_state.active_subsystem_id = 0
+                    update_camera_for_backend_fault()
                     apply_highlights(current_hl)
                 elif client_state.active_commanded_fault_id > 0:
                     update_camera_for_backend_fault()

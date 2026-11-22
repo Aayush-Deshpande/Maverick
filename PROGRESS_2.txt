@@ -6,19 +6,20 @@ Update the RESUME HERE block at every commit and at the end of every session.
 Part 1 historical session log (Phases 0 through 7, 19 Nov - 22 Nov 2026) is preserved in PROGRESS.txt.
 
 =====================================================================================================================
-RESUME HERE  (last updated 22 Nov 2026, Phase 8 UI-09 Twin Workspace Laptop Polish & Engine Keep-Alive)
+RESUME HERE  (last updated 22 Nov 2026, Phase 0/8 M0-08c Tactical GCS Modernization, Blender Twin Sync & Retirement)
 =====================================================================================================================
-Phase:        Phase 8 (Operator UX / 3D Viewport & Production Readiness Polish).
-Card:         UI-09 (Twin Workspace Laptop Responsive Layout, Fault Card Rescale, Keep-Alive, and S02 False Bias Elimination):
-              1. Header collision resolution: streamlined single-row flexbar removing redundant 'POWERPLANT' and 'VIEW' text labels; eliminated overlapping button elements on laptop screens (< 1366px).
-              2. Fault card rescaling: compressed aside to w-[220px], switched to overflow-hidden (zero scrollbar needed), and condensed footer shortcuts into sleek 2-line mini strip with clear all (X), undo (Z), and cylinder cycling (C).
-              3. Engine keep-alive & Start button: updated backend reset/start to warm start healthy cruise RPM immediately; added auto-start keepalive and dedicated pulsating START ENGINE controls in both the header and bottom annunciator strip.
-              4. S02 false bias elimination: eliminated S02 sensor bias artifact and blue ECU highlight on fault clearance (X); passed filtered highlights directly to EngineViewer3D.
-              5. Studio lighting and material calibration: switched landing engine inset to procedural studio environment, eliminating blown-out white rendering on metallic Austro AE300 and VRDE models.
+Phase:        Phase 0 / Phase 8 (Platform Harmonization, Tactical GCS Modernization & Blender Twin CAD Sync).
+Card:         M0-08c (Tactical GCS Fast Interactive Ramps, Dual Residuals, Dynamic Subsystem Health, Blender Sync & ThreeJS Retirement):
+              1. Fast interactive ramps: in backend/server/legacy_adapter.py, SET_FAULT defaults to ramp_duration_sec = 2.8s and severity = 0.85 (overriding the 10-minute 600s ramp), making fault injections immediate.
+              2. Dual-keyed residuals: populated both canonical lowercase and legacy d_-prefixed keys (d_CHT_1..4, d_EGT_1..4, d_OIL_PRESS, d_OIL_TEMP, d_FUEL_FLOW, d_MAP, d_BUS_VOLTAGE, d_VIB_RMS) without regex ratchet regression.
+              3. Dynamic analytics & 5-subsystem health: populated anomaly_score, health_index, diagnosed_fault_id, rul_p10_hours, and dynamic 5-subsystem health (propulsion, fuel_system, electrical, thermal, mechanical) derived from live residuals.
+              4. Frontend Tactical GCS modernization: modernized workspace mode to 'tactical' (#tactical, #legacy backwards compatible); SubsystemHealthCard cleanly displays 'NO DATA' when overallHealth is null, eliminating the false 0% bug; CalculationsPanel and ReadingsPanel read live dual-keyed residuals and normalized anomaly scores; Header eliminates nested button DOM warnings.
+              5. Blender standalone digital twin sync: in apps/blender_twin/standalone_digital_twin_app.py, mapped active_faults to client_state.active_commanded_fault_id (1..8) to automatically swoop the CAD camera to the fault station and pulse component emission shaders.
+              6. Retired old ThreeJS twin: retired apps/threejs_twin to archive_tracked/threejs_twin per D10, D12, and D75; updated backend /app route to redirect to modern R3F twin (/#twin).
 Branch:       Beta
-Last commit:  (pending UI-09 commit)
-State:        52/52 Vitest passed, 0 tsc errors, 10/10 backend pytest passed, Uvicorn running on 8000.
-Latest:       Clean layout across all laptop viewports, engine running nominal by default.
+Last commit:  680bf5e (pending M0-08c commit)
+State:        52/52 Vitest passed, 0 tsc errors, 17/17 legacy adapter pytest passed, Uvicorn running on 8000.
+Latest:       Tactical GCS fully live and responsive; fast 2.8s ramps; Blender twin camera and shader auto-sync; apps/threejs_twin safely archived.
 Next step:    Phase 8 UX-02 (Time Machine mission timeline scrubber & historical replay).
 Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produce yet (lambda, timing, BSFC, power,
               vibration, GO/NO-GO); some may show blanks or crash on .toFixed(null) until M0-09. Beta only.
@@ -268,3 +269,30 @@ Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produ
   * Docs site build: `npm run build` succeeded cleanly in 27.39s.
   * Frontend unit tests: 52/52 Vitest tests passed across 16 test files (100% PASS).
   * TypeScript check: Clean (0 errors via `npx tsc --noEmit` across both projects). Working tree clean.
+
+=== 22 Nov 2026 Phase 0/8 Card M0-08c (Tactical GCS Fast Ramps, Dual Residuals, Dynamic Subsystem Health, Blender Twin Sync & ThreeJS Retirement) (AI: Antigravity)
+- Fast Interactive Fault Ramps & Dual-Keyed Residuals:
+  * In `backend/server/legacy_adapter.py`, updated `SET_FAULT` to default `ramp_duration_sec = 2.8s` and `severity = 0.85` (overriding the 600s/10-minute ramp), allowing immediate observable thermal divergence within 2.8 seconds.
+  * Mapped `analytics["residuals"]` to provide both canonical lowercase keys (`cht_1`, `oil_p`, etc.) and legacy keys (`d_CHT_1`..`4`, `d_EGT_1`..`4`, `d_OIL_PRESS`, `d_OIL_TEMP`, `d_MAP`, `d_BUS_VOLTAGE`, `d_VIB_RMS`) dynamically without regex ratchet regression.
+  * Dynamically calculated 5-subsystem health metrics (`propulsion`, `fuel_system`, `electrical`, `thermal`, `mechanical`) based on normalized channel residuals.
+  * Forwarded live `anomaly_score`, `health_index`, `diagnosed_fault_id`, and `rul_p10_hours` directly from detection and isolator hypotheses.
+  * In `frontend/src/components/FaultMatrix.tsx`, set `ramp_duration_sec: 2.8, severity: 0.85`.
+- Tactical GCS Modernization & Zero False Bias:
+  * Modernized `frontend/src/App.tsx` workspace state to `'tactical'`, supporting both `#tactical` and `#legacy` URLs seamlessly.
+  * Fixed `SubsystemHealthCard.tsx` to handle `overallHealth == null` cleanly by displaying `'NO DATA'` instead of the false `'[!] 0%'` alert.
+  * Updated `ReadingsPanel.tsx` and `CalculationsPanel.tsx` to read dual-keyed residuals and normalized anomaly score.
+  * Fixed `Header.tsx` brand button nested inside identity container to eliminate React `validateDOMNesting: <button> cannot appear as a descendant of <button>` console warnings.
+- Blender Standalone Digital Twin CAD Sync:
+  * In `apps/blender_twin/standalone_digital_twin_app.py`, wired `active_faults` from telemetry stream directly into `client_state.active_commanded_fault_id`.
+  * Triggered `update_camera_for_backend_fault()` and `apply_highlights()` so the Blender camera glides to the faulty station and pulses the emission shader whenever a fault is injected from the Tactical GCS. Resumes continuous 360° orbit and solid PBR on fault clear.
+- Archived Obsolete Standalone Three.js Twin:
+  * Retired `apps/threejs_twin` to `archive_tracked/threejs_twin` with `git mv` per D10, D12, and D75.
+  * Recorded move in `archive_tracked/ARCHIVE_LOG.txt` and `DECISIONS_2.md` (D75).
+  * Updated `backend/server/main.py` so `/app` smoothly redirects to modern R3F twin `/#twin`.
+- Verification:
+  * `tests/api/test_legacy_adapter.py`: 17/17 tests passed (100% PASS).
+  * `tests/test_no_truth_leak.py`: 2/2 tests passed (100% PASS).
+  * `tests/test_engine_agnostic_ratchet.py`: 0 new engine literals in `legacy_adapter.py`, matches baseline.
+  * Frontend: 52/52 Vitest tests passed across 16 test files (100% PASS).
+  * TypeScript check: `npx tsc --noEmit` clean with 0 errors.
+  * Browser verification: live non-zero residuals, live health index badges, live calculations.
