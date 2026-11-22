@@ -17,9 +17,9 @@ Card:         M0-08k (Modernized Single-Card Tactical AI Copilot, Dynamic State-
               5. Dual-Engine Architecture Notice: Transparently displays: "Dual Engine: Operates on local LLM (Ollama / Qwen2.5 / Sarvam) for edge defense deployments; powered by Google Gemini for cloud demonstration."
               6. Interactive Voice Controls: Prominent Hands-Free Voice toggle, audio mute/unmute (`Volume2`/`VolumeX`), speech synthesis barge-in interrupt, conversation history clear, and warmup test.
 Branch:       Beta
-Last commit:  95fdd3c M0-08k: modernize unified tactical copilot, dynamic state-aware mic, and dual-engine architecture notice
-State:        52/52 Vitest passed (100%), 0 tsc errors, 28/28 pytest passed. Both `frontend` and `docs_site` build cleanly in production mode.
-Latest:       All GCS subtabs feature comprehensive (i) calculation modals, tactile active-press microanimations, clean sans-serif typography, and unified AI copilot with dual-engine deployment notice.
+Last commit:  b70aa13 DOC: update .env.example with Gemini cloud agent and server parameters, add frontend .env.example
+State:        All branches (Beta, main) synced and pushed to origin. Vercel deployments verified HTTP 200 (Digital Twin & Docs). Render Docker build unblocked. Gemini LLM agent tested & verified.
+Latest:       All GCS subtabs feature comprehensive (i) calculation modals, tactile active-press microanimations, clean sans-serif typography, unified AI copilot with dual-engine deployment notice, and verified Gemini cloud integration.
 Next step:    Phase 8 UX-02 (Time Machine mission timeline scrubber & historical replay).
 =====================================================================================================================
 Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produce yet (lambda, timing, BSFC, power,
