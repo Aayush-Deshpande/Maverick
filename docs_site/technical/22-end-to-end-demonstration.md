@@ -6,6 +6,16 @@ The scenario below uses a cylinder CHT overheat on the Rotax 912 iS as a concret
 
 ---
 
+## Live System Demonstration Video
+
+A video walkthrough of ANUMAAN in action across the complete flight deck pipeline, demonstrating real-time 20 Hz multi-physics telemetry, 3D digital twin viewport modes, live failure injection, and tactical glide cone derate advisories:
+
+[![ANUMAAN System Demonstration Walkthrough](https://img.youtube.com/vi/L97JAlS9Z7c/maxresdefault.jpg)](https://youtu.be/L97JAlS9Z7c)
+
+Watch the complete demonstration on YouTube: [https://youtu.be/L97JAlS9Z7c](https://youtu.be/L97JAlS9Z7c)
+
+---
+
 ## The 6-Stage Operational Flight Demonstration
 
 ```mermaid

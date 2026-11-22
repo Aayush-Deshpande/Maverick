@@ -38,6 +38,8 @@ import {
   Cpu,
   Wrench,
   User,
+  Play,
+  ArrowUpRight,
 } from 'lucide-react';
 
 export function App() {
@@ -302,27 +304,55 @@ export function App() {
         </Suspense>
       </main>
 
-      {workspace === 'legacy' ? <footer className="bg-surface/80 border-t border-surface-border py-3 px-4 text-center mt-auto">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
-          <div className="flex items-center gap-2">
-            <Shield className="w-3.5 h-3.5" />
-            <span>DRDO / iDEX PS-26054 — Rotax 912 iS Sport High-Altitude MALE UAV Digital Twin</span>
+      {workspace === 'legacy' ? <footer className="bg-surface/80 border-t border-surface-border py-3 px-4 mt-auto">
+        <div className="max-w-7xl mx-auto flex flex-col gap-2.5 text-xs text-slate-500">
+          <div className="flex items-center justify-between pb-2 border-b border-surface-border/50">
+            <a
+              href="https://youtu.be/L97JAlS9Z7c"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-red-500 hover:text-red-400 font-mono text-xs font-semibold transition-colors"
+            >
+              <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-red-600 text-white"><Play size={9} fill="currentColor" /></span>
+              <span>Watch Demonstration Video: ANUMAAN System Walkthrough (YouTube)</span>
+              <ArrowUpRight size={12} />
+            </a>
           </div>
-          <div>
-            <span>
-              Active Role: <span className="text-accent font-medium">{activeRole}</span>
-            </span>
-            <span className="mx-2 text-slate-700">·</span>
-            <span>
-              FADEC Lane: <span className="text-slate-300 font-medium">{state.telemetry.FADEC_ACTIVE_LANE}</span>
-            </span>
-            <span className="mx-2 text-slate-700">·</span>
-            <span>
-              Sortie: <span className="text-slate-300 font-medium">{state.sortie_id}</span>
-            </span>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Shield className="w-3.5 h-3.5" />
+              <span>DRDO / iDEX PS-26054 · Rotax 912 iS Sport High-Altitude MALE UAV Digital Twin</span>
+            </div>
+            <div>
+              <span>
+                Active Role: <span className="text-accent font-medium">{activeRole}</span>
+              </span>
+              <span className="mx-2 text-slate-700">·</span>
+              <span>
+                FADEC Lane: <span className="text-slate-300 font-medium">{state.telemetry.FADEC_ACTIVE_LANE}</span>
+              </span>
+              <span className="mx-2 text-slate-700">·</span>
+              <span>
+                Sortie: <span className="text-slate-300 font-medium">{state.sortie_id}</span>
+              </span>
+            </div>
           </div>
         </div>
-      </footer> : <footer className="bg-surface/80 border-t border-surface-border py-3 px-4 text-center mt-auto text-xs text-slate-500">DRDO / iDEX PS-26054 · Simulation-backed multi-engine condition monitoring demonstrator</footer>}
+      </footer> : <footer className="bg-surface/80 border-t border-surface-border py-3 px-4 mt-auto text-xs text-slate-500">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2.5">
+          <a
+            href="https://youtu.be/L97JAlS9Z7c"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 text-red-500 hover:text-red-400 font-mono text-xs font-semibold transition-colors order-first"
+          >
+            <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-red-600 text-white"><Play size={9} fill="currentColor" /></span>
+            <span>Watch Demonstration Video: ANUMAAN Walkthrough (YouTube)</span>
+            <ArrowUpRight size={12} />
+          </a>
+          <span>DRDO / iDEX PS-26054 · Simulation-backed multi-engine condition monitoring demonstrator</span>
+        </div>
+      </footer>}
 
       <Suspense fallback={null}>
         <ConnectionModal

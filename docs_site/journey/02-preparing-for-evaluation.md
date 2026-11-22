@@ -78,4 +78,14 @@ We are ready.
 
 ---
 
+## Watch Our System Walkthrough
+
+You can watch our full video demonstration walking through the real-time flight deck, failure injection, and 3D digital twin:
+
+[![Watch ANUMAAN System Demonstration](https://img.youtube.com/vi/L97JAlS9Z7c/maxresdefault.jpg)](https://youtu.be/L97JAlS9Z7c)
+
+Watch on YouTube: [https://youtu.be/L97JAlS9Z7c](https://youtu.be/L97JAlS9Z7c)
+
+---
+
 Back to [SIH Journey Overview](index.md) or explore our [Technical Documentation](../technical/01-introducing-ps26054.md).

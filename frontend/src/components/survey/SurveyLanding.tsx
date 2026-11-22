@@ -205,6 +205,22 @@ export function SurveyLanding({ serverUrl, onLaunchConsole }: Props) {
     </main>
 
     <footer className="sv-footer">
+      <div className="sv-footer-video-strip">
+        <a
+          href="https://youtu.be/L97JAlS9Z7c"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="sv-footer-video-btn"
+        >
+          <span className="sv-video-badge">
+            <Play size={12} fill="currentColor" />
+          </span>
+          <span className="sv-video-label">DEMONSTRATION VIDEO</span>
+          <span className="sv-video-text">Watch the full ANUMAAN 3D digital twin &amp; flight deck walkthrough</span>
+          <ArrowUpRight size={14} className="sv-video-arrow" />
+        </a>
+      </div>
+
       <span className="sv-brand-word">ANUMAAN</span>
       <span>Team Midnight Ciphers · DRDO SIH PS-26054</span>
       <a href="https://anumaan-doc-1797.vercel.app/" target="_blank" rel="noreferrer">Engineering notes <ArrowUpRight size={13} aria-hidden /></a>

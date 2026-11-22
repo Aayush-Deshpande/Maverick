@@ -6,14 +6,14 @@ Update the RESUME HERE block at every commit and at the end of every session.
 Part 1 historical session log (Phases 0 through 7, 19 Nov - 22 Nov 2026) is preserved in PROGRESS.txt.
 
 =====================================================================================================================
-RESUME HERE  (last updated 22 Nov 2026, Phase 8 DOC-07 Humanize SIH Journey & College Defense)
+RESUME HERE  (last updated 22 Nov 2026, Phase 8 DOC-08 Demonstration Video Integration)
 =====================================================================================================================
 Phase:        Phase 8 (Operator UX / 3D Viewport & Production Readiness Polish).
-Card:         DOC-07 (Humanize SIH Journey, DRDO Visit & College Evaluation): Rewrote the entire "Our SIH Journey" section in warm, simple, everyday student language. Documented the 2 September field visit to DRDO R&DE (Engrs) Pune with gate archive photo (`DRDO.webp`); shared real stories of sleepless nights, hostel labs, canteen chai, and late-night debugging; integrated institute-level presentation round at RSCOE incubation center (`sih-2026-1.jpg`, `sih-2026-2.jpg`) demonstrating live failure injections to faculty evaluators; upgraded image renderers with team photo archive frames.
+Card:         DOC-08 (System Demonstration Video Integration across Main App & Docs): Integrated YouTube system demonstration video (`https://youtu.be/L97JAlS9Z7c`). Main frontend website: added prominent demo video link button directly at the top of the footer in `SurveyLanding.tsx`, `LandingFooter.tsx`, and `App.tsx` console footers with red play badge and hover elevation. Documentation site: embedded responsive 16:9 player within a tactile window chrome frame on `HomePage.tsx`, added linked video cards to `22-end-to-end-demonstration.md` and `02-preparing-for-evaluation.md`, and added quick links in `Footer.tsx`.
 Branch:       Beta
-Last commit:  526b88b DOC-06: record documentation site visual polish and de-slopping in PROGRESS_2.txt
+Last commit:  231b375 DOC-07: humanize SIH journey with DRDO Pune visit, hostel grind, and college evaluation
 State:        All documentation, viewport transitions, fault isolation workflows, and CI checks 100% green. 52/52 Vitest, 0 tsc errors.
-Latest:       Clean working tree, docs_site build clean (29.14s), frontend build clean (10s), zero console errors.
+Latest:       Clean working tree, docs_site build clean (27.39s), frontend build clean (10s), zero console errors.
 Next step:    Phase 8 UX-02 (Time Machine mission timeline scrubber & historical replay).
 Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produce yet (lambda, timing, BSFC, power,
               vibration, GO/NO-GO); some may show blanks or crash on .toFixed(null) until M0-09. Beta only.
@@ -247,3 +247,19 @@ Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produ
   * Docs site build: `npm run build` passed cleanly in 29.14s.
   * TypeScript check: 0 errors across `docs_site` and `frontend`.
   * Frontend Vitest: 52/52 tests passing (100% PASS). Working tree clean.
+
+=== 22 Nov 2026 Phase 8 Card DOC-08 (System Demonstration Video Integration across Main App & Docs) (AI: Antigravity)
+- Main Frontend Website (`frontend`):
+  * Prominent Footer Video Strip: Added an easy-to-spot demonstration video banner directly at the top of the footer in `SurveyLanding.tsx`, featuring a red play badge, "DEMONSTRATION VIDEO" tag, and title link to `https://youtu.be/L97JAlS9Z7c`.
+  * Styled in `survey.css` with subtle elevation hover, tactile borders, and red accent badge.
+  * Console Footers in `App.tsx`: Added YouTube walkthrough links to both legacy and standard console footers.
+  * `LandingFooter.tsx`: Added "Watch demo video" link button to footer navigation.
+- Documentation Site (`docs_site`):
+  * Architectural Embedded Video Player on `HomePage.tsx`: Added dedicated Section 03 "Watch ANUMAAN in Action" featuring a responsive 16:9 embedded player within an authentic window chrome frame, with live YouTube 1080p status tag, chapter indicators, and external link button.
+  * Markdown Integration: Added linked video showcase cards to `technical/22-end-to-end-demonstration.md` and `journey/02-preparing-for-evaluation.md`.
+  * Footer Link: Added direct video walkthrough link to `Footer.tsx`.
+- Verification:
+  * Zero em dashes across all modified files.
+  * Docs site build: `npm run build` succeeded cleanly in 27.39s.
+  * Frontend unit tests: 52/52 Vitest tests passed across 16 test files (100% PASS).
+  * TypeScript check: Clean (0 errors via `npx tsc --noEmit` across both projects). Working tree clean.

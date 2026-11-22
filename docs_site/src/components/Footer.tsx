@@ -33,6 +33,14 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             >
               Open the ANUMAAN live console &rarr;
             </a>
+            <a
+              href="https://youtu.be/L97JAlS9Z7c"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block pt-1 font-mono text-[11px] uppercase tracking-wider text-red-600 font-semibold hover:underline"
+            >
+              Watch system demo video (YouTube) &rarr;
+            </a>
           </div>
 
           <div>

@@ -1,6 +1,8 @@
 import React from "react";
 import {
     ArrowRight,
+    ArrowUpRight,
+    Play,
     Box,
     ShieldCheck,
     Activity,
@@ -281,7 +283,86 @@ export const HomePage: React.FC<HomePageProps> = ({
                     </div>
                 </section>
 
-                {/* 3. TECHNICAL SNAPSHOT (Contiguous Paneled Metrics Bar) */}
+                {/* 3. SYSTEM DEMONSTRATION VIDEO (Embedded Architectural Player) */}
+                <section className="py-16 px-4 sm:px-6 lg:px-12 border-b border-stone-200 bg-stone-100/40">
+                    <div className="max-w-5xl mx-auto space-y-6">
+                        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                            <div>
+                                <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-stone-500 font-semibold block">
+                                    [SYSTEM DEMO // VIDEO WALKTHROUGH]
+                                </span>
+                                <h2 className="text-2xl sm:text-3xl font-bold text-stone-900 mt-1 tracking-tight">
+                                    Watch ANUMAAN in Action
+                                </h2>
+                                <p className="text-xs text-stone-600 mt-1">
+                                    Full flight deck walkthrough, real-time multi-physics fault injection, and 3D digital twin visualization.
+                                </p>
+                            </div>
+                            <a
+                                href="https://youtu.be/L97JAlS9Z7c"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="btn-extend-tactile shrink-0"
+                            >
+                                <Play size={13} className="text-red-600" fill="currentColor" />
+                                <span>Open in YouTube</span>
+                                <ArrowUpRight size={13} />
+                            </a>
+                        </div>
+
+                        {/* Video Window Chrome Frame */}
+                        <div className="rounded-lg border border-stone-300 bg-white overflow-hidden shadow-xs">
+                            {/* Window Title Bar */}
+                            <div className="flex items-center justify-between px-4 py-2.5 bg-stone-100 border-b border-stone-200 font-mono text-[11px] text-stone-600">
+                                <div className="flex items-center gap-2">
+                                    <span className="size-2.5 rounded-full bg-stone-300 inline-block" />
+                                    <span className="size-2.5 rounded-full bg-stone-300 inline-block" />
+                                    <span className="size-2.5 rounded-full bg-stone-300 inline-block" />
+                                    <span className="ml-2 font-medium text-stone-800">ANUMAAN System Demonstration · Flight Deck &amp; 3D Twin Walkthrough (SIH 2026)</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-[10px] text-stone-600 uppercase font-semibold">
+                                    <span className="size-2 rounded-full bg-red-500 animate-pulse inline-block" />
+                                    <span>YouTube 1080p</span>
+                                </div>
+                            </div>
+
+                            {/* 16:9 Video Embed */}
+                            <div className="relative aspect-video w-full bg-stone-950">
+                                <iframe
+                                    className="w-full h-full border-0"
+                                    src="https://www.youtube-nocookie.com/embed/L97JAlS9Z7c?rel=0&amp;modestbranding=1"
+                                    title="ANUMAAN System Demonstration Video"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                    allowFullScreen
+                                />
+                            </div>
+
+                            {/* Video Metadata / Chapter Strip */}
+                            <div className="px-4 py-3 bg-stone-50 border-t border-stone-200 flex flex-wrap items-center justify-between gap-3 text-xs font-mono text-stone-600">
+                                <div className="flex items-center gap-3">
+                                    <span className="font-semibold text-stone-800">Featured Topics:</span>
+                                    <span>20 Hz Multi-Physics Twin</span>
+                                    <span>·</span>
+                                    <span>Draco 3D Viewport Modes</span>
+                                    <span>·</span>
+                                    <span>Live Fault Injection</span>
+                                    <span>·</span>
+                                    <span>Glide Cone &amp; Derate Advisory</span>
+                                </div>
+                                <a
+                                    href="https://youtu.be/L97JAlS9Z7c"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-stone-900 underline font-semibold hover:text-stone-700"
+                                >
+                                    youtu.be/L97JAlS9Z7c ↗
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                {/* 4. TECHNICAL SNAPSHOT (Contiguous Paneled Metrics Bar) */}
                 <section className="py-12 border-b border-stone-200 bg-stone-50/50 px-4 sm:px-6 lg:px-12">
                     <div className="space-y-6">
                         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
