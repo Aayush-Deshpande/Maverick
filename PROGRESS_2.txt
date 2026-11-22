@@ -6,14 +6,14 @@ Update the RESUME HERE block at every commit and at the end of every session.
 Part 1 historical session log (Phases 0 through 7, 19 Nov - 22 Nov 2026) is preserved in PROGRESS.txt.
 
 =====================================================================================================================
-RESUME HERE  (last updated 22 Nov 2026, Phase 8 UX-09 Clear All vs Stepped Isolation & Viewport Polish)
+RESUME HERE  (last updated 22 Nov 2026, Phase 8 DOC-06 Documentation Site Visual Polish & De-Slopping)
 =====================================================================================================================
 Phase:        Phase 8 (Operator UX / 3D Viewport & Production Readiness Polish).
-Card:         UX-09 (Differentiate Clear All and Clear One by One for Stepped Isolation): Separated 'X' (Clear All simultaneously) and 'Z' / 'R' / Backspace (Clear One by One, popping most recent fault for stepped diagnostic testing); hooked single-fault DELETE to `/api/v1/engines/{id}/faults/{uuid}`; updated Flight Deck Reference Guide. (UX-08: silky smooth 3D fault clear/reset transitions, exponential emissive decay via MathUtils.damp, concentric turntable rotation axis around engine center). (DOC-05: de-slopped technical documentation, updated to real 20 Hz multi-physics UKF, SAE J1939 CAN bus, and 3D viewport architecture; 0 em dashes).
+Card:         DOC-06 (Documentation Site Visual Overhaul & De-Slopping): Purged buzzword AI slop ("66 verified commits", "adversarial scrutiny", "ISO/STANAG/MIL-STD" badges in footer/hero); fixed mislabeled Austro AE300 engine card on home page; removed black `<pre>` container wrapping Mermaid diagrams and added fullscreen blueprint inspector modal; gave tables dedicated horizontal scrolling container; styled KaTeX display equations in clean mathematical cards with proper vector layout; replaced all outdated 30-Sep screenshots with live system captures in macOS/tactile window chrome frames.
 Branch:       Beta
-Last commit:  0ee65fc UX-09: differentiate clear all (X) and clear one by one (Z/R) for stepped fault isolation
+Last commit:  9c47b60 DOC-06: overhaul documentation UI, fix engine card mislabeling, and modernize technical prose
 State:        All documentation, viewport transitions, fault isolation workflows, and CI checks 100% green. 52/52 Vitest, 0 tsc errors.
-Latest:       Clean working tree, docs_site build clean (25s), frontend build clean (10s), zero console errors.
+Latest:       Clean working tree, docs_site build clean (22.17s), frontend build clean (10s), zero console errors.
 Next step:    Phase 8 UX-02 (Time Machine mission timeline scrubber & historical replay).
 Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produce yet (lambda, timing, BSFC, power,
               vibration, GO/NO-GO); some may show blanks or crash on .toFixed(null) until M0-09. Beta only.
@@ -207,3 +207,26 @@ Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produ
 - Verification:
   * Frontend Vitest: 52/52 tests passed (100% PASS).
   * TypeScript: 0 errors. Working tree clean.
+
+=== 22 Nov 2026 Phase 8 Card DOC-06 (Overhaul Documentation UI, Fix Engine Card Mislabeling & De-Slop Technical Prose) (AI: Antigravity)
+- De-Slopped UI & Removed Buzzword Spam:
+  * Purged inflated and generic AI buzzword metrics from HomePage ("66 verified commits", "adversarial scrutiny", "comprehensive verification protocol"). Replaced with factual engineering progress: "Development Timeline · Architecture Decisions · Field Notes", "70+ recorded architectural decisions", "430+ unit, physics, and integration tests".
+  * Removed alphabet-soup compliance badges ("ISO 13374 / OSA-CBM", "STANAG 4586 LOI 2", "MIL-STD-1629A") from header and footer; replaced with clear descriptive tags ("Real-Time 20 Hz Telemetry", "5 Aero Engines", "Interactive 3D Digital Twin").
+  * Removed "Zero Em-Dashes ·" string from footer while preserving strict zero em dash typography throughout prose.
+- Fixed Engine Showcase Card Mislabeling:
+  * Eliminated the duplicate/confusing Austro AE300 engine render on the home page that was mislabeled as "Blender Master Model: Rotax 912 iS".
+  * Streamlined to a single, high-craftsmanship Rotax 912 iS Sport presentation card featuring genuine specifications (1,352 cm³, Dual FADEC EFI, Boxer Layout), active twin ref badge, and an interactive 3D model inspection modal trigger.
+- Unlocked Mermaid Diagrams & Fullscreen Blueprint Inspector:
+  * Removed ReactMarkdown `<pre>` wrapper interception so diagrams are no longer trapped in dark, clipped code containers.
+  * Upgraded MermaidDiagram component to an architectural blueprint card with soft border, precision header toolbar, zoom controls (-, 100%, +, reset), SVG copy feedback, and a Fullscreen Expand Modal ([Esc] / Maximize button).
+- Unlocked Tables & Typography Hierarchy:
+  * Widened document container to 1400px and reading column to xl:col-span-7 with overflow-visible.
+  * Wrapped tables in dedicated horizontal scrolling container with custom scrollbar, eliminating horizontal column truncation.
+  * Upgraded KaTeX formulas into dedicated display cards with soft borders, centered layout, and proper matrix formatting.
+- Replaced Outdated Prototype Screenshots with Live High-Resolution Captures:
+  * Replaced dated September prototype captures with authentic high-resolution screenshots from today's live build (HUD flight deck, 3D solid/thermal viewport, CAN bus inspector, mission palette).
+  * Wrapped all article screenshots in clean desktop window chrome frames (macOS 3-dot buttons, live system capture badge, and clean caption).
+- Verification:
+  * Documentation site build: `npm run build` completed in 22.17s with 0 errors.
+  * Frontend unit tests: 52/52 Vitest tests passed across 16 test files (100% PASS).
+  * TypeScript check: Clean (0 errors via `npx tsc --noEmit`). Working tree clean.
