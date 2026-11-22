@@ -6,18 +6,17 @@ Update the RESUME HERE block at every commit and at the end of every session.
 Part 1 historical session log (Phases 0 through 7, 19 Nov - 22 Nov 2026) is preserved in PROGRESS.txt.
 
 =====================================================================================================================
-RESUME HERE  (last updated 22 Nov 2026, Phase 0/8 M0-08e Tactical AI Copilot Unification & Health Index Calibration)
+RESUME HERE  (last updated 22 Nov 2026, Phase 0/8 M0-08f Rich Aerospace Markdown & ChatGPT Dual Voice Modes)
 =====================================================================================================================
-Phase:        Phase 0 / Phase 8 (Platform Harmonization, Tactical AI Copilot & Telemetry Calibration).
-Card:         M0-08e (Tactical AI Copilot Unification, Local Ollama D: Drive Integration, and Health Index Calibration):
-              1. Calibrated Physical Subsystem Health & Overall Index: Re-calibrated `_sub_score` and `health_index` in `backend/server/legacy_adapter.py` for normalized noise standard deviations ($z$-scores in $\sigma$). Nominal sensor noise ($z \le 2.8\sigma$) maps cleanly to 92%-98% (green NOMINAL), resolving the false 41% overall index and 5% Drivetrain degradation.
-              2. Unified Tactical AI Copilot: Replaced separate, confusing duplicate cards (`CopilotPanel` rigid 7-box forms and `VoiceCopilot` error blocks) with a single, modern `UnifiedCopilot.tsx` supporting text, interactive feed, quick prompt chips, and Web Speech API (microphone push-to-talk + synthesized speech) with zero missing-C++-engine errors.
-              3. Local Ollama Integration on D: Drive: Wired `ANUMAAN_LLM_PROVIDER=qwen` (`qwen2.5:7b-instruct`) with `OLLAMA_MODELS=D:\AI\ollama\models` and daemon on `http://localhost:11434`. Enhanced `AI_CONVERSATIONAL_COPILOT_PROMPT` and greeting classification in `backend/agent/copilot.py` so the AI speaks naturally, professionally, and authoritatively with grounding in live 20 Hz telemetry and OEM manuals.
-              4. Multi-Turn Session Memory: Maintained 4-turn conversational context via `VoiceConversationManager` and `generate_chat()` so follow-ups ("Why is the oil pressure at that level?") resolve naturally against earlier turns.
+Phase:        Phase 0 / Phase 8 (Platform Harmonization, Tactical AI Copilot & Voice UX).
+Card:         M0-08f (Rich Aerospace Markdown Formatting & Dual ChatGPT-Style Voice Modes in Unified Copilot):
+              1. Rich Aerospace Markdown Output: Embedded `AerospaceMarkdown` in `UnifiedCopilot.tsx` with `remark-gfm` to format all AI assistant responses. Eliminates ugly raw markdown syntax (`**`, `###`, `*`), rendering styled headings with cyan underlines, status badges (CRITICAL, CAUTION, NOMINAL, GO), formatted data tables, inline code chips, and one-click copy buttons.
+              2. Mode 1 (Dictation / Voice Typing): Added speech-to-text voice typing into the query bar. Clicking the input bar microphone streams what the operator is speaking directly into the text input box in real-time, allowing review and editing before sending.
+              3. Mode 2 (ChatGPT-Style Hands-Free Conversational Voice Mode): Implemented dedicated full-stage interactive Tactical Voice Cockpit with glowing concentric orbital rings, 7-bar dynamic audio equalizer, automatic continuous conversational loop (speaking -> reasoning -> TTS speech -> auto-listen for next turn), instant "Tap to Interrupt" controls, and live subtitles.
 Branch:       Beta
-Last commit:  737f914 M0-08e: unify tactical AI copilot with local ollama and calibrate nominal health index
+Last commit:  08bcc28 M0-08f: rich aerospace markdown formatting and dual ChatGPT-style voice modes in unified copilot
 State:        52/52 Vitest passed, 0 tsc errors, 26/26 backend adapter/copilot pytest passed. Backend on :8000, Frontend on :5173, Docs on :5174, Ollama on :11434.
-Latest:       Tactical AI Copilot online, fully local, conversational, and integrated with live telemetry. Nominal flight health index displays 91%-98% across all subsystems.
+Latest:       Tactical AI Copilot features dual ChatGPT-style voice modes (Dictation & Hands-Free Conversational Voice Cockpit) with rich AerospaceMarkdown formatting.
 Next step:    Phase 8 UX-02 (Time Machine mission timeline scrubber & historical replay).
 =====================================================================================================================
 Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produce yet (lambda, timing, BSFC, power,
@@ -314,3 +313,22 @@ Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produ
   * Frontend Vitest: 52/52 tests passed across 16 test files (100% PASS).
   * Frontend TypeScript: `npx tsc --noEmit` passed with 0 errors.
   * Live server endpoint verification: `/api/state` reports 91.1%-98% nominal health across all subsystems; `/api/ai/ask` returns natural, grounded responses via local Ollama.
+
+=== 22 Nov 2026 Phase 0/8 Card M0-08f (Rich Aerospace Markdown & ChatGPT Dual Voice Modes) (AI: Antigravity)
+- Rich Aerospace Markdown Output:
+  * Replaced plain-text rendering in `UnifiedCopilot.tsx` with `AerospaceMarkdown.tsx` (`react-markdown` + `remark-gfm`).
+  * Assistant messages now render cleanly with styled headers, status badges (CRITICAL, CAUTION, NOMINAL, GO), bullet lists, code chips, data tables, and copy buttons, completely eliminating raw unrendered markdown syntax (`**`, `###`, `*`).
+- Mode 1: Dictation / Voice-to-Text Mode ("writes what you are speaking"):
+  * Built real-time speech dictation into the text input bar. Clicking the input bar microphone streams what the operator is speaking directly into the text input box in real-time.
+  * Operator can pause, edit, type additional text, or click Send.
+- Mode 2: ChatGPT-Style Conversational Voice Cockpit ("talk like human is in front of you"):
+  * Added a dedicated "Live Voice Mode" full-stage experience in `UnifiedCopilot.tsx`.
+  * Features a central glowing tactical audio orb with concentric animated wave rings and a 7-bar dynamic audio equalizer.
+  * Three distinct state phases: `LISTENING` (detecting operator voice), `THINKING` (analyzing telemetry and generating response), `SPEAKING` (MAVERICK talking with speech synthesis and dynamic sound bars).
+  * Automatic hands-free continuous conversational loop: when MAVERICK finishes speaking, it automatically starts listening again after a 350ms pause so the operator can talk hands-free without clicking any buttons.
+  * "Tap to Interrupt" immediately halts speech synthesis and resumes listening.
+  * Live voice subtitle card displays dialogue in real-time; exiting voice mode preserves full conversation history in the text chat log.
+- Verification:
+  * Frontend TypeScript: `npx tsc --noEmit` clean with 0 errors.
+  * Frontend Vitest: 52/52 tests passed across 16 test files (100% PASS).
+  * UI/UX verified against dark-themed defense aerospace design system.
