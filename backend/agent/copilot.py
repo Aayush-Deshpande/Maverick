@@ -40,15 +40,15 @@ AI_DIAGNOSIS_SYSTEM_PROMPT = (
 )
 
 AI_CONVERSATIONAL_COPILOT_PROMPT = (
-    "You are the Tactical Mission Copilot for the ANUMAAN MALE UAV Digital Twin (DRDO / iDEX Problem Statement ID: 26054). "
-    "You assist defense flight engineers and UAV operators with propulsion health, telemetry diagnostics, and ATA manual procedures.\n\n"
-    "DISCIPLINE AND PROFESSIONAL BEARING:\n"
-    "- This system is deployed for DRDO defense aeronautical operations where precision and discipline matter. "
-    "Be direct, authoritative, and strictly to the point. Deliver the technical finding, cause, and action immediately in the opening sentence. "
-    "- Strictly avoid conversational filler, apologies, pleasantries, or generic AI preambles ('Certainly!', 'I'd be happy to help').\n\n"
-    "STRICT GUARDRAILS & BOUNDARIES:\n"
-    "- You MUST strictly refuse any non-aviation, off-topic, entertainment, political, or casual inquiries (such as jokes, games, recipes, movies, or general chatter). "
-    "If an inquiry is off-topic, state firmly and professionally: 'Security notice: This terminal is strictly restricted to ANUMAAN UAV propulsion diagnostics, telemetry evaluation, and operational flight procedures.'\n\n"
+    "You are MAVERICK, the Tactical Mission Copilot for the ANUMAAN MALE UAV Digital Twin (DRDO / iDEX Problem Statement ID: 26054). "
+    "You assist defense flight engineers and UAV operators with propulsion health, telemetry diagnostics, emergency checklists, and ATA manual procedures.\n\n"
+    "CONVERSATIONAL ADAPTABILITY & BEARING:\n"
+    "- You are an intelligent, responsive flight deck assistant. Converse naturally, authoritatively, and professionally without being robotic. "
+    "- For greetings, check-ins, or handshakes (e.g. 'hi', 'hello', 'standing by'), acknowledge warmly and professionally, state that telemetry and diagnostic subsystems are grounded and active, give a brief 1-sentence flight summary, and ask how you can assist the crew. "
+    "- For technical queries or fault alerts, deliver the core technical finding, cause, and recommended action directly and crisply.\n\n"
+    "SAFETY GUARDRAILS & BOUNDARIES:\n"
+    "- You must stay focused on aeronautical operations, propulsion engineering, digital twin telemetry, flight procedures, and CBM maintenance. "
+    "- If asked completely unrelated non-aviation questions (e.g. jokes, entertainment, cooking, recipes, political commentary), professionally decline: 'Security notice: This terminal is restricted to ANUMAAN UAV propulsion diagnostics, telemetry evaluation, and operational flight procedures.'\n\n"
     "GROUNDING & RIGOR:\n"
     "- Synthesize answers dynamically using the provided live telemetry state, diagnostic directives, and certified OEM manual excerpts. "
     "- Include exact ATA chapters (e.g. ATA 72-00, ATA 74-00), torque specifications, operating limits, and step-by-step procedures when applicable. "
@@ -60,9 +60,9 @@ AI_VOICE_COPILOT_SYSTEM_PROMPT = (
     "You are MAVERICK, the authoritative Tactical AI Flight & Propulsion Copilot for the ANUMAAN MALE UAV Digital Twin "
     "(DRDO / iDEX Problem Statement ID: 26054), communicating directly with the UAV flight operator out loud.\n\n"
     "DISCIPLINE & MILITARY BEARING:\n"
-    "- Discipline and operational precision are paramount. Speak directly, authoritatively, and concisely. "
-    "- Deliver the core finding, status, or flight action in the very first sentence. "
-    "- Never use conversational fluff, greetings, apologies, or preamble ('Understood', 'Looking into that'). "
+    "- Operational precision and clarity are paramount. Speak directly, authoritatively, and concisely. "
+    "- For greetings or check-ins ('hi', 'hello'), respond warmly and concisely, confirming copilot readiness and nominal engine telemetry. "
+    "- For active alerts or technical queries, deliver the core finding, status, or flight action in the very first sentence. "
     "- Do not repeat the operator's question back to them.\n\n"
     "STRICT GUARDRAILS:\n"
     "- Strictly refuse any non-aviation, casual, political, or off-topic questions. If asked anything outside UAV propulsion, telemetry, and flight procedures, "
@@ -345,6 +345,15 @@ class MissionCopilot:
             "how is the system", "how's the system", "is everything fine", "are we ok",
         ]
         return any(p in q for p in patterns)
+
+    def _classify_greeting_query(self, query: str) -> bool:
+        """Detects operator greetings or handshake check-ins (e.g. 'hi', 'hello', 'good morning', 'hey copilot')."""
+        q = re.sub(r"[^\w\s]", "", query.lower().strip())
+        tokens = set(q.split())
+        greeting_words = {"hi", "hello", "hey", "greetings", "howdy", "sup", "morning", "afternoon", "evening"}
+        if q in greeting_words or (len(tokens) <= 3 and any(w in greeting_words for w in tokens)):
+            return True
+        return False
 
     def _build_live_state_block(self, ctx: Optional[Dict[str, Any]]) -> Optional[str]:
         """Condenses the live 20 Hz twin state into a short, authoritative block for the LLM.
@@ -771,10 +780,11 @@ class MissionCopilot:
         # nothing fault-shaped in the prompt to lift from, there's nothing for the model to
         # invent a fault out of. This only applies when there's no active diagnosed fault; an
         # active fault always goes through the `directive` branch below instead.
+        is_greeting = self._classify_greeting_query(user_query)
         is_status_branch = (
             directive is None
             and live_state_block is not None
-            and self._classify_system_status_query(user_query)
+            and (self._classify_system_status_query(user_query) or is_greeting)
         )
 
         if is_status_branch:
@@ -836,7 +846,14 @@ class MissionCopilot:
                     f"{self._intent_instruction(intent)}{length_instruction}"
                 )
             elif is_status_branch:
-                if is_engine_nominal and not has_drift:
+                if is_greeting:
+                    status_instruction = (
+                        "The operator has greeted or checked in. Respond in a natural, authoritative, "
+                        "professional aerospace copilot voice. Confirm MAVERICK is online and monitoring "
+                        "the propulsion twin, confirm engine status is nominal using the readings above in "
+                        "one short sentence, and state readiness to assist."
+                    )
+                elif is_engine_nominal and not has_drift:
                     status_instruction = (
                         "Nothing is wrong right now. Tell the operator everything is nominal in "
                         "one or two short spoken sentences, and you may name one or two of the "
@@ -1009,10 +1026,11 @@ class MissionCopilot:
         analytics = (current_flight_context or {}).get("analytics") or {}
         is_engine_nominal = analytics.get("diagnosed_fault_id", 0) == 0
         has_drift = bool(analytics.get("early_warning_trend")) or analytics.get("severity", "NORMAL") != "NORMAL"
+        is_greeting = self._classify_greeting_query(user_query)
         is_status_branch = (
             directive is None
             and live_state_block is not None
-            and self._classify_system_status_query(user_query)
+            and (self._classify_system_status_query(user_query) or is_greeting)
         )
 
         # 4. Document Retrieval via Local Semantic Embedding Store — skipped for a pure status
@@ -1062,7 +1080,14 @@ class MissionCopilot:
                     f"reasoning a competent engineer would walk through."
                 )
             elif is_status_branch:
-                if is_engine_nominal and not has_drift:
+                if is_greeting:
+                    status_instruction = (
+                        "The operator has greeted or checked in. Respond in a natural, authoritative, "
+                        "professional aerospace copilot voice. Confirm MAVERICK is online and monitoring "
+                        "the propulsion twin, confirm engine status is nominal using the readings above in "
+                        "one short sentence, and state readiness to assist."
+                    )
+                elif is_engine_nominal and not has_drift:
                     status_instruction = (
                         "Nothing is wrong right now. Tell the operator everything is nominal, "
                         "and you may cite one or two of the readings above. Do not name any "
@@ -1136,6 +1161,15 @@ class MissionCopilot:
             demo_response = self._demo_misfire_response(user_query, active_fault_id, current_flight_context)
             if demo_response:
                 response_text = demo_response
+            elif is_greeting:
+                telemetry = (current_flight_context or {}).get("telemetry") or {}
+                rpm = telemetry.get("ENGINE_RPM", 2200)
+                analytics = (current_flight_context or {}).get("analytics") or {}
+                health = analytics.get("health_index", 1.0)
+                response_text = (
+                    f"Greetings. MAVERICK Tactical Copilot online. Telemetry channels are fully synchronized, "
+                    f"engine RPM is nominal at {rpm:.0f}, and health index is {health:.0%}. How can I assist the flight crew?"
+                )
             elif is_status_branch and is_engine_nominal:
                 if current_flight_context:
                     telemetry = current_flight_context.get("telemetry") or {}

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { useTelemetrySocket } from './hooks/useTelemetrySocket';
 import { Header } from './components/Header';
 import { PanelErrorBoundary } from './components/PanelErrorBoundary';
@@ -12,9 +12,7 @@ const ReadingsPanel = lazy(() => import('./components/ReadingsPanel').then((m) =
 const CalculationsPanel = lazy(() => import('./components/CalculationsPanel').then((m) => ({ default: m.CalculationsPanel })));
 const MissionReadinessCard = lazy(() => import('./components/MissionReadinessCard').then((m) => ({ default: m.MissionReadinessCard })));
 const SubsystemHealthCard = lazy(() => import('./components/SubsystemHealthCard').then((m) => ({ default: m.SubsystemHealthCard })));
-const DiagnosticCard = lazy(() => import('./components/DiagnosticCard').then((m) => ({ default: m.DiagnosticCard })));
-const CopilotPanel = lazy(() => import('./components/CopilotPanel'));
-const VoiceCopilot = lazy(() => import('./components/VoiceCopilot').then((m) => ({ default: m.VoiceCopilot })));
+const UnifiedCopilot = lazy(() => import('./components/UnifiedCopilot').then((m) => ({ default: m.UnifiedCopilot })));
 const MissionReplayScrubber = lazy(() => import('./components/MissionReplayScrubber').then((m) => ({ default: m.MissionReplayScrubber })));
 const PropulsionEngineerPanel = lazy(() => import('./components/PropulsionEngineerPanel').then((m) => ({ default: m.PropulsionEngineerPanel })));
 const MaintenanceDashboardPanel = lazy(() => import('./components/MaintenanceDashboardPanel').then((m) => ({ default: m.MaintenanceDashboardPanel })));
@@ -34,7 +32,6 @@ import {
   Radio,
   Shield,
   Brain,
-  Mic,
   History,
   Cpu,
   Wrench,
@@ -72,7 +69,7 @@ export function App() {
 
   const [activeRole, setActiveRole] = useState<GCSRole>('OPERATOR');
   const [activeTab, setActiveTab] = useState<
-    'OPERATOR' | 'PROPULSION' | 'MAINTENANCE' | 'AI_DIAGNOSTICS' | 'VOICE_COPILOT' | 'MISSION_REPLAY'
+    'OPERATOR' | 'PROPULSION' | 'MAINTENANCE' | 'AI_COPILOT' | 'MISSION_REPLAY'
   >('OPERATOR');
 
   // The role is a client-side view setting; it is never sent to the server (audit #42, M0-09).
@@ -94,18 +91,6 @@ export function App() {
     }
   };
 
-  const api = useCallback(async (path: string, method: string = 'GET', body?: unknown) => {
-    const res = await fetch(`${serverUrl}${path}`, {
-      method,
-      headers: body !== undefined ? { 'Content-Type': 'application/json' } : undefined,
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.message || err.detail || `Request failed (${res.status})`);
-    }
-    return res.json();
-  }, [serverUrl]);
 
   if (workspace === 'landing') {
     return <LandingPage serverUrl={serverUrl} onLaunchConsole={(target) => setWorkspace(target === 'legacy' ? 'tactical' : (target || 'runtime'))} />;
@@ -221,8 +206,7 @@ export function App() {
                   { id: 'OPERATOR' as const, label: 'Operator Flight Deck', icon: <User className="w-3.5 h-3.5" /> },
                   { id: 'PROPULSION' as const, label: 'Propulsion Engineer', icon: <Cpu className="w-3.5 h-3.5" /> },
                   { id: 'MAINTENANCE' as const, label: 'Maintenance & CBM', icon: <Wrench className="w-3.5 h-3.5" /> },
-                  { id: 'AI_DIAGNOSTICS' as const, label: 'AI Reasoning & RAG', icon: <Brain className="w-3.5 h-3.5" /> },
-                  { id: 'VOICE_COPILOT' as const, label: 'Voice Copilot', icon: <Mic className="w-3.5 h-3.5" /> },
+                  { id: 'AI_COPILOT' as const, label: 'Tactical AI Copilot', icon: <Brain className="w-3.5 h-3.5" /> },
                   { id: 'MISSION_REPLAY' as const, label: 'Mission Replay', icon: <History className="w-3.5 h-3.5" /> },
                 ].map((tab) => {
                   const isActive = activeTab === tab.id;
@@ -296,22 +280,10 @@ export function App() {
           </PanelErrorBoundary>
         )}
 
-        {/* View 4: AI Diagnostics & Root Cause */}
-        {activeTab === 'AI_DIAGNOSTICS' && (
-          <div className="space-y-4">
-            <PanelErrorBoundary label="Engine copilot orchestrator">
-              <CopilotPanel engineId={state.engine_id || 'rotax_912is'} api={api} />
-            </PanelErrorBoundary>
-            <PanelErrorBoundary label="AI diagnostics">
-              <DiagnosticCard state={state} serverUrl={serverUrl} />
-            </PanelErrorBoundary>
-          </div>
-        )}
-
-        {/* View 5: Voice Copilot */}
-        {activeTab === 'VOICE_COPILOT' && (
-          <PanelErrorBoundary label="Voice copilot">
-            <VoiceCopilot state={state} serverUrl={serverUrl} />
+        {/* View 4: Unified Tactical AI Copilot (Conversational + Voice RAG) */}
+        {activeTab === 'AI_COPILOT' && (
+          <PanelErrorBoundary label="Tactical AI copilot">
+            <UnifiedCopilot state={state} serverUrl={serverUrl} />
           </PanelErrorBoundary>
         )}
 

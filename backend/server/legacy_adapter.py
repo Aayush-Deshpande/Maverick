@@ -136,24 +136,42 @@ def legacy_state(engine_id: str = LEGACY_ENGINE_ID) -> Optional[Dict[str, Any]]:
     rul_p10 = rul_dict.get("rul_lower_h") or rul_dict.get("rul_h")
 
     status_level = m["status"]["level"]
-    health_index = round(max(0.0, min(1.0, 1.0 - (score / 5.0))), 3) if score is not None else 1.0
+    # Calibrated health index:
+    # In nominal flight (status_level == "GO", no active faults), health is 0.92 - 1.0 (NOMINAL).
+    # When active faults exist or status degrades, health drops accordingly.
     if status_level == "CRITICAL":
-        health_index = min(health_index, 0.20)
+        health_index = 0.20
     elif status_level in ("CAUTION", "NO-GO"):
-        health_index = min(health_index, 0.60)
+        health_index = 0.60
+    elif m.get("active_faults") or (diag_id is not None):
+        health_index = 0.65
+    else:
+        # Healthy engine: scale smoothly between 0.92 and 1.0 based on background detector score
+        health_index = round(max(0.90, min(1.0, 1.0 - ((score or 0.0) / 35.0))), 3)
 
     # Dynamic subsystem health from residuals
-    def _sub_score(keys: list[str], tol: float) -> float:
-        max_r = max((abs(res_dual.get(k, 0.0)) for k in keys), default=0.0)
-        return round(max(0.0, min(1.0, 1.0 - (max_r / tol))), 2)
+    # Each residual in res_dual is a normalized z-score in noise sigmas (standard deviations).
+    # Normal Gaussian flight noise routinely reaches 2.5 sigma without representing a fault.
+    def _sub_score(keys: list[str]) -> float:
+        max_z = max((abs(res_dual.get(k, 0.0)) for k in keys), default=0.0)
+        if max_z <= 2.8:
+            # Baseline flight noise band: 0.92 to 1.0 (NOMINAL green)
+            score_val = 1.0 - (max_z / 35.0)
+        elif max_z <= 5.0:
+            # Incipient drift: 0.75 to 0.92 (CAUTION amber)
+            score_val = 0.92 - ((max_z - 2.8) / 2.2) * 0.17
+        else:
+            # Active fault degradation: drops down to 0.10 (DEGRADED red)
+            score_val = max(0.10, 0.75 - ((max_z - 5.0) / 7.0) * 0.65)
+        return round(score_val, 2)
 
     thermal_keys = [k for k in res_dual if k.startswith("cht_")] + ["oil_t", "coolant_t"]
     sub_health = {
-        "propulsion": _sub_score(["map_kpa", "rpm"], 15.0),
-        "fuel_system": _sub_score(["fuel_flow", "fuel_p", "rail_p"], 8.0),
-        "electrical": _sub_score(["bus_v", "batt_i"], 3.0),
-        "thermal": _sub_score(thermal_keys, 25.0),
-        "mechanical": _sub_score(["vib_1X", "vib_prop_1X", "vib_gear_mesh"], 3.0),
+        "propulsion": _sub_score(["map_kpa", "rpm"]),
+        "fuel_system": _sub_score(["fuel_flow", "fuel_p", "rail_p"]),
+        "electrical": _sub_score(["bus_v", "batt_i"]),
+        "thermal": _sub_score(thermal_keys),
+        "mechanical": _sub_score(["vib_1X", "vib_prop_1X", "vib_gear_mesh"]),
     }
 
     analytics: Dict[str, Any] = {
