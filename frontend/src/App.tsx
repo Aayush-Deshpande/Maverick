@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { useTelemetrySocket } from './hooks/useTelemetrySocket';
 import { Header } from './components/Header';
 import { PanelErrorBoundary } from './components/PanelErrorBoundary';
@@ -13,6 +13,7 @@ const CalculationsPanel = lazy(() => import('./components/CalculationsPanel').th
 const MissionReadinessCard = lazy(() => import('./components/MissionReadinessCard').then((m) => ({ default: m.MissionReadinessCard })));
 const SubsystemHealthCard = lazy(() => import('./components/SubsystemHealthCard').then((m) => ({ default: m.SubsystemHealthCard })));
 const DiagnosticCard = lazy(() => import('./components/DiagnosticCard').then((m) => ({ default: m.DiagnosticCard })));
+const CopilotPanel = lazy(() => import('./components/CopilotPanel'));
 const VoiceCopilot = lazy(() => import('./components/VoiceCopilot').then((m) => ({ default: m.VoiceCopilot })));
 const MissionReplayScrubber = lazy(() => import('./components/MissionReplayScrubber').then((m) => ({ default: m.MissionReplayScrubber })));
 const PropulsionEngineerPanel = lazy(() => import('./components/PropulsionEngineerPanel').then((m) => ({ default: m.PropulsionEngineerPanel })));
@@ -92,6 +93,19 @@ export function App() {
       setActiveRole('MAINTENANCE_CREW');
     }
   };
+
+  const api = useCallback(async (path: string, method: string = 'GET', body?: unknown) => {
+    const res = await fetch(`${serverUrl}${path}`, {
+      method,
+      headers: body !== undefined ? { 'Content-Type': 'application/json' } : undefined,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || err.detail || `Request failed (${res.status})`);
+    }
+    return res.json();
+  }, [serverUrl]);
 
   if (workspace === 'landing') {
     return <LandingPage serverUrl={serverUrl} onLaunchConsole={(target) => setWorkspace(target === 'legacy' ? 'tactical' : (target || 'runtime'))} />;
@@ -283,9 +297,14 @@ export function App() {
 
         {/* View 4: AI Diagnostics & Root Cause */}
         {activeTab === 'AI_DIAGNOSTICS' && (
-          <PanelErrorBoundary label="AI diagnostics">
-            <DiagnosticCard state={state} serverUrl={serverUrl} />
-          </PanelErrorBoundary>
+          <div className="space-y-4">
+            <PanelErrorBoundary label="Engine copilot orchestrator">
+              <CopilotPanel engineId={state.engine_id || 'rotax_912is'} api={api} />
+            </PanelErrorBoundary>
+            <PanelErrorBoundary label="AI diagnostics">
+              <DiagnosticCard state={state} serverUrl={serverUrl} />
+            </PanelErrorBoundary>
+          </div>
         )}
 
         {/* View 5: Voice Copilot */}

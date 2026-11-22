@@ -52,13 +52,15 @@ export const PropulsionEngineerPanel: React.FC<PropulsionEngineerPanelProps> = (
   const leadTimeSec = baseline?.lead_time_sec;
 
   // Conventional redlines reference
+  const maxCht = Math.max(t.CHT_1 ?? 0, t.CHT_2 ?? 0, t.CHT_3 ?? 0, t.CHT_4 ?? 0);
+  const maxEgt = Math.max(t.EGT_1 ?? 0, t.EGT_2 ?? 0, t.EGT_3 ?? 0, t.EGT_4 ?? 0);
   const redlines = [
-    { param: 'CHT Max', limit: '135.0 °C', current: `${fmt(Math.max(t.CHT_1, t.CHT_2, t.CHT_3, t.CHT_4))} °C`, breached: Math.max(t.CHT_1, t.CHT_2, t.CHT_3, t.CHT_4) > 135 },
-    { param: 'EGT Max', limit: '850.0 °C', current: `${fmt(Math.max(t.EGT_1, t.EGT_2, t.EGT_3, t.EGT_4))} °C`, breached: Math.max(t.EGT_1, t.EGT_2, t.EGT_3, t.EGT_4) > 850 },
-    { param: 'Oil Press Min', limit: '2.0 bar', current: `${fmt(t.OIL_PRESS)} bar`, breached: t.OIL_PRESS < 2.0 && state.is_engine_running },
-    { param: 'Oil Temp Max', limit: '130.0 °C', current: `${fmt(t.OIL_TEMP)} °C`, breached: t.OIL_TEMP > 130 },
-    { param: 'Gearbox Vib Max', limit: '2.5 mm/s', current: `${fmt(t.VIB_GEARBOX_RMS, 2)} mm/s`, breached: t.VIB_GEARBOX_RMS > 2.5 },
-    { param: 'DC Bus Min', limit: '12.0 V', current: `${fmt(t.BUS_VOLTAGE)} V`, breached: t.BUS_VOLTAGE < 12.0 },
+    { param: 'CHT Max', limit: '135.0 °C', current: `${fmt(maxCht)} °C`, breached: maxCht > 135 },
+    { param: 'EGT Max', limit: '850.0 °C', current: `${fmt(maxEgt)} °C`, breached: maxEgt > 850 },
+    { param: 'Oil Press Min', limit: '2.0 bar', current: `${fmt(t.OIL_PRESS)} bar`, breached: (t.OIL_PRESS ?? 0) < 2.0 && state.is_engine_running },
+    { param: 'Oil Temp Max', limit: '130.0 °C', current: `${fmt(t.OIL_TEMP)} °C`, breached: (t.OIL_TEMP ?? 0) > 130 },
+    { param: 'Gearbox Vib Max', limit: '2.5 mm/s', current: `${fmt(t.VIB_GEARBOX_RMS, 2)} mm/s`, breached: (t.VIB_GEARBOX_RMS ?? 0) > 2.5 },
+    { param: 'DC Bus Min', limit: '12.0 V', current: `${fmt(t.BUS_VOLTAGE)} V`, breached: (t.BUS_VOLTAGE ?? 0) < 12.0 },
   ];
 
   return (

@@ -170,6 +170,7 @@ export interface AnalyticsState {
 }
 
 export interface UnifiedTelemetryState {
+  engine_id?: string;
   timestamp: number;
   sortie_id: string;
   is_engine_running: boolean;
