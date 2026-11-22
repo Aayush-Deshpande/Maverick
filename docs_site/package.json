@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "sync-models": "node ../scripts/assets/sync_web_models.mjs docs_site",
+    "sync-models": "node -e \"const fs=require('fs'); const p='../scripts/assets/sync_web_models.mjs'; if(fs.existsSync(p)){ require('child_process').execSync('node ' + p + ' docs_site', {stdio:'inherit'}); } else { console.log('[sync_web_models] skipped (standalone build)'); }\"",
     "predev": "npm run sync-models",
     "prebuild": "npm run sync-models",
     "dev": "vite",

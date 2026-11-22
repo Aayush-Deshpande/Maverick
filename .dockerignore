@@ -1,14 +1,31 @@
-# Allowlist: exclude everything, then re-include only what the backend reads at runtime.
-*
-!backend
-!configs
-!data
-!assets/manifests
-!docs/reliability
-!apps/threejs_twin
-!frontend/public/models
-!frontend/public/draco
-!frontend/public/images
-!requirements-server.txt
-**/__pycache__
-**/*.pyc
+# Version control & tooling
+.git/
+.github/
+.vscode/
+.idea/
+
+# Python cache & virtual environments
+**/__pycache__/
+**/*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.pytest_cache/
+
+# Node dependencies and local build outputs
+frontend/node_modules/
+frontend/dist/
+docs_site/node_modules/
+docs_site/dist/
+.vercel/
+
+# Heavy blender binary sources & offline renders (models are in frontend/public/models)
+assets/blender/
+assets/renders/
+archive_tracked/
+
+# Environment secrets
+.env
+.env.local
+.env.*.local
