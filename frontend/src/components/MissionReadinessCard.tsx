@@ -1,6 +1,7 @@
 import React from 'react';
 import { CheckCircle2, AlertTriangle, AlertOctagon, Clock } from 'lucide-react';
 import { UnifiedTelemetryState } from '../types/telemetry';
+import { PanelInfoModal } from './PanelInfoModal';
 
 interface MissionReadinessCardProps {
   state: UnifiedTelemetryState;
@@ -33,7 +34,30 @@ export const MissionReadinessCard: React.FC<MissionReadinessCardProps> = ({ stat
     <div className="surface-panel p-4 sm:p-5 space-y-4">
       <div className="flex items-center justify-between border-b border-surface-border pb-3 flex-wrap gap-2">
         <div>
-          <h2 className="text-xs font-semibold text-white">Pre-Flight Mission Readiness</h2>
+          <div className="flex items-center gap-1.5">
+            <h2 className="text-xs font-semibold text-white">Pre-Flight Mission Readiness</h2>
+            <PanelInfoModal
+              title="Pre-Flight Mission Readiness & Go/No-Go Gate"
+              subtitle="Conservative (p10) RUL vs. Planned Sortie Duration"
+              description="Computes a deterministic pre-flight readiness gate for military MALE UAV sorties. Fits degradation trajectories across all 6 critical engine subsystems using 500-sample Monte Carlo extrapolation and computes the 10th percentile (p10) conservative Remaining Useful Life. Issues an automated GO, CAUTION, or NO-GO directive."
+              formula={`Monte Carlo Extrapolation: RUL_i ~ N(μ_i, σ_i²) across 500 runs
+Conservative Margin: RUL_p10 = μ_RUL - 1.28 · σ_RUL
+
+Gate Decision Logic:
+  GO:       RUL_p10 ≥ 1.25 · T_sortie  (≥ 22.5 h for standard 18 h mission)
+  CAUTION:  1.00 · T_sortie ≤ RUL_p10 < 1.25 · T_sortie
+  NO-GO:    RUL_p10 < 1.00 · T_sortie  (< 18.0 h)`}
+              calculationSteps={[
+                { label: 'Subsystem Degradation', detail: 'Ingests degradation rates for Cylinder Heads, Oil Circuit, Gearbox, Fuel Rail, Alternator, and Ignition.' },
+                { label: 'Stochastic Simulation', detail: 'Runs 500-sample Monte Carlo degradation projections under expected mission power profiles.' },
+                { label: 'p10 Safety Extraction', detail: 'Extracts the 10th percentile bound ensuring 90% statistical confidence before engine failure.' },
+                { label: 'Gate Decision', detail: 'Evaluates limiting subsystem RUL_p10 against planned mission sortie duration (18.0 h).' },
+              ]}
+              sensorInputs={['RUL_p10 per component', 'Planned Sortie Duration', 'Active Degradation Slopes', 'Subsystem Health']}
+              thresholds="Safety Factor: ≥ 1.25x for GO | Marginal: 1.00x–1.24x for CAUTION | Abort: < 1.00x for NO-GO"
+              provenance="DRDO MALE UAV Mission Dispatch Guidelines & MIL-HDBK-338B Electronic Reliability"
+            />
+          </div>
           <p className="text-xs text-slate-500">Conservative (p10) RUL vs. planned sortie duration — DRDO PS-26054 Go/No-Go gate</p>
         </div>
         <span className="text-xs font-mono text-slate-500">

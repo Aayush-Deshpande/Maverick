@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { UnifiedTelemetryState } from '../types/telemetry';
 import { AerospaceMarkdown } from './AerospaceMarkdown';
+import { PanelInfoModal } from './PanelInfoModal';
 
 interface UnifiedCopilotProps {
   state: UnifiedTelemetryState;
@@ -416,6 +417,24 @@ export const UnifiedCopilot: React.FC<UnifiedCopilotProps> = ({ state, serverUrl
                 <h2 className="text-xs font-semibold text-white font-mono uppercase tracking-wide">
                   VOICE MISSION COPILOT
                 </h2>
+                <PanelInfoModal
+                  title="MAVERICK Tactical AI Copilot"
+                  subtitle="Conversational RAG Grounding & Local Tool Calling"
+                  description="Autonomous military flight copilot powered by a local Ollama Qwen2.5 LLM with semantic Retrieval-Augmented Generation (RAG) over official Rotax 912 iSc Operator & Maintenance Manuals. Executes live telemetry tool-calls (tool:get_engine_state, tool:get_hypotheses, tool:get_prognosis) with zero cloud network leakage."
+                  formula={`Semantic Similarity: CosineSim(q, d_i) = (q · d_i) / (||q|| · ||d_i||)
+Prompt Context: Context = [Top-3 Manual Chunks] + [20 Hz Live Telemetry JSON]
+Local Synthesis: P(token_t | prompt, tools, context) ~ Ollama Qwen2.5 7B
+Decision Posterior: Confidence = α · RAG_Score + (1 - α) · Diagnostic_Posterior`}
+                  calculationSteps={[
+                    { label: 'Voice STT Ingestion', detail: 'Transcribes operator speech via browser Web Speech API / local Whisper.cpp.' },
+                    { label: 'Manual RAG Retrieval', detail: 'Performs vector cosine search over Rotax Line/Heavy manuals to extract pertinent ATA procedures.' },
+                    { label: 'Telemetry Grounding', detail: 'Injects real-time 20 Hz engine state, active faults, and p10 RUL estimates into LLM context window.' },
+                    { label: 'Tactical Voice Synthesis', detail: 'Synthesizes concise, actionable aeronautical directives and emergency checklist responses.' },
+                  ]}
+                  sensorInputs={['20 Hz Telemetry State', 'Active Fault IDs', 'RUL Predictions', 'Rotax Manual Vector Store']}
+                  thresholds="Inference Latency: < 250ms streaming | Top-K Chunks: 3 | Local Security: 100% offline (127.0.0.1:11434)"
+                  provenance="Rotax 912 iSc Sport OM/MM, DRDO PS-26054 System Architecture, and Ollama Qwen2.5"
+                />
                 <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-sm bg-success-dim text-success border border-success-muted">
                   RPM: {rpm} · Health: {healthPct}%
                 </span>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { AlertTriangle, CheckCircle, FileText, Crosshair, Zap, Flame, Fuel, Cog, Battery, Activity } from 'lucide-react';
 import { UnifiedTelemetryState, ControlCommand } from '../types/telemetry';
+import { PanelInfoModal } from './PanelInfoModal';
 
 interface FaultMatrixProps {
   state: UnifiedTelemetryState;
@@ -38,9 +39,30 @@ export const FaultMatrix: React.FC<FaultMatrixProps> = ({ state, onCommand }) =>
             <AlertTriangle className="w-3.5 h-3.5" />
           </div>
           <div>
-            <h2 className="text-xs font-semibold text-white">
-              DRDO Fault Injection Matrix
-            </h2>
+            <div className="flex items-center gap-1.5">
+              <h2 className="text-xs font-semibold text-white">
+                DRDO Fault Injection Matrix
+              </h2>
+              <PanelInfoModal
+                title="DRDO Fault Injection Matrix"
+                subtitle="Physical Degradation & Parameter Perturbation (PS-26054)"
+                description="Injects continuous physical parameter degradations into the engine simulation according to the DRDO PS-26054 37-Fault FMECA Catalog (F01–F37). In strict adherence to the Zero Truth Leakage rule, faults modify underlying physical parameters (orifice discharge coefficients, heat transfer multipliers, coil resistances) rather than output telemetry."
+                formula={`Parameter Perturbation: θ_fault(t) = θ_nominal · (1 - α · ramp(t - t_inj, τ=6s))
+Cylinder Overheat: UA_cyl2 = UA_nominal · (1 - 0.45 · ramp(t, 6s))
+Injector Clog: C_d,inj = C_d0 · 0.40  (fuel flow drop, lean mixture)
+Oil Pressure Leak: R_orifice = R_0 · 0.35  (scavenge decay to 1.8 bar)
+Gearbox Harmonic: a_vib(t) = a_0 + α · sin(3 · ω_crank · t + φ)`}
+                calculationSteps={[
+                  { label: 'Fault Activation', detail: 'Operator or test harness triggers a physical degradation mode.' },
+                  { label: 'Smooth Dynamic Ramp', detail: 'Linearly or exponentially ramps the parameter over 6.0 seconds (τ = 6 s) to emulate physical failure progression.' },
+                  { label: 'Coupled Simulation', detail: '1D thermodynamic ODE solver propagates altered physical coefficients into temperatures, pressures, and vibration spectra.' },
+                  { label: 'Zero Ground Truth Leak', detail: 'Inference and diagnostic observers inspect only telemetry residuals with zero access to the active fault ID.' },
+                ]}
+                sensorInputs={['CHT_1..4', 'EGT_1..4', 'OIL_PRESS', 'OIL_TEMP', 'FUEL_FLOW', 'VIB_RMS', 'BUS_VOLTAGE', 'MAP']}
+                thresholds="8 primary degradation modes (F01–F08) spanning Thermal, Fuel, Ignition, Lube, Mechanical, and Avionics"
+                provenance="DRDO PS-26054 FMECA Catalog, MIL-STD-1629A, and Rotax 912 iSc Maintenance Manual (Line/Heavy)"
+              />
+            </div>
             <p className="text-xs text-slate-500">8 physical degradation modes (PS-26054)</p>
           </div>
         </div>

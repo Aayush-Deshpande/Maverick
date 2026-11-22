@@ -1,6 +1,7 @@
 import React from 'react';
 import { Play, Pause, Rewind, FastForward, History, AlertTriangle, AlertOctagon, Info } from 'lucide-react';
 import { useMissionReplay, ReplaySpeed, ReplayEventMarker } from '../hooks/useMissionReplay';
+import { PanelInfoModal } from './PanelInfoModal';
 
 interface MissionReplayScrubberProps {
   serverUrl: string;
@@ -59,7 +60,27 @@ export const MissionReplayScrubber: React.FC<MissionReplayScrubberProps> = ({ se
         <div className="flex items-center gap-2">
           <History className="w-4 h-4 text-accent" />
           <div>
-            <h2 className="text-xs font-semibold text-white">Historical Mission Replay</h2>
+            <div className="flex items-center gap-1.5">
+              <h2 className="text-xs font-semibold text-white">Historical Mission Replay</h2>
+              <PanelInfoModal
+                title="Historical Mission Replay & Blackbox Scrubber"
+                subtitle="Synchronous 20 Hz Telemetry Blackbox & Event Navigation"
+                description="Flight Data Recorder (Blackbox) post-mission analysis console. Allows engineers to scrub, replay at accelerated rates (1x, 2x, 5x, 10x), and inspect high-frequency 20 Hz synchronized flight data recorded across all 14 engine telemetry channels, seeking directly to flagged anomaly and fault events."
+                formula={`Sample Interpolation: y(t) = y_k + (y_{k+1} - y_k) · ((t - t_k) / (t_{k+1} - t_k))
+Elapsed Time: T_elapsed = t_frame - t_start (hh:mm:ss format)
+Marker Proximity: Δt = |t_scrub - t_event_marker|
+Playback Dynamic Step: t_next = t_current + Δt_wall · Speed_Multiplier`}
+                calculationSteps={[
+                  { label: 'Blackbox Manifest', detail: 'Loads recorded CSV telemetry frames and extracts mission duration and channel schemas.' },
+                  { label: 'Frame Interpolation', detail: 'Performs linear interpolation between 20 Hz sample points to provide jitter-free scrubber seeking.' },
+                  { label: 'Event Marker Extraction', detail: 'Identifies timestamps where anomalies, warnings, or commanded faults occurred during the flight.' },
+                  { label: 'Synchronized State Broadcasting', detail: 'Pushes reconstructed telemetry across all GCS panels for comprehensive accident investigation.' },
+                ]}
+                sensorInputs={['telemetry_log.csv', 'Recorded CAN 2.0B Frames', 'Event Severity Tags', 'Timestamp Epoch']}
+                thresholds="Replay Rates: 1x (Real-time), 2x, 5x, 10x | Scrub Resolution: 1.0 s step"
+                provenance="DRDO PS-26054 Blackbox Log Specification & MAVLink Mission Protocol"
+              />
+            </div>
             <p className="text-xs text-slate-500">Scrub any recorded sortie — gauges and event markers sync to the exact timestamp.</p>
           </div>
         </div>

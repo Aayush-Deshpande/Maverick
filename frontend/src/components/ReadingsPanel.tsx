@@ -2,6 +2,7 @@ import React from 'react';
 import { Activity, Gauge } from 'lucide-react';
 import { UnifiedTelemetryState } from '../types/telemetry';
 import { pct } from '../utils/format';
+import { PanelInfoModal } from './PanelInfoModal';
 
 interface ReadingsPanelProps {
   state: UnifiedTelemetryState;
@@ -182,7 +183,31 @@ export const ReadingsPanel: React.FC<ReadingsPanelProps> = ({ state }) => {
             <Activity className="w-3.5 h-3.5" />
           </div>
           <div>
-            <h2 className="text-xs font-semibold text-white">Live Engine Readings</h2>
+            <div className="flex items-center gap-1.5">
+              <h2 className="text-xs font-semibold text-white">Live Engine Readings &amp; Residuals</h2>
+              <PanelInfoModal
+                title="Live Engine Readings & Physics Residuals"
+                subtitle="20 Hz Telemetry & Analytical Residual Observer"
+                description="Monitors 20 Hz high-frequency telemetry across 14 engine channels and compares each measurement against an independent thermodynamic baseline model (Expectation Model). Computes channel residuals and normalized z-scores to isolate thermal imbalances, pressure decays, and electrical drifts before conventional alarms trip."
+                formula={`Residual Vector: r_i(t) = y_actual,i(t) - y_expected,i(t)
+Normalized Z-Score: z_i(t) = |r_i(t)| / σ_i
+
+Tolerance Divisors (σ_i):
+  σ_CHT = 4.0 °C         σ_EGT = 15.0 °C
+  σ_OIL_PRESS = 0.30 bar  σ_OIL_TEMP = 5.0 °C
+  σ_FUEL_FLOW = 1.5 L/hr  σ_MAP = 3.0 kPa
+  σ_VIB = 0.25 mm/s       σ_BUS_VOLTAGE = 0.35 V`}
+                calculationSteps={[
+                  { label: 'CAN Bus Stream', detail: 'Acquires 20 Hz telemetry frames from ECU CAN 2.0B / MAVLink bus.' },
+                  { label: 'Physics Expectation', detail: 'Calculates expected steady-state and transient physics values conditioned on RPM, MAP, altitude, and OAT.' },
+                  { label: 'Residual Extraction', detail: 'Subtracts expected physics values from actual sensor readings: r = actual - expected.' },
+                  { label: 'Statistical Z-Score', detail: 'Normalizes residuals by factory tolerance divisors (z = |r| / σ) to enable multi-channel comparison.' },
+                ]}
+                sensorInputs={['CHT_1..4', 'EGT_1..4', 'OIL_PRESS', 'OIL_TEMP', 'FUEL_FLOW', 'MAP', 'VIB_RMS', 'BUS_VOLTAGE']}
+                thresholds="Nominal: z < 1.0σ | Caution: 1.0σ ≤ z < 2.5σ | Critical: z ≥ 2.5σ or Absolute Redline Breach"
+                provenance="Rotax 912 iS Sport Thermodynamic Baseline & DRDO PS-26054 Sensor Specification"
+              />
+            </div>
             <p className="text-xs text-slate-500">20 Hz sensor stream against the RotaxThermoModel physics baseline</p>
           </div>
         </div>
