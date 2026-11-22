@@ -6,14 +6,19 @@ Update the RESUME HERE block at every commit and at the end of every session.
 Part 1 historical session log (Phases 0 through 7, 19 Nov - 22 Nov 2026) is preserved in PROGRESS.txt.
 
 =====================================================================================================================
-RESUME HERE  (last updated 22 Nov 2026, Phase 8 DOC-08 Demonstration Video Integration)
+RESUME HERE  (last updated 22 Nov 2026, Phase 8 UI-09 Twin Workspace Laptop Polish & Engine Keep-Alive)
 =====================================================================================================================
 Phase:        Phase 8 (Operator UX / 3D Viewport & Production Readiness Polish).
-Card:         DOC-08 (System Demonstration Video Integration across Main App & Docs): Integrated YouTube system demonstration video (`https://youtu.be/L97JAlS9Z7c`). Main frontend website: added prominent demo video link button directly at the top of the footer in `SurveyLanding.tsx`, `LandingFooter.tsx`, and `App.tsx` console footers with red play badge and hover elevation. Documentation site: embedded responsive 16:9 player within a tactile window chrome frame on `HomePage.tsx`, added linked video cards to `22-end-to-end-demonstration.md` and `02-preparing-for-evaluation.md`, and added quick links in `Footer.tsx`.
+Card:         UI-09 (Twin Workspace Laptop Responsive Layout, Fault Card Rescale, Keep-Alive, and S02 False Bias Elimination):
+              1. Header collision resolution: streamlined single-row flexbar removing redundant 'POWERPLANT' and 'VIEW' text labels; eliminated overlapping button elements on laptop screens (< 1366px).
+              2. Fault card rescaling: compressed aside to w-[220px], switched to overflow-hidden (zero scrollbar needed), and condensed footer shortcuts into sleek 2-line mini strip with clear all (X), undo (Z), and cylinder cycling (C).
+              3. Engine keep-alive & Start button: updated backend reset/start to warm start healthy cruise RPM immediately; added auto-start keepalive and dedicated pulsating START ENGINE controls in both the header and bottom annunciator strip.
+              4. S02 false bias elimination: eliminated S02 sensor bias artifact and blue ECU highlight on fault clearance (X); passed filtered highlights directly to EngineViewer3D.
+              5. Studio lighting and material calibration: switched landing engine inset to procedural studio environment, eliminating blown-out white rendering on metallic Austro AE300 and VRDE models.
 Branch:       Beta
-Last commit:  231b375 DOC-07: humanize SIH journey with DRDO Pune visit, hostel grind, and college evaluation
-State:        All documentation, viewport transitions, fault isolation workflows, and CI checks 100% green. 52/52 Vitest, 0 tsc errors.
-Latest:       Clean working tree, docs_site build clean (27.39s), frontend build clean (10s), zero console errors.
+Last commit:  (pending UI-09 commit)
+State:        52/52 Vitest passed, 0 tsc errors, 10/10 backend pytest passed, Uvicorn running on 8000.
+Latest:       Clean layout across all laptop viewports, engine running nominal by default.
 Next step:    Phase 8 UX-02 (Time Machine mission timeline scrubber & historical replay).
 Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produce yet (lambda, timing, BSFC, power,
               vibration, GO/NO-GO); some may show blanks or crash on .toFixed(null) until M0-09. Beta only.

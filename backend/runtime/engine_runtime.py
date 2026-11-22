@@ -358,6 +358,8 @@ class EngineRuntime:
             {"START": self.source.start, "STOP": self.source.stop, "RESET": self.source.reset}[command]()
             self.manual_origin = True
             if command in ("START", "RESET"):          # the start-up transient is not a fault: settle, then diagnose
+                if self.source.plant.state != "RUNNING":
+                    self.source.plant.warm_start(self.source.plant.levers.throttle_pct or 75.0)
                 self._reset_inference()
                 self._settle_until = self.source.now() + self._restart_settle_s
             return {"command": command, "engine_state": self.source.plant.state}
@@ -367,6 +369,8 @@ class EngineRuntime:
             self.source.clear_faults()
             self.sensor_levers.clear()
             self.injected.clear()
+            if self.source.plant.state != "RUNNING":
+                self.source.plant.warm_start(self.source.plant.levers.throttle_pct or 75.0)
             self._reset_inference()
             self._settle_until = self.source.now() + self._restart_settle_s
 

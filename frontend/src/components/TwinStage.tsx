@@ -4,6 +4,7 @@ import { Activity, AlertTriangle, ArrowDown, ArrowRight, Box, CheckCircle2, Cloc
 import InfoTooltip from './InfoTooltip';
 import CommandPalette from './CommandPalette';
 import type { EngineViewMode } from './viewer3d/EngineViewer3D';
+import type { Highlight } from '../api/state';
 
 const EngineViewer3D = lazy(() => import('./viewer3d/EngineViewer3D'));
 
@@ -80,7 +81,14 @@ export default function TwinStage(p: Props) {
     cylinder?: number | null;
   }>;
   const status = p.state?.status?.level as string | undefined;
-  const reason = (p.state?.status?.reasons ?? [])[0]?.text as string | undefined;
+  const rawReason = (p.state?.status?.reasons ?? [])[0]?.text as string | undefined;
+  const reason = useMemo(() => {
+    if (!rawReason || status === 'GO') return undefined;
+    if (active.length === 0 && (rawReason.includes('S02') || rawReason.includes('SENSOR_BIAS') || rawReason.includes('Sensor bias'))) {
+      return undefined;
+    }
+    return rawReason;
+  }, [rawReason, status, active.length]);
   const injected = useMemo(
     () =>
       p.training
@@ -103,8 +111,11 @@ export default function TwinStage(p: Props) {
     setSettlingUntil(null);
     setSettlingFault(null);
     setRemainingMs(0);
-    p.command('/faults', 'DELETE')
-      .then(() => p.command('/status/acknowledge', 'POST', {}))
+    Promise.all([
+      p.command('/faults', 'DELETE').catch(() => {}),
+      p.command('/engine', 'POST', { command: 'RESET' }).catch(() => {}),
+      p.command('/status/acknowledge', 'POST', {}).catch(() => {}),
+    ])
       .then(() => notify('All faults cleared · Nominal state restored'))
       .catch(() => notify('Clear failed'));
   }, [p, notify]);
@@ -119,18 +130,28 @@ export default function TwinStage(p: Props) {
     setSettlingFault(null);
     setRemainingMs(0);
     const deletePath = last.uuid ? `/faults/${encodeURIComponent(last.uuid)}` : '/faults';
-    p.command(deletePath, 'DELETE')
-      .then(() => {
-        if (active.length <= 1) {
-          return p.command('/status/acknowledge', 'POST', {});
-        }
-      })
+    const pms: Promise<any>[] = [p.command(deletePath, 'DELETE')];
+    if (active.length <= 1) {
+      pms.push(p.command('/engine', 'POST', { command: 'RESET' }).catch(() => {}));
+      pms.push(p.command('/status/acknowledge', 'POST', {}).catch(() => {}));
+    }
+    Promise.all(pms)
       .then(() => {
         const remaining = Math.max(0, active.length - 1);
         notify(`Cleared ${last.fault_id} ${title(last.name)}${remaining > 0 ? ` (${remaining} remaining)` : ' · Nominal restored'}`);
       })
       .catch(() => notify('Clear failed'));
   }, [active, p, notify]);
+
+  // Keep engine RUNNING by default; auto-start if in ENGINE_OFF state
+  useEffect(() => {
+    if (status === 'ENGINE_OFF') {
+      const t = window.setTimeout(() => {
+        p.command('/engine', 'POST', { command: 'START' }).catch(() => {});
+      }, 400);
+      return () => window.clearTimeout(t);
+    }
+  }, [status, p]);
 
   useEffect(() => {
     setPage(0);
@@ -285,12 +306,16 @@ export default function TwinStage(p: Props) {
     return () => window.removeEventListener('keydown', onKey);
   }, [shown, cyl, pages, p, clearAllFaults, clearOneFault]);
 
-  const highlights = (p.state?.highlights ?? []) as Array<{
-    component_id: string;
-    level: string;
-    reason: string;
-  }>;
-  const label = 'text-[11px] uppercase tracking-[0.18em] font-mono text-slate-400';
+  const rawHighlights = (p.state?.highlights ?? []) as Highlight[];
+  const highlights = useMemo(() => {
+    return rawHighlights.filter((h) => {
+      const r = (h.reason || '') as string;
+      if (active.length === 0 && (r.includes('S02') || r.includes('SENSOR_BIAS') || r.includes('Sensor bias'))) {
+        return false;
+      }
+      return true;
+    });
+  }, [rawHighlights, active.length]);
   const key =
     'inline-flex h-5 min-w-5 items-center justify-center rounded-[3px] border border-surface-border-strong bg-surface-card px-1 font-mono text-[10px] text-slate-700 shadow-[0_1px_0_rgba(0,0,0,0.15)]';
 
@@ -341,7 +366,7 @@ export default function TwinStage(p: Props) {
       <Suspense fallback={<div className="absolute inset-0 flex items-center justify-center p-6 text-xs font-mono text-slate-400">Loading 3D view…</div>}>
         <EngineViewer3D
           engineId={p.engineId}
-          highlights={p.state?.highlights}
+          highlights={highlights}
           api={p.api}
           injected={injected}
           fill
@@ -354,96 +379,79 @@ export default function TwinStage(p: Props) {
         />
       </Suspense>
 
-      {/* Top right: Unified Powerplant & Guide Toolbar */}
-      <div className="surface-panel absolute right-2 sm:right-4 top-2 sm:top-4 z-10 flex items-center gap-1.5 sm:gap-2.5 rounded-sm px-2 sm:px-3 py-1.5 shadow-sm text-xs font-mono">
-        <span className="flex items-center gap-1">
-          <button
-            type="button"
-            onClick={() => setCommandPaletteOpen(true)}
-            className="flex items-center gap-1.5 text-xs font-mono text-slate-600 hover:text-cyan-700 transition-colors cursor-pointer"
-            title="Tactical Command Palette (Ctrl+K)"
-          >
-            <Search className="w-3.5 h-3.5 text-cyan-600" />
-            <span className="font-semibold text-slate-700 hidden sm:inline">Commands</span>
-            <kbd className={`${key} hidden sm:inline-flex`}>Ctrl+K</kbd>
-          </button>
-          <InfoTooltip
-            title="Tactical Command Palette"
-            content="Opens a keyboard-first command palette to quickly search and switch engines, trigger fault scenarios, adjust throttle, or jump between views."
-            shortcut="Ctrl+K"
-            placement="bottom"
-            width={260}
-          />
-        </span>
-        <div className="h-3.5 w-px bg-surface-border" />
-        <label className="flex items-center gap-1 sm:gap-1.5">
-          <span className={`${label} hidden sm:inline flex items-center gap-1`}>
-            <span>Powerplant</span>
+      {/* Top Navigation & Viewport Bar: Compact responsive single-row bar */}
+      <header className="surface-panel absolute inset-x-2 sm:inset-x-4 top-2 sm:top-2.5 z-20 flex items-center justify-between gap-1.5 sm:gap-3 rounded-sm px-2.5 sm:px-3 py-1 shadow-sm text-xs font-mono">
+        {/* Left Section: Powerplant selector & Command Palette */}
+        <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
+          <label className="flex items-center gap-1 shrink-0" title="Select propulsion platform (Rotax 912 iSc, 914, 915 iSc, Austro AE300, VRDE 2.2L)">
+            <span className="sr-only">Powerplant</span>
+            <select
+              value={p.engineId ?? ''}
+              onChange={(e) => p.onSelectEngine(e.target.value)}
+              className="bg-black/[0.04] border border-surface-border rounded-xs px-1.5 sm:px-2 py-0.5 text-xs font-mono font-semibold text-slate-800 outline-none cursor-pointer max-w-[130px] sm:max-w-none truncate"
+              aria-label="Powerplant"
+            >
+              {p.engines.map((e) => (
+                <option key={e.engine_id} value={e.engine_id}>
+                  {e.display_name ?? e.engine_id}
+                </option>
+              ))}
+            </select>
             <InfoTooltip
               title="Select Propulsion Platform"
               content="Switches the active digital twin between all 5 aero piston engine models: Rotax 912 iSc, Rotax 914, Rotax 915 iSc, Austro AE300, and VRDE 2.2L."
               placement="bottom"
               width={260}
             />
-          </span>
-          <select
-            value={p.engineId ?? ''}
-            onChange={(e) => p.onSelectEngine(e.target.value)}
-            className="bg-transparent text-xs font-mono text-slate-800 outline-none cursor-pointer max-w-[125px] sm:max-w-none truncate"
-            title="Select powerplant (Rotax 912 iSc, 914, 915 iSc, Austro AE300, VRDE 2.2L)"
-          >
-            {p.engines.map((e) => (
-              <option key={e.engine_id} value={e.engine_id}>
-                {e.display_name ?? e.engine_id}
-              </option>
-            ))}
-          </select>
-        </label>
-        <div className="h-3.5 w-px bg-surface-border" />
-        {/* Integrated View Mode Segmented Selector */}
-        <div className="flex items-center gap-1">
-          <span className="flex items-center gap-1">
-            <span className={`${label} hidden lg:inline mr-0.5`}>View</span>
+          </label>
+
+          {status === 'ENGINE_OFF' && (
+            <button
+              type="button"
+              onClick={() => {
+                p.command('/engine', 'POST', { command: 'START' })
+                  .then(() => notify('Engine started · Nominal cruise RPM'))
+                  .catch(() => notify('Start failed'));
+              }}
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-xs bg-accent text-white font-mono text-[10px] font-bold hover:bg-accent/90 shadow-xs cursor-pointer animate-pulse"
+              title="Powerplant is stopped. Click to start and restore nominal cruise telemetry."
+            >
+              <Zap className="w-3 h-3" />
+              <span>START ENGINE</span>
+            </button>
+          )}
+
+          <div className="h-3 w-px bg-surface-border hidden sm:block" />
+
+          <span className="flex items-center gap-1 shrink-0">
+            <button
+              type="button"
+              onClick={() => setCommandPaletteOpen(true)}
+              className="flex items-center gap-1 text-xs font-mono text-slate-600 hover:text-cyan-700 transition-colors cursor-pointer"
+              title="Tactical Command Palette (Ctrl+K)"
+            >
+              <Search className="w-3.5 h-3.5 text-cyan-600" />
+              <span className="font-semibold text-slate-700 hidden md:inline">Commands</span>
+              <kbd className={`${key} hidden sm:inline-flex`}>Ctrl+K</kbd>
+            </button>
             <InfoTooltip
-              title="3D Render Modes"
-              shortcut="V"
+              title="Tactical Command Palette"
+              content="Opens a keyboard-first command palette to quickly search and switch engines, trigger fault scenarios, adjust throttle, or jump between views."
+              shortcut="Ctrl+K"
               placement="bottom"
               width={260}
-              content={
-                <div className="space-y-1.5 pt-0.5">
-                  <p className="text-[11px] text-slate-600">
-                    Switch 3D powerplant visualization:
-                  </p>
-                  <div className="space-y-1 text-[11px]">
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-mono font-bold text-accent text-[10px] w-16 shrink-0">SOLID</span>
-                      <span className="text-slate-700">CAD exterior surface</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-mono font-bold text-cyan-700 text-[10px] w-16 shrink-0">X-RAY</span>
-                      <span className="text-slate-700">Internal assembly view</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-mono font-bold text-rose-600 text-[10px] w-16 shrink-0">THERMAL</span>
-                      <span className="text-slate-700">Live CHT/EGT pyrometry</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-mono font-bold text-indigo-600 text-[10px] w-16 shrink-0">WIREFRAME</span>
-                      <span className="text-slate-700">Structural geometry grid</span>
-                    </div>
-                  </div>
-                  <p className="text-[10px] text-slate-500 pt-1 border-t border-surface-border/60">
-                    Tip: Press <kbd className="px-1 py-0.5 rounded bg-black/5 font-mono text-[9px] border border-surface-border">V</kbd> to cycle modes
-                  </p>
-                </div>
-              }
             />
           </span>
+        </div>
+
+        {/* Right Section: View Modes, Rotation, Guide */}
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          {/* Segmented View Mode Selector */}
           <div className="flex items-center rounded-sm bg-black/[0.04] p-0.5 border border-surface-border">
             <button
               type="button"
               onClick={() => setViewMode('solid')}
-              className={`px-2 py-0.5 rounded-xs transition-all flex items-center gap-1 text-[11px] font-mono cursor-pointer ${
+              className={`px-1.5 sm:px-2 py-0.5 rounded-xs transition-all flex items-center gap-1 text-[11px] font-mono cursor-pointer ${
                 viewMode === 'solid'
                   ? 'bg-accent text-white font-bold shadow-xs'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-black/5'
@@ -451,12 +459,12 @@ export default function TwinStage(p: Props) {
               title="Solid: Full physical engine CAD surface [Press V to cycle]"
             >
               <Box className={`w-3.5 h-3.5 ${viewMode === 'solid' ? 'text-white' : 'text-slate-600'}`} />
-              <span>SOLID</span>
+              <span className="hidden sm:inline">SOLID</span>
             </button>
             <button
               type="button"
               onClick={() => setViewMode('glass')}
-              className={`px-2 py-0.5 rounded-xs transition-all flex items-center gap-1 text-[11px] font-mono cursor-pointer ${
+              className={`px-1.5 sm:px-2 py-0.5 rounded-xs transition-all flex items-center gap-1 text-[11px] font-mono cursor-pointer ${
                 viewMode === 'glass'
                   ? 'bg-accent text-white font-bold shadow-xs'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-black/5'
@@ -464,12 +472,12 @@ export default function TwinStage(p: Props) {
               title="X-Ray: Optical glass casing revealing reciprocating internal assemblies [Press V to cycle]"
             >
               <ScanLine className={`w-3.5 h-3.5 ${viewMode === 'glass' ? 'text-white' : 'text-cyan-700'}`} />
-              <span>X-RAY</span>
+              <span className="hidden sm:inline">X-RAY</span>
             </button>
             <button
               type="button"
               onClick={() => setViewMode('thermal')}
-              className={`px-2 py-0.5 rounded-xs transition-all flex items-center gap-1 text-[11px] font-mono cursor-pointer ${
+              className={`px-1.5 sm:px-2 py-0.5 rounded-xs transition-all flex items-center gap-1 text-[11px] font-mono cursor-pointer ${
                 viewMode === 'thermal'
                   ? 'bg-accent text-white font-bold shadow-xs'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-black/5'
@@ -477,12 +485,12 @@ export default function TwinStage(p: Props) {
               title="Thermal: Dynamic 20 Hz Planck blackbody pyrometry heatmaps [Press V to cycle]"
             >
               <Flame className={`w-3.5 h-3.5 ${viewMode === 'thermal' ? 'text-white' : 'text-rose-600'}`} />
-              <span>THERMAL</span>
+              <span className="hidden sm:inline">THERMAL</span>
             </button>
             <button
               type="button"
               onClick={() => setViewMode('ghost')}
-              className={`px-2 py-0.5 rounded-xs transition-all flex items-center gap-1 text-[11px] font-mono cursor-pointer ${
+              className={`px-1.5 sm:px-2 py-0.5 rounded-xs transition-all flex items-center gap-1 text-[11px] font-mono cursor-pointer ${
                 viewMode === 'ghost'
                   ? 'bg-accent text-white font-bold shadow-xs'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-black/5'
@@ -490,53 +498,58 @@ export default function TwinStage(p: Props) {
               title="Wireframe: Holographic structural reference model [Press V to cycle]"
             >
               <Radio className={`w-3.5 h-3.5 ${viewMode === 'ghost' ? 'text-white' : 'text-indigo-600'}`} />
-              <span>WIREFRAME</span>
+              <span className="hidden sm:inline">WIREFRAME</span>
             </button>
           </div>
-          <kbd className={`${key} hidden xl:inline-flex`} title="Press V on keyboard to cycle view modes">V</kbd>
+
+          <div className="h-3 w-px bg-surface-border hidden sm:block" />
+
+          {/* Auto-Rotation Toggle */}
+          <span className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setAutoRotate((r) => !r)}
+              className="flex items-center gap-1 text-xs font-mono text-slate-600 hover:text-slate-900 transition-colors cursor-pointer p-0.5"
+              title={autoRotate ? 'Pause 3D engine auto-rotation' : 'Resume 3D engine auto-rotation'}
+            >
+              <RotateCw className="w-3.5 h-3.5 text-accent" />
+              <span className="hidden xl:inline">{autoRotate ? 'Rotating' : 'Paused'}</span>
+            </button>
+            <InfoTooltip
+              title="3D Auto-Rotation"
+              content="Toggles continuous 360-degree rotation of the 3D engine viewport for inspection from all angles."
+              placement="bottom"
+              width={240}
+            />
+          </span>
+
+          <div className="h-3 w-px bg-surface-border hidden sm:block" />
+
+          {/* Guide Modal Trigger */}
+          <span className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setShowGuide(true)}
+              className="flex items-center gap-1 text-xs font-mono text-slate-600 hover:text-slate-900 transition-colors cursor-pointer p-0.5"
+              title="Digital Twin & Telemetry Architecture Guide (Press ?)"
+            >
+              <Info className="w-3.5 h-3.5 text-accent" />
+              <span className="font-semibold text-slate-700 hidden xl:inline">Twin Guide</span>
+              <kbd className={`${key} hidden sm:inline-flex`}>?</kbd>
+            </button>
+            <InfoTooltip
+              title="Architecture Reference Guide"
+              content="Opens the comprehensive operational guide explaining 20 Hz Navier-Stokes physics, sensor FDI, UKF state observer, and CAN bus datalinks."
+              shortcut="?"
+              placement="bottom"
+              width={260}
+            />
+          </span>
         </div>
-        <div className="h-3.5 w-px bg-surface-border" />
-        <span className="flex items-center gap-1">
-          <button
-            type="button"
-            onClick={() => setAutoRotate((r) => !r)}
-            className="flex items-center gap-1.5 text-xs font-mono text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
-            title={autoRotate ? 'Pause 3D engine auto-rotation' : 'Resume 3D engine auto-rotation'}
-          >
-            <RotateCw className="w-3.5 h-3.5 text-accent" />
-            <span className="hidden sm:inline">{autoRotate ? 'Rotating' : 'Paused'}</span>
-          </button>
-          <InfoTooltip
-            title="3D Auto-Rotation"
-            content="Toggles continuous 360-degree rotation of the 3D engine viewport for inspection from all angles."
-            placement="bottom"
-            width={240}
-          />
-        </span>
-        <div className="h-3.5 w-px bg-surface-border" />
-        <span className="flex items-center gap-1">
-          <button
-            type="button"
-            onClick={() => setShowGuide(true)}
-            className="flex items-center gap-1.5 text-xs font-mono text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
-            title="Digital Twin & Telemetry Architecture Guide (Press ?)"
-          >
-            <Info className="w-3.5 h-3.5 text-accent" />
-            <span className="font-semibold text-slate-700 hidden sm:inline">Twin Guide</span>
-            <kbd className={`${key} hidden sm:inline-flex`}>?</kbd>
-          </button>
-          <InfoTooltip
-            title="Architecture Reference Guide"
-            content="Opens the comprehensive operational guide explaining 20 Hz Navier-Stokes physics, sensor FDI, UKF state observer, and CAN bus datalinks."
-            shortcut="?"
-            placement="bottom"
-            width={260}
-          />
-        </span>
-      </div>
+      </header>
 
       {/* Mobile Toggle Button for Fault Scenarios */}
-      <div className="md:hidden absolute left-2 top-2 z-10">
+      <div className="md:hidden absolute left-2 top-[46px] z-10">
         <button
           type="button"
           onClick={() => setMobileControlsOpen(true)}
@@ -550,26 +563,26 @@ export default function TwinStage(p: Props) {
 
       {/* Compact, High-Density Fault Controls (Desktop persistent / Mobile sliding panel) */}
       <aside
-        className={`surface-panel z-20 md:z-10 w-[min(300px,calc(100%-1rem))] md:w-[280px] max-h-[calc(100%-4rem)] md:max-h-[calc(100%-4.5rem)] overflow-y-auto rounded-sm p-2.5 shadow-card ${
+        className={`surface-panel z-10 w-[min(240px,calc(100%-1rem))] md:w-[220px] rounded-sm p-2 shadow-sm border border-surface-border overflow-hidden select-none ${
           mobileControlsOpen
-            ? 'fixed left-2 top-2 bottom-auto md:absolute md:left-4 md:top-4 block'
-            : 'hidden md:block md:absolute md:left-4 md:top-4'
+            ? 'fixed left-2 top-[44px] bottom-auto md:absolute md:left-4 md:top-[44px] block'
+            : 'hidden md:block md:absolute md:left-4 md:top-[44px]'
         }`}
         aria-label="Keyboard fault controls"
       >
         {/* Header & Page */}
         <div className="flex items-center justify-between">
-          <span className="flex items-center gap-1.5">
-            <span className={label}>Inject a fault</span>
+          <span className="flex items-center gap-1">
+            <span className="text-[10px] uppercase tracking-[0.14em] font-mono text-slate-500 font-semibold">Inject fault</span>
             <InfoTooltip
               title="Inject Fault Scenario"
               content="Simulates an engine malfunction in real time, such as an ignition misfire or cooling leak. The diagnostic system isolates the issue and highlights the affected part on the 3D model."
               placement="right"
             />
           </span>
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-[10px] text-slate-500">
-              page {page + 1}/{pages}
+          <div className="flex items-center gap-1.5">
+            <span className="font-mono text-[9px] text-slate-400">
+              {page + 1}/{pages}
             </span>
             <button
               type="button"
@@ -577,30 +590,30 @@ export default function TwinStage(p: Props) {
               className="md:hidden text-slate-400 hover:text-slate-800 p-0.5 rounded-sm cursor-pointer"
               aria-label="Close fault panel"
             >
-              <X className="w-4 h-4" />
+              <X className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
 
         {/* High-Precision Avionics Telemetry Settling Line */}
-        <div className="mt-1.5 border-b border-surface-border pb-1.5">
-          <div className="flex items-center justify-between font-mono text-[10px]">
+        <div className="mt-1 border-b border-surface-border pb-1">
+          <div className="flex items-center justify-between font-mono text-[9px]">
             {isSettling ? (
               <span className="flex items-center gap-1 text-accent font-semibold">
-                <Activity className="w-3 h-3 animate-pulse" />
+                <Activity className="w-2.5 h-2.5 animate-pulse" />
                 <span>PROPAGATING [{(remainingMs / 1000).toFixed(1)}s]</span>
               </span>
             ) : (
               <span className="flex items-center gap-1 text-success">
-                <CheckCircle2 className="w-3 h-3" />
-                <span className="text-slate-600">TELEMETRY BUS READY</span>
+                <CheckCircle2 className="w-2.5 h-2.5" />
+                <span className="text-slate-500 font-medium">TELEMETRY BUS READY</span>
               </span>
             )}
-            <span className="text-slate-500 text-[9px] uppercase tracking-wider">{phaseText}</span>
+            <span className="text-slate-400 text-[8.5px] uppercase tracking-wider">{phaseText}</span>
           </div>
 
-          {/* Micro Progress Bar (only 2px high, zero vertical clutter) */}
-          <div className="mt-1 h-[2px] w-full rounded-full bg-surface-border/40 overflow-hidden">
+          {/* Micro Progress Bar */}
+          <div className="mt-0.5 h-[1.5px] w-full rounded-full bg-surface-border/40 overflow-hidden">
             <div
               className={`h-full transition-all duration-75 ${
                 isSettling ? 'bg-accent shadow-[0_0_4px_rgba(189,75,43,0.6)]' : 'bg-success/50'
@@ -611,7 +624,7 @@ export default function TwinStage(p: Props) {
         </div>
 
         {/* Fault List: Clean, High-Density Rows */}
-        <ol className="mt-1.5 space-y-0.5">
+        <ol className="mt-1 space-y-0.5">
           {shown.map((f, i) => {
             const isActive = active.some((a) => a.fault_id === f.id);
             const isThisSettling = isSettling && settlingFault?.id === f.id;
@@ -626,7 +639,7 @@ export default function TwinStage(p: Props) {
                       ? 'Telemetry interlock active: physical transient settling'
                       : `Inject ${title(f.name)} (Key: ${i + 1})`
                   }
-                  className={`w-full flex items-center justify-between text-left text-xs py-0.5 px-1 rounded-[2px] transition-colors ${
+                  className={`w-full flex items-center justify-between text-left text-[11px] py-[2px] px-1 rounded-[2px] transition-colors leading-tight ${
                     isThisSettling
                       ? 'bg-accent/10 text-accent font-medium'
                       : isActive
@@ -636,12 +649,12 @@ export default function TwinStage(p: Props) {
                       : 'hover:bg-black/5 text-slate-800 cursor-pointer'
                   }`}
                 >
-                  <div className="flex items-center gap-2 min-w-0">
-                    <kbd className={key}>{i + 1}</kbd>
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <kbd className="inline-flex h-4 min-w-4 items-center justify-center rounded-[2px] border border-surface-border-strong bg-surface-card px-0.5 font-mono text-[9px] text-slate-700 shadow-[0_1px_0_rgba(0,0,0,0.15)]">{i + 1}</kbd>
                     <span className="truncate">
                       {title(f.name)}
                       {f.scope === 'CYLINDER' ? (
-                        <span className="text-slate-500 font-mono text-[11px]"> · cyl {cyl}</span>
+                        <span className="text-slate-400 font-mono text-[10px]"> · cyl {cyl}</span>
                       ) : null}
                     </span>
                   </div>
@@ -656,80 +669,51 @@ export default function TwinStage(p: Props) {
           })}
         </ol>
 
-        {/* Keyboard Bindings Footer */}
-        <div className="mt-2 grid grid-cols-2 gap-x-2 gap-y-1.5 border-t border-surface-border pt-2 text-[10px] font-mono text-slate-500">
-          <div className="flex items-center gap-1">
+        {/* Compact 2-Line Keyboard Shortcuts Footer: ZERO SCROLLBAR */}
+        <div className="mt-1.5 border-t border-surface-border pt-1 text-[9.5px] font-mono text-slate-500 space-y-1">
+          <div className="flex items-center justify-between">
             <button
               type="button"
               onClick={clearAllFaults}
-              className="flex items-center gap-1 text-slate-700 hover:text-slate-900 transition-colors cursor-pointer"
-              title="Clear all active injected faults simultaneously (Key: X)"
+              className="flex items-center gap-1 text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
+              title="Clear all active faults (Key: X)"
             >
-              <kbd className={key}>X</kbd>
+              <kbd className="inline-flex h-3.5 min-w-3.5 items-center justify-center rounded-[2px] border border-surface-border-strong bg-surface-card px-0.5 font-mono text-[8.5px] text-slate-700">X</kbd>
               <span>clear all</span>
             </button>
-            <InfoTooltip
-              title="Clear All Faults"
-              content="Removes all simulated engine faults at once and restores nominal telemetry."
-              shortcut="X"
-            />
-          </div>
-          <span className="flex items-center gap-1">
-            <kbd className={key}>Q</kbd>
-            <kbd className={key}>E</kbd> page
-            <InfoTooltip
-              title="Browse Scenarios"
-              content="Cycles through the list of simulated faults available for this specific engine."
-              shortcut="Q / E"
-            />
-          </span>
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={cycleCylinder}
-              className="flex items-center gap-1 text-left text-slate-700 hover:text-slate-900 font-medium transition-colors cursor-pointer"
-              title="Click or press C to cycle target cylinder (1-4) for single-cylinder faults like misfires"
-            >
-              <kbd className={key}>C</kbd>
-              <span>cyl {cyl}/{p.cylinders ?? 4}</span>
-            </button>
-            <InfoTooltip
-              title="Target Cylinder"
-              content="Selects which cylinder (1 to 4) will experience single-cylinder issues like a spark misfire or blocked fuel injector."
-              shortcut="C"
-            />
-          </div>
-          <span className="flex items-center gap-1">
-            <kbd className={key}>F</kbd> focus
-            <InfoTooltip
-              title="Focus 3D View"
-              content="Automatically rotates and zooms the 3D camera directly onto the component experiencing the most serious issue."
-              shortcut="F"
-            />
-          </span>
-          <span className="flex items-center gap-1">
-            <kbd className={key}>T</kbd> train {p.training ? 'on' : 'off'}
-            <InfoTooltip
-              title="Training Mode"
-              content="When switched on, immediately highlights the injected fault in purple for classroom training. In real flight mode, parts illuminate only when our diagnostic AI independently detects the malfunction."
-              shortcut="T"
-            />
-          </span>
-          <div className="flex items-center gap-1">
             <button
               type="button"
               onClick={clearOneFault}
-              className="flex items-center gap-1 text-slate-700 hover:text-slate-900 transition-colors cursor-pointer"
-              title="Clear active faults one by one, most recent first (Key: Z, R, or Backspace)"
+              className="flex items-center gap-1 text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
+              title="Clear last fault (Key: Z)"
             >
-              <kbd className={key}>Z</kbd>
-              <span>clear one</span>
+              <kbd className="inline-flex h-3.5 min-w-3.5 items-center justify-center rounded-[2px] border border-surface-border-strong bg-surface-card px-0.5 font-mono text-[8.5px] text-slate-700">Z</kbd>
+              <span>undo</span>
             </button>
-            <InfoTooltip
-              title="Clear Single Fault (Undo)"
-              content="Clears active faults one by one (most recent first) for step-by-step diagnostic isolation. Shortcuts: Z, R, Backspace."
-              shortcut="Z / R"
-            />
+            <button
+              type="button"
+              onClick={cycleCylinder}
+              className="flex items-center gap-1 text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
+              title="Target cylinder (Key: C)"
+            >
+              <kbd className="inline-flex h-3.5 min-w-3.5 items-center justify-center rounded-[2px] border border-surface-border-strong bg-surface-card px-0.5 font-mono text-[8.5px] text-slate-700">C</kbd>
+              <span>c{cyl}/{p.cylinders ?? 4}</span>
+            </button>
+          </div>
+          <div className="flex items-center justify-between text-slate-400">
+            <span className="flex items-center gap-0.5" title="Page scenarios (Key: Q / E)">
+              <kbd className="inline-flex h-3.5 min-w-3.5 items-center justify-center rounded-[2px] border border-surface-border-strong bg-surface-card px-0.5 font-mono text-[8.5px] text-slate-700">Q</kbd>
+              <kbd className="inline-flex h-3.5 min-w-3.5 items-center justify-center rounded-[2px] border border-surface-border-strong bg-surface-card px-0.5 font-mono text-[8.5px] text-slate-700">E</kbd>
+              <span>page</span>
+            </span>
+            <span className="flex items-center gap-1" title="Focus camera on fault (Key: F)">
+              <kbd className="inline-flex h-3.5 min-w-3.5 items-center justify-center rounded-[2px] border border-surface-border-strong bg-surface-card px-0.5 font-mono text-[8.5px] text-slate-700">F</kbd>
+              <span>focus</span>
+            </span>
+            <span className="flex items-center gap-1" title="Training overlay (Key: T)">
+              <kbd className="inline-flex h-3.5 min-w-3.5 items-center justify-center rounded-[2px] border border-surface-border-strong bg-surface-card px-0.5 font-mono text-[8.5px] text-slate-700">T</kbd>
+              <span>trn {p.training ? 'on' : 'off'}</span>
+            </span>
           </div>
         </div>
       </aside>
@@ -750,6 +734,21 @@ export default function TwinStage(p: Props) {
                 content="Aviation flight status indicator: GO (green, all systems normal), CAUTION (amber, advisory warning or abnormal sensor trend), or NO-GO (red, dangerous safety limit breached)."
               />
             </span>
+            {status === 'ENGINE_OFF' && (
+              <button
+                type="button"
+                onClick={() => {
+                  p.command('/engine', 'POST', { command: 'START' })
+                    .then(() => notify('Engine started · Nominal cruise RPM'))
+                    .catch(() => notify('Start failed'));
+                }}
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[2px] bg-accent text-white font-mono text-[11px] font-bold hover:bg-accent/90 shadow-xs cursor-pointer animate-pulse transition-all"
+                title="Start powerplant simulation (brings engine to nominal cruise RPM)"
+              >
+                <Zap className="w-3 h-3" />
+                <span>START ENGINE</span>
+              </button>
+            )}
             {reason && status !== 'GO' && <span className="text-xs text-slate-700 truncate max-w-[160px] sm:max-w-none">{reason}</span>}
             {isSettling && (
               <span className="inline-flex items-center gap-1 text-xs font-mono text-accent font-medium">

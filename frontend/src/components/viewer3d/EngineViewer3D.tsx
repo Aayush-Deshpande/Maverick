@@ -72,10 +72,10 @@ function prepare(root: Object3D): void {
   const center = box.getCenter(new Vector3());
   const size = box.getSize(new Vector3());
   const maxDim = Math.max(size.x, size.y, size.z);
-  const scale = 1.8 / (maxDim || 1);
+  const scale = 1.30 / (maxDim || 1);
 
   root.scale.setScalar(scale);
-  root.position.x = -center.x * scale;
+  root.position.x = -center.x * scale + 0.14;
   root.position.y = -center.y * scale + 0.05;
   root.position.z = -center.z * scale;
   root.updateWorldMatrix(true, true);
