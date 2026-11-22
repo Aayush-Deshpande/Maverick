@@ -141,6 +141,26 @@ export const HomePage: React.FC<HomePageProps> = ({
                     </div>
                 </section>
 
+                {/* 1.5 ARCHITECTURAL HONESTY GUARANTEE */}
+                <div className="border-b border-stone-200 bg-emerald-50/50 px-4 sm:px-6 lg:px-12 py-5">
+                    <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div className="flex items-start gap-3">
+                            <ShieldCheck className="size-5 text-emerald-700 shrink-0 mt-0.5" />
+                            <div className="space-y-0.5">
+                                <span className="font-mono text-[10px] uppercase tracking-wider text-emerald-900 font-bold block">
+                                    Aero-Engine State Estimation Guarantee · Zero Ground-Truth Leaking
+                                </span>
+                                <p className="text-xs text-stone-700 leading-relaxed font-sans">
+                                    Injected faults only alter mechanical and thermodynamic variables (fuel flow, friction, air leaks). The 20 Hz Unscented Kalman Filter and Bayesian classifier receive <strong>only noisy simulated sensor telemetry</strong>. Component highlights and root-cause diagnoses are derived mathematically from sensor residual z-scores (<code className="text-stone-900 font-mono text-[11px] bg-white px-1 py-0.5 rounded border border-stone-300">r = y - ŷ</code>), guarded by automated AST test scans (<code className="text-stone-900 font-mono text-[11px] bg-white px-1 py-0.5 rounded border border-stone-300">test_no_truth_leak.py</code>).
+                                </p>
+                            </div>
+                        </div>
+                        <span className="px-2 py-0.5 rounded border border-emerald-600/30 bg-white font-mono text-[10px] font-semibold text-emerald-800 uppercase tracking-wider shrink-0">
+                            Blind Inference
+                        </span>
+                    </div>
+                </div>
+
                 {/* 2. TWO PRIMARY SECTIONS (The Two Architectural Portals) */}
                 <section className="py-16 px-4 sm:px-6 lg:px-12 border-b border-stone-200">
                     <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">

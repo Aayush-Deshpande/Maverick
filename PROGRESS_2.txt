@@ -6,20 +6,18 @@ Update the RESUME HERE block at every commit and at the end of every session.
 Part 1 historical session log (Phases 0 through 7, 19 Nov - 22 Nov 2026) is preserved in PROGRESS.txt.
 
 =====================================================================================================================
-RESUME HERE  (last updated 22 Nov 2026, Phase 0/8 M0-08k Modernized Unified Tactical AI Copilot & Dual-Engine)
+RESUME HERE  (last updated 22 Nov 2026, Phase 0/8 M0-08l Blind State Estimation & Sensor Attribution Disclosures)
 =====================================================================================================================
-Phase:        Phase 0 / Phase 8 (Platform Harmonization & AI Mission Copilot Modernization).
-Card:         M0-08k (Modernized Single-Card Tactical AI Copilot, Dynamic State-Aware Mic & Dual-Engine Notice):
-              1. Unified Single-Card Layout: Eradicated separate voice console box and error badges in favor of a clean, unified card matching ChatGPT / Gemini / Claude conversational layout with standard chat reflection.
-              2. Dynamic State-Aware Mic: Central mic icon updates dynamically across IDLE, LISTENING, THINKING, and SPEAKING states with live 5-bar equalizer animations and interim speech transcript preview.
-              3. Anti-AI-Slop Typography: Switched assistant output from monospace code typewriter slop to clean, high-density sans-serif prose (`font-sans`), reserving monospace strictly for telemetry metrics and ATA codes.
-              4. Zero Screen Jerk / Auto-Scroll Fix: Fixed bug where mic clicks scrolled the outer page to the footer; scoped scroll behavior strictly to inner chat messages container (`messages.length`).
-              5. Dual-Engine Architecture Notice: Transparently displays: "Dual Engine: Operates on local LLM (Ollama / Qwen2.5 / Sarvam) for edge defense deployments; powered by Google Gemini for cloud demonstration."
-              6. Interactive Voice Controls: Prominent Hands-Free Voice toggle, audio mute/unmute (`Volume2`/`VolumeX`), speech synthesis barge-in interrupt, conversation history clear, and warmup test.
+Phase:        Phase 0 / Phase 8 (Platform Harmonization & Scientific Truthfulness).
+Card:         M0-08l (Humanized Blind State Estimation & Sensor Attribution Disclosures Across GCS, Landing, and Docs):
+              1. Eradicated AI-slop catchphrases (specifically "Zero-Cheat Architecture") in favor of standard aerospace engineering terminology: "Blind State Estimation & Independent Sensor Attribution" (OSA-CBM / IEEE Aerospace).
+              2. Updated `RuntimeGuideModal.tsx`, `FaultMatrix.tsx`, and `CalculationsPanel.tsx` (i) modals with clear, humanized explanations showing that injected faults affect only internal thermodynamic and mechanical state equations, while state estimation (UKF) and the Bayesian fault classifier receive only noisy sensor observations ($r = y - \hat{y}$), strictly enforced by `tests/test_no_truth_leak.py`.
+              3. Added prominent Evaluation Guide access directly in the GCS header navigation (`Header.tsx` & `App.tsx`).
+              4. Added evaluator disclosure banners in `LandingDetection.tsx` and `HomePage.tsx` on the documentation portal.
 Branch:       Beta
-Last commit:  b70aa13 DOC: update .env.example with Gemini cloud agent and server parameters, add frontend .env.example
-State:        All branches (Beta, main) synced and pushed to origin. Vercel deployments verified HTTP 200 (Digital Twin & Docs). Render Docker build unblocked. Gemini LLM agent tested & verified.
-Latest:       All GCS subtabs feature comprehensive (i) calculation modals, tactile active-press microanimations, clean sans-serif typography, unified AI copilot with dual-engine deployment notice, and verified Gemini cloud integration.
+Last commit:  Pending M0-08l commit
+State:        All TypeScript and build tests clean (0 errors). Ready to push Beta and merge to main.
+Latest:       Full blind state estimation guarantees documented across GCS UI, landing page, and docs site.
 Next step:    Phase 8 UX-02 (Time Machine mission timeline scrubber & historical replay).
 =====================================================================================================================
 Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produce yet (lambda, timing, BSFC, power,

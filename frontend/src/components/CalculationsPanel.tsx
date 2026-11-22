@@ -107,7 +107,7 @@ export const CalculationsPanel: React.FC<CalculationsPanelProps> = ({ state }) =
             <PanelInfoModal
               title="Multi-Stage Anomaly Detection & Prognostics Pipeline"
               subtitle="4-Step Statistical, Physics, & Deep Learning Consensus"
-              description="Implements a 4-step cascaded detection pipeline designed to eliminate false positives while achieving early fault detection with zero ground-truth leakage: (1) Sensor Sanity & Range Validation, (2) Normalized Residual Z-Scores, (3) Neural Autoencoder Reconstruction Error, and (4) Whiteness / Innovation Chi-Square Testing."
+              description="How the digital twin catches faults without cheating: The system constantly solves a nominal physics model in the background, forecasting what healthy sensors ought to read at the current throttle and altitude. We subtract the twin's forecast from incoming sensor readings to get the residual gap (r = y - ŷ). If real exhaust cools down while the twin expects heat, or vibration harmonics drift away from normal, these four checks confirm the failure mathematically before raising an alarm."
               formula={`Step 1: Sanity Check: y_min ≤ y_i ≤ y_max and |dy_i/dt| ≤ slew_limit
 Step 2: Residual Z-Score: z_i = |y_i - ŷ_i| / σ_i
 Step 3: Autoencoder Score: S_AE = (1/N) · Σ (x_i - x̂_i)²
@@ -115,10 +115,10 @@ Step 4: Whiteness / NIS: χ² = Σ ν_k^T · S_k^(-1) · ν_k ~ χ²_m
 
 Consensus Alarm: Alarm = (z_max ≥ 2.5) ∧ (S_AE ≥ 0.45) ∧ (p_value(χ²) < 0.05)`}
               calculationSteps={[
-                { label: 'Sensor Sanity', detail: 'Detects stuck, disconnected, or out-of-range sensor channels before running algorithms.' },
-                { label: 'Observer Residuals', detail: 'Evaluates thermodynamic discrepancies against calibrated expectation model.' },
-                { label: 'Autoencoder Reconstruction', detail: 'Deep neural autoencoder reconstructs the 14-channel manifold; anomaly score is MSE between input and latent reconstruction.' },
-                { label: 'Innovation Whiteness', detail: 'Verifies whether residual sequence is zero-mean white Gaussian noise (Kalman filter NIS test).' },
+                { label: '1. Sensor Sanity', detail: 'Catches disconnected wires or frozen sensors immediately, preventing wiring glitches from masquerading as engine breakdowns.' },
+                { label: '2. Physics Residuals', detail: 'Calculates the difference between what the twin expects and what sensors report across all 14 engine channels.' },
+                { label: '3. Neural Autoencoder', detail: 'Evaluates multi-sensor coupling; flags unusual combinations of pressure and temperature that violate normal aerodynamics.' },
+                { label: '4. Innovation Whiteness', detail: 'Performs Kalman filter Chi-Square testing to ensure anomalies persist and are not just harmless electrical noise.' },
               ]}
               sensorInputs={['Residual Vector r_1..14', 'Innovation Sequence ν_k', 'Sensor Range & Slew Clamps']}
               thresholds="Autoencoder Threshold: S_AE > 0.45 | Z-Score Alarm: z ≥ 2.50 | NIS Chi-Square: p < 0.05"

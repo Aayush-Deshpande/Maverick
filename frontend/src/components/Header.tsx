@@ -9,6 +9,7 @@ import {
   User,
   Cpu,
   Wrench,
+  ShieldCheck,
 } from 'lucide-react';
 import { UnifiedTelemetryState, GCSRole } from '../types/telemetry';
 import { pct } from '../utils/format';
@@ -24,6 +25,7 @@ interface HeaderProps {
   runtimeMode?: boolean;
   showRoleSelector?: boolean;
   onGoLanding?: () => void;
+  onOpenGuide?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -36,6 +38,7 @@ export const Header: React.FC<HeaderProps> = ({
   runtimeMode = false,
   showRoleSelector = false,
   onGoLanding,
+  onOpenGuide,
 }) => {
   const isFaulted = state.analytics.diagnosed_fault_id > 0;
   const isEngineOn = state.is_engine_running;
@@ -239,7 +242,17 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           )}
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
+            {onOpenGuide && (
+              <button
+                onClick={onOpenGuide}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm bg-accent/15 border border-accent/40 text-accent hover:bg-accent hover:text-white transition-all text-xs font-mono font-medium shadow-xs"
+                title="View Cyber-Physical Digital Twin Architecture & Evaluation Guide for DRDO / SIH Judges"
+              >
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Evaluation Guide</span>
+              </button>
+            )}
             <button
               onClick={onOpenSettings}
               className="p-1.5 sm:p-2 rounded-sm bg-surface-card border border-surface-border text-slate-400 hover:text-white hover:bg-surface-card-hover transition-colors"

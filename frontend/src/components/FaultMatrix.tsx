@@ -46,17 +46,17 @@ export const FaultMatrix: React.FC<FaultMatrixProps> = ({ state, onCommand }) =>
               <PanelInfoModal
                 title="DRDO Fault Injection Matrix"
                 subtitle="Physical Degradation & Parameter Perturbation (PS-26054)"
-                description="Injects continuous physical parameter degradations into the engine simulation according to the DRDO PS-26054 37-Fault FMECA Catalog (F01–F37). In strict adherence to the Zero Truth Leakage rule, faults modify underlying physical parameters (orifice discharge coefficients, heat transfer multipliers, coil resistances) rather than output telemetry."
+                description="When you select a fault, the system does not pass an alert flag or tell the 3D model to glow. Instead, the simulation gradually adjusts physical engine parameters—like reducing fuel delivery to a single injector or opening an intake manifold air leak over 6 seconds. The digital twin has to discover the failure on its own by analyzing raw cylinder temperatures and vibration telemetry, exactly as it would on an operational UAV."
                 formula={`Parameter Perturbation: θ_fault(t) = θ_nominal · (1 - α · ramp(t - t_inj, τ=6s))
 Cylinder Overheat: UA_cyl2 = UA_nominal · (1 - 0.45 · ramp(t, 6s))
 Injector Clog: C_d,inj = C_d0 · 0.40  (fuel flow drop, lean mixture)
 Oil Pressure Leak: R_orifice = R_0 · 0.35  (scavenge decay to 1.8 bar)
 Gearbox Harmonic: a_vib(t) = a_0 + α · sin(3 · ω_crank · t + φ)`}
                 calculationSteps={[
-                  { label: 'Fault Activation', detail: 'Operator or test harness triggers a physical degradation mode.' },
-                  { label: 'Smooth Dynamic Ramp', detail: 'Linearly or exponentially ramps the parameter over 6.0 seconds (τ = 6 s) to emulate physical failure progression.' },
-                  { label: 'Coupled Simulation', detail: '1D thermodynamic ODE solver propagates altered physical coefficients into temperatures, pressures, and vibration spectra.' },
-                  { label: 'Zero Ground Truth Leak', detail: 'Inference and diagnostic observers inspect only telemetry residuals with zero access to the active fault ID.' },
+                  { label: '1. What You Command', detail: 'You pick a realistic mechanical failure (like a clogged injector or scavenge oil leak).' },
+                  { label: '2. Physical Ramp (6s)', detail: 'The engine math gradually chokes the fuel or bleeds oil over 6 seconds so you can watch temperatures and pressures genuinely react.' },
+                  { label: '3. Blind Detection', detail: 'The digital twin runs with zero knowledge of what you clicked. It only sees noisy sensor telemetry.' },
+                  { label: '4. Inferred 3D Highlight', detail: 'The 3D engine part only lights up once the Bayesian classifier calculates at least 70% statistical confidence from sensor drift.' },
                 ]}
                 sensorInputs={['CHT_1..4', 'EGT_1..4', 'OIL_PRESS', 'OIL_TEMP', 'FUEL_FLOW', 'VIB_RMS', 'BUS_VOLTAGE', 'MAP']}
                 thresholds="8 primary degradation modes (F01–F08) spanning Thermal, Fuel, Ignition, Lube, Mechanical, and Avionics"

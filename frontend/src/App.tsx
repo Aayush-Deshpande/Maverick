@@ -19,6 +19,7 @@ const MaintenanceDashboardPanel = lazy(() => import('./components/MaintenanceDas
 const TwinWorkspace = lazy(() => import('./components/TwinWorkspace'));
 const EngineRuntimeConsole = lazy(() => import('./components/EngineRuntimeConsole').then((m) => ({ default: m.EngineRuntimeConsole })));
 const ConnectionModal = lazy(() => import('./components/ConnectionModal').then((m) => ({ default: m.ConnectionModal })));
+const RuntimeGuideModal = lazy(() => import('./components/RuntimeGuideModal').then((m) => ({ default: m.RuntimeGuideModal })));
 
 const TacticalLoaderFallback = () => (
   <div className="surface-panel p-8 flex items-center justify-center gap-3 font-mono text-xs text-slate-400">
@@ -67,6 +68,7 @@ export function App() {
     setIsModalOpen,
   } = useTelemetrySocket({ enabled: workspace !== 'landing' });
 
+  const [isGuideOpen, setIsGuideOpen] = useState(false);
   const [activeRole, setActiveRole] = useState<GCSRole>('OPERATOR');
   const [activeTab, setActiveTab] = useState<
     'OPERATOR' | 'PROPULSION' | 'MAINTENANCE' | 'AI_COPILOT' | 'MISSION_REPLAY'
@@ -108,6 +110,7 @@ export function App() {
         runtimeMode={workspace !== 'tactical'}
         showRoleSelector={false}
         onGoLanding={() => setWorkspace('landing')}
+        onOpenGuide={() => setIsGuideOpen(true)}
       />
 
       <main className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-4 md:p-6 space-y-4">
@@ -363,6 +366,12 @@ export function App() {
           onSave={setServerUrl}
           isConnected={isConnected}
         />
+        {isGuideOpen && (
+          <RuntimeGuideModal
+            open={isGuideOpen}
+            onClose={() => setIsGuideOpen(false)}
+          />
+        )}
       </Suspense>
     </div>
   );
