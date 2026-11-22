@@ -423,28 +423,33 @@ export const DocArticlePage: React.FC<DocArticlePageProps> = ({ slug, onNavigate
                       {children}
                     </td>
                   ),
-                  // Images with application window styling
-                  img: ({ src, alt }: any) => (
-                    <span className="block my-6 rounded-lg border border-stone-200 bg-white overflow-hidden shadow-xs">
-                      <span className="flex items-center justify-between px-3.5 py-2 bg-stone-50 border-b border-stone-200 font-mono text-[11px] text-stone-600">
-                        <span className="flex items-center gap-1.5">
-                          <span className="size-2 rounded-full bg-stone-300 inline-block" />
-                          <span className="size-2 rounded-full bg-stone-300 inline-block" />
-                          <span className="size-2 rounded-full bg-stone-300 inline-block" />
-                          <span className="ml-2 font-medium text-stone-800 truncate max-w-md inline-block">{alt || 'Telemetry & Diagnostics View'}</span>
+                  // Images with application window styling or field photo framing
+                  img: ({ src, alt }: any) => {
+                    const isPhoto = isJourney || (typeof src === 'string' && src.includes('/images/'));
+                    return (
+                      <span className="block my-6 rounded-lg border border-stone-200 bg-white overflow-hidden shadow-xs">
+                        <span className="flex items-center justify-between px-3.5 py-2 bg-stone-50 border-b border-stone-200 font-mono text-[11px] text-stone-600">
+                          <span className="flex items-center gap-1.5">
+                            <span className="size-2 rounded-full bg-stone-300 inline-block" />
+                            <span className="size-2 rounded-full bg-stone-300 inline-block" />
+                            <span className="size-2 rounded-full bg-stone-300 inline-block" />
+                            <span className="ml-2 font-medium text-stone-800 truncate max-w-md inline-block">{alt || (isPhoto ? 'Team Photo Archive' : 'Telemetry & Diagnostics View')}</span>
+                          </span>
+                          <span className="text-[10px] text-stone-600 uppercase font-semibold">
+                            {isPhoto ? 'SIH 2026 Field Archive' : 'Live System Capture'}
+                          </span>
                         </span>
-                        <span className="text-[10px] text-stone-600 uppercase font-semibold">Live System Capture</span>
-                      </span>
-                      <span className="bg-stone-900 flex items-center justify-center p-1 block">
-                        <img src={src} alt={alt} className="w-full h-auto object-contain max-h-[600px] rounded-xs" />
-                      </span>
-                      {alt && (
-                        <span className="p-2.5 bg-stone-50 border-t border-stone-200 text-xs text-stone-600 font-sans text-center block">
-                          {alt}
+                        <span className={`${isPhoto ? 'bg-stone-100 p-2.5 sm:p-4' : 'bg-stone-900 p-1'} flex items-center justify-center block`}>
+                          <img src={src} alt={alt} className={`w-full h-auto object-contain max-h-[600px] ${isPhoto ? 'rounded-md shadow-sm' : 'rounded-xs'}`} />
                         </span>
-                      )}
-                    </span>
-                  ),
+                        {alt && (
+                          <span className="p-2.5 bg-stone-50 border-t border-stone-200 text-xs text-stone-600 font-sans text-center block">
+                            {alt}
+                          </span>
+                        )}
+                      </span>
+                    );
+                  },
                 }}
               >
                 {markdownBody}

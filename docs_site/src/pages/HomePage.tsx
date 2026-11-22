@@ -228,50 +228,50 @@ export const HomePage: React.FC<HomePageProps> = ({
                             <div className="space-y-5">
                                 <div className="flex items-center justify-between border-b border-stone-100 pb-3">
                                     <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-stone-600 font-bold bg-stone-100 border border-stone-200 px-2.5 py-0.5 rounded-[2px]">
-                                        SECTION 02 // FIELD NOTEBOOK &amp; AUDIT
+                                        SECTION 02 // STUDENT STORY &amp; MEMORIES
                                     </span>
                                     <span className="font-mono text-[10px] text-stone-400 font-medium">
-                                        CHRONICLE &amp; DEFENSE
+                                        SIH 2026 ARCHIVE
                                     </span>
                                 </div>
 
                                 <div className="space-y-2">
                                     <h3 className="text-2xl font-bold text-stone-950 group-hover:text-stone-700 transition-colors tracking-tight">
-                                        ENGINEERING LOG &amp; JOURNEY
+                                        OUR SIH JOURNEY
                                     </h3>
                                     <p className="text-xs font-mono text-stone-500 uppercase tracking-wider">
-                                        Development Timeline · Architecture Decisions · Field Notes
+                                        College Lab · DRDO Pune Visit · Sleepless Nights · Live Demo
                                     </p>
                                     <p className="text-sm text-stone-600 leading-relaxed pt-1">
-                                        The chronological evolution of ANUMAAN: how the thermodynamic plant model was built, how the 20 Hz telemetry pipeline was stabilized, and how each engine was integrated.
+                                        The real, human story behind ANUMAAN: from late-night canteen chai and baffling math bugs to walking through the gates of DRDO Pune and defending our live 3D twin in front of college evaluators.
                                     </p>
                                 </div>
 
                                 {/* Subsystem Highlights List */}
                                 <div className="p-3 bg-stone-50 border border-stone-200 rounded-[2px] space-y-1.5 font-mono text-[11px] text-stone-700">
                                     <div className="flex items-center gap-2">
-                                        <span className="size-1.5 rounded-full bg-stone-900" />
+                                        <span className="size-1.5 rounded-full bg-emerald-600" />
                                         <span>
-                                            First principles: 0D/1D thermodynamics before neural heuristics
+                                            2 Sept: Field visit to DRDO R&amp;DE (Engrs) Pune
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <span className="size-1.5 rounded-full bg-stone-900" />
+                                        <span className="size-1.5 rounded-full bg-emerald-600" />
                                         <span>
-                                            Architecture log: 70+ recorded architectural decisions
+                                            Hostel grind: Late-night physics coding until 4 AM
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <span className="size-1.5 rounded-full bg-stone-900" />
+                                        <span className="size-1.5 rounded-full bg-emerald-600" />
                                         <span>
-                                            Automated test suite: 430+ unit, physics, and integration tests
+                                            College round: Selected at RSCOE incubation center
                                         </span>
                                     </div>
                                 </div>
                             </div>
 
                             <div className="pt-6 mt-6 border-t border-stone-100 flex items-center justify-between font-mono text-xs text-stone-900 font-semibold uppercase tracking-wider group-hover:text-stone-700">
-                                <span>Read The Engineering Chronicle</span>
+                                <span>Read Our Student Journey</span>
                                 <ArrowRight
                                     size={15}
                                     className="transition-transform group-hover:translate-x-1"
@@ -1012,12 +1012,14 @@ export const HomePage: React.FC<HomePageProps> = ({
                     <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
                         <div>
                             <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-stone-500 font-semibold block">
-                                [07 // FIELD NOTEBOOK &amp; AUDIT]
+                                [07 // STUDENT FIELD NOTEBOOK]
                             </span>
                             <h2 className="text-2xl sm:text-3xl font-bold text-stone-900 mt-1 tracking-tight">
-                                Our SIH Journey: Research, Rigor &amp;
-                                Verification
+                                Our SIH Journey: From College Lab to Defense Digital Twin
                             </h2>
+                            <p className="text-xs text-stone-500 mt-1 max-w-2xl">
+                                Late nights, endless canteen chai, the 2 Sept visit to DRDO Pune, and standing before our college evaluators.
+                            </p>
                         </div>
                         <button
                             onClick={() =>
@@ -1025,7 +1027,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                             }
                             className="btn-extend-tactile"
                         >
-                            <span>Read Engineering Story</span>
+                            <span>Read Our Story</span>
                             <ArrowRight size={13} />
                         </button>
                     </div>
@@ -1035,33 +1037,24 @@ export const HomePage: React.FC<HomePageProps> = ({
                         <div className="extend-card-corner-dots p-6 sm:p-7 border border-stone-300 rounded-[2px] bg-white space-y-4">
                             <div className="flex items-center justify-between border-b border-stone-100 pb-3">
                                 <span className="font-mono text-[10px] uppercase tracking-wider bg-stone-100 px-2 py-0.5 rounded-[2px] border border-stone-200 text-stone-700 font-semibold">
-                                    CHAPTER 01 // GENESIS
+                                    CHAPTER 01 // GENESIS &amp; DRDO VISIT
                                 </span>
                                 <span className="font-mono text-xs text-stone-400">
-                                    DEVELOPMENT CHRONICLE
+                                    FIELD MEMOIR
                                 </span>
                             </div>
                             <h3 className="text-xl font-bold text-stone-950 tracking-tight">
-                                The Engineering Story: Research First, Code
-                                Second
+                                From an Empty Screen to a Working Twin
                             </h3>
                             <p className="text-xs text-stone-600 leading-relaxed">
-                                How the project began with a 27-part research
-                                study, evolved into a dual-runtime architecture,
-                                constructed the crank-angle physics chain, and
-                                achieved end-to-end integration across all five
-                                engine platforms.
+                                How six engineering students took on DRDO's toughest UAV propulsion challenge, traveled to DRDO R&amp;DE (Engrs) Pune on 2nd September, and spent weeks of sleepless nights turning textbook math into a living 3D digital twin.
                             </p>
                             <div className="p-3.5 bg-stone-50 border-l-2 border-stone-800 rounded-[2px] text-xs space-y-1">
                                 <span className="font-mono text-[10px] text-stone-600 uppercase font-semibold block">
-                                    Scientific Discipline
+                                    Turning Point at DRDO Pune
                                 </span>
                                 <p className="text-stone-700 italic">
-                                    &ldquo;Bio-Inspired Sparse Novelty Coding
-                                    fuses hyperdimensional olfactory projection
-                                    circuits with order-domain aero piston
-                                    vibration and physics residuals under strict
-                                    UAV datalink bandwidth constraints.&rdquo;
+                                    &ldquo;Walking up to the DRDO gates in Pune made everything real. This was not just a college project for grades; it was about building something that could genuinely safeguard a multi-crore military UAV.&rdquo;
                                 </p>
                             </div>
                             <button
@@ -1072,7 +1065,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                                 }
                                 className="btn-extend-tactile w-full justify-between"
                             >
-                                <span>Read Chapter 01</span>
+                                <span>Read Chapter 01: Our Story &amp; DRDO Visit</span>
                                 <ArrowRight size={13} />
                             </button>
                         </div>
@@ -1081,31 +1074,24 @@ export const HomePage: React.FC<HomePageProps> = ({
                         <div className="extend-card-corner-dots p-6 sm:p-7 border border-stone-300 rounded-[2px] bg-white space-y-4">
                             <div className="flex items-center justify-between border-b border-stone-100 pb-3">
                                 <span className="font-mono text-[10px] uppercase tracking-wider bg-stone-100 px-2 py-0.5 rounded-[2px] border border-stone-200 text-stone-700 font-semibold">
-                                    CHAPTER 02 // DEFENSE
+                                    CHAPTER 02 // DEFENSE &amp; EVALUATION
                                 </span>
                                 <span className="font-mono text-xs text-stone-400">
-                                    CHARACTERIZATION TESTS
+                                    COLLEGE ROUND DEFENSE
                                 </span>
                             </div>
                             <h3 className="text-xl font-bold text-stone-950 tracking-tight">
-                                Demonstration Methodology & Verification
-                                Discipline
+                                Facing the Evaluators: College Round to Grand Finale
                             </h3>
                             <p className="text-xs text-stone-600 leading-relaxed">
-                                Controlled engineering demonstrations,
-                                characterization regression tests pinning
-                                headline numbers, automated browser Playwright
-                                verification, and proving why the system stays
-                                quiet during legitimate throttle transients.
+                                The nervous energy outside the RSCOE incubation center, standing before senior faculty with our laptops open, running live failure simulations instead of static slides, and getting selected to represent our institute.
                             </p>
                             <div className="p-3.5 bg-stone-50 border-l-2 border-stone-800 rounded-[2px] text-xs space-y-1">
                                 <span className="font-mono text-[10px] text-stone-600 uppercase font-semibold block">
-                                    Verification Discipline
+                                    Live Demonstration at RSCOE
                                 </span>
-                                <p className="text-stone-700">
-                                    Characterization tests in pytest pin results
-                                    automatically so numbers quoted to
-                                    evaluators cannot quietly drift over time.
+                                <p className="text-stone-700 italic">
+                                    &ldquo;We skipped the 20-slide PowerPoint. We opened our laptop and told the professors: 'Pick any cylinder and trigger a fault.' Watching their reactions as the 3D model responded live was unforgettable.&rdquo;
                                 </p>
                             </div>
                             <button
@@ -1116,7 +1102,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                                 }
                                 className="btn-extend-tactile w-full justify-between"
                             >
-                                <span>Read Chapter 02</span>
+                                <span>Read Chapter 02: College Presentation &amp; Demo</span>
                                 <ArrowRight size={13} />
                             </button>
                         </div>

@@ -6,14 +6,14 @@ Update the RESUME HERE block at every commit and at the end of every session.
 Part 1 historical session log (Phases 0 through 7, 19 Nov - 22 Nov 2026) is preserved in PROGRESS.txt.
 
 =====================================================================================================================
-RESUME HERE  (last updated 22 Nov 2026, Phase 8 DOC-06 Documentation Site Visual Polish & De-Slopping)
+RESUME HERE  (last updated 22 Nov 2026, Phase 8 DOC-07 Humanize SIH Journey & College Defense)
 =====================================================================================================================
 Phase:        Phase 8 (Operator UX / 3D Viewport & Production Readiness Polish).
-Card:         DOC-06 (Documentation Site Visual Overhaul & De-Slopping): Purged buzzword AI slop ("66 verified commits", "adversarial scrutiny", "ISO/STANAG/MIL-STD" badges in footer/hero); fixed mislabeled Austro AE300 engine card on home page; removed black `<pre>` container wrapping Mermaid diagrams and added fullscreen blueprint inspector modal; gave tables dedicated horizontal scrolling container; styled KaTeX display equations in clean mathematical cards with proper vector layout; replaced all outdated 30-Sep screenshots with live system captures in macOS/tactile window chrome frames.
+Card:         DOC-07 (Humanize SIH Journey, DRDO Visit & College Evaluation): Rewrote the entire "Our SIH Journey" section in warm, simple, everyday student language. Documented the 2 September field visit to DRDO R&DE (Engrs) Pune with gate archive photo (`DRDO.webp`); shared real stories of sleepless nights, hostel labs, canteen chai, and late-night debugging; integrated institute-level presentation round at RSCOE incubation center (`sih-2026-1.jpg`, `sih-2026-2.jpg`) demonstrating live failure injections to faculty evaluators; upgraded image renderers with team photo archive frames.
 Branch:       Beta
-Last commit:  9c47b60 DOC-06: overhaul documentation UI, fix engine card mislabeling, and modernize technical prose
+Last commit:  526b88b DOC-06: record documentation site visual polish and de-slopping in PROGRESS_2.txt
 State:        All documentation, viewport transitions, fault isolation workflows, and CI checks 100% green. 52/52 Vitest, 0 tsc errors.
-Latest:       Clean working tree, docs_site build clean (22.17s), frontend build clean (10s), zero console errors.
+Latest:       Clean working tree, docs_site build clean (29.14s), frontend build clean (10s), zero console errors.
 Next step:    Phase 8 UX-02 (Time Machine mission timeline scrubber & historical replay).
 Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produce yet (lambda, timing, BSFC, power,
               vibration, GO/NO-GO); some may show blanks or crash on .toFixed(null) until M0-09. Beta only.
@@ -230,3 +230,20 @@ Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produ
   * Documentation site build: `npm run build` completed in 22.17s with 0 errors.
   * Frontend unit tests: 52/52 Vitest tests passed across 16 test files (100% PASS).
   * TypeScript check: Clean (0 errors via `npx tsc --noEmit`). Working tree clean.
+
+=== 22 Nov 2026 Phase 8 Card DOC-07 (Humanize SIH Journey, DRDO Pune Visit & College Evaluation Defense) (AI: Antigravity)
+- Completely Humanized "Our SIH Journey" in Simple, Authentic Language:
+  * Replaced academic/jargon prose across `journey/index.md`, `journey/01-the-engineering-story.md`, and `journey/02-preparing-for-evaluation.md` with honest, emotional, first-hand student storytelling.
+  * Shared the team genesis: choosing DRDO Problem Statement 26054 over generic web apps, knowing the technical bar was high.
+  * 2 September Field Visit to DRDO Pune: Embedded `/images/DRDO.webp` and recounted walking up to the R&DE (Engrs) gates in Pune, learning about brutal MALE UAV operating conditions (-40°C in Ladakh to +50°C in Thar), and committing to building a genuine physics-based digital twin with no fake demo numbers.
+  * College Grind & Sleepless Nights: Shared the late-night work stretching to 4:00 AM in college labs and hostel rooms, mountains of canteen chai cups, debugging Draco 3D mesh freezes, finding degree vs. radian bugs in cylinder math, and the 3:30 AM breakthrough when Cylinder 2 misfire lit up live on the 3D model.
+  * Institute-Level Evaluation Defense at RSCOE: Embedded `/images/sih-2026-1.jpg` and `/images/sih-2026-2.jpg`, recounting how the team skipped slide decks, opened laptops in the RSCOE incubation center (IIF), ran live fault injections, defended against tough faculty questions, and earned selection to represent the institute at SIH 2026.
+- UI & Component Enhancements:
+  * Upgraded `DocArticlePage.tsx` image renderer: automatically formats field photos and journey memories in clean team archive frames (`SIH 2026 Field Archive`) on soft backgrounds rather than dark HUD terminal frames.
+  * Updated `HomePage.tsx` Sections 02 & 07 with friendly, engaging titles and genuine student quotes.
+  * Updated `content.ts` navigation groups to "Our SIH Story", "01 Our Story & DRDO Visit", and "02 College Presentation & Demo".
+- Verification:
+  * Zero em/en dashes across all journey articles and home page sections.
+  * Docs site build: `npm run build` passed cleanly in 29.14s.
+  * TypeScript check: 0 errors across `docs_site` and `frontend`.
+  * Frontend Vitest: 52/52 tests passing (100% PASS). Working tree clean.

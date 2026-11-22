@@ -90,12 +90,12 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               </li>
               <li>
                 <button onClick={() => onNavigate('journey/01-the-engineering-story')} className="hover:text-stone-950 transition-colors">
-                  SIH Journey &amp; Self-Corrections
+                  Our Story &amp; DRDO Visit
                 </button>
               </li>
               <li>
                 <button onClick={() => onNavigate('journey/02-preparing-for-evaluation')} className="hover:text-stone-950 transition-colors">
-                  Judge Defense &amp; Verification
+                  College Presentation &amp; Demo
                 </button>
               </li>
             </ul>
