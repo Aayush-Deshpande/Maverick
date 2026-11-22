@@ -91,12 +91,15 @@ export const ReadingsPanel: React.FC<ReadingsPanelProps> = ({ state }) => {
   const rows = channels.map((c) => {
     const rawResidual = res[c.key] ?? res[c.key.replace('d_', '').toLowerCase()] ?? res[c.key.toLowerCase()] ?? 0;
     const residual = typeof rawResidual === 'number' && Number.isFinite(rawResidual) ? rawResidual : 0;
-    const expected = c.actual - residual;
-    const z = Math.abs(residual) / c.divisor;
+    const hasActual = typeof c.actual === 'number' && Number.isFinite(c.actual);
+    const expected = hasActual ? c.actual - residual : null;
+    const z = hasActual ? Math.abs(residual) / c.divisor : null;
     let status: Status = 'NOMINAL';
-    if (c.criticalTest(c.actual, expected, residual, z)) status = 'CRITICAL';
-    else if (c.warningTest(c.actual, expected, residual, z)) status = 'WARNING';
-    return { ...c, residual, expected, z, status };
+    if (hasActual) {
+      if (c.criticalTest(c.actual, expected!, residual, z!)) status = 'CRITICAL';
+      else if (c.warningTest(c.actual, expected!, residual, z!)) status = 'WARNING';
+    }
+    return { ...c, residual: hasActual ? residual : null, expected, z, status, hasActual };
   });
 
   const thermalRows = rows.filter((r) => r.key.includes('CHT') || r.key.includes('EGT'));
@@ -135,23 +138,34 @@ export const ReadingsPanel: React.FC<ReadingsPanelProps> = ({ state }) => {
                 {r.label}
                 <span className="text-slate-600 font-mono text-xs ml-1">({r.nominalRange} {r.unit})</span>
               </td>
-              <td className={`text-right py-1.5 px-2 font-mono font-semibold ${statusColor[r.status]}`}>
-                {fmt(r.actual, r.unit === 'bar' ? 2 : r.unit === 'mm/s' ? 2 : 1)} <span className="text-slate-600 font-normal">{r.unit}</span>
+              <td className={`text-right py-1.5 px-2 font-mono font-semibold ${r.hasActual ? statusColor[r.status] : 'text-slate-500'}`}>
+                {r.hasActual ? (
+                  <>
+                    {fmt(r.actual, r.unit === 'bar' ? 2 : r.unit === 'mm/s' ? 2 : 1)}{' '}
+                    <span className="text-slate-600 font-normal">{r.unit}</span>
+                  </>
+                ) : (
+                  <span className="text-slate-500 font-normal">--</span>
+                )}
               </td>
               <td className="text-right py-1.5 px-2 font-mono text-slate-500">
-                {fmt(r.expected, r.unit === 'bar' ? 2 : r.unit === 'mm/s' ? 2 : 1)}
+                {r.expected !== null ? fmt(r.expected, r.unit === 'bar' ? 2 : r.unit === 'mm/s' ? 2 : 1) : '--'}
               </td>
               <td className="text-right py-1.5 px-2 font-mono text-slate-400">
-                {r.residual > 0 ? '+' : ''}{fmt(r.residual, r.unit === 'bar' ? 2 : r.unit === 'mm/s' ? 2 : 1)}
+                {r.residual !== null ? `${r.residual > 0 ? '+' : ''}${fmt(r.residual, r.unit === 'bar' ? 2 : r.unit === 'mm/s' ? 2 : 1)}` : '--'}
               </td>
               <td className="text-right py-1.5 px-2 font-mono text-slate-400">
-                {r.z.toFixed(2)}σ
+                {r.z !== null ? `${r.z.toFixed(2)}σ` : '--'}
               </td>
               <td className="py-1.5 pl-2">
-                <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${statusColor[r.status]}`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${statusDot[r.status]}`} />
-                  {r.status}
-                </span>
+                {r.hasActual ? (
+                  <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${statusColor[r.status]}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${statusDot[r.status]}`} />
+                    {r.status}
+                  </span>
+                ) : (
+                  <span className="text-slate-500 font-mono text-xs">NO DATA</span>
+                )}
               </td>
             </tr>
           ))}
@@ -198,9 +212,9 @@ export const ReadingsPanel: React.FC<ReadingsPanelProps> = ({ state }) => {
           <StatChip label="Altitude MSL" value={`${fmt(t.ALTITUDE_FT / 1000, 1)}k ft`} />
           <StatChip label="OAT" value={`${fmt(t.OAT_C, 1)}°C`} />
           <StatChip label="True Airspeed" value={`${fmt(t.TAS_KNOTS, 0)} kt`} />
-          <StatChip label="Fuel Rail Press." value={`${fmt(t.FUEL_RAIL_P, 2)} bar`} />
+          <StatChip label="Fuel Rail Press." value={t.FUEL_RAIL_P != null ? `${fmt(t.FUEL_RAIL_P, 2)} bar` : '-- bar'} />
           <StatChip label="Battery Current" value={`${t.BATTERY_CURRENT > 0 ? '+' : ''}${fmt(t.BATTERY_CURRENT, 1)} A`} />
-          <StatChip label="FADEC Lane" value={t.FADEC_ACTIVE_LANE} />
+          <StatChip label="FADEC Lane" value={t.FADEC_ACTIVE_LANE || 'NO DATA'} />
           <StatChip label="Flight Phase" value={t.FLIGHT_PHASE ? t.FLIGHT_PHASE.replace('_', ' ') : 'NO DATA'} />
         </div>
       </div>

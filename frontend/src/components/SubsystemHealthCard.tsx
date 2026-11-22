@@ -24,7 +24,9 @@ export const SubsystemHealthCard: React.FC<SubsystemHealthCardProps> = ({ state 
     mechanical: 1.0,
   };
 
-  const overallHealth = state.analytics.health_index;
+  const subValues = Object.values(sub).filter((v): v is number => typeof v === 'number' && Number.isFinite(v));
+  const computedHealth = subValues.length > 0 ? subValues.reduce((a, b) => a + b, 0) / subValues.length : null;
+  const overallHealth = state.analytics.health_index ?? computedHealth;
   const isFaulted = state.analytics.diagnosed_fault_id > 0;
 
   const subsystems: SubsystemItem[] = [

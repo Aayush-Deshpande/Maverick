@@ -22,6 +22,7 @@ interface HeaderProps {
   onSelectRole: (role: GCSRole) => void;
   onOpenSettings: () => void;
   runtimeMode?: boolean;
+  showRoleSelector?: boolean;
   onGoLanding?: () => void;
 }
 
@@ -33,6 +34,7 @@ export const Header: React.FC<HeaderProps> = ({
   onSelectRole,
   onOpenSettings,
   runtimeMode = false,
+  showRoleSelector = false,
   onGoLanding,
 }) => {
   const isFaulted = state.analytics.diagnosed_fault_id > 0;
@@ -189,7 +191,7 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Role Selector (VIS-02..04) - Responsive for both mobile and desktop */}
-        {!runtimeMode && (
+        {!runtimeMode && showRoleSelector && (
           <div className="flex items-center gap-0.5 sm:gap-1 p-0.5 rounded-sm bg-surface-card border border-surface-border text-xs font-mono overflow-x-auto">
             {[
               { id: 'OPERATOR' as GCSRole, label: 'Operator', icon: <User className="w-3 h-3" /> },

@@ -74,7 +74,7 @@ export const MissionReplayScrubber: React.FC<MissionReplayScrubberProps> = ({ se
           </option>
           {replay.manifests.map((m) => (
             <option key={m.mission_id} value={m.mission_id}>
-              {m.mission_id} — {m.name ?? m.sortie_id} ({m.severity ?? 'NOMINAL'})
+              {m.mission_id} — {m.name ?? m.sortie_id} ({m.severity ?? 'NOMINAL'}{m.has_telemetry === false ? ' · summary only' : ''})
             </option>
           ))}
         </select>
@@ -96,6 +96,11 @@ export const MissionReplayScrubber: React.FC<MissionReplayScrubberProps> = ({ se
         </div>
       ) : (
         <>
+          {replay.manifest.has_telemetry === false && (
+            <div className="text-xs font-mono text-warning bg-warning-dim border border-warning-muted p-2 rounded-sm">
+              Notice: This historical sortie was recorded with summary metadata only; no 20 Hz raw sensor time-series log is available to replay.
+            </div>
+          )}
           {/* Timeline bar with event markers */}
           <div className="space-y-1.5">
             <div className="relative h-2 bg-surface-card border border-surface-border">

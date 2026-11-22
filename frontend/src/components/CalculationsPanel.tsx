@@ -1,7 +1,6 @@
 import React from 'react';
 import { FunctionSquare, ChevronRight } from 'lucide-react';
 import { UnifiedTelemetryState } from '../types/telemetry';
-import { pct } from '../utils/format';
 
 interface CalculationsPanelProps {
   state: UnifiedTelemetryState;
@@ -123,7 +122,7 @@ export const CalculationsPanel: React.FC<CalculationsPanelProps> = ({ state }) =
             { label: 'z_composite', value: `${fmt(zComposite)}σ` },
             { label: 'Regime bands', value: '<0.35 / 0.35–0.65 / ≥0.65' },
           ]}
-          result={{ label: 'Composite anomaly score', value: `${pct(a.anomaly_score, 1)} (calc. ${(computedAnomaly * 100).toFixed(1)}%)`, tone: anomalyTone }}
+          result={{ label: 'Composite anomaly score', value: `${effectiveAnomaly.toFixed(3)} (${(effectiveAnomaly * 100).toFixed(1)}%)`, tone: anomalyTone }}
         />
 
         <CalcCard

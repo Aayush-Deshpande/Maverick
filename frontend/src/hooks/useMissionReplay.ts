@@ -20,6 +20,7 @@ export interface ReplayManifestSummary {
   fault_count?: number;
   health_index_start?: number;
   health_index_end?: number;
+  has_telemetry?: boolean;
 }
 
 export interface ReplayEventMarker {
@@ -37,6 +38,7 @@ export interface ReplayManifest {
   region?: string;
   total_duration_sec: number;
   event_markers: ReplayEventMarker[];
+  has_telemetry?: boolean;
 }
 
 // Raw telemetry_log.csv row, passed through as-is by the backend — field names match the
@@ -80,22 +82,6 @@ export function useMissionReplay(serverUrl: string) {
   // Manifest listing / selection
   // ------------------------------------------------------------------
 
-  const refreshManifests = useCallback(async () => {
-    try {
-      const res = await fetch(`${apiBase(serverUrl)}/api/replay/manifests`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      setManifests(data.manifests || []);
-      setManifestsError(null);
-    } catch (e) {
-      setManifestsError(e instanceof Error ? e.message : 'Failed to load replay manifests');
-    }
-  }, [serverUrl]);
-
-  useEffect(() => {
-    refreshManifests();
-  }, [refreshManifests]);
-
   const selectMission = useCallback(
     async (missionId: string) => {
       setIsPlaying(false);
@@ -114,6 +100,27 @@ export function useMissionReplay(serverUrl: string) {
     },
     [serverUrl]
   );
+
+  const refreshManifests = useCallback(async () => {
+    try {
+      const res = await fetch(`${apiBase(serverUrl)}/api/replay/manifests`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      const list: ReplayManifestSummary[] = data.manifests || [];
+      setManifests(list);
+      setManifestsError(null);
+      if (!selectedMissionId && list.length > 0) {
+        const firstWithTelem = list.find((m) => m.has_telemetry) || list[0];
+        selectMission(firstWithTelem.mission_id);
+      }
+    } catch (e) {
+      setManifestsError(e instanceof Error ? e.message : 'Failed to load replay manifests');
+    }
+  }, [serverUrl, selectedMissionId, selectMission]);
+
+  useEffect(() => {
+    refreshManifests();
+  }, [refreshManifests]);
 
   // ------------------------------------------------------------------
   // Frame fetching (throttled, always the freshest request wins)

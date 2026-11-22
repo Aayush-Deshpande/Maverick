@@ -28,7 +28,7 @@ SOURCE = "legacy"
 
 # legacy telemetry field -> v1 reading name (same quantity, same unit)
 _READINGS = {"ENGINE_RPM": "rpm", "PROP_RPM": "prop_rpm", "OIL_PRESS": "oil_p", "OIL_TEMP": "oil_t",
-             "FUEL_RAIL_P": "rail_p", "MAP": "map_kpa", "BUS_VOLTAGE": "bus_v", "BATTERY_CURRENT": "batt_i",
+             "FUEL_RAIL_P": "fuel_p", "MAP": "map_kpa", "BUS_VOLTAGE": "bus_v", "BATTERY_CURRENT": "batt_i",
              "COOLANT_TEMP": "coolant_t", "FUEL_FLOW_KG_H": "fuel_flow"}
 # legacy telemetry field -> runtime frame attribute (operating point, not a sensor reading)
 _FRAME = {"TPS": "throttle", "ALTITUDE_FT": "alt", "OAT_C": "oat", "TAS_KNOTS": "tas"}
@@ -150,7 +150,7 @@ def legacy_state(engine_id: str = LEGACY_ENGINE_ID) -> Optional[Dict[str, Any]]:
     thermal_keys = [k for k in res_dual if k.startswith("cht_")] + ["oil_t", "coolant_t"]
     sub_health = {
         "propulsion": _sub_score(["map_kpa", "rpm"], 15.0),
-        "fuel_system": _sub_score(["fuel_flow", "rail_p"], 8.0),
+        "fuel_system": _sub_score(["fuel_flow", "fuel_p", "rail_p"], 8.0),
         "electrical": _sub_score(["bus_v", "batt_i"], 3.0),
         "thermal": _sub_score(thermal_keys, 25.0),
         "mechanical": _sub_score(["vib_1X", "vib_prop_1X", "vib_gear_mesh"], 3.0),

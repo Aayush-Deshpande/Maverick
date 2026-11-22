@@ -442,12 +442,13 @@ async def ask_ai_copilot(req: AIAskRequest):
     """Free-text mission copilot query (guardrails + RAG retrieval + optional LLM synthesis)."""
     service = EngineStateService.get_instance()
     state = _copilot_state()
+    kwargs = {"session_id": req.session_id} if req.session_id else {}
     result = await asyncio.to_thread(
         service.copilot.ask,
         req.query,
         state,
         state["analytics"]["diagnosed_fault_id"],
-        req.session_id,
+        **kwargs,
     )
     return result
 

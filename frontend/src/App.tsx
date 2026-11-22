@@ -121,6 +121,7 @@ export function App() {
         onSelectRole={handleSelectRole}
         onOpenSettings={() => setIsModalOpen(true)}
         runtimeMode={workspace !== 'tactical'}
+        showRoleSelector={false}
         onGoLanding={() => setWorkspace('landing')}
       />
 
