@@ -49,9 +49,6 @@ const PULSE_HZ = 1.2;                                    // highlighted parts br
 const PULSE_MIN = 0.1;                                   // ...between this share of the peak glow and the peak
 const ORBIT_DISTANCE = 2.2;                               // fault view: comfortable distance keeping the engine in view
 const ORBIT_LIFT = 0.35;                                 // ...seen slightly from above
-const AIM_TOWARD_PART = 0.35;                            // ...looking from the engine centre this far toward the part
-const LOOP_SPEED = 0.6;                                  // then a slow loop around the engine (OrbitControls units)
-const LOOP_DELAY_MS = 1200;                              // after the fly-to has settled
 
 /** Image-based lighting from the shared procedural studio (utils/engineMaterials; no HDR download). */
 function RoomEnv() {
@@ -98,6 +95,12 @@ type ThermalMeshTarget = {
   cyl: number | null;
 };
 
+type FadingMeshTarget = {
+  mesh: Mesh;
+  mat: MeshStandardMaterial;
+  base: Material;
+};
+
 /** Apply view mode materials and highlight colours; restore original materials otherwise. */
 function applyMaterialsAndHighlights(
   root: Object3D,
@@ -108,9 +111,10 @@ function applyMaterialsAndHighlights(
   sharedGlass?: Material,
   sharedSmoked?: Material,
   sharedGhost?: Material
-): { lit: string[]; glowing: MeshStandardMaterial[]; thermalTargets: ThermalMeshTarget[] } {
+): { lit: string[]; glowing: MeshStandardMaterial[]; fading: FadingMeshTarget[]; thermalTargets: ThermalMeshTarget[] } {
   const lit: string[] = [];
   const glowing: MeshStandardMaterial[] = [];
+  const fading: FadingMeshTarget[] = [];
   const thermalTargets: ThermalMeshTarget[] = [];
 
   // Build O(1) node -> component metadata lookup map
@@ -141,7 +145,11 @@ function applyMaterialsAndHighlights(
           m.emissiveIntensity = EMISSIVE_INTENSITY;
           glowing.push(m);
         }
+        obj.userData.isHighlight = true;
         obj.material = m;
+      } else if (obj.userData.isHighlight && obj.material && 'emissive' in (obj.material as MeshStandardMaterial)) {
+        // Smoothly fade out previously glowing fault highlight
+        fading.push({ mesh: obj, mat: obj.material as MeshStandardMaterial, base });
       } else if (viewMode === 'solid') {
         if (obj.material !== base) obj.material = base;
       } else if (viewMode === 'glass') {
@@ -177,7 +185,7 @@ function applyMaterialsAndHighlights(
   };
 
   paint(root, undefined);
-  return { lit, glowing, thermalTargets };
+  return { lit, glowing, fading, thermalTargets };
 }
 
 function Model({
@@ -202,7 +210,9 @@ function Model({
   const { scene } = useGLTF(url, DRACO_PATH);
   const root = useMemo(() => { const r = scene.clone(true); prepare(r); return r; }, [scene]);
   const glowing = useRef<MeshStandardMaterial[]>([]);
+  const fading = useRef<FadingMeshTarget[]>([]);
   const thermalTargets = useRef<ThermalMeshTarget[]>([]);
+  const rotateTimer = useRef<number | null>(null);
   const bounds = useBounds();
   const get = useThree((st) => st.get);
 
@@ -214,6 +224,7 @@ function Model({
   useEffect(() => {
     const r = applyMaterialsAndHighlights(root, levels, viewMode, manifest, readings, glassMat, smokedMat, ghostMat);
     glowing.current = r.glowing;
+    fading.current = r.fading;
     thermalTargets.current = r.thermalTargets;
     onLit(r.lit);
   }, [root, levels, viewMode, manifest, glassMat, smokedMat, ghostMat, onLit]);
@@ -229,42 +240,93 @@ function Model({
     }
   }, [readings, viewMode]);
 
-  useFrame(({ clock }) => {
+  useFrame(({ clock }, delta) => {
     // Pulse: the eye finds the faulty part at once
     const k = PULSE_MIN + (1 - PULSE_MIN) * (0.5 + 0.5 * Math.sin(clock.elapsedTime * 2 * Math.PI * PULSE_HZ));
     for (const m of glowing.current) m.emissiveIntensity = PULSE_PEAK * k;
+
+    // Smoothly decay unhighlighted materials back to baseline
+    if (fading.current.length > 0) {
+      const activeFading: FadingMeshTarget[] = [];
+      for (const item of fading.current) {
+        item.mat.emissiveIntensity = THREE.MathUtils.damp(item.mat.emissiveIntensity, 0, 7, delta);
+        if (item.mat.emissiveIntensity > 0.02) {
+          activeFading.push(item);
+        } else {
+          item.mesh.material = item.base;
+          delete item.mesh.userData.isHighlight;
+        }
+      }
+      fading.current = activeFading;
+    }
   });
 
   const target = useMemo(() => focusNodes(levels).join('|'), [levels]);
   const framed = useRef<Object3D | null>(null);
 
   useEffect(() => {
+    if (rotateTimer.current) {
+      window.clearTimeout(rotateTimer.current);
+      rotateTimer.current = null;
+    }
+
     const names = new Set(target ? target.split('|') : []);
     const box = new Box3();
     root.traverse((o) => { if (names.has(o.name)) box.expandByObject(o); });
     const controls = get().controls as unknown as { autoRotate: boolean; autoRotateSpeed: number; target: Vector3 } | null;
+
     if (box.isEmpty()) {
-      if (controls) {
-        controls.autoRotate = autoRotateEnabled;
-        controls.autoRotateSpeed = 0.8;
-        controls.target.set(0, 0.05, 0);
-      }
-      bounds.moveTo([1.65, 1.1, 2.0]).lookAt({ target: [0, 0.05, 0] });
-    } else {
-      const part = box.getCenter(new Vector3());
-      const out = part.clone().sub(new Vector3(0, 0.05, 0));
-      if (out.lengthSq() < 1e-9) out.set(1, 0.4, 1);
-      out.normalize().add(new Vector3(0, ORBIT_LIFT, 0)).normalize();
-      bounds.moveTo(new Vector3(0, 0.05, 0).addScaledVector(out, ORBIT_DISTANCE))
-        .lookAt({ target: new Vector3(0, 0.05, 0).lerp(part, AIM_TOWARD_PART) });
+      // Clear/Reset/Nominal state:
+      // Pause rotation while camera smoothly flies back to overview
       if (controls) {
         controls.autoRotate = false;
         if (autoRotateEnabled) {
-          window.setTimeout(() => { controls.autoRotate = true; controls.autoRotateSpeed = LOOP_SPEED; }, LOOP_DELAY_MS);
+          rotateTimer.current = window.setTimeout(() => {
+            if (controls) {
+              controls.autoRotate = true;
+              controls.autoRotateSpeed = 0.8;
+            }
+          }, 950);
+        }
+      }
+      // Smoothly animate back to default hero overview framing, looking at engine center
+      bounds.moveTo([1.65, 1.1, 2.0]).lookAt({ target: [0, 0.05, 0] });
+    } else {
+      // Fault injected:
+      // Position camera along the vector facing the faulty part, looking towards the engine center
+      // so the rotation axis stays concentric with the engine center of mass (just like docs_site!)
+      const part = box.getCenter(new Vector3());
+      const out = part.clone().sub(new Vector3(0, 0.05, 0));
+      out.y = 0;
+      if (out.lengthSq() < 1e-9) out.set(1, 0, 1);
+      out.normalize();
+
+      const camPos = new Vector3(0, 0.05, 0)
+        .addScaledVector(out, ORBIT_DISTANCE)
+        .add(new Vector3(0, ORBIT_LIFT, 0));
+
+      bounds.moveTo(camPos).lookAt({ target: [0, 0.05, 0] });
+
+      if (controls) {
+        controls.autoRotate = false;
+        if (autoRotateEnabled) {
+          rotateTimer.current = window.setTimeout(() => {
+            if (controls) {
+              controls.autoRotate = true;
+              controls.autoRotateSpeed = 0.5; // gentle inspection rotation around central axis
+            }
+          }, 1200);
         }
       }
     }
     framed.current = root;
+
+    return () => {
+      if (rotateTimer.current) {
+        window.clearTimeout(rotateTimer.current);
+        rotateTimer.current = null;
+      }
+    };
   }, [target, focusRequest, root, bounds, autoRotateEnabled, get]);
 
   useEffect(() => {
