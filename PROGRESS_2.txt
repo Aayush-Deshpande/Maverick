@@ -6,20 +6,19 @@ Update the RESUME HERE block at every commit and at the end of every session.
 Part 1 historical session log (Phases 0 through 7, 19 Nov - 22 Nov 2026) is preserved in PROGRESS.txt.
 
 =====================================================================================================================
-RESUME HERE  (last updated 22 Nov 2026, Phase 0/8 M0-08c Tactical GCS Modernization, Blender Twin Sync & Retirement)
+RESUME HERE  (last updated 22 Nov 2026, Phase 0/8 M0-08c Tactical GCS Visual Integrity & Telemetry Guards)
 =====================================================================================================================
-Phase:        Phase 0 / Phase 8 (Platform Harmonization, Tactical GCS Modernization & Blender Twin CAD Sync).
-Card:         M0-08c (Tactical GCS Fast Interactive Ramps, Dual Residuals, Dynamic Subsystem Health, Blender Sync & ThreeJS Retirement):
-              1. Fast interactive ramps: in backend/server/legacy_adapter.py, SET_FAULT defaults to ramp_duration_sec = 2.8s and severity = 0.85 (overriding the 10-minute 600s ramp), making fault injections immediate.
-              2. Dual-keyed residuals: populated both canonical lowercase and legacy d_-prefixed keys (d_CHT_1..4, d_EGT_1..4, d_OIL_PRESS, d_OIL_TEMP, d_FUEL_FLOW, d_MAP, d_BUS_VOLTAGE, d_VIB_RMS) without regex ratchet regression.
-              3. Dynamic analytics & 5-subsystem health: populated anomaly_score, health_index, diagnosed_fault_id, rul_p10_hours, and dynamic 5-subsystem health (propulsion, fuel_system, electrical, thermal, mechanical) derived from live residuals.
-              4. Frontend Tactical GCS modernization: modernized workspace mode to 'tactical' (#tactical, #legacy backwards compatible); SubsystemHealthCard cleanly displays 'NO DATA' when overallHealth is null, eliminating the false 0% bug; CalculationsPanel and ReadingsPanel read live dual-keyed residuals and normalized anomaly scores; Header eliminates nested button DOM warnings.
-              5. Blender standalone digital twin sync: in apps/blender_twin/standalone_digital_twin_app.py, mapped active_faults to client_state.active_commanded_fault_id (1..8) to automatically swoop the CAD camera to the fault station and pulse component emission shaders.
-              6. Retired old ThreeJS twin: retired apps/threejs_twin to archive_tracked/threejs_twin per D10, D12, and D75; updated backend /app route to redirect to modern R3F twin (/#twin).
+Phase:        Phase 0 / Phase 8 (Platform Harmonization, Tactical GCS Modernization & Telemetry Guards).
+Card:         M0-08c (Tactical GCS Visual Integrity, Telemetry Guards, and Replay Indexing):
+              1. Visual integrity & header deduplication: suppressed duplicate 3-button role selector in the sticky Header when in Tactical GCS so the 6 subtabs below serve as the authoritative workstation navigation bar.
+              2. Null-safe telemetry display: guarded ReadingsPanel and CalculationsPanel so unavailable readings (e.g. Fuel Flow, Gearbox Vibration) show clean '--' instead of false 0.00 residuals; FADEC lane displays 'NO DATA' instead of an empty box.
+              3. Subsystem coupled health index: SubsystemHealthCard gracefully couples health index to the mean of monitored subsystems when overall health_index is initializing, eliminating any false 0% red badges.
+              4. Replay engine sortie telemetry indexing: added `has_telemetry` flag to ReplayEngine manifests, auto-selecting sorties with full 20 Hz raw sensor logs and providing clear advisory banners for summary-only historical sorties.
+              5. Conversational memory API compliance: passed optional `session_id` as keyword argument in `ask_ai_copilot` to maintain exact backwards compatibility with all existing test mocks.
 Branch:       Beta
-Last commit:  8d67552 M0-08c: integrate engine copilot orchestrator in tactical GCS and harden redline calculations
-State:        52/52 Vitest passed, 0 tsc errors, 17/17 legacy adapter pytest passed, Uvicorn running on 8000.
-Latest:       Tactical GCS fully live and responsive; fast 2.8s ramps; Blender twin camera and shader auto-sync; apps/threejs_twin safely archived.
+Last commit:  64082b0 M0-08c: resolve tactical GCS telemetry guards, header role duplication, and historical replay indexing
+State:        52/52 Vitest passed, 0 tsc errors, 37/37 pytest passed (17 legacy adapter + 18 copilot/voice + 2 no-truth-leak), Uvicorn running on 8000.
+Latest:       Tactical GCS fully live, responsive, and visual hierarchy deduplicated; 4-turn conversational AI copilot synchronized across workspaces; 20 Hz live telemetry streaming.
 Next step:    Phase 8 UX-02 (Time Machine mission timeline scrubber & historical replay).
 Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produce yet (lambda, timing, BSFC, power,
               vibration, GO/NO-GO); some may show blanks or crash on .toFixed(null) until M0-09. Beta only.
