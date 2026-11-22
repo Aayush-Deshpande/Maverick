@@ -11,7 +11,7 @@ RESUME HERE  (last updated 22 Nov 2026, Phase 8 UX-07 Unified 3D Viewport Toolba
 Phase:        Phase 8 (Operator UX / 3D Viewport & Production Readiness Polish).
 Card:         UX-07 (Unified 3D Viewport Toolbar, Mode Keyboard Cycling, Orbit Camera Center Reset, and Quality Polish): Integrated view mode selector directly into top-right toolbar with intuitive names (SOLID, X-RAY, THERMAL, WIREFRAME); wired 'V' hotkey to cycle views; built non-cluttered, high-density InfoTooltip with 'bottom' placement; fixed auto-rotation toggle by wiring controlled prop synchronization in EngineViewer3D; fixed orbit camera axis reset on clear-all (controls.target.set(0, 0.05, 0)); updated Clear All hotkey to 'X' with clickable sidebar action buttons; 52/52 Vitest passed, tsc clean, pytest passed.
 Branch:       Beta
-Last commit:  6b81d85 UX-07: integrate 3d viewport mode selector into unified toolbar, add keyboard cycling, and clean image assets
+Last commit:  ead2515 UX-07: add settling guard and status ack on clear all, and fix ready probe accessor
 State:        3D twin stage, toolbars, camera rigs, and operator tooltips fully polished and tested. 52/52 Vitest, 0 tsc errors.
 Latest:       3D render mode selector incorporated into unified toolbar; auto-rotation and camera reset verified.
 Next step:    Phase 8 UX-02 (Time Machine mission timeline scrubber & historical replay).
