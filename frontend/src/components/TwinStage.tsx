@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Activity, AlertTriangle, ArrowDown, ArrowRight, Box, CheckCircle2, Clock, Flame, Info, Lock, Radio, RotateCw, ScanLine, Search, Sparkles, X, Zap } from 'lucide-react';
 import InfoTooltip from './InfoTooltip';
@@ -74,6 +74,7 @@ export default function TwinStage(p: Props) {
   const pages = Math.max(1, Math.ceil(visible.length / PAGE));
   const shown = visible.slice(page * PAGE, page * PAGE + PAGE);
   const active = (p.state?.active_faults ?? []) as Array<{
+    uuid?: string;
     fault_id: string;
     name: string;
     cylinder?: number | null;
@@ -92,6 +93,44 @@ export default function TwinStage(p: Props) {
         : [],
     [p.training, active]
   );
+
+  const notify = useCallback((text: string) => {
+    setNotice(text);
+    window.setTimeout(() => setNotice(''), 3000);
+  }, []);
+
+  const clearAllFaults = useCallback(() => {
+    setSettlingUntil(null);
+    setSettlingFault(null);
+    setRemainingMs(0);
+    p.command('/faults', 'DELETE')
+      .then(() => p.command('/status/acknowledge', 'POST', {}))
+      .then(() => notify('All faults cleared · Nominal state restored'))
+      .catch(() => notify('Clear failed'));
+  }, [p, notify]);
+
+  const clearOneFault = useCallback(() => {
+    if (active.length === 0) {
+      notify('No active faults to clear');
+      return;
+    }
+    const last = active[active.length - 1];
+    setSettlingUntil(null);
+    setSettlingFault(null);
+    setRemainingMs(0);
+    const deletePath = last.uuid ? `/faults/${encodeURIComponent(last.uuid)}` : '/faults';
+    p.command(deletePath, 'DELETE')
+      .then(() => {
+        if (active.length <= 1) {
+          return p.command('/status/acknowledge', 'POST', {});
+        }
+      })
+      .then(() => {
+        const remaining = Math.max(0, active.length - 1);
+        notify(`Cleared ${last.fault_id} ${title(last.name)}${remaining > 0 ? ` (${remaining} remaining)` : ' · Nominal restored'}`);
+      })
+      .catch(() => notify('Clear failed'));
+  }, [active, p, notify]);
 
   useEffect(() => {
     setPage(0);
@@ -209,13 +248,9 @@ export default function TwinStage(p: Props) {
         const f = shown[Number(k) - 1];
         if (f) inject(f);
       } else if (k === 'x' || k === '0' || e.key === 'Delete') {
-        setSettlingUntil(null);
-        setSettlingFault(null);
-        setRemainingMs(0);
-        p.command('/faults', 'DELETE')
-          .then(() => p.command('/status/acknowledge', 'POST', {}))
-          .then(() => say('All faults cleared · Nominal state restored'))
-          .catch(() => say('Clear failed'));
+        clearAllFaults();
+      } else if (k === 'z' || k === 'r' || e.key === 'Backspace' || k === 'u') {
+        clearOneFault();
       } else if (k === 'q') {
         setPage((n) => (n - 1 + pages) % pages);
       } else if (k === 'e') {
@@ -240,16 +275,6 @@ export default function TwinStage(p: Props) {
           say(`View: ${modeLabels[next]}`);
           return next;
         });
-      } else if (k === 'r') {
-        setSettlingUntil(null);
-        setSettlingFault(null);
-        setRemainingMs(0);
-        p.command('/faults', 'DELETE')
-          .then(() => p.command('/engine', 'POST', { command: 'RESET' }))
-          .then(() => p.command('/engine', 'POST', { command: 'START' }))
-          .then(() => p.command('/status/acknowledge', 'POST', {}))
-          .then(() => say('Engine reset and restarted'))
-          .catch((e) => say(e instanceof Error ? e.message : 'Reset failed'));
       } else {
         return;
       }
@@ -258,7 +283,7 @@ export default function TwinStage(p: Props) {
 
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [shown, cyl, pages, p]);
+  }, [shown, cyl, pages, p, clearAllFaults, clearOneFault]);
 
   const highlights = (p.state?.highlights ?? []) as Array<{
     component_id: string;
@@ -268,11 +293,6 @@ export default function TwinStage(p: Props) {
   const label = 'text-[11px] uppercase tracking-[0.18em] font-mono text-slate-400';
   const key =
     'inline-flex h-5 min-w-5 items-center justify-center rounded-[3px] border border-surface-border-strong bg-surface-card px-1 font-mono text-[10px] text-slate-700 shadow-[0_1px_0_rgba(0,0,0,0.15)]';
-
-  const notify = (text: string) => {
-    setNotice(text);
-    window.setTimeout(() => setNotice(''), 3000);
-  };
 
   const injectFault = (f: Fault) => {
     if (isSettling) {
@@ -641,24 +661,16 @@ export default function TwinStage(p: Props) {
           <div className="flex items-center gap-1">
             <button
               type="button"
-              onClick={() => {
-                setSettlingUntil(null);
-                setSettlingFault(null);
-                setRemainingMs(0);
-                p.command('/faults', 'DELETE')
-                  .then(() => p.command('/status/acknowledge', 'POST', {}))
-                  .then(() => notify('All faults cleared · Nominal state restored'))
-                  .catch(() => notify('Clear failed'));
-              }}
+              onClick={clearAllFaults}
               className="flex items-center gap-1 text-slate-700 hover:text-slate-900 transition-colors cursor-pointer"
-              title="Clear all active injected faults (Key: X)"
+              title="Clear all active injected faults simultaneously (Key: X)"
             >
               <kbd className={key}>X</kbd>
               <span>clear all</span>
             </button>
             <InfoTooltip
-              title="Clear Injected Faults"
-              content="Removes all simulated engine faults and restores the engine to normal healthy operation."
+              title="Clear All Faults"
+              content="Removes all simulated engine faults at once and restores nominal telemetry."
               shortcut="X"
             />
           </div>
@@ -706,27 +718,17 @@ export default function TwinStage(p: Props) {
           <div className="flex items-center gap-1">
             <button
               type="button"
-              onClick={() => {
-                setSettlingUntil(null);
-                setSettlingFault(null);
-                setRemainingMs(0);
-                p.command('/faults', 'DELETE')
-                  .then(() => p.command('/engine', 'POST', { command: 'RESET' }))
-                  .then(() => p.command('/engine', 'POST', { command: 'START' }))
-                  .then(() => p.command('/status/acknowledge', 'POST', {}))
-                  .then(() => notify('Engine reset and restarted'))
-                  .catch((e) => notify(e instanceof Error ? e.message : 'Reset failed'));
-              }}
+              onClick={clearOneFault}
               className="flex items-center gap-1 text-slate-700 hover:text-slate-900 transition-colors cursor-pointer"
-              title="Full restart: clears all faults and starts engine fresh (Key: R)"
+              title="Clear active faults one by one, most recent first (Key: Z, R, or Backspace)"
             >
-              <kbd className={key}>R</kbd>
-              <span>reset</span>
+              <kbd className={key}>Z</kbd>
+              <span>clear one</span>
             </button>
             <InfoTooltip
-              title="Reset Engine"
-              content="Restarts the engine from a clean slate. Clears simulated damage, resets electronic engine controls, and starts the engine up fresh."
-              shortcut="R"
+              title="Clear Single Fault (Undo)"
+              content="Clears active faults one by one (most recent first) for step-by-step diagnostic isolation. Shortcuts: Z, R, Backspace."
+              shortcut="Z / R"
             />
           </div>
         </div>
@@ -904,7 +906,7 @@ export default function TwinStage(p: Props) {
                   <div className="flex items-center gap-1.5"><kbd className={key}>F</kbd><span>Refocus camera</span></div>
                   <div className="flex items-center gap-1.5"><kbd className={key}>T</kbd><span>Training highlight</span></div>
                   <div className="flex items-center gap-1.5"><kbd className={key}>V</kbd><span>Cycle 3D render views</span></div>
-                  <div className="flex items-center gap-1.5"><kbd className={key}>R</kbd><span>Reset & restart</span></div>
+                  <div className="flex items-center gap-1.5"><kbd className={key}>Z</kbd><span>Clear one by one (Z / R)</span></div>
                   <div className="flex items-center gap-1.5"><kbd className={key}>Ctrl+K</kbd><span>Command palette</span></div>
                   <div className="flex items-center gap-1.5"><kbd className={key}>?</kbd><span>Toggle guide</span></div>
                 </div>
@@ -956,9 +958,7 @@ export default function TwinStage(p: Props) {
           setCommandPaletteOpen(false);
         }}
         onClearFaults={() => {
-          p.command('/faults', 'DELETE')
-            .then(() => notify('All faults cleared'))
-            .catch(() => notify('Clear failed'));
+          clearAllFaults();
           setCommandPaletteOpen(false);
         }}
         onSetThrottle={(pct) => {
