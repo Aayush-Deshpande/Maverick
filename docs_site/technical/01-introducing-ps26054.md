@@ -62,7 +62,7 @@ A thorough reverse-engineering of DRDO Problem Statement 26054 reveals five engi
 ```mermaid
 graph TD
     subgraph CoreDRDOIntent["The Five Pillars of DRDO's Solution Intent"]
-        P1["Pillar 1: Real-Time Synchronization<br/>Not an offline CAD animation, but an active EKF state observer<br/>mirroring thermodynamic lag and fluid pressures via live CAN telemetry."]
+        P1["Pillar 1: Real-Time Synchronization<br/>Not an offline CAD animation, but an active UKF state observer<br/>mirroring thermodynamic lag and fluid pressures via live CAN telemetry."]
         P2["Pillar 2: True Multi-Physics Modeling<br/>0D/1D thermodynamics, mass/energy conservation, and lubrication physics<br/>acting as the deterministic baseline that constrains and guides AI."]
         P3["Pillar 3: Honest & Certified AI/ML<br/>Unsupervised anomaly detection with dynamic EVT thresholds;<br/>RUL stated with certified Conformal Prediction intervals rather than fake precision."]
         P4["Pillar 4: Tactical Mission Reliability<br/>Translating thermodynamic degradation into operational pilot guidance:<br/>throttle derating, cooling descent, RTB reachability cones, and glide optimization."]
@@ -76,7 +76,7 @@ graph TD
     end
 ```
 
-1. **Pillar 1: Real-Time Synchronization.** An active Extended Kalman Filter (EKF) running at $50\text{ Hz}$ that estimates internal unmeasured states ($P_{\max}$, Turbine Inlet Temperature, hydrodynamic oil film thickness) synchronously with CAN/MAVLink telemetry.
+1. **Pillar 1: Real-Time Synchronization.** An active Unscented Kalman Filter (UKF) running at $20\text{ Hz}$ that estimates internal unmeasured states ($P_{\max}$, Turbine Inlet Temperature, hydrodynamic oil film thickness) synchronously with CAN/MAVLink telemetry.
 2. **Pillar 2: True Multi-Physics Modeling.** 0D/1D thermodynamics (modified Seiliger combustion, intake manifold filling/emptying, turbocharger compressor-turbine matching) providing an invariant physical baseline that normalizes flight envelopes.
 3. **Pillar 3: Honest & Certified AI/ML.** Machine learning models that ingest **normalized physics residuals** rather than raw temperatures, utilizing Extreme Value Theory (EVT) and Conformal Prediction intervals with guaranteed 95% statistical coverage instead of fabricated scalar point estimates.
 4. **Pillar 4: Tactical Mission Reliability.** Closing the loop between propulsion health and flight operations: calculating Remaining Mission Endurance ($RME$), dynamic ceiling derating, and aerodynamic glide reachability cones ($L/D_{\max}$) for emergency divert airfield selection.
@@ -90,12 +90,12 @@ Every module in the architecture traces directly to explicit requirements in DRD
 
 | PS Requirement Clause | Real-World Engineering Capability | Architectural Subsystem | Algorithmic Mechanism | Scientific Acceptance Metric |
 | :--- | :--- | :--- | :--- | :--- |
-| **"Digital Twin of UAV Engine"** | Real-time state-space synchronization and virtual sensing | `DigitalTwinObserver` | 0D/1D MVEM + 12-state Continuous-Discrete EKF | Residual innovation whiteness ($p > 0.05$); state error $< 2.5\%$ |
-| **"Real-time Telemetry Ingestion"** | Avionics bus capture, frame decoding, and clock alignment | `AvionicsIngestion` | Linux SocketCAN 2.0B / MAVLink / ARINC 429 | Ingestion latency $\le 15\text{ ms}$; zero frame loss at $50\text{ Hz}$ |
+| **"Digital Twin of UAV Engine"** | Real-time state-space synchronization and virtual sensing | `DigitalTwinObserver` | 0D/1D MVEM + 12-state Continuous-Discrete UKF | Residual innovation whiteness ($p > 0.05$); state error $< 2.5\%$ |
+| **"Real-time Telemetry Ingestion"** | Avionics bus capture, frame decoding, and clock alignment | `AvionicsIngestion` | Linux SocketCAN 2.0B / MAVLink / ARINC 429 | Ingestion latency $\le 15\text{ ms}$; zero frame loss at $20\text{ Hz}$ |
 | **"Monitor Engine Parameters"** | Analytical redundancy & sensor fault isolation | `SensorValidator` | Parity space matrix ($\mathbf{V}_p \mathbf{C}_s = \mathbf{0}$) + Mahalanobis distance | Sensor isolation $> 99\%$; False Alarm Rate $< 0.1\%$ |
 | **"Predict Degradation & RUL"** | Prognostic wear tracking under stochastic flight loading | `ConformalPrognostics` | Physics-informed Wiener drift + Conformal Prediction | Empirical coverage $1 - \alpha \ge 95\%$; finite-sample validity |
 | **"Correlate Health to Reliability"** | Tactical flight envelope derating & margin projection | `MissionReliabilityEngine` | Monte Carlo phase integration + Aerodynamic glide polar | Margin error $< 3\%$; zero false non-reachability alarms |
-| **"Historical & Flight Data Replay"** | Deterministic post-incident state reconstruction | `BlackboxReplayEngine` | Deterministic EKF re-execution over cryptographically signed Parquet logs | Replay fidelity $\equiv 100\%$ bit-identical to live run |
+| **"Historical & Flight Data Replay"** | Deterministic post-incident state reconstruction | `BlackboxReplayEngine` | Deterministic UKF re-execution over cryptographically signed Parquet logs | Replay fidelity $\equiv 100\%$ bit-identical to live run |
 | **"Fleet-Level Analytics"** | Population wear benchmarking across airbases | `FleetIntelligenceHub` | Functional Principal Component Analysis (FPCA) + Cox hazards | Cluster silhouette $> 0.75$; fleet anomaly recall $> 98\%$ |
 | **"Federated Learning"** | Cross-depot model training without data centralization | `DepotFederatedAggregator` | FedRand / FedProx with LoRA + Local Differential Privacy | Convergence $\le 15$ rounds; leakage bound $\epsilon \le 1.0$ |
 | **"GCS Dashboard & HMI"** | Dual-role situation awareness (Pilot HUD vs. Test Engineer) | `OperatorGCS` | MIL-STD-1472H / EEMUA 191 Alarm Hierarchy | Pilot reaction time $< 2.0\text{ s}$; 3-click drilldown rule |

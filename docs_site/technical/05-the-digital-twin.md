@@ -10,7 +10,7 @@ The aerospace industry frequently encounters systems marketed as "digital twins"
 
 | Dimension | 3D Visualization / CAD | Offline Simulator | Telemetry Dashboard | Genuine AP-CPDT Digital Twin |
 | :--- | :--- | :--- | :--- | :--- |
-| **State Synchronization** | None (Static / kinematic transforms) | None (Runs *in silico* detached from flight) | Unidirectional push (Displays raw sensors) | **Bidirectional State Observer (50 Hz EKF)** |
+| **State Synchronization** | None (Static / kinematic transforms) | None (Runs *in silico* detached from flight) | Unidirectional push (Displays raw sensors) | **Bidirectional State Observer (20 Hz UKF)** |
 | **Internal State Vector** | Mesh coordinates $(x, y, z)$ | Pre-computed state trajectories | Sensor scalar values only | **Physical + Wear States $(\mathbf{x}(t), \boldsymbol{\theta}(t))$** |
 | **Virtual Sensing** | None | Synthetic offline traces | None | **Real-Time In-Flight ($P_{\max}, TIT, h_{\min}$)** |
 | **Physics Residuals** | None | None | None | **Continuous $\mathbf{r}(t) = \mathbf{y}_{\text{meas}} - \mathbf{y}_{\text{mvem}}$** |
@@ -112,7 +112,7 @@ Running against G01 ensures that residuals reflect true physical model mismatch,
 
 ## Integration & Operational Execution
 
-- **Update Rates:** The inner dynamic state observer executes at **50 Hz** ($20\text{ ms}$ step) matched to high-priority CAN frames, while slow wear parameters ($\theta_{\text{blowby}}, \theta_{\text{fouling}}$) update at **1 Hz**.
+- **Update Rates:** The inner dynamic state observer executes at **20 Hz** ($50\text{ ms}$ deterministic step) synchronized with CAN telemetry frames, while slow wear parameters ($\theta_{\text{blowby}}, \theta_{\text{fouling}}$) update at **1 Hz**.
 - **Downstream Feed:** The validated residual vector feeds directly into [Bio-Inspired Sparse Novelty Coding](10-bio-inspired-sparse-novelty-coding.md) and [Fault Diagnosis](11-fault-diagnosis.md).
 - **Physics Equations:** Detailed mathematical formulations for manifold dynamics, Seiliger combustion, and bearing lubrication are covered in [Engine Physics and Thermodynamics](06-engine-physics.md).
 

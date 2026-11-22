@@ -24,18 +24,47 @@ flowchart TD
     end
 ```
 
-### 1. The CAN Bus Protocol (ISO 11898-1/2 & SocketCAN)
+### 1. The CAN Bus Protocol (ISO 11898-1/2, SAE J1939 & SocketCAN)
 The Controller Area Network (CAN) bus is the standard physical interface for aero-piston engine ECUs:
 * **Physical Layer (ISO 11898-2):** Differential two-wire twisted pair (`CAN_H` and `CAN_L`) terminated with $120\ \Omega$ resistors at each end. High common-mode noise rejection, critical in aircraft where ignition spark coils generate massive electromagnetic interference (EMI).
 * **Signaling:**
   * Dominant State (Bit 0): `CAN_H` driven to $3.5\text{ V}$, `CAN_L` pulled to $1.5\text{ V}$ ($\Delta V = 2.0\text{ V}$).
   * Recessive State (Bit 1): Both lines float at $2.5\text{ V}$ ($\Delta V = 0.0\text{ V}$).
-* **Arbitration:** Non-destructive bitwise arbitration based on message identifiers. Lower numerical IDs have higher priority (e.g., `0x100` emergency engine shutdown preempts `0x350` oil temperature gauge).
-* **CAN 2.0B vs. CAN-FD:**
-  * *CAN 2.0B:* 11-bit standard or 29-bit extended ID; maximum payload of **8 bytes per frame**; fixed bit rate up to $1\text{ Mbps}$.
-  * *CAN-FD (Flexible Data-rate):* Payload expanded up to **64 bytes per frame**; data phase can switch up to $5\text{ Mbps}$, drastically reducing bus load and latency.
+* **Arbitration:** Non-destructive bitwise arbitration based on message identifiers. Lower numerical IDs have higher priority (for example, `0x100` emergency engine shutdown preempts `0x350` oil temperature gauge).
+* **SAE J1939 29-bit Avionics Parameter Group Numbers (PGNs):**
+  ANUMAAN implements standardized aerospace 29-bit extended frames operating at $20\text{ Hz}$:
+  * **PGN 61444 (`EEC1` - Electronic Engine Controller 1):** Engine Speed (RPM), Actual Engine Torque, Throttle Position, and Driver Demand.
+  * **PGN 65262 (`ET1` - Engine Temperature 1):** Cylinder Head Temperatures ($CHT_1 \dots CHT_4$), Coolant Temperature, and Oil Temperature.
+  * **PGN 65263 (`EP1` - Engine Pressure 1):** Manifold Absolute Pressure ($MAP$), Fuel Delivery Pressure, and Main Gallery Oil Pressure.
+  * **PGN 65271 (`VEP1` - Vehicle Electrical Power):** Net Battery Current, Alternator Potential, and Main 28V DC Avionics Bus Voltage.
 * **The Linux SocketCAN Subsystem:**
   In modern Linux-based edge computers (Jetson Orin Nano / NXP i.MX8), CAN controllers are integrated into the Linux network protocol stack as network devices (`can0`, `can1`). Telemetry acquisition uses standard BSD socket APIs (`AF_CAN`, `SOCK_RAW`), providing zero-copy ring buffering, multi-threaded access, and DBC schema parsing via libraries such as `cantools`.
+
+---
+
+## Real-Time CAN Intrusion Detection System (IDS) & Cyber Threat Simulation
+
+In contested electronic warfare scenarios, hostile actors may attempt cyber-physical attacks against the avionics CAN bus to spoof engine telemetry or trigger unwarranted mission aborts. ANUMAAN incorporates an active, real-time CAN Intrusion Detection System (IDS) executing inline at $20\text{ Hz}$:
+
+```mermaid
+flowchart LR
+    CANBUS["Avionics CAN Bus (20 Hz)"] --> IDS["CAN Intrusion Detection Engine"]
+    IDS --> C1["1. Frame Periodicity & Rate Check"]
+    IDS --> C2["2. Sequence Gap Detection"]
+    IDS --> C3["3. Arbitration ID Whitelist Verification"]
+    IDS --> C4["4. DBC Physical Bound Limits"]
+    C1 & C2 & C3 & C4 --> LEDGER["Merkle-Tree Cryptographic Ledger<br/>(SHA-256 Rolling Hash)"]
+    LEDGER --> GCS["Operator Alert & Quarantine"]
+```
+
+### Live Defense Threat Simulation Tests
+The CAN Bus Inspector modal (`CanBusInspector.tsx`) enables operators to test cyber-defense resilience against three live attack vectors:
+1. **Rogue ID Injection (`0x18FF99FF`):** Injects unauthorized, unmapped arbitration frames onto the bus. The IDS immediately flags the unknown transmitter, alerts the operator, and quarantines the frame from entering the digital twin observer.
+2. **Sequence Gap Attack (`+5` Counter Jump):** Simulates message dropping or replay attack where rolling sequence counters jump discontinuously. The IDS detects the discontinuity and logs a sequence tampering advisory.
+3. **Out-of-Range Sensor Spoofing:** Injects synthetically modified payloads (for example, oil pressure forced to $0.0\text{ bar}$ while RPM is nominal). The analytical parity validator and physical conservation filters immediately flag the thermodynamic contradiction.
+
+### Merkle-Tree Sealed Telemetry Ledger
+To ensure forensic chain-of-custody for military accident investigation boards, every incoming $20\text{ Hz}$ frame is cryptographically hashed and rolled into a local SHA-256 Merkle tree. Any post-flight tampering with flight logs or historical records invalidates the Merkle root, providing mathematical proof of telemetry authenticity.
 
 ---
 
