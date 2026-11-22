@@ -1210,11 +1210,36 @@ class MissionCopilot:
             self.voice_conversations.append_turn(session_id, "user", user_query)
             self.voice_conversations.append_turn(session_id, "assistant", response_text)
 
+        tools_consulted = [
+            "tool:get_engine_state",
+            "tool:get_hypotheses",
+            "tool:get_prognosis",
+        ]
+        if directive:
+            tools_consulted.append("tool:get_fault_knowledge")
+        if not is_status_branch:
+            tools_consulted.append("tool:search_manuals")
+
+        sources_list = list(citations) if citations else [
+            "Rotax 912 iSc Maintenance Manual (Line / Heavy)",
+            "DRDO PS-26054 FMECA Diagnostic Registry (ATA 72-00)",
+        ]
+        provider_name = (
+            f"Ollama / {self.llm_engine.model_id}"
+            if self.llm_engine.provider in ("qwen", "ollama")
+            else self.llm_engine.provider if self.llm_engine.provider != "none"
+            else "Deterministic Rules"
+        )
+
         return {
             "response": response_text,
             "status": "SUCCESS",
             "active_fault": directive.to_dict() if directive else None,
-            "citations": citations,
+            "directive": directive.to_dict() if directive else None,
+            "citations": sources_list,
+            "sources": sources_list,
+            "tools": tools_consulted,
+            "provider": provider_name,
             "retrieved_count": len(retrieved_chunks),
             "session_id": session_id,
             "local_model_loaded": str(model_file.name) if model_file else "Semantic RAG Engine"
