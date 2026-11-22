@@ -6,14 +6,14 @@ Update the RESUME HERE block at every commit and at the end of every session.
 Part 1 historical session log (Phases 0 through 7, 19 Nov - 22 Nov 2026) is preserved in PROGRESS.txt.
 
 =====================================================================================================================
-RESUME HERE  (last updated 22 Nov 2026, Phase 8 UX-07 Unified 3D Viewport Toolbar & Camera Orbit Polish)
+RESUME HERE  (last updated 22 Nov 2026, Phase 8 UX-09 Clear All vs Stepped Isolation & Viewport Polish)
 =====================================================================================================================
 Phase:        Phase 8 (Operator UX / 3D Viewport & Production Readiness Polish).
-Card:         UX-07 (Unified 3D Viewport Toolbar, Mode Keyboard Cycling, Orbit Camera Center Reset, and Quality Polish): Integrated view mode selector directly into top-right toolbar with intuitive names (SOLID, X-RAY, THERMAL, WIREFRAME); wired 'V' hotkey to cycle views; built non-cluttered, high-density InfoTooltip with 'bottom' placement; fixed auto-rotation toggle by wiring controlled prop synchronization in EngineViewer3D; fixed orbit camera axis reset on clear-all (controls.target.set(0, 0.05, 0)); updated Clear All hotkey to 'X' with clickable sidebar action buttons; 52/52 Vitest passed, tsc clean, pytest passed.
+Card:         UX-09 (Differentiate Clear All and Clear One by One for Stepped Isolation): Separated 'X' (Clear All simultaneously) and 'Z' / 'R' / Backspace (Clear One by One, popping most recent fault for stepped diagnostic testing); hooked single-fault DELETE to `/api/v1/engines/{id}/faults/{uuid}`; updated Flight Deck Reference Guide. (UX-08: silky smooth 3D fault clear/reset transitions, exponential emissive decay via MathUtils.damp, concentric turntable rotation axis around engine center). (DOC-05: de-slopped technical documentation, updated to real 20 Hz multi-physics UKF, SAE J1939 CAN bus, and 3D viewport architecture; 0 em dashes).
 Branch:       Beta
-Last commit:  ead2515 UX-07: add settling guard and status ack on clear all, and fix ready probe accessor
-State:        3D twin stage, toolbars, camera rigs, and operator tooltips fully polished and tested. 52/52 Vitest, 0 tsc errors.
-Latest:       3D render mode selector incorporated into unified toolbar; auto-rotation and camera reset verified.
+Last commit:  0ee65fc UX-09: differentiate clear all (X) and clear one by one (Z/R) for stepped fault isolation
+State:        All documentation, viewport transitions, fault isolation workflows, and CI checks 100% green. 52/52 Vitest, 0 tsc errors.
+Latest:       Clean working tree, docs_site build clean (25s), frontend build clean (10s), zero console errors.
 Next step:    Phase 8 UX-02 (Time Machine mission timeline scrubber & historical replay).
 Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produce yet (lambda, timing, BSFC, power,
               vibration, GO/NO-GO); some may show blanks or crash on .toFixed(null) until M0-09. Beta only.
@@ -177,3 +177,33 @@ Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produ
   * Frontend Vitest: 52/52 tests passed across 16 test files (100% PASS).
   * TypeScript Check: Clean (0 errors via `npx tsc --noEmit`).
   * Backend Pytest: 100% PASS (`tests/can/test_can_endpoints.py`, `tests/test_production_ops.py`).
+
+=== 22 Nov 2026 Phase 8 Card DOC-05 (De-Slop and Synchronize Technical Documentation with Real 20 Hz UKF & Viewport Architecture) (AI: Antigravity)
+- De-Slopped and Synchronized 10 Core Technical Articles (`docs_site/technical/`):
+  * Aligned all physics, loop rates, and state observers with the real codebase: corrected legacy 50 Hz/250 Hz references to the authoritative 20 Hz deterministic loop rate, and mapped state estimation to the Unscented Kalman Filter (`sim_ukf.py`).
+  * Thoroughly documented 3D Viewport architecture: all 4 real-time viewport modes (SOLID, X-RAY, THERMAL, WIREFRAME), optical borosilicate glass shader (0.92 transmission, 1.48 IOR), Planck pyrometry FLIR color ramp, HUD legend, and keyboard controls.
+  * Documented SAE J1939 29-bit CAN Bus architecture, CAN Intrusion Detection System (IDS), and Merkle-tree sealed telemetry logs.
+  * Enforced strict zero em dashes standard across all technical articles.
+  * Verified build: `docs_site` built cleanly via Vite in 25.0s with 0 errors.
+
+=== 22 Nov 2026 Phase 8 Card UX-08 (Silky Smooth 3D Fault Clear & Reset Transitions, Emissive Decay & Turntable Centering) (AI: Antigravity)
+- Concentric Turntable Rotation Axis (Matching `docs_site` Showroom Quality):
+  * Fixed off-center camera rotation wobble: camera lookAt target now stays centered on the engine's central vertical axis `(0, 0.05, 0)` at all times.
+  * Eliminated camera collision jerks: auto-rotation is smoothly paused during fly-to animations, resuming only after the camera settles at its destination.
+- Exponential Thermal Emissive Decay Animation:
+  * Replaced harsh single-frame material cutout with exponential thermal decay via `THREE.MathUtils.damp(emissiveIntensity, 0, 7, delta)`.
+  * Highlighted components smoothly cool down and dim their emissive glow over ~350ms before seamlessly returning to baseline materials.
+- Production Verification:
+  * Frontend Vitest: 52/52 tests passed across 16 test files (100% PASS).
+  * TypeScript Check: Clean (0 errors via `npx tsc --noEmit`).
+  * Frontend production build: succeeded cleanly in 10.75s.
+
+=== 22 Nov 2026 Phase 8 Card UX-09 (Differentiate Clear All vs Clear One by One for Stepped Fault Testing) (AI: Antigravity)
+- Separated Clear All (`X`) and Clear Single (`Z` / `R` / `Backspace`):
+  * Button 1 `[X] clear all`: Wipes all active faults simultaneously, resets diagnostic state, and notifies operator.
+  * Button 6 `[Z] clear one`: Clears active faults one by one (most recent first) via `/api/v1/engines/{id}/faults/{uuid}`, enabling step-by-step diagnostic isolation.
+  * Mapped intuitive shortcuts: `X` / `Delete` for Clear All; `Z` / `R` / `Backspace` / `U` for Clear One.
+  * Updated Twin Guide Architecture Reference (`?`) with `Z Clear one by one (Z / R)`.
+- Verification:
+  * Frontend Vitest: 52/52 tests passed (100% PASS).
+  * TypeScript: 0 errors. Working tree clean.
