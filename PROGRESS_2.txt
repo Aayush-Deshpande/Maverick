@@ -6,24 +6,22 @@ Update the RESUME HERE block at every commit and at the end of every session.
 Part 1 historical session log (Phases 0 through 7, 19 Nov - 22 Nov 2026) is preserved in PROGRESS.txt.
 
 =====================================================================================================================
-RESUME HERE  (last updated 24 Nov 2026, Phase 0/8 M0-08r Cinema Audio Polish & Hybrid Stem Architecture)
+RESUME HERE  (last updated 24 Nov 2026, Phase 0/8 M0-08s Pure Psychoacoustic Cinema Audio Engine & Temple Organ)
 =====================================================================================================================
 Phase:        Phase 0 / Phase 8 (Platform Harmonization & Visual Polish).
-Card:         M0-08r (Cinema Audio Polish, Mastered Synthesis & Hybrid Web Audio StemPlayer Architecture):
-              1. Mastered Cinema Acoustic Mix: frequency-damped 3.4s dark hall impulse (160 Hz HPF, 4.2 kHz LPF), master 30 Hz sub-cleanup, 85 Hz low shelf, 3.2 kHz de-harshing EQ, and dynamics compressor.
-              2. Warm Rotax Propulsion: softened sawtooth buzz into triangle/sub blade-pass throb (amDepth: 0.18) with tamed upper harmonics and sine-modulated valve-train chatter.
-              3. Chronometer & Foley Upgrades: mechanical escapement tick, VHF radio squelch ducking (-2.8 dB), and distinct touchdown rubber chirp + suspension thump.
-              4. Hybrid StemPlayer: frame-locked decoded Web Audio buffer player with drift correction, hard cut at t=91.95s, and zero-latency fallback to procedural score.ts.
-              5. Four High-Impact Recording Polish Tweaks:
-                 - Breathing Ladakh wind modulation (t*0.85 sin / t*0.72 cos decorrelation).
-                 - Pre-impact 180 ms filtered noise swell cutting dead right at T_INJECT.
-                 - Authentic ground station avionics chime with 2nd harmonic and reverb tail.
-                 - Dynamic breathing ducking (0.22) during 'decide' chapter before landing swell.
+Card:         M0-08s (Pure-Code Psychoacoustic Cinema Audio Engine & Temple-Church Pipe Organ):
+              1. 100% In-Browser Pure Web Audio DSP: zero external audio files / mp3 dependencies, 0 network requests, instant startup.
+              2. Master Bus Chain: 30 Hz sub-cleanup HPF -> 80 Hz warmth (+2 dB) -> 3.1 kHz de-harsh (-2 dB) -> soft tape saturation -> 3:1 bus compressor.
+              3. True 1/f Pink Noise: generated Paul-Kellet 1/f pink-noise buffer for breathing Ladakh wind, cowling alloy resonance, and ground control room tone.
+              4. Velvety Rotax Propulsion: cascaded 24 dB/oct dual low-pass filtering at 460 Hz, eliminating mosquito buzz while preserving 4-cylinder aero hum.
+              5. Temple-Church Organ (score.ts): eliminated harmonium vibrato in favor of dynamic Swell-Box filter (520 Hz - 2250 Hz), 16' sub-pedal pipes (m - 12), and stereo chest facade panning.
+              6. Bowed String Ensemble: cello/viola formant EQ (+2.8 dB at 240 Hz wood body, -3.2 dB at 2.3 kHz fizz) + dual-LFO stereo ensemble chorus.
+              7. Cinema Brass BRAAAM: unison detuned horns with sub-octave through warm saturator on T_INJECT (01:03), gate lock (01:34), and touchdown (02:18).
 Branch:       Beta (Strict main quarantine per Decision D79).
-Last commit:  602225e M0-08r: bake preImpactBreath and ground chime harmonics into SortieSound
-State:        All TypeScript and build tests clean (0 errors, 52/52 Vitest passing).
-Latest:       Complete cinema-grade audio engine and hybrid stem player active on Beta.
-Next step:    Generate 4 cinema music stems (.mp3) into frontend/public/audio/ or proceed to Phase 8 UX-02.
+Last commit:  f09b6f2 M0-08s: upgrade sortie audio to psychoacoustic cinema DSP and temple organ
+State:        All TypeScript and build tests clean (0 errors, 52/52 Vitest passing, npm run build passed in 16.0s).
+Latest:       Complete psychoacoustic cinema audio engine active with pure procedural Web Audio.
+Next step:    Phase 8 UX-02 (Time Machine mission timeline scrubber & historical replay).
 =====================================================================================================================
 Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produce yet (lambda, timing, BSFC, power,
               vibration, GO/NO-GO); some may show blanks or crash on .toFixed(null) until M0-09. Beta only.
@@ -427,3 +425,18 @@ Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produ
   * TypeScript: `cd frontend; npx tsc --noEmit` passed with 0 errors.
   * Vitest: 52/52 tests passed across 16 test files (100% PASS).
   * Work completed strictly on `Beta`. Zero touches to `main`. Zero deployments.
+
+=== 24 Nov 2026 Phase 0/8 Card M0-08s (Pure-Code Psychoacoustic Cinema Audio Engine & Temple Organ) (AI: Antigravity)
+- 100% In-Browser Pure Web Audio DSP:
+  * Plan updated per user request: zero external MP3 / audio file downloads or network requests; 100% procedural Web Audio synthesis.
+  * Master Bus: 30 Hz sub-cleanup HPF, 80 Hz warmth (+2 dB), 3.1 kHz de-harsh (-2 dB), soft tape saturation (`makeSaturationCurve`), and 3:1 bus compressor.
+  * True 1/f Pink Noise: generated Paul-Kellet filtered pink-noise buffer for breathing Ladakh wind, cowling alloy resonance, and ground control room tone.
+  * Velvety Rotax Propulsion: cascaded 24 dB/oct dual low-pass filtering at 460 Hz, eliminating mosquito buzz while preserving 4-cylinder aero hum.
+  * Temple-Church Organ (`score.ts`): eliminated harmonium vibrato in favor of dynamic Swell-Box filter (520 Hz - 2250 Hz), 16' sub-pedal pipes (`m - 12`), and stereo chest facade panning.
+  * Bowed String Ensemble: cello/viola formant EQ (+2.8 dB at 240 Hz wood body, -3.2 dB at 2.3 kHz fizz) + dual-LFO stereo ensemble chorus.
+  * Cinema Brass BRAAAM: unison detuned horns with sub-octave through warm saturator on `T_INJECT` (01:03), gate lock (01:34), and touchdown (02:18).
+- Verification:
+  * TypeScript: `cd frontend; npx tsc --noEmit` passed with 0 errors.
+  * Vitest: 52/52 tests passed across 16 test files (100% PASS).
+  * Vite Production Build: `cd frontend; npm run build` passed in 16.0s (0 errors).
+  * All work committed strictly on `Beta`. Zero touches to `main`. Zero deployments.
