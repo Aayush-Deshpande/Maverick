@@ -6,19 +6,24 @@ Update the RESUME HERE block at every commit and at the end of every session.
 Part 1 historical session log (Phases 0 through 7, 19 Nov - 22 Nov 2026) is preserved in PROGRESS.txt.
 
 =====================================================================================================================
-RESUME HERE  (last updated 24 Nov 2026, Phase 0/8 M0-08m Modernize Sortie Film Preloader Gate & Eliminate Debug Checklist)
+RESUME HERE  (last updated 24 Nov 2026, Phase 0/8 M0-08r Cinema Audio Polish & Hybrid Stem Architecture)
 =====================================================================================================================
 Phase:        Phase 0 / Phase 8 (Platform Harmonization & Visual Polish).
-Card:         M0-08m (Modernize Sortie Film Preloader Gate & Eliminate Debug Checklist):
-              1. Eradicated the raw 12-item developer debug checklist (WASM decoders, raw byte counts, and asset tickboxes) in favor of a centered, high-density aerospace mission briefing card.
-              2. Removed awkward "Continue with pre-rendered visuals" jargon and static 2D fallbacks; the movie strictly launches with the authentic 3D WebGL cyber-physical digital twin.
-              3. Implemented seamless loading state: Cold cache visitors see a sleek 4px cyan glowing bar ("PREPARING DIGITAL TWIN TELEMETRY · XX%") that dissolves cleanly into [Begin with sound] / [Watch without sound] with zero layout shift.
-              4. Cached/returning visitors skip the loading bar completely and immediately access the audio-unlock action buttons.
-Branch:       Beta
-Last commit:  Pending M0-08m commit
-State:        All TypeScript and build tests clean (0 errors, 52/52 Vitest passing). Ready to push Beta and merge to main.
-Latest:       Full 3D Sortie Film preloader gate modernized with defense editorial aesthetics.
-Next step:    Phase 8 UX-02 (Time Machine mission timeline scrubber & historical replay).
+Card:         M0-08r (Cinema Audio Polish, Mastered Synthesis & Hybrid Web Audio StemPlayer Architecture):
+              1. Mastered Cinema Acoustic Mix: frequency-damped 3.4s dark hall impulse (160 Hz HPF, 4.2 kHz LPF), master 30 Hz sub-cleanup, 85 Hz low shelf, 3.2 kHz de-harshing EQ, and dynamics compressor.
+              2. Warm Rotax Propulsion: softened sawtooth buzz into triangle/sub blade-pass throb (amDepth: 0.18) with tamed upper harmonics and sine-modulated valve-train chatter.
+              3. Chronometer & Foley Upgrades: mechanical escapement tick, VHF radio squelch ducking (-2.8 dB), and distinct touchdown rubber chirp + suspension thump.
+              4. Hybrid StemPlayer: frame-locked decoded Web Audio buffer player with drift correction, hard cut at t=91.95s, and zero-latency fallback to procedural score.ts.
+              5. Four High-Impact Recording Polish Tweaks:
+                 - Breathing Ladakh wind modulation (t*0.85 sin / t*0.72 cos decorrelation).
+                 - Pre-impact 180 ms filtered noise swell cutting dead right at T_INJECT.
+                 - Authentic ground station avionics chime with 2nd harmonic and reverb tail.
+                 - Dynamic breathing ducking (0.22) during 'decide' chapter before landing swell.
+Branch:       Beta (Strict main quarantine per Decision D79).
+Last commit:  9fa1c1d M0-08r: apply cinematic audio polish to wind, fault cutaway, and avionics chime
+State:        All TypeScript and build tests clean (0 errors, 52/52 Vitest passing).
+Latest:       Complete cinema-grade audio engine and hybrid stem player active on Beta.
+Next step:    Generate 4 cinema music stems (.mp3) into frontend/public/audio/ or proceed to Phase 8 UX-02.
 =====================================================================================================================
 Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produce yet (lambda, timing, BSFC, power,
               vibration, GO/NO-GO); some may show blanks or crash on .toFixed(null) until M0-09. Beta only.
@@ -399,3 +404,26 @@ Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produ
   * Docs Site: `cd docs_site; npx tsc --noEmit; npm run build` passed cleanly in 34.44s (0 errors).
   * Backend Pytest: 28/28 tests passed (`tests/api/test_legacy_adapter.py`, `tests/test_copilot_and_knowledge.py`, `tests/test_no_truth_leak.py`).
   * Zero lint, build, or TypeScript errors across the entire repository. Ready for production deployment.
+
+=== 24 Nov 2026 Phase 0/8 Decision D79 & Cards M0-08p, M0-08q, M0-08r (Cinema Audio Master, Hybrid StemPlayer & Surgical Polish) (AI: Antigravity)
+- Decision D79 (Strict Branch Quarantine for Main & Deployment Ban):
+  * Codified into `DECISIONS_2.md` and committed locally on `Beta`: absolute ban on touching `main` (no commits, merges, checkouts, or pushes to `main`) and zero deployment commands (`vercel`, etc.) unless Prasad explicitly and literally commands it in that exact prompt.
+- Card M0-08p (Mastered Sortie Acoustic Mix & Score Synthesizers):
+  * Upgraded `sound.ts` with frequency-damped dark hall impulse (3.4s decay, 160 Hz HPF, 4.2 kHz LPF), master 30 Hz sub-cleanup filter, 85 Hz warmth shelf (+1.5 dB), 3.2 kHz de-harsh notch (-1.5 dB), and dynamics compressor (-15 dB threshold, 3:1 ratio).
+  * Softened Rotax 912 propulsion synthesis into warm triangle/sub blade-pass throb (`amDepth: 0.18`), tamed upper harmonics, and replaced valve-train chatter with band-passed mechanical texture.
+  * Added escapement click chronometer watch tick, VHF aviation radio squelch with -2.8 dB music ducking, and dedicated touchdown Foley (rubber tire chirp + suspension thump).
+  * Upgraded `score.ts` with -3.5 dB organ notch at 2.2 kHz, bow-attack texture on strings, and 75 ms cooldown on FlyHash crystalline chimes.
+- Card M0-08q (Hybrid StemPlayer Architecture & Web Audio Fallback):
+  * Built `frontend/src/components/sortie/stemPlayer.ts` with decoded Web Audio `AudioBufferSourceNode` playback, sub-millisecond timeline synchronization, drift correction (>120 ms), and hard cut at t=91.95s.
+  * Seamless fallback: if any stem is missing from `frontend/public/audio/`, procedural `score.ts` seamlessly covers the soundtrack with zero runtime errors.
+  * Integrated `StemPlayer` into `SortieSound` in `sound.ts`.
+- Card M0-08r (Recording Polish Tweaks):
+  * Applied 4 high-impact acoustic polish points in `sound.ts`:
+    1. Breathing Ladakh wind modulation (t*0.85 sin / t*0.72 cos decorrelation).
+    2. Pre-impact 180 ms filtered-noise swell cutting dead right at `T_INJECT`.
+    3. Avionics chime in `ground()` with soft 2nd harmonic (f*2, gain 0.025) and reverb tail send.
+    4. Dynamic breathing ducking (0.22) during `id === 'decide'` ahead of the final landing swell.
+- Verification:
+  * TypeScript: `cd frontend; npx tsc --noEmit` passed with 0 errors.
+  * Vitest: 52/52 tests passed across 16 test files (100% PASS).
+  * Work completed strictly on `Beta`. Zero touches to `main`. Zero deployments.
