@@ -20,7 +20,7 @@ Card:         M0-08r (Cinema Audio Polish, Mastered Synthesis & Hybrid Web Audio
                  - Authentic ground station avionics chime with 2nd harmonic and reverb tail.
                  - Dynamic breathing ducking (0.22) during 'decide' chapter before landing swell.
 Branch:       Beta (Strict main quarantine per Decision D79).
-Last commit:  9fa1c1d M0-08r: apply cinematic audio polish to wind, fault cutaway, and avionics chime
+Last commit:  602225e M0-08r: bake preImpactBreath and ground chime harmonics into SortieSound
 State:        All TypeScript and build tests clean (0 errors, 52/52 Vitest passing).
 Latest:       Complete cinema-grade audio engine and hybrid stem player active on Beta.
 Next step:    Generate 4 cinema music stems (.mp3) into frontend/public/audio/ or proceed to Phase 8 UX-02.
