@@ -2,7 +2,7 @@
 // Upgraded cinema mix: frequency-damped hall reverb, master EQ + compression,
 // warm Rotax propulsion, damped mechanical watch tick, VHF radio ducking,
 // and clear touchdown Foley — preserving all exact timeline hooks.
-import { CHAPTERS, STARTS, TOTAL, T_TOUCH, startOf } from './story';
+import { CHAPTERS, STARTS, TOTAL, T_INJECT, T_TOUCH, startOf } from './story';
 import { T_CONFIRM, type Readout } from './timeline';
 import { Score } from './score';
 import { StemPlayer } from './stemPlayer';
@@ -248,7 +248,7 @@ export class SortieSound {
   }
 
   private duck(depthLinear: number, holdSec: number, releaseSec = 0.45) {
-    const now = this.ctx.currentTime;
+    const ctx = this.ctx, now = ctx.currentTime;
     this.duckBus.gain.cancelScheduledValues(now);
     this.duckBus.gain.setTargetAtTime(depthLinear, now, 0.025);
     this.duckBus.gain.setTargetAtTime(1, now + holdSec, releaseSec);
@@ -260,7 +260,7 @@ export class SortieSound {
   }
   setMuted(m: boolean) {
     this.muted = m;
-    const now = this.ctx.currentTime;
+    const ctx = this.ctx, now = ctx.currentTime;
     this.master.gain.cancelScheduledValues(now);
     this.master.gain.setTargetAtTime(m ? 0 : 0.85, now, 0.15);
   }
@@ -268,7 +268,7 @@ export class SortieSound {
   /** Fade out while the film is off screen or the tab is hidden; back in when it returns. */
   setActive(on: boolean) {
     if (this.muted) return;
-    const now = this.ctx.currentTime;
+    const ctx = this.ctx, now = ctx.currentTime;
     this.master.gain.cancelScheduledValues(now);
     this.master.gain.setTargetAtTime(on ? 0.85 : 0, now, on ? 0.3 : 0.12);
   }
@@ -346,8 +346,14 @@ export class SortieSound {
 
     for (const [dt, f] of [[0, 880], [0.16, 660]] as const) {
       const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = f;
-      this.env(o, now + alertAt + dt, 0.11, 0.006, 0.12, this.master);
-      o.start(now + alertAt + dt); o.stop(now + alertAt + dt + 0.15);
+      const g = this.env(o, now + alertAt + dt, 0.11, 0.006, 0.18, this.master);
+      g.connect(this.reverbSend);
+      o.start(now + alertAt + dt); o.stop(now + alertAt + dt + 0.2);
+
+      const o2 = ctx.createOscillator(); o2.type = 'sine'; o2.frequency.value = f * 2;
+      const g2 = this.env(o2, now + alertAt + dt, 0.025, 0.006, 0.18, this.master);
+      g2.connect(this.reverbSend);
+      o2.start(now + alertAt + dt); o2.stop(now + alertAt + dt + 0.2);
     }
   }
 
@@ -372,20 +378,28 @@ export class SortieSound {
 
   /** Back from a cut: the world returns at once. */
   cut() {
-    const now = this.ctx.currentTime;
+    const ctx = this.ctx, now = ctx.currentTime;
     this.bus.gain.cancelScheduledValues(now); this.bus.gain.setValueAtTime(1, now);
   }
 
   /* ---------------------------------------------------------------- the mix, every frame */
   update(s: SoundState) {
     const { t, r, ci, playing, dt, listener, bay } = s;
-    const now = this.ctx.currentTime;
+    const ctx = this.ctx, now = ctx.currentTime;
     const id = CHAPTERS[ci].id;
     const k = clamp01((t - STARTS[ci]) / CHAPTERS[ci].dur);
     const set = (p: AudioParam, v: number, tc = 0.12) => p.setTargetAtTime(v, now, tc);
     const forward = this.lastT >= 0 && t > this.lastT && t - this.lastT < 1;
 
     if (forward) {
+      if (this.lastT < T_INJECT - 0.18 && t >= T_INJECT - 0.18) {
+        const n = ctx.createBufferSource(); n.buffer = this.noise;
+        const bp = ctx.createBiquadFilter(); bp.type = 'bandpass';
+        bp.frequency.setValueAtTime(300, now);
+        bp.frequency.exponentialRampToValueAtTime(1400, now + 0.18); bp.Q.value = 2.0;
+        this.env(n.connect(bp), now, 0.12, 0.01, 0.17, this.bus);
+        n.start(now); n.stop(now + 0.19);
+      }
       if (this.lastT < T_CONFIRM && t >= T_CONFIRM) {
         // Back from the ground station onto the lock: the hit, then pure silence
         this.hit(1);
@@ -429,7 +443,9 @@ export class SortieSound {
 
     const high = dead ? 1.5 : id === 'cold' ? 0.25 + 0.75 * k : id === 'decide' || id === 'divert' ? 0.85 : id === 'land' ? 0.5 * (1 - idle) : 0.42;
     const windLevel = running ? (bay ? 0.012 : 0.075 * high) : 0.015;
-    set(this.windL.gain, windLevel, 0.5); set(this.windR.gain, windLevel, 0.5);
+    const breathL = 1 + 0.14 * Math.sin(t * 0.85);
+    const breathR = 1 + 0.14 * Math.cos(t * 0.72);
+    set(this.windL.gain, windLevel * breathL, 0.5); set(this.windR.gain, windLevel * breathR, 0.5);
 
     // Inside the cowling or detector's mind: exterior air smoothly muffles
     const mind = id === 'pipeline' || (id === 'detect' && t < T_CONFIRM) || id === 'memory' || id === 'beyond';
@@ -471,7 +487,10 @@ export class SortieSound {
     const sw = running && (id === 'divert' || id === 'land') ? (id === 'divert' ? 0.09 + 0.14 * k : 0.22 * (1 - clamp01((t - T_TOUCH - 1) / 5))) : 0;
     set(this.swell.gain, sw * 0.24, id === 'divert' ? 1.4 : 0.8);
 
-    this.stems.update(t, running, bay ? 1 : 0, dead);
+    const bayDuck = bay ? 1 : 0;
+    const decideDuck = id === 'decide' ? 0.22 : 0;
+    const totalDuck = Math.max(bayDuck, decideDuck);
+    this.stems.update(t, running, totalDuck, dead);
     this.score.update({
       t,
       ci,
@@ -480,7 +499,7 @@ export class SortieSound {
       newWinners,
       unseen: s.unseen,
       memory: s.memory,
-      duck: bay ? 1 : 0,
+      duck: totalDuck,
     });
 
     // Roll-out rumble, dying with speed
