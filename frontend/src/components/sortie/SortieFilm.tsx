@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ArrowDown, ArrowUpRight, Box, ChevronLeft, ChevronRight, Pause, Play, RotateCcw, Volume2, VolumeX } from 'lucide-react';
+import { ArrowDown, ArrowUpRight, Box, ChevronLeft, ChevronRight, Pause, Play, RotateCcw, Volume2, VolumeX, Video, Download } from 'lucide-react';
 import { CHAPTERS, DIRECTIVE, GLIDE, INJECTION, MOVEMENTS, OIL, STARTS, TOTAL, T_ASSESS, T_INJECT, chapterAt, gauges, oilExpected, oilMeasured, startOf } from './story';
 import { INSERT, RADIO, RADIO_HOLD, T_CONFIRM, readout, type Readout } from './timeline';
 import { SCORERS, tier0 } from './detector';
@@ -362,6 +362,97 @@ export function SortieFilm({ onRunDemo, onOpenConsole, onOpenTwin, evidenceHref,
     else { sound.current?.setMuted(true); setMuted(true); }
   }, [muted, soundOn]);
 
+  const [recording, setRecording] = useState(false);
+  const [recordSaved, setRecordSaved] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
+
+  const startRecording = useCallback(() => {
+    if (!world.current || !sound.current) return;
+    try {
+      const canvas = host.current?.querySelector('canvas');
+      if (!canvas) return;
+      const canvasStream = canvas.captureStream(60);
+      const audioDest = sound.current.getMediaStream();
+      
+      const combined = new MediaStream([
+        ...canvasStream.getVideoTracks(),
+        ...audioDest.stream.getAudioTracks(),
+      ]);
+      
+      recordedChunksRef.current = [];
+      const mime = typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')
+        ? 'video/webm;codecs=vp9,opus'
+        : 'video/webm';
+        
+      const rec = new MediaRecorder(combined, {
+        mimeType: mime,
+        videoBitsPerSecond: 8_000_000,
+      });
+      
+      rec.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) recordedChunksRef.current.push(e.data);
+      };
+      
+      rec.onstop = async () => {
+        setRecording(false);
+        const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
+        
+        // 1. Direct browser download
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'ANUMAAN_Sortie_Movie_HD_Audio.webm';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        
+        // 2. Upload to backend for instant MP4 conversion via ffmpeg
+        try {
+          const fd = new FormData();
+          fd.append('file', blob, 'sortie.webm');
+          const res = await fetch('http://localhost:8000/api/v1/recording/save', {
+            method: 'POST',
+            body: fd,
+          });
+          const json = await res.json();
+          if (json.status === 'ok') {
+            setRecordSaved(true);
+            setTimeout(() => setRecordSaved(false), 8000);
+          }
+        } catch (e) {
+          console.warn('[Recording] Backend upload:', e);
+        }
+      };
+      
+      rec.start(1000);
+      mediaRecorderRef.current = rec;
+      setRecording(true);
+      
+      if (clock.current.phase === 'gate') {
+        begin(true);
+      } else {
+        if (!sound.current) soundOn();
+        sound.current?.setMuted(false);
+        setMuted(false);
+      }
+    } catch (err) {
+      console.error('Failed to start MediaRecorder:', err);
+    }
+  }, [begin, soundOn]);
+
+  const stopRecording = useCallback(() => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (ended && recording) {
+      stopRecording();
+    }
+  }, [ended, recording, stopRecording]);
+
   const goTo = useCallback((i: number) => {
     const c = clock.current;
     if (c.phase === 'gate') return;
@@ -557,8 +648,26 @@ export function SortieFilm({ onRunDemo, onOpenConsole, onOpenTwin, evidenceHref,
         <button type="button" className="so-icon" onClick={toggleSound} aria-label={muted ? 'Turn sound on' : 'Turn sound off'} aria-pressed={!muted}>
           {muted ? <VolumeX size={16} /> : <Volume2 size={16} />}
         </button>
+        <button type="button" className={`so-icon${recording ? ' is-rec' : ''}`} onClick={recording ? stopRecording : startRecording} aria-label={recording ? 'Stop & Export Video' : 'Record HD Movie with Audio'} title={recording ? 'Stop & Export Video' : 'Record HD Movie with Audio'}>
+          {recording ? <Download size={16} style={{ color: '#ff5c8c' }} /> : <Video size={16} />}
+        </button>
         <a className="so-skip" href={evidenceHref}>Skip to the evidence <ArrowDown size={14} aria-hidden /></a>
       </nav>
+
+      {recording && (
+        <div style={{ position: 'fixed', top: '16px', left: '16px', zIndex: 9999, background: 'rgba(5,9,9,0.92)', border: '1px solid #ff5c8c', padding: '6px 14px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '10px', color: '#f4f6f5', fontFamily: 'var(--f-data)', fontSize: '12px', boxShadow: '0 4px 20px rgba(255,92,140,0.3)' }}>
+          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ff5c8c' }} />
+          <span>REC · CAPTURING 60FPS WITH AUDIO · {pad2(r.t / 60)}:{pad2(r.t % 60)}</span>
+          <button type="button" onClick={stopRecording} style={{ background: '#ff5c8c', color: '#050909', border: 'none', padding: '2px 8px', borderRadius: '3px', cursor: 'pointer', fontFamily: 'var(--f-label)', fontWeight: 700, fontSize: '11px', textTransform: 'uppercase' }}>
+            Finish & Export
+          </button>
+        </div>
+      )}
+      {recordSaved && (
+        <div style={{ position: 'fixed', top: '16px', left: '16px', zIndex: 9999, background: 'rgba(5,9,9,0.92)', border: '1px solid var(--so-cyan)', padding: '6px 14px', borderRadius: '4px', color: 'var(--so-cyan)', fontFamily: 'var(--f-data)', fontSize: '12px' }}>
+          ✓ MP4 Video Saved to output/ANUMAAN_Sortie_Movie_HD_Audio.mp4
+        </div>
+      )}
 
       <div className={`so-insert${phase === 'insert' ? ' is-shown' : ''}`} aria-hidden={phase !== 'insert'}>
         <p className="so-insert-tag">Ground control · Leh</p>

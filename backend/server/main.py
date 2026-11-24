@@ -693,6 +693,32 @@ async def websocket_blender_endpoint(websocket: WebSocket):
         logger.warning(f"[WebSocket] Blender connection error: {e}")
 
 
+@app.post("/api/v1/recording/save")
+async def save_recording(file: UploadFile = File(...)):
+    out_dir = Path("D:/Programming/PS054/output")
+    out_dir.mkdir(parents=True, exist_ok=True)
+    temp_webm = out_dir / "sortie_raw.webm"
+    final_mp4 = out_dir / "ANUMAAN_Sortie_Movie_HD_Audio.mp4"
+    
+    content = await file.read()
+    with open(temp_webm, "wb") as f:
+        f.write(content)
+        
+    import subprocess
+    cmd = [
+        "ffmpeg", "-y", "-i", str(temp_webm),
+        "-c:v", "libx264", "-preset", "fast", "-crf", "18",
+        "-c:a", "aac", "-b:a", "192k",
+        str(final_mp4)
+    ]
+    try:
+        subprocess.run(cmd, check=True)
+        return {"status": "ok", "mp4": str(final_mp4), "size_mb": os.path.getsize(final_mp4) / (1024*1024)}
+    except Exception as e:
+        logger.error(f"FFmpeg conversion failed: {e}")
+        return {"status": "error", "message": str(e), "webm": str(temp_webm)}
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

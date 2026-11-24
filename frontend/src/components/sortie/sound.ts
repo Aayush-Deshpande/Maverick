@@ -206,6 +206,12 @@ export class SortieSound {
     this.score = new Score(ctx, this.bus, this.reverbSend, this.noise);
   }
 
+  getMediaStream(): MediaStreamAudioDestinationNode {
+    const dest = this.ctx.createMediaStreamDestination();
+    this.master.connect(dest);
+    return dest;
+  }
+
   private impulse(seconds: number, decay: number) {
     const rate = this.ctx.sampleRate, len = Math.floor(rate * seconds);
     const buf = this.ctx.createBuffer(2, len, rate);

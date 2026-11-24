@@ -6,18 +6,18 @@ Update the RESUME HERE block at every commit and at the end of every session.
 Part 1 historical session log (Phases 0 through 7, 19 Nov - 22 Nov 2026) is preserved in PROGRESS.txt.
 
 =====================================================================================================================
-RESUME HERE  (last updated 24 Nov 2026, Phase 0/8 M0-08m Modernize Sortie Film Preloader Gate & Eliminate Debug Checklist)
+RESUME HERE  (last updated 24 Nov 2026, Phase 0/8 M0-08n Direct In-Browser Canvas & Web Audio Movie Recorder)
 =====================================================================================================================
 Phase:        Phase 0 / Phase 8 (Platform Harmonization & Visual Polish).
-Card:         M0-08m (Modernize Sortie Film Preloader Gate & Eliminate Debug Checklist):
-              1. Eradicated the raw 12-item developer debug checklist (WASM decoders, raw byte counts, and asset tickboxes) in favor of a centered, high-density aerospace mission briefing card.
-              2. Removed awkward "Continue with pre-rendered visuals" jargon and static 2D fallbacks; the movie strictly launches with the authentic 3D WebGL cyber-physical digital twin.
-              3. Implemented seamless loading state: Cold cache visitors see a sleek 4px cyan glowing bar ("PREPARING DIGITAL TWIN TELEMETRY · XX%") that dissolves cleanly into [Begin with sound] / [Watch without sound] with zero layout shift.
-              4. Cached/returning visitors skip the loading bar completely and immediately access the audio-unlock action buttons.
+Card:         M0-08n (Direct In-Browser Canvas & Web Audio Movie Recorder):
+              1. Tapped Web Audio synthesis graph via createMediaStreamDestination() on master gain node in sound.ts.
+              2. Integrated native 60 FPS HTML5 Canvas + Web Audio MediaRecorder in SortieFilm.tsx with top-rail [ 📹 ] control and floating REC status HUD.
+              3. Implemented backend /api/v1/recording/save endpoint in backend/server/main.py converting recorded WebM blobs to broadcast-quality MP4 (H.264/AAC) via FFmpeg.
+              4. Verified zero layout shifts, zero static fallbacks, and 52/52 Vitest test pass.
 Branch:       Beta
-Last commit:  Pending M0-08m commit
-State:        All TypeScript and build tests clean (0 errors, 52/52 Vitest passing). Ready to push Beta and merge to main.
-Latest:       Full 3D Sortie Film preloader gate modernized with defense editorial aesthetics.
+Last commit:  Pending M0-08n commit
+State:        All TypeScript and build tests clean (0 errors, 52/52 Vitest passing).
+Latest:       Full 3D Sortie Film movie recorder & preloader gate operational.
 Next step:    Phase 8 UX-02 (Time Machine mission timeline scrubber & historical replay).
 =====================================================================================================================
 Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produce yet (lambda, timing, BSFC, power,
