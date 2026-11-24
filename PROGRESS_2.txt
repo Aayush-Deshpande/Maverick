@@ -18,7 +18,7 @@ Card:         M0-08s (Pure-Code Psychoacoustic Cinema Audio Engine & Temple-Chur
               6. Bowed String Ensemble: cello/viola formant EQ (+2.8 dB at 240 Hz wood body, -3.2 dB at 2.3 kHz fizz) + dual-LFO stereo ensemble chorus.
               7. Cinema Brass BRAAAM: unison detuned horns with sub-octave through warm saturator on T_INJECT (01:03), gate lock (01:34), and touchdown (02:18).
 Branch:       Beta (Strict main quarantine per Decision D79).
-Last commit:  f09b6f2 M0-08s: upgrade sortie audio to psychoacoustic cinema DSP and temple organ
+Last commit:  b61b9de M0-08t: calibrate propeller presence and 260Hz blade bite in SortieSound
 State:        All TypeScript and build tests clean (0 errors, 52/52 Vitest passing, npm run build passed in 16.0s).
 Latest:       Complete psychoacoustic cinema audio engine active with pure procedural Web Audio.
 Next step:    Phase 8 UX-02 (Time Machine mission timeline scrubber & historical replay).
