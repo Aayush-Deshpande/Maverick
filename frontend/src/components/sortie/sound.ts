@@ -162,13 +162,13 @@ export class SortieSound {
       osc.connect(lp1).connect(lp2).connect(g).connect(pan).connect(this.air); osc.start();
       this.eng = { osc, lp1, lp2, g, pan };
     }
-    // Propeller: warm triangle blade-pass throb
+    // Propeller: warm triangle blade-pass throb with crisp aerodynamic blade bite
     {
       const osc = ctx.createOscillator(); osc.type = 'triangle';
-      const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 210; bp.Q.value = 0.9;
+      const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 260; bp.Q.value = 0.8;
       const g = ctx.createGain(); g.gain.value = 0;
       const am = ctx.createOscillator(); am.type = 'sine';
-      const amDepth = ctx.createGain(); amDepth.gain.value = 0.16;
+      const amDepth = ctx.createGain(); amDepth.gain.value = 0.22;
       am.connect(amDepth).connect(g.gain);
       osc.connect(bp).connect(g).connect(this.eng.pan); osc.start(); am.start();
       this.prop = { osc, bp, g, am };
@@ -508,7 +508,7 @@ export class SortieSound {
     const engCut = bay ? 290 : 320 + 1350 * near * near;
     set(this.eng.lp1.frequency, engCut, 0.25);
     set(this.eng.lp2.frequency, engCut * 1.15, 0.25);
-    set(this.prop.g.gain, (bay ? 0.02 : 0.048 * (0.28 + near)) * (running && !dead ? 1 - 0.85 * idle : 0), dead ? 0.025 : 0.2);
+    set(this.prop.g.gain, (bay ? 0.024 : 0.065 * (0.3 + near)) * (running && !dead ? 1 - 0.85 * idle : 0), dead ? 0.025 : 0.2);
     set(this.valve.g.gain, running && !dead ? (bay ? 0.028 : 0.007 * near) : 0, 0.2);
     set(this.bayRing.gain, bay && running ? 0.011 : 0, 0.3);
 
