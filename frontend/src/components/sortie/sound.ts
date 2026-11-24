@@ -5,6 +5,7 @@
 import { CHAPTERS, STARTS, TOTAL, T_TOUCH, startOf } from './story';
 import { T_CONFIRM, type Readout } from './timeline';
 import { Score } from './score';
+import { StemPlayer } from './stemPlayer';
 
 const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
 
@@ -64,6 +65,7 @@ export class SortieSound {
   private riserPhase = 0;
   private prevWinners = new Set<number>();
   private score: Score;
+  private stems: StemPlayer;
 
   constructor() {
     const AC = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
@@ -219,6 +221,7 @@ export class SortieSound {
       n.connect(lp).connect(this.rumble).connect(this.master);
     }
     this.score = new Score(ctx, this.bus, this.reverbSend, this.noise);
+    this.stems = new StemPlayer(ctx, this.bus);
   }
 
   private impulse(seconds: number, decay: number) {
@@ -467,12 +470,26 @@ export class SortieSound {
     // Glide swell pad
     const sw = running && (id === 'divert' || id === 'land') ? (id === 'divert' ? 0.09 + 0.14 * k : 0.22 * (1 - clamp01((t - T_TOUCH - 1) / 5))) : 0;
     set(this.swell.gain, sw * 0.24, id === 'divert' ? 1.4 : 0.8);
-    this.score.update({ t, ci, playing: running && !dead, stage: s.stage, newWinners, unseen: s.unseen, memory: s.memory, duck: bay ? 1 : 0 });
+
+    this.stems.update(t, running, bay ? 1 : 0, dead);
+    this.score.update({
+      t,
+      ci,
+      playing: running && !dead && !this.stems.hasStemAt(t),
+      stage: s.stage,
+      newWinners,
+      unseen: s.unseen,
+      memory: s.memory,
+      duck: bay ? 1 : 0,
+    });
 
     // Roll-out rumble, dying with speed
     const roll = t >= T_TOUCH && t < T_TOUCH + 4.6 ? 1 - (t - T_TOUCH) / 4.6 : 0;
     set(this.rumble.gain, running ? 0.26 * roll * roll : 0, 0.08);
   }
 
-  dispose() { void this.ctx.close(); }
+  dispose() {
+    this.stems.dispose();
+    void this.ctx.close();
+  }
 }
