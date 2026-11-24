@@ -39,7 +39,6 @@ const pad2 = (n: number) => String(Math.floor(n)).padStart(2, '0');
 const sstep = (a: number, b: number, x: number) => { const k = Math.min(1, Math.max(0, (x - a) / (b - a))); return k * k * (3 - 2 * k); };
 /** Sortie elapsed time: the film opens six hours into the eighteen-hour sortie. */
 const missionClock = (t: number) => { const s = 6 * 3600 + 14 * 60 + 7 + t; return `T+${pad2(s / 3600)}:${pad2((s % 3600) / 60)}:${pad2(s % 60)}`; };
-const mb = (b: number) => (b / 1e6).toFixed(1);
 const radioAt = (t: number) => { for (let i = RADIO.length - 1; i >= 0; i--) if (t >= RADIO[i].at) return t < RADIO[i].at + RADIO_HOLD ? i : -1; return -1; };
 
 /** Oil pressure, measured against what the twin expects, over the last 16 story seconds. */
@@ -108,7 +107,6 @@ export function SortieFilm({ onRunDemo, onOpenConsole, onOpenTwin, evidenceHref,
   const [muted, setMuted] = useState(true);
   const [opening, setOpening] = useState(0);
   const [flash, setFlash] = useState(false);
-  const [forceBegin, setForceBegin] = useState(false);
   // the loading dialog: polled while it is on screen
   const [load, setLoad] = useState(() => ({ ...preloader.summary(), tasks: preloader.tasks.map((t) => ({ ...t })), ready: preloader.ready, failed: preloader.anyFailed }));
   useEffect(() => {
@@ -331,7 +329,7 @@ export function SortieFilm({ onRunDemo, onOpenConsole, onOpenTwin, evidenceHref,
     (window as unknown as { __sortie?: unknown }).__sortie = { clock: clock.current };
   }, []);
 
-  const canBegin = load.ready || forceBegin;
+  const canBegin = load.ready;
   useEffect(() => { if (armed && phase === 'gate' && canBegin) gateBtn.current?.focus({ preventScroll: true }); }, [armed, phase, canBegin]);
   // the site behind the dialog does not scroll until the film begins
   useEffect(() => {
@@ -599,40 +597,30 @@ export function SortieFilm({ onRunDemo, onOpenConsole, onOpenTwin, evidenceHref,
           which is the only way a browser allows sound */}
       {previewAt === null && gated && typeof document !== 'undefined' && createPortal(
         <div className={`so-gate${armed ? ' is-shown' : ''}`} role="dialog" aria-modal="true" aria-labelledby="so-gate-title">
-          {armed && (canBegin ? (
-            <div className="so-gate-inner" key="ready">
+          {armed && (
+            <div className="so-gate-inner" key={canBegin ? 'ready' : 'loading'}>
               <p id="so-gate-title" className="so-gate-title">What we built, running</p>
               <p className="so-gate-lede">Two and a half minutes. One aircraft, one engine, one fault caught while every gauge was green. How ANUMAAN listens, thinks on board, and brings the airframe home.</p>
-              {load.failed && <p className="so-gate-warn">Some assets did not load; the film will use stills where it has to.</p>}
-              <div className="so-gate-actions">
-                <button ref={gateBtn} type="button" className="so-btn so-btn-light" onClick={() => begin(true)}><Volume2 size={17} aria-hidden /> Begin with sound</button>
-                <button type="button" className="so-btn so-btn-ghost" onClick={() => begin(false)}>Watch without sound</button>
-              </div>
-              <button type="button" className="so-gate-skip" onClick={() => { begin(false); document.querySelector(evidenceHref)?.scrollIntoView(); }}>Or skip to the evidence <ArrowDown size={14} aria-hidden /></button>
+              {canBegin ? (
+                <div className="so-gate-actions" key="actions">
+                  <button ref={gateBtn} type="button" className="so-btn so-btn-light" onClick={() => begin(true)}><Volume2 size={17} aria-hidden /> Begin with sound</button>
+                  <button type="button" className="so-btn so-btn-ghost" onClick={() => begin(false)}>Watch without sound</button>
+                </div>
+              ) : (
+                <div className="so-gate-loading-block" key="loader" aria-live="polite">
+                  <div className="so-load-bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(load.progress * 100)}>
+                    <span style={{ transform: `scaleX(${load.progress})` }} />
+                  </div>
+                  <div className="so-load-figs" style={{ justifyContent: 'space-between', margin: '0 0 10px' }}>
+                    <span style={{ letterSpacing: '0.08em', textTransform: 'uppercase', fontSize: '11.5px', color: 'var(--so-soft)' }}>
+                      Preparing digital twin telemetry
+                    </span>
+                    <span style={{ color: 'var(--so-cyan)', fontWeight: 600 }}>{Math.round(load.progress * 100)}%</span>
+                  </div>
+                </div>
+              )}
             </div>
-          ) : (
-            <div className="so-gate-inner so-loading" key="loading" aria-live="polite">
-              <p id="so-gate-title" className="so-gate-title">Please wait · loading assets</p>
-              <div className="so-load-bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(load.progress * 100)}>
-                <span style={{ transform: `scaleX(${load.progress})` }} />
-              </div>
-              <p className="so-load-figs">
-                <output>{Math.round(load.progress * 100)}%</output>
-                <span>{mb(load.loaded)} of {mb(load.total)} MB</span>
-                <span>{load.eta === null ? 'estimating time…' : load.eta < 1 ? 'almost there' : `about ${Math.ceil(load.eta)} s left`}</span>
-              </p>
-              <ul className="so-load-list">
-                {load.tasks.map((task) => (
-                  <li key={task.id} className={task.failed ? 'is-failed' : task.done ? 'is-done' : undefined}>
-                    <span className="so-load-mark" aria-hidden>{task.failed ? '!' : task.done ? '✓' : ''}</span>
-                    <span>{task.label}</span>
-                    <small>{task.kind === 'bytes' ? (task.done ? `${mb(task.total)} MB` : `${Math.round((task.loaded / Math.max(1, task.total)) * 100)}%`) : task.done ? 'done' : ''}</small>
-                  </li>
-                ))}
-              </ul>
-              {load.elapsed > 20 && <button type="button" className="so-gate-skip" onClick={() => setForceBegin(true)}>Continue without waiting</button>}
-            </div>
-          ))}
+          )}
         </div>,
         document.body,
       )}

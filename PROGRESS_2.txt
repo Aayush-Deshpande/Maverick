@@ -6,18 +6,18 @@ Update the RESUME HERE block at every commit and at the end of every session.
 Part 1 historical session log (Phases 0 through 7, 19 Nov - 22 Nov 2026) is preserved in PROGRESS.txt.
 
 =====================================================================================================================
-RESUME HERE  (last updated 22 Nov 2026, Phase 0/8 M0-08l Blind State Estimation & Sensor Attribution Disclosures)
+RESUME HERE  (last updated 24 Nov 2026, Phase 0/8 M0-08m Modernize Sortie Film Preloader Gate & Eliminate Debug Checklist)
 =====================================================================================================================
-Phase:        Phase 0 / Phase 8 (Platform Harmonization & Scientific Truthfulness).
-Card:         M0-08l (Humanized Blind State Estimation & Sensor Attribution Disclosures Across GCS, Landing, and Docs):
-              1. Eradicated AI-slop catchphrases (specifically "Zero-Cheat Architecture") in favor of standard aerospace engineering terminology: "Blind State Estimation & Independent Sensor Attribution" (OSA-CBM / IEEE Aerospace).
-              2. Updated `RuntimeGuideModal.tsx`, `FaultMatrix.tsx`, and `CalculationsPanel.tsx` (i) modals with clear, humanized explanations showing that injected faults affect only internal thermodynamic and mechanical state equations, while state estimation (UKF) and the Bayesian fault classifier receive only noisy sensor observations ($r = y - \hat{y}$), strictly enforced by `tests/test_no_truth_leak.py`.
-              3. Added prominent Evaluation Guide access directly in the GCS header navigation (`Header.tsx` & `App.tsx`).
-              4. Added evaluator disclosure banners in `LandingDetection.tsx` and `HomePage.tsx` on the documentation portal.
+Phase:        Phase 0 / Phase 8 (Platform Harmonization & Visual Polish).
+Card:         M0-08m (Modernize Sortie Film Preloader Gate & Eliminate Debug Checklist):
+              1. Eradicated the raw 12-item developer debug checklist (WASM decoders, raw byte counts, and asset tickboxes) in favor of a centered, high-density aerospace mission briefing card.
+              2. Removed awkward "Continue with pre-rendered visuals" jargon and static 2D fallbacks; the movie strictly launches with the authentic 3D WebGL cyber-physical digital twin.
+              3. Implemented seamless loading state: Cold cache visitors see a sleek 4px cyan glowing bar ("PREPARING DIGITAL TWIN TELEMETRY · XX%") that dissolves cleanly into [Begin with sound] / [Watch without sound] with zero layout shift.
+              4. Cached/returning visitors skip the loading bar completely and immediately access the audio-unlock action buttons.
 Branch:       Beta
-Last commit:  Pending M0-08l commit
-State:        All TypeScript and build tests clean (0 errors). Ready to push Beta and merge to main.
-Latest:       Full blind state estimation guarantees documented across GCS UI, landing page, and docs site.
+Last commit:  Pending M0-08m commit
+State:        All TypeScript and build tests clean (0 errors, 52/52 Vitest passing). Ready to push Beta and merge to main.
+Latest:       Full 3D Sortie Film preloader gate modernized with defense editorial aesthetics.
 Next step:    Phase 8 UX-02 (Time Machine mission timeline scrubber & historical replay).
 =====================================================================================================================
 Questions:    (1) Tactical GCS panels receive nulls for values v1 does not produce yet (lambda, timing, BSFC, power,
