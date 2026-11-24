@@ -1,7 +1,7 @@
-// The film's sound, synthesised in the browser (no audio files).
-// Upgraded cinema mix: frequency-damped hall reverb, master EQ + compression,
-// warm Rotax propulsion, damped mechanical watch tick, VHF radio ducking,
-// and clear touchdown Foley — preserving all exact timeline hooks.
+// The film's sound, synthesised in the browser + frame-synced cinema stems.
+// Mastered cinema chain: 30Hz HPF, 85Hz warmth, 3.2kHz de-harsh, 3:1 bus compressor,
+// frequency-damped 3.4s hall reverb, breathing Ladakh wind, pre-impact fault breath,
+// authentic avionics ground chime, VHF radio ducking, and clear touchdown Foley.
 import { CHAPTERS, STARTS, TOTAL, T_INJECT, T_TOUCH, startOf } from './story';
 import { T_CONFIRM, type Readout } from './timeline';
 import { Score } from './score';
@@ -71,7 +71,7 @@ export class SortieSound {
     const AC = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     const ctx = (this.ctx = new AC());
 
-    // Master cinema chain: sub-cleanup HPF -> warm low shelf -> gentle 3.2kHz de-harsh -> compressor -> destination
+    // Master cinema chain: 30Hz HPF -> 85Hz warmth -> 3.2kHz de-harsh -> 3:1 compressor -> destination
     const masterHP = ctx.createBiquadFilter();
     masterHP.type = 'highpass'; masterHP.frequency.value = 30; masterHP.Q.value = 0.7;
 
@@ -92,7 +92,7 @@ export class SortieSound {
 
     this.bus = ctx.createGain(); this.bus.connect(this.duckBus);
 
-    // Warm, frequency-damped dark hall reverb (no sub mud, no bright static hiss)
+    // Frequency-damped 3.4s dark hall reverb (160Hz HPF + 4.2kHz LPF)
     const conv = ctx.createConvolver();
     conv.buffer = this.impulse(3.4, 2.6);
     const revHP = ctx.createBiquadFilter(); revHP.type = 'highpass'; revHP.frequency.value = 160;
@@ -106,15 +106,14 @@ export class SortieSound {
     const d = this.noise.getChannelData(0);
     for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
 
-    // Exterior bus, low-passed when the film goes into the detector's head or cowling
+    // Exterior bus, low-passed when inside cowling or detector's mind
     this.airLP = ctx.createBiquadFilter(); this.airLP.type = 'lowpass'; this.airLP.frequency.value = 16000; this.airLP.Q.value = 0.5;
     this.air = ctx.createGain();
     this.air.connect(this.airLP).connect(this.bus);
-    // Keep reverb send on exterior air subtle so wind doesn't wash out the hall
     const airRev = ctx.createGain(); airRev.gain.value = 0.25;
     this.airLP.connect(airRev).connect(this.reverbSend);
 
-    // Engine: warm 4-cyl Rotax periodic wave (tamed upper harmonics so it never buzzes)
+    // Engine: warm 4-cyl Rotax periodic wave
     {
       const real = new Float32Array(12), imag = new Float32Array(12);
       [0, 0.45, 1.0, 0.2, 0.42, 0.08, 0.18, 0.04, 0.08, 0.02, 0.03, 0.01].forEach((v, i) => { imag[i] = v; });
@@ -125,7 +124,7 @@ export class SortieSound {
       osc.connect(lp).connect(g).connect(pan).connect(this.air); osc.start();
       this.eng = { osc, lp, g, pan };
     }
-    // Propeller: warm triangle blade-pass throb instead of harsh sawtooth buzz
+    // Propeller: warm triangle blade-pass throb
     {
       const osc = ctx.createOscillator(); osc.type = 'triangle';
       const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 240; bp.Q.value = 0.85;
@@ -170,7 +169,7 @@ export class SortieSound {
       n.connect(bp).connect(this.bayRing); n.connect(bp2).connect(this.bayRing);
       this.bayRing.connect(this.bus); this.bayRing.connect(this.reverbSend);
     }
-    // Sub-bass tension bed (clean low-end, zero reverb)
+    // Sub-bass tension bed
     {
       this.sub = ctx.createGain(); this.sub.gain.value = 0;
       for (const [f, v] of [[41.2, 0.55], [61.7, 0.3], [82.4, 0.12]] as const) {
@@ -179,7 +178,7 @@ export class SortieSound {
       }
       this.sub.connect(this.bus);
     }
-    // Endless Shepard-style rise: warm low-passed triangle voices
+    // Endless Shepard-style rise
     this.riserBus = ctx.createGain(); this.riserBus.gain.value = 0;
     {
       const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1400;
@@ -191,7 +190,7 @@ export class SortieSound {
         this.riser.push({ o, g });
       }
     }
-    // The glide swell: warm open chord bed
+    // Glide swell pad
     this.swell = ctx.createGain(); this.swell.gain.value = 0;
     {
       const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 950;
@@ -203,7 +202,7 @@ export class SortieSound {
         }
       }
     }
-    // Memory: eight voices, each following one reservoir node
+    // Memory reservoir voices
     this.voiceBus = ctx.createGain(); this.voiceBus.gain.value = 0;
     this.voiceBus.connect(this.bus); this.voiceBus.connect(this.reverbSend);
     [110, 164.81, 220, 261.63, 329.63, 392, 493.88, 659.25].forEach((f, i) => {
@@ -234,7 +233,6 @@ export class SortieSound {
       for (let i = pre; i < len; i++) {
         const env = Math.pow(1 - (i - pre) / (len - pre), decay);
         const raw = (Math.random() * 2 - 1) * env;
-        // Progressive high-frequency air damping as the tail decays
         const alpha = 0.25 + 0.55 * (1 - (i - pre) / (len - pre));
         lp = lp + alpha * (raw - lp);
         d[i] = lp;
@@ -248,7 +246,7 @@ export class SortieSound {
   }
 
   private duck(depthLinear: number, holdSec: number, releaseSec = 0.45) {
-    const ctx = this.ctx, now = ctx.currentTime;
+    const now = this.ctx.currentTime;
     this.duckBus.gain.cancelScheduledValues(now);
     this.duckBus.gain.setTargetAtTime(depthLinear, now, 0.025);
     this.duckBus.gain.setTargetAtTime(1, now + holdSec, releaseSec);
@@ -260,15 +258,14 @@ export class SortieSound {
   }
   setMuted(m: boolean) {
     this.muted = m;
-    const ctx = this.ctx, now = ctx.currentTime;
+    const now = this.ctx.currentTime;
     this.master.gain.cancelScheduledValues(now);
     this.master.gain.setTargetAtTime(m ? 0 : 0.85, now, 0.15);
   }
   get isMuted() { return this.muted; }
-  /** Fade out while the film is off screen or the tab is hidden; back in when it returns. */
   setActive(on: boolean) {
     if (this.muted) return;
-    const ctx = this.ctx, now = ctx.currentTime;
+    const now = this.ctx.currentTime;
     this.master.gain.cancelScheduledValues(now);
     this.master.gain.setTargetAtTime(on ? 0.85 : 0, now, on ? 0.3 : 0.12);
   }
@@ -283,7 +280,23 @@ export class SortieSound {
     return g;
   }
 
-  /** A low cinema impact: falling sub-drop with dark air thump into the hall. */
+  /** Subtle 180 ms reverse-air breath right before T_INJECT cutaway. */
+  private preImpactBreath() {
+    const ctx = this.ctx, now = ctx.currentTime;
+    const n = ctx.createBufferSource(); n.buffer = this.noise;
+    const bp = ctx.createBiquadFilter();
+    bp.type = 'bandpass'; bp.Q.value = 1.8;
+    bp.frequency.setValueAtTime(300, now);
+    bp.frequency.exponentialRampToValueAtTime(1400, now + 0.175);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, now);
+    g.gain.exponentialRampToValueAtTime(0.12, now + 0.165);
+    g.gain.linearRampToValueAtTime(0.0001, now + 0.18);
+    n.connect(bp).connect(g).connect(this.master);
+    n.start(now, Math.random()); n.stop(now + 0.19);
+  }
+
+  /** Cinema sub-drop impact into the hall. */
   hit(level = 1) {
     const ctx = this.ctx, now = ctx.currentTime;
     const o = ctx.createOscillator();
@@ -299,17 +312,15 @@ export class SortieSound {
     n.start(now); n.stop(now + 1.1);
   }
 
-  /** Damped mechanical chronometer tick (replaces harsh square-wave beep). */
+  /** Damped mechanical chronometer tick. */
   private tick(level: number) {
     const ctx = this.ctx, now = ctx.currentTime;
-    // Crisp escapement click
     const n = ctx.createBufferSource(); n.buffer = this.noise;
     const bp = ctx.createBiquadFilter();
     bp.type = 'bandpass'; bp.frequency.value = this.tock ? 2900 : 3600; bp.Q.value = 3.2;
     this.env(n.connect(bp), now, 0.11 * level, 0.0015, 0.018, this.bus);
     n.start(now, Math.random()); n.stop(now + 0.03);
 
-    // Subtle damped body ping
     const o = ctx.createOscillator(); o.type = 'sine';
     o.frequency.value = this.tock ? 1120 : 1440;
     this.tock = !this.tock;
@@ -317,24 +328,22 @@ export class SortieSound {
     o.start(now); o.stop(now + 0.04);
   }
 
-  /** Authentic VHF aviation radio squelch + subtle music ducking. */
+  /** Authentic VHF aviation radio squelch + -2.8 dB music duck. */
   radio() {
     const ctx = this.ctx, now = ctx.currentTime;
-    this.duck(0.72, 0.35, 0.4); // -2.8 dB duck so ATC callout reads cleanly
+    this.duck(0.72, 0.35, 0.4);
 
-    // PTT mic click + band-passed VHF static burst
     const n = ctx.createBufferSource(); n.buffer = this.noise;
     const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1750; bp.Q.value = 1.6;
     this.env(n.connect(bp), now, 0.18, 0.004, 0.095, this.master);
     n.start(now, Math.random()); n.stop(now + 0.14);
 
-    // Short squelch tail tone
     const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = 1120;
     this.env(o, now + 0.075, 0.032, 0.004, 0.055, this.master);
     o.start(now + 0.075); o.stop(now + 0.16);
   }
 
-  /** Cross-cut to the ground station: the air drops out, a quiet room, the console's alert as the gate fires. */
+  /** Ground station cross-cut: quiet room + authentic avionics console chime. */
   ground(dur: number, alertAt: number) {
     const ctx = this.ctx, now = ctx.currentTime;
     this.bus.gain.cancelScheduledValues(now); this.bus.gain.setValueAtTime(0, now);
@@ -344,23 +353,25 @@ export class SortieSound {
     g.gain.setValueAtTime(0.065, now + dur - 0.05); g.gain.linearRampToValueAtTime(0, now + dur);
     n.connect(lp).connect(g).connect(this.master); n.start(now); n.stop(now + dur + 0.05);
 
+    const chimeRev = ctx.createGain(); chimeRev.gain.value = 0.15;
+    chimeRev.connect(this.reverbSend);
+
     for (const [dt, f] of [[0, 880], [0.16, 660]] as const) {
-      const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = f;
-      const g = this.env(o, now + alertAt + dt, 0.11, 0.006, 0.18, this.master);
-      g.connect(this.reverbSend);
-      o.start(now + alertAt + dt); o.stop(now + alertAt + dt + 0.2);
+      const o1 = ctx.createOscillator(); o1.type = 'sine'; o1.frequency.value = f;
+      const g1 = this.env(o1, now + alertAt + dt, 0.11, 0.006, 0.18, this.master);
+      g1.connect(chimeRev);
+      o1.start(now + alertAt + dt); o1.stop(now + alertAt + dt + 0.22);
 
       const o2 = ctx.createOscillator(); o2.type = 'sine'; o2.frequency.value = f * 2;
-      const g2 = this.env(o2, now + alertAt + dt, 0.025, 0.006, 0.18, this.master);
-      g2.connect(this.reverbSend);
-      o2.start(now + alertAt + dt); o2.stop(now + alertAt + dt + 0.2);
+      this.env(o2, now + alertAt + dt, 0.025, 0.004, 0.14, this.master);
+      o2.start(now + alertAt + dt); o2.stop(now + alertAt + dt + 0.18);
     }
   }
 
-  /** Wheels: crisp rubber-on-asphalt chirp + deep suspension thump above the F major resolution. */
+  /** Wheels: crisp rubber-on-asphalt chirp + deep suspension thump. */
   private touchdown() {
     const ctx = this.ctx, now = ctx.currentTime;
-    this.duck(0.75, 0.5, 0.6); // brief space for the tires to speak
+    this.duck(0.75, 0.5, 0.6);
 
     const n = ctx.createBufferSource(); n.buffer = this.noise;
     const bp = ctx.createBiquadFilter();
@@ -376,32 +387,23 @@ export class SortieSound {
     o.start(now + 0.02); o.stop(now + 0.42);
   }
 
-  /** Back from a cut: the world returns at once. */
   cut() {
-    const ctx = this.ctx, now = ctx.currentTime;
+    const now = this.ctx.currentTime;
     this.bus.gain.cancelScheduledValues(now); this.bus.gain.setValueAtTime(1, now);
   }
 
   /* ---------------------------------------------------------------- the mix, every frame */
   update(s: SoundState) {
     const { t, r, ci, playing, dt, listener, bay } = s;
-    const ctx = this.ctx, now = ctx.currentTime;
+    const now = this.ctx.currentTime;
     const id = CHAPTERS[ci].id;
     const k = clamp01((t - STARTS[ci]) / CHAPTERS[ci].dur);
     const set = (p: AudioParam, v: number, tc = 0.12) => p.setTargetAtTime(v, now, tc);
     const forward = this.lastT >= 0 && t > this.lastT && t - this.lastT < 1;
 
     if (forward) {
-      if (this.lastT < T_INJECT - 0.18 && t >= T_INJECT - 0.18) {
-        const n = ctx.createBufferSource(); n.buffer = this.noise;
-        const bp = ctx.createBiquadFilter(); bp.type = 'bandpass';
-        bp.frequency.setValueAtTime(300, now);
-        bp.frequency.exponentialRampToValueAtTime(1400, now + 0.18); bp.Q.value = 2.0;
-        this.env(n.connect(bp), now, 0.12, 0.01, 0.17, this.bus);
-        n.start(now); n.stop(now + 0.19);
-      }
+      if (this.lastT < T_INJECT - 0.18 && t >= T_INJECT - 0.18) this.preImpactBreath();
       if (this.lastT < T_CONFIRM && t >= T_CONFIRM) {
-        // Back from the ground station onto the lock: the hit, then pure silence
         this.hit(1);
         this.silenceUntil = now + 1.6;
         this.bus.gain.cancelScheduledValues(now);
@@ -441,18 +443,18 @@ export class SortieSound {
     set(this.valve.g.gain, running && !dead ? (bay ? 0.032 : 0.008 * near) : 0, 0.2);
     set(this.bayRing.gain, bay && running ? 0.009 : 0, 0.3);
 
+    // Breathing Ladakh wind
     const high = dead ? 1.5 : id === 'cold' ? 0.25 + 0.75 * k : id === 'decide' || id === 'divert' ? 0.85 : id === 'land' ? 0.5 * (1 - idle) : 0.42;
-    const windLevel = running ? (bay ? 0.012 : 0.075 * high) : 0.015;
-    const breathL = 1 + 0.14 * Math.sin(t * 0.85);
-    const breathR = 1 + 0.14 * Math.cos(t * 0.72);
-    set(this.windL.gain, windLevel * breathL, 0.5); set(this.windR.gain, windLevel * breathR, 0.5);
+    const windBase = running ? (bay ? 0.012 : 0.075 * high) : 0.015;
+    set(this.windL.gain, windBase * (1 + 0.14 * Math.sin(t * 0.85)), 0.45);
+    set(this.windR.gain, windBase * (1 + 0.14 * Math.cos(t * 0.72)), 0.45);
 
-    // Inside the cowling or detector's mind: exterior air smoothly muffles
+    // Inside cowling or detector's mind
     const mind = id === 'pipeline' || (id === 'detect' && t < T_CONFIRM) || id === 'memory' || id === 'beyond';
     set(this.airLP.frequency, mind ? 280 : bay ? 380 : 16000, mind ? 0.6 : 0.35);
     set(this.reverbSend.gain, mind ? 0.42 : bay ? 0.32 : 0.22, 0.6);
 
-    // Tension: chronometer tick from the twin to confirmation
+    // Tension chronometer tick
     const worst = Math.max(...Object.values(r.ratios));
     const ticking = running && t >= startOf('twin') && t < T_CONFIRM;
     if (ticking && now >= this.nextTick && now >= this.silenceUntil) {
@@ -479,18 +481,16 @@ export class SortieSound {
       this.prevWinners = new Set(s.winners);
     } else this.prevWinners.clear();
 
-    // Memory reservoir voices (carried by Score's organ pipes)
+    // Memory reservoir voices
     set(this.voiceBus.gain, 0, 0.8);
     if (s.memory) this.voices.forEach((v, i) => set(v.g.gain, Math.min(1, Math.abs(s.memory![i * 17 % s.memory!.length])) * 0.45, 0.15));
 
-    // Glide swell pad
+    // Glide swell + dynamic breathing on decide -> divert/land
     const sw = running && (id === 'divert' || id === 'land') ? (id === 'divert' ? 0.09 + 0.14 * k : 0.22 * (1 - clamp01((t - T_TOUCH - 1) / 5))) : 0;
     set(this.swell.gain, sw * 0.24, id === 'divert' ? 1.4 : 0.8);
 
-    const bayDuck = bay ? 1 : 0;
-    const decideDuck = id === 'decide' ? 0.22 : 0;
-    const totalDuck = Math.max(bayDuck, decideDuck);
-    this.stems.update(t, running, totalDuck, dead);
+    const musicDuck = bay ? 1 : id === 'decide' ? 0.22 : 0;
+    this.stems.update(t, running, musicDuck, dead);
     this.score.update({
       t,
       ci,
@@ -499,10 +499,10 @@ export class SortieSound {
       newWinners,
       unseen: s.unseen,
       memory: s.memory,
-      duck: totalDuck,
+      duck: musicDuck,
     });
 
-    // Roll-out rumble, dying with speed
+    // Roll-out rumble
     const roll = t >= T_TOUCH && t < T_TOUCH + 4.6 ? 1 - (t - T_TOUCH) / 4.6 : 0;
     set(this.rumble.gain, running ? 0.26 * roll * roll : 0, 0.08);
   }
